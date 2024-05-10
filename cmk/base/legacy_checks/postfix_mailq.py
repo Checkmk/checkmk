@@ -79,7 +79,9 @@ def parse_postfix_mailq(string_table):
     instance_name = ""
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            instance_name = line[0][3:-3]
+            # deal with the pre 2.3 agent output that will send an empty instance
+            # name for the "default" queue.
+            instance_name = line[0][3:-3] or "default"
 
         queueinfo = None
         # single and old output formats
@@ -121,9 +123,6 @@ def inventory_postfix_mailq(parsed):
 
 
 def check_postfix_mailq(item, params, parsed):
-    if item is None:
-        item = ""
-
     if item not in parsed:
         yield 3, "Item not found"
         return

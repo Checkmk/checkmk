@@ -82,9 +82,15 @@ def main(args: argparse.Namespace) -> None:
     )
 
     version = Version.from_str(args.version)
+    feedback_mail = None
+
     if version.release.r_type == RType.b:
         release_type = "beta"
-    elif version.release.r_type == RType.p:
+        assert (
+            version.base is not None
+        ), f"Expected version.base to be not None for release type beta: {version}"
+        feedback_mail = f"feedback-{version.base.major}.{version.base.minor}-beta@checkmk.com"
+    elif version.release.r_type == RType.p or version.release.is_unspecified():
         release_type = "stable"
     elif version.release.r_type == RType.daily:
         release_type = "daily"
@@ -97,5 +103,6 @@ def main(args: argparse.Namespace) -> None:
             werks=werks,
             release_type=release_type,
             version=args.version,
+            feedback_mail=feedback_mail,
         )
     )

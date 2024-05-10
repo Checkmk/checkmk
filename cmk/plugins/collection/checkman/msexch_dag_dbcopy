@@ -7,8 +7,8 @@ description:
  This check monitors status information about the mailbox database copies
  on your Exchange Mailbox Servers in a Database Availability Group (DAG).
 
- The check requires that the agent plugin {msexch_dag.ps1} is installed
- on the Exchange mailbox server(s) to be monitored.  The plugin uses the
+ The check requires that the agent plug-in {msexch_dag.ps1} is installed
+ on the Exchange mailbox server(s) to be monitored.  The plug-in uses the
  PowerShell {Get-MailboxDatabaseCopyStatus} cmdlet.
 
  The check detects and saves the DBCopy {Status} during inventory.  The check

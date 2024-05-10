@@ -13,14 +13,18 @@ from pytest_mock import MockerFixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_statefulset import inventory_kube_statefulset
 
-from cmk.plugins.lib.kube import (
+from cmk.plugins.kube.schemata.api import (
+    ContainerName,
     NamespaceName,
     Recreate,
     Selector,
-    StatefulSetInfo,
     StatefulSetRollingUpdate,
-    ThinContainers,
     Timestamp,
+)
+from cmk.plugins.kube.schemata.section import (
+    FilteredAnnotations,
+    StatefulSetInfo,
+    ThinContainers,
     UpdateStrategy,
 )
 
@@ -35,10 +39,12 @@ from .utils_inventory import sort_inventory_result
                 name="oh-lord",
                 namespace=NamespaceName("have-mercy"),
                 labels={},
-                annotations={},
+                annotations=FilteredAnnotations({}),
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=Timestamp(1600000000.0),
-                containers=ThinContainers(images=frozenset({"i/name:0.5"}), names=["name"]),
+                containers=ThinContainers(
+                    images=frozenset({"i/name:0.5"}), names=[ContainerName("name")]
+                ),
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",
             ),

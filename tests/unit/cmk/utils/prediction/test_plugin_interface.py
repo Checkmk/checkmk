@@ -3,81 +3,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 
-import pytest
-
-from cmk.utils.prediction import _plugin_interface
+from cmk.utils.prediction import estimate_levels
 
 
-@pytest.mark.parametrize(
-    "reference_value, reference_deviation, params, levels_factor, result",
-    [
-        (
-            5,
-            2,
-            {"levels_lower": ("absolute", (2, 4))},
-            1,
-            (None, None, 3, 1),
-        ),
-        (
-            0,
-            2,
-            {"levels_upper": ("absolute", (2, 4))},
-            1,
-            (2, 4, None, None),
-        ),
-        (
-            0,
-            2,
-            {"levels_upper": ("relative", (2, 4))},
-            1,
-            (None, None, None, None),
-        ),
-        (
-            0,
-            2,
-            {"levels_upper": ("stdev", (2, 4))},
-            1,
-            (4, 8, None, None),
-        ),
-        (
-            15,
-            2,
-            {
-                "levels_upper": ("stdev", (2, 4)),
-                "levels_lower": ("stdev", (3, 5)),
-            },
-            1,
-            (19, 23, 9, 5),
-        ),
-        (
-            2,
-            3,
-            {
-                "levels_upper": ("relative", (20, 40)),
-                "levels_upper_min": (2, 4),
-            },
-            1,
-            (2.4, 4, None, None),
-        ),
-    ],
-)
-def test_estimate_levels(
-    reference_value: float,
-    reference_deviation: float,
-    params: Mapping,
-    levels_factor: float,
-    result: _plugin_interface.EstimatedLevels,
-) -> None:
-    assert (
-        _plugin_interface.estimate_levels(
-            reference_value=reference_value,
-            stdev=reference_deviation,
-            levels_lower=params.get("levels_lower"),
-            levels_upper=params.get("levels_upper"),
-            levels_upper_lower_bound=params.get("levels_upper_min"),
-            levels_factor=levels_factor,
-        )
-        == result
+def test_estimate_levels_absolute() -> None:
+    assert estimate_levels(0, 2, "upper", ("absolute", (2, 4)), None) == (2, 4)
+
+
+def test_estimate_levels_zero_reference_relative() -> None:
+    assert estimate_levels(0, 2, "upper", ("relative", (2, 4)), None) is None
+
+
+def test_estimate_levels_stdev() -> None:
+    assert estimate_levels(0, 2, "upper", ("stdev", (2, 4)), None) == (4, 8)
+
+
+def test_estimate_levels_stdev_lower() -> None:
+    assert estimate_levels(
+        15,
+        2,
+        "lower",
+        ("stdev", (3, 5)),
+        None,
+    ) == (9, 5)
+
+
+def test_estimate_levels_upper_lbound() -> None:
+    assert estimate_levels(42.0, 1.0, "upper", ("stdev", (2.3, 3.2)), None) == (
+        44.3,
+        45.2,
     )
+
+    assert estimate_levels(42.0, 1.0, "upper", ("stdev", (2.3, 3.2)), (45.0, 45.0)) == (45.0, 45.2)
+
+
+def test_estimate_levels_lower_ubound() -> None:
+    assert estimate_levels(42.0, 1.0, "lower", ("stdev", (2.3, 3.2)), None) == (
+        39.7,
+        38.8,
+    )
+
+    assert estimate_levels(42.0, 1.0, "lower", ("stdev", (2.3, 3.2)), (38.5, 50.0)) == (38.5, 38.8)

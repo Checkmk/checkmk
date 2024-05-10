@@ -7,23 +7,26 @@
 
 import functools
 import time
+from collections.abc import Callable, Mapping
+from typing import TypeVar
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable
+from cmk.base.check_api import check_levels, CheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
     get_value_store,
     IgnoreResultsError,
-    render,
 )
 
+from cmk.agent_based.v2 import render, Service
 from cmk.plugins.lib.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
+from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 from cmk.plugins.lib.azure import iter_resource_attributes as iter_resource_attributes
 from cmk.plugins.lib.azure import parse_resources as parse_resources
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,
     "percent": render.percent,
-    "bytes": get_bytes_human_readable,
+    "bytes": render.bytes,
     "bytes_per_second": render.iobandwidth,
     "seconds": lambda s: "%.2f s" % s,
     "milli_seconds": lambda ms: "%d ms" % (ms * 1000),
@@ -31,20 +34,13 @@ _AZURE_METRIC_FMT = {
 }
 
 
-def get_data_or_go_stale(check_function):
-    """Variant of get_parsed_item_data that raises MKCounterWrapped
-    if data is not found.
-    """
+_Data = TypeVar("_Data")
 
-    @functools.wraps(check_function)
-    def wrapped_check_function(item, params, parsed):
-        if not isinstance(parsed, dict):
-            return 3, "Wrong usage of decorator: parsed is not a dict"
-        if item not in parsed or not parsed[item]:
-            raise IgnoreResultsError("Data not present at the moment")
-        return check_function(item, params, parsed[item])
 
-    return wrapped_check_function
+def get_data_or_go_stale(item: str, section: Mapping[str, _Data]) -> _Data:
+    if resource := section.get(item):
+        return resource
+    raise IgnoreResultsError("Data not present at the moment")
 
 
 def check_azure_metric(  # pylint: disable=too-many-locals
@@ -82,7 +78,7 @@ def check_azure_metric(  # pylint: disable=too-many-locals
         cmk_key,
         (levels or (None, None)) + (levels_lower or (None, None)),
         infoname=display_name,
-        human_readable_func=_AZURE_METRIC_FMT.get(unit, str),  # type: ignore[arg-type]
+        human_readable_func=_AZURE_METRIC_FMT.get(unit, lambda x: f"{x}"),
         boundaries=(0, None),
     )
 
@@ -106,7 +102,9 @@ def discover_azure_by_metrics(*desired_metrics):
         for name, resource in parsed.items():
             metr = resource.metrics
             if set(desired_metrics) & set(metr):
-                yield name, {}
+                yield Service(
+                    item=name, labels=get_service_labels_from_resource_tags(resource.tags)
+                )
 
     return discovery_function
 

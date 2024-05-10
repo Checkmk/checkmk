@@ -309,7 +309,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         _change_table(self._all_changes, _("Revert changes"))
 
 
-def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
+def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
     with table_element(
         "changes",
         title=title,
@@ -455,6 +455,11 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 disabled_tooltip = _(
                     "Blocked due to non-revertible change. Activate those changes to unblock reverting."
                 )
+            elif any(
+                (change["user_id"] != user.id for _, change in self._pending_changes)
+            ) and not user.may("wato.discardforeign"):
+                enabled = False
+                disabled_tooltip = _("This user doesn't have permission to revert these changes")
             else:
                 enabled = True
 
@@ -643,7 +648,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if warnings:
             _show_activation_state_messages("", warnings, ActivationState.WARNING)
 
-    def _activation_status(self):
+    def _activation_status(self) -> None:
         with table_element(
             "site-status",
             title=_("Activation status"),

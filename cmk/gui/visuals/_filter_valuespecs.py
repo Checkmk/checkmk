@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import json
 import sys
 import traceback
@@ -12,6 +14,7 @@ from itertools import chain
 from livestatus import LivestatusTestingError
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -217,6 +220,15 @@ def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:
     return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
 
 
+def filters_exist_for_infos(infos: SingleInfos) -> bool:
+    """Returns True if any filter is registered for the given infos"""
+    for _fname, filt in filter_registry.items():
+        for info in infos:
+            if filt.info is None or info == filt.info:
+                return True
+    return False
+
+
 class VisualFilterListWithAddPopup(VisualFilterList):
     """Special form of the visual filter list to be used in the views and dashboards"""
 
@@ -243,37 +255,37 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 
             html.open_div(id_=group_id, class_="filter_group")
             # Show / hide all entries of this group
-            html.a(
-                group.title,
-                href="",
-                class_="filter_group_title",
-                onclick="cmk.page_menu.toggle_filter_group_display(this.nextSibling)",
-            )
+            with foldable_container(
+                treename="filter_group_title",
+                id_=group_id,
+                isopen=True,
+                title=group.title,
+                indent=None,
+            ):
+                # Display all entries of this group
+                html.open_ul(class_="active")
+                for choice in group.choices:
+                    filter_name = choice[0]
 
-            # Display all entries of this group
-            html.open_ul(class_="active")
-            for choice in group.choices:
-                filter_name = choice[0]
+                    filter_obj = filter_registry[filter_name]
+                    html.open_li(class_="show_more_mode" if filter_obj.is_show_more else "basic")
 
-                filter_obj = filter_registry[filter_name]
-                html.open_li(class_="show_more_mode" if filter_obj.is_show_more else "basic")
+                    html.a(
+                        choice[1].title() or filter_name,
+                        href="javascript:void(0)",
+                        onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
+                        "cmk.page_menu.update_filter_list_scroll(%s)"
+                        % (
+                            json.dumps(varprefix),
+                            json.dumps(self._choice_page_name),
+                            json.dumps(self._page_request_vars),
+                            json.dumps(filter_list_selected_id),
+                        ),
+                        id_=f"{varprefix}_add_{filter_name}",
+                    )
 
-                html.a(
-                    choice[1].title() or filter_name,
-                    href="javascript:void(0)",
-                    onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
-                    "cmk.page_menu.update_filter_list_scroll(%s)"
-                    % (
-                        json.dumps(varprefix),
-                        json.dumps(self._choice_page_name),
-                        json.dumps(self._page_request_vars),
-                        json.dumps(filter_list_selected_id),
-                    ),
-                    id_=f"{varprefix}_add_{filter_name}",
-                )
-
-                html.close_li()
-            html.close_ul()
+                    html.close_li()
+                html.close_ul()
 
             html.close_div()
         html.close_div()

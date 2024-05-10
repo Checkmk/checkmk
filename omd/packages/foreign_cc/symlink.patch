@@ -1,0 +1,27 @@
+diff --git a/foreign_cc/private/framework/toolchains/linux_commands.bzl b/foreign_cc/private/framework/toolchains/linux_commands.bzl
+index 3cc818e..5319195 100644
+--- a/foreign_cc/private/framework/toolchains/linux_commands.bzl
++++ b/foreign_cc/private/framework/toolchains/linux_commands.bzl
+@@ -86,7 +86,7 @@ fi
+     )
+ 
+ def copy_dir_contents_to_dir(source, target):
+-    return """cp -L -r --no-target-directory "{source}" "{target}" && find "{target}" -type f -exec touch -r "{source}" "{{}}" \\;""".format(
++    return """cp -r --no-target-directory "{source}" "{target}" && find "{target}" -type f -exec touch -r "{source}" "{{}}" \\;""".format(
+         source = source,
+         target = target,
+     )
+@@ -237,12 +237,7 @@ def replace_sandbox_paths(dir_, abs_path):
+     )
+ 
+ def replace_symlink(file):
+-    return """\
+-if [[ -L "{file}" ]]; then
+-  target="$(readlink -f "{file}")"
+-  rm "{file}" && cp -a "${{target}}" "{file}"
+-fi
+-""".format(file = file)
++    return ""
+ 
+ commands = struct(
+     assert_script_errors = assert_script_errors,

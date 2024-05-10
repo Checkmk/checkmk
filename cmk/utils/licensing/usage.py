@@ -23,8 +23,8 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
-    LicenseUsageReportVersion,
     LicenseUsageSample,
+    LicensingProtocolVersion,
     RawLicenseUsageExtensions,
     RawLicenseUsageReport,
     RawLicenseUsageSample,
@@ -52,12 +52,11 @@ CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 
 _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
-_SYNTHETIC_MON_CHECK_NAME = "robotmk_test"
+SYNTHETIC_MON_CHECK_NAME = "robotmk_test"
 
 
 class DoCreateSample(Protocol):
-    def __call__(self, now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
-        ...
+    def __call__(self, now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample: ...
 
 
 @dataclass(frozen=True)
@@ -89,7 +88,7 @@ def try_update_license_usage(
 
     report_file_path = get_license_usage_report_file_path()
     licensing_dir.mkdir(parents=True, exist_ok=True)
-    next_run_file_path = licensing_dir / "next_run"
+    next_run_file_path = get_next_run_file_path()
 
     with store.locked(next_run_file_path), store.locked(report_file_path):
         if now.dt.timestamp() < _get_next_run_ts(next_run_file_path):
@@ -100,7 +99,7 @@ def try_update_license_usage(
         save_license_usage_report(
             report_file_path,
             RawLicenseUsageReport(
-                VERSION=LicenseUsageReportVersion,
+                VERSION=LicensingProtocolVersion,
                 history=history.for_report(),
             ),
         )
@@ -132,11 +131,11 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         - that are shadow services
     num_services_excluded: Services
         - with the "cmk/licensing:excluded" label
-    num_services_synthetic Services
+    num_synthetic_tests Services
         - with the check_command: robotmk_test
         - that are not shadow services
         - without the "cmk/licensing:excluded" label
-    num_services_synthetic_excluded: Services
+    num_synthetic_tests_excluded: Services
         - with the check_command: robotmk_test
         - that are not shadow services
         - with the "cmk/licensing:excluded" label
@@ -175,8 +174,8 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         num_services_cloud=cloud_counter.services,
         num_services_shadow=services_counter.num_shadow,
         num_services_excluded=services_counter.num_excluded,
-        num_services_synthetic=synthetic_monitoring_counter.num_services,
-        num_services_synthetic_excluded=synthetic_monitoring_counter.num_excluded,
+        num_synthetic_tests=synthetic_monitoring_counter.num_services,
+        num_synthetic_tests_excluded=synthetic_monitoring_counter.num_excluded,
         sample_time=sample_time,
         timezone=now.tz,
         extension_ntop=extensions.ntop,
@@ -295,14 +294,14 @@ def _get_synthetic_monitoring_counter() -> HostsOrServicesSyntheticCounter:
             "\nStats: check_type != 2"
             f"\nStats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
             f"\nStats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
-            f"\nStats: check_command = check_mk-{_SYNTHETIC_MON_CHECK_NAME}"
+            f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}"
             "\nStatsAnd: 5"
             f"\nStats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
             f"\nStats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
             "\nStatsOr: 2"
             "\nStats: host_check_type != 2"
             "\nStats: check_type != 2"
-            f"\nStats: check_command = check_mk-{_SYNTHETIC_MON_CHECK_NAME}"
+            f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}"
             "\nStatsAnd: 4"
         )
     )
@@ -322,6 +321,10 @@ def _create_next_run_ts(now: Now) -> int:
 
 def get_license_usage_report_file_path() -> Path:
     return licensing_dir / "history.json"
+
+
+def get_next_run_file_path() -> Path:
+    return licensing_dir / "next_run"
 
 
 def save_license_usage_report(file_path: Path, raw_report: RawLicenseUsageReport) -> None:
@@ -370,10 +373,10 @@ class LocalLicenseUsageHistory:
         if not raw_report:
             return cls([])
 
-        if not isinstance(version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong report version type: %r" % type(version))
+        if not isinstance(protocol_version := raw_report.get("VERSION"), str):
+            raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
 
-        parser = LicenseUsageSample.get_parser(version)
+        parser = LicenseUsageSample.get_parser(protocol_version)
         return cls(
             parser(raw_sample, instance_id=instance_id, site_hash=site_hash)
             for raw_sample in raw_report.get("history", [])
@@ -387,10 +390,10 @@ class LocalLicenseUsageHistory:
         if not raw_report:
             return cls([])
 
-        if not isinstance(version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong report version type: %r" % type(version))
+        if not isinstance(protocol_version := raw_report.get("VERSION"), str):
+            raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
 
-        parser = LicenseUsageSample.get_parser(version)
+        parser = LicenseUsageSample.get_parser(protocol_version)
         return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
     def add_sample(self, sample: LicenseUsageSample) -> None:

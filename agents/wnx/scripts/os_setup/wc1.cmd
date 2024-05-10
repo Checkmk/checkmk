@@ -13,7 +13,7 @@ powershell Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSy
 
 rem python, version is latest
 set pkg=python
-set version=--version 3.10.2
+set version=--version 3.12.1
 call :process
 
 rem make, version is latest

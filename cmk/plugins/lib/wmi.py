@@ -6,7 +6,7 @@
 import re
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 # This set of functions is used for checks that handle "generic" windows
 # performance counters as reported via wmi

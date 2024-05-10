@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import os
 from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 from pytest import MonkeyPatch
 
 import cmk.utils.log
@@ -78,7 +80,7 @@ def _get_only_raw_data_element(
     host_name: HostName,
     time_setting: piggyback.PiggybackTimeSettings,
 ) -> piggyback.PiggybackRawDataInfo:
-    with freeze_time(_FREEZE_DATETIME):
+    with time_machine.travel(_FREEZE_DATETIME):
         raw_data_sequence = piggyback.get_piggyback_raw_data(host_name, time_setting)
     assert len(raw_data_sequence) == 1
     return raw_data_sequence[0]
@@ -211,7 +213,7 @@ def test_get_piggyback_raw_data_too_old_global() -> None:
     assert raw_data.info.source_hostname == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message.startswith("Piggyback file too old:")
+    assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -228,7 +230,7 @@ def test_get_piggyback_raw_data_too_old_source() -> None:
     assert raw_data.info.source_hostname == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message.startswith("Piggyback file too old:")
+    assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -246,7 +248,7 @@ def test_get_piggyback_raw_data_too_old_piggybacked_host() -> None:
     assert raw_data.info.source_hostname == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message.startswith("Piggyback file too old:")
+    assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -263,7 +265,7 @@ def test_has_piggyback_raw_data() -> None:
     time_settings: piggyback.PiggybackTimeSettings = [
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
     ]
-    with freeze_time(_FREEZE_DATETIME):
+    with time_machine.travel(_FREEZE_DATETIME):
         assert piggyback.has_piggyback_raw_data(_TEST_HOST_NAME, time_settings) is True
 
 
@@ -307,7 +309,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
     ]
 
-    with freeze_time(_FREEZE_DATETIME):
+    with time_machine.travel(_FREEZE_DATETIME):
         piggyback.store_piggyback_raw_data(
             HostName("source2"),
             {

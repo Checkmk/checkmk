@@ -71,6 +71,7 @@ def check_netapp_api_fcp(item, params, parsed):
         yield _notice_only_fy(0, "Address %s" % fcp_if["address"], [])
 
 
+# in netapp_ontap_fcp.py this function is ready for migration
 def _speed_result(params, fcp_if):
     speed = fcp_if.get("speed")
     speed_str = None if speed is None else render.nicspeed(float(speed) / 8.0)
@@ -91,6 +92,7 @@ def _speed_result(params, fcp_if):
     yield 2, f"Speed: {speed_str} (expected: {expected_speed_str})"
 
 
+# in netapp_ontap_fcp.py this function is ready for migration
 def _io_bytes_results(item, params, fcp_if):
     bw_levels = bandwidth_levels(
         params=params,
@@ -113,23 +115,25 @@ def _io_bytes_results(item, params, fcp_if):
         yield check_levels(
             value,
             what,
-            levels.config
-            if isinstance(
-                levels,
-                PredictiveLevels,
-            )
-            else (
-                levels.upper
-                or (
-                    None,
-                    None,
+            (
+                levels.config
+                if isinstance(
+                    levels,
+                    PredictiveLevels,
                 )
-            )
-            + (
-                levels.lower
-                or (
-                    None,
-                    None,
+                else (
+                    levels.upper
+                    or (
+                        None,
+                        None,
+                    )
+                )
+                + (
+                    levels.lower
+                    or (
+                        None,
+                        None,
+                    )
                 )
             ),
             human_readable_func=render.iobandwidth,
@@ -137,6 +141,7 @@ def _io_bytes_results(item, params, fcp_if):
         )
 
 
+# in netapp_ontap_fcp.py this function is ready for migration
 def _io_ops_results(item, params, fcp_if):
     now = fcp_if["now"]
     value_store = get_value_store()
@@ -159,6 +164,7 @@ def _io_ops_results(item, params, fcp_if):
         )
 
 
+# in netapp_ontap_fcp.py this function is ready for migration
 def _latency_results(item, params, fcp_if):
     total_ops = fcp_if["total_ops"]
     value_store = get_value_store()

@@ -18,12 +18,15 @@ from dataclasses import dataclass
 from html import escape
 from typing import Any, Literal
 
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
-    check_levels_fixed,
+    CheckResult,
+    DiscoveryResult,
     get_average,
     get_rate,
     get_value_store,
     HostLabel,
+    HostLabelGenerator,
     IgnoreResultsError,
     Metric,
     render,
@@ -31,7 +34,6 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
 
 from . import cpu, memory
 
@@ -558,7 +560,7 @@ def unused_value_remover(
 ) -> Generator[dict[str, tuple[float, float]], None, None]:
     """Remove all values that remain unchanged
 
-    This plugin uses the process IDs in the keys to persist values.
+    This plug-in uses the process IDs in the keys to persist values.
     This would lead to a lot of orphaned values if we used the value store directly.
     Thus we use a single dictionary and only store the values that have been used.
     """
@@ -614,7 +616,7 @@ def count_check(
     info_name: str,
 ) -> CheckResult:
     warnmin, okmin, okmax, warnmax = params["levels"]
-    yield from check_levels_fixed(
+    yield from check_levels(
         processes.count,
         metric_name="count",
         levels_lower=(okmin, warnmin),
@@ -723,7 +725,7 @@ def check_averageable_metric(
     else:
         infotext = metric_name
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         metric_value,
         levels_upper=levels,
         render_func=render_fn,
@@ -806,7 +808,7 @@ def individual_process_check(
             if levels is None or metric_value is None:
                 continue
 
-            check_result, *_ = check_levels_fixed(
+            check_result, *_ = check_levels(
                 metric_value,
                 levels_upper=levels,
                 render_func=render_fn,
@@ -827,7 +829,7 @@ def uptime_check(
 ) -> CheckResult:
     """Check how long the process is running"""
     if min_elapsed == max_elapsed:
-        yield from check_levels_fixed(
+        yield from check_levels(
             min_elapsed,
             levels_lower=params.get("min_age"),
             levels_upper=params.get("max_age"),
@@ -844,14 +846,14 @@ def uptime_check(
             levels=params.get("max_age"),
         )
     else:
-        yield from check_levels_fixed(
+        yield from check_levels(
             min_elapsed,
             metric_name="age_youngest",
             levels_lower=params.get("min_age"),
             render_func=render.timespan,
             label="Youngest running for",
         )
-        yield from check_levels_fixed(
+        yield from check_levels(
             max_elapsed,
             metric_name="age_oldest",
             levels_upper=params.get("max_age"),
@@ -864,7 +866,7 @@ def handle_count_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
 ) -> CheckResult:
-    yield from check_levels_fixed(
+    yield from check_levels(
         processes.handle_count,
         metric_name="process_handles",
         levels_upper=params.get("handle_count"),

@@ -4,8 +4,8 @@
 
 include ../../../../defines.make
 # commandline
-PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
-PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
+PY_VER             ?= $(PYTHON_VERSION_WINDOWS_MAJOR_DOT_MINOR)
+PY_SUBVER          ?= $(PYTHON_VERSION_WINDOWS_PATCH)
 
 INTEGRATION_TIMESTAMP   := results\integration.timestamp
 
@@ -13,7 +13,7 @@ INTEGRATION_TIMESTAMP   := results\integration.timestamp
 PYTHON			:= ..\..\..\..\artefacts\python-3.cab
 
 # Scripts to be compatible with pythons
-SCRIPT_1		:= ..\..\..\..\enterprise\agents\plugins\cmk_update_agent.py
+SCRIPT_1		:= ..\..\..\..\non-free\cmk-update-agent\cmk_update_agent.py
 SCRIPT_2		:= ..\..\..\plugins\mk_logwatch.py
 SCRIPT_3		:= ..\..\..\plugins\mk_jolokia.py
 

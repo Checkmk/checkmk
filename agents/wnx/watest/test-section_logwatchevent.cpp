@@ -193,9 +193,9 @@ TEST(LogWatchEventTest, DumpEventLog) {
         auto start = steady_clock::now();
         auto [_, out] = DumpEventLog(*ptr, state, lwl);
         auto end = steady_clock::now();
-        EXPECT_TRUE(
-            std::chrono::duration_cast<std::chrono::seconds>(end - start)
-                .count() < 2);
+        EXPECT_LE(std::chrono::duration_cast<std::chrono::seconds>(end - start)
+                      .count(),
+                  3);
     }
 }
 

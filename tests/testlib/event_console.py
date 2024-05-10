@@ -39,23 +39,23 @@ class CMKEventConsole:
     @classmethod
     def new_event(cls, attrs: Event) -> Event:
         now = time.time()
-        default_event: Event = {
-            "rule_id": "815",
-            "text": "",
-            "phase": "open",
-            "count": 1,
-            "time": now,
-            "first": now,
-            "last": now,
-            "comment": "",
-            "host": HostName("test-host"),
-            "ipaddress": "127.0.0.1",
-            "application": "",
-            "pid": 0,
-            "priority": 3,
-            "facility": 1,  # user
-            "match_groups": (""),
-        }
+        default_event = Event(
+            rule_id="815",
+            text="",
+            phase="open",
+            count=1,
+            time=now,
+            first=now,
+            last=now,
+            comment="",
+            host=HostName("test-host"),
+            ipaddress="127.0.0.1",
+            application="",
+            pid=0,
+            priority=3,
+            facility=1,  # user
+            match_groups=(""),
+        )
 
         event = default_event.copy()
         event.update(attrs)
@@ -67,13 +67,13 @@ class CMKEventConsoleStatus:
         self._address = address
 
     # Copied from web/htdocs/mkeventd.py. Better move to some common lib.
-    def query(self, query: bytes) -> Any:
+    def query(self, query: str) -> Any:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         timeout = 10
 
         sock.settimeout(timeout)
         sock.connect(self._address)
-        sock.sendall(query)
+        sock.sendall(query.encode("utf-8"))
         sock.shutdown(socket.SHUT_WR)
 
         response_text = b""
@@ -83,9 +83,9 @@ class CMKEventConsoleStatus:
             if not chunk:
                 break
 
-        return eval(response_text)  # nosec B307 # BNS:1c6cc2 # pylint: disable=eval-used
+        return eval(response_text)  # pylint: disable=eval-used
 
-    def query_table_assoc(self, query: bytes) -> list[dict]:
+    def query_table_assoc(self, query: str) -> list[dict]:
         response = self.query(query)
         headers = response[0]
         result = []
@@ -93,5 +93,5 @@ class CMKEventConsoleStatus:
             result.append(dict(zip(headers, line)))
         return result
 
-    def query_value(self, query: bytes) -> Any:
+    def query_value(self, query: str) -> Any:
         return self.query(query)[0][0]

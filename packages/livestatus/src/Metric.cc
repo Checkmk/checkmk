@@ -42,3 +42,11 @@ Metric::Names scan_rrd(const std::filesystem::path &basedir,
     }
     return names;
 }
+
+double Metric::value_as_double() const {
+    try {
+        return std::stod(value());
+    } catch (...) {
+        return 0.0;
+    }
+}

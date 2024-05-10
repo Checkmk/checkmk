@@ -48,11 +48,6 @@ disable=
     # programming practice. In some cases, they can even hide bugs.
     broad-except,
     #---------------------------------------------------------------------------
-    # Enabling this would be nice, but not crucial. Nevertheless, this would
-    # improve readability and involve some cleanups in our class hierarchy, so
-    # we should do this some day.
-    protected-access,
-    #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we
     # probably want to use "include-naming-hint=yes" in the BASIC section.
@@ -99,9 +94,15 @@ disable=
     # Black doesn't split long strings, we'll have to this by ourselves, see
     # https://github.com/psf/black/issues/1331
     line-too-long,
+    # Since Black 24 black and pylint started to disagree on `def foo(): ...`
+    # https://github.com/psf/black/issues/4173
+    # black is our formatter so the black way is the proper way...
+    multiple-statements,
     #---------------------------------------------------------------------------
-    # We are light years away from enabling this...
-    missing-docstring,
+    # We are light years away from enabling these...
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

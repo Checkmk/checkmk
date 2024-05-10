@@ -4,10 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Sequence
-from typing import NotRequired
+from typing import NotRequired, TypedDict
 from urllib.parse import unquote
-
-from typing_extensions import TypedDict
 
 __all__ = [
     "ensure_mrpe_configs",

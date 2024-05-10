@@ -27,17 +27,22 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
 
 from ._graph_specification import GraphDataRange, GraphRecipe
+from ._loader import get_unit_info
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
-from ._unit_info import unit_info
-from ._utils import check_metrics, CheckMetricEntry, find_matching_translation, metric_info
+from ._utils import (
+    check_metrics,
+    CheckMetricEntry,
+    find_matching_translation,
+    get_extended_metric_info,
+)
 
 
 def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
 ) -> RRDData:
-    unit_conversion = unit_info[graph_recipe.unit].get(
+    unit_conversion = get_unit_info(graph_recipe.unit).get(
         "conversion",
         lambda v: v,
     )
@@ -144,7 +149,10 @@ MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]
 
 def _group_needed_rrd_data_by_service(
     rrd_data_keys: Iterable[RRDDataKey],
-) -> dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties],]:
+) -> dict[
+    tuple[SiteId, HostName, ServiceName],
+    set[MetricProperties],
+]:
     by_service: dict[
         tuple[SiteId, HostName, ServiceName],
         set[MetricProperties],
@@ -300,8 +308,5 @@ def translate_and_merge_rrd_columns(
 
 
 def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
-    if not (metric_spec := metric_info.get(metric_name)):
-        return lambda v: v
-    if (unit := metric_spec.get("unit")) is None:
-        return lambda v: v
-    return unit_info[unit].get("conversion", lambda v: v)
+    mie = get_extended_metric_info(metric_name)
+    return mie["unit"].get("conversion", lambda v: v)

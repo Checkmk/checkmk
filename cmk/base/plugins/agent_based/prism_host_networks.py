@@ -5,8 +5,8 @@
 
 
 import json
-from collections.abc import Mapping
-from typing import Any, Iterable, MutableMapping, NamedTuple, Sequence
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, NamedTuple
 
 import pydantic
 
@@ -135,5 +135,5 @@ register.check_plugin(
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     discovery_function=discovery_prism_host_networks,
     check_function=check_prism_host_networks,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
 )

@@ -55,6 +55,7 @@ public:
     [[nodiscard]] Name name() const { return _name; }
     [[nodiscard]] MangledName mangled_name() const { return _mangled_name; }
     [[nodiscard]] std::string value() const { return _value; }
+    [[nodiscard]] double value_as_double() const;
     [[nodiscard]] std::string uom() const { return _uom; }
     [[nodiscard]] std::string warn() const { return _warn; }
     [[nodiscard]] std::string crit() const { return _crit; }

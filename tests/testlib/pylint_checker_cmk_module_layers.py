@@ -2,11 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checker to prevent disallowed imports of modules
-
-See chapter "Module hierarchy" in coding_guidelines_python in wiki
-for further information.
-"""
+"""Checker to prevent disallowed imports of modules"""
 
 from contextlib import suppress
 from pathlib import Path
@@ -194,6 +190,7 @@ def _allowed_for_base(
             ),
             _in_component(imported=imported, component=Component("cmk.cee.helpers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
         )
     )
 
@@ -207,6 +204,7 @@ def _allowed_for_base_cee(
         (
             _allowed_for_base(imported=imported, component=component),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.licensing")),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.suite_log")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.bakery.plugins")),
         )
     )
@@ -245,6 +243,7 @@ def _allow_for_gui(
             ),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
         )
     )
 
@@ -267,9 +266,13 @@ def _allow_for_gui_cee(
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.views")),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.dashboards")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.pages")),
             _in_component(
                 imported=imported, component=Component("cmk.cee.robotmk.bakery.rulespecs")
+            ),
+            _in_component(
+                imported=imported, component=Component("cmk.cee.robotmk.free_tier_banner")
             ),
         )
     )
@@ -391,12 +394,14 @@ def _is_allowed_for_plugins(
 ) -> bool:
     return any(
         (
+            _in_component(imported=imported, component=Component("cmk.agent_based.v1")),
             _in_component(imported=imported, component=Component("cmk.agent_based.v2")),
             _in_component(imported=imported, component=Component("cmk.graphing.v1")),
             _in_component(imported=imported, component=Component("cmk.rulesets.v1")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls.v1")),
             _in_component(imported=imported, component=Component("cmk.special_agents.v0_unstable")),
             _in_component(imported=imported, component=Component("cmk.plugins")),
+            _in_component(imported=imported, component=Component("cmk.utils")),
         )
     )
 
@@ -531,6 +536,35 @@ def _allowed_for_robotmk(
     )
 
 
+def _allow_for_cmk_checkengine(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            _in_component(imported=imported, component=Component("cmk.snmplib")),
+        )
+    )
+
+
+def _allow_for_cmk_fetchers(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.snmplib")),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -543,6 +577,10 @@ _COMPONENTS = (
     (
         Component("tests.integration.cmk.base"),
         _allow_default_plus_component_under_test_bakery_checkengine,
+    ),
+    (
+        Component("tests.integration.cmk.cee.robotmk"),
+        _allow_default_plus_component_under_test,
     ),
     (Component("cmk.agent_based"), _in_component),  # wants to be a package someday
     # Namespaces below cmk.base.api.agent_based are not really components,
@@ -562,9 +600,9 @@ _COMPONENTS = (
     (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
-    (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.checkengine"), _allow_for_cmk_checkengine),
+    (Component("cmk.fetchers"), _allow_for_cmk_fetchers),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
-    (Component("cmk.checkengine"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.automations"), _allow_default_plus_checkers),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui.plugins"), _allow_for_gui_plugins),
@@ -587,6 +625,7 @@ _COMPONENTS = (
     (Component("cmk.plugins"), _is_allowed_for_plugins),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_default_plus_gui_base_and_bakery),
+    (Component("cmk.validate_plugins"), _is_default_allowed_import),
     (Component("cmk.mkp_tool"), _in_component),  # wants to grow up to be a package one day
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.bakery"), _is_default_allowed_import),
@@ -605,12 +644,15 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
+    ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
+    ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
-    ModulePath("enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
-    ModulePath("enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
-    ModulePath("enterprise/bin/dcd"): Component("cmk.cee.dcd"),
-    ModulePath("enterprise/bin/fetcher"): Component("cmk.cee.helpers"),
+    ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
+    ModulePath("omd/packages/enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
+    ModulePath("omd/packages/enterprise/bin/dcd"): Component("cmk.cee.dcd"),
+    ModulePath("omd/packages/enterprise/bin/fetcher"): Component("cmk.cee.helpers"),
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),
@@ -638,13 +680,15 @@ class CMKModuleLayerChecker(BaseChecker):
         for modname in imported:
             self._check_import(
                 node,
-                ModuleName(modname)
-                if node.level is None
-                else get_absolute_importee(
-                    root_name=node.root().name,
-                    modname=modname,
-                    level=node.level,
-                    is_package=_is_package(node),
+                (
+                    ModuleName(modname)
+                    if node.level is None
+                    else get_absolute_importee(
+                        root_name=node.root().name,
+                        modname=modname,
+                        level=node.level,
+                        is_package=_is_package(node),
+                    )
                 ),
             )
 

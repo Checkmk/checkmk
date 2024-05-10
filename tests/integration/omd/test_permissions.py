@@ -90,10 +90,6 @@ def test_version_file_permissions(site: Site) -> None:
     check for world writeable and group writeable
     only the owner should be allowed to write, the owner is checked in another
     test"""
-
-    if site.update_from_git:
-        pytest.skip("The f12ed files do not have the proper permissions")
-
     assert not {
         p
         for p in iter_dir(Path(site.version.version_path()))
@@ -107,9 +103,6 @@ def test_version_file_ownership(site: Site) -> None:
     All files are supposed to be owned by root, hence the hard assert
     There are some files with omd as group, because of some caps, these are
     explicitly listed in the end, therefore the set construct"""
-
-    if site.update_from_git:
-        pytest.skip("The f12ed files do not have the proper owner/group")
 
     path_to_version = Path(site.version.version_path())
     non_root_group = set()

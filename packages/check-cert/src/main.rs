@@ -16,32 +16,7 @@ use time::{Duration, Instant};
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, ValueEnum)]
-enum SignatureAlgorithm {
-    RSA,
-    RSASSA_PSS,
-    RSAAES_OAEP,
-    DSA,
-    ECDSA,
-    ED25519,
-}
-
-impl SignatureAlgorithm {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Self::RSA => "RSA",
-            Self::RSASSA_PSS => "RSASSA_PSS",
-            Self::RSAAES_OAEP => "RSAAES_OAEP",
-            Self::DSA => "DSA",
-            Self::ECDSA => "ECDSA",
-            Self::ED25519 => "ED25519",
-        }
-    }
-}
-
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, Clone, ValueEnum)]
-enum PubKeyAlgorithm {
+enum ClapPubKeyAlgorithm {
     RSA,
     EC,
     DSA,
@@ -50,7 +25,7 @@ enum PubKeyAlgorithm {
     Unknown,
 }
 
-impl PubKeyAlgorithm {
+impl ClapPubKeyAlgorithm {
     fn as_str(&self) -> &'static str {
         match self {
             Self::RSA => "RSA",
@@ -88,6 +63,10 @@ struct Args {
     /// Port
     #[arg(short, long, default_value_t = 443)]
     port: u16,
+
+    /// Verbose output
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
 
     /// Set timeout in seconds
     #[arg(long, default_value_t = 10)]
@@ -133,19 +112,19 @@ struct Args {
     #[arg(long)]
     issuer_c: Option<String>,
 
-    /// Expected signature algorithm
+    /// Expected signature algorithm (OID)
     #[arg(long)]
-    signature_algorithm: Option<SignatureAlgorithm>,
+    signature_algorithm: Option<String>,
 
     /// Expected public key algorithm
     #[arg(long)]
-    pubkey_algorithm: Option<PubKeyAlgorithm>,
+    pubkey_algorithm: Option<ClapPubKeyAlgorithm>,
 
     /// Expected public key size
     #[arg(long)]
     pubkey_size: Option<usize>,
 
-    /// Certificate expiration levels in days [WARN:CRIT]
+    /// Certificate expiration levels in days \[WARN:CRIT\]
     #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
     not_after: Vec<u32>,
 
@@ -153,7 +132,7 @@ struct Args {
     #[arg(long)]
     max_validity: Option<u32>,
 
-    /// Response time levels in milliseconds [WARN:CRIT]
+    /// Response time levels in milliseconds \[WARN:CRIT\]
     #[arg(
         long,
         num_args = 2,
@@ -171,12 +150,30 @@ struct Args {
     allow_self_signed: bool,
 }
 
+fn verbose(verbosity: u8, level: u8, header: &str, text: &str) {
+    if verbosity >= level {
+        eprintln!("{}{}", header, text)
+    }
+}
+
+fn to_pem(der: &[u8]) -> Vec<u8> {
+    openssl::x509::X509::from_der(der)
+        .unwrap()
+        .to_pem()
+        .unwrap()
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // We ran into https://github.com/sfackler/rust-openssl/issues/575
     // without openssl_probe.
     openssl_probe::init_ssl_cert_env_vars();
 
     let args = Args::parse();
+
+    let info = |text: &str| verbose(args.verbose, 1, "INFO: ", text);
+    let debug = |text: &str| verbose(args.verbose, 2, "DEBUG: ", text);
+
+    info("start check-cert");
 
     let not_after = parse_levels(LevelsStrategy::Lower, args.not_after, Duration::days);
     let response_time = parse_levels(
@@ -185,13 +182,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Duration::milliseconds,
     );
 
+    info("load trust store...");
     let Ok(trust_store) = (match args.ca_store {
         Some(ca_store) => truststore::load_store(&ca_store),
         None => truststore::system(),
     }) else {
         check::abort("Failed to load trust store")
     };
+    info(&format!("loaded {} certificates", trust_store.len()));
 
+    info("contact host...");
     let start = Instant::now();
     let chain = match fetcher::fetch_server_cert(
         &args.url,
@@ -204,17 +204,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => check::abort(format!("{:?}", err)),
     };
     let elapsed = start.elapsed();
+    info(&format!(
+        "received chain of {} certificates from host",
+        chain.len()
+    ));
 
     if chain.is_empty() {
         check::abort("Empty or invalid certificate chain on host")
     }
 
+    info("check certificate...");
+    debug(&format!(
+        "\n{}",
+        std::str::from_utf8(&to_pem(&chain[0])).expect("valid utf8")
+    ));
+    info(" 1/3 - check fetching process");
     let mut collection = fetcher_check::check(
         elapsed,
         FetcherChecks::builder()
             .response_time(Some(response_time))
             .build(),
     );
+    info(" 2/3 - verify certificate with trust store");
+    collection.join(&mut verification::check(
+        &chain,
+        VerifChecks::builder()
+            .trust_store(&trust_store)
+            .allow_self_signed(args.allow_self_signed)
+            .build(),
+    ));
+    info(" 3/3 - check certificate");
     collection.join(&mut certificate::check(
         &chain[0],
         CertChecks::builder()
@@ -228,23 +247,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .issuer_ou(args.issuer_ou)
             .issuer_st(args.issuer_st)
             .issuer_c(args.issuer_c)
-            .signature_algorithm(
-                args.signature_algorithm
-                    .map(|sig| String::from(sig.as_str())),
-            )
+            .signature_algorithm(args.signature_algorithm)
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
             .not_after(Some(not_after))
             .max_validity(args.max_validity.map(|x| Duration::days(x.into())))
             .build(),
     ));
-    collection.join(&mut verification::check(
-        &chain,
-        VerifChecks::builder()
-            .trust_store(&trust_store)
-            .allow_self_signed(args.allow_self_signed)
-            .build(),
-    ));
+    info("check certificate... done");
 
     println!("{}", collection);
     std::process::exit(check::exit_code(&collection))

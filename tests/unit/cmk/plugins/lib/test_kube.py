@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import HostLabel
-from cmk.plugins.lib.kube import kube_labels_to_cmk_labels, Label, LabelName, Labels, LabelValue
+from cmk.plugins.kube.schemata.api import Label, LabelName, Labels, LabelValue
+from cmk.plugins.lib.kube import kube_labels_to_cmk_labels
 
 
 def test_kube_labels_to_cmk_labels() -> None:

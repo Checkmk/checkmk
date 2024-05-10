@@ -15,6 +15,7 @@ from cmk.gui.watolib.search import MatchItem
 
 def test_match_item_generator_settings(
     monkeypatch: MonkeyPatch,
+    request_context: None,
 ) -> None:
     class SomeConfigVariable(ConfigVariable):
         def group(self) -> type[ConfigVariableGroup]:

@@ -3,18 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Final
+
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.notify_types import EventContext
+from cmk.utils.labels import CollectedHostLabels
+from cmk.utils.notify_types import EnrichedEventContext, EventContext
 
 import cmk.base.events
-from cmk.base.core_config import CollectedHostLabels
 from cmk.base.events import (
-    _update_raw_context_with_labels,
+    _update_enriched_context_with_labels,
     add_to_event_context,
     raw_context_from_string,
 )
+
+
+class HTTPPRoxyConfig:
+    def to_requests_proxies(self) -> None:
+        return None
+
+    def serialize(self) -> str:
+        return ""
+
+    def __eq__(self, o: object) -> bool:
+        return NotImplemented
+
+
+HTTP_PROXY: Final = HTTPPRoxyConfig()
 
 
 @pytest.mark.parametrize(
@@ -42,15 +58,15 @@ def test_raw_context_from_string(context: str, expected: EventContext) -> None:
 
 def test_add_to_event_context_param_overrides_context() -> None:
     context = {"FOO": "bar", "BAZ": "old"}
-    add_to_event_context(context, "BAZ", "new")
+    add_to_event_context(context, "BAZ", "new", lambda *args, **kw: HTTP_PROXY)
     assert context == {"FOO": "bar", "BAZ": "new"}
 
 
 def test_add_to_event_context_prefix_is_prepended() -> None:
     context: EventContext = {}
-    add_to_event_context(context, "FOO", "bar")
-    add_to_event_context(context, "BAZ", "boo")
-    add_to_event_context(context, "AAA", {"BBB": "CCC"})
+    add_to_event_context(context, "FOO", "bar", lambda *args, **kw: HTTP_PROXY)
+    add_to_event_context(context, "BAZ", "boo", lambda *args, **kw: HTTP_PROXY)
+    add_to_event_context(context, "AAA", {"BBB": "CCC"}, lambda *args, **kw: HTTP_PROXY)
     assert context == {"FOO": "bar", "BAZ": "boo", "AAA_BBB": "CCC"}
 
 
@@ -200,12 +216,12 @@ def test_add_to_event_context_prefix_is_prepended() -> None:
 )
 def test_add_to_event_context(param: object, expected: EventContext) -> None:
     context: EventContext = {}
-    add_to_event_context(context, "PARAMETER", param)
+    add_to_event_context(context, "PARAMETER", param, lambda *args, **lw: HTTP_PROXY)
     assert context == expected
 
 
 @pytest.mark.parametrize(
-    "raw_context, labels, expected",
+    "enriched_context, labels, expected",
     [
         pytest.param(
             {
@@ -277,8 +293,8 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
         ),
     ],
 )
-def test_update_raw_contect_with_labels(
-    raw_context: EventContext,
+def test_update_enriched_contect_with_labels(
+    enriched_context: EnrichedEventContext,
     labels: CollectedHostLabels,
     expected: EventContext,
     monkeypatch: MonkeyPatch,
@@ -286,7 +302,7 @@ def test_update_raw_contect_with_labels(
     monkeypatch.setattr(
         cmk.base.events,
         "read_notify_host_file",
-        lambda host_name: labels,
+        lambda *args, **kw: labels,
     )
-    _update_raw_context_with_labels(raw_context)
-    assert raw_context == expected
+    _update_enriched_context_with_labels(enriched_context)
+    assert enriched_context == expected

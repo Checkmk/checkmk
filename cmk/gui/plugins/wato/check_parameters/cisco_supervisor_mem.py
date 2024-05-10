@@ -37,6 +37,6 @@ rulespec_registry.register(
         check_group_name="cisco_supervisor_mem",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_cisco_supervisor_mem,
-        title=lambda: _("Cisco Nexus Supervisor Memory Usage"),
+        title=lambda: _("Cisco Nexus Supervisor memory usage"),
     )
 )

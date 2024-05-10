@@ -66,7 +66,7 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                             Tuple(
                                 elements=[
                                     TextInput(
-                                        title=_("Automation Username"),
+                                        title=_("Automation user name"),
                                         allow_empty=True,
                                         help=_(
                                             "The name of the automation account to use for fetching the BI aggregation via HTTP. Note: You may "
@@ -100,7 +100,7 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                         (
                             "auth_mode",
                             DropdownChoice(
-                                title=_("Authentication Mode"),
+                                title=_("Authentication mode"),
                                 default_value="header",
                                 choices=[
                                     ("header", _("Authorization Header")),

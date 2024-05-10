@@ -7,8 +7,15 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, ServiceLabel, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    ServiceLabel,
+    State,
+    StringTable,
+)
 from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
 from cmk.plugins.gcp.agent_based.gcp_sql import (
     check_gcp_sql_cpu,

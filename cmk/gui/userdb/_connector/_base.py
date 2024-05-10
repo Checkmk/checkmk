@@ -6,7 +6,7 @@
 import abc
 from collections.abc import Callable, Sequence
 from datetime import datetime
-from typing import Literal
+from typing import Generic, Literal, TypedDict, TypeVar
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
@@ -16,8 +16,16 @@ from cmk.gui.type_defs import Users, UserSpec
 CheckCredentialsResult = UserId | None | Literal[False]
 
 
-class UserConnector(abc.ABC):
-    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
+class UserConnectionConfig(TypedDict):
+    id: str
+    disabled: bool
+
+
+_T_Config = TypeVar("_T_Config", bound=UserConnectionConfig)
+
+
+class UserConnector(abc.ABC, Generic[_T_Config]):
+    def __init__(self, cfg: _T_Config) -> None:
         self._config = cfg
 
     @classmethod

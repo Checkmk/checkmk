@@ -5,9 +5,12 @@
 
 
 from cmk.plugins.elasticsearch.server_side_calls.special_agent import special_agent_elasticsearch
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
-TEST_HOST_CONFIG = HostConfig("my_host", "1.2.3.4", "my_alias", IPAddressFamily.IPV4)
+TEST_HOST_CONFIG = HostConfig(
+    name="my_host",
+    ipv4_config=IPv4Config(address="1.2.3.4"),
+)
 
 
 def test_agent_elasticsearch_arguments_cert_check() -> None:
@@ -16,11 +19,11 @@ def test_agent_elasticsearch_arguments_cert_check() -> None:
         "protocol": "https",
         "infos": ["cluster_health", "nodestats", "stats"],
     }
-    (cmd,) = special_agent_elasticsearch.commands_function(params, TEST_HOST_CONFIG, {})
+    (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG)
     assert "--no-cert-check" not in cmd.command_arguments
 
-    params["no-cert-check"] = True
-    (cmd,) = special_agent_elasticsearch.commands_function(params, TEST_HOST_CONFIG, {})
+    params["no_cert_check"] = True
+    (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG)
     assert "--no-cert-check" in cmd.command_arguments
 
 
@@ -30,9 +33,9 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
         "protocol": "https",
         "infos": ["cluster_health", "nodestats", "stats"],
         "user": "user",
-        "password": ("password", "pass"),
+        "password": Secret(0),
     }
-    (cmd,) = special_agent_elasticsearch.commands_function(params, TEST_HOST_CONFIG, {})
+    (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG)
     assert cmd.command_arguments == [
         "-P",
         "https",
@@ -43,6 +46,7 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
         "-u",
         "user",
         "-s",
-        PlainTextSecret("pass"),
+        Secret(0).unsafe(),
+        "--",
         "testhost",
     ]

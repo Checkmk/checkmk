@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+from typing import Literal
+
 from cmk.utils.tags import TagID
 
 from cmk.gui.http import request
@@ -35,10 +38,10 @@ class AggregationsIcon(Icon):
 
     def render(
         self,
-        what: str,
+        what: Literal["host", "service"],
         row: Row,
-        tags: list[TagID],
-        custom_vars: dict[str, str],
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
         # Link to aggregations of the host/service
         # When precompile on demand is enabled, this icon is displayed for all hosts/services
@@ -80,10 +83,10 @@ class AggregationIcon(Icon):
 
     def render(
         self,
-        what: str,
+        what: Literal["host", "service"],
         row: Row,
-        tags: list[TagID],
-        custom_vars: dict[str, str],
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
         # service_check_command looks like:
         # u"check_mk_active-bi_aggr!... '-b' 'http://localhost/$HOSTNAME$' ... '-a' 'Host foobar' ..."

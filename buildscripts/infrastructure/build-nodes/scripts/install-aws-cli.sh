@@ -12,7 +12,7 @@ case "$DISTRO" in
 
         curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.11.9.zip" -o "awscliv2.zip"
         unzip -q awscliv2.zip
-        ./aws/install
+        ./aws/install --update
         rm -r aws awscliv2.zip
 
         # Test the installation

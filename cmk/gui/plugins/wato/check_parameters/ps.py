@@ -129,8 +129,8 @@ def process_level_elements():
             Tuple(
                 title=_("Levels on total CPU utilization"),
                 help=_(
-                    "By activating this options you can set levels on the total "
-                    "CPU utilization of all included processes."
+                    "By activating this option you can set levels on the total "
+                    "CPU utilization for all included processes."
                 ),
                 elements=[
                     Percentage(title=_("Warning at"), default_value=90, maxvalue=10000),

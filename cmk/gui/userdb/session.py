@@ -45,7 +45,11 @@ def auth_cookie_value(username: UserId, session_id: str) -> str:
 
 def generate_auth_hash(username: UserId, session_id: str) -> str:
     """Generates a hash to be added into the cookie value"""
-    return AuthenticationSecret().hmac(f"{username}{session_id}{_load_serial(username)}")
+    return (
+        AuthenticationSecret()
+        .secret.hmac(f"{username}{session_id}{_load_serial(username)}".encode("utf-8"))
+        .hex()
+    )
 
 
 def _load_serial(username: UserId) -> int:

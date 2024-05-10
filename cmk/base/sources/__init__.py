@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._api import Source
-from ._builder import make_parser, make_sources
+from ._builder import make_sources
+from ._parser import make_parser, ParserFactory
 from ._sources import (
+    FetcherFactory,
     IPMISource,
     MgmtSNMPSource,
     MissingIPSource,
@@ -13,16 +15,20 @@ from ._sources import (
     PiggybackSource,
     ProgramSource,
     PushAgentSource,
+    SNMPFetcherConfig,
     SNMPSource,
     SpecialAgentSource,
     TCPSource,
 )
 
 __all__ = [
+    "FetcherFactory",
     "make_sources",
     "make_parser",
+    "ParserFactory",
     "Source",
     "SNMPSource",
+    "SNMPFetcherConfig",
     "MgmtSNMPSource",
     "IPMISource",
     "ProgramSource",

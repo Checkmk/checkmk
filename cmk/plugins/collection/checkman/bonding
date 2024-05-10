@@ -4,7 +4,7 @@ catalog: os/networking
 license: GPLv2
 distribution: check_mk
 description:
- This plugin monitors the current state of a bonding interface.
+ This plug-in monitors the current state of a bonding interface.
  If the total bonding state of the interface is down, then the
  check goes to {CRIT}, for status degraded it returns {WARN}.
  If at least one slave interface is down or not the expected slave

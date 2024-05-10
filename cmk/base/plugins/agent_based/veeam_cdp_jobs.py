@@ -6,9 +6,7 @@
 import time
 from collections.abc import Mapping
 from enum import Enum
-from typing import NamedTuple
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -78,14 +76,24 @@ def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> Ch
         state=STATE_MAPPING.get(cdp.state, State.UNKNOWN),
         summary=f"State: {cdp.state.value}",
     )
-    if cdp.time_diff is not None:
-        yield from check_levels(
-            value=cdp.time_diff,
-            levels_upper=params.get("age"),
-            metric_name=None,
-            render_func=render.timespan,
-            label="Time since last CDP Run",
+
+    if cdp.time_diff is None:
+        return
+
+    if cdp.time_diff < 0:
+        warning_message = (
+            "The timestamp of the file is in the future. Please investigate your host times"
         )
+        yield Result(state=State.WARN, summary=warning_message)
+        return
+
+    yield from check_levels(
+        value=cdp.time_diff,
+        levels_upper=params.get("age"),
+        metric_name=None,
+        render_func=render.timespan,
+        label="Time since last CDP Run",
+    )
 
 
 register.check_plugin(

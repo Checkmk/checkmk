@@ -13,9 +13,7 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO
-
-from typing_extensions import TypedDict
+from typing import IO, TypedDict
 
 from .job import JobConfig
 

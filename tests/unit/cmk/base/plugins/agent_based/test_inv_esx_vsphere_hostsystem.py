@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections import OrderedDict
+from zoneinfo import ZoneInfo
 
-from tests.testlib import set_timezone
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inv_esx_vsphere_hostsystem import inv_esx_vsphere_hostsystem
@@ -48,9 +50,9 @@ section = OrderedDict(
 
 
 def test_inventory() -> None:
-    # Setting the timezone is needed, otherwise test results will differ between jenkins and local
+    # Setting the timezone is needed, otherwise test results will differ between CI and local
     # runs
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         actual = sort_inventory_result(inv_esx_vsphere_hostsystem(section))
     assert actual == sort_inventory_result(
         [

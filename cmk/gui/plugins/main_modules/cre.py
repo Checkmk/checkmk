@@ -22,7 +22,7 @@ import cmk.gui.main_menu
 import cmk.gui.message
 import cmk.gui.metrics
 import cmk.gui.mobile
-import cmk.gui.node_visualization
+import cmk.gui.nodevis
 import cmk.gui.notifications
 import cmk.gui.openapi
 import cmk.gui.prediction

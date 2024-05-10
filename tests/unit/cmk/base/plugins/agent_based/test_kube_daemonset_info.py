@@ -10,7 +10,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_daemonset_info import check_kube_daemonset_info
 
-from cmk.plugins.lib.kube import DaemonSetInfo, NamespaceName, Selector, ThinContainers, Timestamp
+from cmk.plugins.kube.schemata.api import ContainerName, NamespaceName, Selector, Timestamp
+from cmk.plugins.kube.schemata.section import DaemonSetInfo, FilteredAnnotations, ThinContainers
 
 
 @pytest.mark.parametrize(
@@ -21,10 +22,12 @@ from cmk.plugins.lib.kube import DaemonSetInfo, NamespaceName, Selector, ThinCon
                 name="oh-lord",
                 namespace=NamespaceName("have-mercy"),
                 labels={},
-                annotations={},
+                annotations=FilteredAnnotations({}),
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=Timestamp(1600000000.0),
-                containers=ThinContainers(images=frozenset({"i/name:0.5"}), names=["name"]),
+                containers=ThinContainers(
+                    images=frozenset({"i/name:0.5"}), names=[ContainerName("name")]
+                ),
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",
             ),

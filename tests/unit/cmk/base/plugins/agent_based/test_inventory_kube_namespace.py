@@ -11,7 +11,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_namespace import inventory_kube_namespace
 
-from cmk.plugins.lib.kube import NamespaceInfo, NamespaceName
+from cmk.plugins.kube.schemata.api import NamespaceName
+from cmk.plugins.kube.schemata.section import FilteredAnnotations, NamespaceInfo
 
 from .utils_inventory import sort_inventory_result
 
@@ -23,7 +24,7 @@ from .utils_inventory import sort_inventory_result
             NamespaceInfo(
                 name=NamespaceName("Liam"),  # first result when googling: 'best names'
                 labels={},
-                annotations={},
+                annotations=FilteredAnnotations({}),
                 creation_timestamp=None,
                 cluster="a",
                 kubernetes_cluster_hostname="host",

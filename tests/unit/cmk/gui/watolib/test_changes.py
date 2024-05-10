@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import ast
+import datetime
 import time
 from collections.abc import Iterable
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest_mock import MockerFixture
-
-from tests.testlib import on_time
 
 from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import  # noqa: F401
     compile_builtin_po_files,
@@ -200,7 +203,7 @@ def test_log_audit_with_object_diff() -> None:
         "b": "c",
     }
 
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
         log_audit(
             object_ref=None,
             action="bla",
@@ -224,7 +227,7 @@ def test_log_audit_with_object_diff() -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_log_audit_with_html_message() -> None:
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
         log_audit(
             object_ref=None,
             user_id=UserId("calvin"),
@@ -257,7 +260,7 @@ def test_log_audit_with_lazystring() -> None:
         i18n.localize("de")
         assert lazy_str == "Fremde(n) zeugs editieren"
 
-        with on_time("2018-04-15 16:50", "CET"):
+        with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
             log_audit(
                 object_ref=None,
                 user_id=UserId("calvin"),
@@ -278,7 +281,7 @@ def test_log_audit_with_lazystring() -> None:
     ]
 
 
-def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
+def test_disable_activate_changes_writer(mocker: MockerFixture, request_context: None) -> None:
     add_to_site_mock = mocker.patch.object(ActivateChangesWriter, "_add_change_to_site")
 
     add_change("ding", "dong", sites=[SiteId("a")])

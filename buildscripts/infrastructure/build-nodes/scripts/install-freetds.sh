@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 FREETDS_VERSION=0.95.95
 DIR_NAME=freetds-${FREETDS_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tgz
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 
 # Increase this to enforce a recreation of the build cache
 BUILD_ID=1

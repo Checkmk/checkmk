@@ -7,9 +7,11 @@ import json
 import logging
 import re
 from collections import defaultdict
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import Iterator, Literal, NamedTuple
+from typing import Literal, NamedTuple
 
+from git.objects.commit import Commit
 from git.repo import Repo
 
 from cmk.werks import load_werk, parse_werk
@@ -137,13 +139,14 @@ class WerkFile(NamedTuple):
     file_content: bytes
 
 
-def main(flavor: Literal["cma", "cmk", "checkmk_kube_agent"], repo_path: Path) -> None:
-    logging.basicConfig()
+def _get_branches(
+    r: Repo, c: Config, branch_replacement: Mapping[str, str]
+) -> Iterable[tuple[str, Commit]]:
+    if branch_replacement:
+        for branch, ref in branch_replacement.items():
+            yield branch, r.commit(ref)
+        return
 
-    c = Config.from_flavor(flavor)
-
-    werk_files_by_id_and_branch: dict[int, dict[str, WerkFile]] = defaultdict(dict)
-    r = Repo(repo_path)
     for ref in r.remote().refs:
         if not ref.name.startswith("origin/"):
             logger.info("ignoring ref %s (only considering one from remote origin)", ref)
@@ -153,8 +156,22 @@ def main(flavor: Literal["cma", "cmk", "checkmk_kube_agent"], repo_path: Path) -
         if not re.match(c.branch_regex, branch_name):
             logger.info("ignoring branch %s (does not match regex)", branch_name)
             continue
+        yield branch_name, ref
 
-        tree = r.tree(r.commit(f"refs/remotes/origin/{branch_name}"))
+
+def main(
+    flavor: Literal["cma", "cmk", "checkmk_kube_agent"],
+    repo_path: Path,
+    branches: Mapping[str, str],
+) -> None:
+    logging.basicConfig()
+
+    c = Config.from_flavor(flavor)
+
+    werk_files_by_id_and_branch: dict[int, dict[str, WerkFile]] = defaultdict(dict)
+    r = Repo(repo_path)
+    for branch_name, ref in _get_branches(r, c, branches):
+        tree = r.tree(ref)
         try:
             werks = tree[".werks"]
         except KeyError:

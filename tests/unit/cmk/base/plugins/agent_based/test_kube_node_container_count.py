@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based import kube_node_container_count
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 
-from cmk.plugins.lib.kube import ContainerCount
+from cmk.plugins.kube.schemata.section import ContainerCount
 
 
 @pytest.fixture

@@ -30,14 +30,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         return _("Autodiscovery")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)
         self.site_id = omd_site()
 
     @staticmethod
@@ -112,4 +105,12 @@ def execute_autodiscovery() -> None:
             logger.debug("Job was already executed within last %d minutes", interval / 60)
             return
 
-    job.start(job.do_execute)
+    job.start(
+        job.do_execute,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
+    )

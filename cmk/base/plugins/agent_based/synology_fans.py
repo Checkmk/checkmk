@@ -66,12 +66,16 @@ def discovery(section: Section) -> DiscoveryResult:
 def check(item: str, section: Section) -> CheckResult:
     if not (fan_status := section.get(item)):
         return
-    yield Result(
-        state=State.OK,
-        summary="Operating normally",
-    ) if fan_status is FanStatus.NORMAL else Result(
-        state=State.CRIT,
-        summary="Fan failed",
+    yield (
+        Result(
+            state=State.OK,
+            summary="Operating normally",
+        )
+        if fan_status is FanStatus.NORMAL
+        else Result(
+            state=State.CRIT,
+            summary="Fan failed",
+        )
     )
 
 

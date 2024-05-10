@@ -9,7 +9,6 @@
 ### using the -t/-s CLI options. Note that the same test ID should not appear
 ### in both 'tests' and 'skips', this would be nonsensical and is detected by
 ### Bandit at runtime.
-
 # Available tests:
 # B101 : assert_used
 # B102 : exec_used
@@ -21,7 +20,9 @@
 # B108 : hardcoded_tmp_directory
 # B110 : try_except_pass
 # B112 : try_except_continue
+# B113 : request_without_timeout
 # B201 : flask_debug_true
+# B202 : tarfile_unsafe_members
 # B301 : pickle
 # B302 : marshal
 # B303 : Use of insecure MD2, MD4, MD5, or SHA1 hash function.
@@ -80,6 +81,7 @@
 # B609 : linux_commands_wildcard_injection
 # B610 : django_extra_used
 # B611 : django_rawsql_used
+# B612 : logging_config_insecure_listen
 # B701 : jinja2_autoescape_false
 # B702 : use_of_mako_templates
 # B703 : django_mark_safe
@@ -95,7 +97,6 @@ skips:
 # medium severity tests excluded for now; enable step-by-step
 
   - B104  # hardcoded_bind_all_interfaces
-  - B108  # hardcoded_tmp_directory
   - B302  # marshal
   - B608  # hardcoded_sql_expressions
 
@@ -197,6 +198,8 @@ ssl_with_bad_defaults:
   - PROTOCOL_TLSv1
   - SSLv3_METHOD
   - TLSv1_METHOD
+  - PROTOCOL_TLSv1_1
+  - TLSv1_1_METHOD
 ssl_with_bad_version:
   bad_protocol_versions:
   - PROTOCOL_SSLv2
@@ -206,6 +209,8 @@ ssl_with_bad_version:
   - PROTOCOL_TLSv1
   - SSLv3_METHOD
   - TLSv1_METHOD
+  - PROTOCOL_TLSv1_1
+  - TLSv1_1_METHOD
 start_process_with_a_shell:
   no_shell:
   - os.execl

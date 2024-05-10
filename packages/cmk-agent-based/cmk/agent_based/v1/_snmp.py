@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Classes used by the API for section plugins
+"""Classes used by the API for section plug-ins
 """
 import string
 from collections.abc import Sequence
@@ -108,8 +108,6 @@ class SNMPTree(_SNMPTreeTuple):
     VALID_CHARACTERS: set[str] = {".", *string.digits}
 
     def __new__(cls, base: str, oids: Sequence[str | _OIDSpecTuple]) -> Self:
-        # TODO: we must validate list property before iterating over oids
-        # (otherwise '123' will become ['1', '2', '3']).
         if not isinstance(oids, list):
             raise TypeError(f"'oids' argument to SNMPTree must be a list, got {type(oids)}")
 

@@ -95,7 +95,10 @@ _GRAPH_RECIPE = GraphRecipe(
 _GRAPH_DATA_RANGE = GraphDataRange(time_range=(1681985455, 1681999855), step=20)
 
 
-def test_fetch_rrd_data_for_graph(mock_livestatus: MockLiveStatusConnection) -> None:
+def test_fetch_rrd_data_for_graph(
+    mock_livestatus: MockLiveStatusConnection,
+    request_context: None,
+) -> None:
     with _setup_livestatus(mock_livestatus):
         assert fetch_rrd_data_for_graph(_GRAPH_RECIPE, _GRAPH_DATA_RANGE) == {
             RRDDataKey(
@@ -114,6 +117,7 @@ def test_fetch_rrd_data_for_graph(mock_livestatus: MockLiveStatusConnection) -> 
 
 def test_fetch_rrd_data_for_graph_with_conversion(
     mock_livestatus: MockLiveStatusConnection,
+    request_context: None,
 ) -> None:
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
@@ -226,6 +230,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
 def test_translate_and_merge_rrd_columns_unit_conversion(
     default_temperature_unit: TemperatureUnit,
     expected_data_points: TimeSeriesValues,
+    request_context: None,
 ) -> None:
     active_config.default_temperature_unit = default_temperature_unit.value
     assert translate_and_merge_rrd_columns(

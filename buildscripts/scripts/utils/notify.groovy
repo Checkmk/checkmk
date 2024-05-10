@@ -9,9 +9,9 @@ def get_author_email() {
     // Bug: https://issues.jenkins-ci.org/browse/JENKINS-39838
     return (
         onWindows ?
-        /// windows will replace %ae with ae..
-        cmd_output('git log -1 --pretty=format:%%ae') :
-        cmd_output('git log -1 --pretty=format:%ae'))
+            /// windows will replace %ae with ae..
+            cmd_output('git log -1 --pretty=format:%%ae') :
+            cmd_output('git log -1 --pretty=format:%ae'));
 }
 
 // Send a build failed massage to jenkins
@@ -25,15 +25,33 @@ def slack_build_failed(error) {
             |Error Message:
             |    ${error}
             |""".stripMargin()),
-    )
+    );
 }
 
+def notify_maintainer_of_package(maintainers, package_name, build_url) {
+    try {
+        mail(
+            to: maintainers.join(","),  // TODO: Add the commmiter
+            cc: maintainers.join(","),
+            bcc: "",
+            from: "\"CI\" <${JENKINS_MAIL}>",
+            replyTo: "${TEAM_CI_MAIL}",
+            subject: "[${package_name} failed]",
+            body: ("""
+    |The following package has failed - check the console log here:
+    |    ${build_url}
+    |""".stripMargin()),
+        );
+    } catch (Exception exc) {    // groovylint-disable CatchException
+        println("Could not sent mail to package owner - got ${exc}");
+    }
+}
 
 def notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
-    def projectname = currentBuild.fullProjectName
+    def projectname = currentBuild.fullProjectName;
     try {
         def isChangeValidation = projectname.contains("cv");
         def isTesting = projectname.contains("Testing");
@@ -58,7 +76,7 @@ def notify_error(error) {
                 "jonas.scharpf@checkmk.com",
             ];
             currentBuild.changeSets.each { changeSet ->
-                def culprits_emails = changeSet.items.collect {e -> e.authorEmail};
+                def culprits_emails = changeSet.items.collect { e -> e.authorEmail };
                 print(
                     """
                     ||==========================================================================================
@@ -77,26 +95,34 @@ def notify_error(error) {
             });
 
             /// Inform cloud devs if cloud burns
-            if (projectname.contains("build-cmk-cloud-images")) {
-                notify_emails += "max.linke@checkmk.com"
+            if (projectname.contains("build-cmk-cloud-images") || projectname.contains("saas")) {
+                notify_emails += "aws-saas-checkmk-dev@checkmk.com";
             }
 
             /// Inform nile devs if our extensions fail
             if (projectname.contains("test-extension-compatibility")) {
-                notify_emails.addAll(TEAM_NILE_MAIL.split(","))
+                notify_emails.addAll(TEAM_NILE_MAIL.split(","));
             }
 
             /// Inform werk workers if something's wrong with the werk jobs
             if (projectname.startsWith("werks/")) {
-                notify_emails += "benedikt.seidl@checkmk.com"
+                notify_emails += "benedikt.seidl@checkmk.com";
+            }
+
+            /// Inform QA if something's wrong with those jobs
+            if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
+                notify_emails += "matteo.stifano@checkmk.com";
+                notify_emails += "rene.slowenski@checkmk.com";
             }
 
             /// fallback - for investigation
+            /* groovylint-disable DuplicateListLiteral */
             notify_emails = notify_emails ?: [
                 "timotheus.bachinger@checkmk.com",
                 "frans.fuerst@checkmk.com",
                 "jonas.scharpf@checkmk.com",
             ];
+            /* groovylint-enable DuplicateListLiteral */
 
             print("|| error-reporting: notify_emails ${notify_emails}");
 
@@ -118,9 +144,9 @@ def notify_error(error) {
     |
     |If you feel you got this mail by mistake, please reply and let's fix this together.
     |""".stripMargin()),
-           )
+            );
         }
-    } catch(Exception exc) {
+    } catch (Exception exc) {    // groovylint-disable CatchException
         print("Could not report error by mail - got ${exc}");
     }
 
@@ -134,7 +160,8 @@ def notify_error(error) {
     // teamDomain: <empty>, channel: build-notifications, color: danger,
     // botUser: true, tokenCredentialId: <empty>, iconEmoji <empty>, username
     // <empty>
-    //ERROR: Slack notification failed with exception: java.lang.IllegalArgumentException: the token with the provided ID could not be found and no token was specified
+    //ERROR: Slack notification failed with exception:
+    //java.lang.IllegalArgumentException: the token with the provided ID could not be found and no token was specified
     //
     //slack_build_failed(error)
     // after notifying everybody, the error needs to be thrown again
@@ -142,7 +169,9 @@ def notify_error(error) {
 
     StackTraceUtils.sanitize(error);
     print("ERROR: ${error.stackTrace.head()}: ${error}");
-    currentBuild.description += "<br>The build failed due to an exception (at ${error.stackTrace.head()}):<br><strong style='color:red'>${error}</strong>";
+    currentBuild.description += (
+        "<br>The build failed due to an exception (at ${error.stackTrace.head()}):" +
+            "<br><strong style='color:red'>${error}</strong>");
     throw error;
 }
 

@@ -8,8 +8,8 @@ REPO_PATH="$(git rev-parse --show-toplevel)"
 agents_windows="agents/windows"
 
 touch_and_executable=(
-    "${REPO_PATH}/enterprise/agents/plugins/cmk-update-agent"
-    "${REPO_PATH}/enterprise/agents/plugins/cmk-update-agent-32"
+    "${REPO_PATH}/non-free/cmk-update-agent/cmk-update-agent"
+    "${REPO_PATH}/non-free/cmk-update-agent/cmk-update-agent-32"
     "${REPO_PATH}/${agents_windows}/check_mk_agent.msi"
     "${REPO_PATH}/${agents_windows}/check_mk_agent_unsigned.msi"
     "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy-64.exe"
@@ -17,7 +17,7 @@ touch_and_executable=(
     "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy.msi"
     "${REPO_PATH}/${agents_windows}/OpenHardwareMonitorCLI.exe"
     "${REPO_PATH}/${agents_windows}/robotmk_ext.exe"
-    "${REPO_PATH}/${agents_windows}/check-sql.exe"
+    "${REPO_PATH}/${agents_windows}/mk-sql.exe"
 )
 
 touch_only=(

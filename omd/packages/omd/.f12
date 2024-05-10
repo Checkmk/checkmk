@@ -8,25 +8,31 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-# Little install helper used during development and test
-sudo cp -v bash_completion $ROOT/lib/omd/bash_completion
-sudo rm -vf $ROOT/share/man/man8/omd.8.gz
-sudo cp -v omd.8 $ROOT/share/man/man8/omd.8
-sudo gzip $ROOT/share/man/man8/omd.8
+# the package installs this into /etc/bash_completion.d/
+# but we install bash_completion into the site:
+rsync --rsh="sudo --login -u \"$SITE\" -- exec" --relative bash_completion :etc/bash_completion.d/omd
+
+gzip <omd.8 >"$ROOT/share/man/man8/omd.8.gz"
+
 (
     cd hooks
     for hook in *; do
-        sudo cp -v $hook $ROOT/lib/omd/hooks/$hook
-        sudo chmod +x $ROOT/lib/omd/hooks/$hook
+        cp -v $hook $ROOT/lib/omd/hooks/$hook
     done
 )
-sudo mkdir -p $ROOT/lib/omd/scripts/post-create
-sudo mkdir -p $ROOT/lib/omd/scripts/post-update
-sudo cp -v omd.service $ROOT/share/omd
-sudo cp -v omd.bin $ROOT/bin/omd
-sudo rsync \
+
+mkdir -p $ROOT/lib/omd/scripts/post-create
+mkdir -p $ROOT/lib/omd/scripts/post-update
+
+cp -v omd.service $ROOT/share/omd
+cp -v omd.bin $ROOT/bin/omd
+rsync \
     --exclude=__pycache__ \
-    -aR \
+    --recursive \
+    --links \
+    --devices \
+    --specials \
+    --relative \
     omdlib \
     $ROOT/lib/python3
 
@@ -35,5 +41,5 @@ OLD_VERSION=${OLD_VERSION##*/}
 echo $OLD_VERSION
 
 echo "Keeping version number in 'omd' at $OLD_VERSION"
-sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python3/omdlib/__init__.py
-sudo sed -i 's|#!/omd/versions/.*/bin/python3|#!/omd/versions/'$OLD_VERSION'/bin/python3|g' $ROOT/bin/omd
+sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python3/omdlib/__init__.py
+sed -i 's|#!/omd/versions/.*/bin/python3|#!/omd/versions/'$OLD_VERSION'/bin/python3|g' $ROOT/bin/omd

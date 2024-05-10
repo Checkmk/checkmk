@@ -2,13 +2,13 @@
 name = "cmk-agent-receiver"
 version = "1.0.0"
 dependencies = [
-    "cryptography~=41.0",
-    "fastapi~=0.103.1",
-    "gunicorn==20.1.0",
-    "python-dateutil==2.8.2",
-    "python-multipart==0.0.*",
-    "requests~=2.28",
-    "uvicorn==0.20.0",
+  "cryptography>41.0",
+  "fastapi>=0.109.0",
+  "gunicorn==22.0.0",
+  "python-dateutil==2.9.*",
+  "python-multipart==0.0.*",
+  "requests~=2.28",
+  "uvicorn==0.20.0",
 ]
 
 [build-system]
@@ -28,7 +28,7 @@ quiet = true
 profile = "black"
 order_by_type = false
 line_length = 100
-py_version = 311
+py_version = 312
 
 [tool.mypy]
 explicit_package_bases = true
@@ -54,9 +54,16 @@ persistent = "no"
 score = "no"
 
 [tool.pylint.messages_control]
-disable = "missing-docstring,fixme"
+disable = [
+  # We should at least document modules and classes. :-/
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "missing-function-docstring",
+  # black and pylint disagree here, so let's silence pylint.
+  "multiple-statements",
+]
 
 [tool.pytest.ini_options]
-pythonpath = [ "." ]
-testpaths = [ "cmk", "tests" ]
+pythonpath = ["."]
+testpaths = ["cmk", "tests"]
 addopts = "--doctest-modules --import-mode=importlib"

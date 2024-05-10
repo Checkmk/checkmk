@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 
 import pytest
-from typing_extensions import TypedDict
 
 from tests.testlib import Check
 
@@ -134,7 +133,7 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (0, "Software is Initial grace period"),
-                            (0, "License will expire in 9 days 0 hours"),
+                            (0, "Time until license expires: 9 days 0 hours"),
                         ]
                     ),
                 ),
@@ -148,7 +147,7 @@ class check_ref(NamedTuple):
                             (0, "Software is Licensed"),
                             (
                                 1,
-                                "License will expire in 176 days 2 hours (warn/crit at 180 days 0 hours/90 days 0 hours)",
+                                "Time until license expires: 176 days 2 hours (warn/crit below 180 days 0 hours/90 days 0 hours)",
                             ),
                         ]
                     ),
@@ -163,7 +162,7 @@ class check_ref(NamedTuple):
                             (0, "Software is Licensed"),
                             (
                                 2,
-                                "License will expire in 174 days 9 hours (warn/crit at 360 days 0 hours/180 days 0 hours)",
+                                "Time until license expires: 174 days 9 hours (warn/crit below 360 days 0 hours/180 days 0 hours)",
                             ),
                         ]
                     ),
@@ -190,7 +189,7 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (2, "Software is Initial grace period Required: Registered"),
-                            (0, "License will expire in 9 days 0 hours"),
+                            (0, "Time until license expires: 9 days 0 hours"),
                         ]
                     ),
                 ),
@@ -199,7 +198,7 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (0, "Software is Licensed"),
-                            (0, "License will expire in 176 days 2 hours"),
+                            (0, "Time until license expires: 176 days 2 hours"),
                         ]
                     ),
                 ),

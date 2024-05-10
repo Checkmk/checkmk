@@ -8,7 +8,7 @@ description:
  locks currently active on a postgres server.
  You can configure limits for the shared access and exclusive locks.
 
- This check relies on data reported by the agent-side plugin {mk_postgres}
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
 
 item:
  Name of the category and the name of the database

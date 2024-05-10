@@ -49,7 +49,7 @@ _KEY_MAP = {
 
 
 def _rename_keys(p: dict[str, object]) -> dict[str, object]:
-    """The plugin really needs these keys."""
+    """The plug-in really needs these keys."""
     return {_KEY_MAP.get(k, k): v for k, v in p.items()}
 
 

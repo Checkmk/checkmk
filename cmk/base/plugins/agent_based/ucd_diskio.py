@@ -6,9 +6,7 @@
 
 import time
 from collections.abc import Mapping, MutableMapping
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -44,7 +42,7 @@ Section = Mapping[str, Disk]
 
 
 def parse_ucd_diskio(string_table: list[StringTable]) -> Section:
-    section: MutableMapping[str, Disk] = {}
+    section: dict[str, Disk] = {}
 
     if not string_table:
         return section
@@ -116,7 +114,7 @@ def _check_ucd_diskio(
     if (disk := section.get(item)) is None:
         return
 
-    disk_data: MutableMapping[str, float] = {}
+    disk_data: dict[str, float] = {}
 
     for key in ["read_ios", "write_ios", "read_throughput", "write_throughput"]:
         if (value := disk.get(key)) is None:

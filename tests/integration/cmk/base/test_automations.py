@@ -6,7 +6,7 @@
 import ast
 import re
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 
 import pytest
 
@@ -121,19 +121,18 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
 #   '----------------------------------------------------------------------'
 
 
-def _execute_automation(  # type: ignore[no-untyped-def]
+def _execute_automation(
     site: Site,
-    cmd,
-    args=None,
-    stdin=None,
-    expect_stdout=None,
-    expect_stderr="",
-    expect_stderr_pattern="",
-    expect_exit_code=0,
-    parse_data=True,
-):
-    cmdline = ["cmk", "--automation", cmd] + ([] if args is None else args)
-    print(cmdline)
+    cmd: str,
+    args: Sequence[str] | None = None,
+    stdin: str | None = None,
+    expect_stdout: str | None = None,
+    expect_stderr: str = "",
+    expect_stderr_pattern: str = "",
+    expect_exit_code: int = 0,
+    parse_data: bool = True,
+) -> object:
+    cmdline = ["cmk", "--automation", cmd, *([] if args is None else args)]
     p = site.execute(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
     stdout, stderr = p.communicate(stdin)
@@ -417,7 +416,7 @@ def test_automation_set_autochecks(site: Site) -> None:
     hostname = HostName("blablahost")
     new_items: SetAutochecksTable = {
         ("df", "xxx"): ("Filesystem xxx", {}, {"xyz": "123"}, [hostname]),
-        ("uptime", None): ("Uptime", None, {}, [hostname]),
+        ("uptime", None): ("Uptime", {}, {}, [hostname]),
     }
 
     try:
@@ -451,7 +450,7 @@ def test_automation_set_autochecks(site: Site) -> None:
             ),
             (
                 ("uptime", None),
-                None,
+                {},
                 {},
             ),
         ]
@@ -644,23 +643,35 @@ def test_automation_get_configuration(site: Site) -> None:
     try:
         site.write_text_file("etc/check_mk/main.mk", "agent_port = 6558")
 
-        result = _execute_automation(site, "get-configuration", stdin=repr(variable_names)).result
-        assert result["agent_port"] == 6558
+        automation_result = _execute_automation(
+            site, "get-configuration", stdin=repr(variable_names)
+        )
+        assert isinstance(automation_result, results.GetConfigurationResult)
+        assert automation_result.result["agent_port"] == 6558
 
         site.write_text_file("etc/check_mk/conf.d/agent-port.mk", "agent_port = 1234")
 
-        result = _execute_automation(site, "get-configuration", stdin=repr(variable_names)).result
-        assert result["agent_port"] == 6558
+        automation_result = _execute_automation(
+            site, "get-configuration", stdin=repr(variable_names)
+        )
+        assert isinstance(automation_result, results.GetConfigurationResult)
+        assert automation_result.result["agent_port"] == 6558
 
         site.write_text_file("etc/check_mk/main.mk", "")
 
-        result = _execute_automation(site, "get-configuration", stdin=repr(variable_names)).result
-        assert result["agent_port"] == 6556
+        automation_result = _execute_automation(
+            site, "get-configuration", stdin=repr(variable_names)
+        )
+        assert isinstance(automation_result, results.GetConfigurationResult)
+        assert automation_result.result["agent_port"] == 6556
 
         site.delete_file("etc/check_mk/conf.d/agent-port.mk")
 
-        result = _execute_automation(site, "get-configuration", stdin=repr(variable_names)).result
-        assert result["agent_port"] == 6556
+        automation_result = _execute_automation(
+            site, "get-configuration", stdin=repr(variable_names)
+        )
+        assert isinstance(automation_result, results.GetConfigurationResult)
+        assert automation_result.result["agent_port"] == 6556
     finally:
         if site.file_exists("etc/check_mk/conf.d/agent-port.mk"):
             site.delete_file("etc/check_mk/conf.d/agent-port.mk")

@@ -22,8 +22,8 @@ from cmk.agent_based.v2 import (
     render,
     SNMPTree,
     startswith,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import StringTable
 
 # Taken from connUnitPortState
 # user selected state of the port hardware

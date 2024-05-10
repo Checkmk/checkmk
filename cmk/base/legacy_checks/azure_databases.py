@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     discover_azure_by_metrics,
@@ -15,11 +15,14 @@ from cmk.base.check_legacy_includes.azure import (
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import render, Service
+from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
+
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
 
 
-@get_data_or_go_stale
-def check_azure_databases_storage(_item, params, resource):
+def check_azure_databases_storage(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     cmk_key = "storage_percent"
     levels = params.get("%s_levels" % cmk_key)
     mcheck = check_azure_metric(
@@ -29,7 +32,7 @@ def check_azure_databases_storage(_item, params, resource):
         state, text, perf = mcheck
         abs_storage_metric = resource.metrics.get("average_storage")
         if abs_storage_metric is not None:
-            text += " (%s)" % get_bytes_human_readable(abs_storage_metric.value)
+            text += " (%s)" % render.bytes(abs_storage_metric.value)
         yield state, text, perf
 
 
@@ -47,8 +50,8 @@ check_info["azure_databases.storage"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_databases_deadlock(_item, params, resource):
+def check_azure_databases_deadlock(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     cmk_key = "deadlocks"
     levels = params.get("%s_levels" % cmk_key)
     mcheck = check_azure_metric(resource, "average_deadlock", cmk_key, "Deadlocks", levels=levels)
@@ -70,8 +73,8 @@ check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_databases_cpu(_item, params, resource):
+def check_azure_databases_cpu(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     metrics = resource.metrics
 
     cpu_percent = metrics.get("average_cpu_percent")
@@ -96,8 +99,8 @@ check_info["azure_databases.cpu"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_databases_dtu(_item, params, resource):
+def check_azure_databases_dtu(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     cmk_key = "dtu_percent"
     levels = params.get("%s_levels" % cmk_key)
     mcheck = check_azure_metric(
@@ -131,8 +134,8 @@ _AZURE_CONNECTIONS_METRICS = (
 )
 
 
-@get_data_or_go_stale
-def check_azure_databases_connections(_item, params, resource):
+def check_azure_databases_connections(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     for key, cmk_key, displ, use_rate in _AZURE_CONNECTIONS_METRICS:
         levels = params.get("%s_levels" % cmk_key)
         mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels, use_rate=use_rate)
@@ -156,14 +159,20 @@ check_info["azure_databases.connections"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_databases(_item, _no_params, resource):
+def check_azure_databases(item, _no_params, section):
+    resource = get_data_or_go_stale(item, section)
     for k, v in iter_resource_attributes(resource):
         yield 0, f"{k}: {v}"
 
 
 def discover_azure_databases(section):
-    yield from ((item, {}) for item in section)
+    yield from (
+        Service(
+            item=item,
+            labels=get_service_labels_from_resource_tags(resource.tags),
+        )
+        for item, resource in section.items()
+    )
 
 
 check_info["azure_databases"] = LegacyCheckDefinition(

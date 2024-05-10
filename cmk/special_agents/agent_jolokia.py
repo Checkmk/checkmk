@@ -5,7 +5,7 @@
 """Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia
 """
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 USER_AGENT = "checkmk-special-jolokia-" + __version__
 
@@ -35,10 +35,9 @@ def parse_arguments(argv):
         "--vcrtrace", action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE)
     )
 
-    opts_with_help: list[list[str]] = []
-    for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES:
-        if len(opt) == 3:
-            opts_with_help.append([str(elem) for elem in opt])
+    opts_with_help: list[tuple[str, str | None | float, str]] = [
+        opt for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES if len(opt) == 3
+    ]
 
     for key, default, help_str in opts_with_help:
         if default is not None:

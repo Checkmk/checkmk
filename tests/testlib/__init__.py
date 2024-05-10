@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import datetime
 import fcntl
 import importlib.machinery
 import importlib.util
@@ -13,13 +12,12 @@ import subprocess
 import sys
 import tempfile
 import time
-from collections.abc import Collection, Iterator, Mapping
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, TracebackType
 from typing import Any, Final
 
-import freezegun
 import pytest
 import urllib3
 from psutil import Process
@@ -29,7 +27,6 @@ from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     add_python_paths,
-    cmc_path,
     current_branch_name,
     get_cmk_download_credentials,
     get_standard_linux_agent_output,
@@ -46,10 +43,9 @@ from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unu
 from tests.testlib.web_session import APIError, CMKWebSession
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 
 from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -126,7 +122,6 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
-    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % repo_path())
 
 
 def import_module_hack(pathname: str) -> ModuleType:
@@ -202,7 +197,12 @@ class WatchLog:
 
         return self
 
-    def __exit__(self, *_exc_info: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         if self._tail_process is not None:
             for c in Process(self._tail_process.pid).children(recursive=True):
                 if c.name() == "tail":
@@ -216,7 +216,7 @@ class WatchLog:
         found, lines = self._check_for_line(match_for, timeout)
         if not found:
             raise Exception(
-                "Did not find %r in %s after %d seconds\n%s"
+                "Did not find %r in %s after %d seconds\n'%s'"
                 % (match_for, self._log_path, timeout, lines)
             )
 
@@ -226,7 +226,8 @@ class WatchLog:
         found, lines = self._check_for_line(match_for, timeout)
         if found:
             raise Exception(
-                "Found %r in %s after %d seconds\n%s" % (match_for, self._log_path, timeout, lines)
+                "Found %r in %s after %d seconds\n'%s'"
+                % (match_for, self._log_path, timeout, lines)
             )
 
     def _check_for_line(self, match_for: str, timeout: float) -> tuple[bool, str]:
@@ -339,7 +340,9 @@ class Check(BaseCheck):
         super().__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
-        self.info: LegacyCheckDefinition = config.check_info[self.name]
+        info = config.check_info[self.name]
+        assert isinstance(info, LegacyCheckDefinition)
+        self.info = info
         self._migrated_plugin = register.get_check_plugin(
             CheckPluginName(self.name.replace(".", "_"))
         )
@@ -349,25 +352,22 @@ class Check(BaseCheck):
             return self._migrated_plugin.check_default_parameters or {}
         return {}
 
-    def run_parse(self, info):  # type: ignore[no-untyped-def]
-        parse_func = self.info.get("parse_function")
-        if not parse_func:
+    def run_parse(self, info: list) -> object:
+        if self.info.parse_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
-        return parse_func(info)
+        return self.info.parse_function(info)
 
-    def run_discovery(self, info):  # type: ignore[no-untyped-def]
-        disco_func = self.info.get("discovery_function")
-        if not disco_func:
+    def run_discovery(self, info: object) -> Any:
+        if self.info.discovery_function is None:
             raise MissingCheckInfoError(
                 "Check '%s' " % self.name + "has no discovery function defined"
             )
-        return disco_func(info)
+        return self.info.discovery_function(info)
 
-    def run_check(self, item, params, info):  # type: ignore[no-untyped-def]
-        check_func = self.info.get("check_function")
-        if not check_func:
+    def run_check(self, item: object, params: object, info: object) -> Any:
+        if self.info.check_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
-        return check_func(item, params, info)
+        return self.info.check_function(item, params, info)
 
 
 class ActiveCheck(BaseCheck):
@@ -377,15 +377,15 @@ class ActiveCheck(BaseCheck):
         super().__init__(name)
         self.info = config.active_check_info.get(self.name[len("check_") :])
 
-    def run_argument_function(self, params):  # type: ignore[no-untyped-def]
+    def run_argument_function(self, params: Mapping[str, object]) -> Sequence[str]:
         assert self.info, "Active check has to be implemented in the legacy API"
         return self.info["argument_function"](params)
 
-    def run_service_description(self, params):  # type: ignore[no-untyped-def]
+    def run_service_description(self, params: object) -> object:
         assert self.info, "Active check has to be implemented in the legacy API"
         return self.info["service_description"](params)
 
-    def run_generate_icmp_services(self, host_config, params):  # type: ignore[no-untyped-def]
+    def run_generate_icmp_services(self, host_config: object, params: object) -> object:
         assert self.info, "Active check has to be implemented in the legacy API"
         yield from self.info["service_generator"](host_config, params)
 
@@ -421,25 +421,13 @@ def set_timezone(timezone: str) -> Iterator[None]:
         _set_tz(old_tz)
 
 
-@contextmanager
-def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> Iterator[None]:
-    """Set the time and timezone for the test"""
-    if isinstance(utctime, (int, float)):
-        utctime = datetime.datetime.fromtimestamp(utctime, tz=datetime.UTC)
-
-    with set_timezone(timezone), freezegun.freeze_time(utctime):
-        yield
-
-
 __all__ = [
-    "cmc_path",
     "repo_path",
     "add_python_paths",
     "create_linux_test_host",
     "fake_version_and_paths",
     "skip_unwanted_test_types",
     "wait_until_liveproxyd_ready",
-    "on_time",
     "set_timezone",
     "Site",
     "SiteFactory",

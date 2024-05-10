@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.docker import cleanup_oci_error_message, MemorySection, parse, parse_multiline
 
 

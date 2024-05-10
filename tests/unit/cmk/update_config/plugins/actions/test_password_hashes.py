@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import logging
 
 import pytest
-
-from tests.testlib import mocklogger
 
 from tests.unit.cmk.gui.userdb.test_userdb import _load_users_uncached
 
@@ -87,9 +86,17 @@ def test_check_password_hashes(
     username: str,
     pw_hash: str,
     should_warn: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     test_user = {
-        UserId(username): UserSpec({"connector": "htpasswd", "password": PasswordHash(pw_hash)})
+        UserId(username): UserSpec(
+            {
+                "connector": "htpasswd",
+                "password": PasswordHash(pw_hash),
+                "alias": username,
+                "locked": False,
+            }
+        )
     }
 
     # automation user with legacy hash that should not receive a warning
@@ -99,6 +106,8 @@ def test_check_password_hashes(
                 "connector": "htpasswd",
                 "password": PasswordHash("$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
                 "automation_secret": "foo",
+                "alias": username,
+                "locked": False,
             }
         )
     }
@@ -107,12 +116,12 @@ def test_check_password_hashes(
         test_user | automation_md5 | existing_users,
         datetime.datetime.now(),
     )
-    mock_logger = mocklogger.MockLogger()
 
-    run_check(mock_logger, {})  # type: ignore[arg-type]
+    caplog.set_level(logging.INFO)
+    run_check(logging.getLogger())
 
     if should_warn:
-        assert len(mock_logger.messages) == 1
-        assert username in mock_logger.messages[0]
+        assert len(caplog.messages) == 1
+        assert username in caplog.messages[0]
     else:
-        assert len(mock_logger.messages) == 0
+        assert len(caplog.messages) == 0

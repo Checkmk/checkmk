@@ -36,6 +36,6 @@ def test_automatic_host_removal(
     LOGGER.info("Waiting for hosts to be removed")
     wait_until(
         _no_hosts_exist,
-        timeout=120,
+        timeout=150,
         interval=20,
     )

@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=redefined-outer-name
 
 import datetime
-from collections.abc import Callable, Mapping, Sequence
-from typing import Final
+from collections.abc import Mapping, Sequence
+from typing import Final, Protocol
 
 import pytest
 from dateutil.tz import tzutc
@@ -23,13 +25,11 @@ from cmk.special_agents.agent_aws import (
     NamingConvention,
     OverallTags,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
-
-GetSectionsCallable = Callable[
-    [Sequence[str] | None, OverallTags], tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]
-]
 
 CLUSTERS_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
     {
@@ -323,6 +323,7 @@ class TaggingPaginator:
                     "ResourceARN": "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3",
                     "Tags": [
                         {"Key": "tag2", "Value": "value2"},
+                        {"Key": "tag3", "Value": "value3"},
                     ],
                 },
             ],
@@ -336,13 +337,29 @@ class FakeTaggingClient:
         raise NotImplementedError
 
 
+ElasticacheSectionsOut = tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]
+
+
+class ElasticacheSections(Protocol):
+    def __call__(
+        self,
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> ElasticacheSectionsOut: ...
+
+
 @pytest.fixture()
-def get_elasticache_sections() -> GetSectionsCallable:
+def get_elasticache_sections() -> ElasticacheSections:
     def _create_elasticache_sections(
-        names: Sequence[str] | None, tags: OverallTags
-    ) -> tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]:
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> ElasticacheSectionsOut:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("elasticache_names", names)
         config.add_service_tags("elasticache_tags", tags)
         fake_elasticache_client1 = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
@@ -370,7 +387,7 @@ def get_elasticache_sections() -> GetSectionsCallable:
 
 
 def test_agent_aws_elasticache_limits(
-    get_elasticache_sections: GetSectionsCallable,
+    get_elasticache_sections: ElasticacheSections,
 ) -> None:
     elasticache_limits, _summary, _elasticache = get_elasticache_sections(None, (None, None))
 
@@ -452,6 +469,7 @@ CLUSTER1 = {
     "MemberNodes": ["test-redis-cluster-1-0001-001", "test-redis-cluster-1-0001-002"],
     "ClusterId": "test-redis-cluster-1",
     "Status": "available",
+    "TagsForCmkLabels": {},
 }
 
 CLUSTER2 = {
@@ -459,6 +477,7 @@ CLUSTER2 = {
     "MemberNodes": ["test-redis-cluster-2-0001-001"],
     "ClusterId": "test-redis-cluster-2",
     "Status": "available",
+    "TagsForCmkLabels": {"tag1": "value1"},
 }
 
 CLUSTER3 = {
@@ -466,6 +485,7 @@ CLUSTER3 = {
     "MemberNodes": ["test-redis-cluster-3-0001-001"],
     "ClusterId": "test-redis-cluster-3",
     "Status": "available",
+    "TagsForCmkLabels": {"tag2": "value2", "tag3": "value3"},
 }
 
 
@@ -490,7 +510,7 @@ CLUSTER3 = {
     ],
 )
 def test_agent_aws_elasticache_summary(
-    get_elasticache_sections: GetSectionsCallable,
+    get_elasticache_sections: ElasticacheSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     expected_content: Sequence[object],
@@ -533,7 +553,7 @@ def test_agent_aws_elasticache_summary(
     ],
 )
 def test_agent_aws_elasticache_summary_witout_colleague_content(
-    get_elasticache_sections: GetSectionsCallable,
+    get_elasticache_sections: ElasticacheSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     expected_content: Sequence[object],
@@ -661,7 +681,7 @@ def test_agent_aws_elasticache_summary_witout_colleague_content(
     ],
 )
 def test_agent_aws_elasticache(
-    get_elasticache_sections: GetSectionsCallable,
+    get_elasticache_sections: ElasticacheSections,
     names: Sequence[str] | None,
     expected_content: Sequence[object],
 ) -> None:
@@ -683,10 +703,55 @@ def test_agent_aws_elasticache(
 
 
 def test_agent_aws_elasticache_without_colleague_content(
-    get_elasticache_sections: GetSectionsCallable,
+    get_elasticache_sections: ElasticacheSections,
 ) -> None:
     _limits, _summary, elasticache = get_elasticache_sections(None, (None, None))
 
     results = elasticache.run()
     assert isinstance(results, AWSSectionResults)
     assert results.results == []
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (
+            TagsImportPatternOption.import_all,
+            {
+                "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3": [
+                    "tag2",
+                    "tag3",
+                ],
+            },
+        ),
+        (
+            r".*2$",
+            {
+                "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3": [
+                    "tag2"
+                ]
+            },
+        ),
+        (
+            TagsImportPatternOption.ignore_all,
+            {
+                "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3": []
+            },
+        ),
+    ],
+)
+def test_agent_aws_elasticache_summary_filters_labels(
+    get_elasticache_sections: ElasticacheSections,
+    tag_import: TagsOption,
+    expected_tags: dict[str, Sequence[str]],
+) -> None:
+    _elasticache_limits, elasticache_summary, _elasticache = get_elasticache_sections(
+        None, (None, None), tag_import
+    )
+    elasticache_summary_results = elasticache_summary.run().results
+    elasticache_summary_result = elasticache_summary_results[0]
+
+    assert len(elasticache_summary_results) == 1
+
+    for result in elasticache_summary_result.content:
+        assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["ARN"]]

@@ -11,9 +11,7 @@ import re
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, NamedTuple
-
-from typing_extensions import TypedDict
+from typing import Any, NamedTuple, TypedDict
 
 from cmk.utils.user import UserId
 

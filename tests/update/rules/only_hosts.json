@@ -1,0 +1,21 @@
+[
+  {
+    "ruleset": "only_hosts",
+    "folder": "/",
+    "properties": {
+      "description": "Do not monitor hosts with the tag \"offline\""
+    },
+    "value_raw": "True",
+    "conditions": {
+      "host_tags": [
+        {
+          "key": "criticality",
+          "operator": "is_not",
+          "value": "offline"
+        }
+      ],
+      "host_label_groups": [],
+      "service_label_groups": []
+    }
+  }
+]

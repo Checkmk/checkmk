@@ -41,7 +41,7 @@ class UserId(str):
         * cmk.gui.userdb and htpasswd (LDAP is only ingress of users)
         * various logs, including Audit Log
 
-        * Microcore
+        * Micro Core
         * Nagios core
         * livestatus queries and commands
             * livestatus.py (the validation regex is currently duplicated here!)

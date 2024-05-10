@@ -37,8 +37,8 @@ def parse_azure_usagedetails(string_table):
     return parsed
 
 
-@get_data_or_go_stale
-def check_azure_usagedetails(_no_item, params, data):
+def check_azure_usagedetails(item, params, section):
+    data = get_data_or_go_stale(item, section)
     for currency, amount in list(data.get("costs", {}).items()):
         levels = params.get("levels")
         yield check_levels(amount, "service_costs_%s" % currency.lower(), levels, currency)

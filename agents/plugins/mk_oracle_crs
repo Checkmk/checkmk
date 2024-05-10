@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 # Developed by Thorsten Bruhns from OPITZ CONSULTING Deutschland GmbH
 
@@ -27,6 +27,49 @@ resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+# BEGIN COMMON PLUGIN CODE
+
+# check that no users other than root can change the file
+only_root_can_modify() {
+    permissions=$1
+    owner=$2
+    group=$3
+
+    group_write_perm=$(echo "$permissions" | cut -c 6)
+    other_write_perm=$(echo "$permissions" | cut -c 9)
+
+    if [ "$owner" != "root" ] || [ "$other_write_perm" != "-" ]; then
+        return 1
+    fi
+
+    [ "$group" = "root" ] || [ "$group_write_perm" = "-" ]
+}
+
+get_binary_owner() {
+    BINARY_PATH=$1
+    stat -c '%U' "${BINARY_PATH}"
+}
+
+get_binary_execution_mode() {
+    BINARY_PATH=$1
+    BINARY_USER=$2
+
+    # if the executable belongs to someone besides root, do not execute it as root
+    if needs_user_switch_before_executing "$BINARY_PATH"; then
+        echo "su ${BINARY_USER} -c"
+        return
+    fi
+    echo "bash -c"
+}
+
+needs_user_switch_before_executing() {
+    BINARY_PATH=$1
+
+    [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"
+}
+
+# END COMMON PLUGIN CODE
 
 function set_osenv() {
     ostype=$(uname -s)
@@ -68,42 +111,50 @@ function set_has_env() {
     CRS_STAT=${has_ORACLE_HOME}/bin/crs_stat
 }
 
+function execute_as_user() {
+    binary=${1}
+    params=${2}
+
+    EXECUTION_MODE="$(get_binary_execution_mode "$binary" "$(get_binary_owner "$binary")")"
+    ${EXECUTION_MODE} "${binary} ${params}"
+}
+
 function printhasdata() {
     ps -ef | $GREP -v grep | $GREP cssd.bin >/dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"
-    $CRSCTL query has releaseversion
+    execute_as_user "${CRSCTL}" "query has releaseversion"
 
     echo "<<<oracle_crs_res:sep(124)>>>"
     OLS_NODENAME=$(uname -n)
     echo "nodename|$OLS_NODENAME"
-    $CRSCTL stat res -f | $GREP -E $resourcefilter | sed "s/^/csslocal\|/"
+    execute_as_user "${CRSCTL}" "stat res -f" | $GREP -E $resourcefilter | sed "s/^/csslocal\|/"
 }
 
 function printcrsdata() {
     ps -ef | $GREP -v grep | $GREP -e ohasd.bin -e crsd.bin >/dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"
-    crs_version=$($CRSCTL query crs releaseversion)
+    crs_version=$(execute_as_user "${CRSCTL}" "query crs releaseversion")
     echo "$crs_version"
 
     echo "<<<oracle_crs_voting>>>"
-    $CRSCTL query css votedisk | $GREP "^ [0-9]"
+    execute_as_user "${CRSCTL}" "query css votedisk" | $GREP "^ [0-9]"
 
     ps -ef | $GREP -v grep | $GREP crsd.bin >/dev/null || exit 0
     echo "<<<oracle_crs_res:sep(124)>>>"
-    OLS_NODENAME=$($OLSNODES -l)
+    OLS_NODENAME=$(execute_as_user "${OLSNODES}" "-l")
 
     echo "nodename|$OLS_NODENAME"
 
     crs_version_short=$(echo "$crs_version" | cut -d"[" -f2- | cut -d"." -f-2 | sed 's/\.//')
     if [ "$crs_version_short" -ge 112 ]; then
-        $CRSCTL stat res -v -n "$OLS_NODENAME" -init | $GREP -E "$resourcefilter" | sed "s/^/csslocal\|/"
-        for nodelist in $($OLSNODES); do
-            $CRSCTL stat res -v -n "$nodelist" | $GREP -E "$resourcefilter" | sed "s/^/$nodelist\|/"
+        execute_as_user "${CRSCTL}" "stat res -v -n \"$OLS_NODENAME\" -init" | $GREP -E "$resourcefilter" | sed "s/^/csslocal\|/"
+        for nodelist in $(execute_as_user "${OLSNODES}"); do
+            execute_as_user "${CRSCTL}" "stat res -v -n \"$nodelist\"" | $GREP -E "$resourcefilter" | sed "s/^/$nodelist\|/"
         done
     else
-        $CRS_STAT -f -c "$OLS_NODENAME" | $GREP -E "$resourcefilter" | sed "s/^/$OLS_NODENAME\|/"
+        execute_as_user "${CRS_STAT}" "-f -c \"$OLS_NODENAME\"" | $GREP -E "$resourcefilter" | sed "s/^/$OLS_NODENAME\|/"
     fi
 }
 

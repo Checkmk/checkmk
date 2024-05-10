@@ -136,7 +136,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
 class FetcherMemoryObserver(AbstractMemoryObserver):
     """Controls usage of the memory by the Fetcher.
     Call sys.exit(14) if during call of check_resources() memory is overloaded.
-    The microcore is responsible for restart of Fetcher.
+    The Micro Core is responsible for restart of Fetcher.
     """
 
     def _context(self) -> str:

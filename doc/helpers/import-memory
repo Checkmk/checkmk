@@ -18,7 +18,7 @@ import os
 import subprocess
 import sys
 from collections.abc import Iterator
-from distutils import sysconfig  # pylint: disable=deprecated-module
+from sysconfig import get_path
 from types import FrameType
 from typing import Any, NamedTuple
 
@@ -37,7 +37,7 @@ class Memory(NamedTuple):
 
 
 def _get_python_stdlib() -> Iterator[str]:
-    std_lib = sysconfig.get_python_lib(standard_lib=True)
+    std_lib = get_path("stdlib")
     # noinspection PyTypeChecker
     for top, _dirs, files in os.walk(std_lib):
         if "dist-packages" in top:

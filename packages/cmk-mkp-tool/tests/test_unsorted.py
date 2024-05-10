@@ -28,7 +28,6 @@ from cmk.mkp_tool import (
     release,
 )
 from cmk.mkp_tool._unsorted import (
-    _get_permissions,
     _install,
     _raise_for_too_new_cmk_version,
     _raise_for_too_old_cmk_version,
@@ -37,13 +36,6 @@ from cmk.mkp_tool._unsorted import (
     make_post_package_change_actions,
     StoredManifests,
 )
-
-
-def test_get_permissions() -> None:
-    assert _get_permissions(PackagePart.AGENT_BASED, Path("some_check.py")) == 0o644
-    assert _get_permissions(PackagePart.BIN, Path("some_binary")) == 0o755
-    assert _get_permissions(PackagePart.LIB, Path("nagios/plugins/check_foobar")) == 0o755
-    assert _get_permissions(PackagePart.LIB, Path("something/else/check_foobar")) == 0o644
 
 
 def test_raise_for_too_old_cmk_version_raises() -> None:
@@ -72,20 +64,38 @@ def test_reload_gui_without_gui_files() -> None:
     package = mkp.manifest_template(
         PackageName("ding"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
     )
 
-    make_post_package_change_actions(((PackagePart.GUI,), _assert_not_called))([package])
+    make_post_package_change_actions(((PackagePart.GUI,), _assert_not_called), on_any_change=())(
+        [package]
+    )
 
 
 def test_reload_gui_with_gui_part() -> None:
     package = mkp.manifest_template(
         name=PackageName("ding"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
         files={PackagePart.GUI: [Path("a")]},
     )
 
     with pytest.raises(AssertionError):
-        make_post_package_change_actions(((PackagePart.GUI,), _assert_not_called))([package])
+        make_post_package_change_actions(
+            ((PackagePart.GUI,), _assert_not_called), on_any_change=()
+        )([package])
+
+
+def test_reload_gui_on_unrelated_change() -> None:
+    package = mkp.manifest_template(
+        name=PackageName("ding"),
+        version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
+        files={PackagePart.MIBS: [Path("a")]},  # arbitrary non-gui file.
+    )
+
+    with pytest.raises(AssertionError):
+        make_post_package_change_actions(on_any_change=(_assert_not_called,))([package])
 
 
 def _create_simple_test_package(
@@ -98,6 +108,7 @@ def _create_simple_test_package(
         mkp.manifest_template(
             name=pacname,
             version_packaged="3.14.0p15",
+            version_required="3.14.0p1",
             files={PackagePart.AGENT_BASED: [Path(pacname)]},
         ),
         path_config,
@@ -149,6 +160,7 @@ def test_edit_not_existing(
     new_manifest = mkp.manifest_template(
         name=PackageName("aaa"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
         version=PackageVersion("2.0.0"),
     )
 
@@ -174,6 +186,7 @@ def test_edit(installer: Installer, path_config: PathConfig, package_store: Pack
     new_manifest = mkp.manifest_template(
         name=PackageName("aaa"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
         version=PackageVersion("2.0.0"),
     )
 
@@ -201,6 +214,7 @@ def test_edit_rename(
     new_manifest = mkp.manifest_template(
         PackageName("bbb"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
     )
 
     _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
@@ -225,6 +239,7 @@ def test_edit_rename_conflict(
     new_manifest = mkp.manifest_template(
         PackageName("bbb"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
     )
     _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
     _create_simple_test_package(installer, PackageName("bbb"), path_config, package_store)

@@ -10,10 +10,11 @@ import subprocess
 import sys
 import time
 import traceback
+from pathlib import Path
 
 import requests
 import urllib3
-from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
+from requests_kerberos import HTTPKerberosAuth  # type: ignore[import-untyped]
 
 import cmk.utils.password_store
 from cmk.utils.crypto.secrets import AutomationUserSecret
@@ -230,9 +231,9 @@ if track_downtime:
         )
         sys.exit(1)
 
-    socket_path = os.environ["OMD_ROOT"] + "/tmp/run/live"
+    socket_path = Path(os.environ["OMD_ROOT"]) / "tmp/run/live"
 
-    conn = livestatus.SingleSiteConnection("unix:" + socket_path)
+    conn = livestatus.SingleSiteConnection(f"unix:{socket_path}")
 
     now = time.time()
     # find out if, according to previous tracking, there already is a downtime

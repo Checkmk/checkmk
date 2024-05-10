@@ -11,7 +11,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_cluster import inventory_kube_cluster
 
-from cmk.plugins.lib.kube import ClusterInfo, GitVersion
+from cmk.plugins.kube.schemata.api import GitVersion
+from cmk.plugins.kube.schemata.section import ClusterInfo
 
 from .utils_inventory import sort_inventory_result
 

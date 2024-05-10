@@ -10,12 +10,12 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/Row.h"
 
 class Column;
-class Logger;
 class ICore;
 class Query;
 class User;
@@ -51,11 +51,11 @@ enum class LockDowntimes { no, yes };
 /// timeperiods         | name
 class Table {
 public:
-    explicit Table(ICore *mc);
     virtual ~Table();
 
     void addColumn(std::unique_ptr<Column> col);
     void addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol);
+    [[nodiscard]] std::vector<std::shared_ptr<Column>> allColumns() const;
 
     template <typename Predicate>
     bool any_column(Predicate pred) const {
@@ -120,12 +120,7 @@ public:
         return row.rawData<T>();
     }
 
-    [[nodiscard]] ICore *core() const { return _mc; }
-    [[nodiscard]] Logger *logger() const;
-
 private:
-    ICore *_mc;
-
     [[nodiscard]] std::unique_ptr<Column> dynamicColumn(
         const std::string &colname, const std::string &rest) const;
 

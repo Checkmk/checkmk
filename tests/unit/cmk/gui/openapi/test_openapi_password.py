@@ -17,9 +17,10 @@ managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, r
 
 
 @managedtest
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
 def test_openapi_password(
-    clients: ClientRegistry, aut_user_auth_wsgi_app: WebTestAppForCMK
+    clients: ClientRegistry,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -86,7 +87,7 @@ def test_openapi_password(
 
 
 @managedtest
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
 def test_openapi_password_admin(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -117,7 +118,7 @@ def test_openapi_password_admin(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Non
 
 
 @managedtest
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
 def test_openapi_password_customer(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -162,7 +163,7 @@ def test_openapi_password_customer(aut_user_auth_wsgi_app: WebTestAppForCMK) -> 
 
 
 @managedtest
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
 def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -220,6 +221,7 @@ def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> No
 
 
 @managedtest
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -255,12 +257,12 @@ def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Non
         status=200,
     )
 
-    password_store.load()  # see if it loads correctly
-    stored_credentials = password_store.extract("gcp")
-    assert stored_credentials == credentials_with_newlines.replace("\n", "")
+    loaded = password_store.load(password_store.password_store_path())
+    assert loaded["gcp"] == credentials_with_newlines.replace("\n", "")
 
 
 @managedtest
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_openapi_password_without_owner_regression(clients: ClientRegistry) -> None:
     clients.Password.create(
         ident="so_secret",
@@ -290,6 +292,7 @@ def test_password_min_length_create(clients: ClientRegistry) -> None:
 
 
 @managedtest
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_password_min_length_update(clients: ClientRegistry) -> None:
     clients.Password.create(
         ident="so_secret",

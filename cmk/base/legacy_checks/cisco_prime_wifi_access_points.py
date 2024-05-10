@@ -16,8 +16,7 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import render
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, StringTable
 
 Section = Mapping
 
@@ -55,6 +54,6 @@ check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(
     check_function=check_cisco_prime_wifi_access_points,
     check_ruleset_name="cisco_prime_wifi_access_points",
     check_default_parameters={
-        "levels": (20, 40),
+        "levels": (20.0, 40.0),
     },
 )

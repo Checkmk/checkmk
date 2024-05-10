@@ -8,7 +8,7 @@ description:
  To make this check work you have to either install the agent plugin
  - {{citrix_xenapp.ps1}} or
  - {{citrix_farm.ps1}}.
- The agent plugin {{citrix_sessions.ps1}} is now deprecated.
+ The agent plug-in {{citrix_sessions.ps1}} is now deprecated.
 
 discovery:
  One service is created.

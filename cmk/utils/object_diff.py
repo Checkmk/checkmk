@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from deepdiff import DeepDiff  # type: ignore[import]
-from deepdiff.helper import get_type  # type: ignore[import]
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
+from itertools import zip_longest
 
 from cmk.utils.i18n import _
 
@@ -13,10 +14,22 @@ __all__ = [
     "make_diff_text",
 ]
 
+PATH_COMPONENT = str | int
+PATH_COMPONENTS = Sequence[PATH_COMPONENT]
+DIFF_ITEM = tuple[PATH_COMPONENTS, str]
+MISSING = object()
+
+
+@dataclass(frozen=True, slots=True)
+class DiffPath:
+    components: PATH_COMPONENTS
+    formatted: str
+
 
 def make_diff(old: object, new: object) -> str:
-    diff = DeepDiff(old, new, view="tree")
-    return pretty(diff)
+    root = [] if isinstance(old, (list, dict)) else ["object"]
+    diffs = sorted(_diff_values(root, old, new))  # sort by path, then message
+    return "\n".join(msg for _path, msg in diffs)
 
 
 def make_diff_text(old: object, new: object) -> str:
@@ -26,55 +39,109 @@ def make_diff_text(old: object, new: object) -> str:
     return make_diff(old, new) or _("Nothing was changed.")
 
 
-def pretty(diff: DeepDiff) -> str:
-    """Copy of DeepDiff.pretty() to execute our own pretty_print_diff()"""
-    result = []
-    keys = sorted(
-        diff.tree.keys()
-    )  # sorting keys to guarantee constant order across python versions.
-    for key in keys:
-        for item_key in diff.tree[key]:
-            result += [pretty_print_diff(item_key)]
-
-    return "\n".join(sorted(result))
+def _format_value(value: object) -> str:
+    if isinstance(value, str):
+        value = value.replace('"', '\\"')
+        return f'"{value}"'
+    return str(value)
 
 
-PRETTY_FORM_TEXTS = {
-    "type_changes": _("Value of {diff_path} changed from {val_t1} to {val_t2}."),
-    "values_changed": _("Value of {diff_path} changed from {val_t1} to {val_t2}."),
-    "dictionary_item_added": _("Attribute {diff_path} with value {val_t2} added."),
-    "dictionary_item_removed": _("Attribute {diff_path} with value {val_t1} removed."),
-    "iterable_item_added": _("Item {diff_path} with value {val_t2} added."),
-    "iterable_item_removed": _("Item {diff_path} with value {val_t1} removed."),
-    "attribute_added": _("Attribute {diff_path} with value {val_t2} added."),
-    "attribute_removed": _("Attribute {diff_path} with value {val_t1} removed."),
-    "set_item_added": _("Item {val_t2} added."),
-    "set_item_removed": _("Item {val_t1} removed."),
-    "repetition_change": _("Repetition change for item {diff_path}."),
-}
+def _iter_path_components(
+    components: tuple[PATH_COMPONENT | PATH_COMPONENTS, ...]
+) -> Iterable[PATH_COMPONENT]:
+    for component in components:
+        if isinstance(component, (str, int)):
+            yield component
+        else:
+            yield from component
 
 
-def pretty_print_diff(diff: DeepDiff) -> str:
-    """Copy of deepdiff.serialization.pretty_print_diff to slighlty adapt the output format"""
-    type_t1 = get_type(diff.t1).__name__
-    type_t2 = get_type(diff.t2).__name__
-
-    val_t1 = f'"{str(diff.t1)}"' if type_t1 == "str" else str(diff.t1)
-    val_t2 = f'"{str(diff.t2)}"' if type_t2 == "str" else str(diff.t2)
-
-    return PRETTY_FORM_TEXTS.get(diff.report_type, "").format(
-        diff_path=diff_path(diff), type_t1=type_t1, type_t2=type_t2, val_t1=val_t1, val_t2=val_t2
-    )
+def _diff_path(*components: PATH_COMPONENT | PATH_COMPONENTS) -> DiffPath:
+    flattened = list(_iter_path_components(components))
+    if len(flattened) == 1 and flattened[0] == "object":
+        return DiffPath(flattened, "object")
+    return DiffPath(flattened, "/".join(_format_value(x) for x in flattened))
 
 
-def diff_path(diff: DeepDiff) -> str:
-    """Reformat diff path to be a little more intuitive
+def _diff_values(path_components: PATH_COMPONENTS, old: object, new: object) -> Iterable[DIFF_ITEM]:
+    if isinstance(old, dict) and isinstance(new, dict):
+        yield from __diff_dict(path_components, old, new)
 
-    We could also build our own path renderer (See DiffLevel.path of deepdiff), but this seems to be
-    good enough for the moment.
-    """
-    path = diff.path(root="")
-    if path == "":
-        return "object"  # The whole object changed it's value (e.g. "a" -> "b")
+    elif isinstance(old, list) and isinstance(new, list):
+        yield from __diff_list(path_components, old, new)
 
-    return path.strip("[]").replace("['", "").replace("']", "/").replace("'", '"')
+    elif isinstance(old, set) and isinstance(new, set):
+        yield from __diff_set(path_components, old, new)
+
+    elif type(old) is not type(new) or old != new:
+        yield (
+            path_components,
+            _("Value of {diff_path} changed from {val_t1} to {val_t2}.").format(
+                diff_path=_diff_path(path_components).formatted,
+                val_t1=_format_value(old),
+                val_t2=_format_value(new),
+            ),
+        )
+
+
+def __diff_dict(path_components: PATH_COMPONENTS, old: dict, new: dict) -> Iterable[DIFF_ITEM]:
+    for key, old_value in old.items():
+        sub_path = _diff_path(path_components, key)
+        if key in new:
+            yield from _diff_values(sub_path.components, old_value, new[key])
+        else:
+            yield (
+                sub_path.components,
+                _("Attribute {diff_path} with value {val_t1} removed.").format(
+                    diff_path=sub_path.formatted,
+                    val_t1=_format_value(old_value),
+                ),
+            )
+    for key, new_value in new.items():
+        if key not in old:
+            sub_path = _diff_path(path_components, key)
+            yield (
+                sub_path.components,
+                _("Attribute {diff_path} with value {val_t2} added.").format(
+                    diff_path=sub_path.formatted,
+                    val_t2=_format_value(new_value),
+                ),
+            )
+
+
+def __diff_list(path_components: PATH_COMPONENTS, old: list, new: list) -> Iterable[DIFF_ITEM]:
+    for idx, (old_item, new_item) in enumerate(zip_longest(old, new, fillvalue=MISSING)):
+        sub_path = _diff_path(path_components, idx)
+        if new_item is MISSING:
+            yield (
+                sub_path.components,
+                _("Item {diff_path} with value {val_t1} removed.").format(
+                    diff_path=sub_path.formatted, val_t1=_format_value(old_item)
+                ),
+            )
+        elif old_item is MISSING:
+            yield (
+                sub_path.components,
+                _("Item {diff_path} with value {val_t2} added.").format(
+                    diff_path=sub_path.formatted, val_t2=_format_value(new_item)
+                ),
+            )
+        else:
+            yield from _diff_values(sub_path.components, old_item, new_item)
+
+
+def __diff_set(path_components: PATH_COMPONENTS, old: set, new: set) -> Iterable[DIFF_ITEM]:
+    for removed in old - new:
+        yield (
+            path_components,
+            _("Item {diff_path} with value {val_t1} removed.").format(
+                diff_path=_diff_path(path_components).formatted, val_t1=_format_value(removed)
+            ),
+        )
+    for added in new - old:
+        yield (
+            path_components,
+            _("Item {diff_path} with value {val_t2} added.").format(
+                diff_path=_diff_path(path_components).formatted, val_t2=_format_value(added)
+            ),
+        )

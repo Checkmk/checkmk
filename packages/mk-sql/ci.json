@@ -1,0 +1,5 @@
+{
+    "command_line": "./run --setup-environment --clean --all",
+    "maintainers": ["team-main@checkmk.com"],
+    "sec_vars": ["CI_TEST_SQL_DB_ENDPOINT"]
+}

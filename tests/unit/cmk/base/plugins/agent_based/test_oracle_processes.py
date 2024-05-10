@@ -189,7 +189,7 @@ def test_discover_oracle_processes(
                     summary='Found error in agent output "Message:"',
                 )
             ],
-            id="UNKNOWN on error from 1.6 solaris agent plugin output",
+            id="UNKNOWN on error from 1.6 solaris agent plug-in output",
         ),
     ],
 )

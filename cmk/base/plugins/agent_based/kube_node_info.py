@@ -14,11 +14,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
+from cmk.plugins.kube.schemata.section import NodeInfo
 from cmk.plugins.lib.kube import (
     check_with_time,
     kube_annotations_to_cmk_labels,
     kube_labels_to_cmk_labels,
-    NodeInfo,
 )
 from cmk.plugins.lib.kube_info import check_info
 

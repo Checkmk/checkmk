@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -15,7 +17,7 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 import cmk.utils.man_pages as man_pages
 
-from cmk.base.plugins.server_side_calls import load_active_checks
+from cmk.base.server_side_calls import load_active_checks
 
 from cmk.agent_based.v2 import CheckPlugin
 from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup
@@ -122,7 +124,6 @@ def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
 
     assert len(lines) > 1241
     assert "enterasys_powersupply" in out
-    assert "IBM Websphere MQ: Channel Message Count" in out
 
 
 def man_page_catalog_titles():
@@ -154,7 +155,7 @@ def test_manpage_files(all_pages: Mapping[str, man_pages.ManPage]) -> None:
 
 
 def test_cmk_plugins_families_manpages() -> None:
-    """All v2 style check plugins should have the manpages in their families folder."""
+    """All v2 style check plug-ins should have the manpages in their families folder."""
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
@@ -175,7 +176,7 @@ def test_man_page_consistency(
     expected_man_pages = (
         {str(plugin_name) for plugin_name in fix_register.check_plugins}
         | {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
-        | {f"check_{name}" for name in load_active_checks()[1]}
+        | {f"check_{plugin.name}" for plugin in load_active_checks()[1].values()}
         | {"check-mk", "check-mk-inventory"}
     )
     assert set(all_pages) == expected_man_pages

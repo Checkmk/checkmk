@@ -61,9 +61,9 @@ def match_dual_level_type(value):
     return 0
 
 
-def _get_free_used_dynamic_valuespec(  # type: ignore[no-untyped-def]
+def _get_free_used_dynamic_valuespec(
     level_perspective: Literal["used", "free"],
-    default_value=(80.0, 90.0),
+    default_value: tuple[float, float] = (80.0, 90.0),
     *,
     maxvalue: None | float,
     do_include_absolutes: bool = True,

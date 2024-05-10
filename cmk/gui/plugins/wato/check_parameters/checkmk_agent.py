@@ -61,6 +61,10 @@ def _migrate_version_spec(
 
 def _parameter_valuespec_checkmk_agent():
     return Dictionary(
+        ignored_keys=[
+            # this key is set as a default, and postprocessed by the backend.
+            "only_from",
+        ],
         elements=[
             (
                 "agent_version",
@@ -193,7 +197,7 @@ def _parameter_valuespec_checkmk_agent():
             (
                 "versions_plugins",
                 Dictionary(
-                    title=_("Agent plugins: versions"),
+                    title=_("Agent plug-ins: versions"),
                     optional_keys=False,
                     elements=[
                         (
@@ -202,7 +206,7 @@ def _parameter_valuespec_checkmk_agent():
                                 title=_("Required minimal versions"),
                                 help=_(
                                     "You can configure lower thresholds for the versions of the "
-                                    "currently deployed agent plugins."
+                                    "currently deployed agent plug-ins."
                                 ),
                                 elements=[
                                     TextInput(title=_("Warning at"), validate=_validate_version),
@@ -215,7 +219,7 @@ def _parameter_valuespec_checkmk_agent():
                             MonitoringState(
                                 title=_("Monitoring state in case of version parsing failure"),
                                 help=_(
-                                    "The monitoring state in case the version of an agent plugin "
+                                    "The monitoring state in case the version of an agent plug-in "
                                     "is unparsable."
                                 ),
                                 default_value=3,
@@ -261,13 +265,13 @@ def _parameter_valuespec_checkmk_agent():
             (
                 "exclude_pattern_plugins",
                 RegExp(
-                    title=_("Agent plugins: Regular expression to exclude plugins"),
+                    title=_("Agent plug-ins: Regular expression to exclude plugins"),
                     mode=RegExp.infix,
                     help=_(
                         "Plugins matching this pattern will be excluded from the comparison with "
                         "the required versions specified in '%s' and from the duplicates check."
                     )
-                    % _("Agent plugins: versions"),
+                    % _("Agent plug-ins: versions"),
                 ),
             ),
             (

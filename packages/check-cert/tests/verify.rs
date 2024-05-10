@@ -14,5 +14,8 @@ fn test_verification_with_canned_certs() {
     let config = Config::builder().trust_store(&trust_store).build();
 
     let res = verification::check(&[cert.to_vec()], config);
-    assert_eq!(res.to_string(), "OK - Certificate chain verification OK");
+    assert_eq!(
+        res.to_string(),
+        "OK - Verification: OK\nCertificate chain verification OK"
+    );
 }

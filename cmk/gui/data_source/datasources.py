@@ -403,7 +403,7 @@ class DataSourceLogAlertStatistics(LogDataSource):
 
     @property
     def title(self) -> str:
-        return _("Alert Statistics")
+        return _("Alert statistics")
 
     @property
     def infos(self) -> SingleInfos:

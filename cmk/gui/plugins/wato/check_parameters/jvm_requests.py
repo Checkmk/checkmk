@@ -47,9 +47,11 @@ def _parameter_valuespec_jvm_requests() -> Migrate:
                 ),
             ],
         ),
-        migrate=lambda p: p
-        if isinstance(p, dict)
-        else {"levels_lower": (p[1], p[0]), "levels_upper": (p[2], p[3])},
+        migrate=lambda p: (
+            p
+            if isinstance(p, dict)
+            else {"levels_lower": (p[1], p[0]), "levels_upper": (p[2], p[3])}
+        ),
     )
 
 

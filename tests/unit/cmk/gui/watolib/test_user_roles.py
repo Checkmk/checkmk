@@ -27,7 +27,7 @@ def should_raise_a_mkusererror():
         raise AssertionError("An MKUserError should have been raised and it wasn't!")
 
 
-def test_cant_delete_default_user_roles(monkeypatch: MonkeyPatch) -> None:
+def test_cant_delete_default_user_roles(monkeypatch: MonkeyPatch, request_context: None) -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     with monkeypatch.context() as m:
         m.setattr(
@@ -40,7 +40,7 @@ def test_cant_delete_default_user_roles(monkeypatch: MonkeyPatch) -> None:
                 userroles.delete_role(roleid)
 
 
-def test_deleting_cloned_user_roles() -> None:
+def test_deleting_cloned_user_roles(request_context: None) -> None:
     userroles.clone_role(RoleID("admin"))
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
@@ -50,7 +50,7 @@ def test_deleting_cloned_user_roles() -> None:
     assert len(roles_after_deletion) == 4 if cmk_version.edition() is cmk_version.Edition.CCE else 3
 
 
-def test_cloning_user_roles() -> None:
+def test_cloning_user_roles(request_context: None) -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
 
     for roleid in default_roles.keys():
@@ -66,7 +66,7 @@ def test_cloning_user_roles() -> None:
     }
 
 
-def test_get_default_user_roles() -> None:
+def test_get_default_user_roles(request_context: None) -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert {role.name for role in default_roles.values()} == {
         "admin",
@@ -76,7 +76,7 @@ def test_get_default_user_roles() -> None:
     }
 
 
-def test_get_non_existent_user_roles() -> None:
+def test_get_non_existent_user_roles(request_context: None) -> None:
     with should_raise_a_mkusererror():
         userroles.get_role(RoleID("roleid_that_doesnt_exist"))
     assert userroles.role_exists(RoleID("roleid_that_doesnt_exist")) is False

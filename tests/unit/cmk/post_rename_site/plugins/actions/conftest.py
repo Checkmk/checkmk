@@ -9,7 +9,6 @@ from flask import Flask
 
 from tests.unit.cmk.gui.conftest import (  # NOQA # pylint: disable=unused-import
     admin_auth_request,
-    deactivate_search_index_building_at_requenst_end,
     flask_app,
     gui_cleanup_after_test,
     load_config,

@@ -24,7 +24,6 @@ from typing import Any
 
 from cmk.utils import version
 
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.contact_group_config.request_schemas import (
@@ -32,7 +31,7 @@ from cmk.gui.openapi.endpoints.contact_group_config.request_schemas import (
     BulkInputContactGroup,
     BulkUpdateContactGroup,
     InputContactGroup,
-    UpdateGroup,
+    UpdateContactGroupAttributes,
 )
 from cmk.gui.openapi.endpoints.contact_group_config.response_schemas import (
     ContactGroup,
@@ -50,11 +49,12 @@ from cmk.gui.openapi.endpoints.utils import (
     updated_group_details,
 )
 from cmk.gui.openapi.permission_tracking import disable_permission_tracking
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.session import SuperUserContext
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.groups import (
     add_group,
     check_modify_group_permissions,
@@ -63,6 +63,7 @@ from cmk.gui.watolib.groups import (
     GroupInUseException,
     UnknownGroupException,
 )
+from cmk.gui.watolib.groups_io import load_contact_group_information
 
 PERMISSIONS = permissions.Perm("wato.users")
 
@@ -235,7 +236,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     response_schema=ContactGroup,
     etag="both",
-    request_schema=UpdateGroup,
+    request_schema=UpdateContactGroupAttributes,
     permissions_required=RW_PERMISSIONS,
 )
 def update(params: Mapping[str, Any]) -> Response:

@@ -7,19 +7,22 @@ SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
-EDITION=$(sudo su - "$SITE" -c "python3 -c 'from cmk.utils.version import edition; print(edition().long)'")
+
+EDITION=$(sudo --login -u "$SITE" -- bash -c "python3 -c 'from cmk.utils.version import edition; print(edition().long)'")
 
 (
     cd skel || exit 1
-    sudo rsync \
+    rsync \
+        --rsh="sudo --login -u \"$SITE\" -- exec" \
         --exclude=__pycache__ \
-        --chown "$SITE:$SITE" \
-        -aR \
-        etc \
-        "$ROOT/"
+        --recursive \
+        --links \
+        --devices \
+        --specials \
+        etc :
 )
 
-sudo cp "$PWD/"LIVESTATUS_[[:upper:]]* "$ROOT/lib/omd/hooks"
+cp "$PWD/"LIVESTATUS_[[:upper:]]* "$ROOT/lib/omd/hooks"
 
-sudo find "$ROOT/etc" -type f -exec \
-    perl -pi -e "s|###SITE###|$SITE|g; s|###ROOT###|$ROOT|g; s|###EDITION###|$EDITION|g" "{}" \;
+sudo --login -u "$SITE" -- bash -c "find \"$ROOT/etc\" -type f -exec \
+    perl -pi -e \"s|###SITE###|$SITE|g; s|###ROOT###|$ROOT|g; s|###EDITION###|$EDITION|g\" \"{}\" \;"

@@ -90,7 +90,9 @@ def iter_outbound_rules(
             },
         )
 
-        backend_pool = backend_pools[rule.backendAddressPool["id"]]
+        if (backend_pool := backend_pools.get(rule.backendAddressPool["id"])) is None:
+            continue
+
         yield TableRow(
             path=path + ["outbound_rules", "backend_pools"],
             key_columns={

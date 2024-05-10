@@ -28,7 +28,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
-from cmk.gui.userdb import UserSelection
+from cmk.gui.userdb.store import load_users
 from cmk.gui.utils import escaping
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -43,6 +43,7 @@ from cmk.gui.valuespec import (
     Integer,
     RegExp,
     TextInput,
+    ValueSpec,
 )
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
@@ -261,6 +262,9 @@ class ModeAuditLog(WatoMode):
             return HTML(output_funnel.drain())
 
     def action(self) -> ActionResult:
+        if not transactions.check_transaction():
+            return None
+
         if request.var("_action") == "clear":
             user.need_permission("wato.auditlog")
             user.need_permission("wato.clear_auditlog")
@@ -271,7 +275,7 @@ class ModeAuditLog(WatoMode):
             user.need_permission("wato.auditlog")
             return self._export_audit_log(self._parse_audit_log())
 
-        return None
+        return redirect(makeuri(request, []))
 
     def page(self) -> None:
         with html.form_context("fileselection_form", method="POST"):
@@ -540,7 +544,7 @@ class ModeAuditLog(WatoMode):
 
             for name, vs in self._audit_log_options():
 
-                def renderer(name=name, vs=vs) -> None:  # type: ignore[no-untyped-def]
+                def renderer(name: str = name, vs: ValueSpec = vs) -> None:
                     vs.render_input("options_" + name, self._options[name])
 
                 html.render_floating_option(name, "single", vs.title(), renderer)
@@ -572,6 +576,12 @@ class ModeAuditLog(WatoMode):
             (None, _("No object type")),
         ] + [(t.name, t.name) for t in ObjectRefType]
 
+        users = load_users()
+        user_choices: Choices = [(None, "All users")] + sorted(
+            [("-", "internal")] + [(name, name) for (name, us) in users.items()],
+            key=lambda x: x[1],
+        )
+
         return [
             (
                 "object_type",
@@ -588,10 +598,9 @@ class ModeAuditLog(WatoMode):
             ),
             (
                 "user_id",
-                UserSelection(
+                DropdownChoice(
                     title=_("User"),
-                    only_contacts=False,
-                    none=_("All users"),
+                    choices=user_choices,
                 ),
             ),
             (

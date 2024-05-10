@@ -160,7 +160,7 @@ def _parameter_valuespec_oracle_performance():
         )
 
     return Dictionary(
-        help=_("Here you can set levels for the ORACLE Performance metrics."),
+        help=_("Here you can set levels for the Oracle performance metrics."),
         elements=[
             (
                 "dbtime",

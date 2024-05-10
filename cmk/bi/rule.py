@@ -15,10 +15,9 @@
 from collections.abc import Sequence
 from typing import Any
 
-from marshmallow import fields
-
 from cmk.utils.macros import MacroMapping
 
+from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
 from cmk.bi.lib import (
     ABCBICompiledNode,
@@ -196,12 +195,19 @@ class BIRuleSchema(Schema):
         example_config={
             "arguments": ["foo", "bar"],
         },
+        description="Parameters.",
     )
     node_visualization = create_nested_schema(
-        BINodeVisLayoutStyleSchema, default_schema=BINodeVisBlockStyleSchema
+        BINodeVisLayoutStyleSchema,
+        default_schema=BINodeVisBlockStyleSchema,
+        description="Node visualization.",
     )
-    properties = create_nested_schema_for_class(BIRuleProperties)
+    properties = create_nested_schema_for_class(BIRuleProperties, description="Rule properties.")
     aggregation_function = create_nested_schema(
-        BIAggregationFunctionSchema, default_schema=BIAggregationFunctionBest.schema()
+        BIAggregationFunctionSchema,
+        default_schema=BIAggregationFunctionBest.schema(),
+        description="Aggregation function.",
     )
-    computation_options = create_nested_schema_for_class(BIRuleComputationOptions)
+    computation_options = create_nested_schema_for_class(
+        BIRuleComputationOptions, description="Computation options."
+    )

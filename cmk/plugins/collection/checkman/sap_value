@@ -6,10 +6,10 @@ distribution: check_mk
 description:
  This check uses the data provided by the {mk_sap} agent plugin, which uses
  RFC calls to retrieve monitoring information from SAP R/3 systems. To make
- this check work, you have to deploy the {mk_sap} agent plugin on a host.
+ this check work, you have to deploy the {mk_sap} agent plug-in on a host.
 
  This check looks into the list of nodes which the agent is sending data
- for. You can adapt the agent plugin configuration to modify this list.
+ for. You can adapt the agent plug-in configuration to modify this list.
  The check simply uses the states, performance values and outputs generated
  by SAP, there are no special thresholds or similar to configure here.
 

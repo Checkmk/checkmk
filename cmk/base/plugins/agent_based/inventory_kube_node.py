@@ -7,7 +7,7 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 
-from cmk.plugins.lib.kube import KubeletInfo, NodeInfo
+from cmk.plugins.kube.schemata.section import KubeletInfo, NodeInfo
 from cmk.plugins.lib.kube_inventory import labels_to_table
 
 

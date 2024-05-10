@@ -3,20 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.userdb import SAMLUserConnectionConfig
 from cmk.gui.userdb.type_defs import RelayState
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
 
 def show_saml2_login(
-    saml_connections: list[dict[str, Any]],
+    saml_connections: list[SAMLUserConnectionConfig],
     saml2_user_error: str | None,
     origtarget: str,
 ) -> str | None:

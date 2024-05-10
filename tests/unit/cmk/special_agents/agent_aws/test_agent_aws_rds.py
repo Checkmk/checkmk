@@ -5,7 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 import pytest
 
@@ -17,6 +18,8 @@ from cmk.special_agents.agent_aws import (
     RDSLimits,
     RDSSummary,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import (
@@ -66,7 +69,7 @@ class FakeRDSClient:
         if ResourceName == "DBInstanceArn-2":  # the third table has no tags
             tags = []
         else:
-            tags = RDSListTagsForResourceIB.create_instances(amount=1)
+            tags = RDSListTagsForResourceIB.create_instances(amount=3)
         return {"TagList": tags}
 
     def get_paginator(self, operation_name):
@@ -75,16 +78,33 @@ class FakeRDSClient:
         raise NotImplementedError
 
 
-RDSSections = Callable[[object | None, OverallTags], tuple[RDSLimits, RDSSummary, RDS]]
+RDSSectionsOut = tuple[RDSLimits, RDSSummary, RDS]
+
+
+class RDSSections(Protocol):
+    def __call__(
+        self,
+        names: object | None = None,
+        tags: OverallTags = (None, None),
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> RDSSectionsOut: ...
 
 
 @pytest.fixture()
 def get_rds_sections() -> RDSSections:
     def _create_rds_sections(
-        names: object | None, tags: OverallTags
+        names: object | None = None,
+        tags: OverallTags = (None, None),
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
     ) -> tuple[RDSLimits, RDSSummary, RDS]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname",
+            [],
+            ([], []),
+            NamingConvention.ip_region_instance,
+            tag_import,
+        )
         config.add_single_service_config("rds_names", names)
         config.add_service_tags("rds_tags", tags)
 
@@ -200,7 +220,7 @@ def test_agent_aws_rds(
     found_instances: Sequence[str],
 ) -> None:
     _rds_limits, rds_summary, rds = get_rds_sections(names, tags)
-    _rds_summary_results = rds_summary.run().results
+    rds_summary.run()
     rds_results = rds.run().results
 
     assert rds.cache_interval == 300
@@ -215,3 +235,26 @@ def test_agent_aws_rds(
         assert len(rds_result.content) == 21 * len(found_instances)
     else:
         assert len(rds_results) == 0
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (TagsImportPatternOption.import_all, ["Key-0", "Key-1", "Key-2"]),
+        (r".*-1$", ["Key-1"]),
+        (TagsImportPatternOption.ignore_all, []),
+    ],
+)
+def test_agent_aws_rds_tags_are_filtered(
+    get_rds_sections: RDSSections,
+    tag_import: TagsOption,
+    expected_tags: list[str],
+) -> None:
+    _rds_limits, rds_summary, rds = get_rds_sections(tag_import=tag_import)
+    rds_summary.run()
+    rds_results = rds.run().results
+
+    assert len(rds_results) == 1
+    # We assume all instances follow the same schema so we don't repeat the test n times
+    row = rds_results[0].content[0]
+    assert list(row["TagsForCmkLabels"].keys()) == expected_tags

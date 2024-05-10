@@ -9,11 +9,10 @@ from cmk.gui.userdb import load_two_factor_credentials, load_users
 from cmk.gui.userdb.store import save_two_factor_credentials
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateExistingTwoFactor(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         """
         Check if a user has an existing two_factor_credentials.mk file,
 
@@ -22,8 +21,11 @@ class UpdateExistingTwoFactor(UpdateAction):
         """
         num_users = 0
         for user in load_users():
+            # We don't lock the 2fa file since apparently we only release the lock after all update
+            # actions ran. This should be save though... Since the time between reading and writing
+            # is short and updates are usually done when the site is stopped, let's not lock...
             if "totp_credentials" not in (
-                credentials := load_two_factor_credentials(user, lock=True)
+                credentials := load_two_factor_credentials(user, lock=False)
             ):
                 credentials["totp_credentials"] = {}
                 save_two_factor_credentials(user, credentials)

@@ -1,26 +1,8 @@
 #!/usr/bin/env python3
-#
-#       U  ___ u  __  __   ____
-#        \/"_ \/U|' \/ '|u|  _"\
-#        | | | |\| |\/| |/| | | |
-#    .-,_| |_| | | |  | |U| |_| |\
-#     \_)-\___/  |_|  |_| |____/ u
-#          \\   <<,-,,-.   |||_
-#         (__)   (./  \.) (__)_)
-#
-# This file is part of OMD - The Open Monitoring Distribution.
-# The official homepage is at <http://omdistro.org>.
-#
-# OMD  is  free software;  you  can  redistribute it  and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the  Free Software  Foundation  in  version 2.  OMD  is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Handling of site-internal init scripts"""
 
 import logging
@@ -31,7 +13,9 @@ import sys
 from omdlib.utils import chdir
 
 import cmk.utils.tty as tty
+from cmk.utils.crypto.secrets import SiteInternalSecret
 from cmk.utils.log import VERBOSE
+from cmk.utils.log.security_event import log_security_event, SiteStartStoppedEvent
 
 logger = logging.getLogger("cmk.omd")
 
@@ -46,13 +30,19 @@ def call_init_scripts(
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
-        # TODO: Why is the result of call_init_scripts not returned?
-        call_init_scripts(site_dir, "stop", daemon)
-        call_init_scripts(site_dir, "start", daemon)
-        return 0
+        log_security_event(SiteStartStoppedEvent(event="restart"))
+        code_stop = call_init_scripts(site_dir, "stop", daemon)
+        code_start = call_init_scripts(site_dir, "start", daemon)
+        return max(code_stop, code_start)
 
     # OMD guarantees OMD_ROOT to be the current directory
     with chdir(site_dir):
+        if command == "start":
+            log_security_event(SiteStartStoppedEvent(event="start"))
+            SiteInternalSecret().regenerate()
+        elif command == "stop":
+            log_security_event(SiteStartStoppedEvent(event="stop"))
+
         if daemon:
             success = _call_init_script(f"{site_dir}/etc/init.d/{daemon}", command)
 

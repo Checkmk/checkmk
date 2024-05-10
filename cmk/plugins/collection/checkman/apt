@@ -10,7 +10,7 @@ description:
 
  It works on Debian and Ubuntu. You need to deploy the plugin
  {mk_apt} in order for the check to work. It is recommended to install
- this plugin with asynchronous execution and at an interval with at
+ this plug-in with asynchronous execution and at an interval with at
  least one hour.
 
  The service goes {CRIT} if there are security updates available.
@@ -31,4 +31,4 @@ description:
 
 discovery:
  One service is created for each system where the {mk_apt}
- plugin is being installed and the command {apt-get} is present.
+ plug-in is being installed and the command {apt-get} is present.

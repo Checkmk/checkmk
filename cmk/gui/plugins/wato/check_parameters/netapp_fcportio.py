@@ -5,11 +5,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Filesize, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Filesize, Tuple
 
 
 def _parameter_valuespec_netapp_fcportio():
@@ -40,10 +40,9 @@ def _parameter_valuespec_netapp_fcportio():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="netapp_fcportio",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextInput(title=_("File name"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_fcportio,
         title=lambda: _("Netapp FC Port throughput"),

@@ -24,7 +24,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>engine</RootNamespace>
     <AsioVersion>asio-1.24.0-patched</AsioVersion>
-    <FmtVersion>fmt-9.0.0</FmtVersion>
+    <FmtVersion>fmt-10.2.1</FmtVersion>
     <SimpleIniVersion>simpleini-2af65fc</SimpleIniVersion>
     <YamlCpp>yaml-cpp.9a362420</YamlCpp>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
@@ -155,9 +155,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..\..
-scripts\unpack_packs.cmd 
-cd $(ProjectDir)</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -190,9 +189,8 @@ cd $(ProjectDir)</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..\..
-scripts\unpack_packs.cmd 
-cd $(ProjectDir)</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -605,7 +603,6 @@ cd $(ProjectDir)</Command>
     <None Include="..\..\test_files\config\check_mk_dev_minimum.yml" />
     <None Include="..\..\test_files\config\check_mk_dev_unit_testing.yml" />
     <None Include=".clang-tidy" />
-    <None Include="unpack_packs.cmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -8,8 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.lib import ipmi
 
 

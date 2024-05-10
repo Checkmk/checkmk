@@ -21,6 +21,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import RulespecGroupIntegrateOtherServices
 
 
+# TODO: un-nest the parameters. No need for a dict in a tuple in a dict.
 def _valuespec_active_checks_by_ssh():
     SSHOptions = dict[Literal["options"], tuple[str, dict[str, Any]]]
 

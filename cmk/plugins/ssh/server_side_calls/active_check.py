@@ -7,7 +7,12 @@ from collections.abc import Iterator
 
 from pydantic import BaseModel, Field
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    replace_macros,
+)
 
 
 class Params(BaseModel, frozen=True):
@@ -19,23 +24,25 @@ class Params(BaseModel, frozen=True):
 
 
 def commands_function(
-    params: Params, host_config: HostConfig, _http_proxies: object
+    params: Params,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:
-    command_arguments = ["-H", host_config.address or host_config.name]
+    command_arguments = ["-H", host_config.primary_ip_config.address]
 
     if params.timeout is not None:
         command_arguments += ["-t", str(params.timeout)]
     if params.port is not None:
         command_arguments += ["-p", str(params.port)]
     if params.remote_version is not None:
-        command_arguments += ["-r", params.remote_version]
+        command_arguments += ["-r", replace_macros(params.remote_version, host_config.macros)]
     if params.remote_protocol is not None:
-        command_arguments += ["-P", params.remote_protocol]
+        command_arguments += ["-P", replace_macros(params.remote_protocol, host_config.macros)]
 
+    description = (
+        replace_macros(params.description, host_config.macros) if params.description else ""
+    )
     yield ActiveCheckCommand(
-        service_description=(
-            "SSH" + (f" {params.description}" if params.description is not None else "")
-        ),
+        service_description=f"SSH {description}" if description else "SSH",
         command_arguments=command_arguments,
     )
 

@@ -6,6 +6,7 @@
 
 import ast
 import json
+import time
 import urllib.parse
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
@@ -136,16 +137,13 @@ class LegacyVarsMixin:
         return super().has_var(varname)  # type: ignore[misc]
 
     @overload
-    def var(self, name: str) -> str | None:
-        ...
+    def var(self, name: str) -> str | None: ...
 
     @overload
-    def var(self, name: str, default: str) -> str:
-        ...
+    def var(self, name: str, default: str) -> str: ...
 
     @overload
-    def var(self, name: str, default: str | None) -> str | None:
-        ...
+    def var(self, name: str, default: str | None) -> str | None: ...
 
     def var(self, name: str, default: str | None = None) -> str | None:
         legacy_var = self.legacy_vars.get(name, None)
@@ -197,21 +195,20 @@ class LegacyDeprecatedMixin:
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                    values[-1]
-                ) if values else None
+                yield name, (
+                    ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
+                    if values
+                    else None
+                )
 
     @overload
-    def var(self, name: str) -> str | None:
-        ...
+    def var(self, name: str) -> str | None: ...
 
     @overload
-    def var(self, name: str, default: str) -> str:
-        ...
+    def var(self, name: str, default: str) -> str: ...
 
     @overload
-    def var(self, name: str, default: str | None) -> str | None:
-        ...
+    def var(self, name: str, default: str | None) -> str | None: ...
 
     def var(self, name: str, default: str | None = None) -> str | None:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -326,6 +323,7 @@ class Request(
             del environ["SCRIPT_NAME"]
 
         super().__init__(environ, populate_request=populate_request, shallow=shallow)
+        self.started = time.monotonic()
         self.meta = {}
         self._verify_not_using_threaded_mpm()
 
@@ -333,9 +331,10 @@ class Request(
         if self.is_multithread:
             raise MKGeneralException(
                 _(
-                    "You are trying to Checkmk together with a threaded Apache multiprocessing module (MPM). "
-                    "Check_MK is only working with the prefork module. Please change the MPM module to make "
-                    "Check_MK work."
+                    "You are trying to use Checkmk together with a threaded "
+                    "Apache multiprocessing module (MPM). Checkmk is only "
+                    "working with the prefork module. Please change the MPM "
+                    "module to make Checkmk work."
                 )
             )
 
@@ -391,8 +390,7 @@ class Request(
         varname: str,
         *,
         empty_is_none: bool = False,
-    ) -> Validation_T | None:
-        ...
+    ) -> Validation_T | None: ...
 
     @overload
     def get_validated_type_input(
@@ -402,8 +400,7 @@ class Request(
         deflt: None,
         *,
         empty_is_none: bool = False,
-    ) -> Validation_T | None:
-        ...
+    ) -> Validation_T | None: ...
 
     @overload
     def get_validated_type_input(
@@ -413,8 +410,7 @@ class Request(
         deflt: Validation_T,
         *,
         empty_is_none: bool = False,
-    ) -> Validation_T:
-        ...
+    ) -> Validation_T: ...
 
     def get_validated_type_input(
         self,
@@ -469,8 +465,13 @@ class Request(
             raise MKUserError(varname, _("The given text must only contain ASCII characters."))
         return value
 
-    def get_ascii_input_mandatory(self, varname: str, deflt: str | None = None) -> str:
-        return mandatory_parameter(varname, self.get_ascii_input(varname, deflt))
+    def get_ascii_input_mandatory(
+        self, varname: str, deflt: str | None = None, allowed_values: set[str] | None = None
+    ) -> str:
+        value = mandatory_parameter(varname, self.get_ascii_input(varname, deflt))
+        if allowed_values is not None and value not in allowed_values:
+            raise MKUserError(varname, _("Value must be one of '%s'") % "', '".join(allowed_values))
+        return value
 
     def get_binary_input(self, varname: str, deflt: bytes | None = None) -> bytes | None:
         val = self.var(varname, deflt.decode() if deflt is not None else None)
@@ -636,16 +637,16 @@ class Response(flask.Response):
         super().delete_cookie(key, path=url_prefix())
 
     def set_content_type(self, mime_type: str) -> None:
-        self.headers["Content-type"] = get_content_type(mime_type, self.charset)
+        self.headers["Content-type"] = get_content_type(mime_type, "utf-8")
 
     def set_csp_form_action(self, form_action: str) -> None:
         """If you have a form action that is not within the site, the
         Content-Security-Policy will block it. So you can add it here, Apache
         will then take this value and complete the CSP"""
 
-        self.headers[
-            "Content-Security-Policy"
-        ] = f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
+        self.headers["Content-Security-Policy"] = (
+            f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
+        )
 
     def set_content_disposition(self, header_type: ContentDispositionType, filename: str) -> None:
         """Define the Content-Disposition header here, this HTTP header controls how

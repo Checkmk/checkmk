@@ -19,7 +19,13 @@ def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
                 request,
                 [
                     ("view_name", view_name),
-                    ("filename", folder_from_request().path() + "/hosts.mk"),
+                    (
+                        "filename",
+                        folder_from_request(
+                            request.var("folder"), request.get_ascii_input("host")
+                        ).path()
+                        + "/hosts.mk",
+                    ),
                     ("host", host_name),
                     ("site", ""),
                 ],

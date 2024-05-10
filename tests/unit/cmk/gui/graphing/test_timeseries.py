@@ -25,24 +25,6 @@ def test__time_series_math_exc_symbol(args: tuple[Literal["%"], list[TimeSeries]
         time_series_math(*args)  # type: ignore[arg-type]
 
 
-@pytest.mark.skip(reason="Skip operations when incorrect amount of timeseries data for operator")
-@pytest.mark.parametrize(
-    "args",
-    [
-        pytest.param(("MAX", []), id="MAX requires at least a timeseries"),
-        pytest.param(
-            ("/", [TimeSeries([0, 180, 60, 5, 5, 10])]), id="Division exclusive on pairs #1"
-        ),
-        pytest.param(
-            ("/", [TimeSeries([0, 180, 60, 5, 5, 10])] * 3), id="Division exclusive on pairs #2"
-        ),
-    ],
-)
-def test__time_series_math_exc(args: tuple[Operators, list[TimeSeries]]) -> None:
-    with pytest.raises(MKGeneralException):
-        time_series_math(*args)
-
-
 @pytest.mark.parametrize("operator", ["+", "*", "MAX", "MIN", "AVERAGE", "MERGE"])
 def test__time_series_math_stable_singles(operator: Operators) -> None:
     test_ts = TimeSeries([0, 180, 60, 6, 5, 10, None, -2, -3.14])

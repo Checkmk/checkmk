@@ -25,7 +25,7 @@ ASIO_VERSION 	:= asio-1.24.0-patched
 
 PACKAGE_FMT     := $(TOP_SRC_DIR)\third_party\fmt
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
-FMT_VERSION    := fmt-9.0.0
+FMT_VERSION    := fmt-10.2.1
 
 PACKAGE_OHM     := $(TOP_SRC_DIR)\third_party\openhardwaremonitor
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too

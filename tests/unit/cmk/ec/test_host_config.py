@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Any
 
 import pytest
 
@@ -20,7 +19,7 @@ def fixture_host_config() -> HostConfig:
     return HostConfig(logging.getLogger("cmk.mkeventd.EventServer"))
 
 
-def _heute_config() -> dict[str, Any]:
+def _heute_config() -> dict[str, object]:
     return {
         "name": "heute",
         "alias": "heute alias",
@@ -37,7 +36,7 @@ def _heute_config() -> dict[str, Any]:
     }
 
 
-def _example_com_config() -> dict[str, Any]:
+def _example_com_config() -> dict[str, object]:
     return {
         "name": "example.com",
         "alias": "example.com alias",
@@ -54,7 +53,7 @@ def _example_com_config() -> dict[str, Any]:
     }
 
 
-def _test_table() -> list[dict[str, Any]]:
+def _test_table() -> list[dict[str, object]]:
     return [
         _heute_config(),
         _example_com_config(),
@@ -62,7 +61,9 @@ def _test_table() -> list[dict[str, Any]]:
 
 
 @pytest.fixture(name="live")
-def fixture_livestatus(mock_livestatus: MockLiveStatusConnection) -> MockLiveStatusConnection:
+def fixture_livestatus(
+    patch_omd_site: None, mock_livestatus: MockLiveStatusConnection
+) -> MockLiveStatusConnection:
     mock_livestatus.set_sites(["local"])
     mock_livestatus.add_table("hosts", _test_table())
     return mock_livestatus

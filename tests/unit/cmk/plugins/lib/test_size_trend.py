@@ -5,10 +5,9 @@
 
 from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any
+from typing import Any, TypedDict
 
 import pytest
-from typing_extensions import TypedDict
 
 from cmk.agent_based.v1 import GetRateError, IgnoreResults, Metric, Result, State
 from cmk.plugins.lib.size_trend import size_trend
@@ -66,7 +65,7 @@ def test_size_trend(args: ArgsDict) -> None:
     # (100 (MB) / 1800) * 3600 * 24
     assert _call_size_trend_with(args) == [
         Metric(name="growth", value=4800.0),
-        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +200 MiB"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +210 MB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +10.00%"),
         Metric("trend", 4800.0),
         Result(state=State.OK, summary="Time left until resource_name full: 9 hours 0 minutes"),
@@ -88,7 +87,7 @@ def test_size_trend_growing(args: ArgsDict) -> None:
         Metric(name="growth", value=4800.0),
         Result(
             state=State.WARN,
-            summary="trend per 1 hour 0 minutes: +200 MiB (warn/crit at +150 MiB/+250 MiB)",
+            summary="trend per 1 hour 0 minutes: +210 MB (warn/crit at +157 MB/+262 MB)",
         ),
         Result(
             state=State.WARN,
@@ -118,7 +117,7 @@ def test_size_trend_shrinking_ok(args: ArgsDict) -> None:
     )
     assert _call_size_trend_with(args) == [
         Metric(name="growth", value=-480.0),
-        Result(state=State.OK, summary="trend per 1 hour 0 minutes: -20.0 MiB"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: -21.0 MB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: -1.00%"),
         Metric("trend", -480.0),
     ]
@@ -145,7 +144,7 @@ def test_size_trend_shrinking_warn(args: ArgsDict) -> None:
         Metric(name="growth", value=-4800.0),
         Result(
             state=State.WARN,
-            summary="trend per 1 hour 0 minutes: -200 MiB (warn/crit below -100 MiB/-200 MiB)",
+            summary="trend per 1 hour 0 minutes: -210 MB (warn/crit below -105 MB/-210 MB)",
         ),
         Result(
             state=State.WARN,
@@ -174,11 +173,35 @@ def test_size_trend_negative_free_space() -> None:
         )
     ) == [
         Metric("growth", 50112.0),
-        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +2.04 GiB"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +2.19 GB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +1697.56%"),
         Metric("trend", 50112.0),
         Result(
             state=State.CRIT,
             summary="Time left until something full: 0 seconds (warn/crit below 12 hours 0 minutes/6 hours 0 minutes)",
         ),
+    ]
+
+
+def test_size_trend_infinite() -> None:
+    assert list(
+        size_trend(
+            value_store={
+                "vs_key.delta": (100, 3 * 10**-322),
+            },
+            value_store_key="vs_key",
+            resource="something",
+            levels={
+                "trend_range": 1,
+                "trend_perfdata": True,
+            },
+            used_mb=3 * 10**-321,
+            size_mb=123,
+            timestamp=101,
+        )
+    ) == [
+        Metric("growth", 2.33072504e-316),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +0 B"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +<0.01%"),
+        Metric("trend", 2.33072504e-316),
     ]

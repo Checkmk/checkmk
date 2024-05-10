@@ -205,6 +205,7 @@ from cmk.gui.wato.pages.rulesets import _is_var_to_delete
 def test_vars_to_delete(
     request_vars: list[tuple[str, str]],
     expected_removed: list[str],
+    request_context: None,
 ) -> None:
     form_prefix: str = "search_p_rule"
     for var, val in request_vars:

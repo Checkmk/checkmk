@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+Checkmk <- Browser : GET <SITE>/check_mk/saml_sso.py\n   RelayState="<saml_connection_id>,index.py"
+Checkmk --> Browser: (form to be auto-submitted to IdP)\n   RelayState="<saml_connection_id>,index.py"\n   SAMLRequest="..."
+
+Browser -> IdP: POST   <SingleSignOnService Location>\n   RelayState,SAMLRequest
+IdP --> Browser: (IdP login form)
+
+Browser -> IdP: (follow authentication flow)
+IdP --> Browser: (form to be auto-submitted to SP)\n   RelayState="<saml_connection_id>,index.py"\n   SAMLResponse="..."
+
+Browser -> Checkmk: POST <SITE>/check_mk/saml_acs.py?acs\n   RelayState,SAMLResponse
+Checkmk -> Checkmk: validate SAMLResponse\n(assuming success)
+Checkmk --> Browser: 302 Redirect\n   Set-Cookie:  auth_SITE="..."
+
+Browser -> Checkmk: GET <SITE>/check_mk/index.py
+Checkmk --> Browser: index.py
+@enduml
+

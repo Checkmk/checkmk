@@ -109,8 +109,8 @@ def test_discovery_single() -> None:
             {},
             [
                 (0, "Files in total: 6", [("file_count", 6, None, None)]),
-                (0, "Smallest: 1.12 KiB", []),
-                (0, "Largest: 12.6 KiB", []),
+                (0, "Smallest: 1.15 kB", []),
+                (0, "Largest: 12.9 kB", []),
                 (0, "Newest: 2 days 15 hours", []),
                 (0, "Oldest: 217 days 0 hours", []),
                 (0, "\n"),
@@ -121,8 +121,8 @@ def test_discovery_single() -> None:
             {"maxsize_largest": (12 * 1024, 13 * 1024), "minage_newest": (3600 * 72, 3600 * 96)},
             [
                 (0, "Files in total: 6", [("file_count", 6, None, None)]),
-                (0, "Smallest: 1.12 KiB", []),
-                (1, "Largest: 12.6 KiB (warn/crit at 12.0 KiB/13.0 KiB)", []),
+                (0, "Smallest: 1.15 kB", []),
+                (1, "Largest: 12.9 kB (warn/crit at 12.3 kB/13.3 kB)", []),
                 (2, "Newest: 2 days 15 hours (warn/crit below 3 days 0 hours/4 days 0 hours)", []),
                 (0, "Oldest: 217 days 0 hours", []),
                 (0, "\n"),
@@ -145,7 +145,7 @@ def test_discovery_single() -> None:
             [
                 (0, "Files in total: 17", [("file_count", 17, None, None)]),
                 (0, "Smallest: 0 B", []),
-                (0, "Largest: 2.40 MiB", []),
+                (0, "Largest: 2.51 MB", []),
                 (0, "Newest: 4 minutes 12 seconds", []),
                 (0, "Oldest: 2 years 302 days", []),
                 (0, "\n"),
@@ -166,7 +166,7 @@ def test_check_regression(item, params, expected):
             "file1.txt",
             {},
             [
-                (0, "Size: 3.71 KiB", [("size", 3804, None, None)]),
+                (0, "Size: 3.80 kB", [("size", 3804, None, None)]),
                 (0, "Age: 14 hours 34 minutes", []),
             ],
         ),
@@ -176,7 +176,7 @@ def test_check_regression(item, params, expected):
             [
                 (
                     1,
-                    "Size: 3.71 KiB (warn/crit at 3.00 KiB/4.00 KiB)",
+                    "Size: 3.80 kB (warn/crit at 3.07 kB/4.10 kB)",
                     [("size", 3804, 3072.0, 4096.0)],
                 ),
                 (0, "Age: 14 hours 34 minutes", []),
@@ -186,7 +186,7 @@ def test_check_regression(item, params, expected):
             "file3.txt",
             {"min_age": (2 * 60, 1 * 60), "max_age": (3 * 60, 4 * 60)},
             [
-                (0, "Size: 3.71 KiB", [("size", 3804, None, None)]),
+                (0, "Size: 3.80 kB", [("size", 3804, None, None)]),
                 (
                     2,
                     "Age: 14 hours 34 minutes (warn/crit at 3 minutes 0 seconds/4 minutes 0 seconds)",
@@ -201,10 +201,10 @@ def test_check_regression(item, params, expected):
                 (
                     1,
                     "Received multiple filestats per single file service. Please check agent "
-                    "plugin configuration (mk_filestats). For example, if there are multiple "
+                    "plug-in configuration (mk_filestats). For example, if there are multiple "
                     "non-utf-8 filenames, then they may be mapped to the same file service.",
                 ),
-                (0, "Size: 3.71 KiB", [("size", 3804, None, None)]),
+                (0, "Size: 3.80 kB", [("size", 3804, None, None)]),
                 (0, "Age: 14 hours 34 minutes", []),
             ],
         ),
@@ -231,7 +231,7 @@ def test_check_single_duplicate_file() -> None:
         (
             1,
             "Received multiple filestats per single file service. Please check agent "
-            "plugin configuration (mk_filestats). For example, if there are multiple "
+            "plug-in configuration (mk_filestats). For example, if there are multiple "
             "non-utf-8 filenames, then they may be mapped to the same file service.",
         ),
         (0, "Size: 0 B", [("size", 0, None, None)]),

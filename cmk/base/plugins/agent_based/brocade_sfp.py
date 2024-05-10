@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.plugins.lib.brocade import (
     brocade_fcport_getitem,

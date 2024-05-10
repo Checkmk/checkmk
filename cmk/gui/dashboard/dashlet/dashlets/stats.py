@@ -189,8 +189,7 @@ class StatsElement:
         return serialized
 
 
-class StatsDashletConfig(DashletConfig):
-    ...
+class StatsDashletConfig(DashletConfig): ...
 
 
 class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
@@ -288,6 +287,9 @@ class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     def initial_size(cls):
         return (30, 18)
 
+    def infos(self) -> SingleInfos:
+        return ["host", "event"]
+
 
 S = TypeVar("S", bound=HostStats | ServiceStats | EventStats)
 
@@ -341,11 +343,8 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
         )
         query = cls._stats_query() + "\n" + filter_headers
         try:
-            if only_sites:
-                with sites.only_sites(only_sites):
-                    result: list[int] = sites.live().query_row(query)
-            else:
-                result = sites.live().query_summed_stats(query)
+            with sites.only_sites(only_sites):
+                result: list[int] = sites.live().query_summed_stats(query)
         except MKLivestatusNotFoundError:
             result = []
 

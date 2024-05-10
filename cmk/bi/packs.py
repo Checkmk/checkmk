@@ -6,10 +6,9 @@
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, NamedTuple, NotRequired
+from typing import Any, NamedTuple, NotRequired, TypedDict
 
-from marshmallow import fields, pre_dump
-from typing_extensions import TypedDict
+from marshmallow import pre_dump
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
@@ -17,6 +16,7 @@ from cmk.utils.i18n import _
 from cmk.utils.paths import var_dir
 from cmk.utils.store.host_storage import ContactgroupName
 
+from cmk import fields
 from cmk.bi.actions import (
     BICallARuleAction,
     BIStateOfHostAction,
@@ -412,19 +412,31 @@ class BIAggregationPacks:
 
 
 class BIAggregationPackSchema(Schema):
-    id = ReqString(dump_default="", example="bi_pack1")
-    title = ReqString(dump_default="", example="BI Title")
+    id = ReqString(dump_default="", example="bi_pack1", description="BI Pack ID.")
+    title = ReqString(dump_default="", example="BI Title", description="Title for the pack.")
     comment = String(
         description="An optional comment that may be used to explain the purpose of this object.",
         allow_none=True,
         example="Rule comment",
     )
     contact_groups = ReqList(
-        fields.String(), dump_default=[], example=["contactgroup_a", "contactgroup_b"]
+        fields.String(),
+        dump_default=[],
+        example=["contactgroup_a", "contactgroup_b"],
+        description="List of permitted contact groups.",
     )
-    public = ReqBoolean(dump_default=False)
-    rules = ReqList(fields.Nested(BIRuleSchema()), dump_default=[])
-    aggregations = ReqList(fields.Nested(BIAggregationSchema()), dump_default=[])
+    public = ReqBoolean(
+        dump_default=False,
+        description="If the rule is not public, users must be administrators of members of a permitted contact group to use it.",
+    )
+    rules = ReqList(
+        fields.Nested(BIRuleSchema()), dump_default=[], description="Rules in this BI pack."
+    )
+    aggregations = ReqList(
+        fields.Nested(BIAggregationSchema()),
+        dump_default=[],
+        description="Aggregations in this BI pack.",
+    )
 
     @pre_dump
     def pre_dumper(self, obj: BIAggregationPack, many: bool = False) -> dict:
@@ -441,7 +453,7 @@ class BIAggregationPackSchema(Schema):
 
 
 class BIAggregationPacksSchema(Schema):
-    packs = ReqList(ReqNested(BIAggregationPackSchema))
+    packs = ReqList(ReqNested(BIAggregationPackSchema), description="List of BI packs.")
 
     @pre_dump
     def pre_dumper(self, obj: BIAggregationPacks, many: bool = False) -> dict:
@@ -486,7 +498,7 @@ class BIHostRenamer:
         return renamed
 
     def rename_node_action(self, bi_node: BINodeGenerator, oldname: str, newname: str) -> int:
-        # TODO: renaming can be moved into the action class itself. allows easier plugins
+        # TODO: renaming can be moved into the action class itself. allows easier plug-ins
         if isinstance(
             bi_node.action,
             (BIStateOfHostAction, BIStateOfServiceAction, BIStateOfRemainingServicesAction),
@@ -505,7 +517,7 @@ class BIHostRenamer:
         return 0
 
     def rename_node_search(self, bi_node: BINodeGenerator, oldname: str, newname: str) -> int:
-        # TODO: renaming can be moved into the search class itself. allows easier plugins
+        # TODO: renaming can be moved into the search class itself. allows easier plug-ins
         if (
             isinstance(bi_node.search, (BIHostSearch, BIServiceSearch))
             and bi_node.search.conditions["host_choice"]["type"] == "host_name_regex"

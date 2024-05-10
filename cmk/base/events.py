@@ -13,7 +13,7 @@ import socket
 import sys
 import time
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any
+from typing import Any, cast
 from urllib.parse import quote, urlencode
 
 import livestatus
@@ -21,22 +21,23 @@ import livestatus
 import cmk.utils.daemon
 import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
-from cmk.utils.notify_types import EventContext, EventRule
+from cmk.utils.http_proxy_config import HTTPProxyConfig
+from cmk.utils.notify import read_notify_host_file
+from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
 from cmk.utils.regex import regex
+from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist, in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
 
 import cmk.base.config as config
-import cmk.base.core
-from cmk.base.core_config import read_notify_host_file
 
 ContactList = list  # TODO Improve this
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
-Matcher = Callable[[EventRule, EventContext], str | None]
+Matcher = Callable[[EventRule, EventContext, bool], str | None]
 
 logger = logging.getLogger("cmk.base.events")
 
@@ -46,12 +47,13 @@ def _send_reply_ready() -> None:
     sys.stdout.flush()
 
 
-def event_keepalive(  # pylint: disable=too-many-branches
-    event_function: Callable,
-    call_every_loop: Callable | None = None,
+def event_keepalive(
+    event_function: Callable[[EventContext], object],
+    call_every_loop: Callable[[], object] | None = None,
     loop_interval: int | None = None,
-    shutdown_function: Callable | None = None,
+    shutdown_function: Callable[[], object] | None = None,
 ) -> None:
+    # pylint: disable=too-many-branches
     last_config_timestamp = config_timestamp()
 
     # Send signal that we are ready to receive the next event, but
@@ -249,17 +251,20 @@ def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> Co
         return None  # We must allow notifications without Livestatus access
 
 
-def add_rulebased_macros(raw_context: EventContext, contacts_needed: bool) -> None:
+def add_rulebased_macros(
+    raw_context: EventContext,
+    ensure_nagios: Callable[[str], object],
+    contacts_needed: bool,
+) -> None:
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
     if "CONTACTS" not in raw_context and contacts_needed:
-        # Ensure that we don't reach this when the Microcore is enabled. Triggering this logic
-        # with the Microcore might result in dead locks.
-        if config.is_cmc():
-            raise RuntimeError(
-                "Missing 'CONTACTS' in raw notification context. It should always "
-                "be available when using the Microcore."
-            )
+        # Ensure that we don't reach this when the Micro Core is enabled. Triggering this logic
+        # with the Micro Core might result in dead locks.
+        ensure_nagios(
+            "Missing 'CONTACTS' in raw notification context. It should always "
+            "be available when using the Micro Core."
+        )
 
         contact_list = livestatus_fetch_contacts(
             raw_context["HOSTNAME"], raw_context.get("SERVICEDESC")
@@ -277,105 +282,107 @@ def add_rulebased_macros(raw_context: EventContext, contacts_needed: bool) -> No
     raw_context["CONTACTNAME"] = "check-mk-notify"
 
 
-def complete_raw_context(  # pylint: disable=too-many-branches
+def complete_raw_context(
     raw_context: EventContext,
+    ensure_nagios: Callable[[str], object],
     with_dump: bool,
     contacts_needed: bool,
-) -> None:
+) -> EnrichedEventContext:
+    # pylint: disable=too-many-branches
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
     set. Add a few further helper variables that are useful in notification and alert plugins.
     """
-
     raw_keys = list(raw_context)
 
     # If a remote site has send the spool file to the central site and the user
     # uses "Analyze ruleset", the key "OMD_SITE" is already present. So there is
     # no need to enrich the raw_context again. This also avoids overwriting
     # of sitespecific values.
+    enriched_context = cast(EnrichedEventContext, raw_context.copy())
     if "OMD_SITE" in raw_context:
-        return
+        return enriched_context
 
     try:
-        raw_context["OMD_SITE"] = omd_site()
+        enriched_context["OMD_SITE"] = omd_site()
 
-        raw_context["WHAT"] = "SERVICE" if raw_context.get("SERVICEDESC") else "HOST"
+        enriched_context["WHAT"] = "SERVICE" if enriched_context.get("SERVICEDESC") else "HOST"
 
-        raw_context.setdefault("MONITORING_HOST", socket.gethostname())
-        raw_context.setdefault("OMD_ROOT", str(cmk.utils.paths.omd_root))
+        enriched_context.setdefault("MONITORING_HOST", socket.gethostname())
+        enriched_context.setdefault("OMD_ROOT", str(cmk.utils.paths.omd_root))
 
         # The Checkmk Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible
-        if "MICROTIME" in raw_context:
-            microtime = int(raw_context["MICROTIME"])
+        if "MICROTIME" in enriched_context:
+            microtime = int(enriched_context["MICROTIME"])
             timestamp = float(microtime) / 1000000.0
             broken = time.localtime(timestamp)
-            raw_context["DATE"] = time.strftime("%Y-%m-%d", broken)
-            raw_context["SHORTDATETIME"] = time.strftime("%Y-%m-%d %H:%M:%S", broken)
-            raw_context["LONGDATETIME"] = time.strftime("%a %b %d %H:%M:%S %Z %Y", broken)
-        elif "MICROTIME" not in raw_context:
+            enriched_context["DATE"] = time.strftime("%Y-%m-%d", broken)
+            enriched_context["SHORTDATETIME"] = time.strftime("%Y-%m-%d %H:%M:%S", broken)
+            enriched_context["LONGDATETIME"] = time.strftime("%a %b %d %H:%M:%S %Z %Y", broken)
+        elif "MICROTIME" not in enriched_context:
             # In case the microtime is not provided, e.g. when using Nagios, then set it here
             # from the current time. We could look for "LONGDATETIME" and calculate the timestamp
             # from that one, but we try to keep this simple here.
-            raw_context["MICROTIME"] = "%d" % (time.time() * 1000000)
+            enriched_context["MICROTIME"] = "%d" % (time.time() * 1000000)
 
-        raw_context["HOSTURL"] = "/check_mk/index.py?start_url=view.py?%s" % quote(
+        enriched_context["HOSTURL"] = "/check_mk/index.py?start_url=view.py?%s" % quote(
             urlencode(
                 [
                     ("view_name", "hoststatus"),
-                    ("host", raw_context["HOSTNAME"]),
-                    ("site", raw_context["OMD_SITE"]),
+                    ("host", enriched_context["HOSTNAME"]),
+                    ("site", enriched_context["OMD_SITE"]),
                 ]
             )
         )
-        if raw_context["WHAT"] == "SERVICE":
-            raw_context["SERVICEURL"] = "/check_mk/index.py?start_url=view.py?%s" % quote(
+        if enriched_context["WHAT"] == "SERVICE":
+            enriched_context["SERVICEURL"] = "/check_mk/index.py?start_url=view.py?%s" % quote(
                 urlencode(
                     [
                         ("view_name", "service"),
-                        ("host", raw_context["HOSTNAME"]),
-                        ("service", raw_context["SERVICEDESC"]),
-                        ("site", raw_context["OMD_SITE"]),
+                        ("host", enriched_context["HOSTNAME"]),
+                        ("service", enriched_context["SERVICEDESC"]),
+                        ("site", enriched_context["OMD_SITE"]),
                     ]
                 )
             )
 
         # Relative Timestamps for several macros
-        if (value := raw_context.get("LASTHOSTSTATECHANGE")) is not None:
-            raw_context["LASTHOSTSTATECHANGE_REL"] = get_readable_rel_date(value)
-        if (value := raw_context.get("LASTSERVICESTATECHANGE")) is not None:
-            raw_context["LASTSERVICESTATECHANGE_REL"] = get_readable_rel_date(value)
-        if (value := raw_context.get("LASTHOSTUP")) is not None:
-            raw_context["LASTHOSTUP_REL"] = get_readable_rel_date(value)
-        if (value := raw_context.get("LASTSERVICEOK")) is not None:
-            raw_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
+        if (value := enriched_context.get("LASTHOSTSTATECHANGE")) is not None:
+            enriched_context["LASTHOSTSTATECHANGE_REL"] = get_readable_rel_date(value)
+        if (value := enriched_context.get("LASTSERVICESTATECHANGE")) is not None:
+            enriched_context["LASTSERVICESTATECHANGE_REL"] = get_readable_rel_date(value)
+        if (value := enriched_context.get("LASTHOSTUP")) is not None:
+            enriched_context["LASTHOSTUP_REL"] = get_readable_rel_date(value)
+        if (value := enriched_context.get("LASTSERVICEOK")) is not None:
+            enriched_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
-        add_rulebased_macros(raw_context, contacts_needed)
+        add_rulebased_macros(enriched_context, ensure_nagios, contacts_needed)
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
-        if raw_context.get("HOSTNOTIFICATIONNUMBER") == "0":
+        if enriched_context.get("HOSTNOTIFICATIONNUMBER") == "0":
             if with_dump:
                 logger.info("Setting HOSTNOTIFICATIONNUMBER for notification from '0' to '1'")
-            raw_context["HOSTNOTIFICATIONNUMBER"] = "1"
-        if raw_context.get("SERVICENOTIFICATIONNUMBER") == "0":
+            enriched_context["HOSTNOTIFICATIONNUMBER"] = "1"
+        if enriched_context.get("SERVICENOTIFICATIONNUMBER") == "0":
             if with_dump:
                 logger.info("Setting SERVICENOTIFICATIONNUMBER for notification from '0' to '1'")
-            raw_context["SERVICENOTIFICATIONNUMBER"] = "1"
+            enriched_context["SERVICENOTIFICATIONNUMBER"] = "1"
 
         # Add the previous hard state. This is necessary for notification rules that depend on certain transitions,
         # like OK -> WARN (but not CRIT -> WARN). The CMC sends PREVIOUSHOSTHARDSTATE and PREVIOUSSERVICEHARDSTATE.
         # Nagios does not have this information and we try to deduct this.
-        if "PREVIOUSHOSTHARDSTATE" not in raw_context and "LASTHOSTSTATE" in raw_context:
-            prev_state = raw_context["LASTHOSTSTATE"]
+        if "PREVIOUSHOSTHARDSTATE" not in enriched_context and "LASTHOSTSTATE" in enriched_context:
+            prev_state = enriched_context["LASTHOSTSTATE"]
             # When the attempts are > 1 then the last state could be identical with
             # the current one, e.g. both critical. In that case we assume the
             # previous hard state to be OK.
-            if prev_state == raw_context["HOSTSTATE"]:
+            if prev_state == enriched_context["HOSTSTATE"]:
                 prev_state = "UP"
-            elif "HOSTATTEMPT" not in raw_context or (
-                "HOSTATTEMPT" in raw_context and raw_context["HOSTATTEMPT"] != "1"
+            elif "HOSTATTEMPT" not in enriched_context or (
+                "HOSTATTEMPT" in enriched_context and enriched_context["HOSTATTEMPT"] != "1"
             ):
                 # Here We do not know. The transition might be OK -> WARN -> CRIT and
                 # the initial OK is completely lost. We use the artificial state "?"
@@ -383,36 +390,39 @@ def complete_raw_context(  # pylint: disable=too-many-branches
                 # notification is being sent out. But when the new state is UP, then
                 # we know that the previous state was a hard state (otherwise there
                 # would not have been any notification)
-                if raw_context["HOSTSTATE"] != "UP":
+                if enriched_context["HOSTSTATE"] != "UP":
                     prev_state = "?"
                 logger.info("Previous host hard state not known. Allowing all states.")
-            raw_context["PREVIOUSHOSTHARDSTATE"] = prev_state
+            enriched_context["PREVIOUSHOSTHARDSTATE"] = prev_state
 
         # Same for services
-        if raw_context["WHAT"] == "SERVICE" and "PREVIOUSSERVICEHARDSTATE" not in raw_context:
-            prev_state = raw_context["LASTSERVICESTATE"]
-            if prev_state == raw_context["SERVICESTATE"]:
+        if (
+            enriched_context["WHAT"] == "SERVICE"
+            and "PREVIOUSSERVICEHARDSTATE" not in enriched_context
+        ):
+            prev_state = enriched_context["LASTSERVICESTATE"]
+            if prev_state == enriched_context["SERVICESTATE"]:
                 prev_state = "OK"
-            elif "SERVICEATTEMPT" not in raw_context or (
-                "SERVICEATTEMPT" in raw_context and raw_context["SERVICEATTEMPT"] != "1"
+            elif "SERVICEATTEMPT" not in enriched_context or (
+                "SERVICEATTEMPT" in enriched_context and enriched_context["SERVICEATTEMPT"] != "1"
             ):
                 if raw_context["SERVICESTATE"] != "OK":
                     prev_state = "?"
                 logger.info("Previous service hard state not known. Allowing all states.")
-            raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
+            enriched_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 
         # Add short variants for state names (at most 4 characters)
-        for ctx_key, ctx_value in list(raw_context.items()):
+        for ctx_key, ctx_value in list(enriched_context.items()):
             assert isinstance(ctx_value, str)
             if ctx_key.endswith("STATE"):
                 # dynamical keys are bad...
-                raw_context[ctx_key[:-5] + "SHORTSTATE"] = ctx_value[:4]  # type: ignore[literal-required]
+                enriched_context[ctx_key[:-5] + "SHORTSTATE"] = ctx_value[:4]  # type: ignore[literal-required]
 
-        if raw_context["WHAT"] == "SERVICE":
-            raw_context["SERVICEFORURL"] = quote(raw_context["SERVICEDESC"])
-        raw_context["HOSTFORURL"] = quote(raw_context["HOSTNAME"])
+        if enriched_context["WHAT"] == "SERVICE":
+            enriched_context["SERVICEFORURL"] = quote(enriched_context["SERVICEDESC"])
+        enriched_context["HOSTFORURL"] = quote(enriched_context["HOSTNAME"])
 
-        _update_raw_context_with_labels(raw_context)
+        _update_enriched_context_with_labels(enriched_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -422,23 +432,25 @@ def complete_raw_context(  # pylint: disable=too-many-branches
             sorted(
                 [
                     f"                    {key}={value}"
-                    for key, value in raw_context.items()
+                    for key, value in enriched_context.items()
                     if key not in raw_keys
                 ]
             )
         )
         logger.info("Computed variables:\n%s", log_context)
 
+    return enriched_context
 
-def _update_raw_context_with_labels(raw_context: EventContext) -> None:
-    labels = read_notify_host_file(raw_context["HOSTNAME"])
+
+def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
+    labels = read_notify_host_file(enriched_context["HOSTNAME"])
     for k, v in labels.host_labels.items():
         # Dynamically added keys...
-        raw_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
-    if raw_context["WHAT"] == "SERVICE":
-        for k, v in labels.service_labels.get(raw_context["SERVICEDESC"], {}).items():
+        enriched_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
+    if enriched_context["WHAT"] == "SERVICE":
+        for k, v in labels.service_labels.get(enriched_context["SERVICEDESC"], {}).items():
             # Dynamically added keys...
-            raw_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
+            enriched_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
 
 
 # TODO: Use cmk.utils.render.*?
@@ -459,16 +471,19 @@ def get_readable_rel_date(timestamp: Any) -> str:
 # While the rest of the world increasingly embraces lambdas and folds, the
 # Python world moves backwards in time. :-P So let's introduce this helper...
 def apply_matchers(
-    matchers: Iterable[Matcher], rule: EventRule, context: EventContext
+    matchers: Iterable[Matcher],
+    rule: EventRule,
+    context: EnrichedEventContext | EventContext,
+    analyse: bool,
 ) -> str | None:
     for matcher in matchers:
-        result = matcher(rule, context)
+        result = matcher(rule, context, analyse)
         if result is not None:
             return result
     return None
 
 
-def event_match_rule(rule: EventRule, context: EventContext) -> str | None:
+def event_match_rule(rule: EventRule, context: EventContext, analyse: bool = False) -> str | None:
     return apply_matchers(
         [
             event_match_site,
@@ -492,10 +507,15 @@ def event_match_rule(rule: EventRule, context: EventContext) -> str | None:
         ],
         rule,
         context,
+        analyse,
     )
 
 
-def event_match_site(rule: EventRule, context: EventContext) -> str | None:
+def event_match_site(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_site" not in rule:
         return None
 
@@ -512,7 +532,11 @@ def event_match_site(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_folder(rule: EventRule, context: EventContext) -> str | None:
+def event_match_folder(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_folder" in rule:
         mustfolder = rule["match_folder"]
         mustpath = mustfolder.split("/")
@@ -539,11 +563,15 @@ def event_match_folder(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_hosttags(rule: EventRule, context: EventContext) -> str | None:
+def event_match_hosttags(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     required = rule.get("match_hosttags")
     if required:
         tags = [TagID(ident) for ident in context.get("HOSTTAGS", "").split()]
-        if not config.hosttags_match_taglist(tags, (TagID(_) for _ in required)):
+        if not hosttags_match_taglist(tags, (TagID(_) for _ in required)):
             return "The host's tags {} do not match the required tags {}".format(
                 "|".join(tags),
                 "|".join(required),
@@ -551,11 +579,19 @@ def event_match_hosttags(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_servicegroups_fixed(rule: EventRule, context: EventContext) -> str | None:
+def event_match_servicegroups_fixed(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return _event_match_servicegroups(rule, context, is_regex=False)
 
 
-def event_match_servicegroups_regex(rule: EventRule, context: EventContext) -> str | None:
+def event_match_servicegroups_regex(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return _event_match_servicegroups(rule, context, is_regex=True)
 
 
@@ -628,11 +664,19 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
     return None
 
 
-def event_match_exclude_servicegroups_fixed(rule: EventRule, context: EventContext) -> str | None:
+def event_match_exclude_servicegroups_fixed(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return _event_match_exclude_servicegroups(rule, context, is_regex=False)
 
 
-def event_match_exclude_servicegroups_regex(rule: EventRule, context: EventContext) -> str | None:
+def event_match_exclude_servicegroups_regex(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return _event_match_exclude_servicegroups(rule, context, is_regex=True)
 
 
@@ -674,7 +718,11 @@ def _event_match_exclude_servicegroups(
     return None
 
 
-def event_match_contacts(rule: EventRule, context: EventContext) -> str | None:
+def event_match_contacts(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_contacts" not in rule:
         return None
 
@@ -694,7 +742,11 @@ def event_match_contacts(rule: EventRule, context: EventContext) -> str | None:
     )
 
 
-def event_match_contactgroups(rule: EventRule, context: EventContext) -> str | None:
+def event_match_contactgroups(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     required_groups = rule.get("match_contactgroups")
     if required_groups is None:
         return None
@@ -721,7 +773,7 @@ def event_match_contactgroups(rule: EventRule, context: EventContext) -> str | N
     )
 
 
-def event_match_hostgroups(rule: EventRule, context: EventContext) -> str | None:
+def event_match_hostgroups(rule: EventRule, context: EventContext, _analyse: bool) -> str | None:
     required_groups = rule.get("match_hostgroups")
     if required_groups is not None:
         hgn = context.get("HOSTGROUPNAMES")
@@ -746,7 +798,11 @@ def event_match_hostgroups(rule: EventRule, context: EventContext) -> str | None
     return None
 
 
-def event_match_hosts(rule: EventRule, context: EventContext) -> str | None:
+def event_match_hosts(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_hosts" in rule:
         hostlist = rule["match_hosts"]
         if context["HOSTNAME"] not in hostlist:
@@ -757,19 +813,27 @@ def event_match_hosts(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_exclude_hosts(rule: EventRule, context: EventContext) -> str | None:
+def event_match_exclude_hosts(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if context["HOSTNAME"] in rule.get("match_exclude_hosts", []):
         return "The host's name '%s' is on the list of excluded hosts" % context["HOSTNAME"]
     return None
 
 
-def event_match_services(rule: EventRule, context: EventContext) -> str | None:
+def event_match_services(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_services" in rule:
         if context["WHAT"] != "SERVICE":
             return "The rule specifies a list of services, but this is a host notification."
         servicelist = rule["match_services"]
         service = context["SERVICEDESC"]
-        if not config.in_extraconf_servicelist(servicelist, service):
+        if not in_extraconf_servicelist(servicelist, service):
             return (
                 "The service's description '%s' does not match by the list of "
                 "allowed services (%s)" % (service, ", ".join(servicelist))
@@ -777,12 +841,16 @@ def event_match_services(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_exclude_services(rule: EventRule, context: EventContext) -> str | None:
+def event_match_exclude_services(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if context["WHAT"] != "SERVICE":
         return None
     excludelist = rule.get("match_exclude_services", [])
     service = context["SERVICEDESC"]
-    if config.in_extraconf_servicelist(excludelist, service):
+    if in_extraconf_servicelist(excludelist, service):
         return (
             "The service's description '%s' matches the list of excluded services"
             % context["SERVICEDESC"]
@@ -790,7 +858,11 @@ def event_match_exclude_services(rule: EventRule, context: EventContext) -> str 
     return None
 
 
-def event_match_plugin_output(rule: EventRule, context: EventContext) -> str | None:
+def event_match_plugin_output(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_plugin_output" in rule:
         r = regex(rule["match_plugin_output"])
 
@@ -799,14 +871,18 @@ def event_match_plugin_output(rule: EventRule, context: EventContext) -> str | N
         else:
             output = context["HOSTOUTPUT"]
         if not r.search(output):
-            return "The expression '{}' cannot be found in the plugin output '{}'".format(
+            return "The expression '{}' cannot be found in the plug-in output '{}'".format(
                 rule["match_plugin_output"],
                 output,
             )
     return None
 
 
-def event_match_checktype(rule: EventRule, context: EventContext) -> str | None:
+def event_match_checktype(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_checktype" in rule:
         if context["WHAT"] != "SERVICE":
             return "The rule specifies a list of Check_MK plugins, but this is a host notification."
@@ -816,14 +892,23 @@ def event_match_checktype(rule: EventRule, context: EventContext) -> str | None:
         plugin = command[9:]
         allowed = rule["match_checktype"]
         if plugin not in allowed:
-            return "The Check_MK plugin '{}' is not on the list of allowed plugins ({})".format(
+            return "The Check_MK plug-in '{}' is not on the list of allowed plugins ({})".format(
                 plugin,
                 ", ".join(allowed),
             )
     return None
 
 
-def event_match_timeperiod(rule: EventRule, _context: EventContext) -> str | None:
+def event_match_timeperiod(
+    rule: EventRule,
+    _context: EventContext,
+    analyse: bool,
+) -> str | None:
+    # don't test on notification tests, in that case this is done within
+    # notify.rbn_match_timeperiod
+    if analyse:
+        return None
+
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
         if timeperiod != "24X7" and not check_timeperiod(timeperiod):
@@ -831,7 +916,11 @@ def event_match_timeperiod(rule: EventRule, _context: EventContext) -> str | Non
     return None
 
 
-def event_match_servicelevel(rule: EventRule, context: EventContext) -> str | None:
+def event_match_servicelevel(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_sl" in rule:
         from_sl, to_sl = rule["match_sl"]
         if context["WHAT"] == "SERVICE" and context.get("SVC_SL", "").isdigit():
@@ -860,15 +949,18 @@ def add_context_to_environment(
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
 def add_to_event_context(
-    context: EventContext | dict[str, str], prefix: str, param: object
+    context: EventContext | dict[str, str],
+    prefix: str,
+    param: object,
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
 ) -> None:
     if isinstance(param, (list, tuple)):
         if all(isinstance(p, str) for p in param):
             # TODO: Why on earth do we have these arbitrary differences? Can we unify this?
             suffix, separator = ("S", " ") if isinstance(param, list) else ("", "\t")
-            add_to_event_context(context, prefix + suffix, separator.join(param))
+            add_to_event_context(context, prefix + suffix, separator.join(param), get_http_proxy)
         for nr, value in enumerate(param, start=1):
-            add_to_event_context(context, f"{prefix}_{nr}", value)
+            add_to_event_context(context, f"{prefix}_{nr}", value, get_http_proxy)
     elif isinstance(param, dict):  # NOTE: We only handle Dict[str, Any].
         for key, value in param.items():
             varname = f"{prefix}_{key.upper()}"
@@ -876,8 +968,8 @@ def add_to_event_context(
                 # Compatibility for 1.5 pushover explicitly configured proxy URL format
                 if isinstance(value, str):
                     value = ("url", value)
-                value = config.get_http_proxy(value).serialize()
-            add_to_event_context(context, varname, value)
+                value = get_http_proxy(value).serialize()
+            add_to_event_context(context, varname, value, get_http_proxy)
     elif isinstance(param, (str, int, float)):  # NOTE: bool is a subclass of int!
         # Dynamically added keys...
         context[prefix] = str(param)  # type: ignore[literal-required]

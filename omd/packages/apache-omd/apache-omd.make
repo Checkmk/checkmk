@@ -52,9 +52,11 @@ ifeq ($(DISTRO_NAME),REDHAT)
   endif
 endif
 
+.PHONY: $(APACHE_OMD_BUILD)
 $(APACHE_OMD_BUILD):
-	$(TOUCH) $@
+	$(BAZEL_BUILD) @$(APACHE_OMD)//:skel
 
+.PHONY: $(APACHE_OMD_INSTALL)
 $(APACHE_OMD_INSTALL):
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
@@ -91,5 +93,3 @@ $(APACHE_OMD_INSTALL):
 		    $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/$$MODULE_FILE ; \
 	    fi ; \
 	done
-	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@

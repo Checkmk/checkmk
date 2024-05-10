@@ -111,14 +111,14 @@ class AuthError(Exception):
 def main(argv=None):
     replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
-    sys.stdout.write("<<<zerto_agent:sep(0)>>>")
+    sys.stdout.write("<<<zerto_agent:sep(0)>>>\n")
     try:
         connection = ZertoConnection(args.hostaddress, args.username, args.password)
         session_id = connection.get_session_id(args.authentication)
     except Exception as e:
-        sys.stdout.write(f"Error: {e}")
-        sys.exit(1)
-    sys.stdout.write("Initialized OK")
+        sys.stdout.write(f"Error: {e}\n")
+        sys.exit(0)
+    sys.stdout.write("Initialized OK\n")
 
     request = ZertoRequest(connection.base_url, session_id)
     vm_data = request.get_vms_data()

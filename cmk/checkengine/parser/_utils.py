@@ -29,8 +29,8 @@ def group_by_host(
 
     for host_key, host_section in host_sections:
         host_keys.append(host_key)
-        console.vverbose(f"  {host_key!s}")
-        console.vverbose(
+        console.debug(f"  {host_key!s}")
+        console.debug(
             "  -> Add sections: %s\n" % sorted([str(s) for s in host_section.sections.keys()])
         )
         for section_name, section_content in host_section.sections.items():

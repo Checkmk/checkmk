@@ -33,6 +33,7 @@ class DashboardStore:
     def __init__(self) -> None:
         self.all = self._load_all()
         self.permitted = self._load_permitted(self.all)
+        self.permitted_by_owner = self._load_permitted_by_owner(self.all)
 
     def _load_all(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
@@ -45,20 +46,29 @@ class DashboardStore:
     def _load_permitted(
         self, all_dashboards: dict[tuple[UserId, DashboardName], DashboardConfig]
     ) -> dict[DashboardName, DashboardConfig]:
-        """Returns all defitions that a user is allowed to use"""
+        """Returns all definitions that a user is allowed to use"""
         return visuals.available("dashboards", all_dashboards)
+
+    def _load_permitted_by_owner(
+        self, all_dashboards: dict[tuple[UserId, DashboardName], DashboardConfig]
+    ) -> dict[DashboardName, dict[UserId, DashboardConfig]]:
+        """Returns all definitions that a user is allowed to use"""
+        return visuals.available_by_owner("dashboards", all_dashboards)
 
 
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
     raw_dashboard["packaged"] = False
+    raw_dashboard.setdefault("megamenu_search_terms", [])
     return {
         # Need to assume that we are right for now. We will have to introduce parsing there to do a
         # real conversion in one of the following typing steps
         **raw_dashboard,  # type: ignore[typeddict-item]
         "dashlets": [
-            internal_view_to_runtime_view(dashlet_spec)
-            if dashlet_spec["type"] == "view"
-            else dashlet_spec
+            (
+                internal_view_to_runtime_view(dashlet_spec)
+                if dashlet_spec["type"] == "view"
+                else dashlet_spec
+            )
             for dashlet_spec in raw_dashboard["dashlets"]
         ],
     }
@@ -74,6 +84,10 @@ def get_all_dashboards() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
 
 def get_permitted_dashboards() -> dict[DashboardName, DashboardConfig]:
     return DashboardStore.get_instance().permitted
+
+
+def get_permitted_dashboards_by_owners() -> dict[DashboardName, dict[UserId, DashboardConfig]]:
+    return DashboardStore.get_instance().permitted_by_owner
 
 
 def load_dashboard_with_cloning(

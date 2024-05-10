@@ -8,8 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
 
 # .1.3.6.1.4.1.9.9.441.1.3.1 CISCO-SRST-MIB::csrstState (1: active, 2: inactive)
 # .1.3.6.1.4.1.9.9.441.1.3.4 CISCO-SRST-MIB::csrstTotalUpTime

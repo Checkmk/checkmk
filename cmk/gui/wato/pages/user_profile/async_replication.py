@@ -129,7 +129,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         if status == "dead":
             raise MKGeneralException(_("The site is marked as dead. Not trying to replicate."))
 
-        site = get_site_config(site_id)
+        site = get_site_config(active_config, site_id)
         assert user.id is not None
         result = self._synchronize_profile(site_id, site, user.id)
 

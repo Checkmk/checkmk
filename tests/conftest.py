@@ -9,12 +9,26 @@
 import logging
 import os
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+import pytest_check  # type: ignore[import-untyped]
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
-from tests.testlib.utils import current_base_branch_name
+
+@pytest.fixture(scope="function", autouse=True)
+def fail_on_log_exception(
+    caplog: pytest.LogCaptureFixture, pytestconfig: pytest.Config
+) -> Iterator[None]:
+    """Fail tests if exceptions are logged. Function scoped due to caplog fixture."""
+    yield
+    if not pytestconfig.getoption("--fail-on-log-exception"):
+        return
+    for record in caplog.get_records("call"):
+        if record.levelno >= logging.ERROR and record.exc_info:
+            pytest_check.fail(record.message)
+
 
 if os.getenv("_PYTEST_RAISE", "0") != "0":
     # This allows exceptions to be handled by IDEs (rather than just printing the results)
@@ -37,11 +51,9 @@ pytest.register_assert_rewrite(
 pytest_plugins = ("tests.testlib.playwright.plugin",)
 
 import tests.testlib as testlib
+from tests.testlib.utils import current_base_branch_name
 
-collect_ignore = []
-# TODO Hack: Exclude cee tests in cre repo
-if not Path(testlib.utils.cmc_path()).exists():
-    collect_ignore_glob = ["*/cee/*"]
+collect_ignore: list[str] = []
 
 # Faker creates a bunch of annoying DEBUG level log entries, which clutter the output of test
 # runs and prevent us from spot the important messages easily. Reduce the Reduce the log level
@@ -88,6 +100,12 @@ def pytest_addoption(parser):
         default="unit",
         help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types),
     )
+    parser.addoption(
+        "--fail-on-log-exception",
+        action="store_true",
+        default=False,
+        help="Fail test run if any exception was logged.",
+    )
 
 
 def pytest_configure(config):
@@ -95,7 +113,7 @@ def pytest_configure(config):
     env_vars = {
         "BRANCH": current_base_branch_name(),
         "EDITION": "cee",
-        "VERSION": "git",
+        "VERSION": "daily",
         "DISTRO": "",
         "TZ": "",
         "REUSE": "0",

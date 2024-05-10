@@ -36,7 +36,7 @@ def _parameter_valuespec_cpu_utilization_cluster():
             "for user processes and kernel routines over all available cores within "
             "the last check interval. The possible range is from 0% to 100%"
         ),
-        title=_("Memory Usage"),
+        title=_("Memory usage"),
         add_label=_("Add limits"),
     )
 

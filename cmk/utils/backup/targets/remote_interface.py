@@ -6,9 +6,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Final, Generic, Protocol, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Final, Generic, Protocol, TypedDict, TypeVar
 
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
@@ -34,23 +32,17 @@ class RemoteTargetParams(TypedDict, Generic[TRemoteParams]):
 
 
 class RemoteStorage(Protocol):
-    def __init__(self, params: Mapping[str, object]) -> None:
-        ...
+    def __init__(self, params: Mapping[str, object]) -> None: ...
 
-    def ready(self) -> None:
-        ...
+    def ready(self) -> None: ...
 
-    def download(self, key: Path, tmp: Path) -> Path:
-        ...
+    def download(self, key: Path, tmp: Path) -> Path: ...
 
-    def upload(self, file: Path, key: Path) -> None:
-        ...
+    def upload(self, file: Path, key: Path) -> None: ...
 
-    def remove(self, key: Path) -> None:
-        ...
+    def remove(self, key: Path) -> None: ...
 
-    def objects(self) -> Iterator[Path]:
-        ...
+    def objects(self) -> Iterator[Path]: ...
 
 
 TRemoteStorage = TypeVar("TRemoteStorage", bound=RemoteStorage)
@@ -64,8 +56,7 @@ class RemoteTarget(ABC, Generic[TRemoteParams, TRemoteStorage]):
 
     @staticmethod
     @abstractmethod
-    def _remote_storage(remote_params: TRemoteParams) -> TRemoteStorage:
-        ...
+    def _remote_storage(remote_params: TRemoteParams) -> TRemoteStorage: ...
 
     def check_ready(self) -> None:
         self.local_target.check_ready()

@@ -9,7 +9,6 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import cmk.gui.utils as utils
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
@@ -64,12 +63,10 @@ def register_sorters(registry: SorterRegistry) -> None:
         "service_display_name",
         cmp_simple_string,
     )
-    declare_simple_sorter(
-        "svcoutput", _("Service plugin output"), "service_plugin_output", cmp_simple_string
-    )
+    declare_simple_sorter("svcoutput", _("Summary"), "service_plugin_output", cmp_simple_string)
     declare_simple_sorter(
         "svc_long_plugin_output",
-        _("Long output of check plugin"),
+        _("Long output of check plug-in"),
         "service_long_plugin_output",
         cmp_simple_string,
     )
@@ -341,8 +338,12 @@ class SorterSitealias(Sorter):
         return ["site"]
 
     def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return (get_site_config(r1["site"])["alias"] > get_site_config(r2["site"])["alias"]) - (
-            get_site_config(r1["site"])["alias"] < get_site_config(r2["site"])["alias"]
+        return (
+            get_site_config(self.config, r1["site"])["alias"]
+            > get_site_config(self.config, r2["site"])["alias"]
+        ) - (
+            get_site_config(self.config, r1["site"])["alias"]
+            < get_site_config(self.config, r2["site"])["alias"]
         )
 
 
@@ -524,7 +525,7 @@ class SorterCustomHostVariable(ParameterizedSorter):
 
     def vs_parameters(self, painters: Sequence[ColumnSpec]) -> Dictionary:
         choices: list[tuple[str, str]] = []
-        for attr_spec in active_config.wato_host_attrs:
+        for attr_spec in self.config.wato_host_attrs:
             choices.append((attr_spec["name"], attr_spec["title"]))
         choices.sort(key=lambda x: x[1])
         return Dictionary(

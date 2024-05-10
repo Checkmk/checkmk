@@ -3,15 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import contextlib
+import datetime
 import logging
 import queue
 from collections.abc import Iterator
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
+import time_machine
 from pytest import CaptureFixture
-
-from tests.testlib import on_time
 
 import cmk.utils.log as log
 import cmk.utils.log.security_event as se
@@ -51,7 +54,9 @@ def test_open_log(tmp_path: Path) -> None:
     log_file = tmp_path / "test.log"
     log.open_log(log_file)
 
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(
+        datetime.datetime(2018, 4, 15, 18, 50, tzinfo=ZoneInfo("CET")), tick=False
+    ):
         log.logger.warning("abc")
         log.logger.warning("äbc")
 

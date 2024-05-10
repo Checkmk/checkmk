@@ -8,10 +8,11 @@ from collections.abc import Callable, Mapping, Sequence
 import numpy as np
 import pytest
 
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.gui.graphing import (
     get_first_matching_perfometer,
     MetricometerRendererLegacyLogarithmic,
-    perfometer_info,
     PerfometerSpec,
     renderer_registry,
 )
@@ -19,9 +20,11 @@ from cmk.gui.graphing._perfometer import (
     _make_projection,
     _perfometer_possible,
     _PERFOMETER_PROJECTION_PARAMETERS,
+    LegacyPerfometer,
     MetricometerRendererLegacyLinear,
     MetricometerRendererPerfometer,
     MetricRendererStack,
+    parse_perfometer,
 )
 from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
 
@@ -120,7 +123,7 @@ def test__perfometer_possible(
                 name="active_connections",
                 focus_range=perfometers.FocusRange(
                     lower=perfometers.Closed(0),
-                    upper=perfometers.Open(565),
+                    upper=perfometers.Open(90),
                 ),
                 segments=["active_connections"],
             ),
@@ -136,14 +139,20 @@ def test_get_first_matching_perfometer(
 
 
 @pytest.mark.parametrize(
-    "translated_metrics, perfometer_index",
+    "translated_metrics, perfometer",
     [
         pytest.param(
             {
                 "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
                 "failed_notifications": {"value": 0, "unit": "", "color": "#456789"},
             },
-            -2,
+            {
+                "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
+                "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
+                "segments": ["delivered_notifications,failed_notifications,+,100,+"],
+                "total": 100.0,
+                "type": "linear",
+            },
             id="second to last",
         ),
         pytest.param(
@@ -151,7 +160,18 @@ def test_get_first_matching_perfometer(
                 "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
                 "failed_notifications": {"value": 1, "unit": "", "color": "#456789"},
             },
-            -1,
+            {
+                "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
+                "label": (
+                    "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
+                    "%",
+                ),
+                "segments": [
+                    "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
+                ],
+                "total": 100.0,
+                "type": "linear",
+            },
             id="very last perfometer",
         ),
         pytest.param(
@@ -160,7 +180,18 @@ def test_get_first_matching_perfometer(
                 "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
             },
-            61,
+            {
+                "condition": "fs_used,uncommitted,+,fs_size,<",
+                "label": ("fs_used(%)", "%"),
+                "segments": [
+                    "fs_used",
+                    "uncommitted",
+                    "fs_size,fs_used,-,uncommitted,-#e3fff9",
+                    "0.1#559090",
+                ],
+                "total": "fs_size",
+                "type": "linear",
+            },
             id="filesystem check without overcommittment",
         ),
         pytest.param(
@@ -170,7 +201,18 @@ def test_get_first_matching_perfometer(
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
                 "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
             },
-            61,
+            {
+                "condition": "fs_used,uncommitted,+,fs_size,<",
+                "label": ("fs_used(%)", "%"),
+                "segments": [
+                    "fs_used",
+                    "uncommitted",
+                    "fs_size,fs_used,-,uncommitted,-#e3fff9",
+                    "0.1#559090",
+                ],
+                "total": "fs_size",
+                "type": "linear",
+            },
             id="filesystem check without overcommittment (+overprovisioned)",
         ),
         pytest.param(
@@ -180,15 +222,26 @@ def test_get_first_matching_perfometer(
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
                 "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
             },
-            62,
+            {
+                "condition": "fs_used,uncommitted,+,fs_size,>=",
+                "label": ("fs_used,fs_used,uncommitted,+,/,100,*", "%"),
+                "segments": [
+                    "fs_used",
+                    "fs_size,fs_used,-#e3fff9",
+                    "0.1#559090",
+                    "overprovisioned,fs_size,-#ffa000",
+                ],
+                "total": "overprovisioned",
+                "type": "linear",
+            },
             id="filesystem check with overcommittment",
         ),
     ],
 )
 def test_get_first_matching_legacy_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric], perfometer_index: int
+    translated_metrics: Mapping[str, TranslatedMetric], perfometer: dict
 ) -> None:
-    assert get_first_matching_perfometer(translated_metrics) == perfometer_info[perfometer_index]
+    assert get_first_matching_perfometer(translated_metrics) == perfometer
 
 
 def test_registered_renderers() -> None:
@@ -270,6 +323,8 @@ class TestMetricometerRendererLegacyLinear:
         self,
         unit_info: UnitInfo,
         expected_result: MetricRendererStack,
+        request_context: None,
+        patch_theme: None,
     ) -> None:
         assert self._renderer(unit_info).get_stack() == expected_result
 
@@ -685,6 +740,8 @@ def test_perfometer_renderer_stack(
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
     value_projections: Sequence[tuple[float, str]],
+    request_context: None,
+    patch_theme: None,
 ) -> None:
     assert MetricometerRendererPerfometer(
         perfometers.Perfometer(
@@ -696,7 +753,7 @@ def test_perfometer_renderer_stack(
     ).get_stack() == [list(value_projections) + [(14.73, "#bdbdbd")]]
 
 
-def test_perfometer_renderer_stack_same_values() -> None:
+def test_perfometer_renderer_stack_same_values(request_context: None, patch_theme: None) -> None:
     assert MetricometerRendererPerfometer(
         perfometers.Perfometer(
             name="name",
@@ -736,3 +793,126 @@ def test_perfometer_renderer_stack_same_values() -> None:
             },
         },
     ).get_stack() == [[(42.63, "#111111"), (42.63, "#222222"), (14.74, "#bdbdbd")]]
+
+
+@pytest.mark.parametrize(
+    "legacy_perfometer, expected_perfometer",
+    [
+        pytest.param(
+            ("linear", ([], 100, "Label 1")),
+            {"type": "linear", "segments": [], "total": 100, "label": "Label 1"},
+            id="linear",
+        ),
+        pytest.param(
+            ("dual", [("linear", ([], 100, "Label 2")), ("linear", ([], 100, "Label 3"))]),
+            {
+                "type": "dual",
+                "perfometers": [
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 2"},
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 3"},
+                ],
+            },
+            id="dual",
+        ),
+        pytest.param(
+            ("stacked", [("linear", ([], 100, "Label 4")), ("linear", ([], 100, "Label 5"))]),
+            {
+                "type": "stacked",
+                "perfometers": [
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 4"},
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 5"},
+                ],
+            },
+            id="stacked",
+        ),
+    ],
+)
+def test_parse_perfometer(
+    legacy_perfometer: LegacyPerfometer, expected_perfometer: PerfometerSpec
+) -> None:
+    assert parse_perfometer(legacy_perfometer) == expected_perfometer
+
+
+@pytest.mark.parametrize(
+    "legacy_perfometer",
+    [
+        pytest.param(
+            ("dual", [("linear", ([], 100, "Label"))]),
+            id="dual-one-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    ("linear", ([], 100, "Label 1")),
+                    ("linear", ([], 100, "Label 2")),
+                    ("linear", ([], 100, "Label 3")),
+                ],
+            ),
+            id="dual-three-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    (
+                        "dual",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="dual-dual-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    (
+                        "stacked",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="dual-stacked-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "stacked",
+                [
+                    (
+                        "stacked",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="stacked-stacked-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "stacked",
+                [
+                    (
+                        "dual",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="stacked-dual-sub-perfometers",
+        ),
+    ],
+)
+def test_parse_dual_or_stacked_perfometer_errors(legacy_perfometer: LegacyPerfometer) -> None:
+    with pytest.raises(MKGeneralException):
+        parse_perfometer(legacy_perfometer)

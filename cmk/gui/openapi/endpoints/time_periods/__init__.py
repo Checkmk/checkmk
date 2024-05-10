@@ -14,10 +14,10 @@ You can find an introduction to time periods in the
 import datetime as dt
 import http.client
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 import cmk.utils.dateutils as dateutils
-from cmk.utils.timeperiod import TimeperiodSpec
+from cmk.utils.timeperiod import load_timeperiods, TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -29,16 +29,16 @@ from cmk.gui.openapi.endpoints.time_periods.response_schemas import (
     TimePeriodResponse,
     TimePeriodResponseCollection,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.parameters import TIMEPERIOD_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import FIELDS, problem, ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
     load_timeperiod,
-    load_timeperiods,
     modify_timeperiod,
     TimePeriodBuiltInError,
     TimePeriodInUseError,
@@ -234,7 +234,8 @@ def list_time_periods(params: Mapping[str, Any]) -> Response:
 
 def _serve_time_period(time_period: DomainObject) -> Response:
     response = serve_json(time_period)
-    return constructors.response_with_etag_created_from_dict(response, time_period)
+    timeperiod_dict = cast(dict[str, Any], time_period)
+    return constructors.response_with_etag_created_from_dict(response, timeperiod_dict)
 
 
 def _to_api_format(  # type: ignore[no-untyped-def]

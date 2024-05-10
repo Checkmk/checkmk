@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
+    RawSubscriptionDetailsForAggregation,
     SubscriptionDetails,
-    SubscriptionDetailsError,
+    SubscriptionDetailsForAggregation,
     SubscriptionDetailsLimit,
     SubscriptionDetailsLimitType,
 )
@@ -25,7 +26,7 @@ from cmk.utils.licensing.export import (
     ],
 )
 def test_subscription_details_broken(raw_subscription_details: Mapping[str, Any]) -> None:
-    with pytest.raises(SubscriptionDetailsError):
+    with pytest.raises(KeyError):
         SubscriptionDetails.parse(raw_subscription_details)
 
 
@@ -40,8 +41,8 @@ def test_subscription_details_empty_source() -> None:
         start=1,
         end=2,
         limit=SubscriptionDetailsLimit(
-            limit_type=SubscriptionDetailsLimitType.custom,
-            limit_value=3,
+            type_=SubscriptionDetailsLimitType.custom,
+            value=3,
         ),
     )
 
@@ -65,8 +66,8 @@ def test_subscription_details_source(raw_subscription_details_source: str) -> No
         start=1,
         end=2,
         limit=SubscriptionDetailsLimit(
-            limit_type=SubscriptionDetailsLimitType.custom,
-            limit_value=3,
+            type_=SubscriptionDetailsLimitType.custom,
+            value=3,
         ),
     )
 
@@ -77,71 +78,71 @@ def test_subscription_details_source(raw_subscription_details_source: str) -> No
         (
             ["fixed", 3000],
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.fixed,
-                limit_value=3000,
+                type_=SubscriptionDetailsLimitType.fixed,
+                value=3000,
             ),
         ),
         (
             ("unlimited", -1),
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
-                limit_value=-1,
+                type_=SubscriptionDetailsLimitType.unlimited,
+                value=-1,
             ),
         ),
         (
             ("custom", 3),
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.custom,
-                limit_value=3,
+                type_=SubscriptionDetailsLimitType.custom,
+                value=3,
             ),
         ),
         (
             "2000000+",
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
-                limit_value=-1,
+                type_=SubscriptionDetailsLimitType.unlimited,
+                value=-1,
             ),
         ),
         (
             "3000",
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.fixed,
-                limit_value=3000,
+                type_=SubscriptionDetailsLimitType.fixed,
+                value=3000,
             ),
         ),
         (
             3000,
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.fixed,
-                limit_value=3000,
+                type_=SubscriptionDetailsLimitType.fixed,
+                value=3000,
             ),
         ),
         (
             "3",
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.custom,
-                limit_value=3,
+                type_=SubscriptionDetailsLimitType.custom,
+                value=3,
             ),
         ),
         (
             3,
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.custom,
-                limit_value=3,
+                type_=SubscriptionDetailsLimitType.custom,
+                value=3,
             ),
         ),
         (
             "-1",
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
-                limit_value=-1,
+                type_=SubscriptionDetailsLimitType.unlimited,
+                value=-1,
             ),
         ),
         (
             -1,
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
-                limit_value=-1,
+                type_=SubscriptionDetailsLimitType.unlimited,
+                value=-1,
             ),
         ),
     ],
@@ -171,8 +172,8 @@ def test_subscription_details_limit(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.fixed,
-                    limit_value=3000,
+                    type_=SubscriptionDetailsLimitType.fixed,
+                    value=3000,
                 ),
             ),
             {
@@ -186,8 +187,8 @@ def test_subscription_details_limit(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.unlimited,
-                    limit_value=-1,
+                    type_=SubscriptionDetailsLimitType.unlimited,
+                    value=-1,
                 ),
             ),
             {
@@ -201,8 +202,8 @@ def test_subscription_details_limit(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.custom,
-                    limit_value=3,
+                    type_=SubscriptionDetailsLimitType.custom,
+                    value=3,
                 ),
             ),
             {
@@ -227,8 +228,8 @@ def test_subscription_details_for_report(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.fixed,
-                    limit_value=3000,
+                    type_=SubscriptionDetailsLimitType.fixed,
+                    value=3000,
                 ),
             ),
             {
@@ -242,8 +243,8 @@ def test_subscription_details_for_report(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.unlimited,
-                    limit_value=-1,
+                    type_=SubscriptionDetailsLimitType.unlimited,
+                    value=-1,
                 ),
             ),
             {
@@ -257,8 +258,8 @@ def test_subscription_details_for_report(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.custom,
-                    limit_value=3,
+                    type_=SubscriptionDetailsLimitType.custom,
+                    value=3,
                 ),
             ),
             {
@@ -376,3 +377,87 @@ def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
         LicenseUsageExtensions(ntop=expected_ntop_enabled).for_report()
     )
     assert extensions.ntop is expected_ntop_enabled
+
+
+@pytest.mark.parametrize(
+    "limit",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(-1, id="lt-zero"),
+    ],
+)
+def test_subscription_details_for_aggregation_limit_error(limit: int) -> None:
+    with pytest.raises(ValueError):
+        SubscriptionDetailsForAggregation(None, None, limit)
+
+
+@pytest.mark.parametrize(
+    "start",
+    [
+        pytest.param(None, id="start-none"),
+        pytest.param(0, id="start-int"),
+        pytest.param(1, id="start-int"),
+    ],
+)
+@pytest.mark.parametrize(
+    "end",
+    [
+        pytest.param(None, id="end-none"),
+        pytest.param(0, id="end-int"),
+        pytest.param(1, id="end-int"),
+    ],
+)
+@pytest.mark.parametrize(
+    "limit, is_free, real_limit",
+    [
+        pytest.param(None, False, None, id="limit-none"),
+        pytest.param("unlimited", False, None, id="unlimited"),
+        pytest.param(("free", 3), True, 3, id="free"),
+        pytest.param(1, False, 1, id="limit-int"),
+    ],
+)
+def test_subscription_details_for_aggregation(
+    start: int | None,
+    end: int | None,
+    limit: Literal["unlimited"] | tuple[Literal["free"], Literal[3]] | int | None,
+    is_free: bool,
+    real_limit: Literal["unlimited"] | int | None,
+) -> None:
+    subscription_details = SubscriptionDetailsForAggregation(start, end, limit)
+    assert subscription_details.start == start
+    assert subscription_details.end == end
+    assert subscription_details.limit == limit
+    assert subscription_details.is_free == is_free
+    assert subscription_details.real_limit == real_limit
+
+
+@pytest.mark.parametrize(
+    "subscription_details, expected_report",
+    [
+        pytest.param(
+            SubscriptionDetailsForAggregation(None, None, None),
+            RawSubscriptionDetailsForAggregation(start=None, end=None, limit=None),
+            id="all-none",
+        ),
+        pytest.param(
+            SubscriptionDetailsForAggregation(0, 1, 2),
+            RawSubscriptionDetailsForAggregation(start=0, end=1, limit=2),
+            id="all-set",
+        ),
+        pytest.param(
+            SubscriptionDetailsForAggregation(0, 1, "unlimited"),
+            RawSubscriptionDetailsForAggregation(start=0, end=1, limit="unlimited"),
+            id="unlimited",
+        ),
+        pytest.param(
+            SubscriptionDetailsForAggregation(0, 1, ("free", 3)),
+            RawSubscriptionDetailsForAggregation(start=0, end=1, limit=3),
+            id="free",
+        ),
+    ],
+)
+def test_subscription_details_for_aggregation_for_report(
+    subscription_details: SubscriptionDetailsForAggregation,
+    expected_report: RawSubscriptionDetailsForAggregation,
+) -> None:
+    assert subscription_details.for_report() == expected_report

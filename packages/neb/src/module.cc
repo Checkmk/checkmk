@@ -880,7 +880,7 @@ std::filesystem::path check_path(const std::string &name,
     return path;
 }
 
-template <class T>
+template <typename T>
 T parse_number(std::string_view str) {
     T value{};
     auto [ptr, ec] = std::from_chars(str.begin(), str.end(), value);

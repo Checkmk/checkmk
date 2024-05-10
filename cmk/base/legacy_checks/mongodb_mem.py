@@ -17,8 +17,10 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 Section = Mapping[str, str | int]
 
@@ -48,7 +50,7 @@ def check_mongodb_mem(_no_item, params, parsed):
                 value_bytes,
                 "process_%s_size" % key,
                 levels,
-                human_readable_func=get_bytes_human_readable,
+                human_readable_func=render.bytes,
                 infoname="%s usage" % key.title(),
             )
 

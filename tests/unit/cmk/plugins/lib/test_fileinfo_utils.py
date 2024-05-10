@@ -8,11 +8,10 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import Metric, render, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
 from cmk.plugins.lib.fileinfo import (
     _cast_value,
     _fileinfo_check_conjunctions,
@@ -257,7 +256,7 @@ def test_fileinfo_groups_get_group_name_error(
         ),
     ],
 )
-@freeze_time("2021-07-12 12:00")
+@time_machine.travel("2021-07-12 12:00")
 def test_check_fileinfo_data(
     file_stat: FileinfoItem, reftime: int, params: dict[str, Any], expected_result: CheckResult
 ) -> None:

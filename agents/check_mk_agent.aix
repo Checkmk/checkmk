@@ -44,7 +44,7 @@ is_valid_plugin() {
     # test if a file is executable and does not have certain
     # extensions (remnants from distro upgrades).
     case "${1:?No plugin defined}" in
-        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp | *.dpkg-tmp) return 1 ;;
         *) [ -f "${1}" ] && [ -x "${1}" ] ;;
     esac
 }
@@ -215,7 +215,7 @@ set_up_profiling() {
 unset_locale() {
     # eliminate localized outputs where possible
     # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
-    unset -v LANG
+    unset -v LANG LC_ALL
     if inpath locale && inpath paste; then
         # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
         case "$(locale -a | paste -sd ' ' -)" in
@@ -302,7 +302,7 @@ waitmax() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.3.0b1"
+    echo "Version: 2.4.0b1"
     echo "AgentOS: aix"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -310,6 +310,9 @@ section_checkmk() {
     echo "SpoolDirectory: ${SPOOLDIR}"
     echo "PluginsDirectory: ${PLUGINSDIR}"
     echo "LocalDirectory: ${LOCALDIR}"
+    echo "OSType: unix"
+    echo "OSName: AIX"
+    echo "OSVersion: $(oslevel -s)"
 
     #
     # BEGIN COMMON AGENT CODE
@@ -750,9 +753,11 @@ _run_cached_internal() {
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
             # Start it. If the command fails the output is thrown away
             cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
-eval '${MK_DEFINE_LOG_SECTION_TIME}'
-exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" || rm -f "${CACHEFILE}.new.\$\$"
+                eval '${MK_DEFINE_LOG_SECTION_TIME}'
+                exec > "${CACHEFILE}.new.\$\$" || exit 1
+                $* \
+                && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" \
+                || rm -f "${CACHEFILE}.new.\$\$"
 HERE
         fi
 
@@ -942,7 +947,7 @@ run_purely_synchronous_sections() {
 
     _log_section_time section_cmk_agent_ctl_status
 
-    [ -z "${MK_SKIP_CHECKMK_AGENT_PLUGINS}" ] && log_section_time section_checkmk_agent_plugins
+    [ -z "${MK_SKIP_CHECKMK_AGENT_PLUGINS}" ] && _log_section_time section_checkmk_agent_plugins
 
     [ -z "${MK_SKIP_DF}" ] && _log_section_time section_df
 

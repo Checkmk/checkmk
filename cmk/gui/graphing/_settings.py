@@ -42,8 +42,8 @@ class ConfigVariableGraphTimeranges(ConfigVariable):
                     ),
                 ],
             ),
-            title=_("Custom graph timeranges"),
+            title=_("Custom graph time ranges"),
             movable=True,
-            totext=_("%d timeranges"),
+            totext=_("%d time ranges"),
             default_value=active_config.graph_timeranges,
         )

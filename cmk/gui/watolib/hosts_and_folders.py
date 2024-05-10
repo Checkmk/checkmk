@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import json
@@ -17,15 +19,15 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol
+from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, TypedDict
 
 from redis.client import Pipeline
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
 import cmk.utils.paths
 from cmk.utils import store
+from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
@@ -61,7 +63,6 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKUserError, RequestTimeout
-from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -90,6 +91,7 @@ from cmk.gui.watolib.host_attributes import (
     MetaData,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -758,26 +760,19 @@ class EffectiveAttributes:
 
 
 class FolderProtocol(Protocol):
-    def is_disk_folder(self) -> bool:
-        ...
+    def is_disk_folder(self) -> bool: ...
 
-    def is_search_folder(self) -> bool:
-        ...
+    def is_search_folder(self) -> bool: ...
 
-    def breadcrumb(self) -> Breadcrumb:
-        ...
+    def breadcrumb(self) -> Breadcrumb: ...
 
-    def has_host(self, host_name: HostName) -> bool:
-        ...
+    def has_host(self, host_name: HostName) -> bool: ...
 
-    def has_hosts(self) -> bool:
-        ...
+    def has_hosts(self) -> bool: ...
 
-    def load_host(self, host_name: HostName) -> Host:
-        ...
+    def load_host(self, host_name: HostName) -> Host: ...
 
-    def host_validation_errors(self) -> dict[HostName, list[str]]:
-        ...
+    def host_validation_errors(self) -> dict[HostName, list[str]]: ...
 
 
 def find_available_folder_name(candidate: str, parent: Folder) -> str:
@@ -1046,18 +1041,22 @@ def folder_lookup_cache() -> FolderLookupCache:
 
 
 @request_memoize()
-def folder_from_request() -> Folder:
-    """Return `Folder` that is specified by the current URL"""
-    if (var_folder := request.var("folder")) is not None:
+def folder_from_request(var_folder: str | None = None, host_name: str | None = None) -> Folder:
+    """
+    Return `Folder` that is specified by the current URL
+
+    Optional you can specify the fetched var via calling this function.
+    This is currently needed for the search that results in
+    ModeEditHost._init_host() were the actual request is available (and not already was cached)
+    """
+    if var_folder is not None:
         try:
             folder = folder_tree().folder(var_folder)
         except MKGeneralException as e:
             raise MKUserError("folder", "%s" % e)
     else:
         folder = folder_tree().root_folder()
-        if (
-            host_name := request.get_ascii_input("host")
-        ) is not None:  # find host with full scan. Expensive operation
+        if host_name is not None:  # find host with full scan. Expensive operation
             host = Host.host(HostName(host_name))
             if host:
                 folder = host.folder()
@@ -1066,7 +1065,9 @@ def folder_from_request() -> Folder:
 
 
 @request_memoize()
-def disk_or_search_folder_from_request() -> Folder | SearchFolder:
+def disk_or_search_folder_from_request(
+    var_folder: str | None = None, host_name: str | None = None
+) -> Folder | SearchFolder:
     """Return `Folder` that is specified by the current URL
 
     This is either by a folder
@@ -1080,7 +1081,7 @@ def disk_or_search_folder_from_request() -> Folder | SearchFolder:
     if search_folder:
         return search_folder
 
-    return folder_from_request()
+    return folder_from_request(var_folder, host_name)
 
 
 def _search_folder_from_request() -> SearchFolder | None:
@@ -1097,8 +1098,10 @@ def _search_folder_from_request() -> SearchFolder | None:
     return None
 
 
-def disk_or_search_base_folder_from_request() -> Folder:
-    disk_or_search_folder = disk_or_search_folder_from_request()
+def disk_or_search_base_folder_from_request(
+    var_folder: str | None = None, host_name: str | None = None
+) -> Folder:
+    disk_or_search_folder = disk_or_search_folder_from_request(var_folder, host_name)
     if isinstance(disk_or_search_folder, Folder):
         return disk_or_search_folder
 
@@ -1225,7 +1228,9 @@ class Folder(FolderProtocol):
         return self._parent
 
     def is_current_folder(self) -> bool:
-        return self.is_same_as(folder_from_request())
+        return self.is_same_as(
+            folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        )
 
     def is_transitive_parent_of(self, maybe_child: Folder) -> bool:
         if self.is_same_as(maybe_child):
@@ -1338,14 +1343,11 @@ class Folder(FolderProtocol):
         for hostname, host in sorted(self.hosts().items()):
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = update_metadata(host.attributes, created_by=user.id)
+            host_labels[hostname] = effective["labels"]
 
             tag_groups = host.tag_groups()
             if tag_groups:
                 host_tags[hostname] = tag_groups
-
-            labels = host.labels()
-            if labels:
-                host_labels[hostname] = labels
 
             if host.is_cluster():
                 nodes = host.cluster_nodes()
@@ -1546,6 +1548,16 @@ class Folder(FolderProtocol):
         self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
         if may_use_redis():
             get_wato_redis_client(self.tree).save_folder_info(self)
+
+    def has_rules(self) -> bool:
+        return Path(self.rules_file_path()).exists()
+
+    def is_empty(self) -> bool:
+        return not (self.has_hosts() or self.has_subfolders() or self.has_rules())
+
+    def is_referenced(self) -> bool:
+        conditions = PredefinedConditionStore().filter_by_path(self.path())
+        return len(conditions) > 0
 
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |
@@ -2106,7 +2118,7 @@ class Folder(FolderProtocol):
     # .-----------------------------------------------------------------------.
     # | MODIFICATIONS                                                         |
     # |                                                                       |
-    # | These methods are for being called by actual Setup modules when they   |
+    # | These methods are for being called by actual Setup modules when they  |
     # | want to modify folders and hosts. They all check permissions and      |
     # | locking. They may raise MKAuthException or MKUserError.               |
     # |                                                                       |
@@ -2121,11 +2133,11 @@ class Folder(FolderProtocol):
     # | - locked()       -> .wato file in the folder must not be modified     |
     # | - locked_subfolders() -> No subfolders may be created/deleted         |
     # |                                                                       |
-    # | Sidebar: some sidebar snapins show the Setup folder tree. Everytime    |
+    # | Sidebar: some sidebar snap-ins show the Setup folder tree. Everytime  |
     # | the tree changes the sidebar needs to be reloaded. This is done here. |
     # |                                                                       |
     # | Validation: these methods do *not* validate the parameters for syntax.|
-    # | This is the task of the actual Setup modes or the API.                 |
+    # | This is the task of the actual Setup modes or the API.                |
     # '-----------------------------------------------------------------------'
 
     def create_subfolder(self, name: str, title: str, attributes: HostAttributes) -> Folder:
@@ -2165,11 +2177,11 @@ class Folder(FolderProtocol):
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
 
-        # 2. check if hosts have parents
         subfolder = self.subfolder(name)
         if subfolder is None:
             return
 
+        # 2. Check if hosts have parents
         hosts_with_children = self._get_parents_of_hosts(subfolder.all_hosts_recursively().keys())
         if hosts_with_children:
             raise MKUserError(
@@ -2326,6 +2338,18 @@ class Folder(FolderProtocol):
         self,
         entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
+        """Create many hosts at once.
+
+        Below are the expected Exceptions this function will throw (indirectly). Any other
+        Exception is due to an error.
+
+        Raises:
+            - MKAuthException: When the user doesn't have the rights to see a (or any) host.
+            - MKAuthException: When the user isn't in the contact group specified.
+            - MKUserError: When the host is already there.
+            - MKGeneralException: When something happened during permission check.
+
+        """
         # 1. Check preconditions
         self.prepare_create_hosts()
 
@@ -2472,7 +2496,7 @@ class Folder(FolderProtocol):
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
         return hosts_by_site
 
-    def move_hosts(self, host_names, target_folder: Folder):  # type: ignore[no-untyped-def]
+    def move_hosts(self, host_names: Collection[HostName], target_folder: Folder) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         user.need_permission("wato.edit_hosts")
@@ -3172,6 +3196,7 @@ class Host:
     def _compute_effective_attributes(self) -> HostAttributes:
         effective = self.folder().effective_attributes()
         effective.update(self.attributes)
+        effective["labels"] = self.labels()
         return effective
 
     def labels(self) -> Labels:
@@ -3488,8 +3513,8 @@ def call_hook_hosts_changed(folder: Folder) -> None:
 # hostnames. These informations are used for displaying warning
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
-def validate_all_hosts(  # type: ignore[no-untyped-def]
-    hostnames: Sequence[HostName], force_all=False
+def validate_all_hosts(
+    hostnames: Sequence[HostName], force_all: bool = False
 ) -> dict[HostName, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):
         hosts_errors: dict[HostName, list[str]] = {}
@@ -3527,7 +3552,7 @@ def _collect_hosts(folder: Folder) -> Mapping[HostName, CollectedHostAttributes]
 
 
 def folder_preserving_link(add_vars: HTTPVariables) -> str:
-    return folder_from_request().url(add_vars)
+    return folder_from_request(request.var("folder"), request.get_ascii_input("host")).url(add_vars)
 
 
 def make_action_link(vars_: HTTPVariables) -> str:
@@ -3556,7 +3581,9 @@ def get_folder_title(path: str) -> str:
 
 # TODO: Move to Folder()?
 def check_wato_foldername(htmlvarname: str | None, name: str, just_name: bool = False) -> None:
-    if not just_name and folder_from_request().has_subfolder(name):
+    if not just_name and folder_from_request(
+        request.var("folder"), request.get_ascii_input("host")
+    ).has_subfolder(name):
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
 
     if not name:
@@ -3664,7 +3691,7 @@ def rebuild_folder_lookup_cache() -> None:
 
 
 def ajax_popup_host_action_menu() -> None:
-    hostname: HostName = HostName(request.get_ascii_input_mandatory("hostname"))
+    hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     host = Host.host(hostname)
     if host is None:
         html.show_error(_('"%s" is not a valid host name') % hostname)

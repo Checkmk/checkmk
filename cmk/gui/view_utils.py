@@ -4,20 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Iterator, Mapping
+from typing import Any, Literal
 
 from livestatus import SiteId
 
 from cmk.utils.html import replace_state_markers
-from cmk.utils.labels import LabelGroups, Labels
-from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
@@ -46,6 +45,9 @@ CSSClass = str | None
 CellContent = str | HTML | Mapping[str, Any]
 CellSpec = tuple[CSSClass, CellContent]
 
+# We support more label CSS classes than just label sources
+LabelRenderType = Literal[LabelSource, "changed", "removed", "added", "unspecified"]
+
 # fmt: off
 _URL_PATTERN = (
     r"("
@@ -61,7 +63,9 @@ _URL_PATTERN = (
 _STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
-def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
+def format_plugin_output(  # pylint: disable=redefined-outer-name
+    output: str, *, request: Request, row: Row | None = None, shall_escape: bool = True
+) -> HTML:
     shall_escape = _consolidate_escaping_options(row, shall_escape)
 
     if shall_escape and _render_url_icons(row):
@@ -72,7 +76,7 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
 
     output = replace_state_markers(output)
 
-    output = _render_host_links(output, row)
+    output = _render_host_links(output, row, request=request)
 
     return HTML(output)
 
@@ -92,14 +96,16 @@ def _render_url_icons(row: Row | None) -> bool:
     return row is None or row.get("service_check_command", "") != "check_mk-checkmk_agent"
 
 
-def _render_host_links(output: str, row: Row | None) -> str:
+def _render_host_links(  # pylint: disable=redefined-outer-name
+    output: str, row: Row | None, *, request: Request
+) -> str:
     if not row or "[running on" not in output:
         return output
 
     a = output.index("[running on")
     e = output.index("]", a)
     hosts = output[a + 12 : e].replace(" ", "").split(",")
-    h = get_host_list_links(row["site"], hosts)
+    h = get_host_list_links(row["site"], hosts, request=request)
     return output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
 
 
@@ -117,19 +123,34 @@ def _render_icon_button(output: str) -> str:
             case 0:
                 buffer.append(escaping.escape_attribute(token))
             case 2:
-                # if a url is directly followed by a state marker, separate them
-                if match := re.match(_STATE_MARKER_PATTERN, token):
-                    url, state_marker = match.group(1), match.group(2)
-                    buffer.append(str(html.render_icon_button(url, url, "link", target="_blank")))
-                    buffer.append(escaping.escape_attribute(state_marker))
-                else:
-                    buffer.append(
-                        str(html.render_icon_button(token, token, "link", target="_blank"))
-                    )
+                buffer.extend(_render_url(token, buffer[-1][-1] if buffer and buffer[-1] else ""))
     return "".join(buffer)
 
 
-def get_host_list_links(site: SiteId, hosts: list[str]) -> list[str]:
+def _render_url(token: str, last_char: str) -> Iterator[str]:
+    url = token
+    rest: str | None = None
+
+    # if a url is directly followed by a state marker, separate them
+    if match := re.match(_STATE_MARKER_PATTERN, token):
+        url, rest = match.group(1), match.group(2)
+
+    # A URL may be surrounded by parantheses without spaces.
+    # Since ")" and ":" are allowed in URLS, we have to detect this situation explicitly.
+    elif last_char == "(":
+        if token.endswith(")"):
+            url, rest = token[:-1], ")"
+        elif token.endswith("):"):
+            url, rest = token[:-2], "):"
+
+    yield str(html.render_icon_button(url, url, "link", target="_blank"))
+    if rest is not None:
+        yield escaping.escape_attribute(rest)
+
+
+def get_host_list_links(  # pylint: disable=redefined-outer-name
+    site: SiteId, hosts: list[str], *, request: Request
+) -> list[str]:
     entries = []
     for host in hosts:
         args: HTTPVariables = [
@@ -186,11 +207,23 @@ def get_labels(row: "Row", what: str) -> Labels:
     return labels
 
 
-def render_labels(
-    labels: Labels, object_type: str, with_links: bool, label_sources: LabelSources
+def render_labels(  # pylint: disable=redefined-outer-name
+    labels: Labels,
+    object_type: str,
+    with_links: bool,
+    label_sources: LabelSources,
+    override_label_render_type: LabelRenderType | None = None,
+    *,
+    request: Request,
 ) -> HTML:
     return _render_tag_groups_or_labels(
-        labels, object_type, with_links, label_type="label", label_sources=label_sources
+        labels,
+        object_type,
+        with_links,
+        label_type="label",
+        label_sources=label_sources,
+        override_label_render_type=override_label_render_type,
+        request=request,
     )
 
 
@@ -232,7 +265,8 @@ def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
                     object_type,
                     with_link=False,
                     label_type="label",
-                    label_source="unspecified",
+                    label_render_type="unspecified",
+                    request=request,
                 ),
                 class_=["tagify", "label", "display"],
                 readonly="true",
@@ -246,20 +280,28 @@ def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
     return overall_html
 
 
-def render_tag_groups(
-    tag_groups: Mapping[TagGroupID, TagID], object_type: str, with_links: bool
+def render_tag_groups(  # pylint: disable=redefined-outer-name
+    tag_groups: Mapping[TagGroupID, TagID], object_type: str, with_links: bool, *, request: Request
 ) -> HTML:
     return _render_tag_groups_or_labels(
-        tag_groups, object_type, with_links, label_type="tag_group", label_sources={}
+        tag_groups,
+        object_type,
+        with_links,
+        label_type="tag_group",
+        label_sources={},
+        request=request,
     )
 
 
-def _render_tag_groups_or_labels(
+def _render_tag_groups_or_labels(  # pylint: disable=redefined-outer-name
     entries: Mapping[TagGroupID, TagID] | Labels,
     object_type: str,
     with_links: bool,
     label_type: str,
     label_sources: LabelSources,
+    override_label_render_type: LabelRenderType | None = None,
+    *,
+    request: Request,
 ) -> HTML:
     elements = [
         _render_tag_group(
@@ -268,7 +310,12 @@ def _render_tag_groups_or_labels(
             object_type,
             with_links,
             label_type,
-            label_sources.get(tag_group_id_or_label_key, "unspecified"),
+            (
+                override_label_render_type
+                if override_label_render_type
+                else label_sources.get(tag_group_id_or_label_key, "unspecified")
+            ),
+            request=request,
         )
         for tag_group_id_or_label_key, tag_id_or_label_value in sorted(entries.items())
     ]
@@ -277,13 +324,15 @@ def _render_tag_groups_or_labels(
     )
 
 
-def _render_tag_group(
+def _render_tag_group(  # pylint: disable=redefined-outer-name
     tag_group_id_or_label_key: TagGroupID | str,
     tag_id_or_label_value: TagID | str,
     object_type: str,
     with_link: bool,
     label_type: str,
-    label_source: str,
+    label_render_type: LabelRenderType,
+    *,
+    request: Request,
 ) -> HTML:
     span = HTMLWriter.render_tag(
         HTMLWriter.render_div(
@@ -296,7 +345,7 @@ def _render_tag_group(
                 class_=["tagify__tag-text"],
             )
         ),
-        class_=["tagify--noAnim", label_source],
+        class_=["tagify--noAnim", label_render_type],
     )
     if not with_link:
         return span

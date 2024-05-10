@@ -2,11 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime
 from unittest import mock
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.ntp import (
@@ -39,10 +40,10 @@ def test_check_ntp_summanry() -> None:
     mock.Mock(return_value={"time_server": 1570001652.37}),
 )
 def test_check_ntp_timeserver_stored() -> None:
-    server_time = 1569922392.37 + 60 * 60 * 22 + 60, "UTC"
+    server_time = 1569922392.37 + 60 * 60 * 22 + 60
 
     section: Section = {}
-    with on_time(*server_time):
+    with time_machine.travel(datetime.datetime.fromtimestamp(server_time, tz=ZoneInfo("UTC"))):
         assert list(check_ntp_summary({}, section)) == [
             Result(state=State.OK, summary="Time since last sync: 0 seconds")
         ]

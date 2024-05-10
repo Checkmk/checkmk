@@ -35,6 +35,7 @@ MAP_DEVICE_STATUS = {
     "identifying": State.WARN,
     "critical": State.CRIT,
     "unhealthy": State.CRIT,
+    "not_installed": State.OK,
 }
 
 

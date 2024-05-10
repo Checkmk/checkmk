@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Mapping, Sequence
+# pylint: disable=protected-access
+
+import re
+from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
-from re import Pattern
 from typing import Any
 
 import cmk.utils.store as store
@@ -15,36 +17,59 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.base import config
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderPath,
+    Rule,
+    RuleConditions,
+    RulesetCollection,
+)
 
-from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
+from cmk.update_config.lib import format_warning
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import format_warning, UpdateActionState
 
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "checkgroup_parameters:fileinfo-groups": "checkgroup_parameters:fileinfo_groups_checking",
+    "checkgroup_parameters:robotmk_suite": "checkgroup_parameters:robotmk_plan",
     "static_checks:fileinfo-groups": "static_checks:fileinfo_groups_checking",
+    "checkgroup_parameters:if": "checkgroup_parameters:interfaces",
+    "static_checks:if": "static_checks:interfaces",
+    "special_agents:3par": "special_agents:three_par",
 }
 
-DEPRECATED_RULESET_PATTERNS: list[Pattern] = []
+RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {
+    "mongodb_replica_set",
+    "netapp_fcportio",
+    "azure_agent_info",
+}
+
+DEPRECATED_RULESET_PATTERNS = (re.compile("^agent_simulator$"),)
 
 
 class UpdateRulesets(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         # To transform the given ruleset config files before initialization, we cannot call
         # AllRulesets.load_all_rulesets() here.
         raw_rulesets = AllRulesets(RulesetCollection._initialize_rulesets())
         root_folder = folder_tree().root_folder()
         all_rulesets = _transform_label_conditions_in_all_folders(logger, raw_rulesets, root_folder)
 
+        if "http" not in config.use_new_descriptions_for:
+            _force_old_http_service_description(all_rulesets)
+
         _delete_deprecated_wato_rulesets(
             logger,
             all_rulesets,
             DEPRECATED_RULESET_PATTERNS,
+        )
+        _transform_rulesets_loosing_item(
+            logger,
+            all_rulesets,
+            RULESETS_LOOSING_THEIR_ITEM,
         )
         _transform_replaced_wato_rulesets(
             logger,
@@ -54,10 +79,6 @@ class UpdateRulesets(UpdateAction):
         _transform_wato_rulesets_params(
             logger,
             all_rulesets,
-        )
-        _remove_removed_check_plugins_from_ignored_checks(
-            all_rulesets,
-            REPLACED_CHECK_PLUGINS,
         )
         _validate_rule_values(logger, all_rulesets)
         all_rulesets.save()
@@ -97,10 +118,7 @@ def _transform_label_conditions_in_all_folders(
             _transform_label_conditions(rule_config)
 
         # Overwrite rulesets
-        if varname in all_rulesets._rulesets:
-            all_rulesets._rulesets[varname].replace_folder_config(folder, ruleset_config)
-        else:
-            all_rulesets._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
+        all_rulesets.replace_folder_ruleset_config(folder, ruleset_config, varname)
 
     return all_rulesets
 
@@ -127,7 +145,7 @@ def transform_condition_labels_to_label_groups(conditions: dict[str, Any]) -> di
 def _delete_deprecated_wato_rulesets(
     logger: Logger,
     all_rulesets: RulesetCollection,
-    deprecated_ruleset_patterns: Sequence[Pattern],
+    deprecated_ruleset_patterns: Sequence[re.Pattern],
 ) -> None:
     for ruleset_name in list(all_rulesets.get_rulesets()):
         if any(p.match(ruleset_name) for p in deprecated_ruleset_patterns):
@@ -136,7 +154,52 @@ def _delete_deprecated_wato_rulesets(
             continue
 
 
+def _transform_rulesets_loosing_item(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    rulesets_loosing_item: Iterable[str],
+) -> None:
+    for ruleset_name in rulesets_loosing_item:
+        logger.log(VERBOSE, f"Fixing items for ruleset {ruleset_name}")
+        for _folder, _index, rule in all_rulesets.get(
+            f"checkgroup_parameters:{ruleset_name}"
+        ).get_rules():
+            rule.conditions = RuleConditions(
+                host_folder=rule.conditions.host_folder,
+                host_tags=rule.conditions.host_tags,
+                host_label_groups=rule.conditions.host_label_groups,
+                host_name=rule.conditions.host_name,
+                service_description=None,
+                service_label_groups=rule.conditions.service_label_groups,
+            )
+        for _folder, _index, rule in all_rulesets.get(f"static_checks:{ruleset_name}").get_rules():
+            rule.value = (rule.value[0], None, rule.value[2])
+
+
+def _force_old_http_service_description(all_rulesets: RulesetCollection) -> None:
+    # relevant for update to 2.4
+
+    # remove "http" from configuration/ add another update step
+    if (http_ruleset := all_rulesets.get("active_checks:http")).is_empty():
+        return
+
+    for _, _, rule in http_ruleset.get_rules():
+        if rule.value["name"].startswith("^"):
+            continue
+
+        rule.value["name"] = f"^HTTP {rule.value['name']}"
+
+
 def _transform_replaced_wato_rulesets(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    replaced_rulesets: Mapping[RulesetName, RulesetName],
+) -> None:
+    _transform_replaced_unknown_rulesets(logger, all_rulesets, replaced_rulesets)
+    _transform_replaced_known_rulesets(logger, all_rulesets, replaced_rulesets)
+
+
+def _transform_replaced_known_rulesets(
     logger: Logger,
     all_rulesets: RulesetCollection,
     replaced_rulesets: Mapping[RulesetName, RulesetName],
@@ -148,17 +211,41 @@ def _transform_replaced_wato_rulesets(
 
         new_ruleset = all_rulesets.get(replaced_rulesets[ruleset_name])
 
-        if not new_ruleset.is_empty():
-            logger.log(VERBOSE, "Found deprecated ruleset: %s" % ruleset_name)
-
         logger.log(VERBOSE, f"Replacing ruleset {ruleset_name} with {new_ruleset.name}")
         for folder, _folder_index, rule in ruleset.get_rules():
             new_ruleset.append_rule(folder, rule)
 
         deprecated_ruleset_names.add(ruleset_name)
-
     for deprecated_ruleset_name in deprecated_ruleset_names:
         all_rulesets.delete(deprecated_ruleset_name)
+
+
+def _transform_replaced_unknown_rulesets(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    replaced_rulesets: Mapping[RulesetName, RulesetName],
+) -> None:
+    deprecated_unknown_ruleset_names_per_folder: dict[FolderPath, set[RulesetName]] = {}
+    for folder_path, ruleset_configs in all_rulesets.get_unknown_rulesets().items():
+        folder = folder_tree().folder(folder_path)
+        deprecated_unknown_ruleset_names_per_folder[folder_path] = set()
+        for ruleset_name, rule_specs in ruleset_configs.items():
+            if ruleset_name not in replaced_rulesets:
+                continue
+
+            new_ruleset = all_rulesets.get(replaced_rulesets[ruleset_name])
+
+            logger.log(VERBOSE, f"Replacing ruleset {ruleset_name} with {new_ruleset.name}")
+            for rule_spec in rule_specs:
+                new_ruleset.append_rule(folder, Rule.from_config(folder, new_ruleset, rule_spec))
+
+            deprecated_unknown_ruleset_names_per_folder[folder_path].add(ruleset_name)
+    for (
+        folder_path,
+        deprecated_unknown_ruleset_names,
+    ) in deprecated_unknown_ruleset_names_per_folder.items():
+        for deprecated_unknown_ruleset_name in deprecated_unknown_ruleset_names:
+            all_rulesets.delete_unknown(folder_path, deprecated_unknown_ruleset_name)
 
 
 def _transform_wato_rulesets_params(
@@ -192,6 +279,11 @@ def _validate_rule_values(
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
         RuleGroup.ExtraServiceConf("_sla_config"),
+        # Validating the ignored checks ruleset does not make sense:
+        # Invalid choices are the plugins that don't exist (anymore).
+        # These do no harm, they are dropped upon rule edit. On the other hand, the plugin
+        # could be missing only temporarily, so better not remove it.
+        "ignored_checks",
     }
 
     n_invalid = 0
@@ -228,22 +320,3 @@ def _validate_rule_values(
             ),
             n_invalid,
         )
-
-
-def _remove_removed_check_plugins_from_ignored_checks(
-    all_rulesets: RulesetCollection,
-    removed_check_plugins: Container[CheckPluginName],
-) -> None:
-    ignored_checks_ruleset = all_rulesets.get("ignored_checks")
-    for _folder, _index, rule in ignored_checks_ruleset.get_rules():
-        if plugins_to_keep := [
-            plugin_str
-            for plugin_str in rule.value
-            if CheckPluginName(plugin_str).create_basic_name() not in removed_check_plugins
-        ]:
-            rule.value = plugins_to_keep
-        else:
-            ignored_checks_ruleset.delete_rule(
-                rule,
-                create_change=False,
-            )

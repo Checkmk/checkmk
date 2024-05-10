@@ -24,7 +24,7 @@
 # z4065084                        Running 1.10:28:39          Operating normally
 # z4133235                        Running 1.03:38:23          Operating normally
 
-# A Version with a plugin that uses tab as seperator and quotes the strings:
+# A Version with a plug-in that uses tab as seperator and quotes the strings:
 # <<<hyperv_vms:sep(9)>>>
 # "Name"  "State" "Uptime"        "Status"
 # "z4058013"      "Running"       "06:05:16"      "Operating normally"

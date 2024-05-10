@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from re import Match
 from typing import ClassVar, Literal
 
 from livestatus import SiteId
@@ -49,7 +48,6 @@ from ._utils import (
     get_graph_templates,
     GraphTemplate,
     MetricDefinition,
-    MetricUnitColor,
     ScalarDefinition,
     translated_metrics_from_row,
 )
@@ -61,7 +59,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
     ] = lambda graph_template, _spec: graph_template
 
-    graph_type: Literal["template"] = "template"
     site: SiteId | None
     host_name: HostName
     service_description: ServiceName
@@ -70,8 +67,8 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     destination: str | None = None
 
     @staticmethod
-    def name() -> str:
-        return "template_graph_specification"
+    def graph_type_name() -> Literal["template"]:
+        return "template"
 
     def recipes(self) -> list[GraphRecipe]:
         row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)
@@ -157,17 +154,19 @@ def matching_graph_templates(
 
 def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
-
-    def eval_to_string(match: Match[str]) -> str:
+    # Note: The 'CPU load' graph is the only example with such a replacement. We do not want to
+    # offer such replacements in a generic way.
+    reg = regex.regex(r"%\([^)]*\)")
+    if m := reg.search(text):
         try:
-            result = parse_expression(match.group()[2:-1], translated_metrics).evaluate(
+            result = parse_expression(m.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
-        except ValueError:
-            return _("n/a")
-        return result.unit_info["render"](result.value)
+        except (ValueError, KeyError):
+            return text.split("-")[0].strip()
+        return reg.sub(result.unit_info["render"](result.value).strip(), text)
 
-    return regex.regex(r"%\([^)]*\)").sub(eval_to_string, text)
+    return text
 
 
 def _horizontal_rules_from_thresholds(
@@ -201,13 +200,12 @@ def create_graph_recipe_from_template(
     specification: GraphSpecification,
 ) -> GraphRecipe:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
-        unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
+        unit_color = metric_definition.compute_unit_color(
+            translated_metrics,
+            graph_template.optional_metrics,
+        )
         return GraphMetric(
-            title=metric_line_title(
-                metric_definition,
-                metric_definition.expression,
-                translated_metrics,
-            ),
+            title=metric_definition.compute_title(translated_metrics),
             line_type=metric_definition.line_type,
             operation=metric_expression_to_graph_recipe_expression(
                 metric_definition.expression,
@@ -406,35 +404,3 @@ def metric_expression_to_graph_recipe_expression(
         lq_row,
         enforced_consolidation_function,
     )
-
-
-def metric_line_title(
-    metric_definition: MetricDefinition,
-    metric_expression: MetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> str:
-    if metric_definition.title:
-        return metric_definition.title
-    return translated_metrics[next(metric_expression.metrics()).name]["title"]
-
-
-def metric_unit_color(
-    metric_expression: MetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    optional_metrics: Sequence[str] | None = None,
-) -> MetricUnitColor | None:
-    try:
-        result = metric_expression.evaluate(translated_metrics)
-    except KeyError as err:  # because metric_name is not in translated_metrics
-        metric_name = err.args[0]
-        if optional_metrics and metric_name in optional_metrics:
-            return None
-        raise MKGeneralException(
-            _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
-            % (
-                metric_expression,
-                metric_name,
-                ", ".join(sorted(translated_metrics.keys())) or "None",
-            )
-        )
-    return MetricUnitColor(unit=result.unit_info["id"], color=result.color)

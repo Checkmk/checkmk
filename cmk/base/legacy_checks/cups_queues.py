@@ -28,8 +28,7 @@
 
 import time
 from collections.abc import Mapping
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info

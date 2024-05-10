@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+import datetime
 import itertools
 import time
 from typing import Any, NamedTuple
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest_mock import MockerFixture
-
-from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
@@ -990,7 +993,7 @@ def test_check_ps_common(inv_item: Service, reference: type_defs.CheckResult) ->
     factory_defaults = {"levels": (1, 1, 99999, 99999), **inv_item.parameters}
     item = inv_item.item
     assert item is not None
-    with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("CET"))):
         test_result: type_defs.CheckResult = list(
             ps_utils.check_ps_common(
                 label="Processes",
@@ -1304,7 +1307,7 @@ def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
             (None, ps_info, cmd_line, ps_time) for (ps_info, cmd_line) in parsed_lines
         ]
 
-        with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime
+        with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("CET"))):
             return list(
                 ps_utils.check_ps_common(
                     label="Processes",

@@ -22,7 +22,7 @@ def test_register_modules(monkeypatch: MonkeyPatch) -> None:
     )
     main_menu.register_modules(module)
 
-    modules = list(main_menu.main_module_registry.values())  # type: ignore[attr-defined]
+    modules = list(main_menu.main_module_registry.values())
     assert len(modules) == 1
     registered = modules[0]()
     assert isinstance(registered, ABCMainModule)

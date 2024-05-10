@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -30,7 +32,7 @@ def test_get_start_url_default_config(set_config: SetConfig) -> None:
         assert cmk.gui.main._get_start_url() == "bla.py"
 
 
-def test_get_start_url_user_config(set_config: SetConfig) -> None:
+def test_get_start_url_user_config(set_config: SetConfig, request_context: None) -> None:
     class MockUser:
         ident = id = "17"  # session wants us to have an id to be able to set it there
 

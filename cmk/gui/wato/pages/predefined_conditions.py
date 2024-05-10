@@ -8,7 +8,6 @@ from collections.abc import Collection
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -26,6 +25,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions
 from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore

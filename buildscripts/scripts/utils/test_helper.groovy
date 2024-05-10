@@ -9,7 +9,7 @@ def execute_test(Map config = [:]) {
     def defaultDict = [
         name: "",
         cmd: "",
-        output_file: ""
+        output_file: "",
     ] << config;
 
     stage("Run ${defaultDict.name}") {
@@ -18,7 +18,7 @@ def execute_test(Map config = [:]) {
         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
             def cmd = defaultDict.cmd;
             if (defaultDict.output_file) {
-                cmd += " 2>&1 | tee ${defaultDict.output_file}"
+                cmd += " 2>&1 | tee ${defaultDict.output_file}";
             }
             sh("""
                 set -o pipefail
@@ -31,6 +31,7 @@ def execute_test(Map config = [:]) {
 // create issues parser
 // in case 'as_stage' is set false, the parser list will be returned
 // otherwise a publish issue stage is created
+/* groovylint-disable MethodSize, LineLength */
 def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) {
     def issues = [];
     def parserId = '';  // used for custom groovyScript parser
@@ -43,7 +44,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 name: 'Bazel Format', // Name shown on left side menu
                 regex: '(.*)\\s#\\s(reformat)$', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).setMessage(matcher.group(2)).buildOptional()', // Mapping script
-                example: "omd/packages/freetds/freetds_http.bzl # reformat"  // example log message
+                example: "omd/packages/freetds/freetds_http.bzl # reformat",  // example log message
                 //       |               1                     |  |   2   |
             ]);
             issues.add(scanForIssues(
@@ -60,7 +61,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 name: 'Bazel Lint', // Name shown on left side menu
                 regex: '(.*):(\\d+):(\\d+):(.*)', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).setMessage(matcher.group(4)).setLineStart(Integer.parseInt(matcher.group(2))).setColumnStart(Integer.parseInt(matcher.group(3))).buildOptional()', // Mapping script
-                example: "omd/packages/freetds/freetds_http.bzl:8:19: syntax error near build_file"  // example log message
+                example: "omd/packages/freetds/freetds_http.bzl:8:19: syntax error near build_file",  // example log message
                 //       |               1                     |2|3 |             4               |
             ]);
             issues.add(scanForIssues(
@@ -77,14 +78,21 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 )
             ));
             break;
-        case "CSSFORMAT":
-            parserId = 'css-format';
+        case "CODENARC":
+            issues.add(scanForIssues(
+                tool: codeNarc(
+                    pattern: "${result_check_file_pattern}"
+                )
+            ));
+            break;
+        case "PRETTIER":
+            parserId = 'prettier';
             update_custom_parser([
                 id: parserId, // ID
                 name: 'CSS Format', // Name shown on left side menu
-                regex: '^\\[warn\\]\\s(.*\\.(?:sc|c)ss)$', // RegEx
+                regex: '^\\[warn\\]\\s(.*\\.(?:scss|css|ts|js))$', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).buildOptional()', // Mapping script
-                example: "[warn] web/htdocs/themes/facelift/scss/_bi.scss"  // example log message
+                example: "[warn] web/htdocs/themes/facelift/scss/_bi.scss",  // example log message
                 //       |      |          1                             |
             ]);
             issues.add(scanForIssues(
@@ -104,6 +112,26 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         case "GCC":
             issues.add(scanForIssues(
                 tool: gcc(
+                    pattern: "${result_check_file_pattern}"
+                )
+            ));
+            break;
+        case "GROOVY":
+            parserId = 'groovy-lint';
+            update_custom_parser([
+                id: parserId, // ID
+                name: 'Grooy Lint', // Name shown on left side menu
+                regex: '(.*\\.groovy$)\\n(\\s{2})(\\d+)(\\s+)(\\w+)(\\s{2,})(.*?)(?=\\s{2})(\\s{2})(\\w+)', // RegEx
+                mapping: 'return builder.setFileName(matcher.group(1)).setMessage(matcher.group(7)).setLineStart(Integer.parseInt(matcher.group(3))).setCategory(matcher.group(5)).setType(matcher.group(9)).buildOptional()', // Mapping script
+                example: """/home/jonasscharpf/git/check_mk/buildscripts/scripts/utils/upload_artifacts.groovy
+                  39    error    The variable [versioning] in class None is not used  UnusedVariable
+                  71    warning  Map [credentialsId:Release_Key, variable:RELEASE_KEY] is duplicated.  DuplicateMapLiteral""",  // example log message
+                // |                                                    1                                                    |
+                // |2|3|4| 5   |6|                                7                                 |8|          9           |
+            ]);
+            issues.add(scanForIssues(
+                tool: groovyScript(
+                    parserId: parserId,
                     pattern: "${result_check_file_pattern}"
                 )
             ));
@@ -138,7 +166,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 mapping: 'return builder.setFileName(matcher.group(2)).setCategory(matcher.group(8)).setMessage(matcher.group(9)).setLineStart(Integer.parseInt(matcher.group(4))).buildOptional()', // Mapping script
                 example: """In ./enterprise/skel/etc/init.d/dcd line 14:
                 . \"\$OMD_ROOT/.profile\"
-                  ^------------------^ SC1091 (info): Not following: ./.profile: openBinaryFile: does not exist (No such file or directory)"""  // example log message
+                  ^------------------^ SC1091 (info): Not following: ./.profile: openBinaryFile: does not exist (No such file or directory)""",  // example log message
                 // |1 |             2                 | 3  | 4 |
                 // |         5        |
                 // | 6 |      7       |  8   |  9   |  10                   |
@@ -159,7 +187,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 mapping: 'return builder.setFileName(matcher.group(1)).setCategory(matcher.group(3)).setMessage(matcher.group(6)).buildOptional()', // Mapping script
                 example: """tests/unit-shell/agents/test_set_up_path.shshunit2:ERROR test_set_up_path_already_in_path() returned non-zero return code.
                 test_set_up_path_already_in_path
-                ASSERT:expected:</foo:/usr/local/bin:/bar2> but was:</foo:/usr/local/bin:/bar>"""  // example log message
+                ASSERT:expected:</foo:/usr/local/bin:/bar2> but was:</foo:/usr/local/bin:/bar>""",  // example log message
                 // |                     1                             |  2   |  3  |             4                    |
                 // |            5               |
                 // |                          6                                               |
@@ -178,25 +206,8 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 name: 'TS/JS build', // Name shown on left side menu
                 regex: '(.*):\\s(.*):\\s(.*)\\s\\((\\d+):(\\d+)\\)', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(2)).setCategory(matcher.group(1)).setMessage(matcher.group(3)).setLineStart(Integer.parseInt(matcher.group(4))).setColumnStart(Integer.parseInt(matcher.group(5))).buildOptional()', // Mapping script
-                example: "SyntaxError: web/htdocs/js/modules/dashboard.ts: Missing semicolon. (65:30)"  // example log message
+                example: "SyntaxError: web/htdocs/js/modules/dashboard.ts: Missing semicolon. (65:30)",  // example log message
                 //       |     1     |                    2              |         3        | 4  |5 |
-            ]);
-            issues.add(scanForIssues(
-                tool: groovyScript(
-                    parserId: parserId,
-                    pattern: "${result_check_file_pattern}"
-                )
-            ));
-            break;
-        case "TSJSFORMAT":
-            parserId = 'js-format';
-            update_custom_parser([
-                id: parserId, // ID
-                name: 'TS/JS Format', // Name shown on left side menu
-                regex: '^\\[warn\\]\\s(.*\\.(?:j|t)s)$', // RegEx
-                mapping: 'return builder.setFileName(matcher.group(2)).buildOptional()', // Mapping script
-                example: "[warn] web/htdocs/js/modules/cbor_ext.js"  // example log message
-                //        |  1  |             2                   |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -212,7 +223,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 name: 'TS/JS types', // Name shown on left side menu
                 regex: '(.*\\..*(?:ts|js))\\((\\d+),(\\d+)\\):\\s(.*):\\s(.*)', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).setCategory(matcher.group(4)).setMessage(matcher.group(5)).setLineStart(Integer.parseInt(matcher.group(2))).setColumnStart(Integer.parseInt(matcher.group(3))).buildOptional()', // Mapping script
-                example: "web/htdocs/js/modules/dashboard.js(65,37): error TS1005: ',' expected.s"  // example log message
+                example: "web/htdocs/js/modules/dashboard.js(65,37): error TS1005: ',' expected.s",  // example log message
                 //       |      1                           |2 | 3 |      4      |      5        |
             ]);
             issues.add(scanForIssues(
@@ -234,6 +245,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         return issues;
     }
 }
+/* groovylint-enable MethodSize, LineLength */
 
 // pusblish issues stage based on given issue parser(s)
 def analyse_issue_stages(issues) {
@@ -285,7 +297,7 @@ def update_custom_parser(Map config = [:]) {
     }
     else {
         print("${defaultDict.id} undefined, adding parser");
-        parser_config.setParsers(existing_parsers.plus(newParser));
+        parser_config.setParsers(existing_parsers.plus(newParser)); // groovylint-disable ExplicitCallToPlusMethod
     }
 }
 

@@ -200,17 +200,16 @@ check_metrics["check_mk-netapp_api_disk_summary"] = {
     "total_disk_capacity": {"name": "disk_capacity"},
     "total_disks": {"name": "disks"},
 }
+check_metrics["check_mk-netapp_ontap_disk_summary"] = {
+    "total_disk_capacity": {"name": "disk_capacity"},
+    "total_disks": {"name": "disks"},
+}
 check_metrics["check_mk-emc_isilon_iops"] = {
     "iops": {"name": "disk_ios"},
 }
 check_metrics["check_mk-vms_system_ios"] = {
     "direct": {"name": "direct_io"},
     "buffered": {"name": "buffered_io"},
-}
-check_metrics["check_mk-kernel"] = {
-    "ctxt": {"name": "context_switches"},
-    "pgmajfault": {"name": "major_page_faults"},
-    "processes": {"name": "process_creations"},
 }
 check_metrics["check_mk-oracle_jobs"] = {
     "duration": {"name": "job_duration"},
@@ -229,8 +228,8 @@ check_metrics["check_mk-jolokia_metrics_tp"] = {
 check_metrics["check_mk-mem_win"] = {
     "memory": {"name": "mem_used", "scale": MB, "deprecated": "2.0.0i1"},
     "pagefile": {"name": "pagefile_used", "scale": MB},
-    "memory_avg": {"scale": MB},
-    "pagefile_avg": {"scale": MB},
+    "memory_avg": {"name": "mem_used_avg", "scale": MB},
+    "pagefile_avg": {"name": "pagefile_used_avg", "scale": MB},
     "mem_total": {"auto_graph": False, "scale": MB},
     "pagefile_total": {"auto_graph": False, "scale": MB},
 }
@@ -241,6 +240,10 @@ check_metrics["check_mk-brocade_mlx_module_mem"] = {
     },
 }
 check_metrics["check_mk-jolokia_metrics_mem"] = {
+    "heap": {"name": "mem_heap", "scale": MB},
+    "nonheap": {"name": "mem_nonheap", "scale": MB},
+}
+check_metrics["check_mk-jolokia_jvm_memory"] = {
     "heap": {"name": "mem_heap", "scale": MB},
     "nonheap": {"name": "mem_nonheap", "scale": MB},
 }
@@ -339,9 +342,7 @@ check_metrics["check_mk-mem_linux"] = {
     "caches": {"name": "caches", "auto_graph": False},
     "swap_free": {"name": "swap_free", "auto_graph": False},
     "mem_free": {"name": "mem_free", "auto_graph": False},
-    "sreclaimable": {"name": "mem_lnx_sreclaimable", "auto_graph": False},
     "pending": {"name": "mem_lnx_pending", "auto_graph": False},
-    "sunreclaim": {"name": "mem_lnx_sunreclaim", "auto_graph": False},
     "anon_huge_pages": {"name": "mem_lnx_anon_huge_pages", "auto_graph": False},
     "anon_pages": {"name": "mem_lnx_anon_pages", "auto_graph": False},
     "mapped": {"name": "mem_lnx_mapped", "auto_graph": False},
@@ -356,23 +357,6 @@ check_metrics["check_mk-mem_vmalloc"] = {
     "used": {"name": "mem_lnx_vmalloc_used"},
     "chunk": {"name": "mem_lnx_vmalloc_chunk"},
 }
-tcp_conn_stats_translation: dict[str, CheckMetricEntry] = {
-    "SYN_SENT": {"name": "tcp_syn_sent"},
-    "SYN_RECV": {"name": "tcp_syn_recv"},
-    "ESTABLISHED": {"name": "tcp_established"},
-    "LISTEN": {"name": "tcp_listen"},
-    "TIME_WAIT": {"name": "tcp_time_wait"},
-    "LAST_ACK": {"name": "tcp_last_ack"},
-    "CLOSE_WAIT": {"name": "tcp_close_wait"},
-    "CLOSED": {"name": "tcp_closed"},
-    "CLOSING": {"name": "tcp_closing"},
-    "FIN_WAIT1": {"name": "tcp_fin_wait1"},
-    "FIN_WAIT2": {"name": "tcp_fin_wait2"},
-    "BOUND": {"name": "tcp_bound"},
-    "IDLE": {"name": "tcp_idle"},
-}
-check_metrics["check_mk-tcp_conn_stats"] = tcp_conn_stats_translation
-check_metrics["check_mk-datapower_tcp"] = tcp_conn_stats_translation
 check_metrics["check_mk_active-disk_smb"] = {
     "~.*": {"name": "fs_used"},
 }
@@ -418,6 +402,7 @@ check_metrics["check_mk-df"] = df_translation
 check_metrics["check_mk-db2_logsizes"] = df_translation
 check_metrics["check_mk-esx_vsphere_datastores"] = df_translation
 check_metrics["check_mk-netapp_api_aggr"] = df_translation
+check_metrics["check_mk-netapp_ontap_aggr"] = df_translation
 check_metrics["check_mk-vms_df"] = df_translation
 check_metrics["check_mk-vms_diskstat_df"] = df_translation
 check_metrics["check_disk"] = df_translation
@@ -437,7 +422,9 @@ check_metrics["check_mk-fast_lta_silent_cubes_capacity"] = df_translation
 check_metrics["check_mk-fast_lta_volumes"] = df_translation
 check_metrics["check_mk-libelle_business_shadow_archive_dir"] = df_translation
 check_metrics["check_mk-netapp_api_luns"] = df_translation
+check_metrics["check_mk-netapp_ontap_luns"] = df_translation
 check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
+check_metrics["check_mk-netapp_ontap_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
 check_metrics["check_mk-emc_isilon_ifs"] = df_translation
@@ -462,6 +449,7 @@ check_metrics["check_mk-df_netscaler"] = df_translation
 check_metrics["check_mk-prism_host_usage"] = df_translation
 check_metrics["check_mk-prism_containers"] = df_translation
 check_metrics["check_mk-prism_storage_pools"] = df_translation
+check_metrics["check_mk-ucd_disk"] = df_translation
 check_metrics["check_mk-pure_storage_fa_arrays"] = {
     "fs_used": {"scale": MB},
     "fs_used_percent": {"auto_graph": False},
@@ -484,10 +472,16 @@ do_not_display_fs_size_translation: dict[str, CheckMetricEntry] = {
     },
 }
 check_metrics["check_mk-nfsmounts"] = do_not_display_fs_size_translation
+check_metrics["check_mk-nfsiostat"] = {
+    "read_avg_rtt_ms": {"name": "read_avg_rtt_s", "scale": m},
+    "read_avg_exe_ms": {"name": "read_avg_exe_s", "scale": m},
+    "write_avg_rtt_ms": {"name": "write_avg_rtt_s", "scale": m},
+    "write_avg_exe_ms": {"name": "write_avg_exe_s", "scale": m},
+}
 check_metrics["check_mk-cifsmounts"] = do_not_display_fs_size_translation
 check_metrics["check_mk-proxmox_ve_disk_usage"] = do_not_display_fs_size_translation
 
-check_metrics["check_mk-netapp_api_volumes"] = {
+netapp_volumes_metrics: dict[str, CheckMetricEntry] = {
     "fs_used": {"scale": MB},
     "fs_free": {"scale": MB},
     "fs_used_percent": {
@@ -518,6 +512,10 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "iscsi_write_latency": {"scale": m},
     "iscsi_other_latency": {"scale": m},
 }
+
+check_metrics["check_mk-netapp_api_volumes"] = netapp_volumes_metrics
+check_metrics["check_mk-netapp_ontap_volumes"] = netapp_volumes_metrics
+
 disk_utilization_translation: dict[str, CheckMetricEntry] = {
     "disk_utilization": {"scale": 100.0},
 }
@@ -565,6 +563,7 @@ check_metrics["check_mk-if64"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation
 check_metrics["check_mk-netapp_api_if"] = if_translation
+check_metrics["check_mk-netapp_ontap_if"] = if_translation
 check_metrics["check_mk-winperf_if"] = if_translation
 check_metrics["check_mk-gcp_gce_network"] = if_translation
 check_metrics["check_mk-azure_vm_network_io"] = if_translation
@@ -740,7 +739,7 @@ check_metrics["check_mk-brocade_mlx_module_cpu"] = {
     "cpu_util1": {"name": "util1s"},
     "cpu_util5": {"name": "util5s"},
     "cpu_util60": {"name": "util1"},
-    "cpu_util200": {"name": "util5"},
+    "cpu_util300": {"name": "util5"},
 }
 check_metrics["check_mk-dell_powerconnect_cpu"] = {
     "load": {"name": "util", "deprecated": "2.0.0p4"},
@@ -818,32 +817,6 @@ check_metrics["check_mk-adva_fsp_if"] = {
 check_metrics["check_mk-allnet_ip_sensoric_tension"] = {
     "tension": {"name": "voltage_percent"},
 }
-check_metrics["check_mk-apache_status"] = {
-    "Uptime": {"name": "uptime"},
-    "IdleWorkers": {"name": "idle_workers"},
-    "BusyWorkers": {"name": "busy_workers"},
-    "IdleServers": {"name": "idle_servers"},
-    "BusyServers": {"name": "busy_servers"},
-    "OpenSlots": {"name": "open_slots"},
-    "TotalSlots": {"name": "total_slots"},
-    "CPULoad": {"name": "load1"},
-    "ReqPerSec": {"name": "requests_per_second"},
-    "BytesPerSec": {"name": "direkt_io"},
-    "ConnsTotal": {"name": "connections"},
-    "ConnsAsyncWriting": {"name": "connections_async_writing"},
-    "ConnsAsyncKeepAlive": {"name": "connections_async_keepalive"},
-    "ConnsAsyncClosing": {"name": "connections_async_closing"},
-    "State_StartingUp": {"name": "apache_state_startingup"},
-    "State_Waiting": {"name": "apache_state_waiting"},
-    "State_Logging": {"name": "apache_state_logging"},
-    "State_DNS": {"name": "apache_state_dns"},
-    "State_SendingReply": {"name": "apache_state_sending_reply"},
-    "State_ReadingRequest": {"name": "apache_state_reading_request"},
-    "State_Closing": {"name": "apache_state_closing"},
-    "State_IdleCleanup": {"name": "apache_state_idle_cleanup"},
-    "State_Finishing": {"name": "apache_state_finishing"},
-    "State_Keepalive": {"name": "apache_state_keep_alive"},
-}
 check_metrics["check_mk-ups_socomec_out_voltage"] = {
     "out_voltage": {"name": "voltage"},
 }
@@ -904,17 +877,6 @@ check_metrics["check_mk-zfs_arc_cache_l2"] = {
 check_metrics["check_mk-postgres_sessions"] = {
     "total": {"name": "total_sessions"},
     "running": {"name": "running_sessions"},
-}
-check_metrics["check_mk-fileinfo"] = {
-    "size": {"name": "file_size"},
-}
-check_metrics["check_mk-fileinfo_groups"] = {
-    "size": {"name": "total_file_size"},
-    "size_smallest": {"name": "file_size_smallest"},
-    "size_largest": {"name": "file_size_largest"},
-    "count": {"name": "file_count"},
-    "age_oldest": {"name": "file_age_oldest"},
-    "age_newest": {"name": "file_age_newest"},
 }
 check_metrics["check_mk-postgres_stat_database_size"] = {
     "size": {"name": "database_size"},
@@ -997,17 +959,8 @@ mq_translation: dict[str, CheckMetricEntry] = {
     "queue": {"name": "messages_in_queue"},
 }
 check_metrics["check_mk-mq_queues"] = mq_translation
-check_metrics["check_mk-websphere_mq_channels"] = mq_translation
-check_metrics["check_mk-websphere_mq_queues"] = mq_translation
 check_metrics["check_mk-printer_pages"] = {
     "pages": {"name": "pages_total"},
-}
-check_metrics["check_mk-livestatus_status"] = {
-    "host_checks": {"name": "host_check_rate"},
-    "service_checks": {"name": "service_check_rate"},
-    "connections": {"name": "livestatus_connect_rate"},
-    "requests": {"name": "livestatus_request_rate"},
-    "log_messages": {"name": "log_message_rate"},
 }
 check_metrics["check_mk-cisco_wlc_clients"] = {
     "clients": {"name": "connections"},
@@ -1184,4 +1137,7 @@ check_metrics["check_mk-ups_capacity"] = {
         "name": "battery_capacity",
         "deprecated": "2.0.0b2",
     },
+}
+check_metrics["check_mk-hp_proliant_power"] = {
+    "watt": {"name": "power"},
 }

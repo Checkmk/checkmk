@@ -84,7 +84,7 @@ class WerkTranslator:
             "setup": _("Setup, site management"),
             "config": _("Configuration generation"),
             "inline-snmp": _("Inline SNMP"),
-            "agents": _("Agent bakery"),
+            "agents": _("Agent Bakery"),
             "metrics": _("Metrics system"),
             "alerts": _("Alert handlers"),
             "dcd": _("Dynamic host configuration"),

@@ -1,0 +1,578 @@
+@charset "UTF-8";
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+/*-------------------------------------------------------------------------.
+|                 ____  _     _      _                                     |
+|                / ___|(_) __| | ___| |__   __ _ _ __                      |
+|                \___ \| |/ _` |/ _ \ '_ \ / _` | '__|                     |
+|                 ___) | | (_| |  __/ |_) | (_| | |                        |
+|                |____/|_|\__,_|\___|_.__/ \__,_|_|                        |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styling for the sidebar and its snapins.                                 |
+'-------------------------------------------------------------------------*/
+
+body.side {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  font-family: $font-family-default;
+  font-weight: $font-weight-default;
+  background: $navigation-bg-color;
+
+  &.screenshotmode {
+    background-image: url("");
+  }
+
+  b.treeangle.title {
+    color: $font-color;
+  }
+}
+
+#check_mk_navigation {
+  display: flex;
+  flex-direction: column;
+  float: left;
+  width: 64px;
+  height: 100%;
+
+  &.min {
+    width: 48px;
+  }
+}
+
+#check_mk_sidebar {
+  display: flex;
+  flex-direction: column;
+  float: right;
+  width: 280px;
+  height: 100%;
+  padding-top: $spacing;
+
+  &.folded {
+    display: none;
+  }
+
+  &.left {
+    float: left;
+    border-left: 1px solid $sidebar-border-color;
+  }
+
+  div.shortcuts {
+    display: flex;
+    padding: $spacing $spacing (0.5 * $spacing);
+    border-bottom: 1px solid $sidebar-border-color;
+
+    a {
+      flex: 1 0 auto;
+      font-size: $font-size-small;
+      line-height: 1.7;
+      color: $font-color;
+      text-align: center;
+      text-decoration: none;
+
+      &:hover img {
+        opacity: 0.5;
+      }
+
+      &:visited {
+        color: $font-color;
+      }
+
+      &.min {
+        font-size: 0;
+
+        img {
+          width: 24px;
+          height: 24px;
+        }
+      }
+    }
+
+    img {
+      margin-bottom: 6px;
+    }
+  }
+
+  #side_content {
+    height: 100%;
+    overflow: auto;
+    color: $font-color-black;
+
+    & > .snapin {
+      margin-top: 0;
+    }
+  }
+
+  // needed to place the add_snapin button always at the bottom
+  .simplebar-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+}
+
+#content_area {
+  width: auto;
+  height: 100%;
+  overflow: hidden;
+  background: $bg-color;
+}
+
+#content_area iframe,
+iframe#robotmk_ok_report,
+iframe#robotmk_error_report {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Top logo part */
+#side_header {
+  height: 58px;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    outline: none;
+  }
+
+  img {
+    width: 48px;
+    height: auto;
+    padding: 0;
+  }
+
+  .min & img {
+    width: 45px;
+    padding: 0 12px;
+
+    &.custom {
+      width: 35px;
+    }
+  }
+}
+
+body.main .popup_menu #side_header > span {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background-image: url("images/mk-logo.png");
+  background-position: 16px center;
+  background-repeat: no-repeat;
+  background-size: auto 30px;
+}
+
+#side_fold,
+#saas {
+  padding: $spacing 4px $spacing 0;
+  font-size: $font-size-small;
+  color: $font-color;
+  text-align: center;
+  cursor: pointer;
+  border-left: 4px solid $navigation-bg-color;
+
+  &:hover {
+    border-left-color: $success;
+  }
+
+  img {
+    margin-bottom: 8px;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+#side_fold {
+  &:not(.folded) {
+    color: $font-color-green;
+  }
+
+  &:not(.folded) img.folded,
+  &.folded img:not(.folded) {
+    display: none;
+  }
+}
+
+#side_version {
+  margin: $spacing;
+  font-size: $font-size-small;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-table;
+  color: $font-color;
+  text-align: center;
+
+  a {
+    text-decoration: none;
+    text-rendering: optimizeLegibility;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:visited {
+      color: $font-color;
+    }
+  }
+
+  span.unack_werks {
+    padding: 2px;
+    margin-left: 2px;
+    color: $font-color;
+    cursor: pointer;
+    background-color: $danger;
+    border-radius: 6px;
+  }
+}
+
+/* General layout of snapins */
+body.side div.snapin,
+div.add_snapin div.snapin {
+  width: 100%;
+  padding: (0.75 * $spacing) (2 * $spacing);
+  overflow: hidden;
+  background: $navigation-bg-color;
+  border-radius: 4px;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+div.snapin {
+  &.dragging {
+    position: absolute;
+    z-index: 200;
+  }
+
+  /* Header of the snapin */
+  div.head {
+    position: relative;
+    height: auto;
+    line-height: 10px; /* affects height of snapin title bar */
+    color: $font-color;
+    text-align: left;
+    background: transparent;
+
+    &.open {
+      padding-bottom: 0;
+    }
+
+    img.treeangle {
+      padding-bottom: 4px;
+    }
+
+    b.heading {
+      padding-bottom: 3px;
+      margin-left: 3px;
+      font-weight: $font-weight-bold;
+      line-height: 16px;
+      letter-spacing: $letter-spacing-table;
+    }
+  }
+
+  div.snapin_buttons {
+    position: absolute;
+    right: 5px;
+    opacity: 0;
+    transition: opacity 50ms ease-in 50ms;
+  }
+
+  &:hover div.snapin_buttons {
+    opacity: 1;
+    transition: opacity 0s;
+  }
+
+  div.content {
+    top: 64px;
+    width: 100%;
+    padding: $spacing 0;
+    color: $font-color;
+    border-bottom: 1px solid $snapin-heading-border-color;
+    box-sizing: border-box;
+
+    li.sidebar {
+      padding-left: 0;
+    }
+    .foldable {
+      margin-left: $spacing-double;
+    }
+  }
+
+  select {
+    width: 100%;
+    height: 24px;
+    background-image: none;
+    border-radius: $popup-filters-border-radius;
+    box-shadow: none;
+  }
+
+  /*
+   * General styles for snapin contents
+   */
+
+  td {
+    color: $font-color;
+  }
+
+  h3 {
+    margin: 2px 0;
+    color: $font-color;
+  }
+
+  /* Normal link in snapins */
+  a {
+    font-weight: $font-weight-default;
+    color: $font-color;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &.iconlink img:not(.emblem) {
+      margin-right: 5px;
+    }
+
+    &.iconlink img {
+      width: 10px;
+      height: 12px;
+    }
+  }
+
+  ul {
+    /* width: 220px; Bei mehrstufigen Einrueckungen stimmt der rechte Rand nicht */
+    padding: 0;
+    padding-left: 16px;
+    margin: 0;
+  }
+
+  li {
+    padding-left: 0;
+    color: $font-color;
+
+    &.sidebar {
+      margin-left: 0;
+    }
+  }
+
+  /* Style for exceptions displayed in snapins */
+  div.snapinexception {
+    width: 220px;
+    padding: $spacing-half;
+    background-color: $color-state-2-background;
+    border-radius: 4px;
+
+    h2 {
+      margin-top: 0;
+      color: $font-color-light-grey;
+    }
+
+    p {
+      color: $font-color-light-grey;
+    }
+  }
+
+  /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
+  div.footnotelink {
+    margin-top: 0;
+    text-align: left;
+
+    a {
+      border-radius: $spacing;
+
+      &:hover {
+        /* TODO: create a better hover effect */
+        text-decoration: none;
+        opacity: 0.5;
+      }
+    }
+  }
+
+  /* Small iconbutton (e.g. at virtual host tree) */
+  img.iconbutton {
+    width: 10px;
+    height: 10px;
+    margin: 0 2px 0 0;
+    border: none;
+
+    &:hover {
+      opacity: 0.5;
+      filter: alpha(opacity=50); /* For IE8 and earlier */
+    }
+
+    &.bookmark {
+      width: 16px;
+      height: 16px;
+      margin: 0 -1px;
+    }
+  }
+
+  a.toggle_switch img.iconbutton {
+    margin-bottom: 2px;
+  }
+}
+
+#add_snapin {
+  margin: auto 0 $spacing;
+  text-align: center;
+
+  a {
+    display: block;
+    padding: $spacing 0;
+    text-decoration: none;
+
+    img {
+      width: 28px;
+      height: 28px;
+    }
+  }
+}
+
+div.snapin div.content div.foldable ul.treeangle a.iconlink {
+  padding: 0;
+}
+
+div.snapin div.footnotelink a.link {
+  height: 11px;
+  padding: 2px 7px;
+  font-size: $font-size-small;
+  font-weight: $font-weight-bold;
+  color: $font-color;
+  background: $input-background-color;
+  border: none;
+  box-shadow: none;
+
+  &:not(:last-child) {
+    margin: $spacing-half $spacing-half 0 0;
+  }
+}
+
+div#snapinDragIndicator {
+  position: relative;
+  top: 2px;
+  width: 247px;
+  height: 1.5px;
+  margin: 0 0 0 11px;
+  font-size: 1px;
+  line-height: 1px;
+  background-color: $white;
+  border-radius: 3px;
+  box-shadow: 0 0 3px $white;
+}
+
+/*-------------------------------------------------------------------------.
+|          _       _     _                         _                       |
+|         / \   __| | __| |  ___ _ __   __ _ _ __ (_)_ __  ___             |
+|        / _ \ / _` |/ _` | / __| '_ \ / _` | '_ \| | '_ \/ __|            |
+|       / ___ \ (_| | (_| | \__ \ | | | (_| | |_) | | | | \__ \            |
+|      /_/   \_\__,_|\__,_| |___/_| |_|\__,_| .__/|_|_| |_|___/            |
+|                                           |_|                            |
++--------------------------------------------------------------------------+
+| Style for the page where you can add new snapins to the sidebar.         |
+'-------------------------------------------------------------------------*/
+
+div.add_snapin {
+  div.snapinadder {
+    &,
+    &:hover {
+      float: left;
+      width: 270px;
+      height: 220px;
+      padding: $spacing;
+      margin: 0 16px 16px 0;
+      background-color: $snapin-bg-color;
+      border: 1px solid $snapin-bg-color;
+      border-radius: 5px;
+    }
+
+    *,
+    &:hover * {
+      color: $font-color;
+    }
+
+    &:hover {
+      position: relative;
+    }
+
+    div.description {
+      padding: $spacing 0;
+      border-top: 1px solid $snapin-heading-border-color;
+    }
+
+    div.snapin {
+      height: 116px;
+      padding-top: 0;
+      border: none;
+      border-radius: 0;
+    }
+
+    .head {
+      padding: 0 0 $spacing;
+    }
+
+    .content {
+      padding: $spacing 0;
+      border-bottom: none;
+    }
+  }
+
+  div.snapin_preview {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 270px;
+    height: 120px;
+    overflow: hidden;
+
+    div.clickshield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      width: 270px;
+      height: 120px;
+    }
+  }
+}
+
+/*-Popup Msg-----------------------------------------------------------.
+|           ____                           __  __                      |
+|          |  _ \ ___  _ __  _   _ _ __   |  \/  |___  __ _            |
+|          | |_) / _ \| '_ \| | | | '_ \  | |\/| / __|/ _` |           |
+|          |  __/ (_) | |_) | |_| | |_) | | |  | \__ \ (_| |           |
+|          |_|   \___/| .__/ \__,_| .__/  |_|  |_|___/\__, |           |
+|                     |_|         |_|                 |___/            |
++----------------------------------------------------------------------+
+| Popup message rendering                                              |
+'---------------------------------------------------------------------*/
+
+div.popup_msg {
+  position: absolute;
+  bottom: 35px;
+  left: 20px;
+  width: 200px;
+  padding: 3px;
+  background-color: $headline-color;
+
+  .close {
+    display: block;
+    float: right;
+  }
+}
+
+div.head {
+  position: relative;
+
+  a.more img {
+    top: 0;
+  }
+}

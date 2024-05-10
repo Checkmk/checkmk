@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 import logging
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -22,10 +26,10 @@ from tests.testlib.utils import (
     qa_test_data_path,
 )
 from tests.testlib.version import CMKVersion, version_from_env
+
 from tests.update.conftest import BaseVersions
 
 from cmk.utils.version import Edition
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +37,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
     base_version = CMKVersion(
-        "2.2.0p8", Edition.CEE, current_base_branch_name(), current_branch_version()
+        "2.3.0b1", Edition.CEE, current_base_branch_name(), current_branch_version()
     )
     return SiteFactory(version=base_version, prefix="")
 
@@ -73,27 +77,22 @@ def _base_site_demo(site_factory_demo):
     yield from site_factory_demo.get_test_site(site_name, save_results=False)
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
-    reason="Test currently failing for missing `php7`. "
-    "This will be fixed starting from base-version 2.2.0p8",
-)
 @pytest.mark.cee
+@pytest.mark.skip("Re-generate backup using a 2.3.0 release.")
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
-    backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
+    backup_path = qa_test_data_path() / Path("update/backups/update_central_2.3.0b1_backup.tar.gz")
     assert backup_path.exists()
 
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
-    for hostname in hostnames:
-        address = f"127.0.0.{hostnames.index(hostname) + 1}"
-        register_controller(agent_ctl, base_site, hostname, site_address=address)
+    for i, hostname in enumerate(hostnames, start=1):
+        register_controller(agent_ctl, base_site, hostname, site_address=f"127.0.0.{i}")
         wait_until_host_receives_data(base_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
-    base_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    base_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     base_site.openapi.activate_changes_and_wait_for_completion()
 
@@ -148,12 +147,14 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
             f"In the {hostname} host the following services were `OK` in base-version but not in "
             f"target-version: "
             f"{not_ok_services}"
+            f"\nDetails: {[(s, target_services[hostname][s].summary) for s in not_ok_services]})"
         )
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg
 
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
+@pytest.mark.skip("Re-generate backup using a 2.3.0 release.")
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:
@@ -186,7 +187,6 @@ def test_update_from_backup_demo(
     site_factory_demo = SiteFactory(
         version=target_version,
         prefix="",
-        update_from_git=False,
         update=True,
         update_conflict_mode="keepold",
         enforce_english_gui=False,
@@ -207,7 +207,7 @@ def test_update_from_backup_demo(
     current_lost_services = {}
     missed_services = {}
 
-    with open(lost_services_path, "r") as json_file:
+    with open(lost_services_path) as json_file:
         known_lost_services = json.load(json_file)
 
     for hostname in target_hostnames:

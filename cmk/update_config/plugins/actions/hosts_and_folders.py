@@ -11,13 +11,12 @@ from cmk.gui.watolib.host_attributes import HostContactGroupSpec
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 LegacyContactGroupSpec = tuple[bool, list[ContactgroupName]]
 
 
 class UpdateHostsAndFolders(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         save_handlers = replace_legacy_contact_groups(folder_tree().root_folder())
 
         for handler in save_handlers:

@@ -21,7 +21,7 @@ class TestValueSpecFixedValue:
         assert vs.FixedValue(value="zwei").value_to_html("zwei") == "zwei"
         assert vs.FixedValue(value="zwei").value_to_html("drei") == "drei"
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         assert vs.FixedValue(value=Sentinel).from_html_vars("") is Sentinel
 
     def test_mask(self) -> None:

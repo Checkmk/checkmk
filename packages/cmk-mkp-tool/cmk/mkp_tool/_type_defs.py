@@ -7,11 +7,10 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from functools import cached_property
-from typing import Literal
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, field_validator, GetCoreSchemaHandler
 from pydantic_core import core_schema
-from semver import VersionInfo
 
 
 class PackageError(Exception):
@@ -34,6 +33,23 @@ class PackageVersion(str):
     # one fine day we might remove the inheritance, but for now this'll have to do.
     _MISMATCH_MSG = "Invalid version %r. A package version must not contain slashes"
 
+    # semver pattern according to semver.org
+    # Watch out, currently matching this pattern is *not* a requirement
+    # for becoming a PackageVersion (but it should be in the future).
+    _SEMVER_PATTERN = re.compile(
+        # major
+        r"^(?P<major>0|[1-9]\d*)"
+        # minor
+        r"\.(?P<minor>0|[1-9]\d*)"
+        # patch
+        r"\.(?P<patch>0|[1-9]\d*)"
+        # prerelease
+        r"(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+        r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+        # build metadata
+        r"(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+    )
+
     def __new__(cls, value: str) -> PackageVersion:
         if "/" in value:
             raise ValueError(cls._MISMATCH_MSG % value)
@@ -51,9 +67,11 @@ class PackageVersion(str):
             cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
         )
 
-    @staticmethod
-    def parse_semver(raw: str) -> VersionInfo:
-        return VersionInfo.parse(raw)
+    @classmethod
+    def parse_semver(cls, raw: str) -> Self:
+        if cls._SEMVER_PATTERN.match(raw):
+            return cls(raw)
+        raise ValueError(f"Not a valid semantic versioning string: {raw!r}")
 
     @cached_property
     def sort_key(self) -> tuple[_SortKeyElement, ...]:

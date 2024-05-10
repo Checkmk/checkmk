@@ -30,9 +30,11 @@ from cmk.gui.openapi.endpoints.host_tag_group.response_schemas import (
     ConcreteHostTagGroup,
     HostTagGroupCollection,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.host_attributes import undeclare_host_tag_attribute
 from cmk.gui.watolib.tags import (
     change_host_tags,
@@ -207,6 +209,12 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Delete a host tag group"""
     user.need_permission("wato.edit")
     ident = params["name"]
+    if params["repair"] and params["mode"]:
+        return problem(
+            status=400,
+            title="Cannot use both repair and mode",
+            detail="Cannot use both repair and mode at the same time",
+        )
     if is_builtin(ident):
         return problem(
             status=405,
@@ -216,7 +224,8 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
 
     affected = change_host_tags(OperationRemoveTagGroup(ident), TagCleanupMode.CHECK)
     if any(affected):
-        if not params["repair"]:
+        mode = TagCleanupMode(params["mode"] or ("delete" if params["repair"] else "abort"))
+        if mode == TagCleanupMode.ABORT:
             affected_folder, affected_hosts, affected_rulesets = affected
             affected_occurrences = []
 
@@ -238,11 +247,11 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
                 title=f'Deleting this host tag group "{ident}" requires additional authorization',
                 detail=(
                     f"The host tag group you intend to delete is used in the following occurrences: {', '.join(affected_occurrences)}. You must "
-                    "authorize Checkmk to update the relevant instances using the repair parameter"
+                    "authorize Checkmk to update the relevant instances using the repair or mode parameters"
                 ),
             )
         undeclare_host_tag_attribute(ident)
-        _ = change_host_tags(OperationRemoveTagGroup(ident), TagCleanupMode("delete"))
+        _ = change_host_tags(OperationRemoveTagGroup(ident), mode)
 
     tag_config = load_tag_config()
     tag_config.remove_tag_group(ident)
@@ -266,7 +275,7 @@ def _serve_host_tag_group(tag_details: TagGroupSpec) -> Response:
     return constructors.response_with_etag_created_from_dict(response, dict(tag_details))
 
 
-def serialize_host_tag_group(details: TagGroupSpec) -> dict[str, Any]:
+def serialize_host_tag_group(details: TagGroupSpec) -> DomainObject:
     extensions = {
         "topic": details.get("topic", "Tags"),
         "tags": details["tags"],

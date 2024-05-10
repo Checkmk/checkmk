@@ -21,8 +21,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_tsm_storagepools(string_table):
@@ -55,7 +57,7 @@ def check_tsm_storagepools(item, _no_params, parsed):
     size = int(float(data["size"]) * 1024**2)
     return (
         0,
-        f"Used size: {get_bytes_human_readable(size)}, Type: {stype}",
+        f"Used size: {render.disksize(size)}, Type: {stype}",
         [("used_space", size)],
     )
 

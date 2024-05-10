@@ -7,8 +7,15 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, ServiceLabel, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    ServiceLabel,
+    State,
+    StringTable,
+)
 from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
 from cmk.plugins.gcp.agent_based.gcp_filestore import check, check_summary, discover, parse
 from cmk.plugins.gcp.lib import gcp
@@ -70,6 +77,7 @@ PLUGINS = [
             "disk_write_ios",
             "disk_average_read_wait",
             "disk_average_write_wait",
+            "disk_latency",
         ],
         pure_metrics=["disk_used_capacity", "disk_capacity"],
         results=[

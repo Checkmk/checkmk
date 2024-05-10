@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping, Sequence
 
-import freezegun
 import pytest
+import time_machine
 
 from tests.unit.checks.checktestlib import mock_item_state
 
@@ -72,7 +73,7 @@ def test_discover_3par_volumes(
                 Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.00)),
                 Metric("fs_free", 10240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Used: 0% - 0 B of 10.0 GiB"),
+                Result(state=State.OK, summary="Used: 0% - 0 B of 10.7 GB"),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
@@ -99,11 +100,11 @@ def test_discover_3par_volumes(
                 Metric("fs_used_percent", 80.46875, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(
                     state=State.WARN,
-                    summary="Used: 80.47% - 8.05 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
+                    summary="Used: 80.47% - 8.64 GB of 10.7 GB (warn/crit at 80.00%/90.00% used)",
                 ),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
                 Metric("growth", 0.47614433552936597),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +488 KiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +499 kB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.47614433552936597),
                 Result(state=State.OK, summary="Time left until disk full: 11 years 185 days"),
@@ -128,11 +129,11 @@ def test_discover_3par_volumes(
                 Metric("fs_used_percent", 97.65625, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(
                     state=State.CRIT,
-                    summary="Used: 97.66% - 9.77 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
+                    summary="Used: 97.66% - 10.5 GB of 10.7 GB (warn/crit at 80.00%/90.00% used)",
                 ),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
                 Metric("growth", 0.5778450673900072),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +592 KiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +606 kB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.5778450673900072),
                 Result(state=State.OK, summary="Time left until disk full: 1 year 50 days"),
@@ -155,7 +156,7 @@ def test_discover_3par_volumes(
                 Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.00)),
                 Metric("fs_free", 10240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Used: 0% - 0 B of 10.0 GiB"),
+                Result(state=State.OK, summary="Used: 0% - 0 B of 10.7 GB"),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
@@ -182,7 +183,7 @@ def test_discover_3par_volumes(
                 Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.00)),
                 Metric("fs_free", 10240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Used: 0% - 0 B of 10.0 GiB"),
+                Result(state=State.OK, summary="Used: 0% - 0 B of 10.7 GB"),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
@@ -209,7 +210,7 @@ def test_discover_3par_volumes(
                 Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.00)),
                 Metric("fs_free", 10240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Used: 0% - 0 B of 10.0 GiB"),
+                Result(state=State.OK, summary="Used: 0% - 0 B of 10.7 GB"),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
@@ -228,7 +229,10 @@ def test_check_3par_volumes(
     parameters: Mapping[str, tuple[float, float]],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-    with freezegun.freeze_time("2022-07-11 07:00:00"), mock_item_state((162312321.0, 0.0)):
+    with (
+        time_machine.travel(datetime.datetime.fromisoformat("2022-07-11 07:00:00Z")),
+        mock_item_state((162312321.0, 0.0)),
+    ):
         assert (
             list(
                 check_threepar_volumes(

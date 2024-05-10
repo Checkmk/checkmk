@@ -7,7 +7,7 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 
-from cmk.plugins.lib.kube import DaemonSetInfo, UpdateStrategy
+from cmk.plugins.kube.schemata.section import DaemonSetInfo, UpdateStrategy
 from cmk.plugins.lib.kube_inventory import (
     labels_to_table,
     match_expressions_to_str,

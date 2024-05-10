@@ -1,0 +1,23 @@
+title: NetApp Filer Clustermode: System Electrical Current
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the electrical current levels of various components of a NetApp
+ filer.
+
+ The checks reports {CRIT} when the sensor-value is higher than the
+ critical-high-threshold, and reports {WARN} if it is higher than the warning-high-threshold.
+ If both critical-high-threshold and warning-high-threshold are present the check will also honor
+ critical-low-threshold and warning-low-threshold if present and the threshold-sensor-value falls
+ below those.
+
+ Please note: You need the Special Agent "NetApp via ONTAP REST Api" to retrieve the monitoring
+ data from the device. The Special Agent itself can be configured by WATO.
+
+item:
+ Name of the sensor
+
+discovery:
+ One service is created for each sensor reporting current information.

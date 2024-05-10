@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import cast
 
+from cmk.utils.config_validation_layer.users.contacts import validate_contacts
+from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
@@ -23,11 +26,13 @@ from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import (
     declare_notification_plugin_permissions,
     user_script_choices,
     user_script_title,
 )
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
@@ -183,7 +188,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
         )
 
     # Locking
-    locked = user_attrs.get("locked")
+    locked = user_attrs["locked"]
     if user_id == user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
@@ -278,22 +283,63 @@ def notification_script_choices() -> list[tuple[str, str]]:
     return choices
 
 
-def verify_password_policy(password: Password) -> None:
+def verify_password_policy(password: Password, varname: str = "password") -> None:
     min_len = active_config.password_policy.get("min_length")
     num_groups = active_config.password_policy.get("num_groups")
 
     result = password.verify_policy(PasswordPolicy(min_len, num_groups))
     if result == PasswordPolicy.Result.TooShort:
         raise MKUserError(
-            "password",
+            varname,
             _("The given password is too short. It must have at least %d characters.") % min_len,
         )
     if result == PasswordPolicy.Result.TooSimple:
         raise MKUserError(
-            "password",
+            varname,
             _(
                 "The password does not use enough character groups. You need to "
                 "set a password which uses at least %d of them."
             )
             % num_groups,
         )
+
+
+class UsersConfigFile(WatoSingleConfigFile[dict]):
+    """Handles reading and writing users.mk file"""
+
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(multisite_dir()) / "users.mk", config_variable="multisite_users"
+        )
+
+    def _load_file(self, lock: bool) -> dict:
+        users = super()._load_file(lock)
+        validate_users(users)
+        return users
+
+    def save(self, cfg: dict) -> None:
+        validate_users(cfg)
+        super().save(cfg)
+
+
+class ContactsConfigFile(WatoSingleConfigFile[dict]):
+    """Handles reading and writing contacts.mk file"""
+
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(wato_root_dir()) / "contacts.mk", config_variable="contacts"
+        )
+
+    def _load_file(self, lock: bool) -> dict:
+        users = super()._load_file(lock)
+        validate_contacts(users)
+        return users
+
+    def save(self, cfg: dict) -> None:
+        validate_contacts(cfg)
+        super().save(cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(UsersConfigFile())
+    config_file_registry.register(ContactsConfigFile())

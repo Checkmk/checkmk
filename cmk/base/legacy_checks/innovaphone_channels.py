@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.innovaphone import check_innovaphone
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 
 
-def inventory_innovaphone_channels(string_table: StringTable) -> DiscoveryResult:
+def discover_innovaphone_channels(string_table: StringTable) -> DiscoveryResult:
     yield from (Service(item=x[0]) for x in string_table if x[1] == "Up" and x[2] == "Up")
 
 
@@ -37,7 +37,7 @@ def parse_innovaphone_channels(string_table: StringTable) -> StringTable:
 check_info["innovaphone_channels"] = LegacyCheckDefinition(
     parse_function=parse_innovaphone_channels,
     service_name="Channel %s",
-    discovery_function=inventory_innovaphone_channels,
+    discovery_function=discover_innovaphone_channels,
     check_function=check_innovaphone_channels,
     check_default_parameters={
         "levels": (75.0, 80.0),

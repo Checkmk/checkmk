@@ -21,6 +21,10 @@ std::unique_ptr<Filter> NullColumn::createFilter(
     throw std::runtime_error("filtering on null column not supported");
 }
 
+std::unique_ptr<Sorter> NullColumn::createSorter() const {
+    throw std::runtime_error("filtering on null column not supported");
+}
+
 std::unique_ptr<Aggregator> NullColumn::createAggregator(
     AggregationFactory /*factory*/) const {
     throw std::runtime_error("aggregating on null column not supported");

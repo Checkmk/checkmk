@@ -1,0 +1,774 @@
+@charset "UTF-8";
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+a#menu_shortcut_compare_history {
+  display: none;
+}
+
+div#viewport_information {
+  position: absolute;
+  top: 0px;
+  right: 14px;
+  height: 28px;
+  margin-top: 10px;
+  background-color: $bg-color-secondary;
+
+  table {
+    height: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  select {
+    cursor: pointer;
+    background-color: $navbar-color;
+    height: 100%;
+    width: 80px;
+  }
+
+  select option {
+    text-align: right;
+  }
+
+  td#panning_info {
+    width: 80px;
+    div {
+      font-size: 10px;
+      text-align: center;
+      &:first-child {
+        font-weight: 700;
+      }
+    }
+  }
+  td#zoom_options {
+    border-top: solid $ux-theme-6;
+    border-bottom: solid $ux-theme-6;
+    select {
+      font-size: 12px;
+      font-weight: 500;
+    }
+    border-width: thin;
+  }
+
+  td#zoom_plus {
+    border-top-right-radius: $theme-border-radius;
+    border-bottom-right-radius: $theme-border-radius;
+  }
+
+  td#zoom_minus {
+    border-top-left-radius: $theme-border-radius;
+    border-bottom-left-radius: $theme-border-radius;
+  }
+
+  td#zoom_plus,
+  td#zoom_minus {
+    background-color: $navbar-color;
+    border: solid $ux-theme-6;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 500;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    border-width: thin;
+  }
+}
+
+div.topology_layout_designer,
+a#menu_shortcut_edit_layout,
+div.topology_compare_history {
+  img {
+    content: url("images/icon_toggle_off.svg") !important;
+
+    &.on {
+      content: url("images/icon_toggle_on.svg") !important;
+    }
+  }
+}
+
+div.topology_layout_designer,
+div.topology_compare_history {
+  span.choices {
+    height: 100%;
+    pointer-events: all;
+  }
+
+  label {
+    margin-right: 4px;
+  }
+
+  span.choice {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 10px;
+    padding-top: 5px;
+  }
+}
+
+// Toggle switch
+div.nodevis.toggle_switch_container {
+  width: $toggle-switch-width-large;
+  height: $toggle-switch-height;
+  background-repeat: no-repeat;
+  pointer-events: all;
+
+  background-image: url("images/icon_toggle_off.svg");
+
+  &.on {
+    background-image: url("images/icon_toggle_on.svg");
+  }
+
+  img.iconbutton {
+    height: $toggle-switch-height;
+  }
+}
+
+// Search box
+div#top_heading table.menubar td.inpage_search.node_vis {
+  input[type="text"] {
+    background-color: $ux-theme-5;
+  }
+
+  input[type="button"] {
+    position: relative;
+    left: -24px;
+    top: -2px;
+  }
+}
+
+// Range slider text+input+manual_input
+tr.range_input {
+  td.range_input.slider {
+    width: 100%;
+    input {
+      width: 85%;
+      accent-color: $success;
+    }
+  }
+
+  input.range_input.manual_input {
+    width: 43px;
+    text-align: right;
+  }
+}
+
+#svg_content {
+  min-height: 630px;
+  background-color: $bg-color-secondary;
+}
+
+#node_visualization {
+  position: relative;
+  height: 100%;
+}
+
+.topology_center,
+.topology_remote {
+  fill: transparent;
+}
+
+#node_visualization_root_div {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: $bg-color-secondary;
+}
+
+div.node_vis {
+  label.link_info {
+    background-color: $bg-color-secondary;
+    padding: 3px;
+  }
+
+  img.tick {
+    content: url("images/icon_tick.svg") !important;
+  }
+
+  g#svg_layers .node_element circle.mesh_root {
+    display: none;
+  }
+
+  g#svg_layers g#nodes.edit .node_element circle.mesh_root {
+    display: unset;
+  }
+
+  div#layout_toggle_panel {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    padding: 4px;
+    background-color: rgba($bg-color-secondary, 0.8);
+
+    div {
+      display: inline-block;
+      align-items: center;
+    }
+  }
+
+  g#nodes.hide_host_labels text.host_text {
+    display: none;
+  }
+
+  g#nodes.hide_service_labels text.service_text {
+    display: none;
+  }
+
+  g#nodes.hide_other_labels text.other_text {
+    display: none;
+  }
+
+  g#nodes.hide_icons image.main_icon {
+    display: none;
+  }
+
+  table#overlay_configuration {
+    margin-top: 12px;
+  }
+
+  g#nodes img.unknown {
+    height: 50px;
+    width: 50px;
+    content: url("images/icon_maxisnapin.svg");
+  }
+
+  // Radio group
+  div.radio_group {
+    display: flex;
+    align-items: center;
+    background-color: $bg-color-secondary;
+    label.title {
+      width: 80px;
+    }
+  }
+
+  table.radio_group {
+    border-collapse: separate;
+    border-spacing: 0;
+
+    input[type="radio"] {
+      display: none !important;
+    }
+
+    label.title {
+      margin-right: 28px;
+    }
+
+    td {
+      input[type="radio"]:checked + label {
+        background-color: $ux-theme-6;
+        font-weight: 700;
+      }
+
+      border-top: solid $ux-theme-6;
+      border-bottom: solid $ux-theme-6;
+
+      &:hover {
+        cursor: pointer;
+        background-color: $ux-theme-6;
+      }
+
+      &:first-child {
+        border-left: solid $ux-theme-6;
+        border-radius: $theme-border-radius 0px 0px $theme-border-radius;
+      }
+
+      &:last-child {
+        border-right: solid $ux-theme-6;
+        border-radius: 0px $theme-border-radius $theme-border-radius 0px;
+      }
+
+      label {
+        display: flex;
+        padding: 4px;
+        pointer-events: all;
+      }
+    }
+  }
+
+  div#log_messages {
+    position: absolute;
+    pointer-events: none;
+    overflow: hidden;
+    width: 300px;
+    height: 150px;
+    top: 12px;
+    left: 280px;
+  }
+
+  #viewport {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+
+  #toolbar div.content {
+    top: 25px;
+  }
+
+  .node_element .indicator_growth_root {
+    stroke: $font-color-dimmed;
+    stroke-width: 1;
+  }
+
+  div.box,
+  img.box {
+    background-color: $node-vis-menu-bg-color;
+    border-radius: 4px;
+  }
+
+  /* infobox */
+  #infobox {
+    position: absolute;
+    top: 44px;
+    left: 130px;
+    width: 250px;
+    overflow: hidden;
+
+    label {
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+    }
+  }
+
+  div#infobox div#content {
+    padding: 8px;
+  }
+
+  /* topology depth */
+  div.topology_slider {
+    padding-top: 8px;
+    padding-right: 8px;
+  }
+
+  div.topology_slider input {
+    width: 80px;
+  }
+
+  /* layouting*/
+  img.layouting_icon,
+  img.node_icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  img.layouting_icon {
+    background-color: $node-vis-history-bg-color;
+    border-color: $node-vis-history-border-color;
+    filter: $node-vis-history-filter;
+  }
+
+  div#layouting_toolbar {
+    table#layout_settings {
+      margin-top: 6px;
+      margin-bottom: -12px;
+      table-layout: fixed;
+
+      tr {
+        height: 21px;
+
+        td:first-child {
+          width: 125px;
+        }
+      }
+    }
+
+    div.radio_group {
+      margin-top: 12px;
+
+      label.title {
+        width: 68px;
+      }
+    }
+
+    div#save_delete {
+      margin-top: 10px;
+    }
+
+    position: absolute;
+    top: 48px;
+    right: 12px;
+    width: 340px;
+    pointer-events: all;
+
+    padding: 8px;
+    padding-top: 0;
+    margin: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+
+    input.save_delete {
+      width: 100%;
+      margin: 3px;
+
+      &.save {
+        border: 1px solid $success;
+      }
+    }
+  }
+
+  div#layout_management {
+    padding: 8px;
+    padding-top: 0;
+    margin: 3px;
+  }
+
+  div#configuration_div table select {
+    margin-left: 34px;
+  }
+
+  div#style_management {
+    margin-top: 10px;
+    margin-left: 4px;
+    margin-right: -3px;
+    overflow: hidden;
+    background-color: $node-vis-menu-bg-color;
+    border: solid $ux-theme-6;
+    border-width: thin;
+
+    table.style_configuration {
+      margin-top: 10px;
+    }
+
+    div#style_div {
+      position: relative;
+    }
+  }
+
+  div#history_icons {
+    position: absolute;
+    right: 4px;
+    top: 6px;
+
+    img {
+      width: 16px;
+      height: 20px;
+      border-radius: 4px;
+      margin-right: 2px;
+      background-color: $node-vis-history-bg-color;
+      border-color: $node-vis-history-border-color;
+      filter: $node-vis-history-filter;
+
+      &.disabled {
+        opacity: 0.3;
+      }
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+  }
+
+  #matcher_config {
+    margin-top: 8px;
+    margin-left: 6px;
+  }
+
+  input[type="checkbox"] {
+    display: unset;
+  }
+
+  #current_style {
+    width: 100%;
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .delete_icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .path_details table {
+    padding-left: 12px;
+
+    th {
+      text-align: left;
+    }
+  }
+
+  .node_element,
+  .infobox_entry {
+    cursor: pointer;
+  }
+
+  g.node_element {
+    pointer-events: all;
+    &.topology_center {
+      display: none;
+    }
+  }
+
+  g.edit .topology_center {
+    display: unset;
+  }
+
+  g.edit .node_element circle.style_root_node,
+  g.edit .node_element .free_floating_node {
+    cursor: move;
+  }
+
+  .node_element circle.collapsed {
+    stroke-width: 15;
+  }
+
+  .node_element circle.has_crit_services {
+    stroke: $danger;
+    stroke-width: 1;
+    fill: none;
+    pointer-events: none;
+  }
+
+  .node_element circle.has_warn_services {
+    stroke: $warning;
+    stroke-width: 1;
+    fill: none;
+    pointer-events: none;
+  }
+
+  .node_element.focus circle {
+    stroke: $blue !important;
+    stroke-width: 3;
+  }
+
+  .node_element.highlight circle {
+    stroke: $font-color !important;
+    stroke-width: 4;
+  }
+
+  circle.edge_marker {
+    fill: $darkgrey;
+    opacity: 0.5;
+    r: 4;
+  }
+
+  .link_element {
+    line,
+    path {
+      stroke: $darkgrey;
+      pointer-events: stroke;
+    }
+
+    &.foreign_link {
+      line,
+      path {
+        stroke-dasharray: 2 3;
+      }
+    }
+
+    &.local_link {
+      line,
+      path {
+        stroke-dasharray: none;
+      }
+    }
+
+    .critical {
+      stroke: $danger !important;
+      stroke-width: 4;
+    }
+
+    .highlight {
+      stroke: $font-color !important;
+      stroke-width: 4;
+    }
+  }
+
+  .only_in_ref {
+    circle {
+      stroke: $tag-added-color-light !important;
+      stroke-width: 5;
+    }
+    line,
+    path {
+      stroke: $tag-added-color-light !important;
+      stroke-width: 3;
+    }
+  }
+  .only_in_ref.highlight {
+    circle {
+      stroke: $tag-added-color-light !important;
+      stroke-width: 5;
+    }
+    line,
+    path {
+      stroke: $tag-added-color-light !important;
+      stroke-width: 3;
+    }
+  }
+  .missing_in_ref {
+    circle {
+      stroke: $tag-removed-color-light !important;
+      stroke-width: 5;
+    }
+    line,
+    path {
+      stroke: $tag-removed-color-light !important;
+      stroke-width: 3;
+    }
+  }
+  .missing_in_ref.highlight {
+    circle {
+      stroke: $tag-removed-color-light !important;
+      stroke-width: 5;
+    }
+    line,
+    path {
+      stroke: $tag-removed-color-light !important;
+      stroke-width: 3;
+    }
+  }
+
+  div#popup_menu {
+    min-width: 250px;
+
+    li.nested {
+      a {
+        display: inline;
+      }
+
+      span.triangle {
+        display: inline;
+        position: absolute;
+        right: 0px;
+        margin-top: -2px;
+      }
+    }
+
+    ul {
+      background-color: $bg-color;
+    }
+    label {
+      color: $font-color;
+    }
+  }
+
+  /* Context popup Popup */
+  li a {
+    cursor: pointer;
+  }
+
+  li.popup_link {
+    span {
+      text-decoration: unset !important;
+    }
+  }
+
+  li.popup_link:not(.nested) {
+    div:hover {
+      text-decoration: underline;
+    }
+  }
+
+  /* Style indicators */
+  .style_indicator {
+    opacity: 0.3;
+    stroke: $black;
+    stroke-width: 1;
+  }
+
+  circle.style_indicator.focus {
+    opacity: 0.5;
+    stroke: $warning;
+    stroke-width: 3;
+  }
+
+  .style_infotext {
+    width: 159px;
+  }
+
+  div.quickinfo {
+    min-width: 600px;
+  }
+
+  input.reset_options {
+    position: absolute;
+    top: -3px;
+    right: -8px;
+  }
+
+  img.layouting_icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  image.indicator_growth_possible {
+    filter: $dark-image-invert;
+  }
+
+  div#togglebuttons {
+    display: flex;
+  }
+
+  .style_overlay {
+    pointer-events: none;
+    fill: none;
+    stroke: $line-color;
+    stroke-width: 2px;
+    stroke-linejoin: round;
+  }
+
+  line.dashed,
+  path.dashed,
+  .style_indicator {
+    animation-duration: 60s;
+    animation-iteration-count: infinite;
+    animation-name: dash;
+    animation-timing-function: linear;
+    animation-direction: reverse;
+    stroke-dasharray: 20 1;
+    stroke-dashoffset: 0;
+  }
+
+  div#main_window_layered {
+    width: 100%;
+    height: 100%;
+  }
+
+  .zoom {
+    pointer-events: all;
+    cursor: move2;
+    fill: none;
+  }
+}
+.block_style_overlay.root_children_connection {
+  stroke-width: 6px;
+  stroke-linejoin: round;
+}
+
+.block_style_overlay {
+  vector-effect: non-scaling-stroke;
+  fill: $node-vis-darkgrey;
+  stroke: $node-vis-darkgrey;
+  stroke-width: $spacing;
+  stroke-linejoin: round;
+}
+
+@media only screen and (max-width: 1150px) {
+  div.node_vis div#layouting_toolbar {
+    top: 84px;
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: 500;
+  }
+}
+
+.noselect {
+  user-select: none;
+  /* Non-prefixed version, currently
+                             supported by Chrome and Opera */
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+}

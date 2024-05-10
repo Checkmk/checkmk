@@ -66,9 +66,11 @@ class _ClientCertProtocol(H11Protocol):
                 self.headers = [
                     (
                         b"verified-uuid",
-                        client_cn.encode()
-                        if client_cn is not None
-                        else b"missing: no client certificate provided",
+                        (
+                            client_cn.encode()
+                            if client_cn is not None
+                            else b"missing: no client certificate provided"
+                        ),
                     ),
                     *self.headers,
                 ]

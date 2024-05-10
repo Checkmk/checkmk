@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
-
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -37,5 +35,5 @@ from cmk.plugins.lib.cpu import Load, Section
         ),
     ],
 )
-def test_parse_ucd_cpu_load(string_table: List[StringTable], expected_section: Section) -> None:
+def test_parse_ucd_cpu_load(string_table: list[StringTable], expected_section: Section) -> None:
     assert parse_ucd_cpu_load(string_table) == expected_section

@@ -23,16 +23,16 @@ from cmk.base.config import check_info
 # 8 1 failed
 
 
-def inventory_nullmailer_mailq(parsed):
+def discover_nullmailer_mailq(parsed):
     if parsed:
-        yield "", {}
+        yield None, {}
 
 
 check_info["nullmailer_mailq"] = LegacyCheckDefinition(
     parse_function=parse_nullmailer_mailq,
-    service_name="Nullmailer Queue %s",
-    discovery_function=inventory_nullmailer_mailq,
+    service_name="Nullmailer Queue",
+    discovery_function=discover_nullmailer_mailq,
     check_function=check_nullmailer_mailq,
-    check_ruleset_name="mail_queue_length",
+    check_ruleset_name="mail_queue_length_single",
     check_default_parameters=NULLMAILER_MAILQ_DEFAULT_LEVELS,
 )

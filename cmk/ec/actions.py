@@ -82,18 +82,20 @@ def do_event_actions(
     event: Event,
     is_cancelling: bool,
 ) -> None:
-    """
-    Execute a list of actions on an event that has just been opened or cancelled.
-    """
+    """Execute a list of actions on an event that has just been opened or cancelled."""
     table = config["action"]
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(host_config, logger, event, is_cancelling=is_cancelling)
         elif action := table.get(aname):
-            logger.info(f'executing action "{action["title"]}" on event {event["id"]}')
+            logger.info('executing action "%s" on event %s', action["title"], event["id"])
             do_event_action(history, settings, config, logger, event_columns, action, event, "")
         else:
-            logger.info('undefined action "{aname}, must be one of {", ".join(table.keys()}"')
+            logger.info(
+                'undefined action "%s", must be one of %s',
+                aname,
+                ", ".join(table.keys()),
+            )
 
 
 # Rule actions are currently done synchronously. Actions should
@@ -121,7 +123,8 @@ def do_event_action(
         elif act[0] == "script":
             _do_script_action(history, logger, event_columns, act[1], action_id, event, user)
         else:
-            logger.error("Cannot execute action %s: invalid action type %s", action_id, act[0])
+            # TODO: Really parse the config, then this can't happen
+            logger.error("Cannot execute action %s: invalid action type %s", action_id, act[0])  # type: ignore[unreachable]
     except Exception:
         if settings.options.debug:
             raise
@@ -254,10 +257,7 @@ def _get_event_tags(
 
     tags: dict[str, str] = {}
     for key, value in substs:
-        if isinstance(value, tuple):
-            value = " ".join(map(to_string, value))
-        else:
-            value = to_string(value)
+        value = " ".join(map(to_string, value)) if isinstance(value, tuple) else to_string(value)
 
         tags[key] = value
 
@@ -460,9 +460,8 @@ def _add_infos_from_monitoring_host(
 def _add_contacts_from_rule(context: ECEventContext, event: Event, logger: Logger) -> None:
     """
     Add contact information from the rule, but only if the
-    host is unknown or if contact groups in rule have precedence
+    host is unknown or if contact groups in rule have precedence.
     """
-
     contact_groups = event.get("contact_groups")
     if (
         contact_groups is not None
@@ -481,8 +480,8 @@ def _add_contact_information_to_context(
 ) -> None:
     try:
         contact_names = query_contactgroups_members(contact_groups)
-    except Exception as e:
-        logger.error(f"Cannot get contact group members, assuming none: {e}")
+    except Exception:
+        logger.exception("Cannot get contact group members, assuming none:")
         contact_names = set()
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
@@ -498,8 +497,8 @@ def _add_contact_information_to_context(
 def _core_has_notifications_enabled(logger: Logger) -> bool:
     try:
         return query_status_enable_notifications()
-    except Exception as e:
-        logger.error(
-            f"Cannot determine whether notifications are enabled in core, assuming YES: {e}"
+    except Exception:
+        logger.exception(
+            "Cannot determine whether notifications are enabled in core, assuming YES."
         )
         return True

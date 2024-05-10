@@ -25,7 +25,7 @@ def _parameter_valuespec_skype_edge():
             (
                 "authentication_failures",
                 Dictionary(
-                    title=_("Authentication Failures"),
+                    title=_("Authentication failures"),
                     elements=[
                         (
                             "upper",

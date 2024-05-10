@@ -8,9 +8,7 @@ import contextlib
 import dataclasses
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, NamedTuple, NotRequired, TypeAlias, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Generic, NamedTuple, NotRequired, TypeAlias, TypedDict, TypeVar
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (
@@ -20,8 +18,9 @@ from cmk.utils.labels import (
     HostLabel,
     LabelGroups,
     Labels,
+    LabelSources,
 )
-from cmk.utils.parameters import boil_down_parameters
+from cmk.utils.parameters import merge_parameters
 from cmk.utils.regex import regex
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
@@ -30,8 +29,6 @@ from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
-
-LabelSources = dict[str, str]
 
 # The Tag* types below are *not* used in `cmk.utils.tags`
 # but they are used here.  Therefore, they do *not* belong
@@ -121,9 +118,12 @@ class LabelManager(NamedTuple):
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class RulesetMatchObject:
-    # TODO: Get rid of this.  Or at least, make it private to this module.
     host_name: HostName | HostAddress
-    service_description: ServiceName | None = None
+    # The next field is:
+    #   * None to match hosts
+    #   * ServiceName to match services
+    #   * Item to match checkgroups
+    service_description: ServiceName | Item | None = None
     service_labels: Labels | None = None
 
 
@@ -201,10 +201,7 @@ class RulesetMatcher:
         The first dict setting a key defines the final value.
 
         """
-        default: Mapping[str, TRuleValue] = {}
-        merged = boil_down_parameters(self.get_host_values(hostname, ruleset), default)
-        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
-        return merged
+        return merge_parameters(self.get_host_values(hostname, ruleset), default={})
 
     def get_host_values(
         self,
@@ -217,9 +214,9 @@ class RulesetMatcher:
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self.ruleset_optimizer.all_processed_hosts()
 
-        optimized_ruleset: Mapping[
-            HostName | HostAddress, Sequence[TRuleValue]
-        ] = self.ruleset_optimizer.get_host_ruleset(ruleset, with_foreign_hosts)
+        optimized_ruleset: Mapping[HostName | HostAddress, Sequence[TRuleValue]] = (
+            self.ruleset_optimizer.get_host_ruleset(ruleset, with_foreign_hosts)
+        )
 
         return optimized_ruleset.get(hostname, [])
 
@@ -235,7 +232,7 @@ class RulesetMatcher:
     ) -> None:
         cache_id = (hostname, description, item)
         if cache_id not in self.__service_match_obj:
-            self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, description, labels)
+            self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, item, labels)
 
     def _service_match_object(
         self, hostname: HostName, description: ServiceName
@@ -290,15 +287,14 @@ class RulesetMatcher:
         The first dict setting a key defines the final value.
 
         """
-        default: Mapping[str, TRuleValue] = {}
-        merged = boil_down_parameters(
-            self.get_service_ruleset_values(
-                self._service_match_object(hostname, description), ruleset
+        return merge_parameters(
+            list(
+                self.get_service_ruleset_values(
+                    self._service_match_object(hostname, description), ruleset
+                )
             ),
-            default,
+            default={},
         )
-        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
-        return merged
 
     def service_extra_conf(
         self, hostname: HostName, description: ServiceName, ruleset: Sequence[RuleSpec[TRuleValue]]
@@ -868,15 +864,15 @@ class RulesetOptimizer:
         return labels
 
     def _ruleset_labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
-        default: Labels = {}
-        merged = boil_down_parameters(
-            self._ruleset_matcher.get_service_ruleset_values(
-                RulesetMatchObject(hostname, service_desc), self._label_manager.service_label_rules
+        return merge_parameters(
+            list(
+                self._ruleset_matcher.get_service_ruleset_values(
+                    RulesetMatchObject(hostname, service_desc),
+                    self._label_manager.service_label_rules,
+                )
             ),
-            default,
+            default={},
         )
-        assert isinstance(merged, dict)
-        return merged
 
 
 def _tags_cache_id(tag_or_label_spec: object) -> object:

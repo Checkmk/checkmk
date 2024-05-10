@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import logging
 
 import pytest
@@ -76,15 +78,14 @@ def test_perfcounters_columns_match_status_length() -> None:
 def test_perfcounters_column_default_values() -> None:
     c = Perfcounters(logger)
     for column_name, default_value in c.status_columns():
-        if column_name.startswith("status_average_") and column_name.endswith("_time"):
-            assert isinstance(default_value, float)
-            assert default_value == 0.0
-
-        elif column_name.startswith("status_average_") and column_name.endswith("_rate"):
-            assert isinstance(default_value, float)
-            assert default_value == 0.0
-
-        elif column_name.startswith("status_") and column_name.endswith("_rate"):
+        if (
+            column_name.startswith("status_average_")
+            and column_name.endswith("_time")
+            or column_name.startswith("status_average_")
+            and column_name.endswith("_rate")
+            or column_name.startswith("status_")
+            and column_name.endswith("_rate")
+        ):
             assert isinstance(default_value, float)
             assert default_value == 0.0
 
@@ -135,4 +136,4 @@ def test_perfcounters_correct_status_values() -> None:
             )
 
         else:
-            raise NotImplementedError()
+            raise NotImplementedError

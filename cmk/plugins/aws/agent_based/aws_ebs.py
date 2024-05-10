@@ -6,15 +6,17 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     AgentSection,
-    check_levels_fixed,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_rate,
     get_value_store,
     render,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.aws.lib import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
 from cmk.plugins.lib.diskstat import check_diskstat_dict
 
@@ -158,7 +160,7 @@ def check_aws_ebs_burst_balance(
     if (disk_data := section.get(item)) is None:
         return
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=disk_data["BurstBalance"],
         metric_name="aws_burst_balance",
         levels_lower=params.get("burst_balance_levels_lower", (None, None)),

@@ -10,7 +10,7 @@ import livestatus
 from cmk.gui.logged_in import user
 
 
-def determine_downtime_mode(recurring_number, delayed_duration):
+def determine_downtime_mode(recurring_number: int, delayed_duration: int) -> int:
     """Determining the downtime mode
 
     The mode is represented by an integer (bit masking?) which contains information
@@ -27,14 +27,12 @@ def determine_downtime_mode(recurring_number, delayed_duration):
 
 
 class DowntimeSchedule:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, start_time, end_time, mode, delayed_duration=None, comment=None
+    def __init__(
+        self, start_time: float, end_time: float, mode: int, delayed_duration: int, comment: str
     ) -> None:
         self.start_time = start_time
         self.end_time = end_time
         self.mode = mode
-        if delayed_duration is None:
-            delayed_duration = 0
         self.delayed_duration = delayed_duration
         self.comment = comment
 

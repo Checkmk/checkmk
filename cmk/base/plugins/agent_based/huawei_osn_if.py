@@ -97,7 +97,7 @@ register.check_plugin(
     name="huawei_osn_if",
     service_name="Interface %s",
     discovery_function=discover_huawei_osn_if,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_huawei_osn_if,
 )

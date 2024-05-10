@@ -3,19 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import time
 from collections.abc import Iterable, Mapping
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 
-from tests.testlib import on_time
+from cmk.gui.plugins.wato.check_parameters.diskstat import scale_back, scale_forth
 
-from tests.unit.cmk.plugins.lib.diskstat import LEVELS
-
-from cmk.agent_based.v2 import get_rate, IgnoreResultsError, Metric, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import (
+    CheckResult,
+    get_rate,
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.lib import diskstat
+
+
+def migrated_parameters(p: dict) -> dict:
+    """replace the test parameters with the scaled ones
+
+    inline this once the migration is done."""
+    return scale_back(scale_forth(p))
 
 
 @pytest.mark.parametrize(
@@ -137,15 +152,14 @@ def test_compute_rates_multiple_disks() -> None:
     value_store: dict[str, Any] = {}
 
     # first call should result in IgnoreResultsError, second call should yield rates
-    with on_time(0, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(0, tz=ZoneInfo("UTC"))):
         with pytest.raises(IgnoreResultsError):
             diskstat.compute_rates_multiple_disks(
                 disks,
                 value_store,
                 _compute_rates_single_disk,
             )
-
-    with on_time(60, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(60, tz=ZoneInfo("UTC"))):
         disks_w_rates = diskstat.compute_rates_multiple_disks(
             disks,
             value_store,
@@ -316,47 +330,6 @@ def test_summarize_disks(
 
 
 @pytest.mark.parametrize(
-    "levels,factor",
-    [
-        (
-            (
-                1,
-                2,
-            ),
-            3,
-        ),
-        (
-            (
-                10,
-                20,
-            ),
-            1e6,
-        ),
-        (
-            None,
-            1,
-        ),
-    ],
-)
-def test_scale_levels(levels: tuple[float, float] | None, factor: float) -> None:
-    scaled_levels = diskstat._scale_levels(levels, factor)
-    if levels is None:
-        assert scaled_levels is None
-    else:
-        assert scaled_levels == tuple(level * factor for level in levels)
-
-
-def test_scale_levels_predictive() -> None:
-    assert diskstat._scale_levels_predictive(LEVELS, 10) == {
-        "horizon": 90,
-        "levels_lower": ("absolute", (20.0, 40.0)),
-        "levels_upper": ("absolute", (100.0, 200.0)),
-        "levels_upper_min": (100.0, 150.0),
-        "period": "wday",
-    }
-
-
-@pytest.mark.parametrize(
     "params,disk,exp_res",
     [
         (
@@ -396,7 +369,7 @@ def test_scale_levels_predictive() -> None:
             ],
         ),
         (
-            (
+            migrated_parameters(
                 {
                     "utilization": (10, 20),
                     "read": (1e-5, 1e-4),
@@ -483,14 +456,17 @@ def test_check_diskstat_dict(
     assert (
         list(
             diskstat.check_diskstat_dict(
-                params=params, disk=disk, value_store=value_store, this_time=0.0
+                params=params,
+                disk=disk,
+                value_store=value_store,
+                this_time=0.0,
             )
         )
         == exp_res
     )
     assert list(
         diskstat.check_diskstat_dict(
-            params=({**params, "average": 300}),
+            params={**params, "average": 300},
             disk=disk,
             value_store=value_store,
             this_time=60.0,

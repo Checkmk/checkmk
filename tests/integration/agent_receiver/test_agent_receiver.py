@@ -122,8 +122,7 @@ def paired_keypair_fixture(
     private_key_path = tmp_path_factory.mktemp("certs") / "private_key.key"
     with private_key_path.open("wb") as private_key_file:
         private_key_file.write(
-            # mypy claims private_bytes is not a thing, docs and reality say otherwise...
-            private_key.private_bytes(  # type: ignore[attr-defined]
+            private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
                 encryption_algorithm=serialization.NoEncryption(),

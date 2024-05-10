@@ -157,9 +157,11 @@ def do_actions(  # pylint: disable=too-many-branches
     if not command_confirm_dialog(
         confirm_options,
         confirm_dialog_options.confirm_title,
-        confirm_dialog_options.affected + confirm_dialog_options.additions
-        if confirm_dialog_options.additions
-        else confirm_dialog_options.affected,
+        (
+            confirm_dialog_options.affected + confirm_dialog_options.additions
+            if confirm_dialog_options.additions
+            else confirm_dialog_options.affected
+        ),
         confirm_dialog_options.icon_class,
         confirm_dialog_options.confirm_button,
         confirm_dialog_options.cancel_button,

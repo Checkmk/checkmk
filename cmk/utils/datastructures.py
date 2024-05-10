@@ -11,13 +11,11 @@ T = TypeVar("T")
 
 
 @overload
-def denilled(obj: list[T | None]) -> list[T]:
-    ...
+def denilled(obj: list[T | None]) -> list[T]: ...
 
 
 @overload
-def denilled(obj: dict[str, T | None]) -> dict[str, T]:
-    ...
+def denilled(obj: dict[str, T | None]) -> dict[str, T]: ...
 
 
 def denilled(

@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import subprocess
 from collections.abc import Mapping
 from pathlib import Path
 
 from cmk.utils import password_store, store
+from cmk.utils.config_validation_layer.passwords import validate_passwords
 from cmk.utils.password_store import Password
 
 import cmk.gui.userdb as userdb
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
-from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 
 
@@ -49,23 +51,32 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
-        return join_password_specs(
+        cfg = join_password_specs(
             store.load_from_mk_file(
                 self._config_file_path,
                 key=self._config_variable,
                 default={},
                 lock=lock,
             ),
-            password_store.load(),
+            password_store.load(password_store.password_store_path()),
         )
+        validate_passwords(cfg)
+        return cfg
 
-    def save(self, cfg: Mapping[str, Password], pretty: bool) -> None:
+    def save(self, cfg: Mapping[str, Password]) -> None:
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
+        validate_passwords(cfg)
         meta_data, passwords = split_password_specs(cfg)
-        super().save(meta_data, pretty)
-        password_store.save(passwords)
+        super().save(meta_data)
+        password_store.save(passwords, password_store.password_store_path())
+        update_passwords_merged_file()
+
+
+def update_passwords_merged_file() -> None:
+    # update the "live" merged passwords file
+    subprocess.check_call(["cmk", "--automation", "update-passwords-merged-file"])
 
 
 def join_password_specs(
@@ -98,3 +109,7 @@ def passwordstore_choices() -> Choices:
         (ident, pw["title"])
         for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()
     ]
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(PasswordStore())

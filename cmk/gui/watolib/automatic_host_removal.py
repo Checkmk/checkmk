@@ -7,9 +7,7 @@ import itertools
 import json
 import time
 from collections.abc import Iterable, Iterator, Sequence
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from livestatus import LocalConnection, SiteId
 
@@ -19,9 +17,11 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, wato_site_ids
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
@@ -41,7 +41,15 @@ def execute_host_removal_background_job() -> None:
         logger.debug("Another host removal job is already running, skipping this time.")
         return
 
-    job.start(_remove_hosts)
+    job.start(
+        _remove_hosts,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
+    )
 
 
 class HostRemovalBackgroundJob(BackgroundJob):
@@ -52,14 +60,7 @@ class HostRemovalBackgroundJob(BackgroundJob):
         return _("Host removal")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
 
 def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:
@@ -105,13 +106,13 @@ def _hosts_to_be_removed_for_site(
     job_interface: BackgroundProcessInterface,
     site_id: SiteId,
 ) -> Iterator[Host]:
-    if site_is_local(site_id):
+    if site_is_local(active_config, site_id):
         hostnames = _hosts_to_be_removed_local()
     else:
         try:
             hostnames_serialized = str(
                 do_remote_automation(
-                    get_site_config(site_id),
+                    get_site_config(active_config, site_id),
                     "hosts-for-auto-removal",
                     [],
                 )

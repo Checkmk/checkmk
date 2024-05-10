@@ -21,16 +21,13 @@ __all__ = [
 @dataclass(frozen=True)
 class Closed:
     """
-    Defines a closed bound
-
-    Args::
-        value:  A bound value
+    Args:
+        value: A bound value
 
     Example:
 
         >>> Closed(23.5)
         Closed(value=23.5)
-
     """
 
     value: Bound
@@ -43,16 +40,13 @@ class Closed:
 @dataclass(frozen=True)
 class Open:
     """
-    Defines an open bound
-
-    Args::
-        value:  A bound value
+    Args:
+        value: A bound value
 
     Example:
 
         >>> Open(23.5)
         Open(value=23.5)
-
     """
 
     value: Bound
@@ -65,17 +59,21 @@ class Open:
 @dataclass(frozen=True)
 class FocusRange:
     """
-    Defines a focus range
+    Args:
+        lower: A lower bound
+        upper: An upper bound
 
-    Args::
-        lower:  A lower bound
-        upper:  An upper bound
+    For metric that only can produce values between 0 and 100, but never smaller or larger ones, use
+    :class:`Closed` borders:
 
-    Example:
+    >>> FocusRange(Closed(0), Closed(100))
+    FocusRange(lower=Closed(value=0), upper=Closed(value=100))
 
-        >>> FocusRange(Closed(0), Closed(100))
-        FocusRange(lower=Closed(value=0), upper=Closed(value=100))
+    For metrics that can create arbitrarily small or large numbers, but you expect them to be
+    between -10 and +10 most of the time, use :class:`Open` borders.
 
+    >>> FocusRange(Open(-10), Open(+10))
+    FocusRange(lower=Open(value=-10), upper=Open(value=10))
     """
 
     lower: Closed | Open
@@ -85,14 +83,13 @@ class FocusRange:
 @dataclass(frozen=True, kw_only=True)
 class Perfometer:
     """
-    Defines a perfometer
+    Istances of this class will only be picked up by Checkmk if their names start with
+    ``perfometer_``.
 
-    Args::
-        name:   An unique name
-        focus_range:
-                A focus range
-        segments:
-                A list of metric names or objects
+    Args:
+        name: An unique name
+        focus_range: A focus range
+        segments: A list of metric names or objects
 
     Example:
 
@@ -101,7 +98,6 @@ class Perfometer:
         ...     focus_range=FocusRange(Closed(0), Closed(100)),
         ...     segments=["metric-name-1", "metric-name-2"],
         ... )
-
     """
 
     name: str
@@ -120,12 +116,13 @@ class Perfometer:
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
     """
-    Defines a bidirectional perfometer
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``perfometer_``.
 
-    Args::
-        name:   An unique name
-        left:   A perfometer which grow to the left
-        right:  A perfometer which grow to the right
+    Args:
+        name: An unique name
+        left: A perfometer which grows to the left
+        right: A perfometer which grows to the right
 
     Example:
 
@@ -142,7 +139,6 @@ class Bidirectional:
         ...         segments=["metric-name-3"],
         ...     ),
         ... )
-
     """
 
     name: str
@@ -157,12 +153,13 @@ class Bidirectional:
 @dataclass(frozen=True, kw_only=True)
 class Stacked:
     """
-    Defines a stacked perfometer
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``perfometer_``.
 
-    Args::
-        name:   An unique name
-        lower:  A perfometer on the bottom
-        upper:  A perfometer on the top
+    Args:
+        name: An unique name
+        lower: A perfometer at the bottom
+        upper: A perfometer on the top
 
     Example:
 
@@ -179,7 +176,6 @@ class Stacked:
         ...         segments=["metric-name-3"],
         ...     ),
         ... )
-
     """
 
     name: str

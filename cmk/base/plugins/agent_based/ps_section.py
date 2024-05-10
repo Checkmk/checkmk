@@ -25,10 +25,10 @@ from .agent_based_api.v1.type_defs import StringTable
 
 # Sixth generation (>=1.2.7) adds an optional etime, joined by "/" with the CPU time
 
-# The plugin "psperf.bat" is deprecated. As of version 1.2.5 all of this information
+# The plug-in "psperf.bat" is deprecated. As of version 1.2.5 all of this information
 # is reported by the windows agent itself. However, we still support sections from psperf.bat
 # if the agent version is lower than 1.2.5.
-# Windows agent now ships a plugin "psperf.bat" that adds a section from wmic
+# Windows agent now ships a plug-in "psperf.bat" that adds a section from wmic
 # to the output:
 # <<<ps:sep(44)>>>
 # [wmic process]

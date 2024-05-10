@@ -30,7 +30,7 @@ def check_sophos_disk(item, params, parsed):
 
 
 def discover_sophos_disk(parsed):
-    return [(None, {})] if parsed is not None else None
+    yield None, {}
 
 
 check_info["sophos_disk"] = LegacyCheckDefinition(

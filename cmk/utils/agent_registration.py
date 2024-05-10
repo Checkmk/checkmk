@@ -67,7 +67,10 @@ class UUIDLinkManager:
             return
 
         for source in self._received_outputs_dir.iterdir():
-            yield UUIDLink(source=source, target=source.readlink())
+            try:
+                yield UUIDLink(source=source, target=source.readlink())
+            except FileNotFoundError:
+                continue
 
     def unlink(self, host_names: Container[HostName]) -> None:
         for link in self:

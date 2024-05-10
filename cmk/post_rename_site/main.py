@@ -55,7 +55,7 @@ def main(args: list[str]) -> int:
 
 def load_plugins() -> None:
     for plugin, exc in _load_plugins():
-        logger.error("Error in action plugin %s: %s\n", plugin, exc)
+        logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if cmk.utils.debug.enabled():
             raise exc
 

@@ -20,7 +20,7 @@
 class Logger;
 class IntFilter;
 
-template <class T, int32_t Default = 0>
+template <typename T, int32_t Default = 0>
 struct AttributeBitmaskColumn : IntColumn<T, Default> {
     using IntColumn<T, Default>::IntColumn;
 

@@ -6,17 +6,14 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import (
     handle_iso_utc_to_localtimestamp,
     parse_graylog_agent_data,
 )
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 # <<<graylog_license>>>
 # {"status": [{"violated": true,"expired": false,"expiration_upcoming":
@@ -75,7 +72,7 @@ def check_graylog_license(_no_item, params, parsed):
 
     traffic_limit = license_data.get("license", {}).get("enterprise", {}).get("traffic_limit")
     if traffic_limit is not None:
-        yield 0, "Traffic limit: %s" % get_bytes_human_readable(traffic_limit)
+        yield 0, "Traffic limit: %s" % render.bytes(traffic_limit)
 
     expires = license_data.get("license", {}).get("expiration_date")
     if expires is not None:
@@ -86,7 +83,7 @@ def check_graylog_license(_no_item, params, parsed):
             time_to_expiration,
             None,
             (None, None, warn, crit),
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.time_offset,
             infoname="Expires in",
         )
 

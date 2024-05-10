@@ -7,8 +7,7 @@ import json
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 
-from cmk.agent_based.v2 import AgentSection
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.gcp.lib.gcp import (
     AssetSection,
     AssetType,

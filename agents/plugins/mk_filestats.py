@@ -87,7 +87,7 @@ You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 import collections
 import configparser
@@ -269,7 +269,7 @@ class PatternIterator:
                 if filestat.isfile:
                     yield filestat
                 if filestat.isdir:
-                    for filestat in self._iterate_folder(item):
+                    for filestat in self._iterate_folder(item):  # pylint: disable=use-yield-from
                         yield filestat
 
 

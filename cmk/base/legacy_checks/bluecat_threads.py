@@ -7,8 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 threads_default_levels = {"levels": ("levels", (2000, 4000))}
 

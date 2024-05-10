@@ -197,7 +197,14 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
 
 def run_shell_command(cmd: str, replace_newlines: bool) -> str:
     """Run a command and return preprocessed stdout"""
-    stdout_str = subprocess.check_output(["sh", "-c", cmd], text=True).strip()
+    with subprocess.Popen(
+        ["sh"],
+        text=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    ) as proc_sh:
+        stdout_str, _ = proc_sh.communicate(cmd)
+    stdout_str = stdout_str.strip()
     return stdout_str.replace("\n", " ") if replace_newlines else stdout_str
 
 

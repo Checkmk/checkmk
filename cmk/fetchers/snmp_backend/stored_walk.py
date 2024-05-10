@@ -9,9 +9,6 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
-import cmk.utils.agent_simulator as agent_simulator
-import cmk.utils.paths
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
@@ -24,13 +21,9 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(SNMPBackend):
-    def __init__(
-        self, snmp_config: SNMPHostConfig, logger: logging.Logger, path: Path | None = None
-    ) -> None:
+    def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger, path: Path) -> None:
         super().__init__(snmp_config, logger)
-        self.path: Final = (
-            path if path is not None else Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
-        )
+        self.path: Final = path
         if not self.path.exists():
             raise MKSNMPError(f"No snmpwalk file {self.path}")
 
@@ -63,7 +56,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
             oid_prefix = oid
             dot_star = False
 
-        console.vverbose(f"  Loading {oid}")
+        console.debug(f"  Loading {oid}")
         lines = self.read_walk_data()
 
         begin = 0
@@ -95,7 +88,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
     @staticmethod
     def read_walk_from_path(path: Path) -> Sequence[str]:
-        console.vverbose(f"  Opening {path}\n")
+        console.debug(f"  Opening {path}\n")
         lines = []
         with path.open() as f:
             # Sometimes there are newlines in the data of snmpwalks.
@@ -150,12 +143,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
-                    # FIXME: This encoding ping-pong is horrible...
-                    value = agent_simulator.process(
-                        AgentRawData(
-                            parts[1].encode(),
-                        ),
-                    ).decode()
+                    value = parts[1]
                 else:
                     value = ""
                 # Fix for missing starting oids

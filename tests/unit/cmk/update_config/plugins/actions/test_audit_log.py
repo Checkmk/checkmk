@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+import datetime
 import logging
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest_mock import MockerFixture
-
-from tests.testlib import on_time
 
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.paths import wato_var_dir
@@ -27,7 +30,7 @@ def fixture_plugin() -> UpdateAuditLog:
     return test
 
 
-def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture) -> None:
+def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture, request_context: None) -> None:
     """
     Create new audit log, execute update action and check for result
     """
@@ -43,8 +46,8 @@ def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture) -> None:
     with open(wato_var_dir() / "log" / "wato_audit.log", "rb") as f:
         expected_content = f.read()
 
-    with on_time("2023-11-08 13:00", "CET"):
-        plugin(logging.getLogger(), {})
+    with time_machine.travel(datetime.datetime(2023, 11, 8, 13, tzinfo=ZoneInfo("CET"))):
+        plugin(logging.getLogger())
 
     content = b""
     for file in [

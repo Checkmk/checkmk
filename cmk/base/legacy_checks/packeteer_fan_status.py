@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, startswith, StringTable
 
 
-def inventory_packeteer_fan_status(section: StringTable) -> DiscoveryResult:
+def discover_packeteer_fan_status(section: StringTable) -> DiscoveryResult:
     for nr, fan_status in enumerate(section[0]):
         if fan_status in ["1", "2"]:
             yield Service(item=f"{nr}")
@@ -40,6 +39,6 @@ check_info["packeteer_fan_status"] = LegacyCheckDefinition(
         oids=["12", "14", "22", "24"],
     ),
     service_name="Fan Status",
-    discovery_function=inventory_packeteer_fan_status,
+    discovery_function=discover_packeteer_fan_status,
     check_function=check_packeteer_fan_status,
 )

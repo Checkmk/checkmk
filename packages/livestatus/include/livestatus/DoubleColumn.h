@@ -16,9 +16,11 @@
 #include "livestatus/Column.h"
 #include "livestatus/DoubleAggregator.h"
 #include "livestatus/DoubleFilter.h"
+#include "livestatus/DoubleSorter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/opids.h"
 class User;
 
@@ -27,7 +29,7 @@ class User;
 // Currently the default is hardwired to zero.
 // TODO(ml, sp): C++-20 should let us use double as default template parameter
 // (see P0732).
-template <class T>
+template <typename T>
 class DoubleColumn : public Column {
 public:
     using value_type = double;
@@ -52,6 +54,18 @@ public:
         return std::make_unique<DoubleFilter>(
             kind, name(), [this](Row row) { return this->getValue(row); },
             relOp, value, logger());
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<DoubleSorter>(
+            [this](Row row, const std::optional<std::string> &key) {
+                if (key) {
+                    throw std::runtime_error("double column '" + name() +
+                                             "' does not expect key '" +
+                                             (*key) + "'");
+                }
+                return getValue(row);
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

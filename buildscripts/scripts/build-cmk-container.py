@@ -249,6 +249,9 @@ def docker_tag(
         )
         LOG.debug("Done")
 
+    image.reload()
+    LOG.debug(f"Final image tags: {image.tags}")
+
 
 def docker_login(registry: str, docker_username: str, docker_passphrase: str) -> None:
     """Log into a registry"""
@@ -400,22 +403,34 @@ def build_tar_gz(
 
         LOG.info(f"Creating Image-Tarball {tar_name} ...")
         if "-rc" in version_tag:
-            LOG.info(f"{version_tag} contains rc information, do a retagging before docker save.")
+            LOG.info(
+                f"{version_tag} contains rc information, do a retagging before docker save with {args.version}."
+            )
+
+            # image.tag() is required to make image.save() work properly.
+            # See docs of image.save(chunk_size=2097152, named=False):
+            # If set to True, the first tag in the tags list will be used to identify the image.
+            # Alternatively, any element of the tags list can be used as an argument to use that specific tag as the saved identifier.
             image.tag(
                 repository=f"{docker_repo_name}/check-mk-{args.edition}",
                 tag=f"{args.version}",
             )
-
+            # reload this object from the server and update attrs
+            image.reload()
+            LOG.debug(f"Image tags after re-tagging: {image.tags}")
+            this_tag = f"{docker_repo_name}/check-mk-{args.edition}:{args.version}"
             with gzip.open(tar_name, "wb") as tar_ball:
-                for chunk in image.save():
+                # image.save() can only take elements of the tags list of an image
+                # as new tags are appended to the list of tags, the "oldest" one would be used if nothing is specified by the named keyword
+                for chunk in image.save(named=this_tag):
                     tar_ball.write(chunk)
-
-            docker_client.images.remove(
-                image=f"{docker_repo_name}/check-mk-{args.edition}:{args.version}"
+            LOG.debug(
+                f"Remove image {this_tag} now, it will be loaded from tar.gz at a later point again, see CMK-16498"
             )
+            docker_client.images.remove(image=this_tag)
         else:
             with gzip.open(tar_name, "wb") as tar_ball:
-                for chunk in image.save():
+                for chunk in image.save(named=this_tag):
                     tar_ball.write(chunk)
 
 
@@ -445,7 +460,7 @@ def build_image(
         name=f"{args.source_path}/check-mk-{args.edition}-{args.version}{suffix}.tar.gz",
         mode="r:gz",
     ) as tar:
-        tar.extractall(tmp_path)
+        tar.extractall(tmp_path, filter="data")
 
     LOG.info("Copy debian package ...")
     run_cmd(cmd=["cp", f"{args.source_path}/{pkg_file}", docker_path])

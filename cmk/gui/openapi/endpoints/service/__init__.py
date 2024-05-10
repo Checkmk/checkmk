@@ -17,8 +17,7 @@ How to use the query DSL used in the `query` parameters of these endpoints, have
 These endpoints support all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
 which you can look up in the Checkmk documentation.
 
-For a detailed list of columns have a look at the [services table](https://github.com/checkmk/checkmk/blob/master/cmk/utils/livestatus_helpers/tables/services.py)
-definition on GitHub.
+For a detailed list of columns, have a look at the [services table](#section/Table-definitions/Services-Table) definition.
 """
 from collections.abc import Mapping
 from typing import Any
@@ -31,10 +30,11 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields import HostField
 from cmk.gui.http import Response
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
 
@@ -102,26 +102,31 @@ OPTIONAL_HOST_NAME = {
                 example="Filesystem /boot",
                 required=True,
             ),
-        }
+            "columns": gui_fields.column_field(
+                Services,
+                default=[
+                    Services.host_name,
+                    Services.description,
+                    Services.state,
+                    Services.state_type,
+                    Services.last_check,
+                ],
+                example=["state", "state_type"],
+            ),
+        },
     ],
     tag_group="Monitoring",
-    response_schema=response_schemas.DomainObject,
+    response_schema=response_schemas.DomainObject,  # TODO: response schema
     permissions_required=PERMISSIONS,
 )
 def show_service(params: Mapping[str, Any]) -> Response:
-    """Show the monitored service of a host"""
+    """Show a single service of a specific host"""
     service_description = params["service_description"]
     host_name = params["host_name"]
     live = sites.live()
     try:
         q = Query(
-            [
-                Services.description,
-                Services.host_name,
-                Services.state_type,
-                Services.state,
-                Services.last_check,
-            ],
+            params["columns"],
             filter_expr=And(
                 Services.host_name.op("=", params["host_name"]),
                 Services.description.op("=", service_description),
@@ -184,6 +189,8 @@ def _list_all_services(params: Mapping[str, Any]) -> Response:
 
 def _list_services(params: Mapping[str, Any]) -> Response:
     live = sites.live()
+    if only_sites := params.get("sites"):
+        live.set_only_sites(only_sites)
 
     q = Query(params["columns"])
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 
 import pytest
 
@@ -553,3 +555,88 @@ def test_aggregation_state_filter_names_with_get_method(
             clients.BiAggregation.get_aggregation_state(
                 query_params={"filter_names": ["Host heute"]}
             )
+
+
+def create_bipack_get_rule_test_data(clients: ClientRegistry) -> dict:
+    clients.BiPack.create(
+        pack_id="Labeltest",
+        body={"title": "Test title", "contact_groups": [], "public": True},
+    )
+
+    return {
+        "pack_id": "Labeltest",
+        "id": "label_test_rule_id_1",
+        "nodes": [
+            {
+                "search": {
+                    "type": "service_search",
+                    "conditions": {
+                        "host_folder": "",
+                        "host_label_groups": [
+                            {
+                                "operator": "and",
+                                "label_group": [
+                                    {"operator": "and", "label": "mystery/switch:yes"},
+                                    {"operator": "or", "label": "mystery/switch:no"},
+                                ],
+                            },
+                            {
+                                "operator": "or",
+                                "label_group": [
+                                    {"operator": "and", "label": "network/primary:yes"},
+                                    {"operator": "not", "label": "network/primary:no"},
+                                ],
+                            },
+                        ],
+                        "host_tags": {},
+                        "host_choice": {"type": "all_hosts"},
+                        "service_regex": "(.*)",
+                        "service_label_groups": [
+                            {
+                                "operator": "and",
+                                "label_group": [
+                                    {"operator": "and", "label": "network/stable:yes"},
+                                    {"operator": "or", "label": "network/stable:no"},
+                                ],
+                            },
+                            {
+                                "operator": "or",
+                                "label_group": [
+                                    {"operator": "and", "label": "network/uplink:yes"},
+                                    {"operator": "not", "label": "network/uplink:no"},
+                                ],
+                            },
+                        ],
+                    },
+                },
+                "action": {"type": "state_of_service", "host_regex": "$1$", "service_regex": "$2$"},
+            }
+        ],
+        "params": {"arguments": []},
+        "node_visualization": {"type": "block", "style_config": {}},
+        "properties": {
+            "title": "Labeltest 2.3.0 UI",
+            "comment": "",
+            "docu_url": "",
+            "icon": "",
+            "state_messages": {},
+        },
+        "aggregation_function": {"type": "worst", "count": 1, "restrict_state": 2},
+        "computation_options": {"disabled": False},
+    }
+
+
+def test_create_rule_with_label_groups(clients: ClientRegistry) -> None:
+    test_rule = create_bipack_get_rule_test_data(clients)
+    resp = clients.BiRule.create(rule_id="label_test_rule_id_1", body=test_rule)
+    assert (
+        resp.json["nodes"][0]["search"]["conditions"]
+        == test_rule["nodes"][0]["search"]["conditions"]
+    )
+
+
+def test_create_rule_with_label_groups_no_first_operator(clients: ClientRegistry) -> None:
+    test_rule = create_bipack_get_rule_test_data(clients)
+    del test_rule["nodes"][0]["search"]["conditions"]["host_label_groups"][0]["operator"]
+    del test_rule["nodes"][0]["search"]["conditions"]["service_label_groups"][0]["operator"]
+    clients.BiRule.create(rule_id="label_test_rule_id_1", body=test_rule)

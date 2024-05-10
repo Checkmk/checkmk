@@ -196,7 +196,7 @@ def test_domain_object() -> None:
 
 
 def test_status_codes_match() -> None:
-    assert get_args(StatusCodeInt) == tuple(int(sc) for sc in get_args(StatusCode))
+    assert set(get_args(StatusCodeInt)) == {int(sc) for sc in get_args(StatusCode)}
 
 
 def test_no_config_generation_on_get(

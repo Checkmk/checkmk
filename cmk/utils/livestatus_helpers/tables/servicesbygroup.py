@@ -1053,6 +1053,13 @@ class Servicesbygroup(Table):
     )
     """Optional performance data of the last check"""
 
+    host_performance_data = Column(
+        'host_performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     host_plugin_output = Column(
         'host_plugin_output',
         col_type='string',
@@ -1578,6 +1585,13 @@ class Servicesbygroup(Table):
     )
     """Optional performance data of the last check"""
 
+    performance_data = Column(
+        'performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     plugin_output = Column(
         'plugin_output',
         col_type='string',
@@ -1591,6 +1605,13 @@ class Servicesbygroup(Table):
         description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
     """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
+
+    prediction_files = Column(
+        'prediction_files',
+        col_type='list',
+        description='List currently available predictions',
+    )
+    """List currently available predictions"""
 
     previous_hard_state = Column(
         'previous_hard_state',

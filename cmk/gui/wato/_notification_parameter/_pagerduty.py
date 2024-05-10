@@ -29,7 +29,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
                     CascadingDropdown(
                         title=_("PagerDuty Service Integration Key"),
                         help=_(
-                            "After setting up a new Service in PagerDuty you will receive an "
+                            "After setting up a new service in PagerDuty you will receive an "
                             "Integration key associated with that service. Copy that value here."
                         ),
                         choices=[

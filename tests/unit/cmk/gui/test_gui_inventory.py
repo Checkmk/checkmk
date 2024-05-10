@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableTree, SDFilterChoice
+from cmk.utils.structured_data import ImmutableTree, SDFilterChoice, SDKey, SDNodeName
 
 import cmk.gui.inventory
 from cmk.gui.inventory import (
@@ -46,7 +46,7 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.",
             InventoryPath(
-                path=("hardware",),
+                path=(SDNodeName("hardware"),),
                 source=TreeSource.node,
             ),
             "hardware",
@@ -54,7 +54,7 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.cpu.",
             InventoryPath(
-                path=("hardware", "cpu"),
+                path=(SDNodeName("hardware"), SDNodeName("cpu")),
                 source=TreeSource.node,
             ),
             "cpu",
@@ -62,16 +62,16 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.cpu.model",
             InventoryPath(
-                path=("hardware", "cpu"),
+                path=(SDNodeName("hardware"), SDNodeName("cpu")),
                 source=TreeSource.attributes,
-                key="model",
+                key=SDKey("model"),
             ),
             "cpu",
         ),
         (
             ".software.packages:",
             InventoryPath(
-                path=("software", "packages"),
+                path=(SDNodeName("software"), SDNodeName("packages")),
                 source=TreeSource.table,
             ),
             "packages",
@@ -79,7 +79,12 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.memory.arrays:*.",
             InventoryPath(
-                ("hardware", "memory", "arrays", "*"),
+                (
+                    SDNodeName("hardware"),
+                    SDNodeName("memory"),
+                    SDNodeName("arrays"),
+                    SDNodeName("*"),
+                ),
                 source=TreeSource.node,
             ),
             "*",
@@ -87,36 +92,42 @@ from cmk.gui.type_defs import Row
         (
             ".software.packages:17.name",
             InventoryPath(
-                path=("software", "packages"),
+                path=(SDNodeName("software"), SDNodeName("packages")),
                 source=TreeSource.table,
-                key="name",
+                key=SDKey("name"),
             ),
             "packages",
         ),
         (
             ".software.packages:*.name",
             InventoryPath(
-                path=("software", "packages"),
+                path=(SDNodeName("software"), SDNodeName("packages")),
                 source=TreeSource.table,
-                key="name",
+                key=SDKey("name"),
             ),
             "packages",
         ),
         (
             ".hardware.memory.arrays:*.devices:*.speed",
             InventoryPath(
-                path=("hardware", "memory", "arrays", "*", "devices"),
+                path=(
+                    SDNodeName("hardware"),
+                    SDNodeName("memory"),
+                    SDNodeName("arrays"),
+                    SDNodeName("*"),
+                    SDNodeName("devices"),
+                ),
                 source=TreeSource.table,
-                key="speed",
+                key=SDKey("speed"),
             ),
             "devices",
         ),
         (
             ".path:*.to.node.key",
             InventoryPath(
-                path=("path", "*", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("*"), SDNodeName("to"), SDNodeName("node")),
                 source=TreeSource.attributes,
-                key="key",
+                key=SDKey("key"),
             ),
             "node",
         ),
@@ -138,7 +149,7 @@ def test_parse_tree_path(
                 "visible_raw_path": "path.to.node",
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
                 nodes="all",
@@ -150,10 +161,10 @@ def test_parse_tree_path(
                 "nodes": ("choices", ["node"]),
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
-                nodes=["node"],
+                nodes=[SDNodeName("node")],
             ),
         ),
         (
@@ -162,8 +173,8 @@ def test_parse_tree_path(
                 "attributes": ("choices", ["key"]),
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
-                pairs=["key"],
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs=[SDKey("key")],
                 columns="all",
                 nodes="all",
             ),
@@ -174,9 +185,9 @@ def test_parse_tree_path(
                 "columns": ("choices", ["key"]),
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
-                columns=["key"],
+                columns=[SDKey("key")],
                 nodes="all",
             ),
         ),
@@ -186,7 +197,7 @@ def test_parse_tree_path(
                 "nodes": "nothing",
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
                 nodes="nothing",
@@ -198,7 +209,7 @@ def test_parse_tree_path(
                 "attributes": "nothing",
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="nothing",
                 columns="all",
                 nodes="all",
@@ -210,7 +221,7 @@ def test_parse_tree_path(
                 "columns": "nothing",
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="nothing",
                 nodes="all",
@@ -231,7 +242,7 @@ def test__make_filter_choices_from_permitted_paths(
         (
             ".path.to.node.",
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
                 nodes="all",
@@ -240,7 +251,7 @@ def test__make_filter_choices_from_permitted_paths(
         (
             ".path.to.node:",
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
                 nodes="all",
@@ -249,18 +260,18 @@ def test__make_filter_choices_from_permitted_paths(
         (
             ".path.to.node:*.key",
             SDFilterChoice(
-                path=("path", "to", "node"),
-                pairs=["key"],
-                columns=["key"],
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs=[SDKey("key")],
+                columns=[SDKey("key")],
                 nodes="nothing",
             ),
         ),
         (
             ".path.to.node.key",
             SDFilterChoice(
-                path=("path", "to", "node"),
-                pairs=["key"],
-                columns=["key"],
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                pairs=[SDKey("key")],
+                columns=[SDKey("key")],
                 nodes="nothing",
             ),
         ),
@@ -298,15 +309,21 @@ def test__make_filter_choices_from_api_request_paths(
     ],
 )
 def test_load_filtered_and_merged_tree(
-    monkeypatch: MonkeyPatch, hostname: HostName | None, row: Row, expected_tree: ImmutableTree
+    monkeypatch: MonkeyPatch,
+    hostname: HostName | None,
+    row: Row,
+    expected_tree: ImmutableTree,
+    request_context: None,
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
         "_load_tree_from_file",
         (
-            lambda *args, **kw: ImmutableTree.deserialize({"loaded": "tree"})
-            if kw["tree_type"] == "status_data"
-            else ImmutableTree()
+            lambda *args, **kw: (
+                ImmutableTree.deserialize({"loaded": "tree"})
+                if kw["tree_type"] == "status_data"
+                else ImmutableTree()
+            )
         ),
     )
     row.update({"host_name": hostname})
@@ -314,17 +331,13 @@ def test_load_filtered_and_merged_tree(
 
 
 def test_get_history_empty() -> None:
-    for hostname in [
-        HostName("inv-host"),
-        HostName("/inv-host"),
-    ]:
-        history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
+    history, corrupted_history_files = cmk.gui.inventory.get_history(HostName("inv-host"))
 
-        assert len(history) == 0
-        assert len(corrupted_history_files) == 0
+    assert len(history) == 0
+    assert len(corrupted_history_files) == 0
 
 
-def test_get_history_archive_but_no_inv_tree() -> None:
+def test_get_history_archive_but_no_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # history
@@ -368,7 +381,7 @@ def _create_inventory_history() -> None:
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_get_history() -> None:
+def test_get_history(request_context: None) -> None:
     hostname = HostName("inv-host")
     expected_results = [
         (1, 0, 0),
@@ -428,6 +441,7 @@ def test_get_history() -> None:
 def test_load_delta_tree(
     search_timestamp: int,
     expected_raw_delta_tree: dict,
+    request_context: None,
 ) -> None:
     hostname = HostName("inv-host")
 
@@ -449,7 +463,7 @@ def test_load_delta_tree_no_such_timestamp() -> None:
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_load_latest_delta_tree() -> None:
+def test_load_latest_delta_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
     search_timestamp = int(Path(cmk.utils.paths.inventory_output_dir, hostname).stat().st_mtime)
 
@@ -466,7 +480,7 @@ def test_load_latest_delta_tree() -> None:
     assert delta_tree_2 is not None
 
 
-def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
+def test_load_latest_delta_tree_no_archive_and_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # current tree
@@ -478,7 +492,7 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
     assert not cmk.gui.inventory.load_latest_delta_tree(hostname)
 
 
-def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
+def test_load_latest_delta_tree_one_archive_and_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # history
@@ -498,7 +512,7 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
     assert delta_tree is not None
 
 
-def test_load_latest_delta_tree_one_archive_and_no_inv_tree() -> None:
+def test_load_latest_delta_tree_one_archive_and_no_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # history

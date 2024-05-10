@@ -8,20 +8,14 @@ from __future__ import annotations
 import enum
 import hashlib
 import hmac
-import sys
 import zlib
-from collections.abc import Callable, Iterator
+from collections.abc import Buffer, Callable, Iterator
 from enum import Enum
 from typing import assert_never, Final, Self
 
 from cmk.utils.crypto.deprecated import AesCbcCipher
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.serializertype import Deserializer, Serializer
-
-if sys.version_info < (3, 12):
-    from typing_extensions import Buffer
-else:
-    from collections.abc import Buffer
 
 OPENSSL_SALTED_MARKER = "Salted__"
 

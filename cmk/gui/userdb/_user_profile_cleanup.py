@@ -16,6 +16,7 @@ from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, In
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 
+from ..logged_in import user
 from .store import load_users
 
 
@@ -34,7 +35,15 @@ def execute_user_profile_cleanup_job() -> None:
             gui_logger.debug("Job was already executed within last %d seconds", interval)
             return
 
-    job.start(job.do_execute)
+    job.start(
+        job.do_execute,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
+    )
 
 
 class UserProfileCleanupBackgroundJob(BackgroundJob):
@@ -49,14 +58,7 @@ class UserProfileCleanupBackgroundJob(BackgroundJob):
         return _("User profile cleanup")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
         try:

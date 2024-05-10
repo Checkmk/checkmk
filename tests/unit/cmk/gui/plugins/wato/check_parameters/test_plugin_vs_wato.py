@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import abc
 import typing as t
+from pprint import pprint
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin
 
@@ -84,32 +86,25 @@ class Base(t.Generic[T], abc.ABC):
 class BaseProtocol(t.Protocol):
     type: str
 
-    def get_name(self) -> str:
-        ...
+    def get_name(self) -> str: ...
 
-    def get_merge_name(self) -> str:
-        ...
+    def get_merge_name(self) -> str: ...
 
-    def get_description(self) -> str:
-        ...
+    def get_description(self) -> str: ...
 
-    def __eq__(self, other: object) -> bool:
-        ...
+    def __eq__(self, other: object) -> bool: ...
 
-    def __gt__(self, other: object) -> bool:
-        ...
+    def __gt__(self, other: object) -> bool: ...
 
 
 class WatoProtocol(BaseProtocol, t.Protocol):
     def validate_parameter(
         self, parameters: t.Optional[ParametersTypeAlias]
-    ) -> t.Optional[Exception]:
-        ...
+    ) -> t.Optional[Exception]: ...
 
 
 class PluginProtocol(BaseProtocol, t.Protocol):
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
-        ...
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]: ...
 
 
 class Plugin(Base[TC], abc.ABC):
@@ -120,8 +115,7 @@ class Plugin(Base[TC], abc.ABC):
         return str(self._element.name)
 
     @abc.abstractmethod
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
-        ...
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]: ...
 
 
 class PluginDiscovery(Plugin[CheckPlugin]):
@@ -270,72 +264,7 @@ class ErrorReporter:
             RuleGroup.InvExports("software_csv"),
         ),  # deprecated since 2.2
     }
-    if edition() is Edition.CRE:
-        KNOWN_WATO_UNUSED |= {
-            ("check", RuleGroup.CheckgroupParameters("robotmk")),
-            ("check", RuleGroup.CheckgroupParameters("robotmk_suite")),
-        }
 
-    KNOWN_ITEM_REQUIREMENTS = {
-        # type # plugin # wato
-        ("check", "azure_ad_sync", RuleGroup.CheckgroupParameters("azure_ad")),
-        (
-            "check",
-            "azure_agent_info",
-            RuleGroup.CheckgroupParameters("azure_agent_info"),
-        ),
-        (
-            "check",
-            "checkpoint_memory",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "cisco_cpu_memory",
-            RuleGroup.CheckgroupParameters("cisco_cpu_memory"),
-        ),
-        (
-            "check",
-            "datapower_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "f5_bigip_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "f5_bigip_mem_tmm",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "hp_procurve_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "mongodb_replica_set",
-            RuleGroup.CheckgroupParameters("mongodb_replica_set"),
-        ),
-        (
-            "check",
-            "mongodb_replica_set_election",
-            RuleGroup.CheckgroupParameters("mongodb_replica_set"),
-        ),
-        (
-            "check",
-            "netapp_fcpio",
-            RuleGroup.CheckgroupParameters("netapp_fcportio"),
-        ),
-        (
-            "check",
-            "systemd_units_services_summary",
-            RuleGroup.CheckgroupParameters("systemd_services_summary"),
-        ),
-        ("check", "ucd_mem", RuleGroup.CheckgroupParameters("memory_simple")),
-    }
     KNOWN_WATO_MISSING = {
         # type # instance # wato
         ("check", "3ware_units", "raid"),
@@ -358,7 +287,6 @@ class ErrorReporter:
         ("check", "vbox_guest", "vm_state"),
         ("check", "win_netstat", "tcp_connections"),
         ("check", "wmic_process", "wmic_process"),
-        ("check", "zerto_vpg_rpo", "zerto_vpg_rpo"),
         ("check", "zertificon_mail_queues", "zertificon_mail_queues"),
         ("check", "zpool_status", "zpool_status"),
         ("discovery", "fileinfo", "fileinfo_groups"),
@@ -371,37 +299,11 @@ class ErrorReporter:
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
-        # type # plugin # wato
-        (
-            "check",
-            "apc_ats_output",
-            RuleGroup.CheckgroupParameters("apc_ats_output"),
-        ),
-        ("check", "apc_humidity", RuleGroup.CheckgroupParameters("humidity")),
-        (
-            "check",
-            "apc_symmetra",
-            RuleGroup.CheckgroupParameters("apc_symentra"),
-        ),
+        # type # plug-in # wato
         (
             "check",
             "apc_symmetra_temp",
             RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        (
-            "check",
-            "aws_dynamodb_table_read_capacity",
-            RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
-        ),
-        (
-            "check",
-            "aws_dynamodb_table_write_capacity",
-            RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
-        ),
-        (
-            "check",
-            "blade_bx_powerfan",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         (
             "check",
@@ -424,11 +326,6 @@ class ErrorReporter:
             "check",
             "ceph_status_osds",
             RuleGroup.CheckgroupParameters("ceph_osds"),
-        ),
-        (
-            "check",
-            "cisco_prime_wifi_access_points",
-            RuleGroup.CheckgroupParameters("cisco_prime_wifi_access_points"),
         ),
         (
             "check",
@@ -455,11 +352,6 @@ class ErrorReporter:
             "check",
             "docsis_channels_upstream",
             RuleGroup.CheckgroupParameters("docsis_channels_upstream"),
-        ),
-        (
-            "check",
-            "eltek_fans",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
         (
@@ -499,11 +391,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortimail_disk_usage",
-            RuleGroup.CheckgroupParameters("fortimail_disk_usage"),
-        ),
-        (
-            "check",
             "hivemanager_devices",
             RuleGroup.CheckgroupParameters("hivemanager_devices"),
         ),
@@ -512,44 +399,9 @@ class ErrorReporter:
             "huawei_osn_laser",
             RuleGroup.CheckgroupParameters("huawei_osn_laser"),
         ),
-        (
-            "check",
-            "ibm_imm_fan",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
-        (
-            "check",
-            "liebert_cooling",
-            RuleGroup.CheckgroupParameters("liebert_cooling"),
-        ),
-        (
-            "check",
-            "liebert_cooling_position",
-            RuleGroup.CheckgroupParameters("liebert_cooling_position"),
-        ),
-        (
-            "check",
-            "liebert_fans",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "liebert_fans_condenser",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "liebert_humidity_air",
-            RuleGroup.CheckgroupParameters("humidity"),
-        ),
         ("check", "lvm_vgs", RuleGroup.CheckgroupParameters("volume_groups")),
-        (
-            "check",
-            "mikrotik_signal",
-            RuleGroup.CheckgroupParameters("signal_quality"),
-        ),
         (
             "check",
             "mongodb_collections",
@@ -595,11 +447,6 @@ class ErrorReporter:
             "check",
             "openhardwaremonitor_fan",
             RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "openhardwaremonitor_smart",
-            RuleGroup.CheckgroupParameters("openhardwaremonitor_smart"),
         ),
         (
             "check",
@@ -664,16 +511,6 @@ class ErrorReporter:
             "tplink_poe_summary",
             RuleGroup.CheckgroupParameters("epower_single"),
         ),
-        (
-            "check",
-            "watchdog_sensors_humidity",
-            RuleGroup.CheckgroupParameters("humidity"),
-        ),
-        (
-            "check",
-            "websphere_mq_channels",
-            RuleGroup.CheckgroupParameters("websphere_mq_channels"),
-        ),
         ("discovery", "domino_tasks", "inv_domino_tasks_rules"),
         ("discovery", "mssql_counters_cache_hits", "inventory_mssql_counters_rules"),
         ("discovery", "mssql_datafiles", "mssql_transactionlogs_discovery"),
@@ -688,7 +525,6 @@ class ErrorReporter:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
-        self._known_item_requirements = self.KNOWN_ITEM_REQUIREMENTS.copy()
         self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
         self._known_error_loading_defaults = self.KNOWN_ERROR_LOADING_DEFAULTS.copy()
 
@@ -715,12 +551,12 @@ class ErrorReporter:
         self._failed |= True
 
     def run_tests(self, plugin: PluginProtocol, wato: WatoProtocol) -> None:
-        # try to load the plugin defaults into wato ruleset
+        # try to load the plug-in defaults into wato ruleset
         exception = wato.validate_parameter(plugin.get_default_parameters())
         if exception:
             self._report_error_loading_defaults(plugin, wato, exception)
 
-        # see if both plugin and wato have the same idea about items
+        # see if both plug-in and wato have the same idea about items
         if isinstance(plugin, PluginCheck) and isinstance(wato, WatoCheck):
             if wato.has_item() != plugin.has_item():
                 self._report_check_item_requirements(plugin, wato)
@@ -730,15 +566,11 @@ class ErrorReporter:
         plugin: PluginCheck,
         wato: WatoCheck,
     ) -> None:
-        element = (plugin.type, plugin.get_name(), wato.get_name())
-        if element in self._known_item_requirements:
-            self._known_item_requirements.remove(element)
-            return
         print(
             f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
         )
         print("    wato   handles item:", wato.has_item())
-        print("    plugin handles items:", plugin.has_item())
+        print("    plug-in handles items:", plugin.has_item())
         self._failed |= True
 
     def _report_error_loading_defaults(
@@ -765,7 +597,7 @@ class ErrorReporter:
 
     def test_for_vanished_known_problems(self) -> None:
         """
-        Generally test_plugin_vs_wato makes sure that the plugin default values
+        Generally test_plugin_vs_wato makes sure that the plug-in default values
         matches the structure of the wato ruleset.
 
         This particular test makes sure that the known defects defined in the
@@ -777,12 +609,10 @@ class ErrorReporter:
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...
-        print(self._known_error_loading_defaults)
-        print(self._known_item_requirements)
-        print(self._known_wato_missing)
-        print(self._known_wato_unused)
+        pprint(self._known_error_loading_defaults)
+        pprint(self._known_wato_missing)
+        pprint(self._known_wato_unused)
         assert len(self._known_error_loading_defaults) == 0
-        assert len(self._known_item_requirements) == 0
         assert len(self._known_wato_missing) == 0
         assert len(self._known_wato_unused) == 0
 
@@ -800,8 +630,7 @@ T_contra = t.TypeVar("T_contra", contravariant=True)
 
 
 class SupportsGreaterThan(t.Protocol, t.Generic[T_contra]):
-    def __gt__(self, other: T_contra) -> bool:
-        ...
+    def __gt__(self, other: T_contra) -> bool: ...
 
 
 A = t.TypeVar("A", bound=SupportsGreaterThan)

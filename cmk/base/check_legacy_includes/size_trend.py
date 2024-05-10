@@ -8,7 +8,6 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
     get_rate,
@@ -141,7 +140,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
     sign = "+" if trend > 0 else ""
     infotext += ", trend: {}{} / {:g} hours".format(
         sign,
-        get_bytes_human_readable(trend * MB),
+        render.disksize(trend * MB),
         range_hours,
     )
 
@@ -158,8 +157,8 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
             problems.append(
                 "growing too fast (warn/crit at %s/%s per %.1f h)(!"
                 % (
-                    get_bytes_human_readable(wa),
-                    get_bytes_human_readable(cr),
+                    render.disksize(wa),
+                    render.disksize(cr),
                     range_hours,
                 )
             )
@@ -173,7 +172,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
         trend * MB,
         levels.get("trend_shrinking_bytes"),
         range_hours,
-        get_bytes_human_readable,
+        render.disksize,
     )
     if tmp_state > 0:
         state = max(state, tmp_state)

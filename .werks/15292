@@ -22,3 +22,7 @@ https://checkmk.com/werks
 When updating to a new major version, the update process will check if there
 are unacknowledged werks and tell the user about this, as this list will no
 longer be available after the update.
+
+This check is omitted for remote sites in a distributed configuration
+environment, as long as both the remote site and the central site are running
+at least version 2.3.0 of Checkmk.

@@ -9,8 +9,10 @@ import contextlib
 import json
 import pprint
 import re
+import time
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, overload
 
@@ -18,6 +20,7 @@ from flask import current_app, session
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.log as log
 import cmk.gui.utils as utils
@@ -25,6 +28,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -41,7 +45,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.theme import theme
+from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
@@ -59,16 +63,35 @@ from .tag_rendering import (
 from .type_defs import RequireConfirmation
 
 
-def use_vue_rendering():
-    return active_config.experimental_features.get("use_vue_rendering") or html.request.has_var(
-        "use_vue_rendering"
-    )
+class ExperimentalRenderMode(Enum):
+    BACKEND = "backend"
+    FRONTEND = "frontend"
+    BACKEND_AND_FRONTEND = "backend_and_frontend"
+
+
+@request_memoize()
+def get_render_mode() -> ExperimentalRenderMode:
+    # Settings via url overwrite config based settings
+    if (rendering_mode := html.request.var("experimental_render_mode", None)) is None:
+        rendering_mode = active_config.experimental_features.get(
+            "render_mode", ExperimentalRenderMode.BACKEND.value
+        )
+
+    match rendering_mode:
+        case ExperimentalRenderMode.BACKEND.value:
+            return ExperimentalRenderMode.BACKEND
+        case ExperimentalRenderMode.FRONTEND.value:
+            return ExperimentalRenderMode.FRONTEND
+        case ExperimentalRenderMode.BACKEND_AND_FRONTEND.value:
+            return ExperimentalRenderMode.BACKEND_AND_FRONTEND
+        case _:
+            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
 
 
 def inject_js_profiling_code():
-    return active_config.experimental_features.get(
+    return active_config.inject_js_profiling_code or html.request.has_var(
         "inject_js_profiling_code"
-    ) or html.request.has_var("inject_js_profiling_code")
+    )
 
 
 EncType = typing.Literal[
@@ -220,259 +243,8 @@ class HTMLGenerator(HTMLWriter):
         javascripts = javascripts if javascripts else []
 
         self.open_head()
-
         if inject_js_profiling_code():
-            self.javascript(
-                """
-
-// NOTE:
-// This code is meant to be temporary and is used to investigate the runtime performance of the
-// user-interface on a continuous basis while developing it, without requiring too much infra-
-// structure.
-
-// We set this as early as possible.
-var startTime = Date.now();
-const currentUrl = window.location.pathname + window.location.search;
-
-const repeatUrlsTable = "repeatUrls";
-const metricsTable = "metrics";
-
-// We use a database!
-function openDatabase() {
-    // Whenever we need to change the schema, increment the version here.
-    const dbVersion = 1;
-    const dbName = 'PageMetricsDB';
-
-    return new Promise((resolve, reject) => {
-        const openRequest = indexedDB.open(dbName, dbVersion);
-
-        openRequest.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(metricsTable)) {
-                const objectStore = db.createObjectStore(metricsTable, { autoIncrement: true });
-                objectStore.createIndex('url', 'url', { unique: false });
-                objectStore.createIndex('metricName', 'metricName', { unique: false });
-            }
-            if (!db.objectStoreNames.contains(repeatUrlsTable)) {
-                const objectStore = db.createObjectStore(repeatUrlsTable, { keyPath: "url" });
-            }
-        };
-
-        openRequest.onsuccess = (event) => resolve(event.target.result);
-        openRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-function addRecord(store, object) {
-    return new Promise((resolve, reject) => {
-        const addRequest = store.add(object);
-
-        addRequest.onsuccess = (event) => resolve(event.target.result);
-        addRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-function putRecord(store, object) {
-    return new Promise((resolve, reject) => {
-        const putRequest = store.put(object);
-
-        putRequest.onsuccess = (event) => resolve(event.target.result);
-        putRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-function getRecord(store, key) {
-  return new Promise((resolve, reject) => {
-        let getRequest = store.get(key);
-
-        getRequest.onsuccess = (event) => resolve(event.target.result);
-        getRequest.onerror = (event) => reject(event.target.error);
-  });
-}
-
-
-async function storePageLoadMetric(db, url, metricName, loadTime) {
-    // console.info(`Metric: ${metricName}: ${loadTime}ms (${url})`);
-
-    const transaction = db.transaction([metricsTable], 'readwrite');
-    const store = transaction.objectStore(metricsTable);
-
-    return await addRecord(store, {
-        url: url,
-        metricName: metricName,
-        timestamp: new Date().getTime(),
-        loadTime: loadTime,
-    });
-}
-
-
-async function repeat(times) {
-    const db = await openDatabase();
-
-    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
-    const store = transaction.objectStore(repeatUrlsTable);
-
-    return await putRecord(store, {
-        url: currentUrl,
-        times: times,
-    });
-}
-
-
-async function decreaseUrl(db, url) {
-    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
-    const store = transaction.objectStore(repeatUrlsTable);
-
-    let record = await getRecord(store, url);
-
-    if (record && typeof record.times === 'number' && record.times > 0) {
-        record.times -= 1;
-        return await putRecord(store, record);
-    }
-
-}
-
-
-async function decrease() {
-    const db = await openDatabase();
-    return await decreaseUrl(db, currentUrl);
-}
-
-
-function isMouseoverMutation(mutationRecords) {
-    for (const record of mutationRecords) {
-        // Ignore mouseovers over the graph in index.py
-        if (record.target.className == "graph" || record.target.className == "hover_menu") {
-            return true;
-        }
-    }
-    return false;
-}
-
-
-async function shouldRepeat(db, url) {
-    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
-    const store = transaction.objectStore(repeatUrlsTable);
-
-    let record = await getRecord(store, currentUrl);
-
-    if (record && typeof record.times === 'number' && record.times > 0) {
-        return true;
-    }
-    return false;
-}
-
-
-function waitForMutationsToStop(observedElement, timeoutDuration, isIgnoredMutation) {
-    return new Promise((resolve) => {
-        let lastMutationTime = Date.now();
-        let timer;
-
-        // console.log(`Setting up observer after ${lastMutationTime - startTime}ms`);
-        timer = setTimeout(() => {
-            resolve(lastMutationTime - startTime);
-        }, timeoutDuration);
-
-        const observer = new MutationObserver((mutations) => {
-            lastMutationTime = Date.now();
-            // console.log(`Got mutations after ${lastMutationTime - startTime}ms`);
-            if (isIgnoredMutation(mutations)) return;
-
-            clearTimeout(timer);
-            timer = setTimeout(() => {
-                observer.disconnect();
-                resolve(lastMutationTime - startTime);
-            }, timeoutDuration);
-        });
-
-        observer.observe(observedElement, { childList: true, subtree: true });
-    });
-}
-
-
-async function onDomContentLoaded() {
-    const fullyLoaded = Date.now() - startTime;
-    // We set up the observer earlier so that its internal timing won't be delayed by our
-    // following database work, etc.
-    let mutationWaiter = waitForMutationsToStop(document.body, 2000, isMouseoverMutation);
-
-    const db = await openDatabase();
-    await storePageLoadMetric(db, currentUrl, "fullyLoaded", fullyLoaded);
-
-    const lastMutation = await mutationWaiter;
-    await storePageLoadMetric(db, currentUrl, "fullyRendered", lastMutation);
-
-    if (await shouldRepeat(db, currentUrl)) {
-        await decreaseUrl(db, currentUrl);
-        document.location.reload();
-    }
-}
-
-
-async function nukeDataFromOrbit() {
-    console.warn("Nuking data: started")
-    let db = await openDatabase();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([metricsTable], 'readwrite');
-        const store = transaction.objectStore(metricsTable);
-
-        const clearRequest = store.clear();
-        clearRequest.onsuccess = (event) => {
-            console.warn("Nuking data: done.")
-            resolve(event.target.result);
-        };
-        clearRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-async function clearData() {
-    console.warn("Clearing all data: started")
-    let db = await openDatabase();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([metricsTable], 'readwrite');
-        const store = transaction.objectStore(metricsTable);
-
-        let deletedRows = 0;
-        const cursorRequest = store.openCursor();
-        cursorRequest.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                if (cursor.value.url === currentUrl) {
-                    deletedRows += 1;
-                    cursor.delete();
-                }
-                cursor.continue();
-            } else {
-                console.warn(`Clearing all data: ${deletedRows} records deleted.`);
-                resolve(deletedRows);
-            }
-        };
-        cursorRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-function help() {
-    console.warn(`Available commands:
-help()              - Show this help.
-clearData()         - Clear all performance data for the current url.
-nukeDataFromOrbit() - Clear all performance data for ALL(!) urls.
-repeat(integer)     - Repeat the current page $integer times. First reload needs to be done manually.
-                      After every reload, the counter is decreased by 1. Once it reaches 0, the
-                      reloads will stop.`);
-}
-
-
-document.addEventListener('DOMContentLoaded', onDomContentLoaded);
-
-"""
-            )
+            self._inject_profiling_code()
 
         self.default_html_headers()
         self.title(title)
@@ -493,9 +265,19 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         # Load all scripts
         for js in javascripts:
             js_filepath = f"js/{js}_min.js"
-            if current_app.debug:
-                HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
-            self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
+            js_url = HTMLGenerator._append_cache_busting_query(js_filepath)
+            if js == "vue" and active_config.load_frontend_vue == "inject":
+                # stage1 will try to load the hot reloading files. if this fails,
+                # an error will be shown and the fallback files will be loaded.
+                self.js_entrypoint(
+                    json.dumps({"fallback": [js_url]}),
+                    type_="cmk-entrypoint-vue-stage1",
+                )
+                self.javascript_file(HTMLGenerator._append_cache_busting_query("js/vue_stage1.js"))
+            else:
+                if current_app.debug:
+                    HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
+                self.javascript_file(js_url)
 
         self.set_js_csrf_token()
 
@@ -503,6 +285,23 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
 
         self.close_head()
+
+    def _inject_profiling_code(self):
+        self.javascript("const startTime = Date.now();")
+        # A lambda, so it will get evaluated at the end of the request, not the beginning.
+        self.final_javascript(
+            lambda: f"""
+                const generationDuration = {round((time.monotonic() - self.request.started) * 1000, 0)};
+                const currentUrl = window.location.pathname + window.location.search;
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    () => {{
+                        activate_tracking(currentUrl, startTime, generationDuration);
+                    }}
+                );
+            """
+        )
+        self.javascript_file(HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js"))
 
     def set_js_csrf_token(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
@@ -554,7 +353,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         force: bool = False,
     ) -> None:
         javascript_files = [main_javascript]
-        if use_vue_rendering():
+        if get_render_mode() != ExperimentalRenderMode.BACKEND:
             javascript_files.append("vue")
         if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))
@@ -621,12 +420,13 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             require_confirmation=require_confirmation,
         )
 
-        yield
-
-        if only_close:
-            html.close_form()
-        else:
-            html.end_form()
+        try:
+            yield
+        finally:
+            if only_close:
+                html.close_form()
+            else:
+                html.end_form()
 
     def begin_form(
         self,
@@ -891,9 +691,12 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             title=title,
         )
 
-    def user_error(self, e: MKUserError) -> None:
+    def user_error(self, e: MKUserError, show_as_warning: bool = False) -> None:
         """Display the given MKUserError and store message for later use"""
-        self.show_error(str(e))
+        if show_as_warning:
+            self.show_warning(str(e))
+        else:
+            self.show_error(str(e))
         user_errors.add(e)
 
     def show_user_errors(self) -> None:
@@ -925,11 +728,10 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         autocomplete: str | None = None,
         style: str | None = None,
         type_: str | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         onblur: str | None = None,
         placeholder: str | None = None,
-        data_world: str | None = None,
-        data_max_labels: int | None = None,
+        data_attrs: HTMLTagAttributes | None = None,
         required: bool = False,
         title: str | None = None,
     ) -> None:
@@ -941,6 +743,9 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         if error:
             self.set_focus(varname)
         self.form_vars.append(varname)
+
+        if data_attrs is not None:
+            assert all(data_attr_key.startswith("data-") for data_attr_key in data_attrs.keys())
 
         # View
         # TODO: Move styling away from py code
@@ -972,15 +777,16 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             "readonly": "true" if read_only else None,
             "value": value,
             "onblur": onblur,
-            "onkeyup": onkeyup,
-            "onkeydown": ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
-            if submit
-            else None,
+            "oninput": oninput,
+            "onkeydown": (
+                ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
+                if submit
+                else None
+            ),
             "placeholder": placeholder,
-            "data-world": data_world,
-            "data-max-labels": None if data_max_labels is None else str(data_max_labels),
             "required": "" if required else None,
             "title": title,
+            **(data_attrs or {}),
         }
 
         if error:
@@ -1011,7 +817,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         onclick: str | None,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-        """Shows a colored button with text (used in site and customer status snapins)"""
+        """Shows a colored button with text (used in site and customer status snap-ins)"""
         self.div(
             content,
             title=title,
@@ -1383,12 +1189,16 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         self.write_html(HTMLGenerator.render_icon("trans"))
 
     @staticmethod
-    def render_icon(
+    def render_icon(  # pylint: disable=redefined-outer-name
         icon: Icon,
         title: str | None = None,
         id_: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        *,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> HTML:
         classes = ["icon"] + ([] if cssclass is None else [cssclass])
         if isinstance(class_, list):
@@ -1446,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         )
 
     @staticmethod
-    def render_icon_button(
+    def render_icon_button(  # pylint: disable=redefined-outer-name
         url: None | str,
         title: str,
         icon: Icon,
@@ -1456,6 +1266,9 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         target: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
@@ -1467,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         assert href is not None
 
         return HTMLWriter.render_a(
-            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton")),
+            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme)),
             href=href,
             title=title,
             id_=id_,
@@ -1478,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             onclick=onclick,
         )
 
-    def icon_button(
+    def icon_button(  # pylint: disable=redefined-outer-name
         self,
         url: str | None,
         title: str,
@@ -1489,10 +1302,13 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         target: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
-                url, title, icon, id_, onclick, style, target, cssclass, class_
+                url, title, icon, id_, onclick, style, target, cssclass, class_, theme=theme
             )
         )
 
@@ -1673,13 +1489,11 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
 
 
 @overload
-def _path(path_or_str: Path) -> Path:
-    ...
+def _path(path_or_str: Path) -> Path: ...
 
 
 @overload
-def _path(path_or_str: str) -> Path:
-    ...
+def _path(path_or_str: str) -> Path: ...
 
 
 def _path(path_or_str: Path | str) -> Path:

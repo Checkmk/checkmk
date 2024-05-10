@@ -47,9 +47,11 @@ def site_rule_match_condition(only_sites_with_replication: bool) -> DictionaryEn
         DualListChoice(
             title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of the selected sites."),
-            choices=get_activation_site_choices
-            if only_sites_with_replication
-            else get_configured_site_choices,
+            choices=(
+                get_activation_site_choices
+                if only_sites_with_replication
+                else get_configured_site_choices
+            ),
         ),
     )
 

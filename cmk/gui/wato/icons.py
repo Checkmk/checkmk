@@ -3,11 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+from typing import Literal
+
+from cmk.utils.tags import TagID
+
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.views.icon import Icon
@@ -15,18 +21,24 @@ from cmk.gui.views.icon import Icon
 
 class WatoIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "wato"
 
     @classmethod
     def title(cls) -> str:
-        return _("Wato")
+        return _("Setup (formerly Wato)")
 
-    def host_columns(self):
+    def host_columns(self) -> list[str]:
         return ["filename"]
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
-        def may_see_hosts():
+    def render(
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
+    ) -> tuple[str, str, str] | None:
+        def may_see_hosts() -> bool:
             return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
 
         if not may_see_hosts() or is_mobile(request, response):
@@ -37,12 +49,16 @@ class WatoIcon(Icon):
             return None
 
         if what == "host":
-            return self._wato_link(wato_folder, row["site"], row["host_name"], "edithost")
+            return self._wato_link(wato_folder, row["host_name"], "edithost")
 
         if row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
-            return self._wato_link(wato_folder, row["site"], row["host_name"], "inventory")
+            return self._wato_link(wato_folder, row["host_name"], "inventory")
 
-    def _wato_link(self, folder, site, hostname, where):
+        return None
+
+    def _wato_link(
+        self, folder: str, hostname: str, where: Literal["edithost", "inventory"]
+    ) -> tuple[str, str, str] | None:
         if not active_config.wato_enabled:
             return None
 
@@ -65,30 +81,34 @@ class DownloadAgentOutputIcon(Icon):
     """Action for downloading the current agent output."""
 
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "download_agent_output"
 
     @classmethod
     def title(cls) -> str:
         return _("Download agent output")
 
-    def default_sort_index(self):
+    def default_sort_index(self) -> int:
         return 50
 
-    def host_columns(self):
+    def host_columns(self) -> list[str]:
         return ["filename", "check_type"]
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
-        return _paint_download_host_info(
-            what, row, tags, custom_vars, ty="agent"
-        )  # pylint: disable=no-value-for-parameter
+    def render(
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
+    ) -> tuple[str, str, str] | None:
+        return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")
 
 
 class DownloadSnmpWalkIcon(Icon):
     """Action for downloading the current snmp output."""
 
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "download_snmp_walk"
 
     @classmethod
@@ -101,13 +121,23 @@ class DownloadSnmpWalkIcon(Icon):
     def default_sort_index(self):
         return 50
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
-        return _paint_download_host_info(
-            what, row, tags, custom_vars, ty="walk"
-        )  # pylint: disable=no-value-for-parameter
+    def render(
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
+    ) -> tuple[str, str, str] | None:
+        return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")
 
 
-def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
+def _paint_download_host_info(
+    what: Literal["host", "service"],
+    row: Row,
+    tags: Sequence[TagID],
+    custom_vars: Mapping[str, str],
+    ty: Literal["agent", "walk"],
+) -> tuple[str, str, str] | None:
     if (
         (what == "host" or (what == "service" and row["service_description"] == "Check_MK"))
         and user.may("wato.download_agent_output")
@@ -147,7 +177,7 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
     return None
 
 
-def _wato_folder_from_filename(filename):
+def _wato_folder_from_filename(filename: str) -> str | None:
     if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
         return filename[6:-8].rstrip("/")
     return None

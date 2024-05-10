@@ -4,7 +4,7 @@ catalog: hw/environment/stulz
 license: GPLv2
 distribution: check_mk
 description:
- This plugin shows the power state (on/off) of all connected clima units on a stulz management.
+ This plug-in shows the power state (on/off) of all connected clima units on a stulz management.
  The check is only informatial an returns always {OK}
 
 item:

@@ -13,8 +13,5 @@ description:
  The check will result in WARNING/CRITICAL states when the number of items
  in the queue reach the defined thresholds.
 
-item:
- An empty string
-
 discovery:
  One service is created on each system which provides the {qmail-qstat} command.

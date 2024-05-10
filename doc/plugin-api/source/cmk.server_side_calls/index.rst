@@ -1,6 +1,6 @@
-=====================
-Server-side calls API
-=====================
+=================
+Server-side calls
+=================
 
 .. automodule:: cmk.server_side_calls
    :members:

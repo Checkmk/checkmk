@@ -12,8 +12,7 @@ from cmk.base.check_legacy_includes.huawei_switch import (
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
 
 huawei_switch_hw_oper_state_map = {

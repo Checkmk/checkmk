@@ -9,8 +9,10 @@ description:
  exceeded or the configured percentage of max threads is busy.
  By default only levels for currentThreadsbusy are configured.
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
 
 item:
  The name of the application server instance as configured by the agent.

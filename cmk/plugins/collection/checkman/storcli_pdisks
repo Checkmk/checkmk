@@ -6,9 +6,9 @@ distribution: check_mk
 description:
  This check monitors the state of the phyiscal disks of an LSI
  MegaRAID controller.
- On Windows the corresponding agent plugin uses the {storcli64.exe}
+ On Windows the corresponding agent plug-in uses the {storcli64.exe}
  utility, provided its location has been correctly entered in the script.
- The linux plugin looks for {MegaCli}, {MegaCli64}, {megacli},
+ The linux plug-in looks for {MegaCli}, {MegaCli64}, {megacli},
  {storcli} or {storcli64} on the path.
 
 item:

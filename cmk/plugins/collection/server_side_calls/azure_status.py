@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
-from typing import Iterator
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
 
 
 class AzureStatusParams(BaseModel):
@@ -18,7 +17,6 @@ class AzureStatusParams(BaseModel):
 def agent_azure_status_config(
     params: AzureStatusParams,
     _host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     yield SpecialAgentCommand(command_arguments=params.regions)
 

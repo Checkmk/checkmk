@@ -6,7 +6,9 @@
 import ast
 import logging
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from functools import partial
+from pathlib import Path
 from typing import Any
 
 import cmk.utils.debug
@@ -21,7 +23,7 @@ from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-viol
 )
 
 if edition() is not Edition.CRE:
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation
+    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=import-error,no-name-in-module,cmk-module-layer-violation
         InlineSNMPBackend,
     )
 else:
@@ -37,14 +39,16 @@ backend_type = SNMPBackendEnum.deserialize(params[1])
 config = SNMPHostConfig.deserialize(params[2])
 cmk.utils.paths.snmpwalks_dir = params[3]
 
-backend: type[SNMPBackend]
+backend: Callable[[SNMPHostConfig, logging.Logger], SNMPBackend]
 match backend_type:
     case SNMPBackendEnum.INLINE:
         backend = InlineSNMPBackend
     case SNMPBackendEnum.CLASSIC:
         backend = ClassicSNMPBackend
     case SNMPBackendEnum.STORED_WALK:
-        backend = StoredWalkSNMPBackend
+        backend = partial(
+            StoredWalkSNMPBackend, path=Path(cmk.utils.paths.snmpwalks_dir) / config.hostname
+        )
     case _:
         raise ValueError(backend_type)
 

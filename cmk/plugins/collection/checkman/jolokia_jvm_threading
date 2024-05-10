@@ -9,9 +9,10 @@ description:
  (per second) at which new threads are created, and the number
  of daemon threads.
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server.
 
+ Both, version 1.7 and 2.0 of Jolokia are supported.
 
 item:
  The name of the application server instance as configured by the agent.

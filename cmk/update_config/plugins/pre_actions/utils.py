@@ -7,6 +7,7 @@ import enum
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from termios import tcflush, TCIFLUSH
 from typing import Final
 
 from cmk.utils import paths
@@ -23,12 +24,22 @@ from cmk.mkp_tool import (
     make_post_package_change_actions,
     Manifest,
     PackageID,
-    PackageOperationCallbacks,
-    PackagePart,
     PackageStore,
     PathConfig,
     reload_apache,
 )
+
+AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX = 30
+GUI_PLUGINS_PREACTION_SORT_INDEX = 20
+
+AUTOCHECK_REWRITE_PREACTION_SORT_INDEX = (  # autocheck rewrite *must* run after these two!
+    max(AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX, GUI_PLUGINS_PREACTION_SORT_INDEX) + 10
+)
+
+
+def prompt(message: str) -> str:
+    tcflush(sys.stdin, TCIFLUSH)
+    return input(message)
 
 
 def get_path_config() -> PathConfig:
@@ -57,14 +68,7 @@ def get_path_config() -> PathConfig:
     )
 
 
-_CALLBACKS: Final = {
-    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
-        install=ec.install_packaged_rule_packs,
-        uninstall=ec.uninstall_packaged_rule_packs,
-        release=ec.release_packaged_rule_packs,
-    ),
-}
-
+_CALLBACKS: Final = ec.mkp_callbacks()
 
 PACKAGE_STORE = PackageStore(
     enabled_dir=paths.local_enabled_packages_dir,
@@ -80,12 +84,6 @@ class ConflictMode(enum.StrEnum):
     ABORT = "abort"
 
 
-NEED_USER_INPUT_MODES: Final[Sequence] = [
-    ConflictMode.INSTALL,
-    ConflictMode.KEEP_OLD,
-    ConflictMode.ASK,
-]
-
 USER_INPUT_CONTINUE: Final[Sequence] = ["c", "continue"]
 USER_INPUT_DISABLE: Final[Sequence] = ["d", "disable"]
 
@@ -98,10 +96,11 @@ def disable_incomp_mkp(
     installer: Installer,
     package_store: PackageStore,
     path_config: PathConfig,
+    path: Path,
 ) -> bool:
-    if (
-        conflict_mode in NEED_USER_INPUT_MODES
-        and _request_user_input_on_incompatible_file(module_name, package_id, error).lower()
+    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+        conflict_mode is ConflictMode.ASK
+        and _request_user_input_on_incompatible_file(path, module_name, package_id, error).lower()
         in USER_INPUT_DISABLE
     ):
         if (
@@ -121,10 +120,10 @@ def disable_incomp_mkp(
 
 
 def _request_user_input_on_incompatible_file(
-    module_name: str, package_id: PackageID, error: BaseException
+    path: Path, module_name: str, package_id: PackageID, error: BaseException
 ) -> str:
-    return input(
-        f"Incompatible file '{module_name}' of extension package '{package_id.name} {package_id.version}'\n"
+    return prompt(
+        f"Incompatible file '{path}' of extension package '{package_id.name} {package_id.version}'\n"
         f"Error: {error}\n\n"
         "You can abort the update process (A) or disable the "
         "extension package (d) and continue the update process.\n"
@@ -134,38 +133,29 @@ def _request_user_input_on_incompatible_file(
 
 def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
     return make_post_package_change_actions(
-        ((PackagePart.GUI, PackagePart.WEB), reload_apache),
-        (
-            (PackagePart.GUI, PackagePart.WEB),
-            invalidate_visuals_cache,
-        ),
-        (
-            (
-                PackagePart.GUI,
-                PackagePart.WEB,
-                PackagePart.EC_RULE_PACKS,
-            ),
-            request_index_rebuild,
-        ),
+        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
     )
 
 
 def continue_on_incomp_local_file(
     conflict_mode: ConflictMode,
-    module_name: str,
+    path: Path,
     error: BaseException,
 ) -> bool:
-    return (
-        conflict_mode in NEED_USER_INPUT_MODES
-        and input(
-            f"Incompatible local file '{module_name}'.\n"
-            f"Error: {error}\n\n"
-            "You can abort the update process (A) and try to fix "
-            "the incompatibilities or continue the update (c).\n\n"
-            "Abort the update process? [A/c] \n"
-        ).lower()
-        in USER_INPUT_CONTINUE
+    return continue_per_users_choice(
+        conflict_mode,
+        f"Incompatible local file '{path}'.\n"
+        f"Error: {error}\n\n"
+        "You can abort the update process (A) and try to fix "
+        "the incompatibilities or continue the update (c).\n\n"
+        "Abort the update process? [A/c] \n",
     )
+
+
+def continue_per_users_choice(conflict_mode: ConflictMode, propt_text: str) -> bool:
+    if conflict_mode is ConflictMode.ASK:
+        return prompt(propt_text).lower() in USER_INPUT_CONTINUE
+    return False
 
 
 def get_installer_and_package_map(

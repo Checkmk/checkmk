@@ -5,17 +5,18 @@
 
 from logging import Logger
 
+from pydantic import ValidationError
+
 from cmk.utils import tty
 from cmk.utils.user import UserId
 
 from cmk.gui.userdb import load_contacts, load_multisite_users, load_users
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class ValidateUserIds(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         """
         Check if we can find UserIds that aren't valid in this version of Checkmk.
 
@@ -25,8 +26,8 @@ class ValidateUserIds(UpdateAction):
         in 'var/check_mk/web' (which are also converted to UserIds).
         """
         try:
-            load_users()
-        except ValueError:
+            load_users(skip_validation=True)
+        except (ValueError, ValidationError):
             err = """ERROR: Update aborted.
 Incompatible user IDs have been found. Updating is not possible. See Werk #15182
 for further information. """
@@ -43,7 +44,10 @@ for further information. """
 
             if invalid_users := [
                 user
-                for user in set(list(load_contacts()) + list(load_multisite_users()))
+                for user in set(
+                    list(load_contacts(skip_contact_validation=True))
+                    + list(load_multisite_users(skip_user_validation=True))
+                )
                 if not _is_valid(user)
             ]:
                 err += "The following users are incompatible with Checkmk 2.2:\n  " + "\n  ".join(
@@ -62,10 +66,10 @@ update_action_registry.register(
     ValidateUserIds(
         name="validate_user_ids",
         title="Validate user IDs",
-        # Run this validation before any plugin that deals with UserIds, as those would encounter
+        # Run this validation before any plug-in that deals with UserIds, as those would encounter
         # unexpected errors when UserIds cannot be created.
         # Currently the next to run is UpdateViews, which uses UserIds as view owners.
-        sort_index=5,
+        sort_index=1,
         # Malformed user IDs would cause most other actions to fail as well.
         continue_on_failure=False,
     )

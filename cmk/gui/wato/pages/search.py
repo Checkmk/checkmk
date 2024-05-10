@@ -41,7 +41,7 @@ class ModeSearch(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = folder_from_request()
+        self._folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(

@@ -17,8 +17,7 @@
 #include "livestatus/TimeColumn.h"
 class IHost;
 
-TableEventConsoleEvents::TableEventConsoleEvents(ICore *mc)
-    : TableEventConsole{mc} {
+TableEventConsoleEvents::TableEventConsoleEvents(ICore *mc) {
     addColumns(this, *mc);
 }
 

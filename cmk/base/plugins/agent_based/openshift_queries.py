@@ -11,12 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from cmk.plugins.lib.kube import (
-    COLLECTOR_SERVICE_NAME,
-    OpenShiftEndpoint,
-    PrometheusResult,
-    ResultType,
-)
+from cmk.plugins.kube.schemata.section import OpenShiftEndpoint, PrometheusResult, ResultType
+from cmk.plugins.lib.kube import COLLECTOR_SERVICE_NAME
 
 
 def parse(string_table: StringTable) -> OpenShiftEndpoint:

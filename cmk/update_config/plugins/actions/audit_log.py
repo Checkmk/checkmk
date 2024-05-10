@@ -13,7 +13,6 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.gui.watolib.paths import wato_var_dir
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
@@ -23,7 +22,7 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         self._audit_log_backup_path: Path = wato_var_dir() / "log" / "wato_audit.log-backup"
         self._audit_log_target_size: int = 400 * 1024 * 1024  # 300MB in bytes
 
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         if not self._audit_log_path.exists():
             logger.debug("No audit log found. Skipping...")
             return
@@ -40,7 +39,7 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         logger_msg = "Skipping update of audit log. Please review the errors and try 'cmk-update-config' again"
         try:
             self._split_file(wato_var_dir() / "log")
-        except IOError as e:
+        except OSError as e:
             logger.warning(logger_msg)
             raise MKException(
                 f"I/O error while updating existing audit log({e.errno}): {e.strerror}"

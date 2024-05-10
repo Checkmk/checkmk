@@ -4,8 +4,8 @@ catalog: app/oracle
 license: GPLv2
 distribution: check_mk
 description:
- This check needs the agent pluing mk_oracle_crs from our plugin directory.
- After copying to the agent plugin directory, Checkmk will find all resources
+ This check needs the agent pluing mk_oracle_crs from our plug-in directory.
+ After copying to the agent plug-in directory, Checkmk will find all resources
  of a running Oracle Clusterware/Grid-Infrastructure or Restart.
 
  All resources are stale when RA-GI ora.cssd Resource is CRIT to reduced
@@ -23,7 +23,7 @@ description:
  the agent result came from. These resources are no cluster resource and
  they don't need any clusterrule in WATO!
 
- This plugin is tested against Oracle Grid-Infrastructure, Oracle Restart
+ This plug-in is tested against Oracle Grid-Infrastructure, Oracle Restart
  11.2 and 12.1.
 
 item:

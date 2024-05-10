@@ -7,17 +7,13 @@ from __future__ import annotations
 
 import pprint
 import time
-from collections.abc import Callable, Iterable, Iterator, Sequence
-from typing import Final
-
-from typing_extensions import TypedDict
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from typing import Final, TypedDict
 
 import cmk.utils.debug
 from cmk.utils.check_utils import ParametersTypeAlias
-from cmk.utils.parameters import boil_down_parameters
+from cmk.utils.parameters import merge_parameters
 from cmk.utils.timeperiod import TimeperiodName
-
-from cmk.checkengine.legacy import LegacyCheckParameters
 
 __all__ = [
     "Parameters",
@@ -28,7 +24,7 @@ __all__ = [
 
 
 class Parameters(ParametersTypeAlias):
-    """Parameter objects are used to pass parameters to plugin functions"""
+    """Parameter objects are used to pass parameters to plug-in functions"""
 
     def __init__(self, data: ParametersTypeAlias) -> None:
         self._data = dict(data)
@@ -51,7 +47,7 @@ _IsTimeperiodActiveCallback = Callable[[TimeperiodName], bool | None]
 
 
 class _InnerTimespecificParametersPreview(TypedDict):
-    params: LegacyCheckParameters
+    params: Mapping[str, object]
     computed_at: float
 
 
@@ -59,8 +55,6 @@ class TimespecificParametersPreview(TypedDict):
     tp_computed_params: _InnerTimespecificParametersPreview
 
 
-# this is not particularly clever, but an easy way to allow for
-# an instance check (for the transitioning phase)
 class TimespecificParameters:
     def __init__(self, entries: Sequence[TimespecificParameterSet] = ()) -> None:
         self.entries: Final = tuple(entries)
@@ -71,19 +65,9 @@ class TimespecificParameters:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.entries!r})"
 
-    def evaluate(self, is_active: _IsTimeperiodActiveCallback) -> LegacyCheckParameters:
-        # This is kept for compatibility. I am not sure if we shouldn't make this more consistent
-        if self.entries and not isinstance(self.entries[0].default, dict):
-            return self.entries[0].evaluate(is_active)
-
-        return boil_down_parameters(
-            # Ignore parameters derived from old parameters like
-            #   'NAME_default_levels' = (80.0, 85.0)
-            (
-                entry.evaluate(is_active)
-                for entry in self.entries
-                if isinstance(entry.default, dict) or entry.timeperiod_values
-            ),
+    def evaluate(self, is_active: _IsTimeperiodActiveCallback) -> Mapping[str, object]:
+        return merge_parameters(
+            [entry.evaluate(is_active) for entry in self.entries],
             {},
         )
 
@@ -92,7 +76,7 @@ class TimespecificParameters:
 
     def preview(
         self, is_active: _IsTimeperiodActiveCallback
-    ) -> TimespecificParametersPreview | LegacyCheckParameters:
+    ) -> TimespecificParametersPreview | Mapping[str, object]:
         """Create a serializeable version for preview via automation call"""
         if self.is_constant():
             return self.evaluate(is_active)
@@ -109,18 +93,20 @@ class TimespecificParameters:
 class TimespecificParameterSet:
     def __init__(
         self,
-        default: LegacyCheckParameters,
-        timeperiod_values: Sequence[tuple[TimeperiodName, LegacyCheckParameters]],
+        default: Mapping[str, object],
+        timeperiod_values: Sequence[tuple[TimeperiodName, Mapping[str, object]]],
     ) -> None:
-        # LegacyCheckParameters is almost as usefull as `object`.
-        # I hope we end up with a more useful type at some point :-(
         self.default: Final = default
         self.timeperiod_values: Final = tuple(timeperiod_values)
 
     @classmethod
-    def from_parameters(cls, parameters: LegacyCheckParameters) -> TimespecificParameterSet:
-        if isinstance(parameters, dict) and "tp_default_value" in parameters:
-            return cls(parameters["tp_default_value"], parameters["tp_values"])
+    def from_parameters(cls, parameters: Mapping[str, object]) -> TimespecificParameterSet:
+        if (
+            "tp_default_value" in parameters
+            and isinstance((default := parameters["tp_default_value"]), dict)
+            and isinstance((tp_values := parameters["tp_values"]), list)
+        ):
+            return cls(default, tp_values)
         return cls(parameters, ())
 
     def __eq__(self, other: object) -> bool:
@@ -136,7 +122,7 @@ class TimespecificParameterSet:
     def _active_subsets(
         self,
         is_active: _IsTimeperiodActiveCallback,
-    ) -> Iterable[LegacyCheckParameters]:
+    ) -> Iterable[Mapping[str, object]]:
         for timeperiod_name, tp_entry in self.timeperiod_values:
             try:
                 if is_active(timeperiod_name):
@@ -147,5 +133,5 @@ class TimespecificParameterSet:
                     raise
                 return
 
-    def evaluate(self, is_active: _IsTimeperiodActiveCallback) -> LegacyCheckParameters:
-        return boil_down_parameters(self._active_subsets(is_active), self.default)
+    def evaluate(self, is_active: _IsTimeperiodActiveCallback) -> Mapping[str, object]:
+        return merge_parameters(list(self._active_subsets(is_active)), self.default)

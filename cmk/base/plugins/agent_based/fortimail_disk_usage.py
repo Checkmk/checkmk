@@ -56,6 +56,6 @@ register.check_plugin(
     service_name="Disk usage",
     discovery_function=discover_fortimail_disk_usage,
     check_function=check_fortimail_disk_usage,
-    check_default_parameters={"disk_usage": (80, 90)},
+    check_default_parameters={"disk_usage": (80.0, 90.0)},
     check_ruleset_name="fortimail_disk_usage",
 )

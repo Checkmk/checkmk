@@ -7,7 +7,7 @@ description:
  The Citrix Server load is score calculated by citrix (See:
  http://www.virtualizationadmin.com/articles-tutorials/terminal-services/general/citrix-presentation-server-load-management-part1.html)
  With this check it's possible to set thresholds for this value. In order
- to work the {citrix_serverload.ps1} plugin is needed.
+ to work the {citrix_serverload.ps1} plug-in is needed.
 
 discovery:
  One service is created.

@@ -26,16 +26,18 @@ from cmk.gui.watolib.global_settings import (
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-_REMOVED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = [
+_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = [
     ("view_action_defaults", "acknowledge_problems", {}),
+]
+_REMOVED_OPTIONS: Sequence[str] = [
+    "wato_upload_insecure_snapshots",
 ]
 
 
 class UpdateGlobalSettings(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         _update_installation_wide_global_settings(logger)
         _update_site_specific_global_settings(logger)
         _update_remote_site_specific_global_settings(logger)
@@ -95,20 +97,20 @@ def update_global_config(
     logger: Logger,
     global_config: GlobalSettings,
 ) -> GlobalSettings:
-    return _transform_global_config_values(
-        _update_removed_global_config_vars(
-            logger,
-            global_config,
-        )
+    new_config = _remove_options(logger, global_config, _REMOVED_OPTIONS)
+    new_config = _update_renamed_global_config_vars(
+        logger,
+        new_config,
     )
+    return _transform_global_config_values(new_config)
 
 
-def _update_removed_global_config_vars(
+def _update_renamed_global_config_vars(
     logger: Logger,
     global_config: GlobalSettings,
 ) -> GlobalSettings:
     global_config_updated = dict(global_config)
-    for old_config_name, new_config_name, replacement in _REMOVED_GLOBALS:
+    for old_config_name, new_config_name, replacement in _RENAMED_GLOBALS:
         if old_config_name in global_config_updated:
             logger.log(VERBOSE, f"Replacing {old_config_name} with {new_config_name}")
             old_value = global_config_updated[old_config_name]
@@ -130,6 +132,23 @@ def _update_removed_global_config_vars(
     )
 
 
+def _remove_options(
+    logger: Logger,
+    global_config: GlobalSettings,
+    options_to_remove: Sequence[str],
+) -> GlobalSettings:
+    """remove options_to_remove from global_config
+
+    Meant to cleanup no longer used config options"""
+
+    config = dict(global_config)
+    for option_to_remove in options_to_remove:
+        if option_to_remove in config:
+            logger.log(VERBOSE, f"Removing old unused option {option_to_remove!r}")
+        config.pop(option_to_remove, None)
+    return config
+
+
 def _convert_user_idle_timeout(
     logger: Logger,
     global_config: GlobalSettings,
@@ -144,7 +163,7 @@ def _convert_user_idle_timeout(
 
     logger.log(VERBOSE, "Converting global setting 'user_idle_timeout' to new format")
     # None, deactivated by user
-    if idle_timeout := global_config.get("user_idle_timeout") is None:
+    if (idle_timeout := global_config.get("user_idle_timeout")) is None:
         return {"session_mgmt": {}}
 
     return {

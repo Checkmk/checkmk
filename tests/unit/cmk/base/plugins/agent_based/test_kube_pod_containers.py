@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import json
@@ -16,7 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, Stat
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.plugins.lib.kube import ContainerStateType, ContainerTerminatedState, PodContainers
+from cmk.plugins.kube.schemata.api import ContainerStateType, ContainerTerminatedState
+from cmk.plugins.kube.schemata.section import PodContainers
 
 TIMESTAMP = 359
 MINUTE = 60
@@ -302,7 +305,26 @@ def test_container_terminated_state_linebreak_in_detail() -> None:
 
     assert all(r.state == State.OK for r in result if isinstance(r, Result))
     assert any(
-        r.summary.startswith(r"Status: Succeeded (Completed: Installing helm_v3 chart; )")
+        r.summary.startswith(r"Status: Succeeded (Completed: Installing helm_v3 chart)")
+        for r in result
+        if isinstance(r, Result)
+    )
+
+
+def test_container_terminated_state_no_detail() -> None:
+    terminated_container_state = ContainerTerminatedStateFactory.build(
+        exit_code=0,
+        start_time=TIMESTAMP,
+        end_time=TIMESTAMP + 1,
+        reason="Completed",
+        detail=None,
+    )
+
+    result = list(kube_pod_containers.check_terminated({}, terminated_container_state))
+
+    assert all(r.state == State.OK for r in result if isinstance(r, Result))
+    assert any(
+        r.summary.startswith(r"Status: Succeeded (Completed: None)")
         for r in result
         if isinstance(r, Result)
     )

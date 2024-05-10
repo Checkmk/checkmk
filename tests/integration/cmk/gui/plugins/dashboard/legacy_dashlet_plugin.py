@@ -15,7 +15,7 @@ from cmk.gui.plugins.dashboard import (  # type: ignore[attr-defined] # pylint: 
 
 
 @dashlet_registry.register
-class TestDashlet(Dashlet):
+class TestDashlet(Dashlet):  # type: ignore[misc]
     @classmethod
     def type_name(cls):
         return "test"

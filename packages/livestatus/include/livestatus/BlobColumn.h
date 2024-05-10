@@ -28,7 +28,7 @@ class Aggregator;
 class RowRenderer;
 class User;
 
-template <class T>
+template <typename T>
 class BlobColumn : public Column {
 public:
     BlobColumn(const std::string &name, const std::string &description,
@@ -54,6 +54,11 @@ public:
                                  "' not supported");
     }
 
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        throw std::runtime_error("sorting on blob column '" + name() +
+                                 "' not supported");
+    }
+
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory /*factory*/) const override {
         throw std::runtime_error("aggregating on blob column '" + name() +
@@ -70,7 +75,7 @@ private:
     const std::function<std::vector<char>(const T &)> f_;
 };
 
-template <class T>
+template <typename T>
 class BlobFileReader {
 public:
     explicit BlobFileReader(

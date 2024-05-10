@@ -5,8 +5,9 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime as dt
+from typing import Protocol
 
 import pytest
 
@@ -21,6 +22,8 @@ from cmk.special_agents.agent_aws import (
     S3Limits,
     S3Requests,
     S3Summary,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
@@ -56,19 +59,33 @@ class FakeS3Client:
 
 
 S3Sections = tuple[S3Limits, S3Summary, S3, S3Requests]
-CreateS3Sections = Callable[[object | None, OverallTags], S3Sections]
+
+
+class CreateS3Sections(Protocol):
+    def __call__(
+        self,
+        names: object | None = None,
+        tags: OverallTags = (None, None),
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> S3Sections: ...
 
 
 @pytest.fixture()
 def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
-    def _create_s3_sections(names: object | None, tags: OverallTags) -> S3Sections:
+    def _create_s3_sections(
+        names: object | None = None,
+        tags: OverallTags = (None, None),
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> S3Sections:
         # on_time is somehow not feeded from here to S3Limits, so use monkey patch...
         monkeypatch.setattr(
             agent_aws, "NOW", dt.strptime("2020-09-28 15:30 UTC", "%Y-%m-%d %H:%M %Z")
         )
 
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("s3_names", names)
         config.add_service_tags("s3_tags", tags)
 
@@ -230,12 +247,18 @@ def test_agent_aws_s3_summary(
     amount_buckets: int,
 ) -> None:
     s3_limits, s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
-    _s3_summary_results = s3_limits.run().results
+    s3_limits.run()
     s3_summary_results = s3_summary.run().results
 
     assert s3_summary.name == "s3_summary"
 
-    assert s3_summary_results == []
+    if amount_buckets:
+        assert len(s3_summary_results) == 1
+        s3_summary_result = s3_summary_results[0]
+        assert s3_summary_result.piggyback_hostname == ""
+        assert len(s3_summary_result.content) == amount_buckets
+    else:
+        assert not s3_summary_results
 
 
 @pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
@@ -305,7 +328,15 @@ def test_agent_aws_s3_summary_without_limits(
     s3_summary_results = s3_summary.run().results
 
     assert s3_summary.name == "s3_summary"
-    assert s3_summary_results == []
+
+    if amount_buckets:
+        assert len(s3_summary_results) == 1
+        s3_summary_result = s3_summary_results[0]
+        assert s3_summary_result.piggyback_hostname == ""
+        assert len(s3_summary_result.content) == amount_buckets
+        assert "Tagging" in s3_summary_result.content[0]
+    else:
+        assert not s3_summary_results
 
 
 @pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
@@ -316,7 +347,7 @@ def test_agent_aws_s3_without_limits(
     amount_buckets: int,
 ) -> None:
     _s3_limits, s3_summary, s3, _s3_requests = get_s3_sections(names, tags)
-    _s3_summary_results = s3_summary.run().results
+    s3_summary.run()
     s3_results = s3.run().results
 
     assert s3.name == "s3"
@@ -342,7 +373,7 @@ def test_agent_aws_s3_requests_without_limits(
     amount_buckets: int,
 ) -> None:
     s3_limits, s3_summary, _s3, s3_requests = get_s3_sections(names, tags)
-    _s3_summary_results = s3_summary.run().results
+    s3_summary.run()
     s3_requests_results = s3_requests.run().results
 
     assert s3_requests.cache_interval == 300
@@ -364,3 +395,29 @@ def test_agent_aws_s3_requests_without_limits(
             if row.get("Name") in ["Name-0", "Name-1", "Name-2"]:
                 assert row.get("LocationConstraint") == "region"
             assert "Tagging" in row
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (
+            TagsImportPatternOption.import_all,
+            {"Name-0": ["Key-0"], "Name-1": ["Key-0", "Key-1"]},
+        ),
+        (r".*-1$", {"Name-1": ["Key-1"]}),
+        (TagsImportPatternOption.ignore_all, {}),
+    ],
+)
+def test_agent_aws_s3_filters_tags(
+    get_s3_sections: CreateS3Sections,
+    tag_import: TagsOption,
+    expected_tags: dict[str, list[str]],
+) -> None:
+    _s3_limits, s3_summary, _s3, _s3_requests = get_s3_sections(tag_import=tag_import)
+    s3_summary_results = s3_summary.run().results
+
+    assert s3_summary_results
+    for result in s3_summary_results:
+        assert result.content
+        for row in result.content:
+            assert list(row["TagsForCmkLabels"].keys()) == expected_tags.get(row["Name"], [])

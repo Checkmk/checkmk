@@ -161,10 +161,10 @@ class PainterCrashIdent(Painter):
     def ident(self) -> str:
         return "crash_ident"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash Ident")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("ID")
 
     @property
@@ -173,7 +173,7 @@ class PainterCrashIdent(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         url = makeuri_contextless(
-            request,
+            self.request,
             [
                 ("crash_id", row["crash_id"]),
                 ("site", row["site"]),
@@ -188,10 +188,10 @@ class PainterCrashType(Painter):
     def ident(self) -> str:
         return "crash_type"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash type")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Type")
 
     @property
@@ -207,10 +207,10 @@ class PainterCrashSource(Painter):
     def ident(self) -> str:
         return "crash_source"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash source")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Source")
 
     @property
@@ -220,9 +220,11 @@ class PainterCrashSource(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (
             None,
-            _("Extension")
-            if local_files_involved_in_crash(row["crash_exc_traceback"])
-            else _("Built-in"),
+            (
+                _("Extension")
+                if local_files_involved_in_crash(row["crash_exc_traceback"])
+                else _("Built-in")
+            ),
         )
 
 
@@ -231,10 +233,10 @@ class PainterCrashTime(Painter):
     def ident(self) -> str:
         return "crash_time"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash Time")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Time")
 
     @property
@@ -246,7 +248,13 @@ class PainterCrashTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["crash_time"], has_been_checked=True, bold_if_younger_than=3600)
+        return paint_age(
+            row["crash_time"],
+            has_been_checked=True,
+            bold_if_younger_than=3600,
+            request=self.request,
+            painter_options=self._painter_options,
+        )
 
 
 class PainterCrashVersion(Painter):
@@ -254,10 +262,10 @@ class PainterCrashVersion(Painter):
     def ident(self) -> str:
         return "crash_version"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash Checkmk Version")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Version")
 
     @property
@@ -273,10 +281,10 @@ class PainterCrashException(Painter):
     def ident(self) -> str:
         return "crash_exception"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash Exception")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Exc.")
 
     @property
@@ -337,7 +345,7 @@ class CommandDeleteCrashReports(Command):
         return PermissionActionDeleteCrashReport
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["crash"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
@@ -353,7 +361,7 @@ class CommandDeleteCrashReports(Command):
             )
         )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_delete_crash_reports", _("Delete"), cssclass="hot")
         html.button("_cancel", _("Cancel"))

@@ -12,7 +12,6 @@ case "$DISTRO" in
 
         apt-get update
         apt-get install -y shellcheck
-        rm -rf /var/lib/apt/lists/*
 
         # Test the installation
         shellcheck --version || exit $?

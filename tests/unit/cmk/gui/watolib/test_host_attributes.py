@@ -14,7 +14,7 @@ expected_attributes = {
     "additional_ipv4addresses": {
         "class_name": "ValueSpecAttribute",
         "depends_on_roles": [],
-        "depends_on_tags": [],
+        "depends_on_tags": ["ip-v4"],
         "editable": True,
         "from_config": False,
         "show_in_folder": False,
@@ -27,7 +27,7 @@ expected_attributes = {
     "additional_ipv6addresses": {
         "class_name": "ValueSpecAttribute",
         "depends_on_roles": [],
-        "depends_on_tags": [],
+        "depends_on_tags": ["ip-v6"],
         "editable": True,
         "from_config": False,
         "show_in_folder": False,

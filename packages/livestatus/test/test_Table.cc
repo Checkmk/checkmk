@@ -264,13 +264,13 @@ class DummyMonitoringCore : public ICore {
         return {};
     }
 
-    std::vector<std::string> metrics(const IHost & /* h */,
-                                     Logger * /*  l */) const override {
+    [[nodiscard]] std::vector<std::string> metrics(
+        const IHost & /*h*/) const override {
         return {};
     }
 
-    std::vector<std::string> metrics(const IService & /* d */,
-                                     Logger * /*  l */) const override {
+    [[nodiscard]] std::vector<std::string> metrics(
+        const IService & /*s*/) const override {
         return {};
     }
 
@@ -427,7 +427,7 @@ ColumnDefinitions columns_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableColumns) {
     EXPECT_EQ(columns_columns(),  //
-              ColumnDefinitions(TableColumns{&mc_}));
+              ColumnDefinitions(TableColumns{}));
 }
 
 namespace {
@@ -441,7 +441,7 @@ ColumnDefinitions commands_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableCommands) {
     EXPECT_EQ(commands_columns(),  //
-              ColumnDefinitions(TableCommands{&mc_}));
+              ColumnDefinitions(TableCommands{}));
 }
 
 namespace {
@@ -481,7 +481,7 @@ ColumnDefinitions contact_groups_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableContactGroups) {
     EXPECT_EQ(contact_groups_columns(),
-              ColumnDefinitions(TableContactGroups{&mc_}));
+              ColumnDefinitions(TableContactGroups{}));
 }
 
 namespace {
@@ -497,7 +497,7 @@ ColumnDefinitions contacts_columns() {
         {"can_submit_commands", ColumnType::int_},
         {"custom_variable_names", ColumnType::list},
         {"custom_variable_values", ColumnType::list},
-        {"custom_variables", ColumnType::dict},
+        {"custom_variables", ColumnType::dictstr},
         {"email", ColumnType::string},
         {"host_notification_period", ColumnType::string},
         {"host_notifications_enabled", ColumnType::int_},
@@ -506,9 +506,9 @@ ColumnDefinitions contacts_columns() {
         {"label_names", ColumnType::list},
         {"label_source_names", ColumnType::list},
         {"label_source_values", ColumnType::list},
-        {"label_sources", ColumnType::dict},
+        {"label_sources", ColumnType::dictstr},
         {"label_values", ColumnType::list},
-        {"labels", ColumnType::dict},
+        {"labels", ColumnType::dictstr},
         {"modified_attributes", ColumnType::int_},
         {"modified_attributes_list", ColumnType::list},
         {"name", ColumnType::string},
@@ -517,14 +517,14 @@ ColumnDefinitions contacts_columns() {
         {"service_notifications_enabled", ColumnType::int_},
         {"tag_names", ColumnType::list},
         {"tag_values", ColumnType::list},
-        {"tags", ColumnType::dict},
+        {"tags", ColumnType::dictstr},
     };
 }
 }  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableContacts) {
     EXPECT_EQ(contacts_columns(),  //
-              ColumnDefinitions(TableContacts{&mc_}));
+              ColumnDefinitions(TableContacts{}));
 }
 
 namespace {
@@ -637,7 +637,7 @@ ColumnDefinitions event_console_rules_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleRules) {
     EXPECT_EQ(event_console_rules_columns(),
-              ColumnDefinitions(TableEventConsoleRules{&mc_}));
+              ColumnDefinitions(TableEventConsoleRules{}));
 }
 
 namespace {
@@ -686,7 +686,7 @@ ColumnDefinitions event_console_status_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleStatus) {
     EXPECT_EQ(event_console_status_columns(),
-              ColumnDefinitions(TableEventConsoleStatus{&mc_}));
+              ColumnDefinitions(TableEventConsoleStatus{}));
 }
 
 namespace {
@@ -734,7 +734,7 @@ ColumnDefinitions host_groups_columns() {
 TEST_F(ColumnNamesAndTypesTest, TableHostGroups) {
     EXPECT_EQ(host_groups_columns() +  //
                   service_groups_columns(),
-              ColumnDefinitions(TableHostGroups{&mc_}));
+              ColumnDefinitions(TableHostGroups{}));
 }
 
 namespace {
@@ -764,7 +764,7 @@ ColumnDefinitions hosts_and_services_columns() {
         {"current_notification_number", ColumnType::int_},
         {"custom_variable_names", ColumnType::list},
         {"custom_variable_values", ColumnType::list},
-        {"custom_variables", ColumnType::dict},
+        {"custom_variables", ColumnType::dictstr},
         {"display_name", ColumnType::string},
         {"downtimes", ColumnType::list},
         {"downtimes_with_extra_info", ColumnType::list},
@@ -790,9 +790,9 @@ ColumnDefinitions hosts_and_services_columns() {
         {"label_names", ColumnType::list},
         {"label_source_names", ColumnType::list},
         {"label_source_values", ColumnType::list},
-        {"label_sources", ColumnType::dict},
+        {"label_sources", ColumnType::dictstr},
         {"label_values", ColumnType::list},
-        {"labels", ColumnType::dict},
+        {"labels", ColumnType::dictstr},
         {"last_check", ColumnType::time},
         {"last_hard_state", ColumnType::int_},
         {"last_hard_state_change", ColumnType::time},
@@ -820,6 +820,7 @@ ColumnDefinitions hosts_and_services_columns() {
         {"pending_flex_downtime", ColumnType::int_},
         {"percent_state_change", ColumnType::double_},
         {"perf_data", ColumnType::string},
+        {"performance_data", ColumnType::dictdouble},
         {"plugin_output", ColumnType::string},
         {"pnpgraph_present", ColumnType::int_},
         {"previous_hard_state", ColumnType::int_},
@@ -832,7 +833,7 @@ ColumnDefinitions hosts_and_services_columns() {
         {"state_type", ColumnType::int_},
         {"tag_names", ColumnType::list},
         {"tag_values", ColumnType::list},
-        {"tags", ColumnType::dict},
+        {"tags", ColumnType::dictstr},
     };
 }
 
@@ -904,7 +905,7 @@ ColumnDefinitions labels_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableLabels) {
     EXPECT_EQ(labels_columns(),  //
-              ColumnDefinitions(TableLabels{&mc_}));
+              ColumnDefinitions(TableLabels{}));
 }
 
 namespace {
@@ -942,7 +943,7 @@ TEST_F(ColumnNamesAndTypesTest, TableLog) {
 
 TEST_F(ColumnNamesAndTypesTest, TableServiceGroups) {
     EXPECT_EQ(service_groups_columns(),
-              ColumnDefinitions(TableServiceGroups{&mc_}));
+              ColumnDefinitions(TableServiceGroups{}));
 }
 
 namespace {
@@ -1149,5 +1150,5 @@ ColumnDefinitions timeperiods_columns() {
 }  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableTimeperiods) {
-    EXPECT_EQ(timeperiods_columns(), ColumnDefinitions(TableTimeperiods{&mc_}));
+    EXPECT_EQ(timeperiods_columns(), ColumnDefinitions(TableTimeperiods{}));
 }

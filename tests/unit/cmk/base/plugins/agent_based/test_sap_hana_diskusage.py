@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from tests.unit.conftest import FixRegister
 
@@ -27,7 +27,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
-NOW_SIMULATED = "1988-06-08 17:00:00.000000"
+NOW_SIMULATED = datetime.fromisoformat("1988-06-08 17:00:00.000000Z")
 LAST_TIME_EPOCH = (
     datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
 ).total_seconds()
@@ -132,13 +132,13 @@ def value_store_fixture(monkeypatch):
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 15.71% - 10.1 GiB of 64.3 GiB"),
+                Result(state=State.OK, summary="Used: 15.71% - 10.8 GB of 69.0 GB"),
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +621 TiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +988323.73%"),
-                Metric("trend", 650743967.1166623),
-                Result(state=State.OK, summary="Time left until disk full: 7 seconds"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +407 TB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +589768.67%"),
+                Metric("trend", 388322565.4877706),
+                Result(state=State.OK, summary="Time left until disk full: 12 seconds"),
             ],
         ),
         (
@@ -161,13 +161,13 @@ def value_store_fixture(monkeypatch):
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 15.71% - 10.1 GiB of 64.3 GiB"),
+                Result(state=State.OK, summary="Used: 15.71% - 10.8 GB of 69.0 GB"),
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +621 TiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +988323.73%"),
-                Metric("trend", 650743967.1166623),
-                Result(state=State.OK, summary="Time left until disk full: 7 seconds"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +407 TB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +589768.67%"),
+                Metric("trend", 388322565.4877706),
+                Result(state=State.OK, summary="Time left until disk full: 12 seconds"),
             ],
         ),
         (
@@ -190,18 +190,18 @@ def value_store_fixture(monkeypatch):
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 15.71% - 10.1 GiB of 64.3 GiB"),
+                Result(state=State.OK, summary="Used: 15.71% - 10.8 GB of 69.0 GB"),
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +621 TiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +988323.73%"),
-                Metric("trend", 650743967.1166623),
-                Result(state=State.OK, summary="Time left until disk full: 7 seconds"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +407 TB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +589768.67%"),
+                Metric("trend", 388322565.4877706),
+                Result(state=State.OK, summary="Time left until disk full: 12 seconds"),
             ],
         ),
     ],
 )
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_check_sap_hana_diskusage(
     fix_register: FixRegister,
     item: str,

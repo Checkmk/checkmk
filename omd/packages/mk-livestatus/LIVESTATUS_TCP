@@ -17,9 +17,8 @@ case "$1" in
         echo "off: disable"
     ;;
     set)
-        if [ "$2" == "on" -a "$CONFIG_CORE" != "shinken" ]
+        if [ "$2" == "on" ]
         then
- 	    mkdir -p $OMD_ROOT/etc/xinetd.d
             ln -sfn ../mk-livestatus/xinetd.conf $OMD_ROOT/etc/xinetd.d/mk-livestatus
         else
             rm -f $OMD_ROOT/etc/xinetd.d/mk-livestatus

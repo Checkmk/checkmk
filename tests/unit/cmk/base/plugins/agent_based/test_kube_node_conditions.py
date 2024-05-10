@@ -11,7 +11,8 @@ from cmk.base.plugins.agent_based.kube_node_conditions import (
     DEFAULT_STATE_MAP,
 )
 
-from cmk.plugins.lib.kube import NodeCondition, NodeConditions, NodeConditionStatus
+from cmk.plugins.kube.schemata.api import NodeConditionStatus
+from cmk.plugins.kube.schemata.section import NodeCondition, NodeConditions
 
 READY = NodeCondition(
     type_="Ready",

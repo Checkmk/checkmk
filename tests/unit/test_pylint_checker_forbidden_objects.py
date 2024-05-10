@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Iterable
 
-import astroid  # type: ignore[import]
+import astroid  # type: ignore[import-untyped]
 import pytest
 from pylint.lint import PyLinter
 

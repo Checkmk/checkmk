@@ -9,7 +9,7 @@ description:
  The check always reports OK.
 
  To be able to use this check the binary {dmidecode} needs to be installed on the
- monitored host and the agent plugin {agents/plugins/dmi_sysinfo} needs to be
+ monitored host and the agent plug-in {agents/plugins/dmi_sysinfo} needs to be
  installed on the system to be monitored.
 
 discovery:

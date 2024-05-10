@@ -90,9 +90,11 @@ def parse_cbl_airlaser(string_table):
     return string_table[0], {
         hwclass: {
             sensor: (
-                airlaser_status_names[int(data[hwclass][offset][0])]
-                if "Status" in sensor
-                else saveint(data[hwclass][offset][0]),
+                (
+                    airlaser_status_names[int(data[hwclass][offset][0])]
+                    if "Status" in sensor
+                    else saveint(data[hwclass][offset][0])
+                ),
                 sub_oid,
                 offset,
             )

@@ -10,25 +10,19 @@ import pytest
 
 from cmk.plugins.collection.server_side_calls.cisco_meraki import special_agent_cisco_meraki
 from cmk.server_side_calls.v1 import (
+    EnvProxy,
     HostConfig,
-    HTTPProxy,
-    IPAddressFamily,
-    PlainTextSecret,
+    IPv4Config,
+    NoProxy,
+    Secret,
     SpecialAgentCommand,
+    URLProxy,
 )
 
 HOST_CONFIG = HostConfig(
     name="testhost",
-    address="0.0.0.1",
-    alias="host_alias",
-    ip_family=IPAddressFamily.IPV4,
-    ipv4address=None,
-    ipv6address=None,
-    additional_ipv4addresses=[],
-    additional_ipv6addresses=[],
+    ipv4_config=IPv4Config(address="0.0.0.1"),
 )
-
-HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
 
 
 @pytest.mark.parametrize(
@@ -36,13 +30,13 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
     [
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                     ]
                 )
             ],
@@ -50,17 +44,14 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
-                "proxy": (
-                    "url",
-                    "abc:8567",
-                ),
+                "api_key": Secret(0),
+                "proxy": URLProxy(url="abc:8567"),
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--proxy",
                         "abc:8567",
                     ]
@@ -70,17 +61,14 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
-                "proxy": (
-                    "environment",
-                    "environment",
-                ),
+                "api_key": Secret(0),
+                "proxy": EnvProxy(),
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--proxy",
                         "FROM_ENVIRONMENT",
                     ]
@@ -90,17 +78,14 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
-                "proxy": (
-                    "no_proxy",
-                    None,
-                ),
+                "api_key": Secret(0),
+                "proxy": NoProxy(),
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--proxy",
                         "NO_PROXY",
                     ]
@@ -110,57 +95,17 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
-                "proxy": (
-                    "global",
-                    "my_proxy",
-                ),
+                "api_key": Secret(0),
+                "sections": ["licenses_overview", "device_statuses"],
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
-                        "--proxy",
-                        "proxy.com",
-                    ]
-                )
-            ],
-            id="Proxy settings, global proxy",
-        ),
-        pytest.param(
-            {
-                "api_key": ("password", "my-api-key"),
-                "proxy": (
-                    "global",
-                    "test_proxy",
-                ),
-            },
-            [
-                SpecialAgentCommand(
-                    command_arguments=[
-                        "testhost",
-                        PlainTextSecret(value="my-api-key"),
-                        "--proxy",
-                        "FROM_ENVIRONMENT",
-                    ]
-                )
-            ],
-            id="Proxy settings, global proxy not found in global config",
-        ),
-        pytest.param(
-            {
-                "api_key": ("password", "my-api-key"),
-                "sections": ["sec1", "sec2"],
-            },
-            [
-                SpecialAgentCommand(
-                    command_arguments=[
-                        "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--sections",
-                        "sec1",
-                        "sec2",
+                        "licenses-overview",
+                        "device-statuses",
                     ]
                 )
             ],
@@ -168,14 +113,14 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
                 "orgs": ["org1", "org2"],
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--orgs",
                         "org1",
                         "org2",
@@ -186,13 +131,9 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
         ),
     ],
 )
-def test_aws_argument_parsing(
+def test_argument_parsing(
     params: Mapping[str, Any],
     expected_args: Sequence[SpecialAgentCommand],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = special_agent_cisco_meraki.parameter_parser(params)
-    assert (
-        list(special_agent_cisco_meraki.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
-        == expected_args
-    )
+    assert list(special_agent_cisco_meraki(params, HOST_CONFIG)) == expected_args

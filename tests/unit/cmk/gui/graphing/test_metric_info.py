@@ -6,21 +6,12 @@
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import metric_info
 
-_METRICS_WITH_UNKNOWN_UNIT = [
-    "read_avg_rtt_ms",
-    "read_avg_exe_ms",
-    "write_avg_rtt_ms",
-    "write_avg_exe_ms",
-]
-
 
 def test_metric_info_unit() -> None:
     assert metric_info
     unit_info_keys = list(unit_info.keys())
     assert unit_info_keys
-    assert [
-        name for name, info in metric_info.items() if info["unit"] not in unit_info_keys
-    ] == _METRICS_WITH_UNKNOWN_UNIT
+    assert not [name for name, info in metric_info.items() if info["unit"] not in unit_info_keys]
 
 
 def _is_valid_color(color: str) -> bool:
@@ -67,13 +58,8 @@ def test_metric_info_color() -> None:
 
 
 _DUPLICATE_METRIC_INFOS = [
-    ["aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"],
     ["db_read_latency", "read_latency"],
     ["db_write_latency", "write_latency"],
-    ["kube_memory_cluster_allocatable_utilization", "kube_cpu_cluster_allocatable_utilization"],
-    ["kube_memory_limit_utilization", "kube_cpu_limit_utilization"],
-    ["kube_memory_node_allocatable_utilization", "kube_cpu_node_allocatable_utilization"],
-    ["kube_memory_request_utilization", "kube_cpu_request_utilization"],
 ]
 
 

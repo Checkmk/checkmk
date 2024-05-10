@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -12,7 +14,7 @@ from pytest_mock import MockerFixture
 from tests.testlib.users import create_and_destroy_user
 
 # The test below executes the special agent and queries a mocked REST API endpoint. Some of the
-# action plugin tests require an initialized UI context. This is done by referencing the ui_context
+# action plug-in tests require an initialized UI context. This is done by referencing the ui_context
 # fixture which makes an initialized context available outside of tests.unit.cmk.gui package.
 # However, seems we need to import the fixtures referenced by the ui_context fixture to make it
 # work.

@@ -18,13 +18,13 @@
 #include "livestatus/Table.h"
 
 class ColumnOffsets;
-template <class T>
+template <typename T>
 class DoubleColumn;
 class ICore;
 class Query;
-template <class T>
+template <typename T>
 class StringColumn;
-template <class T>
+template <typename T>
 class TimeColumn;
 class User;
 
@@ -65,8 +65,6 @@ private:
 
 class TableEventConsole : public Table {
 public:
-    explicit TableEventConsole(ICore *mc);
-
     void answerQuery(Query &query, const User &user,
                      const ICore &core) override;
 };

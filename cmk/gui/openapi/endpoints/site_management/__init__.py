@@ -38,11 +38,12 @@ from cmk.gui.openapi.endpoints.site_management.response_schemas import (
     SiteConnectionResponse,
     SiteConnectionResponseCollection,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import domain_object
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_site_connection,
     LoginException,

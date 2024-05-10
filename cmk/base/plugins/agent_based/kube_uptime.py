@@ -7,7 +7,7 @@
 import time
 from json import loads
 
-from cmk.plugins.lib.kube import StartTime
+from cmk.plugins.kube.schemata.section import StartTime
 from cmk.plugins.lib.uptime import Section
 
 from .agent_based_api.v1 import register

@@ -10,7 +10,7 @@ from os import PathLike
 from pathlib import Path
 from typing import IO
 
-from cmk.utils.paths import log_dir
+import cmk.utils.paths
 
 from ._level import VERBOSE
 
@@ -147,7 +147,7 @@ def verbosity_to_log_level(verbosity: int) -> int:
 def init_dedicated_logging(
     log_level: int | None,
     target_logger: logging.Logger,
-    log_file: Path,
+    log_file_name: str,
     formatter: logging.Formatter | None = None,
 ) -> None:
     """Initializes logging to a dedicated log_file for the given log_handler.
@@ -160,7 +160,7 @@ def init_dedicated_logging(
         return
 
     handler = logging.FileHandler(
-        Path(log_dir) / log_file,
+        Path(cmk.utils.paths.log_dir) / log_file_name,
         encoding="UTF-8",
     )
     handler.setFormatter(formatter if formatter is not None else get_formatter())

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Final
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -12,7 +14,9 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Age, Dictionary, FixedValue, TextInput
+from cmk.gui.valuespec import Age, Dictionary, FixedValue, TextInput, Transform
+
+from .transforms import scale_levels
 
 
 def _valuespec_diskstat_inventory() -> Dictionary:
@@ -91,90 +95,154 @@ def _item_spec_diskstat():
     )
 
 
+_KEY_MAP: Final = {
+    "read": "read_throughput",
+    "write": "write_throughput",
+    "read_wait": "average_read_wait",
+    "write_wait": "average_write_wait",
+}
+
+
+_SCALES: Final = {
+    "read_throughput": 1e6,
+    "write_throughput": 1e6,
+    "utilization": 0.01,
+    "latency": 1e-3,
+    "read_latency": 1e-3,
+    "write_latency": 1e-3,
+    "average_wait": 1e-3,
+    "average_read_wait": 1e-3,
+    "average_write_wait": 1e-3,
+}
+
+_NEEDS_CONVERSION = "_NEEDS_CONVERSION"
+
+
+def scale_forth(p: dict[str, Any]) -> dict[str, Any]:
+    """If this is seconds and bytes (good), convert into something more readable
+
+    >>> scale_forth({"read_wait": (23.0, 42.0)})
+    {'average_read_wait': (23.0, 42.0)}
+    >>> scale_forth({"_NEEDS_CONVERSION": True, "latency": (0.023, 0.042)})
+    {'latency': (23.0, 42.0)}
+    """
+    if _NEEDS_CONVERSION not in p:
+        # first time, "back" has not ever been called
+        return {_KEY_MAP.get(k, k): v for k, v in p.items()}
+    return {
+        k: scale_levels(v, 1.0 / _SCALES[k]) if k in _SCALES else v
+        for k, v in p.items()
+        if k != _NEEDS_CONVERSION
+    }
+
+
+def scale_back(p: dict[str, Any]) -> dict[str, Any]:
+    """Store the nicely rendered ms or MB values in seconds or bytes
+
+    >>> scale_back({"latency": (23.0, 42.0)})
+    {'latency': (0.023, 0.042), '_NEEDS_CONVERSION': True}
+    """
+    return {
+        **{k: scale_levels(v, _SCALES[k]) if k in _SCALES else v for k, v in p.items()},
+        _NEEDS_CONVERSION: True,
+    }
+
+
 def _parameter_valuespec_diskstat():
-    return Dictionary(
-        help=_(
-            "With this rule you can set limits for various disk IO statistics. "
-            "Keep in mind that not all of these settings may be applicable for the actual "
-            "check. For example, if the check doesn't provide a <i>Read wait</i> information in its "
-            "output, any configuration setting referring to <i>Read wait</i> will have no effect."
-        ),
-        elements=[
-            (
-                "read",
-                Levels(
-                    title=_("Read throughput"),
-                    unit=_("MB/s"),
-                    default_levels=(50.0, 100.0),
-                ),
+    return Transform(
+        Dictionary(
+            help=_(
+                "With this rule you can set limits for various disk IO statistics. "
+                "Keep in mind that not all of these settings may be applicable for the actual "
+                "check. For example, if the check doesn't provide a <i>Read wait</i> information in its "
+                "output, any configuration setting referring to <i>Read wait</i> will have no effect."
             ),
-            (
-                "write",
-                Levels(
-                    title=_("Write throughput"),
-                    unit=_("MB/s"),
-                    default_levels=(50.0, 100.0),
-                ),
-            ),
-            (
-                "utilization",
-                Levels(
-                    title=_("Disk Utilization"),
-                    unit=_("%"),
-                    default_levels=(80.0, 90.0),
-                ),
-            ),
-            (
-                "latency",
-                Levels(
-                    title=_("Disk Latency"),
-                    unit=_("ms"),
-                    default_levels=(80.0, 160.0),
-                ),
-            ),
-            (
-                "read_latency",
-                Levels(
-                    title=_("Disk Read Latency"),
-                    unit=_("ms"),
-                    default_levels=(80.0, 160.0),
-                ),
-            ),
-            (
-                "write_latency",
-                Levels(
-                    title=_("Disk Write Latency"),
-                    unit=_("ms"),
-                    default_levels=(80.0, 160.0),
-                ),
-            ),
-            ("read_wait", Levels(title=_("Read wait"), unit=_("ms"), default_levels=(30.0, 50.0))),
-            (
-                "write_wait",
-                Levels(title=_("Write wait"), unit=_("ms"), default_levels=(30.0, 50.0)),
-            ),
-            (
-                "average",
-                Age(
-                    title=_("Averaging"),
-                    help=_(
-                        "When averaging is set, then all of the disk's metrics are averaged "
-                        "over the selected interval - rather then the check interval. This allows "
-                        "you to make your monitoring less reactive to short peaks. But it will also "
-                        "introduce a loss of accuracy in your graphs. "
+            elements=[
+                (
+                    "read_throughput",
+                    Levels(
+                        title=_("Read throughput"),
+                        unit=_("MB/s"),
+                        default_levels=(50.0, 100.0),
                     ),
-                    default_value=300,
                 ),
-            ),
-            (
-                "read_ios",
-                Levels(title=_("Read operations"), unit=_("1/s"), default_levels=(400.0, 600.0)),
-            ),
-            (
-                "write_ios",
-                Levels(title=_("Write operations"), unit=_("1/s"), default_levels=(300.0, 400.0)),
-            ),
-        ],
+                (
+                    "write_throughput",
+                    Levels(
+                        title=_("Write throughput"),
+                        unit=_("MB/s"),
+                        default_levels=(50.0, 100.0),
+                    ),
+                ),
+                (
+                    "utilization",
+                    Levels(
+                        title=_("Disk Utilization"),
+                        unit=_("%"),
+                        default_levels=(80.0, 90.0),
+                    ),
+                ),
+                (
+                    "latency",
+                    Levels(
+                        title=_("Disk Latency"),
+                        unit=_("ms"),
+                        default_levels=(80.0, 160.0),
+                    ),
+                ),
+                (
+                    "read_latency",
+                    Levels(
+                        title=_("Disk Read Latency"),
+                        unit=_("ms"),
+                        default_levels=(80.0, 160.0),
+                    ),
+                ),
+                (
+                    "write_latency",
+                    Levels(
+                        title=_("Disk Write Latency"),
+                        unit=_("ms"),
+                        default_levels=(80.0, 160.0),
+                    ),
+                ),
+                (
+                    "average_read_wait",
+                    Levels(title=_("Read wait"), unit=_("ms"), default_levels=(30.0, 50.0)),
+                ),
+                (
+                    "average_write_wait",
+                    Levels(title=_("Write wait"), unit=_("ms"), default_levels=(30.0, 50.0)),
+                ),
+                (
+                    "average",
+                    Age(
+                        title=_("Averaging"),
+                        help=_(
+                            "When averaging is set, then all of the disk's metrics are averaged "
+                            "over the selected interval - rather then the check interval. This allows "
+                            "you to make your monitoring less reactive to short peaks. But it will also "
+                            "introduce a loss of accuracy in your graphs. "
+                        ),
+                        default_value=300,
+                    ),
+                ),
+                (
+                    "read_ios",
+                    Levels(
+                        title=_("Read operations"), unit=_("1/s"), default_levels=(400.0, 600.0)
+                    ),
+                ),
+                (
+                    "write_ios",
+                    Levels(
+                        title=_("Write operations"), unit=_("1/s"), default_levels=(300.0, 400.0)
+                    ),
+                ),
+            ],
+        ),
+        forth=scale_forth,
+        back=scale_back,
     )
 
 

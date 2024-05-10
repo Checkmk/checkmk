@@ -1,0 +1,13 @@
+[
+  {
+    "ruleset": "extra_host_conf:notification_options",
+    "folder": "/",
+    "properties": {},
+    "value_raw": "'d,r,f,s'",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [],
+      "service_label_groups": []
+    }
+  }
+]

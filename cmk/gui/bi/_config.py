@@ -7,11 +7,10 @@
 import copy
 import json
 from collections.abc import Collection, Iterable
-from typing import Any, overload
-
-from typing_extensions import TypedDict
+from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
+from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
@@ -24,7 +23,6 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.groups import GroupName, load_contact_group_information
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -32,7 +30,6 @@ from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.nodevis_lib import BILayoutManagement
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
@@ -86,6 +83,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import ContactGroupSelection, PermissionSectionWATO, TileMenuRenderer
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
     MainModuleRegistry,
@@ -141,7 +139,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="bi_rules",
-            title=_l("Business Intelligence Rules and Aggregations"),
+            title=_l("Business Intelligence rules and aggregations"),
             description=_l(
                 "Use the Setup BI module, create, modify and delete BI rules and "
                 "aggregations in packs that you are a contact of."
@@ -154,7 +152,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="bi_admin",
-            title=_l("Business Intelligence Administration"),
+            title=_l("Business Intelligence administration"),
             description=_l(
                 "Edit all rules and aggregations for Business Intelligence, "
                 "create, modify and delete rule packs."
@@ -344,8 +342,8 @@ class ModeBIEditPack(ABCBIMode):
 
     def title(self) -> str:
         if self._bi_pack:
-            return super().title() + " - " + _("Edit BI Pack %s") % self.bi_pack.title
-        return super().title() + " - " + _("Add BI Pack")
+            return _("Edit BI Pack %s") % self.bi_pack.title
+        return _("Add BI Pack")
 
     def action(self) -> ActionResult:
         if transactions.check_transaction():
@@ -411,7 +409,9 @@ class ModeBIEditPack(ABCBIMode):
 
     def _vs_pack(self) -> Dictionary:
         if self._bi_pack:
-            id_element = FixedValue(title=_("Pack ID"), value=self.bi_pack.id)
+            id_element: FixedValue | TextInput = FixedValue(
+                title=_("Pack ID"), value=self.bi_pack.id
+            )
         else:
             id_element = ID(
                 title=_("BI pack ID"),
@@ -675,8 +675,7 @@ class ModeBIRules(ABCBIMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -1705,7 +1704,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     def title(self) -> str:
         if self._clone:
-            return _("Clone Aggregation %s") % request.get_str_input_mandatory("clone")
+            return _("Clone aggregation %s") % request.get_str_input_mandatory("clone")
         if self._new:
             return _("Add Aggregation")
         return _("Edit Aggregation")
@@ -1790,9 +1789,6 @@ class BIModeEditAggregation(ABCBIMode):
     def get_vs_aggregation(cls, aggregation_id: str | None) -> BIAggregationForm:
         visualization_choices = []
         visualization_choices.append((None, _("Use default layout")))
-        templates = BILayoutManagement.get_all_bi_template_layouts()
-        for template_id in sorted(templates.keys()):
-            visualization_choices.append((template_id, template_id))
 
         if aggregation_id:
             id_valuespec: ValueSpec = FixedValue(
@@ -1907,7 +1903,7 @@ class BIModeEditAggregation(ABCBIMode):
                 (
                     "escalate_downtimes_as_warn",
                     Checkbox(
-                        title=_("Aggregation of Downtimes"),
+                        title=_("Aggregation of downtimes"),
                         label=_("Escalate downtimes based on aggregated WARN state"),
                         help=_(
                             "When computing the state 'in scheduled downtime' for an aggregate "
@@ -2006,8 +2002,7 @@ class BIModeAggregations(ABCBIMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:

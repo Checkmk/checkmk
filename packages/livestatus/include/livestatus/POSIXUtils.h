@@ -87,12 +87,12 @@ public:
 
     bool try_lock() { return fcntl_impl(F_WRLCK, F_SETLK, "try_lock", true); }
 
-    template <class Clock, class Duration>
+    template <typename Clock, typename Duration>
     bool try_lock_until(const std::chrono::time_point<Clock, Duration> &time) {
         return try_lock_until_impl(time, F_WRLCK, "try_lock_until");
     }
 
-    template <class Rep, class Period>
+    template <typename Rep, typename Period>
     bool try_lock_for(const std::chrono::duration<Rep, Period> &duration) {
         return try_lock_until_impl(std::chrono::steady_clock::now() + duration,
                                    F_WRLCK, "try_lock_for");
@@ -106,13 +106,13 @@ public:
         return fcntl_impl(F_RDLCK, F_SETLK, "try_lock_sharable", true);
     }
 
-    template <class Clock, class Duration>
+    template <typename Clock, typename Duration>
     bool try_lock_sharable_until(
         const std::chrono::time_point<Clock, Duration> &time) {
         return try_lock_until_impl(time, F_RDLCK, "try_lock_sharable_until");
     }
 
-    template <class Rep, class Period>
+    template <typename Rep, typename Period>
     bool try_lock_sharable_for(
         const std::chrono::duration<Rep, Period> &duration) {
         return try_lock_until_impl(std::chrono::steady_clock::now() + duration,

@@ -176,7 +176,6 @@ def check_winperf_processor_util(params: Mapping[str, Any], section: Section) ->
         )
 
     yield Result(state=State.OK, notice=f"Number of processors: {num_cpus}")
-    yield Metric("cpus", num_cpus)  # seriously?
 
 
 register.check_plugin(

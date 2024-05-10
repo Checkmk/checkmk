@@ -11,7 +11,7 @@ a string.
 
 # pylint: disable=duplicate-code
 
-from ..v1.render import (  # pylint: disable=redefined-builtin
+from cmk.agent_based.v1.render import (  # pylint: disable=redefined-builtin
     bytes,
     date,
     datetime,
@@ -25,6 +25,40 @@ from ..v1.render import (  # pylint: disable=redefined-builtin
     timespan,
 )
 
+
+def time_offset(seconds: float) -> str:
+    """Render a time offset (positive or negative) given in seconds
+
+    Like :func:`timespan`, but allows negative values.
+
+    Example:
+        >>> time_offset(-0.0001)
+        '-100 microseconds'
+
+    Please carefully consider if this really is what you want.
+    Here are the main two reasons why it might not be:
+
+    Firstly, a negative time span might indicate that actually
+    something else is wrong. A negative uptime or a negative
+    amount of remaining battery time is nothing that a monitored
+    device should ever report.
+
+    Secondly, even if a negative time is a reasonable thing to observe,
+    you might want to render it differently, taking care of the sign
+    for yourself. Consider the slightly weird
+
+        >>> f"Time until certificate expires: {time_offset(-183600)}"
+        'Time until certificate expires: -2 days 3 hours'
+
+    compared to the more straightforward
+
+        >>> f"Time since certificate expired: {timespan(183600)}"
+        'Time since certificate expired: 2 days 3 hours'
+
+    """
+    return f"-{timespan(-seconds)}" if seconds < 0 else timespan(seconds)
+
+
 __all__ = [
     "bytes",
     "date",
@@ -37,4 +71,5 @@ __all__ = [
     "nicspeed",
     "percent",
     "timespan",
+    "time_offset",
 ]

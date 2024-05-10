@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.plugins.lib import oracle
 
@@ -230,7 +228,7 @@ def check_oracle_rman(
     else:
         yield Result(
             state=State.CRIT,
-            summary="no COMPLETED backup found in last 14 days (very old plugin in use?)",
+            summary="no COMPLETED backup found in last 14 days (very old plug-in in use?)",
         )
 
 

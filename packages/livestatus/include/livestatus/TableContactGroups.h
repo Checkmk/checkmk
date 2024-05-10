@@ -16,7 +16,7 @@ class User;
 
 class TableContactGroups : public Table {
 public:
-    explicit TableContactGroups(ICore *mc);
+    TableContactGroups();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

@@ -28,7 +28,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
         return instance.type_name()
 
     def registration_hook(self, instance: type[SidebarSnapin]) -> None:
-        # Custom snapins have their own permissions "custom_snapin.*"
+        # Custom snap-ins have their own permissions "custom_snapin.*"
         if not instance.is_custom_snapin():
             permission_registry.register(
                 Permission(
@@ -54,7 +54,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
         ]
 
     def register_custom_snapins(self, custom_snapins: list[CustomSnapins]) -> None:
-        """Extends the snapin registry with the ones configured in the site (for the current user)"""
+        """Extends the snap-in registry with the ones configured in the site (for the current user)"""
         self._clear_custom_snapins()
         self._add_custom_snapins(custom_snapins)
 

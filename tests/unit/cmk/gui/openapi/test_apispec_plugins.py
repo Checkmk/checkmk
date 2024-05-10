@@ -12,26 +12,27 @@ from marshmallow import post_load, Schema, ValidationError
 from marshmallow.base import SchemaABC
 
 from cmk.gui.fields.base import ValueTypedDictSchema
-from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
+from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
 
 from cmk import fields
 
 
 class Movie:
-    def __init__(self, **kw) -> None: # type: ignore[no-untyped-def]
-        for key, value in kw.items():
-            setattr(self, key, value)
-        self.kw = kw
-        self.value = tuple(sorted(kw.items()))
+    def __init__(self, title: str, director: str, year: int) -> None:
+        self.title = title
+        self.director = director
+        self.year = year
 
     def __repr__(self) -> str:
-        return f"<Movie {self.kw!r}>"
+        return f"<Movie(title={self.title!r}, director={self.director!r}, year={self.year})>"
 
-    def __lt__(self, other):
-        return self.kw["year"] > other.kw["year"]
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Movie):
+            return NotImplemented
+        return self.year > other.year
 
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.value == other.value
+    def __eq__(self, other: object) -> bool:
+        return (isinstance(other, Movie) and self.title == other.title and self.director == other.director and self.year == other.year)
 
 
 MOVIES = {
@@ -56,16 +57,16 @@ BROKEN_MOVIE = {
 }
 
 EXPECTED_MOVIES = {
-    'Solyaris': Movie(**{
-        'title': 'Solyaris',
-        'director': 'Andrei Tarkovsky',
-        'year': 1972
-    }),
-    'Stalker': Movie(**{
-        'title': 'Stalker',
-        'director': 'Andrei Tarkovsky',
-        'year': 1979
-    }),
+    'Solyaris': Movie(
+        title='Solyaris',
+        director='Andrei Tarkovsky',
+        year=1972
+    ),
+    'Stalker': Movie(
+        title='Stalker',
+        director='Andrei Tarkovsky',
+        year=1979
+    ),
 }
 
 
@@ -138,7 +139,7 @@ def test_apispec_plugin_string_to_string_dict(spec: APISpec) -> None:
 
 
 def test_apispec_plugin_parameters(spec: APISpec) -> None:
-    # Different code paths are executed here. We need to make sure our plugin handles this.
+    # Different code paths are executed here. We need to make sure our plug-in handles this.
     spec.components.parameter('var', 'path', {'description': "Some path variable"})
 
 

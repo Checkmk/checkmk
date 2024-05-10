@@ -19,7 +19,7 @@ class InputGroup(BaseSchema):
     )
 
 
-class UpdateGroup(BaseSchema):
+class UpdateContactGroupAttributes(BaseSchema):
     alias = fields.String(
         example="Example Group",
         description="The name used for displaying in the GUI.",
@@ -80,7 +80,7 @@ class UpdateContactGroup(BaseSchema):
         should_exist=True,
     )
     attributes = fields.Nested(
-        UpdateGroup,
+        UpdateContactGroupAttributes,
         required=True,
     )
 

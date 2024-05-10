@@ -35,6 +35,8 @@
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
+using row_type = HostServiceState;
+
 enum {
     STATE_OK = 0,
     STATE_WARNING = 1,
@@ -45,7 +47,7 @@ enum {
 using namespace std::chrono_literals;
 
 TableStateHistory::TableStateHistory(ICore *mc, LogCache *log_cache)
-    : Table{mc}, log_cache_{log_cache} {
+    : log_cache_{log_cache} {
     addColumns(this, *mc, "", ColumnOffsets{});
 }
 
@@ -53,141 +55,138 @@ TableStateHistory::TableStateHistory(ICore *mc, LogCache *log_cache)
 void TableStateHistory::addColumns(Table *table, const ICore &core,
                                    const std::string &prefix,
                                    const ColumnOffsets &offsets) {
-    table->addColumn(std::make_unique<TimeColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<TimeColumn<row_type>>(
         prefix + "time", "Time of the log event (seconds since 1/1/1970)",
-        offsets, [](const HostServiceState &r) { return r._time; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        offsets, [](const row_type &row) { return row._time; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "lineno", "The number of the line in the log file", offsets,
-        [](const HostServiceState &r) { return r._lineno; }));
-    table->addColumn(std::make_unique<TimeColumn<HostServiceState>>(
+        [](const row_type &row) { return row._lineno; }));
+    table->addColumn(std::make_unique<TimeColumn<row_type>>(
         prefix + "from", "Start time of state (seconds since 1/1/1970)",
-        offsets, [](const HostServiceState &r) { return r._from; }));
-    table->addColumn(std::make_unique<TimeColumn<HostServiceState>>(
+        offsets, [](const row_type &row) { return row._from; }));
+    table->addColumn(std::make_unique<TimeColumn<row_type>>(
         prefix + "until", "End time of state (seconds since 1/1/1970)", offsets,
-        [](const HostServiceState &r) { return r._until; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        [](const row_type &row) { return row._until; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "duration", "Duration of state (until - from)", offsets,
-        [](const HostServiceState &r) {
-            return mk::ticks<std::chrono::seconds>(r._duration);
+        [](const row_type &row) {
+            return mk::ticks<std::chrono::seconds>(row._duration);
         }));
-    table->addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<DoubleColumn<row_type>>(
         prefix + "duration_part",
         "Duration part in regard to the query timeframe", offsets,
-        [](const HostServiceState &r) { return r._duration_part; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        [](const row_type &row) { return row._duration_part; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "state",
         "The state of the host or service in question - OK(0) / WARNING(1) / CRITICAL(2) / UNKNOWN(3) / UNMONITORED(-1)",
-        offsets, [](const HostServiceState &r) { return r._state; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        offsets, [](const row_type &row) { return row._state; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "host_down", "Shows if the host of this service is down",
-        offsets, [](const HostServiceState &r) { return r._host_down; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        offsets, [](const row_type &row) { return row._host_down; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "in_downtime", "Shows if the host or service is in downtime",
-        offsets, [](const HostServiceState &r) { return r._in_downtime; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        offsets, [](const row_type &row) { return row._in_downtime; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "in_host_downtime",
         "Shows if the host of this service is in downtime", offsets,
-        [](const HostServiceState &r) { return r._in_host_downtime; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        [](const row_type &row) { return row._in_host_downtime; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "is_flapping", "Shows if the host or service is flapping",
-        offsets, [](const HostServiceState &r) { return r._is_flapping; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        offsets, [](const row_type &row) { return row._is_flapping; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "in_notification_period",
         "Shows if the host or service is within its notification period",
         offsets,
-        [](const HostServiceState &r) { return r._in_notification_period; }));
-    table->addColumn(std::make_unique<StringColumn<HostServiceState>>(
+        [](const row_type &row) { return row._in_notification_period; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "notification_period",
         "The notification period of the host or service in question", offsets,
-        [](const HostServiceState &r) { return r._notification_period; }));
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+        [](const row_type &row) { return row._notification_period; }));
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "in_service_period",
         "Shows if the host or service is within its service period", offsets,
-        [](const HostServiceState &r) { return r._in_service_period; }));
-    table->addColumn(std::make_unique<StringColumn<HostServiceState>>(
+        [](const row_type &row) { return row._in_service_period; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "service_period",
         "The service period of the host or service in question", offsets,
-        [](const HostServiceState &r) { return r._service_period; }));
-    table->addColumn(std::make_unique<StringColumn<HostServiceState>>(
+        [](const row_type &row) { return row._service_period; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "debug_info", "Debug information", offsets,
-        [](const HostServiceState &r) { return r._debug_info; }));
-    table->addColumn(std::make_unique<StringColumn<HostServiceState>>(
+        [](const row_type &row) { return row._debug_info; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "host_name", "Host name", offsets,
-        [](const HostServiceState &r) { return r._host_name; }));
-    table->addColumn(std::make_unique<StringColumn<HostServiceState>>(
+        [](const row_type &row) { return row._host_name; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "service_description", "Description of the service", offsets,
-        [](const HostServiceState &r) { return r._service_description; }));
-    table->addColumn(std::make_unique<StringColumn<HostServiceState>>(
+        [](const row_type &row) { return row._service_description; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "log_output", "Logfile output relevant for this state",
-        offsets, [](const HostServiceState &r) { return r._log_output; }));
-    table->addColumn(std::make_unique<StringColumn<HostServiceState>>(
+        offsets, [](const row_type &row) { return row._log_output; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "long_log_output",
         "Complete logfile output relevant for this state", offsets,
-        [](const HostServiceState &r) { return r._long_log_output; }));
+        [](const row_type &row) { return row._long_log_output; }));
 
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "duration_ok", "OK duration of state ( until - from )",
-        offsets, [](const HostServiceState &r) {
-            return mk::ticks<std::chrono::seconds>(r._duration_ok);
+        offsets, [](const row_type &row) {
+            return mk::ticks<std::chrono::seconds>(row._duration_ok);
         }));
-    table->addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<DoubleColumn<row_type>>(
         prefix + "duration_part_ok",
         "OK duration part in regard to the query timeframe", offsets,
-        [](const HostServiceState &r) { return r._duration_part_ok; }));
+        [](const row_type &row) { return row._duration_part_ok; }));
 
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "duration_warning", "WARNING duration of state (until - from)",
-        offsets, [](const HostServiceState &r) {
-            return mk::ticks<std::chrono::seconds>(r._duration_warning);
+        offsets, [](const row_type &row) {
+            return mk::ticks<std::chrono::seconds>(row._duration_warning);
         }));
-    table->addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<DoubleColumn<row_type>>(
         prefix + "duration_part_warning",
         "WARNING duration part in regard to the query timeframe", offsets,
-        [](const HostServiceState &r) { return r._duration_part_warning; }));
+        [](const row_type &row) { return row._duration_part_warning; }));
 
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "duration_critical",
         "CRITICAL duration of state (until - from)", offsets,
-        [](const HostServiceState &r) {
-            return mk::ticks<std::chrono::seconds>(r._duration_critical);
+        [](const row_type &row) {
+            return mk::ticks<std::chrono::seconds>(row._duration_critical);
         }));
-    table->addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<DoubleColumn<row_type>>(
         prefix + "duration_part_critical",
         "CRITICAL duration part in regard to the query timeframe", offsets,
-        [](const HostServiceState &r) { return r._duration_part_critical; }));
+        [](const row_type &row) { return row._duration_part_critical; }));
 
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "duration_unknown", "UNKNOWN duration of state (until - from)",
-        offsets, [](const HostServiceState &r) {
-            return mk::ticks<std::chrono::seconds>(r._duration_unknown);
+        offsets, [](const row_type &row) {
+            return mk::ticks<std::chrono::seconds>(row._duration_unknown);
         }));
-    table->addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<DoubleColumn<row_type>>(
         prefix + "duration_part_unknown",
         "UNKNOWN duration part in regard to the query timeframe", offsets,
-        [](const HostServiceState &r) { return r._duration_part_unknown; }));
+        [](const row_type &row) { return row._duration_part_unknown; }));
 
-    table->addColumn(std::make_unique<IntColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "duration_unmonitored",
         "UNMONITORED duration of state (until - from)", offsets,
-        [](const HostServiceState &r) {
-            return mk::ticks<std::chrono::seconds>(r._duration_unmonitored);
+        [](const row_type &row) {
+            return mk::ticks<std::chrono::seconds>(row._duration_unmonitored);
         }));
-    table->addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
+    table->addColumn(std::make_unique<DoubleColumn<row_type>>(
         prefix + "duration_part_unmonitored",
         "UNMONITORED duration part in regard to the query timeframe", offsets,
-        [](const HostServiceState &r) {
-            return r._duration_part_unmonitored;
-        }));
+        [](const row_type &row) { return row._duration_part_unmonitored; }));
 
     // join host and service tables
     TableHosts::addColumns(
         table, core, prefix + "current_host_",
-        offsets.add([](Row r) { return r.rawData<HostServiceState>()->_host; }),
+        offsets.add([](Row r) { return r.rawData<row_type>()->_host; }),
         LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(
-        table, core, prefix + "current_service_", offsets.add([](Row r) {
-            return r.rawData<HostServiceState>()->_service;
-        }),
+        table, core, prefix + "current_service_",
+        offsets.add([](Row r) { return r.rawData<row_type>()->_service; }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::yes);
 }
 
@@ -554,17 +553,17 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 }
 
                 auto state_changed = updateHostServiceState(
-                    query, user, query_timeframe, entry, state, only_update,
-                    notification_periods);
+                    query, user, core, query_timeframe, entry, state,
+                    only_update, notification_periods);
                 // Host downtime or state changes also affect its services
                 if (entry->kind() == LogEntryKind::alert_host ||
                     entry->kind() == LogEntryKind::state_host ||
                     entry->kind() == LogEntryKind::downtime_alert_host) {
                     if (state_changed == ModificationStatus::changed) {
                         for (auto &svc : state->_services) {
-                            updateHostServiceState(query, user, query_timeframe,
-                                                   entry, svc, only_update,
-                                                   notification_periods);
+                            updateHostServiceState(
+                                query, user, core, query_timeframe, entry, svc,
+                                only_update, notification_periods);
                         }
                     }
                 }
@@ -575,12 +574,12 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     const TimeperiodTransition tpt(entry->options());
                     notification_periods[tpt.name()] = tpt.to();
                     for (const auto &[key, hst] : state_info) {
-                        updateHostServiceState(query, user, query_timeframe,
-                                               entry, hst, only_update,
-                                               notification_periods);
+                        updateHostServiceState(
+                            query, user, core, query_timeframe, entry, hst,
+                            only_update, notification_periods);
                     }
                 } catch (const std::logic_error &e) {
-                    Warning(logger())
+                    Warning(core.loggerLivestatus())
                         << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
                         << entry->message();
                 }
@@ -636,7 +635,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 }
 
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
-    Query &query, const User &user,
+    Query &query, const User &user, const ICore &core,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
     HostServiceState *hss, bool only_update,
     const std::map<std::string, int> &notification_periods) {
@@ -813,7 +812,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                     }
                 }
             } catch (const std::logic_error &e) {
-                Warning(logger())
+                Warning(core.loggerLivestatus())
                     << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
                     << entry->message();
             }

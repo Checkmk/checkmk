@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.wato.special_agents.aws import AWSSpecialAgentValuespecBuilder
-from cmk.gui.plugins.wato.special_agents.common import aws_region_to_monitor
 
 
 def test_cloud_only_services_present_in_cloud_edition():
@@ -23,15 +22,3 @@ def test_cloud_only_services_not_present_in_enterprise_edition():
 
     assert "sns" not in {service[0] for service in regional_services}
     assert "cloudfront" not in {service[0] for service in global_services}
-
-
-def test_display_order_logic() -> None:
-    # Assemble
-    display_regions = [display_region for _region_id, display_region in aws_region_to_monitor()]
-    # Assert
-    # GovCloud entries are generally useful to only very few people. Thus, they should all be
-    # displayed at end of the list. Within the groups, the order should be alphabetical.
-    assert display_regions == [
-        *sorted(region for region in display_regions if "GovCloud" not in region),
-        *sorted(region for region in display_regions if "GovCloud" in region),
-    ]

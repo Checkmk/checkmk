@@ -9,15 +9,15 @@ description:
  data sent by the Checkmk agent.
 
  To get information about the link status and the MAC address, you need to
- deploy the agent plugin {wmic_if.bat} into the {plugins} directory of your
+ deploy the agent plug-in {wmic_if.bat} into the {plugins} directory of your
  Checkmk agent for Windows. On servers with just one network interface, you
  probably won't need the information about the link status, since the agent
  will be unreachable anyway if the interface is not up. We propose to not
- install the plugin in that case and save a few CPU resources.
+ install the plug-in in that case and save a few CPU resources.
 
- The plugin {mk_dhcp_enabled.bat} can be used to get a WARN if the ip
+ The plug-in {mk_dhcp_enabled.bat} can be used to get a WARN if the ip
  address of the interface was assigned by dhcp. To check the current state of
- Windows bonding interfaces, you need to install the agent plugin {windows_if.ps1}
+ Windows bonding interfaces, you need to install the agent plug-in {windows_if.ps1}
  on the target host. Without the plugin, this check will show 'Connected' as
  the operation state.
 

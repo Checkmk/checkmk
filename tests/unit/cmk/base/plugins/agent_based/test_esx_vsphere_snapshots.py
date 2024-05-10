@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
+import datetime
 from collections.abc import Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_section
 
@@ -62,18 +63,16 @@ def test_parse_esx_vsphere_snapshots():
         ),
     ],
 )
-@freeze_time("2020-11-23")
-def test_check_snapshots_summary(
-    section: Section, expected_result: CheckResult, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(time, "localtime", time.gmtime)
+@time_machine.travel(datetime.datetime.fromisoformat("2020-11-23").replace(tzinfo=ZoneInfo("UTC")))
+def test_check_snapshots_summary(section: Section, expected_result: CheckResult) -> None:
     result = check_snapshots_summary({}, section)
     assert list(result) == expected_result
 
 
-@freeze_time("2020-11-23")
-def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(time, "localtime", time.gmtime)
+@time_machine.travel(
+    datetime.datetime.fromisoformat("2020-11-23T00:00:00Z").replace(tzinfo=ZoneInfo("UTC"))
+)
+def test_check_snapshots() -> None:
     assert list(
         check_snapshots(
             {},
@@ -88,9 +87,10 @@ def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2020-11-23 14:37:00")
-def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(time, "localtime", time.gmtime)
+@time_machine.travel(
+    datetime.datetime.fromisoformat("2020-11-23 14:37:00Z").replace(tzinfo=ZoneInfo("UTC"))
+)
+def test_check_multi_snapshots() -> None:
     parsed = parse_esx_vsphere_vm(
         [
             [
@@ -122,9 +122,10 @@ def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2019-06-22 14:37:00")
-def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(time, "localtime", time.gmtime)
+@time_machine.travel(
+    datetime.datetime.fromisoformat("2019-06-22 14:37:00Z").replace(tzinfo=ZoneInfo("UTC"))
+)
+def test_check_one_snapshot() -> None:
     parsed = parse_esx_vsphere_vm(
         [
             [
@@ -159,9 +160,10 @@ def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2022-06-22")
-def test_time_reference_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(time, "localtime", time.gmtime)
+@time_machine.travel(
+    datetime.datetime.fromisoformat("2022-06-22 00:00:00Z").replace(tzinfo=ZoneInfo("UTC"))
+)
+def test_time_reference_snapshot() -> None:
     parsed = parse_esx_vsphere_vm(
         [
             ["snapshot.rootSnapshotList", "732", "1594041788", "poweredOn", "FransTeil2"],

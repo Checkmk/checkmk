@@ -44,7 +44,7 @@ def discover_lsi_disk(section: Section) -> DiscoveryResult:
     )
 
 
-def discover_lsi_array(section) -> DiscoveryResult:  # type: ignore[no-untyped-def]
+def discover_lsi_array(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section["arrays"])
 
 

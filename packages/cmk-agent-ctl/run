@@ -5,6 +5,8 @@
 
 set -e
 
+JOBS=6
+
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -14,18 +16,20 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -e, --setup-environment  setup environment"
-    echo "  -c, --clean              remove artifacts first"
-    echo "  -F, --check-format       check for correct formatting"
-    echo "  -b, --build              build executable"
-    echo "  -U, --build-unit-tests   build unit tests"
-    echo "  -u, --unit-tests         run unit tests"
-    echo "  -C, --clippy             run clippy linter"
-    echo "  -a, --all                shortcut for -F -b -U -u -C"
-    echo "  -A, --build-all          shortcut for -b -U"
-    echo "  -f, --format             format sources"
-    echo "  -D, --documentation      generate documentation"
-    echo "  -h, --help               show this help"
+    echo "  -e, --setup-environment             setup environment"
+    echo "  -c, --clean                         remove artifacts first"
+    echo "  -F, --check-format                  check for correct formatting"
+    echo "  -b, --build                         build executable"
+    echo "  -U, --build-unit-tests              build unit tests"
+    echo "  -u, --unit-tests                    run unit tests"
+    echo "  -C, --clippy                        run clippy linter"
+    echo "  -I F1,F2,..., --features=F1,F2,...  list of features to activate"
+    echo "  -a, --all                           shortcut for -F -b -U -u -C"
+    echo "  -A, --build-all                     shortcut for -b -U"
+    echo "  -f, --format                        format sources"
+    echo "  -D, --documentation                 generate documentation"
+    echo "  -j N, --jobs=N                      allow N jobs at once, default is ${JOBS}"
+    echo "  -h, --help                          show this help"
 }
 
 parse_options() {
@@ -37,10 +41,11 @@ parse_options() {
     RUN_BUILD_UNIT_TESTS=no
     RUN_UNIT_TESTS=no
     RUN_CLIPPY=no
+    FEATURES=""
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecFbUuCaAfDh' --long 'setup-environment,clean,check-format,build,build-unit-tests,unit-tests,clippy,all,build-all,format,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecFbUuCIaAfDj:h' --long 'setup-environment,clean,check-format,build,build-unit-tests,unit-tests,clippy,features:,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -84,6 +89,11 @@ parse_options() {
                 shift
                 continue
                 ;;
+            '-I' | '--features')
+                FEATURES="$2"
+                shift 2
+                continue
+                ;;
             '-a' | '--all')
                 RUN_CHECK_FORMAT=yes
                 RUN_BUILD=yes
@@ -108,6 +118,11 @@ parse_options() {
                 shift
                 continue
                 ;;
+            '-j' | '--jobs')
+                JOBS="$2"
+                shift 2
+                continue
+                ;;
             '-h' | '--help')
                 usage
                 exit 0
@@ -121,7 +136,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION
+    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY FEATURES RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 # TODO: This needs some serious massaging, some stuff probably don't even belong
@@ -134,8 +149,6 @@ run_setup_environment() {
     unset MAKEFLAGS DESTDIR
 
     if [ -e "/opt/rust/rustup" ]; then
-        RUSTUP_HOME="/opt/rust/rustup"
-        export RUSTUP_HOME
         # Make sure we don't use "$HOME/.cargo" accidentally (expands to
         # /.cargo, if HOME is not set). On a jenkins node, .cargo should be
         # created under /home/jenkins/shared_cargo_folder in order to reuse it
@@ -152,6 +165,16 @@ $RUSTFLAGS \
     export RUSTFLAGS
 }
 
+run_check_format() {
+    command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff Cargo.toml
+    cargo fmt -- --check
+}
+
+run_format() {
+    command -v taplo >/dev/null && RUST_LOG=warn taplo format Cargo.toml
+    cargo fmt
+}
+
 main() {
     # Change to the directory where this script resides, it makes many things easier
     # and we can call this script from everywhere.
@@ -159,14 +182,14 @@ main() {
     parse_options "$@"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && cargo clean
-    test ${RUN_CHECK_FORMAT} = yes && cargo fmt -- --check
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     # TODO: Re-evaluate usage of --all-targets below
-    test ${RUN_BUILD} = yes && cargo build --release --all-targets
-    test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --release --all-targets --no-run
-    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=1 cargo test --release --all-targets
-    test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets -- --deny warnings
-    test ${RUN_FORMAT} = yes && cargo fmt
-    test ${RUN_DOCUMENTATION} = yes && cargo doc --release --lib --bin --examples
+    test ${RUN_BUILD} = yes && cargo build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"} --no-run
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings
+    test ${RUN_FORMAT} = yes && run_format
+    test ${RUN_DOCUMENTATION} = yes && cargo doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
     true
 }
 

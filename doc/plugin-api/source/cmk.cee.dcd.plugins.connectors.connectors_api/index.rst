@@ -1,6 +1,6 @@
-===================================
-Dynamic Configuration connector API
-===================================
+===============================
+Dynamic configuration connector
+===============================
 
 .. automodule:: cmk.cee.dcd.plugins.connectors.connectors_api
    :members:

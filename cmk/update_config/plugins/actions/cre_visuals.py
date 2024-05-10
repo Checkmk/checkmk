@@ -10,16 +10,15 @@ from cmk.gui.views.store import get_all_views
 
 from cmk.update_config.plugins.actions.visuals_utils import update_visuals
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateViews(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         update_visuals("views", get_all_views())
 
 
 class UpdateDashboards(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         update_visuals("dashboards", get_all_dashboards())
 
 

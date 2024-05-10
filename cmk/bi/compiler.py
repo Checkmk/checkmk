@@ -10,9 +10,9 @@ import os
 import pickle
 import time
 from pathlib import Path
+from typing import TypedDict
 
 from redis import Redis
-from typing_extensions import TypedDict
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
@@ -36,6 +36,9 @@ class ConfigStatus(TypedDict):
     online_sites: set[SiteProgramStart]
 
 
+path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
+
+
 class BICompiler:
     def __init__(self, bi_configuration_file: str, sites_callback: SitesCallback) -> None:
         self._sites_callback = sites_callback
@@ -45,8 +48,7 @@ class BICompiler:
         self._compiled_aggregations: dict[str, BICompiledAggregation] = {}
         self._path_compilation_lock = Path(get_cache_dir(), "compilation.LOCK")
         self._path_compilation_timestamp = Path(get_cache_dir(), "last_compilation")
-        self._path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
-        self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
+        path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
 
         self._redis_client: Redis[str] | None = None
         self._setup()
@@ -187,7 +189,7 @@ class BICompiler:
         return updated_aggregations
 
     def _load_compiled_aggregations(self) -> None:
-        for path_object in self._path_compiled_aggregations.iterdir():
+        for path_object in path_compiled_aggregations.iterdir():
             if path_object.is_dir():
                 continue
             aggr_id = path_object.name
@@ -196,7 +198,7 @@ class BICompiler:
 
             self._logger.debug("Loading cached aggregation results %s" % aggr_id)
             self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(
-                self._load_data(path_object)
+                store.load_object_from_pickle_file(path_object, default={})
             )
 
         self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
@@ -234,7 +236,7 @@ class BICompiler:
                     "Schema dump %s took config took %f (%d branches)"
                     % (aggr_id, time.time() - start, len(compiled_aggr.branches))
                 )
-                self._save_data(self._path_compiled_aggregations.joinpath(aggr_id), result)
+                self._save_data(path_compiled_aggregations.joinpath(aggr_id), result)
 
             self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
             self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
@@ -248,7 +250,7 @@ class BICompiler:
 
     def _cleanup_vanished_aggregations(self) -> None:
         valid_aggregations = list(self._compiled_aggregations.keys())
-        for path_object in self._path_compiled_aggregations.iterdir():
+        for path_object in path_compiled_aggregations.iterdir():
             if path_object.is_dir():
                 continue
             if path_object.name not in valid_aggregations:
@@ -351,9 +353,6 @@ class BICompiler:
 
     def _save_data(self, filepath: Path, data: dict) -> None:
         store.save_bytes_to_file(filepath, pickle.dumps(data))
-
-    def _load_data(self, filepath: Path) -> dict:
-        return store.load_object_from_pickle_file(filepath, default={})
 
     def _get_redis_client(self) -> Redis[str]:
         if self._redis_client is None:

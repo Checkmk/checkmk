@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import cisco_meraki_org_sensor_readings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -84,7 +85,7 @@ def test_check_sensor_temperature(
     string_table: StringTable, expected_results: Sequence[Result]
 ) -> None:
     section = cisco_meraki_org_sensor_readings.parse_sensor_readings(string_table)
-    with on_time("2000-01-30 12:00:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2000, 1, 30, 12, tzinfo=ZoneInfo("UTC"))):
         assert (
             list(cisco_meraki_org_sensor_readings.check_sensor_temperature("Sensor", {}, section))
             == expected_results

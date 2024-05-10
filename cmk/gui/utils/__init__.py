@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This is an unsorted collection of small unrelated helper functions which are
-usable in all components of the Web GUI of Check_MK
+usable in all components of the web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
@@ -64,7 +64,9 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
                     with file_path.open(encoding="utf-8") as f:
-                        exec(f.read(), globalvars)  # nosec B102 # BNS:aee528
+                        exec(
+                            compile(f.read(), file_path, "exec"), globalvars
+                        )  # nosec B102 # BNS:aee528
 
                 elif file_path.suffix == ".pyc":
                     with file_path.open("rb") as pyc:
@@ -73,7 +75,7 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
                     exec(code, globalvars)  # nosec B102 # BNS:aee528
 
             except Exception as e:
-                logger.exception("Failed to load plugin %s: %s", file_path, e)
+                logger.exception("Failed to load plug-in %s: %s", file_path, e)
                 add_failed_plugin(file_path.with_suffix(".py"), forwhat, file_path.stem, e)
 
 

@@ -107,7 +107,7 @@ def sensor_id(type_: SensorType, variable: Variable, device: str) -> str:
     return f"{device} {variable[0]}"
 
 
-def sensor_key(type_: SensorType, var_type: str, variable: Variable):  # type: ignore[no-untyped-def]
+def sensor_key(type_: SensorType, var_type: str, variable: Variable) -> str:
     if type_ != "phase":
         return variable[-1]
 

@@ -6,10 +6,15 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection
-from cmk.agent_based.v2 import check_levels_fixed as check_levels
-from cmk.agent_based.v2 import CheckPlugin, IgnoreResultsError, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    IgnoreResultsError,
+    Result,
+    State,
+)
 from cmk.plugins.lib.azure import create_discover_by_metrics_function, parse_resources, Section
 
 agent_section_azure_trafficmanagerprofiles = AgentSection(

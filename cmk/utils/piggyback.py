@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import errno
 import logging
 import os
+import re
 import tempfile
+import time
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
@@ -18,11 +21,8 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.log import VERBOSE
-from cmk.utils.regex import regex
-from cmk.utils.render import Age
 
-logger = logging.getLogger("cmk.base")
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -82,8 +82,7 @@ def get_piggyback_raw_data(
 
     piggyback_file_infos = _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
     if not piggyback_file_infos:
-        logger.log(
-            VERBOSE,
+        logger.debug(
             "No piggyback files for '%s'. Skip processing.",
             piggybacked_hostname,
         )
@@ -95,47 +94,26 @@ def get_piggyback_raw_data(
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            raw_data = AgentRawData(store.load_bytes_from_file(file_info.file_path))
+            piggyback_raw_data = PiggybackRawDataInfo(
+                info=file_info,
+                raw_data=AgentRawData(store.load_bytes_from_file(file_info.file_path)),
+            )
 
-        except OSError as e:
-            reason = f"Cannot read piggyback raw data from source '{file_info.source_hostname}'"
+        except OSError as exc:
             piggyback_raw_data = PiggybackRawDataInfo(
                 PiggybackFileInfo(
                     source_hostname=file_info.source_hostname,
                     file_path=file_info.file_path,
                     successfully_processed=False,
-                    message=reason,
+                    message=f"Cannot read piggyback raw data from source '{file_info.source_hostname}': {exc}",
                     status=0,
                 ),
                 raw_data=AgentRawData(b""),
             )
-            logger.log(
-                VERBOSE,
-                "Piggyback file '%s': %s, %s",
-                file_info.file_path,
-                reason,
-                e,
-            )
 
-        else:
-            piggyback_raw_data = PiggybackRawDataInfo(
-                file_info,
-                raw_data,
-            )
-            if file_info.successfully_processed:
-                logger.log(
-                    VERBOSE,
-                    "Piggyback file '%s': %s",
-                    file_info.file_path,
-                    file_info.message,
-                )
-            else:
-                logger.log(
-                    VERBOSE,
-                    "Piggyback file '%s' is outdated (%s). Skip processing.",
-                    file_info.file_path,
-                    file_info.message,
-                )
+        logger.debug(
+            "Piggyback file '%s': %s", file_info.file_path, piggyback_raw_data.info.message
+        )
         piggyback_data.append(piggyback_raw_data)
     return piggyback_data
 
@@ -183,7 +161,7 @@ class _TimeSettingsMap:
             # the first entry ('piggybacked-hostname' vs '~piggybacked-[hH]ostname') wins
             if expr is None or expr in source_hostnames or expr == piggybacked_hostname:
                 matching_time_settings.setdefault((expr, key), value)
-            elif expr.startswith("~") and regex(expr[1:]).match(piggybacked_hostname):
+            elif expr.startswith("~") and re.match(expr[1:], piggybacked_hostname):
                 matching_time_settings.setdefault((piggybacked_hostname, key), value)
 
         self._expanded_settings: Final = matching_time_settings
@@ -258,18 +236,18 @@ def _get_piggyback_processed_file_info(
     settings: _TimeSettingsMap,
 ) -> PiggybackFileInfo:
     try:
-        file_age = cmk.utils.cachefile_age(piggyback_file_path)
+        file_age = _time_since_last_modification(piggyback_file_path)
     except FileNotFoundError:
         return PiggybackFileInfo(
             source_hostname, piggyback_file_path, False, "Piggyback file is missing", 0
         )
 
-    if (outdated := file_age - settings.max_cache_age(source_hostname, piggybacked_hostname)) > 0:
+    if file_age > (allowed := settings.max_cache_age(source_hostname, piggybacked_hostname)):
         return PiggybackFileInfo(
             source_hostname,
             piggyback_file_path,
             False,
-            f"Piggyback file too old: {Age(outdated)}",
+            f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
             0,
         )
 
@@ -312,13 +290,18 @@ def _validity_period_message(
 ) -> str:
     if validity_period is None or (time_left := validity_period - file_age) <= 0:
         return ""
-    return f" (still valid, {Age(time_left)} left)"
+    return f" (still valid, {_render_time(time_left)} left)"
 
 
 def _is_piggyback_file_outdated(
     status_file_path: Path,
     piggyback_file_path: Path,
 ) -> bool:
+    """Return True if the status file is missing or it is newer than the payload file
+
+    It will return True if the payload file is "abandoned", i.e. the source host is
+    still sending data, but no longer has data for this target ( = piggybacked) host.
+    """
     try:
         # TODO use Path.stat() but be aware of:
         # On POSIX platforms Python reads atime and mtime at nanosecond resolution
@@ -351,11 +334,7 @@ def store_piggyback_raw_data(
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
-        logger.log(
-            VERBOSE,
-            "Storing piggyback data for: %r",
-            piggybacked_hostname,
-        )
+        logger.debug("Storing piggyback data for: %r", piggybacked_hostname)
         # Raw data is always stored as bytes. Later the content is
         # converted to unicode in abstact.py:_parse_info which respects
         # 'encoding' in section options.
@@ -367,7 +346,7 @@ def store_piggyback_raw_data(
     # Only do this for hosts that sent piggyback data this turn, cleanup the status file when no
     # piggyback data was sent this turn.
     if piggybacked_raw_data:
-        logger.log(VERBOSE, "Received piggyback data for %d hosts", len(piggybacked_raw_data))
+        logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
 
         status_file_path = _get_source_status_file_path(source_hostname)
         _store_status_file_of(status_file_path, piggyback_file_paths)
@@ -477,12 +456,8 @@ def cleanup_piggyback_files(time_settings: PiggybackTimeSettings) -> None:
     # Source status files and/or piggybacked data files are cleaned up/deleted
     # if and only if they have exceeded the maximum cache age configured in the
     # global settings or in the rule 'Piggybacked Host Files'."""
-
-    logger.log(
-        VERBOSE,
-        "Cleanup piggyback files; time settings: %s.",
-        time_settings,
-    )
+    logger.debug("Cleanup piggyback files.")
+    logger.debug("Time settings: %r.", time_settings)
 
     piggybacked_hosts_settings = _get_piggybacked_hosts_settings(time_settings)
 
@@ -528,26 +503,22 @@ def _cleanup_old_source_status_files(
 
     for source_state_file in _get_source_state_files():
         try:
-            file_age = cmk.utils.cachefile_age(source_state_file)
+            file_age = _time_since_last_modification(source_state_file)
         except FileNotFoundError:
             continue  # File has been removed, that's OK.
 
         # No entry -> no file
         max_cache_age_of_source = max_cache_age_by_sources.get(source_state_file.name)
         if max_cache_age_of_source is None:
-            logger.log(
-                VERBOSE,
-                "No piggyback data from source '%s'",
-                source_state_file.name,
-            )
+            logger.debug("No piggyback data from source '%s'", source_state_file.name)
             continue
 
         if file_age > max_cache_age_of_source:
-            logger.log(
-                VERBOSE,
-                "Piggyback source status file '%s' is outdated (File too old: %s). Remove it.",
+            logger.debug(
+                "Piggyback source status file '%s' too old (age: %s, allowed: %s). Remove it.",
                 source_state_file,
-                Age(file_age - max_cache_age_of_source),
+                _render_time(file_age),
+                _render_time(max_cache_age_of_source),
             )
             _remove_piggyback_file(source_state_file)
 
@@ -559,21 +530,23 @@ def _cleanup_old_piggybacked_files(
 
     for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
         for piggybacked_host_source in source_hosts:
-            file_info = _get_piggyback_processed_file_info(
-                HostName(piggybacked_host_source.name),
-                piggybacked_hostname=HostName(piggybacked_host_folder.name),
-                piggyback_file_path=piggybacked_host_source,
-                settings=time_settings,
-            )
+            src = HostName(piggybacked_host_source.name)
+            dst = HostName(piggybacked_host_folder.name)
 
-            if not file_info.successfully_processed:
-                logger.log(
-                    VERBOSE,
-                    "Piggyback file '%s' is outdated (%s). Remove it.",
-                    piggybacked_host_source,
-                    file_info.message,
-                )
-                _remove_piggyback_file(piggybacked_host_source)
+            try:
+                file_age = _time_since_last_modification(piggybacked_host_source)
+            except FileNotFoundError:
+                continue
+
+            max_cache_age = time_settings.max_cache_age(src, dst)
+            validity_period = time_settings.validity_period(src, dst) or 0
+            if file_age <= max_cache_age or file_age <= validity_period:
+                # Do not remove files just because they're abandoned.
+                # We don't use them anymore, but the DCD still needs to know about them for a while.
+                continue
+
+            logger.debug("Piggyback file '%s' is outdated. Remove it.", piggybacked_host_source)
+            _remove_piggyback_file(piggybacked_host_source)
 
         # Remove empty backed host directory
         try:
@@ -582,8 +555,30 @@ def _cleanup_old_piggybacked_files(
             if e.errno == errno.ENOTEMPTY:
                 continue
             raise
-        logger.log(
-            VERBOSE,
+        logger.debug(
             "Piggyback folder '%s' is empty. Removed it.",
             piggybacked_host_folder,
         )
+
+
+def _time_since_last_modification(path: Path) -> float:
+    """Return the time difference between the last modification and now.
+
+    Raises:
+        FileNotFoundError if `path` does not exist.
+
+    """
+    return time.time() - path.stat().st_mtime
+
+
+def _render_time(value: float | int) -> str:
+    """Format time difference seconds into human readable text
+
+    >>> _render_time(184)
+    '0:03:04'
+
+    Unlikely in this context, but still acceptable:
+    >>> _render_time(92635.3)
+    '1 day, 1:43:55'
+    """
+    return str(datetime.timedelta(seconds=round(value)))

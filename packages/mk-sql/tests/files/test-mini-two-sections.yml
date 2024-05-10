@@ -1,0 +1,9 @@
+---
+mssql:
+  main: # mandatory, to be used if no specific config
+    authentication: # mandatory
+      username: "f" # mandatory
+    sections:
+      - instance:
+      - databases:
+          is_async: yes

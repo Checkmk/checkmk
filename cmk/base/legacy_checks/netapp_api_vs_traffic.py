@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
 
@@ -35,13 +35,17 @@ def inventory_netapp_api_vs_traffic(parsed):
 
 
 def check_netapp_api_vs_traffic(item, _no_params, parsed):
+    """
+    In the case of migration, a utility function is available for this check here:
+    cmk/plugins/lib/netapp_api.py -> check_netapp_vs_traffic
+    """
     protocol_map = {
         "lif:vserver": (
             "Ethernet",
             # ( what         perfname        perftext      scale     format_func)
             [
-                ("recv_data", "if_in_octets", "received data", 1, get_bytes_human_readable),
-                ("sent_data", "if_out_octets", "sent data", 1, get_bytes_human_readable),
+                ("recv_data", "if_in_octets", "received data", 1, render.bytes),
+                ("sent_data", "if_out_octets", "sent data", 1, render.bytes),
                 ("recv_errors", "if_in_errors", "received errors", 1, int),
                 ("sent_errors", "if_out_errors", "sent errors", 1, int),
                 ("recv_packet", "if_in_pkts", "received packets", 1, int),
@@ -65,8 +69,8 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                     0.001,
                     lambda x: "%.2f ms" % (x * 1000),
                 ),
-                ("read_data", "fcp_read_data", "read data", 1, get_bytes_human_readable),
-                ("write_data", "fcp_write_data", "write data", 1, get_bytes_human_readable),
+                ("read_data", "fcp_read_data", "read data", 1, render.bytes),
+                ("write_data", "fcp_write_data", "write data", 1, render.bytes),
             ],
         ),
         "cifs:vserver": (
@@ -107,8 +111,8 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                     0.001,
                     lambda x: "%.2f ms" % (x * 1000),
                 ),
-                ("read_data", "iscsi_read_data", "read data", 1, get_bytes_human_readable),
-                ("write_data", "iscsi_write_data", "write data", 1, get_bytes_human_readable),
+                ("read_data", "iscsi_read_data", "read data", 1, render.bytes),
+                ("write_data", "iscsi_write_data", "write data", 1, render.bytes),
             ],
         ),
         "nfsv3": (

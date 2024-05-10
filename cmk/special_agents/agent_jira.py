@@ -9,14 +9,11 @@ import logging
 import sys
 from typing import Any
 
-import urllib3
 from jira import JIRA
 from jira.exceptions import JIRAError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from cmk.utils.password_store import replace_passwords
-
-urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 
 
 def main(argv=None):

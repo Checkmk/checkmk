@@ -15,10 +15,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.printer_supply import (
     check_printer_supply,
+    DEFAULT_PARAMETERS,
     discovery_printer_supply,
     parse_printer_supply,
     PrinterSupply,
     Section,
+    SupplyClass,
 )
 
 
@@ -28,10 +30,21 @@ from cmk.base.plugins.agent_based.printer_supply import (
         pytest.param(
             [
                 [["1.1", "black\x00"]],
-                [["Patrone Schwarz 508A HP CF360A\x00", "19", "100", "9", "3", "1"]],
+                [
+                    [
+                        "Patrone Schwarz 508A HP CF360A\x00",
+                        "19",
+                        "100",
+                        "9",
+                        SupplyClass.CONTAINER,
+                        "1",
+                    ]
+                ],
             ],
             {
-                "Patrone Schwarz 508A HP CF360A": PrinterSupply("%", 100, 9, "3", "black"),
+                "Patrone Schwarz 508A HP CF360A": PrinterSupply(
+                    "%", 100, 9, SupplyClass.CONTAINER, "black"
+                ),
             },
             id="with null bytes",
         ),
@@ -66,23 +79,18 @@ def test_inventory_printer_supply(
     [
         (
             "Black Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            {**DEFAULT_PARAMETERS, "some_remaining_ink": 3},
             [
                 [["1.4", "black"]],
                 [["Black Ink Cartridge", "15", "-2", "-3", "3", "4"]],
             ],
             [
-                Result(state=State.WARN, summary="Some remaining"),
-                Metric("pages", -3, levels=(-0.4, -0.2), boundaries=(0, -2)),
+                Result(state=State.UNKNOWN, summary="Some ink remaining"),
             ],
         ),
         (
             "Magenta Ink Cartridge",
-            {
-                "levels": (20.0, 10.0),
-                "upturn_toner": False,
-                "some_remaining": 1,
-            },
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -93,7 +101,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -104,7 +112,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -115,7 +123,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -126,7 +134,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -143,7 +151,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -160,7 +168,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -175,7 +183,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -190,7 +198,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -205,7 +213,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -220,7 +228,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [
                     ["Magenta Ink Cartridge", "19", "0", "25", "3", "1"],
@@ -230,7 +238,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -241,7 +249,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Toner Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"], ["1.4", "black"]],
                 [
@@ -257,7 +265,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Toner Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"], ["1.2", "black"]],
                 [
@@ -273,7 +281,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Toner Cartridge2",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"], ["1.2", "black"]],
                 [
@@ -289,7 +297,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": True, "some_remaining": 1},
+            {**DEFAULT_PARAMETERS, "upturn_toner": True},
             [
                 [["1.1", "magenta"]],
                 [
@@ -304,7 +312,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Magenta Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [
@@ -319,7 +327,7 @@ def test_inventory_printer_supply(
         ),
         (
             "Ink Cartridge",
-            {"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+            DEFAULT_PARAMETERS,
             [
                 [["1.1", "magenta"]],
                 [

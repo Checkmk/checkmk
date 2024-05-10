@@ -1,26 +1,8 @@
 #!/usr/bin/env python3
-#
-#       U  ___ u  __  __   ____
-#        \/"_ \/U|' \/ '|u|  _"\
-#        | | | |\| |\/| |/| | | |
-#    .-,_| |_| | | |  | |U| |_| |\
-#     \_)-\___/  |_|  |_| |____/ u
-#          \\   <<,-,,-.   |||_
-#         (__)   (./  \.) (__)_)
-#
-# This file is part of OMD - The Open Monitoring Distribution.
-# The official homepage is at <http://omdistro.org>.
-#
-# OMD  is  free software;  you  can  redistribute it  and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the  Free Software  Foundation  in  version 2.  OMD  is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Cares about backing up the files of a site"""
 
 import contextlib
@@ -29,9 +11,12 @@ import fnmatch
 import io
 import os
 import socket
+import sqlite3
 import sys
 import tarfile
 from collections.abc import Callable, Iterator
+from pathlib import Path
+from types import TracebackType
 from typing import BinaryIO
 
 from omdlib.contexts import SiteContext
@@ -92,7 +77,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     excludes.append("*.mk.new*")
     excludes.append("var/log/.liveproxyd.state.new*")
 
-    # exclude the "cache" / working directory for the agent bakery
+    # exclude the "cache" / working directory for the Agent Bakery
     excludes.append("var/check_mk/agents/.files_cache/*")
 
     # exclude section cache because files may vanish during backup. It would
@@ -120,7 +105,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
         excludes.append("var/nagios/archive/")
         # Event console
         excludes.append("var/mkeventd/history/*")
-        # Microcore monitoring history
+        # Micro Core monitoring history
         excludes.append("var/check_mk/core/history")
         excludes.append("var/check_mk/core/archive/*")
         # HW/SW Inventory history
@@ -133,7 +118,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
 
 class RRDSocket(contextlib.AbstractContextManager):
     def __init__(self, site_dir: str, site_stopped: bool, site_name: str, verbose: bool) -> None:
-        self._rrdcached_socket_path = site_dir + "/tmp/run/rrdcached.sock"
+        self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(
             self._rrdcached_socket_path
         )
@@ -226,7 +211,12 @@ class RRDSocket(contextlib.AbstractContextManager):
         ):
             raise Exception(f"Error while processing rrdcached command ({cmd}): {msg}")
 
-    def __exit__(self, exc_type: object, exc_value: object, exc_tb: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self._resume_all_rrds()
         if self._sock is not None:
             self._sock.close()
@@ -262,8 +252,20 @@ def tar_add(
             if tarinfo is None or not predicate(tarinfo):
                 return
 
+            # Create a backup of history file and add it to the archive as history.sqlite.
+            if name.endswith("var/mkeventd/history/history.sqlite"):
+                backup_name = f"{name}.backup"
+                try:
+                    backup_sqlite(name, backup_name)
+                    backup_tarinfo = tar.gettarinfo(backup_name, arcname=arcname)
+                    with open(backup_name, "rb") as file:
+                        tar.addfile(backup_tarinfo, file)
+                finally:
+                    os.remove(backup_name)
+                return
+
             # Append the tar header and data to the archive.
-            if tarinfo.isreg():
+            if tarinfo.isfile():
                 with open(name, "rb") as file:
                     tar.addfile(tarinfo, file)
             else:
@@ -307,3 +309,15 @@ def get_site_and_version_from_backup(tar: tarfile.TarFile) -> tuple[str, str]:
         raise Exception("Failed to detect version of backed up site.")
 
     return sitename, version
+
+
+def backup_sqlite(src: str | Path, dst: str | Path) -> None:
+    """Backup sqlite database file.
+
+    Uses sqlite3 backup API to create a backup of the database file.
+    """
+    with (
+        contextlib.closing(sqlite3.connect(src, timeout=10)) as src_conn,
+        contextlib.closing(sqlite3.connect(dst)) as dst_conn,
+    ):
+        src_conn.backup(dst_conn)

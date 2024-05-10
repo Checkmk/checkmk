@@ -222,12 +222,10 @@ def test_delete_event_by_query(
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host",
-        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;1;test123-...", match_type="ellipsis")
     with mock_livestatus:
         clients.EventConsole.delete(
-            site_id="NO_SITE",
             filter_type="query",
             query='{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
         )
@@ -240,12 +238,10 @@ def test_delete_event_by_params_all(
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_host = heute\nAnd: 2",
-        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;5;test123-...", match_type="ellipsis")
     with mock_livestatus:
         clients.EventConsole.delete(
-            site_id="NO_SITE",
             filter_type="params",
             state="warning",
             host="heute",
@@ -260,13 +256,11 @@ def test_delete_event_by_phase(
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = ack",
-        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] EC_DELETE;2,4,6;test123-...", match_type="ellipsis")
 
     with mock_livestatus:
         clients.EventConsole.delete(
-            site_id="NO_SITE",
             filter_type="params",
             phase="ack",
         )

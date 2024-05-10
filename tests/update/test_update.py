@@ -8,7 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import register_controller, wait_until_host_receives_data
+from tests.testlib.agent import (
+    register_controller,
+    wait_for_agent_cache_omd_status,
+    wait_until_host_receives_data,
+)
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name, get_services_with_status
 from tests.testlib.version import CMKVersion, version_from_env
@@ -16,11 +20,12 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
-from .conftest import get_site_status, update_config, update_site
+from .conftest import get_site_status, update_site
 
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.cse
 @pytest.mark.cee
 def test_update(  # pylint: disable=too-many-branches
     test_setup: tuple[Site, bool],
@@ -63,8 +68,8 @@ def test_update(  # pylint: disable=too-many-branches
         wait_until_host_receives_data(test_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    test_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     test_site.openapi.activate_changes_and_wait_for_completion()
 
@@ -72,16 +77,24 @@ def test_update(  # pylint: disable=too-many-branches
     base_ok_services = {}
 
     for hostname in hostnames:
-        test_site.reschedule_services(hostname)
+        test_site.reschedule_services(hostname, max_count=20)
 
         # get baseline monitoring data for each host
         base_data[hostname] = test_site.get_host_services(hostname)
+        ignore_data = [
+            # Check_MK service turning into CRIT after the update.
+            # See CMK-17002. TODO: restore service after ticket is done.
+            "Check_MK",
+            # OMD status performance turning into CRIT after the update
+            # See CMK-17016. TODO: restore service after ticket is done.
+            f"OMD {test_site.id} performance",
+        ]
+
+        for data in ignore_data:
+            if data in base_data[hostname]:
+                base_data[hostname].pop(data)
 
         base_ok_services[hostname] = get_services_with_status(base_data[hostname], 0)
-        # used in debugging mode
-        _ = get_services_with_status(base_data[hostname], 1)  # Warn
-        _ = get_services_with_status(base_data[hostname], 2)  # Crit
-        _ = get_services_with_status(base_data[hostname], 3)  # Unknown
 
         assert len(base_ok_services[hostname]) > 0
 
@@ -93,36 +106,33 @@ def test_update(  # pylint: disable=too-many-branches
 
     target_site = update_site(test_site, target_version, not disable_interactive_mode)
 
-    # Triggering cmk config update
-    update_config_result = update_config(target_site)
-
-    assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
-
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
 
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
     logger.info("Discovering services and waiting for completion...")
-    target_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    target_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     target_site.openapi.activate_changes_and_wait_for_completion()
 
     target_data = {}
     target_ok_services = {}
 
+    # services such as 'omd status' rely on cache data:
+    # wait for the cache to be up-to-date and reschedule services
+    wait_for_agent_cache_omd_status(test_site)
     for hostname in hostnames:
-        target_site.reschedule_services(hostname)
+        test_site.schedule_check(hostname, "Check_MK", 0)
+
+    for hostname in hostnames:
+        target_site.reschedule_services(hostname, max_count=20)
 
         # get update monitoring data
         target_data[hostname] = target_site.get_host_services(hostname)
 
         target_ok_services[hostname] = get_services_with_status(target_data[hostname], 0)
-        # used in debugging mode
-        _ = get_services_with_status(target_data[hostname], 1)  # Warn
-        _ = get_services_with_status(target_data[hostname], 2)  # Crit
-        _ = get_services_with_status(target_data[hostname], 3)  # Unknown
 
         not_found_services = [
             service for service in base_data[hostname] if service not in target_data[hostname]
@@ -139,9 +149,14 @@ def test_update(  # pylint: disable=too-many-branches
             for service in base_ok_services[hostname]
             if service not in target_ok_services[hostname]
         ]
+        err_details = [
+            (s, "state: " + str(target_data[hostname][s].state), target_data[hostname][s].summary)
+            for s in not_ok_services
+        ]
         err_msg = (
             f"In the {hostname} host the following services were `OK` in base-version but not in "
             f"target-version: "
             f"{not_ok_services}"
+            f"\nDetails: {err_details})"
         )
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg

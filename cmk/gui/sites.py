@@ -7,9 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import cast, Literal, NamedTuple, NewType
-
-from typing_extensions import TypedDict
+from typing import cast, Literal, NamedTuple, NewType, TypedDict
 
 from livestatus import (
     ConnectedSite,
@@ -110,7 +108,7 @@ def disconnect() -> None:
     """Actively closes all Livestatus connections."""
     if not g:
         return
-    logger.debug("Disconnecing site connections")
+    logger.debug("Disconnecting site connections")
     if "live" in g:
         g.live.disconnect()
     g.pop("live", None)
@@ -185,8 +183,10 @@ def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) 
         user = global_user
 
     if force_authuser is None:
-        request_force_authuser = request.get_str_input("force_authuser")
-        force_authuser = UserId(request_force_authuser) if request_force_authuser else None
+        # This makes also sure force_authuser is not the builtin user aka UserId("")
+        force_authuser = (
+            u if (u := request.get_validated_type_input(UserId, "force_authuser")) else None
+        )
 
     logger.debug(
         "Initializing livestatus connections as user %s (forced auth user: %s)",

@@ -7,7 +7,9 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.gui.wato._ac_tests import ACTestGenericCheckHelperUsage
 
 
-def test_local_connection_mocked(mock_livestatus: MockLiveStatusConnection) -> None:
+def test_local_connection_mocked(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
     live = mock_livestatus
     live.set_sites(["local"])
     live.expect_query(

@@ -11,11 +11,10 @@ from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.search import BIHostSearch, BIServiceSearch
 from cmk.update_config.plugins.actions.rulesets import transform_condition_labels_to_label_groups
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateBIConfig(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         # This update action simply loads the bi config (i.e. it instantiates BIAggregationPacks
         # from cache) into aggregation_packs, updates these packs and saves the config again.
         aggregation_packs: BIAggregationPacks = get_cached_bi_packs()
@@ -41,10 +40,10 @@ def _migrate_bi_rule_label_conditions(aggregation_packs: BIAggregationPacks) -> 
                     and not isinstance(aggregation.node.search.refer_to, str)
                     and aggregation.node.search.refer_to.get("type") == "child_with"
                 ):
-                    aggregation.node.search.refer_to[
-                        "conditions"
-                    ] = transform_condition_labels_to_label_groups(
-                        aggregation.node.search.refer_to["conditions"]
+                    aggregation.node.search.refer_to["conditions"] = (
+                        transform_condition_labels_to_label_groups(
+                            aggregation.node.search.refer_to["conditions"]
+                        )
                     )
 
         # rule search conditions

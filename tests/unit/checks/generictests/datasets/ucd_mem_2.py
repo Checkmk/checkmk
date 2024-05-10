@@ -32,7 +32,7 @@ parsed = parse_ucd_mem(
 )
 
 
-discovery = {"": [("", {})]}
+discovery = {"": [(None, {})]}
 
 
 checks = {

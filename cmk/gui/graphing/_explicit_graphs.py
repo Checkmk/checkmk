@@ -11,7 +11,6 @@ from ._type_defs import GraphConsoldiationFunction
 
 
 class ExplicitGraphSpecification(GraphSpecification, frozen=True):
-    graph_type: Literal["explicit"] = "explicit"
     title: str
     unit: str
     consolidation_function: GraphConsoldiationFunction | None
@@ -22,8 +21,8 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     mark_requested_end_time: bool = False
 
     @staticmethod
-    def name() -> str:
-        return "explicit_graph_specification"
+    def graph_type_name() -> Literal["explicit"]:
+        return "explicit"
 
     def recipes(self) -> list[GraphRecipe]:
         return [

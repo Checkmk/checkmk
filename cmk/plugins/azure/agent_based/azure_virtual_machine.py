@@ -7,10 +7,12 @@ import time
 from collections.abc import Iterator, Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2 import AgentSection
-from cmk.agent_based.v2 import check_levels_fixed as check_levels
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     IgnoreResultsError,
     render,
@@ -18,12 +20,12 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.azure import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
+    get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
     parse_resources,
@@ -76,8 +78,8 @@ agent_section_azure_virtualmachines = AgentSection(
 
 
 def discover_azure_virtual_machine(section: Section) -> DiscoveryResult:
-    for item in section.keys():
-        yield Service(item=item)
+    for item, resource in section.items():
+        yield Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
 
 
 def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:
@@ -449,6 +451,12 @@ def check_azure_vm_network_io(
         raise IgnoreResultsError("Only one resource expected")
 
     resource = list(section.values())[0]
+    in_octets = None
+    if (In_Total := resource.metrics.get("total_Network_In_Total")) is not None:
+        in_octets = In_Total.value / 60
+    out_octets = None
+    if (Out_Total := resource.metrics.get("total_Network_Out_Total")) is not None:
+        out_octets = Out_Total.value / 60
     interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
         interfaces.InterfaceWithRates(
             attributes=interfaces.Attributes(
@@ -458,10 +466,7 @@ def check_azure_vm_network_io(
                 type="1",
                 oper_status="1",
             ),
-            rates=interfaces.Rates(
-                in_octets=resource.metrics["total_Network_In_Total"].value / 60,
-                out_octets=resource.metrics["total_Network_Out_Total"].value / 60,
-            ),
+            rates=interfaces.Rates(in_octets=in_octets, out_octets=out_octets),
             get_rate_errors=[],
         ),
         timestamp=time.time(),
@@ -477,6 +482,6 @@ check_plugin_azure_vm_network_io = CheckPlugin(
     service_name="Azure/VM %s",
     discovery_function=discover_azure_vm_network_io,
     check_function=check_azure_vm_network_io,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
 )

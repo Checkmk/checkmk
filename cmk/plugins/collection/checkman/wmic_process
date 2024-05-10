@@ -10,7 +10,7 @@ description:
 
  This check uses the output of {wmic process} in order to monitor the resource
  consumption of processes on Windows servers. On the target host this check
- needs the command line utility {wmic} and the agent plugin {wmicchecks.bat}
+ needs the command line utility {wmic} and the agent plug-in {wmicchecks.bat}
  (in the subdirectory {plugins} below the directory where {check_mk_agent.exe}
  is located).
 

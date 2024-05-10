@@ -17,13 +17,10 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_bytes_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 Section = Mapping
 
@@ -61,7 +58,7 @@ def check_mongodb_replication_info(item, params, info_dict):
         timestamp_last_operation = info_dict.get("tLast", 0)
         time_difference_sec = timestamp_last_operation - timestamp_first_operation
         time_diff = "Time difference: %s between the first and last operation on oplog" % (
-            get_age_human_readable(time_difference_sec)
+            render.timespan(time_difference_sec)
         )
     except TypeError:
         time_diff = "Time difference: n/a"
@@ -117,21 +114,21 @@ def _long_output(info_dict):
 
 def _bytes_human_readable(data, key):
     try:
-        return get_bytes_human_readable(int(data.get(key)))
+        return render.bytes(int(data.get(key)))
     except (TypeError, ValueError):
         return "n/a"
 
 
 def _timestamp_human_readable(data, key):
     try:
-        return get_timestamp_human_readable(int(data.get(key)))
+        return render.datetime(int(data.get(key)))
     except (TypeError, ValueError):
         return "n/a"
 
 
 def _calc_time_diff(value1, value2):
     try:
-        return get_age_human_readable(value1 - value2)
+        return render.timespan(value1 - value2)
     except TypeError:
         return "n/a"
 

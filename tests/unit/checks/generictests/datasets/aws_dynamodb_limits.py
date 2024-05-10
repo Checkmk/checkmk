@@ -75,11 +75,9 @@ checks = {
                         ("aws_dynamodb_write_capacity", 3),
                     ],
                 ),
-                (
-                    0,
-                    "\nNumber of tables: 3 (of max. 256)\nRead Capacity: 3 (of max. 80000)\nWrite "
-                    "Capacity: 3 (of max. 80000)",
-                ),
+                (0, "\nNumber of tables: 3 (of max. 256)"),
+                (0, "\nRead Capacity: 3 (of max. 80000)"),
+                (0, "\nWrite Capacity: 3 (of max. 80000)"),
             ],
         ),
         (
@@ -99,11 +97,9 @@ checks = {
                         ("aws_dynamodb_write_capacity", 2),
                     ],
                 ),
-                (
-                    0,
-                    "\nNumber of tables: 1 (of max. 256)\nRead Capacity: 4 (of max. 80000)\nWrite "
-                    "Capacity: 2 (of max. 80000)",
-                ),
+                (0, "\nNumber of tables: 1 (of max. 256)"),
+                (0, "\nRead Capacity: 4 (of max. 80000)"),
+                (0, "\nWrite Capacity: 2 (of max. 80000)"),
             ],
         ),
     ]

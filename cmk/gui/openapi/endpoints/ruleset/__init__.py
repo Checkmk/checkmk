@@ -12,10 +12,11 @@ from cmk.gui.openapi.endpoints.ruleset.fields import (
     RulesetObject,
     RulesetSearchOptions,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
@@ -59,15 +60,14 @@ def list_rulesets(param):
     else:
         rulesets = all_sets
 
-    ruleset_collection: list[DomainObject] = []
-    for ruleset in visible_rulesets(rulesets.get_rulesets()).values():
-        ruleset_collection.append(_serialize_ruleset(ruleset))
-
     # We don't do grouping like in the GUI. This would not add any value here.
     return serve_json(
         constructors.collection_object(
             domain_type="ruleset",
-            value=ruleset_collection,
+            value=[
+                _serialize_ruleset(ruleset)
+                for ruleset in visible_rulesets(rulesets.get_rulesets()).values()
+            ],
         )
     )
 

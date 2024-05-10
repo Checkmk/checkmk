@@ -5,7 +5,7 @@
 
 import sys
 
-from PIL import Image
+from PIL import Image, PngImagePlugin  # pylint: disable=pillow-module-import
 
 if len(sys.argv) < 3:
     sys.stderr.write("So gehts:\n")
@@ -18,8 +18,6 @@ images = sys.argv[2:]
 for image in images:
     im = Image.open(image)
     im.info["Comment"] = category
-
-    from PIL import PngImagePlugin
 
     meta = PngImagePlugin.PngInfo()
     for k, v in im.info.items():

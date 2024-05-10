@@ -4,7 +4,7 @@ If UCase(Right(Wscript.FullName, 11)) = "WSCRIPT.EXE" Then
     Wscript.Quit
 End If
 
-Const CMK_VERSION = "2.3.0b1"
+Const CMK_VERSION = "2.4.0b1"
 CONST HKLM = &H80000002
 
 Dim delay
@@ -295,6 +295,11 @@ Call getWMIObject("Win32_SystemEnclosure",systemVars)
 Call startSection("win_computersystem",58,timeUntil)
 systemVars = Array( "Manufacturer","Name","Model","InstallDate" )
 Call getWMIObject("Win32_ComputerSystem",systemVars)
+
+' ComputerSystemProduct
+Call startSection("win_computersystemproduct",58,timeUntil)
+computerSystemProductVars = Array( "UUID" )
+Call getWMIObject("Win32_ComputerSystemProduct",computerSystemProductVars)
 
 ' Hard-Disk
 Call startSection("win_disks",58,timeUntil)

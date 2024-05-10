@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """
 smth (needed for endpoint registration in test_openapi_endpoint_decorator_resets_used_permissions)
 """
@@ -184,7 +186,7 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
     exc = response.json["ext"]["details"]["rest_api_exception"]
     assert exc["description"] == "Unexpected status code returned: 418"
     assert exc["detail"] == "Endpoint tests.unit.cmk.gui.openapi.test_endpoint.test"
-    assert exc["ext"] == {"The following status codes are allowed for this endpoint": [204]}
+    assert exc["ext"] == {"The following status codes are allowed for this endpoint": [406, 204]}
 
 
 # ========= PATH Validation Tests =========
@@ -290,7 +292,7 @@ def test_permission_exception(clients: ClientRegistry) -> None:
     def validate(*args, **kwargs):
         return False
 
-    with mock.patch("cmk.gui.openapi.restful_objects.permissions.BasePerm.validate", validate):
+    with mock.patch("cmk.gui.utils.permission_verification.BasePerm.validate", validate):
         resp = clients.AuxTag.get(aux_tag_id="ping", expect_ok=False)
 
     resp.assert_status_code(500)

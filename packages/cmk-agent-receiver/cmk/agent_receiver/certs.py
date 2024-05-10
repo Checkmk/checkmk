@@ -47,14 +47,12 @@ def sign_agent_csr(
 ) -> Certificate:
     root_cert, root_key = keypair
     return (
-        (
-            CertificateBuilder()
-            .subject_name(csr.subject)
-            .public_key(csr.public_key())
-            .serial_number(random_serial_number())
-            .not_valid_before(valid_from)
-            .not_valid_after(valid_from + relativedelta(months=lifetime_in_months))
-        )
+        CertificateBuilder()
+        .subject_name(csr.subject)
+        .public_key(csr.public_key())
+        .serial_number(random_serial_number())
+        .not_valid_before(valid_from)
+        .not_valid_after(valid_from + relativedelta(months=lifetime_in_months))
         .issuer_name(root_cert.subject)
         .add_extension(
             SubjectAlternativeName([DNSName(extract_cn_from_csr(csr))]),

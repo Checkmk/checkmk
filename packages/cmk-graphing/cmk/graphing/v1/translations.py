@@ -20,18 +20,15 @@ __all__ = [
 @dataclass(frozen=True)
 class PassiveCheck:
     """
-    Defines a passive check
-
-    A passive check has the prefix 'check_mk-'.
+    A passive check has the prefix ``check_mk-``.
 
     Args:
-        name:   The name of the passive check
+        name: The name of the passive check.
 
     Example:
 
         >>> PassiveCheck("check_plugin")
         PassiveCheck(name='check_plugin')
-
     """
 
     name: str
@@ -43,18 +40,15 @@ class PassiveCheck:
 @dataclass(frozen=True)
 class ActiveCheck:
     """
-    Defines an active check
-
-    An active check has the prefix 'check_mk_active-'.
+    An active check has the prefix ``check_mk_active-``.
 
     Args:
-        name:   The name of the active check
+        name: The name of the active check
 
     Example:
 
         >>> ActiveCheck("http")
         ActiveCheck(name='http')
-
     """
 
     name: str
@@ -66,18 +60,15 @@ class ActiveCheck:
 @dataclass(frozen=True)
 class HostCheckCommand:
     """
-    Defines a host check command
-
-    A host check command has the prefix 'check-mk-'.
+    A host check command has the prefix ``check-mk-``.
 
     Args:
-        name:   The name of the host check command
+        name: The name of the host check command
 
     Example:
 
         >>> HostCheckCommand("host-ping")
         HostCheckCommand(name='host-ping')
-
     """
 
     name: str
@@ -89,18 +80,15 @@ class HostCheckCommand:
 @dataclass(frozen=True)
 class NagiosPlugin:
     """
-    Defines a classical Nagios plugin
-
-    A classical Nagios plugin has the prefix 'check_'.
+    A classical Nagios plug-in has the prefix ``check_``.
 
     Args:
-        name:   The name of the Nagios plugin
+        name: The name of the Nagios plugin
 
     Example:
 
         >>> NagiosPlugin("check_plugin")
         NagiosPlugin(name='check_plugin')
-
     """
 
     name: str
@@ -112,17 +100,13 @@ class NagiosPlugin:
 @dataclass(frozen=True)
 class RenameTo:
     """
-    Defines a 'rename to'
-
     Args:
-        metric_name:
-                A new metric name
+        metric_name: A new metric name
 
     Example:
 
         >>> RenameTo("new-metric-name")
         RenameTo(metric_name='new-metric-name')
-
     """
 
     metric_name: str
@@ -135,8 +119,6 @@ class RenameTo:
 @dataclass(frozen=True)
 class ScaleBy:
     """
-    Defines a 'scale by'
-
     Args:
         factor: A number with which the old metric is scaled
 
@@ -144,7 +126,6 @@ class ScaleBy:
 
         >>> ScaleBy(1.5)
         ScaleBy(factor=1.5)
-
     """
 
     factor: int | float
@@ -156,18 +137,14 @@ class ScaleBy:
 @dataclass(frozen=True)
 class RenameToAndScaleBy:
     """
-    Defines a 'rename to' and 'scale by'
-
     Args:
-        metric_name:
-                A new metric name
+        metric_name: A new metric name
         factor: A number with which the old metric is scaled
 
     Example:
 
         >>> RenameToAndScaleBy("new-metric-name", 1.5)
         RenameToAndScaleBy(metric_name='new-metric-name', factor=1.5)
-
     """
 
     metric_name: str
@@ -182,17 +159,16 @@ class RenameToAndScaleBy:
 @dataclass(frozen=True, kw_only=True)
 class Translation:
     """
-    Defines a translation
-
     A translation applies to the given check commands and renames or scales given old metrics to new
     ones.
 
+    Istances of this class will only be picked up by Checkmk if their names start with
+    ``translation_``.
+
     Args:
-        name:   An unique name
-        check_commands:
-                A list of check commands to which the translations apply
-        translations:
-                A map which defines how old metrics are renamed or scaled
+        name: An unique name
+        check_commands: A list of check commands to which the translations apply
+        translations: A map which defines how old metrics are renamed or scaled
 
     Example:
 
@@ -205,7 +181,6 @@ class Translation:
         ...         "old-metric-name-3": RenameToAndScaleBy("new-metric-name-3", 1.5),
         ...     },
         ... )
-
     """
 
     name: str

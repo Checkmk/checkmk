@@ -10,7 +10,7 @@ description:
  {WARN} and {CRIT} thresholds for each latency measure can be configured,
  defaults are based of suggestions published on microsofts technet.
 
- This check requires the msexch_database.ps1 agent plugin to work.
+ This check requires the msexch_database.ps1 agent plug-in to work.
 
 item:
  Name of the database instance

@@ -71,7 +71,7 @@ def check_hp_proliant_power(params: Params, section: Section) -> CheckResult:
 
     yield from v1.check_levels(
         value=reading,
-        metric_name="watt",
+        metric_name="power",
         levels_upper=params.get("levels"),
         label="Current reading",
         render_func=lambda x: f"{x} Watts",

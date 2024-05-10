@@ -35,7 +35,7 @@ def get_single_oid(
 
     with suppress(KeyError):
         cached_value = single_oid_cache[oid]
-        console.vverbose(
+        console.debug(
             f"       Using cached OID {oid}: {tty.bold}{tty.green}{cached_value!r}{tty.normal}\n"
         )
         return cached_value
@@ -43,7 +43,7 @@ def get_single_oid(
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
     value = None
-    console.vverbose("       Getting OID %s: " % oid)
+    console.debug("       Getting OID %s: " % oid)
     context_config = backend.config.snmpv3_contexts_of(section_name)
     for context in context_config.contexts:
         try:
@@ -57,9 +57,9 @@ def get_single_oid(
             value = None
 
     if value is not None:
-        console.vverbose(f"{tty.bold}{tty.green}{value!r}{tty.normal}\n")
+        console.debug(f"{tty.bold}{tty.green}{value!r}{tty.normal}\n")
     else:
-        console.vverbose("failed.\n")
+        console.debug("failed.\n")
 
     if value is not None:
         decoded_value: SNMPDecodedString | None = ensure_str(

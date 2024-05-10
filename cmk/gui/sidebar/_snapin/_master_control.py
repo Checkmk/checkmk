@@ -36,7 +36,7 @@ class MasterControlSnapin(SidebarSnapin):
 
     @classmethod
     def description(cls) -> str:
-        return _("Buttons for switching globally states such as enabling checks and notifications")
+        return _("Buttons for globally switching states such as enabling checks and notifications")
 
     def show(self) -> None:
         items = self._core_toggles()
@@ -60,7 +60,6 @@ class MasterControlSnapin(SidebarSnapin):
                     id_=site_id,
                     isopen=True,
                     title=site_alias,
-                    icon="foldable_sidebar",
                 )
                 if not site_config.is_single_local_site()
                 else nullcontext(False)
@@ -81,7 +80,7 @@ class MasterControlSnapin(SidebarSnapin):
             ("enable_notifications", _("Notifications")),
             ("execute_service_checks", _("Service checks")),
             ("execute_host_checks", _("Host checks")),
-            ("enable_flap_detection", _("Flap Detection")),
+            ("enable_flap_detection", _("Flap detection")),
             ("enable_event_handlers", _("Event handlers")),
             ("process_performance_data", _("Performance data")),
             ("enable_event_handlers", _("Alert handlers")),

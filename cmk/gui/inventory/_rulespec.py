@@ -67,7 +67,7 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
             "hours and one day. "
             "<b>Note:</b> in order to get any useful "
             "result for agent based hosts make sure that you have installed "
-            "the agent plugin <tt>mk_inventory</tt> on these hosts."
+            "the agent plug-in <tt>mk_inventory</tt> on these hosts."
         ),
         elements=[
             (
@@ -111,10 +111,10 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
                     help=_(
                         "All hosts configured via this ruleset will do a hardware and "
                         "software inventory after every check cycle if there's at least "
-                        "one inventory plugin which processes status data. "
+                        "one inventory plug-in which processes status data. "
                         "<b>Note:</b> in order to get any useful "
                         "result for agent based hosts make sure that you have installed "
-                        "the agent plugin <tt>mk_inventory</tt> on these hosts."
+                        "the agent plug-in <tt>mk_inventory</tt> on these hosts."
                     ),
                     choices=[
                         (True, _("Do status data inventory")),

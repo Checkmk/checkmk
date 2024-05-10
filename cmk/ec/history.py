@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import time
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Sequence
-from logging import Logger
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import contextmanager
+from logging import getLogger, Logger
 from pathlib import Path
 from typing import Any, Literal
 
@@ -35,20 +37,57 @@ HistoryWhat = Literal[
 
 class History(ABC):
     @abstractmethod
+    def flush(self) -> None: ...
+
+    @abstractmethod
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None: ...
+
+    @abstractmethod
+    def get(self, query: QueryGET) -> Iterable[Sequence[object]]: ...
+
+    @abstractmethod
+    def housekeeping(self) -> None: ...
+
+    @abstractmethod
+    def close(self) -> None: ...
+
+
+class TimedHistory(History):
+    """Decorate History methods with timing information."""
+
+    def __init__(self, history: History) -> None:
+        self._history = history
+        self._logger = getLogger("cmk.mkeventd")
+
+    @contextmanager
+    def _timing(self, method_name: str) -> Iterator[None]:
+        tic = time.time()
+        try:
+            yield
+        finally:
+            self._logger.debug(
+                "method call %s took: %.3f ms", method_name, (time.time() - tic) * 1000
+            )
+
     def flush(self) -> None:
-        ...
+        with self._timing("flush"):
+            self._history.flush()
 
-    @abstractmethod
-    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
-        ...
-
-    @abstractmethod
-    def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
-        ...
-
-    @abstractmethod
     def housekeeping(self) -> None:
-        ...
+        with self._timing("housekeeping"):
+            self._history.housekeeping()
+
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        with self._timing("add"):
+            self._history.add(event, what, who, addinfo)
+
+    def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
+        with self._timing("get"):
+            return self._history.get(query)
+
+    def close(self) -> None:
+        with self._timing("close"):
+            return self._history.close()
 
 
 def _log_event(
@@ -91,7 +130,7 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
     # compute currently active period
     if active_history_period.value is None or timestamp > active_history_period.value:
         # Look if newer files exist
-        timestamps = sorted(int(str(path.name)[:-4]) for path in log_dir.glob("*.log"))
+        timestamps = sorted(int(path.stem) for path in log_dir.glob("*.log"))
         if len(timestamps) > 0:
             timestamp = max(timestamps[-1], timestamp)
 
@@ -102,7 +141,6 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
 
 def _current_history_period(config: Config) -> int:
     """Return timestamp of the beginning of the current history period."""
-
     today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     return int(

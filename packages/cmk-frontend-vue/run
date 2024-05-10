@@ -1,0 +1,24 @@
+#!/bin/bash
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+ARTIFACT_STORAGE=https://artifacts.lan.tribe29.com
+
+if curl --silent --output /dev/null --head "${ARTIFACT_STORAGE}/" || [ "${CI}" == "true" ]; then
+    export NPM_CONFIG_REGISTRY="${ARTIFACT_STORAGE}/repository/npm-proxy/"
+    export SASS_BINARY_SITE="${ARTIFACT_STORAGE}/repository/archives/"
+    echo "Installing from local registry ${ARTIFACT_STORAGE}"
+else
+    echo "Installing from public registry"
+fi
+
+# audit=false disables metrics
+NODE_OPTIONS="--dns-result-order=ipv4first" npm ci --audit=false
+
+# use the following commands when code base is cleaned up
+./node_modules/.bin/prettier --check src/
+./node_modules/.bin/eslint . --ignore-path .gitignore
+npm run build

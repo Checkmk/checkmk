@@ -27,6 +27,7 @@ from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_loc
 from cmk.gui.type_defs import Users
 from cmk.gui.utils.urls import makeuri_contextless
 
+from ..logged_in import user
 from ._connections import active_connections
 from .store import general_userdb_job, load_users, save_users
 
@@ -52,7 +53,12 @@ def execute_userdb_job() -> None:
             enforce_sync=False,
             load_users_func=load_users,
             save_users_func=save_users,
-        )
+        ),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
     )
 
 
@@ -72,7 +78,7 @@ def user_sync_config() -> UserSyncConfig:
     # use global option as default for reading legacy options and on remote site
     # for reading the value set by the Setup master site
     default_cfg = user_sync_default_config(omd_site())
-    return get_site_config(omd_site()).get("user_sync", default_cfg)
+    return get_site_config(active_config, omd_site()).get("user_sync", default_cfg)
 
 
 # Legacy option config.userdb_automatic_sync defaulted to "master".
@@ -82,7 +88,7 @@ def user_sync_config() -> UserSyncConfig:
 def user_sync_default_config(site_name: SiteId) -> UserSyncConfig:
     global_user_sync = _transform_userdb_automatic_sync(active_config.userdb_automatic_sync)
     if global_user_sync == "master":
-        if site_is_local(site_name) and not is_wato_slave_site():
+        if site_is_local(active_config, site_name) and not is_wato_slave_site():
             user_sync_default: UserSyncConfig = "all"
         else:
             user_sync_default = None
@@ -132,7 +138,12 @@ def ajax_sync() -> None:
                     enforce_sync=True,
                     load_users_func=load_users,
                     save_users_func=save_users,
-                )
+                ),
+                InitialStatusArgs(
+                    title=job.gui_title(),
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
             )
         except BackgroundJobAlreadyRunning as e:
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
@@ -152,13 +163,7 @@ class UserSyncBackgroundJob(BackgroundJob):
         return _("User synchronization")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def _back_url(self) -> str:
         return makeuri_contextless(request, [("mode", "users")], filename="wato.py")

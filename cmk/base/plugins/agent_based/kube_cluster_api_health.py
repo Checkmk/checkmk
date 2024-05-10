@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
-from cmk.plugins.lib.kube import ClusterDetails
+from cmk.plugins.kube.schemata.section import ClusterDetails
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

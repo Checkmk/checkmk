@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
-from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -53,9 +53,9 @@ def check_prism_host_usage(item: str, params: Mapping[str, Any], section: Sectio
             None,
             params=params,
         )
-    message = f"Total SAS: {render.bytes(total_sas)}, Free SAS: {render.bytes(free_sas)}"
+    message = f"Total SAS: {render.disksize(total_sas)}, Free SAS: {render.disksize(free_sas)}"
     yield Result(state=State(0), summary=message)
-    message = f"Total SSD: {render.bytes(total_ssd)}, Free SSD: {render.bytes(free_ssd)}"
+    message = f"Total SSD: {render.disksize(total_ssd)}, Free SSD: {render.disksize(free_ssd)}"
     yield Result(state=State(0), summary=message)
 
 
@@ -63,7 +63,7 @@ register.check_plugin(
     name="prism_host_usage",
     service_name="NTNX Storage %s",
     sections=["prism_host"],
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
     discovery_function=discovery_prism_host_usage,
     check_function=check_prism_host_usage,
     check_ruleset_name="filesystem",

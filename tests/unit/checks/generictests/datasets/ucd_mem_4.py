@@ -11,7 +11,7 @@ checkname = "ucd_mem"
 
 parsed = parse_ucd_mem([[["10", "9", "", "", "", "", "", "", "", "", "", ""]]])
 
-discovery = {"": [("", {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
     "": [

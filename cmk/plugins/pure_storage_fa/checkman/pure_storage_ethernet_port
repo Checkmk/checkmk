@@ -8,7 +8,7 @@ description:
 
  The status is mapped to the following Checkmk state:
 
- - {OK} if "ok", "healthy" or "unused"
+ - {OK} if "ok", "healthy" , "unused" or "not_installed"
 
  - {WARN} if "unknown" or "identifying"
 

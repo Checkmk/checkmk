@@ -14,8 +14,7 @@
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 
-TableEventConsoleStatus::TableEventConsoleStatus(ICore *mc)
-    : TableEventConsole{mc} {
+TableEventConsoleStatus::TableEventConsoleStatus() {
     const ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "status_config_load_time",

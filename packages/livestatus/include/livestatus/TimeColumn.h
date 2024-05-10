@@ -17,14 +17,16 @@
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/TimeAggregator.h"
 #include "livestatus/TimeFilter.h"
+#include "livestatus/TimeSorter.h"
 #include "livestatus/opids.h"
 class User;
 
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the start of the epoch.
-template <class T>
+template <typename T>
 class TimeColumn : public Column {
 public:
     using value_type = std::chrono::system_clock::time_point;
@@ -50,6 +52,19 @@ public:
                 return this->getValue(row, timezone_offset);
             },
             relOp, value);
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<TimeSorter>(
+            [this](Row row, const std::optional<std::string> &key,
+                   std::chrono::seconds timezone_offset) {
+                if (key) {
+                    throw std::runtime_error("time column '" + name() +
+                                             "' does not expect key '" +
+                                             (*key) + "'");
+                }
+                return getValue(row, timezone_offset);
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

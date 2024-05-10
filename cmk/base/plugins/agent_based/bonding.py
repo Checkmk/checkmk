@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any, get_args, Literal
+from typing import Any, TypedDict
 
 from cmk.plugins.lib import bonding
 
@@ -60,33 +60,39 @@ def _check_ieee_302_3ad_specific(params: Mapping[str, Any], status: bonding.Bond
             )
 
 
-MODE_OPTION = Literal[
-    "balance-rr",
-    "active-backup",
-    "balance-xor",
-    "broadcast",
-    "802.3ad",
-    "balance-tlb",
-    "balance-alb",
-]
-BONDING_MODE_CONFIG = tuple[MODE_OPTION, State]
+mode_map = {
+    "mode_0": "round-robin",
+    "mode_1": "active-backup",
+    "mode_2": "xor",
+    "mode_3": "broadcast",
+    "mode_4": "802.3ad",
+    "mode_5": "transmit",
+    "mode_6": "adaptive",
+}
 
 
-def _check_bonding_mode(current_mode: str, config: BONDING_MODE_CONFIG) -> CheckResult:
-    expected_mode, state_if_not_expected = config
+class BondingModeConfig(TypedDict):
+    mode_0: int
+    mode_1: int
+    mode_2: int
+    mode_3: int
+    mode_4: int
+    mode_5: int
+    mode_6: int
 
-    for mode in get_args(MODE_OPTION):
-        if mode in current_mode.lower():
-            current_mode = mode
+
+def _check_bonding_mode(current_mode: str, config: BondingModeConfig) -> CheckResult:
+    state = State.OK
+    summary = f"Mode: {current_mode}"
+    for mode, mode_str in mode_map.items():
+        if mode_str in current_mode.lower():
+            summary = f"Mode: {mode_str}"
+            state = State(config[mode])  # type: ignore[literal-required]
+            if state != State.OK:
+                summary += " (not allowed)"
             break
 
-    if expected_mode not in current_mode.lower():
-        yield Result(
-            state=State(state_if_not_expected),
-            summary=f"Mode: {current_mode} (expected mode: {expected_mode})",
-        )
-    else:
-        yield Result(state=State.OK, summary=f"Mode: {current_mode}")
+    yield Result(state=state, summary=summary)
 
 
 def check_bonding(  # pylint: disable=too-many-branches
@@ -113,6 +119,7 @@ def check_bonding(  # pylint: disable=too-many-branches
     Result(state=<State.OK: 0>, summary='eth2/f8:4f:57:72:11:34 up')
     Result(state=<State.WARN: 1>, summary='eth3/f8:4f:57:72:11:36 down')
     """
+
     if (properties := section.get(item)) is None:
         return
 
@@ -125,8 +132,8 @@ def check_bonding(  # pylint: disable=too-many-branches
         return
 
     mode = properties["mode"]
-    if params.get("expected_bonding_mode_and_state") is not None:
-        config: BONDING_MODE_CONFIG = params["expected_bonding_mode_and_state"]
+    if params.get("bonding_mode_states") is not None:
+        config: BondingModeConfig = params["bonding_mode_states"]
         yield from _check_bonding_mode(mode, config)
     else:
         yield Result(state=State.OK, summary=f"Mode: {mode}")
@@ -193,7 +200,7 @@ register.check_plugin(
     name="windows_intel_bonding",
     # unfortunately, this one is written with lower 'i' :-(
     service_name="Bonding interface %s",
-    # This plugin is not discovered since version 2.2
+    # This plug-in is not discovered since version 2.2
     discovery_function=never_discover,
     check_function=check_bonding,
     check_ruleset_name="bonding",

@@ -8,9 +8,7 @@
 # DO NOT CHANGE!                        #
 #########################################
 
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from .aws_s3_bucket import S3Params
 from .azure_blob_storage import BlobStorageParams
@@ -21,12 +19,10 @@ from .remote_interface import RemoteTargetParams
 # simple use RemoteTargetParams[...]
 
 
-class _S3TargetParams(RemoteTargetParams[S3Params]):
-    ...
+class _S3TargetParams(RemoteTargetParams[S3Params]): ...
 
 
-class _BlobStorageTargetParams(RemoteTargetParams[BlobStorageParams]):
-    ...
+class _BlobStorageTargetParams(RemoteTargetParams[BlobStorageParams]): ...
 
 
 LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]

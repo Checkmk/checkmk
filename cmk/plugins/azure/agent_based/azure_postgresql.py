@@ -6,8 +6,7 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import CheckPlugin, render
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, render
 from cmk.plugins.lib.azure import (
     check_connections,
     check_cpu,

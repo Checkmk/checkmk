@@ -186,8 +186,10 @@ class UnitEntry:
         name, unit_type = name_unit
         temp = name[: name.find("@") + 1] if "@" in name else name
         enabled = enabled_status.get(f"{temp}{unit_type.suffix}", "unknown")
-        remains = " ".join(row[1:])
-        loaded_status, active_status, current_state, descr = remains.split(" ", 3)
+        remains = (" ".join(row[1:])).split(" ", 3)
+        if len(remains) == 3:
+            remains.append("")
+        loaded_status, active_status, current_state, descr = remains
         time_since_change = (
             status_details[name].time_since_change if name in status_details else None
         )
@@ -444,7 +446,7 @@ register.check_plugin(
 
 
 def discovery_systemd_units_services_summary(section: Section) -> DiscoveryResult:
-    yield Service(item="Summary")
+    yield Service()
 
 
 def discovery_systemd_units_sockets_summary(section: Section) -> DiscoveryResult:
@@ -529,7 +531,7 @@ def _check_non_ok_services(
 
 
 def check_systemd_units_services_summary(
-    item: str, params: Mapping[str, Any], section: Section
+    params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     yield from check_systemd_units_summary(
         params, list(section.services.values()), unit_type=UnitTypes.service
@@ -590,7 +592,7 @@ register.check_plugin(
     discovery_function=discovery_systemd_units_services_summary,
     check_function=check_systemd_units_services_summary,
     check_ruleset_name="systemd_services_summary",
-    service_name="Systemd Service %s",
+    service_name="Systemd Service Summary",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS_SUMMARY,
 )
 

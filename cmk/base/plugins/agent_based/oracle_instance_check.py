@@ -16,9 +16,7 @@
 
 import time
 from collections.abc import Iterable, Mapping
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData, Section
 
@@ -74,7 +72,7 @@ def check_oracle_instance(item: str, params: _Params, section: Section) -> Check
         )
         return
 
-    # Handle old oracle agent plugin output
+    # Handle old oracle agent plug-in output
     if instance.old_agent:
         yield Result(state=State.OK, summary=f"Status {instance.openmode}")
         yield Result(state=State.OK, summary=f"Version {instance.version}")

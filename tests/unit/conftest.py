@@ -9,14 +9,20 @@ import os
 import shutil
 from collections.abc import Callable, Generator, Iterable, Iterator
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fakeredis import FakeRedis
-from pytest import MonkeyPatch
 
 # Import this fixture to not clutter this file, but it's unused here...
-from tests.testlib.certs import fixture_rsa_key  # pylint: disable=unused-import # noqa: F401
-from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
+from tests.testlib.certs import (  # pylint: disable=unused-import # noqa: F401
+    fixture_ed25519_private_key,
+    fixture_rsa_private_key,
+    fixture_secp256k1_private_key,
+    fixture_self_signed,
+    fixture_self_signed_ec,
+    fixture_self_signed_ed25519,
+)
 from tests.testlib.utils import (
     is_cloud_repo,
     is_enterprise_repo,
@@ -28,12 +34,14 @@ from tests.testlib.utils import (
 import livestatus
 
 import cmk.utils.caching
+import cmk.utils.crypto.password_hashing
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils import tty
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.licensing.handler import (
     LicenseState,
     LicensingHandler,
@@ -80,7 +88,7 @@ def disable_debug():
     cmk.utils.debug.debug_mode = debug_mode
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def fixture_umask():
     """Ensure the unit tests always use the same umask"""
     old_mask = os.umask(0o0007)
@@ -125,8 +133,8 @@ def fixture_omd_site() -> Generator[None, None, None]:
     yield
 
 
-@pytest.fixture(autouse=True)
-def patch_omd_site(monkeypatch):
+@pytest.fixture
+def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
 
@@ -236,7 +244,6 @@ def site(request):
 
 def _clear_caches():
     cmk.utils.caching.cache_manager.clear()
-
     cmk_version.edition.cache_clear()
 
 
@@ -244,12 +251,14 @@ def _clear_caches():
 def clear_caches_per_module():
     """Ensures that module-scope fixtures are executed with clean caches."""
     _clear_caches()
+    yield
 
 
 @pytest.fixture(autouse=True)
 def clear_caches_per_function():
     """Ensures that each test is executed with a non-polluted cache from a previous test."""
     _clear_caches()
+    yield
 
 
 class FixRegister:
@@ -299,9 +308,13 @@ class FixPluginLegacy:
     def __init__(self, fixed_register: FixRegister) -> None:
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
 
-        assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
+        assert isinstance(fixed_register, FixRegister)  # make sure plug-ins are loaded
 
-        self.check_info = copy.deepcopy(config.check_info)
+        self.check_info = {
+            k: v
+            for k, v in config.check_info.items()
+            if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
+        }
         self.active_check_info = copy.deepcopy(config.active_check_info)
         self.factory_settings = copy.deepcopy(config.factory_settings)
 
@@ -316,18 +329,10 @@ def fix_plugin_legacy(fix_register: FixRegister) -> Iterator[FixPluginLegacy]:
     yield FixPluginLegacy(fix_register)
 
 
-@pytest.fixture(autouse=True)
-def prevent_livestatus_connect(monkeypatch):
+@pytest.fixture(autouse=True, scope="module")
+def prevent_livestatus_connect() -> Iterator[None]:
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
-    monkeypatch.setattr(
-        livestatus.SingleSiteConnection,
-        "_create_socket",
-        lambda *_: pytest.fail(
-            "The test tried to use a livestatus connection. This will result in connect timeouts. "
-            "Use mock_livestatus for mocking away the livestatus API"
-        ),
-    )
 
     orig_init = livestatus.MultiSiteConnection.__init__
 
@@ -336,7 +341,16 @@ def prevent_livestatus_connect(monkeypatch):
         if self.deadsites:
             pytest.fail("Dead sites: %r" % self.deadsites)
 
-    monkeypatch.setattr(livestatus.MultiSiteConnection, "__init__", init_mock)
+    with patch.object(
+        livestatus.SingleSiteConnection,
+        "_create_socket",
+        lambda *_: pytest.fail(
+            "The test tried to use a livestatus connection. This will result in connect timeouts. "
+            "Use mock_livestatus for mocking away the livestatus API"
+        ),
+    ) as _:
+        with patch.object(livestatus.MultiSiteConnection, "__init__", init_mock) as _:
+            yield
 
 
 @pytest.fixture(name="mock_livestatus")
@@ -359,21 +373,19 @@ def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
         yield mock_live
 
 
-@pytest.fixture(autouse=True)
-def use_fakeredis_client(monkeypatch):
+@pytest.fixture(scope="module")
+def use_fakeredis_client() -> Iterator[None]:
     """Use fakeredis client instead of redis.Redis"""
-    monkeypatch.setattr(
-        redis,
-        "Redis",
-        FakeRedis,
-    )
-    redis.get_redis_client().flushall()
+    with patch.object(redis, "Redis", FakeRedis) as _:
+        redis.get_redis_client().flushall()
+        yield
 
 
-@pytest.fixture(autouse=True)
-def reduce_password_hashing_rounds(monkeypatch: MonkeyPatch) -> None:
+@pytest.fixture(autouse=True, scope="session")
+def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
-    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
+    with patch.object(cmk.utils.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
+        yield
 
 
 @pytest.fixture(name="monkeypatch_module", scope="module")

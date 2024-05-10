@@ -30,6 +30,7 @@ def test_builtin_icons_and_actions() -> None:
         "inventory",
         "logwatch",
         "mkeventd",
+        "network_topology",
         "notes",
         "parent_child_topology",
         "perfgraph",
@@ -57,7 +58,6 @@ def test_builtin_icons_and_actions() -> None:
             "status_shadow",
             "ntop_host",
             "robotmk_suite_ok_log",
-            "robotmk_suite_error_log",
         ]
 
     cmk.gui.views.register_legacy_icons()

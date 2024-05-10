@@ -8,9 +8,11 @@
 
 import dateutil.parser
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition, regex
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.ibm_mq import is_ibm_mq_service_vanished
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
@@ -143,7 +145,7 @@ def ibm_mq_msg_age(msg_age, params):
         int(msg_age),
         "msgage",
         params.get("msgage"),
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.timespan,
         infoname=label,
     )
 
@@ -161,7 +163,7 @@ def ibm_mq_last_age(mq_date, mq_time, agent_timestamp, label, key, params):
     input_time = dateutil.parser.parse(mq_datetime, default=agent_timestamp)
     age = (agent_timestamp - input_time).total_seconds()
     return check_levels(
-        age, None, params.get(key), human_readable_func=get_age_human_readable, infoname=label
+        age, None, params.get(key), human_readable_func=render.timespan, infoname=label
     )
 
 
@@ -171,9 +173,7 @@ def ibm_mq_procs(cnt, label, levels_key, metric, params):
     if wato:
         levels += wato.get("upper", (None, None))
         levels += wato.get("lower", (None, None))
-    return check_levels(
-        int(cnt), metric, levels, factor=1, scale=1, human_readable_func=int, infoname=label
-    )
+    return check_levels(int(cnt), metric, levels, human_readable_func=int, infoname=label)
 
 
 def ibm_mq_get_qtime(qtime, label, key):
@@ -182,7 +182,7 @@ def ibm_mq_get_qtime(qtime, label, key):
         info_value = "n/a"
     else:
         time_in_seconds = int(qtime) / 1000000
-        info_value = get_age_human_readable(time_in_seconds)
+        info_value = render.timespan(time_in_seconds)
     infotext = f"{label}: {info_value}"
     perfdata = [(key, time_in_seconds, None, None)]
     return (0, infotext, perfdata)

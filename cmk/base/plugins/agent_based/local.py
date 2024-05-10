@@ -80,7 +80,7 @@ def _sanitize_state(raw_state: str) -> tuple[int | str, str]:
         "3": (3, ""),
         "P": ("P", ""),
     }
-    return state_mapping.get(raw_state, (3, f"Invalid plugin status {raw_state}."))
+    return state_mapping.get(raw_state, (3, f"Invalid plug-in status {raw_state}."))
 
 
 def _parse_perfentry(entry: str) -> Perfdata:
@@ -374,16 +374,18 @@ def _labelify(word: str) -> str:
         "%s%s"
         % (
             this if not prev.isalnum() or prev.isupper() or nxt.isupper() else this.lower(),
-            " "
-            if (
-                prev.isupper()
-                and this.isupper()
-                and nxt.islower()
-                or this.islower()
-                and nxt.isupper()
-                or this.isdigit() is not nxt.isdigit()
-            )
-            else "",
+            (
+                " "
+                if (
+                    prev.isupper()
+                    and this.isupper()
+                    and nxt.islower()
+                    or this.islower()
+                    and nxt.isupper()
+                    or this.isdigit() is not nxt.isdigit()
+                )
+                else ""
+            ),
         )
         for prev, this, nxt in zip(" " + word, word, word[1:] + " ")
     )

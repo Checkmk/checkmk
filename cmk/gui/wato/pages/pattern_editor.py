@@ -11,8 +11,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginNameStr
-
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
@@ -88,7 +86,7 @@ class ModePatternEditor(WatoMode):
         self._item = request.get_str_input_mandatory("file", "")
         self._match_txt = request.get_str_input_mandatory("match", "")
 
-        self._host = folder_from_request().host(self._hostname)
+        self._host = folder_from_request(request.var("folder"), self._hostname).host(self._hostname)
 
         if self._hostname and not self._host:
             raise MKUserError(None, _("This host does not exist."))
@@ -215,7 +213,7 @@ class ModePatternEditor(WatoMode):
         already_matched = False
         abs_rulenr = 0
         service_labels: Labels = {}
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if self._hostname:
             service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
             host = folder.host(self._hostname)
@@ -251,7 +249,7 @@ class ModePatternEditor(WatoMode):
 
                         # If hostname (and maybe filename) try match it
                         rule_matches = rule.matches_host_and_item(
-                            folder_from_request(),
+                            folder_from_request(request.var("folder"), self._hostname),
                             self._hostname,
                             self._item,
                             service_desc,
@@ -340,7 +338,7 @@ class ModePatternEditor(WatoMode):
                         table.cell(_("Comment"), comment)
                         table.cell(_("Matched line"), disp_match_txt)
 
-                    table.row(fixed=True)
+                    table.row(fixed=True, collect_headers=False)
                     table.cell(colspan=7)
                     edit_url = folder_preserving_link(
                         [
@@ -355,7 +353,7 @@ class ModePatternEditor(WatoMode):
                     html.icon_button(edit_url, _("Edit this rule"), "edit")
 
     def _get_service_description(
-        self, hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item
+        self, hostname: HostName, check_plugin_name: str, item: Item
     ) -> ServiceName:
         return cmk.base.export.service_description(hostname, check_plugin_name, item)
 

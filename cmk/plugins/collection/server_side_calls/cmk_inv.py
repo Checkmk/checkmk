@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from typing import Any
 
 from pydantic import BaseModel, model_validator
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
 
 
 class CmkInvParams(BaseModel):
@@ -28,7 +28,6 @@ class CmkInvParams(BaseModel):
 def generate_cmk_inv_commands(
     params: CmkInvParams,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[ActiveCheckCommand]:
     yield ActiveCheckCommand(
         service_description="Check_MK HW/SW Inventory",

@@ -62,7 +62,7 @@ class StatusTable:
         Must return a enumerable type containing fully populated lists (rows) matching the
         columns of the table.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger.getChild(f"status_table.{self.prefix}")
@@ -121,11 +121,12 @@ class Query:
         return self.__method + " " + self.method_arg
 
 
-def filter_operator_in(a: Any, b: Any) -> bool:
+def filter_operator_in(a: str, b: Iterable[str]) -> bool:
     """Implemented as a named function, as it is used in a second filter
     cmk.ec.main: StatusTableEvents._enumerate
-    not implemented as regex/IGNORECASE due to performance"""
-    return a.lower() in (e.lower() for e in b)
+    not implemented as regex/IGNORECASE due to performance.
+    """
+    return a.lower() in {e.lower() for e in b}
 
 
 OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
@@ -135,7 +136,7 @@ OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
 class QueryFilter:
     column_name: str
     operator_name: OperatorName
-    predicate: Callable[[Any], bool]
+    predicate: Callable[[object], bool]
     argument: Any
 
 
@@ -186,7 +187,7 @@ class QueryGET(Query):
 
     def _parse_header_line(self, header: str, argument: str, logger: Logger) -> None:
         if header == "OutputFormat":
-            if argument not in ["python", "plain", "json"]:
+            if argument not in {"python", "plain", "json"}:
                 raise MKClientError(
                     f'Invalid output format "{argument}" (allowed are: python, plain, json)'
                 )
@@ -208,7 +209,8 @@ class QueryGET(Query):
         """Examples:
         id = 17
         name ~= This is some .* text
-        host_name ="""
+        host_name =
+        """
         parts = textspec.split(None, 2)
         if len(parts) == 2:
             parts.append("")
@@ -248,7 +250,7 @@ class QueryGET(Query):
             self.table.column_indices.get(column_name) for column_name in self.requested_columns
         ]
 
-    def filter_row(self, row: Sequence[Any]) -> bool:
+    def filter_row(self, row: Sequence[object]) -> bool:
         return all(f.predicate(row[self.table.column_indices[f.column_name]]) for f in self.filters)
 
 

@@ -6,8 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_informix_logusage(string_table):
@@ -54,8 +56,8 @@ def check_informix_logusage(item, params, parsed):
 
         infotext = "Files: {}, Size: {}, Used: {}".format(
             logfiles,
-            get_bytes_human_readable(size),
-            get_bytes_human_readable(used),
+            render.bytes(size),
+            render.bytes(used),
         )
         state = 0
         if "levels" in params:
@@ -66,8 +68,8 @@ def check_informix_logusage(item, params, parsed):
                 state = 1
             if state:
                 infotext += " (warn/crit at {}/{})".format(
-                    get_bytes_human_readable(warn),
-                    get_bytes_human_readable(crit),
+                    render.bytes(warn),
+                    render.bytes(crit),
                 )
 
         yield state, infotext, [

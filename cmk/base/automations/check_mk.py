@@ -9,6 +9,7 @@ import functools
 import glob
 import io
 import itertools
+import json
 import logging
 import operator
 import os
@@ -20,6 +21,7 @@ import sys
 import time
 from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
+from dataclasses import asdict
 from itertools import islice
 from pathlib import Path
 from typing import Any
@@ -31,10 +33,12 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.password_store
+import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
+from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
@@ -64,6 +68,7 @@ from cmk.utils.paths import (
     var_dir,
 )
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.version import edition_supports_nagvis
@@ -86,6 +91,7 @@ from cmk.automations.results import (
     NotificationAnalyseResult,
     NotificationGetBulksResult,
     NotificationReplayResult,
+    NotificationTestResult,
     ReloadResult,
     RenameHostsResult,
     RestartResult,
@@ -97,6 +103,7 @@ from cmk.automations.results import (
     SetAutochecksTable,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
+    UpdatePasswordsMergedFileResult,
 )
 
 from cmk.snmplib import (
@@ -106,14 +113,16 @@ from cmk.snmplib import (
     oids_to_walk,
     SNMPCredentials,
     SNMPHostConfig,
+    SNMPVersion,
     walk_for_export,
 )
 
-from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFetcher
+from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, SNMPScanConfig, TCPFetcher, TLSConfig
+from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
@@ -128,7 +137,8 @@ from cmk.checkengine.discovery import (
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
-from cmk.checkengine.fetcher import SourceType
+from cmk.checkengine.discovery._utils import DiscoveredItem
+from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
@@ -156,13 +166,20 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.config import ConfigCache
+from cmk.base.config import (
+    ConfigCache,
+    ConfiguredIPLookup,
+    handle_ip_lookup_failure,
+    lookup_mgmt_board_ip_address,
+    snmp_default_community,
+)
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
-from cmk.base.plugins.server_side_calls import load_active_checks
-from cmk.base.sources import make_parser
+from cmk.base.parent_scan import ScanConfig
+from cmk.base.server_side_calls import load_active_checks
+from cmk.base.sources import make_parser, SNMPFetcherConfig
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
@@ -217,11 +234,8 @@ class AutomationDiscovery(DiscoveryAutomation):
     needs_config = True
     needs_checks = True
 
-    # Does discovery for a list of hosts. Possible values for mode:
-    # "new" - find only new services (like -I)
-    # "remove" - remove exceeding services
-    # "fixall" - find new, remove exceeding
-    # "refresh" - drop all services and reinventorize
+    # Does discovery for a list of hosts. For possible values see
+    # DiscoverySettings
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
     def execute(self, args: list[str]) -> ServiceDiscoveryResult:
@@ -240,10 +254,19 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         if len(args) < 2:
             raise MKAutomationError(
-                "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME"
+                "Need two arguments: %s " % "DiscoveryMode|DiscoverySettings HOSTNAME"
             )
 
-        settings = DiscoverySettings.from_discovery_mode(DiscoveryMode.from_str(args[0]))
+        # TODO 2.3 introduced a new format but has to be compatible for 2.2.
+        # Can be removed one day
+        if (discovery_settings := args[0]) in ["new", "remove", "fixall", "refresh"]:
+            settings = DiscoverySettings.from_discovery_mode(
+                DiscoveryMode.from_str(discovery_settings)
+            )
+        else:
+            # 2.3 format
+            settings = DiscoverySettings.from_json(discovery_settings)
+
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()
@@ -252,13 +275,17 @@ class AutomationDiscovery(DiscoveryAutomation):
         results: dict[HostName, DiscoveryResult] = {}
 
         parser = CMKParser(
-            config_cache,
+            config_cache.parser_factory(),
+            checking_sections=lambda hostname: config_cache.make_checking_sections(
+                hostname, selected_sections=NO_SELECTION
+            ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
         )
         fetcher = CMKFetcher(
             config_cache,
+            config_cache.fetcher_factory(),
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             mode=Mode.DISCOVERY,
@@ -266,6 +293,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             selected_sections=NO_SELECTION,
             simulation_mode=config.simulation_mode,
             snmp_backend_override=None,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
         for hostname in hostnames:
 
@@ -287,7 +315,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 results[hostname] = automation_discovery(
                     hostname,
                     is_cluster=hostname in config_cache.hosts_config.clusters,
-                    cluster_nodes=config_cache.nodes_of(hostname) or (),
+                    cluster_nodes=config_cache.nodes(hostname),
                     active_hosts={
                         hn
                         for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
@@ -297,8 +325,8 @@ class AutomationDiscovery(DiscoveryAutomation):
                     parser=parser,
                     fetcher=fetcher,
                     summarizer=CMKSummarizer(
-                        config_cache,
                         hostname,
+                        config_cache.summary_config,
                         override_non_ok_state=None,
                     ),
                     section_plugins=SectionPluginMapper(),
@@ -351,7 +379,10 @@ class AutomationDiscoveryPreview(Automation):
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return _get_discovery_preview(
-            host_name, not prevent_fetching, OnError.RAISE if raise_errors else OnError.WARN
+            host_name,
+            config_cache,
+            not prevent_fetching,
+            OnError.RAISE if raise_errors else OnError.WARN,
         )
 
 
@@ -374,7 +405,10 @@ class AutomationTryDiscovery(Automation):
         )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
 
         return _get_discovery_preview(
-            HostName(args[0]), perform_scan, OnError.RAISE if raise_errors else OnError.WARN
+            HostName(args[0]),
+            config.get_config_cache(),
+            perform_scan,
+            OnError.RAISE if raise_errors else OnError.WARN,
         )
 
 
@@ -383,13 +417,19 @@ automations.register(AutomationTryDiscovery())
 
 # TODO: invert the 'perform_scan' logic -> 'prevent_fetching'
 def _get_discovery_preview(
-    host_name: HostName, perform_scan: bool, on_error: OnError
+    host_name: HostName,
+    config_cache: ConfigCache,
+    perform_scan: bool,
+    on_error: OnError,
 ) -> ServiceDiscoveryPreviewResult:
     buf = io.StringIO()
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
 
-        check_preview = _execute_discovery(host_name, perform_scan, on_error)
+        check_preview = _execute_discovery(host_name, perform_scan, on_error, ip_address_of)
 
         def make_discovered_host_labels(
             labels: Sequence[HostLabel],
@@ -407,7 +447,8 @@ def _get_discovery_preview(
 
         return ServiceDiscoveryPreviewResult(
             output=buf.getvalue(),
-            check_table=check_preview.table,
+            # TODO: will be removed later when full information is returned to fronted
+            check_table=check_preview.table[host_name],
             host_labels=make_discovered_host_labels(check_preview.labels.present),
             new_labels=make_discovered_host_labels(
                 [l for l in check_preview.labels.new if l.name not in changed_labels]
@@ -423,13 +464,16 @@ def _get_discovery_preview(
         )
 
 
-def active_check_preview_rows(
-    config_cache: ConfigCache, host_name: HostName
+def _active_check_preview_rows(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    ip_address_of: config.IPLookup,
 ) -> Sequence[CheckPreviewEntry]:
     active_checks_ = config_cache.active_checks(host_name)
-    host_attrs = config_cache.get_host_attributes(host_name)
+    host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
     ignored_services = config.IgnoredServices(config_cache, host_name)
     ruleset_matcher = config_cache.ruleset_matcher
+    translations = config.get_service_translations(ruleset_matcher, host_name)
 
     def make_check_source(desc: str) -> str:
         return "ignored_active" if desc in ignored_services else "active"
@@ -438,12 +482,24 @@ def active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
+    def make_final_service_name(sn: ServiceName) -> ServiceName:
+        return config.get_final_service_description(sn, translations)
+
+    host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
+    resource_macros = config.get_resource_macros()
+    macros = {**host_macros, **resource_macros}
+    password_store_file = cmk.utils.password_store.pending_password_store_path()
     active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
+        config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
         host_attrs,
-        config.get_service_translations(ruleset_matcher, host_name),
+        config.http_proxies,
+        make_final_service_name,
+        config.use_new_descriptions_for,
+        cmk.utils.password_store.load(password_store_file),
+        password_store_file,
     )
 
     return list(
@@ -452,14 +508,17 @@ def active_check_preview_rows(
                 check_source=make_check_source(active_service.description),
                 check_plugin_name=active_service.plugin_name,
                 ruleset_name=None,
+                discovery_ruleset_name=None,
                 item=active_service.description,
-                discovered_parameters=None,
-                effective_parameters=None,
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
                 description=active_service.description,
                 state=None,
                 output=make_output(active_service.description),
                 metrics=[],
-                labels={},
+                old_labels={},
+                new_labels={},
                 found_on_nodes=[host_name],
             )
             for active_service in active_check_config.get_active_service_descriptions(
@@ -473,6 +532,7 @@ def _execute_discovery(
     host_name: HostName,
     perform_scan: bool,
     on_error: OnError,
+    ip_address_of: config.IPLookup,
 ) -> CheckPreview:
     file_cache_options = FileCacheOptions(
         use_outdated=not perform_scan, use_only_cache=not perform_scan
@@ -482,13 +542,17 @@ def _execute_discovery(
     hosts_config = config.make_hosts_config()
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
-        config_cache,
+        config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=perform_scan,
         mode=Mode.DISCOVERY,
@@ -496,18 +560,23 @@ def _execute_discovery(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
+        password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     ip_address = (
         None
         if host_name in hosts_config.clusters
+        or ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
         # We *must* do the lookup *before* calling `get_host_attributes()`
         # because...  I don't know... global variables I guess.  In any case,
         # doing it the other way around breaks one integration test.
         else config.lookup_ip_address(config_cache, host_name)
     )
-    with plugin_contexts.current_host(host_name), set_value_store_manager(
-        ValueStoreManager(host_name), store_changes=False
-    ) as value_store_manager:
+    with (
+        plugin_contexts.current_host(host_name),
+        set_value_store_manager(
+            ValueStoreManager(host_name), store_changes=False
+        ) as value_store_manager,
+    ):
         is_cluster = host_name in hosts_config.clusters
         check_plugins = CheckPluginMapper(
             config_cache,
@@ -519,12 +588,12 @@ def _execute_discovery(
             host_name,
             ip_address,
             is_cluster=is_cluster,
-            cluster_nodes=config_cache.nodes_of(host_name) or (),
+            cluster_nodes=config_cache.nodes(host_name),
             parser=parser,
             fetcher=fetcher,
             summarizer=CMKSummarizer(
-                config_cache,
                 host_name,
+                config_cache.summary_config,
                 override_non_ok_state=None,
             ),
             section_plugins=SectionPluginMapper(),
@@ -555,11 +624,13 @@ def _execute_discovery(
             on_error=on_error,
         )
     return CheckPreview(
-        table=[
-            *passive_check_preview.table,
-            *active_check_preview_rows(config_cache, host_name),
-            *config_cache.custom_check_preview_rows(host_name),
-        ],
+        table={
+            host_name: [
+                *passive_check_preview.table[host_name],
+                *_active_check_preview_rows(config_cache, host_name, ip_address_of),
+                *config_cache.custom_check_preview_rows(host_name),
+            ]
+        },
         labels=passive_check_preview.labels,
         source_results=passive_check_preview.source_results,
         kept_labels=passive_check_preview.kept_labels,
@@ -590,15 +661,22 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
 
     config.load()
     config_cache = config.get_config_cache()
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
-        config_cache,
+        config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         mode=Mode.DISCOVERY,
@@ -606,11 +684,11 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     section_plugins = SectionPluginMapper()
     host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
     plugins = DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher)
-    get_service_description = functools.partial(config.service_description, ruleset_matcher)
     on_error = OnError.IGNORE
 
     hosts_config = config_cache.hosts_config
@@ -679,7 +757,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                         discovery_result, activate_host = autodiscovery(
                             host_name,
                             is_cluster=host_name in config_cache.hosts_config.clusters,
-                            cluster_nodes=config_cache.nodes_of(host_name) or (),
+                            cluster_nodes=config_cache.nodes(host_name),
                             active_hosts={
                                 hn
                                 for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
@@ -689,7 +767,9 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                             parser=parser,
                             fetcher=fetcher,
                             summarizer=CMKSummarizer(
-                                config_cache, host_name, override_non_ok_state=None
+                                host_name,
+                                config_cache.summary_config,
+                                override_non_ok_state=None,
                             ),
                             section_plugins=section_plugins,
                             section_error_handling=section_error_handling,
@@ -699,7 +779,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                             ignore_plugin=config_cache.check_plugin_ignored,
                             get_effective_host=config_cache.effective_host,
                             get_service_description=(
-                                functools.partial(get_service_description, ruleset_matcher)
+                                functools.partial(config.service_description, ruleset_matcher)
                             ),
                             schedule_discovery_check=_schedule_discovery_check,
                             rediscovery_parameters=params.rediscovery,
@@ -734,6 +814,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
             if config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
                     config_cache,
+                    ip_address_of,
                     core,
                     locking_mode=config.restart_locking,
                     all_hosts=hosts_config.hosts,
@@ -746,6 +827,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
             else:
                 cmk.base.core.do_restart(
                     config_cache,
+                    ip_address_of,
                     core,
                     all_hosts=hosts_config.hosts,
                     locking_mode=config.restart_locking,
@@ -792,8 +874,11 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         new_services = [
             AutocheckServiceWithNodes(
-                AutocheckEntry(
-                    CheckPluginName(raw_check_plugin_name), item, params, raw_service_labels
+                DiscoveredItem[AutocheckEntry](
+                    previous=AutocheckEntry(
+                        CheckPluginName(raw_check_plugin_name), item, params, raw_service_labels
+                    ),
+                    new=None,
                 ),
                 found_on_nodes,
             )
@@ -807,9 +892,11 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         if hostname in config_cache.hosts_config.clusters:
             set_autochecks_of_cluster(
-                config_cache.nodes_of(hostname) or (),
+                config_cache.nodes(hostname),
                 hostname,
-                new_services,
+                # TODO: get full node information and pass it to set_autochecks_of_cluster.
+                # Currently the set-autochecks command will still set cluster information.
+                {hostname: new_services},
                 config_cache.effective_host,
                 functools.partial(config.service_description, config_cache.ruleset_matcher),
             )
@@ -871,9 +958,9 @@ class AutomationRenameHosts(Automation):
         # including the current history files will be handled later when the core
         # is stopped.
         for oldname, newname in renamings:
-            self._finished_history_files[
-                (oldname, newname)
-            ] = self._rename_host_in_core_history_archive(oldname, newname)
+            self._finished_history_files[(oldname, newname)] = (
+                self._rename_host_in_core_history_archive(oldname, newname)
+            )
             if self._finished_history_files[(oldname, newname)]:
                 actions.append("history")
 
@@ -895,21 +982,23 @@ class AutomationRenameHosts(Automation):
             # Start monitoring again
             if core_was_running:
                 # force config generation to succeed. The core *must* start.
-                # TODO: Can't we drop this hack since we have config warnings now?
-                config.ignore_ip_lookup_failures()
                 # In this case the configuration is already locked by the caller of the automation.
                 # If that is on the local site, we can not lock the configuration again during baking!
                 # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
                 config_cache = config.get_config_cache()
                 hosts_config = config.make_hosts_config()
+                ip_address_of = config.ConfiguredIPLookup(
+                    config_cache, error_handler=ip_lookup.CollectFailedHosts()
+                )
                 _execute_silently(
                     config_cache,
                     CoreAction.START,
+                    ip_address_of,
                     hosts_config,
                     skip_config_locking_for_bakery=True,
                 )
 
-                for hostname in config.failed_ip_lookups():
+                for hostname in ip_address_of.error_handler.failed_ip_lookups:
                     actions.append("dnsfail-" + hostname)
 
         # Convert actions into a dictionary { "what" : count }
@@ -1231,6 +1320,9 @@ class AutomationAnalyseServices(Automation):
                     config_cache=config_cache,
                     host_name=host_name,
                     servicedesc=servicedesc,
+                    ip_address_of=config.ConfiguredIPLookup(
+                        config_cache, error_handler=config.handle_ip_lookup_failure
+                    ),
                 )
             )
             else AnalyseServiceResult(
@@ -1248,6 +1340,7 @@ class AutomationAnalyseServices(Automation):
         config_cache: ConfigCache,
         host_name: HostName,
         servicedesc: str,
+        ip_address_of: config.IPLookup,
     ) -> ServiceInfo:
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
@@ -1255,6 +1348,14 @@ class AutomationAnalyseServices(Automation):
         # 2. disocvered services
         # 3. classical checks
         # 4. active checks
+
+        # special case. cheap to check, so check this first:
+        if servicedesc == "Check_MK Discovery":
+            return {
+                "origin": "active",
+                "checktype": "check-mk-inventory",
+                "parameters": asdict(config_cache.discovery_check_parameters(host_name)),
+            }
 
         # 1. Enforced services
         for checkgroup_name, service in config_cache.enforced_services_table(host_name).values():
@@ -1288,13 +1389,23 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        host_attrs = config_cache.get_host_attributes(host_name)
+        translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
+        host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
+        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
+        resource_macros = config.get_resource_macros()
+        macros = {**host_macros, **resource_macros}
+        password_store_file = cmk.utils.password_store.pending_password_store_path()
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
+            config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
             host_attrs,
-            translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
+            config.http_proxies,
+            lambda x: config.get_final_service_description(x, translations),
+            config.use_new_descriptions_for,
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
         )
 
         active_checks = config_cache.active_checks(host_name)
@@ -1318,7 +1429,7 @@ class AutomationAnalyseServices(Automation):
         services = (
             [
                 service
-                for node in config_cache.nodes_of(host_name) or []
+                for node in config_cache.nodes(host_name)
                 for service in config_cache.get_autochecks_of(node)
                 if host_name == config_cache.effective_host(node, service.description)
             ]
@@ -1335,7 +1446,7 @@ class AutomationAnalyseServices(Automation):
 
             plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
             if plugin is None:
-                # plugin can only be None if we looked for the "Unimplemented check..." description.
+                # plug-in can only be None if we looked for the "Unimplemented check..." description.
                 # In this case we can run into the 'not found' case below.
                 continue
 
@@ -1516,7 +1627,12 @@ class AutomationRestart(Automation):
             nodes = None
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
-        return _execute_silently(config_cache, self._mode(), hosts_config, hosts_to_update=nodes)
+        ip_address_of = config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        )
+        return _execute_silently(
+            config_cache, self._mode(), ip_address_of, hosts_config, hosts_to_update=nodes
+        )
 
     def _check_plugins_have_changed(self) -> bool:
         last_time = self._time_of_last_core_restart()
@@ -1570,6 +1686,7 @@ automations.register(AutomationReload())
 def _execute_silently(
     config_cache: ConfigCache,
     action: CoreAction,
+    ip_address_of: config.IPLookup,
     hosts_config: Hosts,
     hosts_to_update: set[HostName] | None = None,
     skip_config_locking_for_bakery: bool = False,
@@ -1579,6 +1696,7 @@ def _execute_silently(
         try:
             do_restart(
                 config_cache,
+                ip_address_of,
                 create_core(config.monitoring_core),
                 action=action,
                 all_hosts=hosts_config.hosts,
@@ -1655,7 +1773,7 @@ class AutomationGetCheckInformation(Automation):
             discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
         )
 
-        plugin_infos: dict[CheckPluginNameStr, dict[str, Any]] = {}
+        plugin_infos: dict[str, dict[str, Any]] = {}
         for plugin in agent_based_register.iter_all_check_plugins():
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name),
@@ -1743,16 +1861,27 @@ class AutomationScanParents(Automation):
             HostName(config.monitoring_host) if config.monitoring_host is not None else None
         )
 
+        def make_scan_config() -> Mapping[HostName, ScanConfig]:
+            return {
+                host: config_cache.make_parent_scan_config(host)
+                for host in itertools.chain(
+                    hostnames,
+                    hosts_config.hosts,
+                    ([HostName(config.monitoring_host)] if config.monitoring_host else ()),
+                )
+            }
+
         try:
-            gateways = cmk.base.parent_scan.scan_parents_of(
-                config_cache,
+            gateway_results = cmk.base.parent_scan.scan_parents_of(
+                make_scan_config(),
                 hosts_config,
                 monitoring_host,
                 hostnames,
                 silent=True,
                 settings=settings,
+                lookup_ip_address=functools.partial(config.lookup_ip_address, config_cache),
             )
-            return ScanParentsResult(gateways)
+            return ScanParentsResult(gateway_results)
         except Exception as e:
             raise MKAutomationError("%s" % e)
 
@@ -1807,6 +1936,8 @@ class AutomationDiagHost(Automation):
         file_cache_options = FileCacheOptions()
 
         if not ipaddress:
+            if ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP:
+                raise MKGeneralException("Host is configured as No-IP host: %s" % host_name)
             try:
                 resolved_address = config.lookup_ip_address(config_cache, host_name)
             except Exception:
@@ -1831,6 +1962,14 @@ class AutomationDiagHost(Automation):
                         cmd=cmd,
                         tcp_connect_timeout=tcp_connect_timeout,
                         file_cache_options=file_cache_options,
+                        # Passing `ip_address_of` is the result of a refactoring.
+                        # We do pass an IP address as well, so I'm not quite sure why we need this.
+                        # Feel free to investigate!
+                        # Also: This class might write to console. The de-serializer of the automation call will
+                        # not be able to handle this I think? At best it will ignore it. We should fix this.
+                        ip_address_of=config.ConfiguredIPLookup(
+                            config_cache, error_handler=config.handle_ip_lookup_failure
+                        ),
                     )
                 )
 
@@ -1845,7 +1984,9 @@ class AutomationDiagHost(Automation):
                 return DiagHostResult(
                     *self._execute_snmp(
                         test,
-                        config_cache.make_snmp_config(host_name, ipaddress, SourceType.HOST),
+                        config_cache.make_snmp_config(
+                            host_name, ipaddress, SourceType.HOST, backend_override=None
+                        ),
                         host_name,
                         ipaddress,
                         snmp_community,
@@ -1898,15 +2039,41 @@ class AutomationDiagHost(Automation):
         cmd: str,
         tcp_connect_timeout: float | None,
         file_cache_options: FileCacheOptions,
+        ip_address_of: config.IPLookup,
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
+        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+        walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+        file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+        tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
+        tls_config = TLSConfig(
+            cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+            ca_store=Path(cmk.utils.paths.agent_cert_store),
+            site_crt=Path(cmk.utils.paths.site_cert_file),
+        )
+
         state, output = 0, ""
+        pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
+        passwords = cmk.utils.password_store.load(pending_passwords_file)
+        snmp_scan_config = SNMPScanConfig(
+            on_error=OnError.RAISE,
+            missing_sys_description=config_cache.missing_sys_description(host_name),
+            oid_cache_dir=oid_cache_dir,
+        )
         for source in sources.make_sources(
             host_name,
             ipaddress,
-            ConfigCache.address_family(host_name),
-            config_cache=config_cache,
+            ConfigCache.ip_stack_config(host_name),
+            fetcher_factory=config_cache.fetcher_factory(),
+            snmp_fetcher_config=SNMPFetcherConfig(
+                scan_config=snmp_scan_config,
+                selected_sections=NO_SELECTION,
+                backend_override=None,
+                stored_walk_path=stored_walk_path,
+                walk_cache_path=walk_cache_path,
+            ),
             is_cluster=host_name in hosts_config.clusters,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
@@ -1915,7 +2082,26 @@ class AutomationDiagHost(Automation):
                 discovery=1.5 * check_interval,
                 inventory=1.5 * check_interval,
             ),
-            snmp_backend_override=None,
+            snmp_backend=config_cache.get_snmp_backend(host_name),
+            file_cache_path=file_cache_path,
+            tcp_cache_path=tcp_cache_path,
+            tls_config=tls_config,
+            computed_datasources=config_cache.computed_datasources(host_name),
+            datasource_programs=config_cache.datasource_programs(host_name),
+            tag_list=config_cache.tag_list(host_name),
+            management_ip=lookup_mgmt_board_ip_address(config_cache, host_name),
+            management_protocol=config_cache.management_protocol(host_name),
+            special_agent_command_lines=config_cache.special_agent_command_lines(
+                host_name,
+                ipaddress,
+                password_store_file=pending_passwords_file,
+                passwords=passwords,
+                ip_address_of=ConfiguredIPLookup(
+                    config_cache, error_handler=handle_ip_lookup_failure
+                ),
+            ),
+            agent_connection_mode=config_cache.agent_connection_mode(host_name),
+            check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -1925,7 +2111,9 @@ class AutomationDiagHost(Automation):
             if source_info.fetcher_type is FetcherType.PROGRAM and cmd:
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
-                    cmdline=config_cache.translate_commandline(host_name, ipaddress, cmd),
+                    cmdline=config_cache.translate_commandline(
+                        host_name, ipaddress, cmd, ip_address_of
+                    ),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
                 )
@@ -1940,6 +2128,7 @@ class AutomationDiagHost(Automation):
                     host_name=fetcher.host_name,
                     encryption_handling=fetcher.encryption_handling,
                     pre_shared_secret=fetcher.pre_shared_secret,
+                    tls_config=tls_config,
                 )
 
             raw_data = get_raw_data(
@@ -2009,10 +2198,9 @@ class AutomationDiagHost(Automation):
         # ('authNoPriv', 'md5', '11111111', '22222222')
         # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
-        credentials: SNMPCredentials = snmp_config.credentials
-
-        # Insert preconfigured communitiy
         if test == "snmpv3":
+            credentials: SNMPCredentials = snmp_config.credentials
+
             if snmpv3_use:
                 snmpv3_credentials = [snmpv3_use]
                 if snmpv3_use in ["authNoPriv", "authPriv"]:
@@ -2038,8 +2226,12 @@ class AutomationDiagHost(Automation):
                     snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
 
                 credentials = tuple(snmpv3_credentials)
-        elif snmp_community:
-            credentials = snmp_community
+        else:
+            credentials = snmp_community or (
+                snmp_config.credentials
+                if isinstance(snmp_config.credentials, str)
+                else snmp_default_community
+            )
 
         # Determine SNMPv2/v3 community
         if hostname not in config.explicit_snmp_communities:
@@ -2051,18 +2243,21 @@ class AutomationDiagHost(Automation):
                 credentials = cred
 
         # SNMP versions
-        if test in ["snmpv2", "snmpv3"]:
-            is_bulkwalk_host = True
-            is_snmpv2or3_without_bulkwalk_host = False
-        elif test == "snmpv2_nobulk":
-            is_bulkwalk_host = False
-            is_snmpv2or3_without_bulkwalk_host = True
-        elif test == "snmpv1":
-            is_bulkwalk_host = False
-            is_snmpv2or3_without_bulkwalk_host = False
-
-        else:
-            return 1, "SNMP command not implemented"
+        match test:
+            case "snmpv1":
+                snmp_version = SNMPVersion.V1
+                bulkwalk_enabled = False  # not implemented in v1 anyway
+            case "snmpv2":
+                snmp_version = SNMPVersion.V2C
+                bulkwalk_enabled = True
+            case "snmpv2_nobulk":
+                snmp_version = SNMPVersion.V2C
+                bulkwalk_enabled = False
+            case "snmpv3":
+                snmp_version = SNMPVersion.V3
+                bulkwalk_enabled = True
+            case other:
+                return 1, f"SNMP command {other!r} not implemented"
 
         # TODO: What about SNMP management boards?
         # TODO: `get_snmp_table()` with some cache handling
@@ -2074,8 +2269,8 @@ class AutomationDiagHost(Automation):
             ipaddress=ipaddress,
             credentials=credentials,
             port=snmp_config.port,
-            is_bulkwalk_host=is_bulkwalk_host,
-            is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host,
+            snmp_version=snmp_version,
+            bulkwalk_enabled=bulkwalk_enabled,
             bulk_walk_size_of=snmp_config.bulk_walk_size_of,
             timing={
                 "timeout": snmp_timeout,
@@ -2087,6 +2282,7 @@ class AutomationDiagHost(Automation):
             snmp_backend=snmp_config.snmp_backend,
         )
 
+        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         data = get_snmp_table(
             section_name=None,
             tree=BackendSNMPTree(
@@ -2094,7 +2290,7 @@ class AutomationDiagHost(Automation):
                 oids=[BackendOIDSpec(c, "string", False) for c in "1456"],
             ),
             walk_cache={},
-            backend=make_snmp_backend(snmp_config, log.logger),
+            backend=make_snmp_backend(snmp_config, log.logger, stored_walk_path=stored_walk_path),
         )
 
         if data:
@@ -2119,8 +2315,9 @@ class AutomationActiveCheck(Automation):
 
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        with redirect_stdout(open(os.devnull, "w")):
-            host_attrs = config_cache.get_host_attributes(host_name)
+        ip_address_of = config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        )
 
         if plugin == "custom":
             for entry in config_cache.custom_checks(host_name):
@@ -2128,7 +2325,10 @@ class AutomationActiveCheck(Automation):
                     continue
 
                 command_line = self._replace_macros(
-                    host_name, entry["service_description"], entry.get("command_line", "")
+                    host_name,
+                    entry["service_description"],
+                    entry.get("command_line", ""),
+                    ip_address_of,
                 )
                 if command_line:
                     cmd = core_config.autodetect_plugin(command_line)
@@ -2139,16 +2339,28 @@ class AutomationActiveCheck(Automation):
                     "Passive check - cannot be executed",
                 )
 
+        with redirect_stdout(open(os.devnull, "w")):
+            # TODO: we're redirecting stdout to /dev/null here; so we might want to create
+            # a version of ip_address_of that does not write to stdout in the first place.
+            # Also I don't think we ever revisit the collected errors.
+            host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
+
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-        resource_macros = self._get_resouce_macros()
+        resource_macros = config.get_resource_macros()
+        translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
+        macros = {**host_macros, **resource_macros}
+        password_store_file = cmk.utils.password_store.pending_password_store_path()
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
+            config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
             host_attrs,
-            translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
-            macros={**host_macros, **resource_macros},
-            stored_passwords=cmk.utils.password_store.load(),
+            config.http_proxies,
+            lambda x: config.get_final_service_description(x, translations),
+            config.use_new_descriptions_for,
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
         )
 
         active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])
@@ -2168,33 +2380,25 @@ class AutomationActiveCheck(Automation):
             "Failed to compute check result",
         )
 
-    def _get_resouce_macros(self) -> Mapping[str, str]:
-        macros = {}
-        try:
-            for line in (omd_root / "etc/nagios/resource.cfg").open():
-                line = line.strip()
-                if not line or line[0] == "#":
-                    continue
-                varname, value = line.split("=", 1)
-                macros[varname] = value
-        except Exception:
-            if cmk.utils.debug.enabled():
-                raise
-        return macros
-
     # Simulate replacing some of the more important macros of host and service. We
     # cannot use dynamic macros, of course. Note: this will not work
     # without OMD, since we do not know the value of $USER1$ and $USER2$
     # here. We could read the Nagios resource.cfg file, but we do not
     # know for sure the place of that either.
-    def _replace_macros(self, hostname: HostName, service_desc: str, commandline: str) -> str:
+    def _replace_macros(
+        self,
+        hostname: HostName,
+        service_desc: str,
+        commandline: str,
+        ip_address_of: config.IPLookup,
+    ) -> str:
         config_cache = config.get_config_cache()
         macros = ConfigCache.get_host_macros_from_attributes(
-            hostname, config_cache.get_host_attributes(hostname)
+            hostname, config_cache.get_host_attributes(hostname, ip_address_of)
         )
         service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
-        macros.update(self._get_resouce_macros())
+        macros.update(config.get_resource_macros())
 
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
 
@@ -2228,6 +2432,22 @@ class AutomationActiveCheck(Automation):
 
 
 automations.register(AutomationActiveCheck())
+
+
+class AutomationUpdatePasswordsMergedFile(Automation):
+    cmd = "update-passwords-merged-file"
+    needs_config = True
+    needs_checks = False
+
+    def execute(self, args: list[str]) -> UpdatePasswordsMergedFileResult:
+        cmk.utils.password_store.save(
+            config.get_config_cache().collect_passwords(),
+            cmk.utils.password_store.pending_password_store_path(),
+        )
+        return UpdatePasswordsMergedFileResult()
+
+
+automations.register(AutomationUpdatePasswordsMergedFile())
 
 
 class AutomationUpdateDNSCache(Automation):
@@ -2275,14 +2495,45 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
-            ipaddress = config.lookup_ip_address(config_cache, hostname)
+            ip_stack_config = ConfigCache.ip_stack_config(hostname)
+            ipaddress = (
+                None
+                if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
+                else config.lookup_ip_address(config_cache, hostname)
+            )
             check_interval = config_cache.check_mk_check_interval(hostname)
+            stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+            walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+            section_cache_path = Path(var_dir)
+            file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+            tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
+            tls_config = TLSConfig(
+                cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+                ca_store=Path(cmk.utils.paths.agent_cert_store),
+                site_crt=Path(cmk.utils.paths.site_cert_file),
+            )
+            snmp_scan_config = SNMPScanConfig(
+                on_error=OnError.RAISE,
+                oid_cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir),
+                missing_sys_description=config_cache.missing_sys_description(hostname),
+            )
+
             if ty == "agent":
+                core_password_store_file = cmk.utils.password_store.core_password_store_path(
+                    LATEST_CONFIG
+                )
                 for source in sources.make_sources(
                     hostname,
                     ipaddress,
-                    ConfigCache.address_family(hostname),
-                    config_cache=config_cache,
+                    ip_stack_config,
+                    fetcher_factory=config_cache.fetcher_factory(),
+                    snmp_fetcher_config=SNMPFetcherConfig(
+                        scan_config=snmp_scan_config,
+                        selected_sections=NO_SELECTION,
+                        backend_override=None,
+                        stored_walk_path=stored_walk_path,
+                        walk_cache_path=walk_cache_path,
+                    ),
                     is_cluster=hostname in hosts_config.clusters,
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
@@ -2291,7 +2542,26 @@ class AutomationGetAgentOutput(Automation):
                         discovery=1.5 * check_interval,
                         inventory=1.5 * check_interval,
                     ),
-                    snmp_backend_override=None,
+                    snmp_backend=config_cache.get_snmp_backend(hostname),
+                    file_cache_path=file_cache_path,
+                    tcp_cache_path=tcp_cache_path,
+                    tls_config=tls_config,
+                    computed_datasources=config_cache.computed_datasources(hostname),
+                    datasource_programs=config_cache.datasource_programs(hostname),
+                    tag_list=config_cache.tag_list(hostname),
+                    management_ip=lookup_mgmt_board_ip_address(config_cache, hostname),
+                    management_protocol=config_cache.management_protocol(hostname),
+                    special_agent_command_lines=config_cache.special_agent_command_lines(
+                        hostname,
+                        ipaddress,
+                        password_store_file=core_password_store_file,
+                        passwords=cmk.utils.password_store.load(core_password_store_file),
+                        ip_address_of=ConfiguredIPLookup(
+                            config_cache, error_handler=handle_ip_lookup_failure
+                        ),
+                    ),
+                    agent_connection_mode=config_cache.agent_connection_mode(hostname),
+                    check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:
@@ -2306,10 +2576,17 @@ class AutomationGetAgentOutput(Automation):
                     )
                     host_sections = parse_raw_data(
                         make_parser(
-                            config_cache,
-                            source_info,
+                            config_cache.parser_factory(),
+                            source_info.hostname,
+                            source_info.fetcher_type,
                             checking_sections=config_cache.make_checking_sections(
                                 hostname, selected_sections=NO_SELECTION
+                            ),
+                            persisted_section_dir=make_persisted_section_dir(
+                                source_info.hostname,
+                                fetcher_type=source_info.fetcher_type,
+                                ident=source_info.ident,
+                                section_cache_path=section_cache_path,
                             ),
                             keep_outdated=file_cache_options.keep_outdated,
                             logger=logging.getLogger("cmk.base.checking"),
@@ -2321,11 +2598,7 @@ class AutomationGetAgentOutput(Automation):
                         hostname,
                         ipaddress,
                         host_sections,
-                        exit_spec=config_cache.exit_code_spec(hostname, source_info.ident),
-                        time_settings=config_cache.get_piggybacked_hosts_time_settings(
-                            piggybacked_hostname=hostname,
-                        ),
-                        is_piggyback=config_cache.is_piggyback_host(hostname),
+                        config=config_cache.summary_config(hostname, source_info.ident),
                         fetcher_type=source_info.fetcher_type,
                     )
                     if any(r.state != 0 for r in source_results):
@@ -2337,8 +2610,12 @@ class AutomationGetAgentOutput(Automation):
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-                snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
-                backend = make_snmp_backend(snmp_config, log.logger, use_cache=False)
+                snmp_config = config_cache.make_snmp_config(
+                    hostname, ipaddress, SourceType.HOST, backend_override=None
+                )
+                backend = make_snmp_backend(
+                    snmp_config, log.logger, use_cache=False, stored_walk_path=stored_walk_path
+                )
 
                 lines = []
                 for walk_oid in oids_to_walk():
@@ -2375,8 +2652,19 @@ class AutomationNotificationReplay(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: list[str]) -> NotificationReplayResult:
+        def ensure_nagios(msg: str) -> None:
+            if config.is_cmc():
+                raise RuntimeError(msg)
+
         nr = args[0]
-        notify.notification_replay_backlog(int(nr))
+        notify.notification_replay_backlog(
+            lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
+                hostname, plugin
+            ),
+            config.get_http_proxy,
+            ensure_nagios,
+            int(nr),
+        )
         return NotificationReplayResult()
 
 
@@ -2389,11 +2677,52 @@ class AutomationNotificationAnalyse(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: list[str]) -> NotificationAnalyseResult:
+        def ensure_nagios(msg: str) -> None:
+            if config.is_cmc():
+                raise RuntimeError(msg)
+
         nr = args[0]
-        return NotificationAnalyseResult(notify.notification_analyse_backlog(int(nr)))
+        return NotificationAnalyseResult(
+            notify.notification_analyse_backlog(
+                lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
+                    hostname, plugin
+                ),
+                config.get_http_proxy,
+                ensure_nagios,
+                int(nr),
+            )
+        )
 
 
 automations.register(AutomationNotificationAnalyse())
+
+
+class AutomationNotificationTest(Automation):
+    cmd = "notification-test"
+    needs_config = True
+    needs_checks = True  # TODO: Can we change this?
+
+    def execute(self, args: list[str]) -> NotificationTestResult:
+        def ensure_nagios(msg: str) -> None:
+            if config.is_cmc():
+                raise RuntimeError(msg)
+
+        context = json.loads(args[0])
+        dispatch = args[1]
+        return NotificationTestResult(
+            notify.notification_test(
+                context,
+                lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
+                    hostname, plugin
+                ),
+                config.get_http_proxy,
+                ensure_nagios,
+                dispatch=dispatch == "True",
+            )
+        )
+
+
+automations.register(AutomationNotificationTest())
 
 
 class AutomationGetBulks(Automation):

@@ -99,7 +99,7 @@ class VisualTypeViews(VisualType):
 
         # TODO: host is not correctly validated by visuals. Do it here for the moment.
         try:
-            Hostname().validate_value(hostname, None)
+            Hostname().validate_value(hostname, "")
         except MKUserError:
             return False
 

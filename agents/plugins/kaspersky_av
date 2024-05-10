@@ -9,16 +9,60 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 KAV4FS="kav4fs"
 KESL="kesl"
+
+# BEGIN COMMON PLUGIN CODE
+
+# check that no users other than root can change the file
+only_root_can_modify() {
+    permissions=$1
+    owner=$2
+    group=$3
+
+    group_write_perm=$(echo "$permissions" | cut -c 6)
+    other_write_perm=$(echo "$permissions" | cut -c 9)
+
+    if [ "$owner" != "root" ] || [ "$other_write_perm" != "-" ]; then
+        return 1
+    fi
+
+    [ "$group" = "root" ] || [ "$group_write_perm" = "-" ]
+}
+
+get_binary_owner() {
+    BINARY_PATH=$1
+    stat -c '%U' "${BINARY_PATH}"
+}
+
+get_binary_execution_mode() {
+    BINARY_PATH=$1
+    BINARY_USER=$2
+
+    # if the executable belongs to someone besides root, do not execute it as root
+    if needs_user_switch_before_executing "$BINARY_PATH"; then
+        echo "su ${BINARY_USER} -c"
+        return
+    fi
+    echo "bash -c"
+}
+
+needs_user_switch_before_executing() {
+    BINARY_PATH=$1
+
+    [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"
+}
+
+# END COMMON PLUGIN CODE
 
 run() {
     suite="$1"
     control="/opt/kaspersky/$suite/bin/$suite-control"
 
     [ -x "$(command -v "$control")" ] || return
+    only_root_can_modify "$(stat -c '%A' "$control")" "$(stat -c '%U' "$control")" "$(stat -c '%G' "$control")" || return
 
     if [ "$suite" = "$KAV4FS" ]; then
         echo "<<<kaspersky_av_updates:sep(58)>>>"

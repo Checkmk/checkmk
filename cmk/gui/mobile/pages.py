@@ -2,8 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils
@@ -21,10 +19,11 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
+from cmk.gui.pages import Page, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Rows, VisualContext
-from cmk.gui.userdb import active_connections_by_type
+from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
@@ -197,7 +196,7 @@ def page_login() -> None:
 
         saml2_user_error: str | None = None
         if saml_connections := [
-            c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+            c for c in get_active_saml_connections().values() if c["owned_by_site"] == omd_site()
         ]:
             saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
@@ -230,7 +229,17 @@ def page_login() -> None:
     mobile_html_foot()
 
 
-def page_index() -> None:
+class PageMobileIndex(Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "mobile"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        _page_index()
+        return None
+
+
+def _page_index() -> None:
     title = _("Checkmk Mobile")
     mobile_html_head(title)
     jqm_page_header(
@@ -282,10 +291,20 @@ def page_index() -> None:
     mobile_html_foot()
 
 
-def page_view() -> None:
+class PageMobileView(Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "mobile_view"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        _page_view()
+        return None
+
+
+def _page_view() -> None:
     view_name = request.var("view_name")
     if not view_name:
-        return page_index()
+        return _page_index()
 
     view_spec = get_permitted_views().get(view_name)
     if not view_spec:
@@ -490,9 +509,11 @@ def do_commands(what: str, rows: Rows) -> bool:
     if not command_confirm_dialog(
         confirm_options,
         confirm_dialog_options.confirm_title,
-        confirm_dialog_options.affected + confirm_dialog_options.additions
-        if confirm_dialog_options.additions
-        else confirm_dialog_options.affected,
+        (
+            confirm_dialog_options.affected + confirm_dialog_options.additions
+            if confirm_dialog_options.additions
+            else confirm_dialog_options.affected
+        ),
         confirm_dialog_options.icon_class,
         confirm_dialog_options.confirm_button,
     ):

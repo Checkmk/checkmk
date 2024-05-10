@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import all_of, Service, startswith, type_defs
+from cmk.agent_based.v2 import all_of, DiscoveryResult, Service, startswith
 
 Variable = list[str]
 DiscoveryParams = Mapping[str, bool]
@@ -31,7 +31,7 @@ def discovery_default_parameters() -> DiscoveryParams:
 
 def discover_cmciii_sensors(
     type_: str, params: DiscoveryParams, parsed: Section
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     for id_, entry in parsed[type_].items():
         yield Service(item=get_item(id_, params, entry), parameters={"_item_key": id_})
 

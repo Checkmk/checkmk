@@ -5,20 +5,18 @@
 
 from __future__ import annotations
 
-import copy
 import logging
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import astuple, dataclass
-from typing import Any, Final, Self, TYPE_CHECKING
+from typing import Final, Self, TYPE_CHECKING, TypedDict
 
-import pyghmi.constants as ipmi_const  # type: ignore[import]
-from pyghmi.exceptions import IpmiException  # type: ignore[import]
-from typing_extensions import TypedDict
+import pyghmi.constants as ipmi_const  # type: ignore[import-untyped]
+from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     # The remaining pyghmi imports are expensive (60 ms for all of them together).
-    import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
-    import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
+    import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import-untyped]
+    import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import-untyped]
 
 from six import ensure_binary
 
@@ -56,9 +54,11 @@ class IPMISensor:
             name=ensure_binary(reading.name),  # pylint: disable= six-ensure-str-bin-call
             type=ensure_binary(reading.type),  # pylint: disable= six-ensure-str-bin-call
             value=(b"%0.2f" % reading.value) if reading.value else b"N/A",
-            unit=ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
-            if reading.units != b"\xc2\xb0C"
-            else b"C",
+            unit=(
+                ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
+                if reading.units != b"\xc2\xb0C"
+                else b"C"
+            ),
             health=cls._parse_health_txt(reading),
         )
 
@@ -143,16 +143,14 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             + ")"
         )
 
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> IPMIFetcher:
-        return cls(**copy.deepcopy(dict(serialized)))
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "address": self.address,
-            "username": self.username,
-            "password": self.password,
-        }
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, IPMIFetcher):
+            return False
+        return (
+            self.address == other.address
+            and self.username == other.username
+            and self.password == other.password
+        )
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.log(VERBOSE, "Get IPMI data")
@@ -195,7 +193,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         # initialize a new session every cycle.
         # We also don't want to reuse sockets or other things from previous calls.
 
-        import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import]
+        import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import-untyped]
 
         ipmi_session.iothread.join()
         ipmi_session.iothread = None
@@ -243,7 +241,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             if "error" in rsp:
                 continue
 
-            reading = sensor.decode_sensor_reading(rsp["data"])
+            reading = sensor.decode_sensor_reading(self._command, rsp["data"])
             if reading is not None:
                 # sometimes (wrong) data for GPU sensors is reported, even if
                 # not installed

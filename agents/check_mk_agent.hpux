@@ -31,7 +31,7 @@ fi
 section_checkmk() {
 
     echo "<<<check_mk>>>"
-    echo "Version: 2.3.0b1"
+    echo "Version: 2.4.0b1"
     echo "AgentOS: hpux"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -39,7 +39,9 @@ section_checkmk() {
     echo "SpoolDirectory: $SPOOLDIR"
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
-
+    echo "OSType: unix"
+    echo "OSName: HP-UX"
+    echo "OSVersion: $(uname -r | cut -d' ' -f1)"
 }
 
 run_purely_synchronous_sections() {

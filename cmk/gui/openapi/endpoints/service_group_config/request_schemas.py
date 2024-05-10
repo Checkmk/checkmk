@@ -62,7 +62,7 @@ class BulkInputServiceGroup(BaseSchema):
     )
 
 
-class UpdateGroup(BaseSchema):
+class UpdateServiceGroupAttributes(BaseSchema):
     alias = fields.String(
         example="Example Group",
         description="The name used for displaying in the GUI.",
@@ -80,7 +80,7 @@ class UpdateServiceGroup(BaseSchema):
 
     name = EXISTING_SERVICE_GROUP_NAME
     attributes = fields.Nested(
-        UpdateGroup,
+        UpdateServiceGroupAttributes,
         required=True,
     )
 

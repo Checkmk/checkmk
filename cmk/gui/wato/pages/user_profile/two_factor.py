@@ -71,6 +71,7 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.userdb.store import save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -81,6 +82,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.mode import redirect
 
@@ -153,9 +155,11 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             if credential_id in credentials["webauthn_credentials"]:
                 del credentials["webauthn_credentials"][credential_id]
                 log_event_usermanagement(TwoFactorEventType.webauthn_remove)
+                send_security_message(user.id, SecurityNotificationEvent.webauthn_removed)
             elif credential_id in credentials["totp_credentials"]:
                 del credentials["totp_credentials"][credential_id]
                 log_event_usermanagement(TwoFactorEventType.totp_remove)
+                send_security_message(user.id, SecurityNotificationEvent.totp_removed)
             else:
                 return
             save_two_factor_credentials(user.id, credentials)
@@ -165,6 +169,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             credentials["backup_codes"] = []
             log_event_usermanagement(TwoFactorEventType.backup_remove)
             save_two_factor_credentials(user.id, credentials)
+            send_security_message(user.id, SecurityNotificationEvent.backup_revoked)
             flash(_("All backup codes have been deleted"))
 
         if request.has_var("_backup_codes"):
@@ -172,15 +177,37 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
             log_event_usermanagement(TwoFactorEventType.backup_add)
             save_two_factor_credentials(user.id, credentials)
-            flash(
-                _(
-                    "The following backup codes have been generated: <ul>%s</ul> These codes are "
-                    "displayed only now. Save them securely."
-                )
-                % "".join(f"<li><tt>{password.raw}</tt></li>" for password, _pwhashed in codes)
-            )
+            send_security_message(user.id, SecurityNotificationEvent.backup_reset)
+            flash(self.flash_new_backup_codes(codes))
 
-    def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
+    def flash_new_backup_codes(self, codes: list[tuple[Password, PasswordHash]]) -> HTML:
+        backup_codes = "\n".join(pw.raw for pw, _hash in codes)
+        success_message = _("Codes copied")
+        header_msg = html.render_h3(html.render_b("Successfully generated 10 backup codes"))
+        message1 = html.render_p(
+            _(
+                "Each code may be used only once. Store these backup codes in a safe place. "
+                "If you lose access to your authentication device and backup codes, you'll have to "
+                "contact your Checkmk admin to recover your account."
+            )
+        )
+        codesdiv = html.render_div(
+            HTML("").join(
+                [html.render_div(code.raw, class_="codelistelement") for code, _v in codes]
+            ),
+            class_="codelist",
+        )
+        message2 = html.render_p(_("These codes are only displayed now."))
+        copy_button = html.render_input(
+            "copy codes",
+            type_="button",
+            onclick=f"cmk.utils.copy_to_clipboard({json.dumps(backup_codes)}, {json.dumps(success_message)})",
+            value=_("Copy codes to clipboard"),
+            class_=["button buttonlink"],
+        )
+        return HTML("").join([header_msg, message1, codesdiv, message2, copy_button])
+
+    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
         registered_credentials = list(credentials["webauthn_credentials"].keys()) + list(
@@ -195,6 +222,20 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         enable_backup_codes = any(credentials.values()) and (
             [request.get_ascii_input("_delete_credential")] != registered_credentials
         )
+
+        if backup_codes_given:
+            backup_codes_item = make_simple_link(
+                make_confirm_delete_link(
+                    url=makeactionuri(request, transactions, [("_backup_codes", "SET")]),
+                    title=_("Regenerate backup codes"),
+                    confirm_button=_("Regenerate codes"),
+                    message="Generating backup codes automatically invalidates existing codes",
+                ),
+            )
+        else:
+            backup_codes_item = make_simple_link(
+                makeactionuri(request, transactions, [("_backup_codes", "SET")]),
+            )
 
         page_menu: PageMenu = PageMenu(
             dropdowns=[
@@ -212,7 +253,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                                     is_shortcut=True,
                                     is_suggested=True,
                                     description=_(
-                                        "Make use of an Authenicatior App to generate time-based one-time validation codes."
+                                        "Make use of an authenicator app to generate time-based one-time validation codes."
                                     ),
                                 ),
                                 PageMenuEntry(
@@ -228,15 +269,13 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                                     ),
                                 ),
                                 PageMenuEntry(
-                                    title=_("Regenerate backup codes")
-                                    if backup_codes_given
-                                    else _("Generate backup codes"),
-                                    icon_name="2fa_backup_codes",
-                                    item=make_simple_link(
-                                        makeactionuri(
-                                            request, transactions, [("_backup_codes", "SET")]
-                                        )
+                                    title=(
+                                        _("Regenerate backup codes")
+                                        if backup_codes_given
+                                        else _("Generate backup codes")
                                     ),
+                                    icon_name="2fa_backup_codes",
+                                    item=backup_codes_item,
                                     is_enabled=enable_backup_codes,
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -407,7 +446,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
 
 class RegisterTotpSecret(ABCUserProfilePage):
     def _page_title(self) -> str:
-        return _("Register Authenticator App")
+        return _("Register authenticator app")
 
     def __init__(self, secret: bytes | None = None) -> None:
         super().__init__("general.manage_2fa")
@@ -426,31 +465,39 @@ class RegisterTotpSecret(ABCUserProfilePage):
 
     def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Profile"), breadcrumb, form_name="profile", button_name="_save", add_cancel_link=True
+            _("Profile"),
+            breadcrumb,
+            form_name="register_totp",
+            button_name="_save",
+            add_cancel_link=True,
         )
         return menu
 
     def _action(self) -> None:
+        auth_code_vs = TextInput(allow_empty=False)
+        auth_code = auth_code_vs.from_html_vars("auth_code")
+        auth_code_vs.validate_value(auth_code, "auth_code")
+
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id, lock=True)
 
         self.secret = b32decode(request.get_ascii_input_mandatory("_otp"))
         otp = TOTP(self.secret, TotpVersion.one)
 
-        vs = self._valuespec()
-        provided_otp = vs.from_html_vars("profile")
+        alias = TextInput().from_html_vars("alias")
         now_time = otp.calculate_generation(datetime.datetime.now())
-        if otp.check_totp(provided_otp["ValidateOTP"], now_time):
+        if otp.check_totp(auth_code, now_time):
             totp_uuid = str(uuid4())
             credentials["totp_credentials"][totp_uuid] = {
                 "credential_id": totp_uuid,
                 "secret": self.secret,
                 "version": 1,
                 "registered_at": int(time.time()),
-                "alias": "",
+                "alias": alias or "",
             }
             save_two_factor_credentials(user.id, credentials)
             log_event_usermanagement(TwoFactorEventType.totp_add)
+            send_security_message(user.id, SecurityNotificationEvent.totp_added)
             session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
             origtarget = "user_two_factor_overview.py"
@@ -465,46 +512,60 @@ class RegisterTotpSecret(ABCUserProfilePage):
             self.secret = TOTP.generate_secret()
         base32_secret = b32encode(self.secret).decode()
 
-        with html.form_context("profile", method="POST"):
+        with html.form_context("register_totp", method="POST"):
             html.prevent_password_auto_completion()
             html.open_div(class_="wato")
 
-            html.div(
-                "",
-                data_cmk_qrdata="otpauth://totp/%s?secret=%s&issuer=%s"
-                % (
-                    parse.quote(user.alias, safe=""),
-                    base32_secret,
-                    parse.quote("checkmk " + omd_site(), safe=""),
-                ),
-            )
-            html.p("Alternatively you can enter your secret manually: %s" % (base32_secret))
+            forms.header("1. %s" % _("Scan QR-Code or enter secret manually"), foldable=False)
+            forms.section(legend=False)
 
-            self._valuespec().render_input(
-                "profile",
-                {
-                    "Validate OTP": "",
+            html.call_ts_function(
+                container="div",
+                function_name="render_qr_code",
+                options={
+                    "qrcode": "otpauth://totp/%s?secret=%s&issuer=%s"
+                    % (
+                        parse.quote(user.alias, safe=""),
+                        base32_secret,
+                        parse.quote("checkmk " + omd_site(), safe=""),
+                    ),
                 },
             )
+
+            html.open_div()
+            html.span("Secret: ")
+            html.a(
+                html.render_span(base32_secret) + html.render_icon("insert"),
+                href="javascript:void(0)",
+                onclick="cmk.utils.copy_to_clipboard(%s, %s);"
+                % (json.dumps(base32_secret), json.dumps(_("Successfully copied to clipboard"))),
+                title=_("Copy secret to clipboard"),
+                class_="copy_to_clipboard",
+            )
+            html.close_div()
+
+            forms.header("2. %s" % _("Enter authentication code"), foldable=False, css="wide")
+            forms.section(legend=False)
+            html.span(
+                _(
+                    "Open the two-factor authenticator app on your device and enter the shown "
+                    "authentication code below."
+                )
+            )
+            forms.section(_("Authentication code (OTP / TOTP)"), is_required=True)
+            TextInput().render_input("auth_code", "")
+
+            forms.header("3. %s" % _("Enter alias (optional)"), foldable=False, css="wide")
+            forms.section("Alias")
+            TextInput().render_input("alias", "")
+            forms.section(legend=False)
+            html.span(_("Click ‘Save’ to enable the two-factor authentication."))
 
             forms.end()
             html.close_div()
             html.hidden_field("_otp", base32_secret)
             html.hidden_fields()
         html.footer()
-
-    def _valuespec(self) -> Dictionary:
-        return Dictionary(
-            title=_("Edit credential"),
-            optional_keys=False,
-            render="form",
-            elements=[
-                (
-                    "ValidateOTP",
-                    TextInput(title=_("Validate OTP")),
-                ),
-            ],
-        )
 
 
 class EditCredentialAlias(ABCUserProfilePage):
@@ -727,6 +788,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         )
         save_two_factor_credentials(user.id, credentials)
         log_event_usermanagement(TwoFactorEventType.webauthn_add_)
+        send_security_message(user.id, SecurityNotificationEvent.webauthn_added)
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         return {"status": "OK"}
@@ -882,6 +944,7 @@ class UserLoginTwoFactor(Page):
             if backup_code := request.get_validated_type_input(Password, "_backup_code"):
                 if is_two_factor_backup_code_valid(user.id, backup_code):
                     log_event_usermanagement(TwoFactorEventType.backup_used)
+                    send_security_message(user.id, SecurityNotificationEvent.backup_used)
                     session.session_info.two_factor_completed = True
                     raise HTTPRedirect(origtarget)
                 log_event_auth("Backup code")

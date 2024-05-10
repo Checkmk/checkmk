@@ -6,8 +6,7 @@
 import abc
 import collections
 import json
-from collections.abc import Iterator
-from typing import Callable
+from collections.abc import Callable, Iterator
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -23,6 +22,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request
@@ -94,22 +94,22 @@ class ABCViewRenderer(abc.ABC):
 
 
 class GUIViewRenderer(ABCViewRenderer):
-    page_menu_dropdowns_hook: Callable[
-        [View, Rows, list[PageMenuDropdown]], None
-    ] = lambda v, r, p: None
+    page_menu_dropdowns_hook: Callable[[View, Rows, list[PageMenuDropdown]], None] = (
+        lambda v, r, p: None
+    )
 
     def __init__(self, view: View, show_buttons: bool) -> None:
         super().__init__(view)
         self._show_buttons = show_buttons
 
-    def render(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def render(  # pylint: disable=too-many-branches
         self,
         rows: Rows,
         show_checkboxes: bool,
         num_columns: int,
         show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
-    ):
+    ) -> None:
         view_spec = self.view.spec
 
         if transactions.transaction_valid() and html.do_actions():
@@ -233,6 +233,8 @@ class GUIViewRenderer(ABCViewRenderer):
 
         for message in self.view.warning_messages:
             html.show_warning(message)
+
+        call_hooks("view_banner", self.view.name)
 
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")
@@ -401,16 +403,18 @@ class GUIViewRenderer(ABCViewRenderer):
                 yield PageMenuEntry(
                     title=command.title,
                     icon_name=command.icon_name,
-                    item=PageMenuPopup(self._render_command_form(info_name, command))
-                    if command.show_command_form
-                    else make_simple_link(
-                        makeuri(
-                            request,
-                            [
-                                ("_transid", str(transactions.get())),
-                                ("_do_actions", "yes"),
-                                (f"_{command.ident}", True),
-                            ],
+                    item=(
+                        PageMenuPopup(self._render_command_form(info_name, command))
+                        if command.show_command_form
+                        else make_simple_link(
+                            makeuri(
+                                request,
+                                [
+                                    ("_transid", str(transactions.get())),
+                                    ("_do_actions", "yes"),
+                                    (f"_{command.ident}", True),
+                                ],
+                            )
                         )
                     ),
                     name="command_%s" % command.ident,
@@ -487,7 +491,10 @@ class GUIViewRenderer(ABCViewRenderer):
             ),
         )
 
-        if display_options.enabled(display_options.F):
+        # Only render the filter page menu popup if there are filters available for the given infos
+        if display_options.enabled(display_options.F) and visuals.filters_exist_for_infos(
+            self.view.datasource.infos
+        ):
             display_dropdown.topics.insert(
                 0,
                 PageMenuTopic(
@@ -587,7 +594,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
     def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
-        if not display_options.enabled(display_options.F) or not show_filters:
+        if not display_options.enabled(display_options.F):
             return HTML()
 
         with output_funnel.plugged():

@@ -54,7 +54,7 @@ def _validate_levels(
 
 
 def parse_quanta(info: Sequence[Sequence[Sequence[str]]]) -> MutableMapping[str, Item]:
-    parsed: MutableMapping[str, Item] = {}
+    parsed: dict[str, Item] = {}
     for (
         dev_index,
         dev_status,

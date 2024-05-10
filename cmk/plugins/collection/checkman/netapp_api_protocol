@@ -4,6 +4,9 @@ catalog: hw/storagehw/netapp
 license: GPLv2
 distribution: check_mk
 description:
+ This check and the associated special agent (agent_netapp) are deprecated
+ and will be removed in a future version.
+
  This check monitors the read and write operations per second for each protocol.
  Right now there are no configurable limits and the check is always {OK}.
 

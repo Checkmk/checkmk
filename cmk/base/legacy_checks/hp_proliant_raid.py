@@ -6,7 +6,7 @@
 
 import typing
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.hp_proliant import sanitize_item
 from cmk.base.config import check_info
 
@@ -68,7 +68,7 @@ def check_hp_proliant_raid(item, _no_params, parsed):
 
     state, state_readable = map_states.get(raid_stats.status, (3, "unknown"))
     yield state, f"Status: {state_readable}"
-    yield 0, f"Logical volume size: {get_bytes_human_readable(raid_stats.size_bytes)}"
+    yield 0, f"Logical volume size: {render.bytes(raid_stats.size_bytes)}"
 
     # From CPQIDA-MIB:
     # This value is the percent complete of the rebuild.

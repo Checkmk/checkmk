@@ -185,7 +185,7 @@ def test_delete_tag_that_belongs_to_a_tag_group(clients: ClientRegistry) -> None
         ident="tag_group_id_1",
         title="tag_group_1",
         tags=[
-            {"ident": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
+            {"id": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
         ],
     )
 
@@ -193,7 +193,7 @@ def test_delete_tag_that_belongs_to_a_tag_group(clients: ClientRegistry) -> None
         ident="tag_group_id_2",
         title="tag_group_2",
         tags=[
-            {"ident": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
+            {"id": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
         ],
     )
 
@@ -251,4 +251,92 @@ def test_create_host_tag_with_newline_in_the_id(
     assert (
         resp.json["fields"]["aux_tag_id"][0]
         == f"{aux_tag_id!r} does not match pattern '^[-0-9a-zA-Z_]+\\\\Z'."
+    )
+
+
+def test_id_already_in_use_by_custom_tag_group(clients: ClientRegistry) -> None:
+    custom_tag_group = "criticality"
+    clients.HostTagGroup.create(
+        ident=custom_tag_group,
+        title="tag_group_1",
+        tags=[
+            {"id": "prod", "title": "Production"},
+            {"id": "test", "title": "Testing site"},
+            {"id": "beta", "title": "Beta site"},
+        ],
+    )
+
+    custom_tag_group_resp = clients.AuxTag.create(
+        tag_data={
+            "aux_tag_id": custom_tag_group,
+            "title": "aux_tag_2",
+            "topic": "topic_2",
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert (
+        f"The id '{custom_tag_group}' is already in use by a tag group."
+        in custom_tag_group_resp.json["fields"]["aux_tag_id"]
+    )
+
+
+def test_id_already_in_use_by_builtin_tag_group(clients: ClientRegistry) -> None:
+    builtin_tag_group = "agent"
+    builtin_tag_group_resp = clients.AuxTag.create(
+        tag_data={
+            "aux_tag_id": builtin_tag_group,
+            "title": "aux_tag_3",
+            "topic": "topic_3",
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert (
+        f"The id '{builtin_tag_group}' is already in use by a tag group."
+        in builtin_tag_group_resp.json["fields"]["aux_tag_id"]
+    )
+
+
+def test_id_already_in_use_by_custom_aux_tag(clients: ClientRegistry) -> None:
+    custom_aux_tag = "interface"
+
+    clients.AuxTag.create(
+        tag_data={
+            "aux_tag_id": custom_aux_tag,
+            "title": "aux_tag_1",
+            "topic": "topic_1",
+        },
+    )
+
+    custom_aux_tag_resp = clients.AuxTag.create(
+        tag_data={
+            "aux_tag_id": custom_aux_tag,
+            "title": "aux_tag_1",
+            "topic": "topic_1",
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert (
+        f"The aux_tag '{custom_aux_tag}' should not exist but it does."
+        in custom_aux_tag_resp.json["fields"]["aux_tag_id"]
+    )
+
+
+def test_id_in_use_by_builtin_aux_tag(clients: ClientRegistry) -> None:
+    builtin_aux_tag = "snmp"
+
+    builtin_aux_tag_resp = clients.AuxTag.create(
+        tag_data={
+            "aux_tag_id": builtin_aux_tag,
+            "title": "aux_tag_4",
+            "topic": "topic_4",
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert (
+        f"The aux_tag '{builtin_aux_tag}' should not exist but it does."
+        in builtin_aux_tag_resp.json["fields"]["aux_tag_id"]
     )

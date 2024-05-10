@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 import inspect
 import sys
 from collections.abc import Callable, Mapping, Sequence
@@ -28,7 +30,7 @@ _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
 
 
 def get_validated_plugin_location() -> PluginLocation:
-    """Find out which module registered the plugin and make sure its in the right place"""
+    """Find out which module registered the plug-in and make sure its in the right place"""
     # We used this before, but it was a performance killer. The method below is a lot faster.
     # calling_from = inspect.stack()[2].filename
     full_module_name = str(sys._getframe(2).f_globals["__name__"])

@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Any, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, TypedDict
 
 __all__ = [
     "PhaseOneResult",

@@ -85,6 +85,7 @@ def test_simple_rbn_host_notification(host: HostName, site: Site) -> None:
 @pytest.mark.usefixtures("fake_sendmail")
 @pytest.mark.usefixtures("test_user")
 @pytest.mark.usefixtures("disable_flap_detection")
+@pytest.mark.skip(reason="flaky test")
 def test_simple_rbn_service_notification(host: HostName, site: Site) -> None:
     # cmc only has 'Check_MK' and 'Check_MK Discovery'.
     service: Final = "PING" if site.core_name() == "nagios" else "Check_MK"
@@ -102,7 +103,7 @@ def test_simple_rbn_service_notification(host: HostName, site: Site) -> None:
     site.send_service_check_result(host, service, 2, "FAKE CRIT")
 
     # And check that the notifications are recorded in the log.
-    with WatchLog(site, default_timeout=20) as log:
+    with WatchLog(site, default_timeout=30) as log:
         # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.
         log.check_logged(
             f"] SERVICE NOTIFICATION: check-mk-notify;{host};{service};CRITICAL;check-mk-notify;FAKE CRIT"

@@ -6,10 +6,10 @@
 ' is running one or multiple MySQL server instances locally.
 
 Option Explicit
-Const CMK_VERSION = "2.3.0b1"
+Const CMK_VERSION = "2.4.0b1"
 
 Dim SHO, FSO, WMI, PROC
-Dim cfg_dir, cfg_file, service_list, service, instances, instance, cmd
+Dim cfg_dir, cfg_file, service_list, service, instances, instance, cmd, mysqlLocalIni
 Dim output, pos, conn_args
 
 Set instances = CreateObject("Scripting.Dictionary")
@@ -58,6 +58,16 @@ Function BuildPrintDefaultsCmd(instance_name, instance_cmd)
    print_defaults_cmd = Left(print_defaults_cmd, InStrRev(print_defaults_cmd, instance_name) - 2) & " --print-defaults"
    BuildPrintDefaultsCmd = print_defaults_cmd
 End Function
+
+' The following logic exists as well in the linux bash script mk_mysql
+mysqlLocalIni = cfg_dir & "\mysql.local.ini"
+If Not FSO.FileExists(mysqlLocalIni) Then
+    dim inifile
+    Set inifile = FSO.CreateTextFile(mysqlLocalIni, True)
+    inifile.WriteLine("# This file is created by mk_mysql.vbs because some versions of mysqladmin")
+    inifile.WriteLine("# issue a warning if there are missing includes.")
+    inifile.Close
+End If
 
 For Each instance In instances.Keys
     ' Use either an instance specific config file named mysql_<instance-id>.ini

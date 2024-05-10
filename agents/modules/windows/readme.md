@@ -1,16 +1,16 @@
 # Windows Modules to deploy wint Windows Agent 2.0 and later
 
-## Python 3.11.5
+## Python 3.12.0
 
 ### Source
 
-PYTHON 3.11.5, provided as source tarball by standard Checkmk development process
+PYTHON 3.12.0, provided as source tarball by standard Checkmk development process
 =======
-## Python 3.11.2
+## Python 3.12.0
 
 ### Source
 
-PYTHON 3.11.2, provided as source tarball by standard Checkmk development process
+PYTHON 3.12.0, provided as source tarball by standard Checkmk development process
 
 ### Changing or Updating the Python
 
@@ -57,7 +57,7 @@ This procedure may quite annoying, you have to check next points:
 
    Usually it is conftest.py and Makefile.
 
-6. Check build_the_module.cmd for 3.11 and et cetera
+6. Check build_the_module.cmd for 3.12 and et cetera
 7. Check the Windows node builds artifacts succesfully.
 
 ### PROCESS
@@ -65,7 +65,7 @@ This procedure may quite annoying, you have to check next points:
 #### Execution local
 
 ##### Building
-make build PY_VER=3.11 PY_SUBVER=1
+make build PY_VER=3.12 PY_SUBVER=0
 
 ##### Testing
 make integration
@@ -78,7 +78,7 @@ Main entry:
 build_the_module cached
 
 In a turn the script makes two calls:
-build_the_cached artefact_dir credentials url 3.11 1
+build_the_cached artefact_dir credentials url 3.12 1
 
 #### Caching
 
@@ -86,16 +86,16 @@ All builds of the Python are cached.
 Name of the cached file
 python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
 
-This mean that you didn't get a new build till you increase valeu in the file *BUILD_NUM*.
+This mean that you didn't get a new build till you increase value in the file *BUILD_NUM*.
 Just a commit is not enough, because some builds can't get data about current git hash.
 In latter case the git_hash is replaced with string "latest".
 
 
-#### Steps 3.11 and newer
+#### Steps 3.12 and newer
 
 1. Deploy package from the *omd/packages*
 2. Build  and copy results t the *out*.
-3. Uninstall from backuped python-3.11.exe in *uninstall*
+3. Uninstall from backuped python-3.12.exe in *uninstall*
 4. Install to the *to_install*
 5. Upgrade pip
 6. Install pipenv
@@ -115,7 +115,7 @@ In latter case the git_hash is replaced with string "latest".
 |
 |-- tmp/
 |    |
-|    +-- 3.11/
+|    +-- 3.12/
 |           |   python-3.cab  * resulting module file
 |           |
 |           |-- to_save/		* to produce module *
@@ -140,8 +140,8 @@ In latter case the git_hash is replaced with string "latest".
 |
 |-- python/
      |
-     +-- 3.11/
+     +-- 3.12/
              |
-             |-- python-3.11.timestamp
+             |-- python-3.12.timestamp
              |
-             +-- python-3.11/
+             +-- python-3.12/

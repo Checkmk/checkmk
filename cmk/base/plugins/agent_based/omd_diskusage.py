@@ -34,7 +34,7 @@ SPECS: Final = {
     "": Spec(metric_name="omd_size", label="Total"),
     "/var/log": Spec(metric_name="omd_log_size", label="Logs"),
     "/var/check_mk/rrd": Spec(metric_name="omd_rrd_size", label="RRDs"),
-    "/tmp": Spec(metric_name="omd_tmp_size", label="Tmp"),
+    "/tmp": Spec(metric_name="omd_tmp_size", label="Tmp"),  # nosec B108 # BNS:13b2c8
     "/local": Spec(metric_name="omd_local_size", label="Local"),
     "/var/check_mk/agents": Spec(metric_name="omd_agents_size", label="Agents"),
     "/var/mkeventd/history": Spec(metric_name="omd_history_size", label="History"),

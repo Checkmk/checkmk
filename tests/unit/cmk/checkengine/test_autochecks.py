@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -17,6 +19,7 @@ from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer
 from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
+from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.parameters import TimespecificParameters
 
 # pylint: disable=redefined-outer-name
@@ -132,16 +135,20 @@ def _entry(name: str, params: dict[str, str] | None = None) -> AutocheckEntry:
 def test_consolidate_autochecks_of_real_hosts() -> None:
     new_services_with_nodes = [
         AutocheckServiceWithNodes(  # found on node and new
-            _entry("A"), [HostName("node"), HostName("othernode")]
+            DiscoveredItem(new=_entry("A"), previous=None),
+            [HostName("node"), HostName("othernode")],
         ),
         AutocheckServiceWithNodes(  # not found, not present (i.e. unrelated)
-            _entry("B"), [HostName("othernode"), HostName("yetanothernode")]
+            DiscoveredItem(previous=_entry("B"), new=_entry("B")),
+            [HostName("othernode"), HostName("yetanothernode")],
         ),
         AutocheckServiceWithNodes(  # found and preexistting
-            _entry("C", {"params": "new"}), [HostName("node"), HostName("node2")]
+            DiscoveredItem(new=_entry("C", {"params": "new"}), previous=None),
+            [HostName("node"), HostName("node2")],
         ),
         AutocheckServiceWithNodes(  # not found but present
-            _entry("D"), [HostName("othernode"), HostName("yetanothernode")]
+            DiscoveredItem(new=_entry("D"), previous=_entry("D")),
+            [HostName("othernode"), HostName("yetanothernode")],
         ),
     ]
     preexisting_entries = [
@@ -163,5 +170,4 @@ def test_consolidate_autochecks_of_real_hosts() -> None:
     # these are entries we expect (Note: this is status quo. Not sure why we keep service D):
     assert len(consolidated) == 3
     assert set(by_plugin) == {"A", "C", "D"}
-    # and this one should have kept the old parameters
-    assert by_plugin["C"].parameters == {"params": "old"}
+    assert by_plugin["C"].parameters == {"params": "new"}

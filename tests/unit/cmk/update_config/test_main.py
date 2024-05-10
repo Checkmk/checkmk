@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import logging
-from collections.abc import Iterator, MutableMapping
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -59,7 +61,7 @@ def test_main_calls_config_updater(
         "update_config",
         return_value=False,
     )
-    assert not main.main([])
+    assert not main.main([], ensure_site_is_stopped_callback=lambda _: None)
     mock_config_checker_call.assert_called_once()
     mock_config_udpater_call.assert_called_once()
 
@@ -69,7 +71,7 @@ class MockUpdateAction(registry.UpdateAction):
         super().__init__(name=name, title=title, sort_index=sort_index)
         self.calls = 0
 
-    def __call__(self, logger: logging.Logger, update_state: MutableMapping[str, str]) -> None:
+    def __call__(self, logger: logging.Logger) -> None:
         self.calls += 1
 
 
@@ -93,7 +95,7 @@ def test_config_updater_executes_plugins(
     mocker.patch.object(main, "update_action_registry", reg)
     mocker.patch.object(main, "_initialize_base_environment")
 
-    assert not main.main(["-v"])
+    assert not main.main(["-v"], ensure_site_is_stopped_callback=lambda _: None)
 
     output = capsys.readouterr()
     assert output.err == ""

@@ -8,7 +8,7 @@ description:
  per second of a DB2 database. You can configure limits for each type.
  Per default no limits are set.
 
- This check needs the mk_db2 plugin installed in the agent.
+ This check needs the mk_db2 plug-in installed in the agent.
 
 item:
  The DB2 instance name followed by a : and the database name, e.g. db2ilog1:REST1

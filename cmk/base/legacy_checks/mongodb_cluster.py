@@ -12,8 +12,10 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 Section = Mapping
 
@@ -337,11 +339,11 @@ def _generate_mongodb_cluster_long_output(
     if has_chunks:
         collections_info.append(
             "- Chunks: %d (Default chunk size: %s)"
-            % (total_number_of_chunks, get_bytes_human_readable(chunk_size))
+            % (total_number_of_chunks, render.bytes(chunk_size))
         )
     collections_info.append("- Docs: %d" % total_number_of_documents)
-    collections_info.append("- Size: %s" % get_bytes_human_readable(total_collection_size))
-    collections_info.append("- Storage: %s" % get_bytes_human_readable(storage_size))
+    collections_info.append("- Size: %s" % render.bytes(total_collection_size))
+    collections_info.append("- Storage: %s" % render.bytes(storage_size))
     if is_sharded:
         collections_info.append("- Balancer: %s" % balancer_status)
 
@@ -405,12 +407,12 @@ def _mongodb_cluster_get_shard_statistic_info(
     output.append(
         "- Size: %s%s"
         % (
-            get_bytes_human_readable(shard_size),
+            render.bytes(shard_size),
             " (%1.2f%%)" % estDataPercent if is_sharded else "",
         )
     )
     if is_sharded:
-        output.append("--- per chunk: " + "\u2248" + " %s" % get_bytes_human_readable(estChunkData))
+        output.append("--- per chunk: " + "\u2248" + " %s" % render.bytes(estChunkData))
     output.append("- Host: %s" % hostname)
     return "\n".join(output)
 

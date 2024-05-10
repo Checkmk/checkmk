@@ -5,6 +5,7 @@
 import os
 import pprint
 from datetime import datetime
+from typing import Literal, TypedDict
 
 from cmk.utils import store
 
@@ -16,7 +17,32 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.utils import multisite_dir
 
 
-def update_user_custom_attrs(now: datetime):  # type: ignore[no-untyped-def]
+class CustomAttrSpec(TypedDict):
+    type: Literal["TextAscii"]
+    name: str
+    title: str
+    topic: str
+    help: str
+    # None case should be cleaned up to False
+    show_in_table: bool | None
+    # None case should be cleaned up to False
+    add_custom_macro: bool | None
+
+
+class CustomHostAttrSpec(CustomAttrSpec): ...
+
+
+class CustomUserAttrSpec(CustomAttrSpec):
+    # None case should be cleaned up to False
+    user_editable: bool | None
+
+
+class CustomAttrSpecs(TypedDict):
+    user: list[CustomUserAttrSpec]
+    host: list[CustomHostAttrSpec]
+
+
+def update_user_custom_attrs(now: datetime) -> None:
     userdb.update_config_based_user_attributes()
     userdb.rewrite_users(now)
 
@@ -28,7 +54,7 @@ def update_host_custom_attrs():
     tree.root_folder().rewrite_hosts_files()
 
 
-def load_custom_attrs_from_mk_file(lock):
+def load_custom_attrs_from_mk_file(lock: bool) -> CustomAttrSpecs:
     filename = os.path.join(multisite_dir(), "custom_attrs.mk")
     vars_ = store.load_mk_file(
         filename,
@@ -39,22 +65,25 @@ def load_custom_attrs_from_mk_file(lock):
         lock=lock,
     )
 
-    attrs = {}
-    for what in ["user", "host"]:
-        attributes = vars_.get("wato_%s_attrs" % what, [])
-        assert isinstance(attributes, list)
-        if what == "host":
-            attributes = transform_pre_16_host_topics(attributes)
-        attrs[what] = attributes
-    return attrs
+    return CustomAttrSpecs(
+        {
+            # Next step: Parse data to get rid of the annotations
+            "user": vars_.get("wato_user_attrs", []),  # type: ignore[typeddict-item]
+            "host": transform_pre_16_host_topics(vars_.get("wato_host_attrs", [])),  # type: ignore[arg-type,typeddict-item]
+        }
+    )
 
 
-def save_custom_attrs_to_mk_file(attrs):
+def save_custom_attrs_to_mk_file(attrs: CustomAttrSpecs) -> None:
     output = wato_fileheader()
-    for what in ["user", "host"]:
-        if what in attrs and len(attrs[what]) > 0:
-            output += f"if type(wato_{what}_attrs) != list:\n    wato_{what}_attrs = []\n"
-            output += f"wato_{what}_attrs += {pprint.pformat(attrs[what])}\n\n"
+
+    if attrs["user"]:
+        output += "if type(wato_user_attrs) != list:\n    wato_user_attrs = []\n"
+        output += f"wato_user_attrs += {pprint.pformat(attrs['user'])}\n\n"
+
+    if attrs["host"]:
+        output += "if type(wato_host_attrs) != list:\n    wato_host_attrs = []\n"
+        output += f"wato_host_attrs += {pprint.pformat(attrs['host'])}\n\n"
 
     store.mkdir(multisite_dir())
     store.save_text_to_file(multisite_dir() + "custom_attrs.mk", output)

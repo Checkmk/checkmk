@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based import veeam_cdp_jobs
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, type_defs
@@ -17,6 +19,7 @@ DATA = [
     ["Test 3", "1632216559.87806", "Stopped"],
     ["Test 4", "null", "Disabled"],
     ["Test 5", "1632216559,73749", "Running"],
+    ["Test 6", "1632217660", "Running"],
 ]
 
 
@@ -31,6 +34,7 @@ DATA = [
                 Service(item="Test 3"),
                 Service(item="Test 4"),
                 Service(item="Test 5"),
+                Service(item="Test 6"),
             ],
         ),
     ],
@@ -96,6 +100,19 @@ def test_veeam_cdp_jobs_discovery(
                 Result(state=State.OK, summary="Time since last CDP Run: 1 minute 40 seconds"),
             ],
         ),
+        pytest.param(
+            "Test 6",
+            veeam_cdp_jobs.CheckParams(age=(108000, 172800)),
+            DATA,
+            [
+                Result(state=State.OK, summary="State: Running"),
+                Result(
+                    state=State.WARN,
+                    summary="The timestamp of the file is in the future. Please investigate your host times",
+                ),
+            ],
+            id="last sync time from the future",
+        ),
     ],
 )
 def test_veeam_cdp_jobs_check(
@@ -104,6 +121,6 @@ def test_veeam_cdp_jobs_check(
     data: type_defs.StringTable,
     result: CheckResult,
 ) -> None:
-    with on_time(1632216660, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1632216660, tz=ZoneInfo("UTC"))):
         section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
         assert list(veeam_cdp_jobs.check_veeam_cdp_jobs(item, params, section)) == result

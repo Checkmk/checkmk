@@ -6,12 +6,15 @@
 #include <bitset>
 #include <cstddef>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "livestatus/StringUtils.h"
+
+using namespace std::string_view_literals;
 
 TEST(StringUtilTest, JoinTest) {
     using v = std::vector<std::string>;
@@ -120,20 +123,6 @@ TEST(StringUtilTest, ReplaceAllTest) {
               mk::replace_all("very lovely test we have", "xy", "hurz"));
 }
 
-TEST(StringUtilTest, FromMultiLine) {
-    EXPECT_EQ("", mk::from_multi_line(""));
-    EXPECT_EQ("foo bar", mk::from_multi_line("foo bar"));
-    EXPECT_EQ("\\nfoo\\nbar\\n", mk::from_multi_line("\nfoo\nbar\n"));
-    EXPECT_EQ("\\nfoo\\nbar\\n", mk::from_multi_line("\\nfoo\\nbar\\n"));
-}
-
-TEST(StringUtilTest, ToMultiLine) {
-    EXPECT_EQ("", mk::to_multi_line(""));
-    EXPECT_EQ("foo bar", mk::to_multi_line("foo bar"));
-    EXPECT_EQ("\nfoo\nbar\n", mk::to_multi_line("\nfoo\nbar\n"));
-    EXPECT_EQ("\nfoo\nbar\n", mk::to_multi_line("\\nfoo\\nbar\\n"));
-}
-
 namespace {
 template <size_t N>
 std::string format_bitset(const std::bitset<N> &bs) {
@@ -235,3 +224,69 @@ INSTANTIATE_TEST_SUITE_P(
         "\xF1\xBF\xBF\xBF", "\xF2\x80\x80\x80", "\xF2\xBF\xBF\xBF",
         "\xF3\x80\x80\x80", "\xF3\xBF\xBF\xBF", "\xF4\x80\x80\x80",
         "\xF4\x8F\xBF\xBF"));
+
+TEST(StringUtilTest, SkipWhitespaceEmpty) {
+    auto str = ""sv;
+    mk::skip_whitespace(str);
+    EXPECT_EQ(""sv, str);
+}
+
+TEST(StringUtilTest, SkipWhitespaceOnlyWhitespace) {
+    auto str = "  \n  \t"sv;
+    mk::skip_whitespace(str);
+    EXPECT_EQ(""sv, str);
+}
+
+TEST(StringUtilTest, SkipWhitespaceLeadingWhitespace) {
+    auto str = "  foo "sv;
+    mk::skip_whitespace(str);
+    EXPECT_EQ("foo "sv, str);
+}
+
+TEST(StringUtilTest, NextArgumentEmpty) {
+    auto str = ""sv;
+    EXPECT_THROW(mk::next_argument(str), std::runtime_error);
+}
+
+TEST(StringUtilTest, NextArgumentOnlyWhitespace) {
+    auto str = "  \n  "sv;
+    EXPECT_THROW(mk::next_argument(str), std::runtime_error);
+}
+
+TEST(StringUtilTest, NextArgumentNonQuoted) {
+    auto str = "  foo bar"sv;
+    auto arg = mk::next_argument(str);
+    EXPECT_EQ("foo"sv, arg);
+    EXPECT_EQ(" bar"sv, str);
+}
+
+TEST(StringUtilTest, NextArgumentQuoted) {
+    auto str = "  'foo' bar"sv;
+    auto arg = mk::next_argument(str);
+    EXPECT_EQ("foo"sv, arg);
+    EXPECT_EQ(" bar"sv, str);
+}
+
+TEST(StringUtilTest, NextArgumentQuoteAtEnd) {
+    auto str = "  'foo'"sv;
+    auto arg = mk::next_argument(str);
+    EXPECT_EQ("foo"sv, arg);
+    EXPECT_EQ(""sv, str);
+}
+
+TEST(StringUtilTest, NextArgumentEscapedQuotes) {
+    auto str = "  'foo''s blah''' bar"sv;
+    auto arg = mk::next_argument(str);
+    EXPECT_EQ("foo's blah'"sv, arg);
+    EXPECT_EQ(" bar"sv, str);
+}
+
+TEST(StringUtilTest, NextArgumentMissingQuote) {
+    auto str = "  'foo bar"sv;
+    EXPECT_THROW(mk::next_argument(str), std::runtime_error);
+}
+
+TEST(StringUtilTest, NextArgumentMissingQuote2) {
+    auto str = "  'foo''s blah'' bar"sv;
+    EXPECT_THROW(mk::next_argument(str), std::runtime_error);
+}

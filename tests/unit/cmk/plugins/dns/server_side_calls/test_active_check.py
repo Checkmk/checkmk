@@ -8,30 +8,31 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.dns.server_side_calls.active_check import commands_function, Params
-from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 
 
 @pytest.mark.parametrize(
     "params, expected_command",
     [
         pytest.param(
-            {},
+            {"hostname": "hostname"},
             ActiveCheckCommand(
-                service_description="DNS check",
-                command_arguments=["-H", "check", "-s", "1.2.3.4", "-L"],
+                service_description="DNS hostname",
+                command_arguments=["-H", "hostname", "-s", "1.2.3.4", "-L"],
             ),
             id="No params",
         ),
         pytest.param(
-            {"server": "default DNS server", "timeout": 1},
+            {"hostname": "hostname", "server": "default DNS server", "timeout": 1},
             ActiveCheckCommand(
-                service_description="DNS check",
-                command_arguments=["-H", "check", "-L", "-t", "1"],
+                service_description="DNS hostname",
+                command_arguments=["-H", "hostname", "-L", "-t", "1"],
             ),
             id="Default DNS server",
         ),
         pytest.param(
             {
+                "hostname": "hostname",
                 "name": "check_name",
                 "server": "some_dns_server",
                 "expected_addresses_list": ("2.4.5.6", "2.4.5.7"),
@@ -43,7 +44,7 @@ from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFa
                 service_description="check_name",
                 command_arguments=[
                     "-H",
-                    "check",
+                    "hostname",
                     "-s",
                     "some_dns_server",
                     "-L",
@@ -64,6 +65,7 @@ from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFa
         ),
         pytest.param(
             {
+                "hostname": "hostname",
                 "expected_addresses_list": ["1.2.3.4", "C0FE::FE11"],
                 "server": "127.0.0.53",
                 "timeout": 10,
@@ -71,10 +73,10 @@ from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFa
                 "expected_authority": True,
             },
             ActiveCheckCommand(
-                service_description="DNS check",
+                service_description="DNS hostname",
                 command_arguments=[
                     "-H",
-                    "check",
+                    "hostname",
                     "-s",
                     "127.0.0.53",
                     "-L",
@@ -95,15 +97,16 @@ from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFa
         ),
         pytest.param(
             {
+                "hostname": "hostname",
                 "server": None,
                 "expect_all_addresses": False,
                 "expected_addresses_list": ["1.2.3.4", "5.6.7.8"],
             },
             ActiveCheckCommand(
-                service_description="DNS check",
+                service_description="DNS hostname",
                 command_arguments=[
                     "-H",
-                    "check",
+                    "hostname",
                     "-s",
                     "1.2.3.4",
                     "-a",
@@ -125,10 +128,7 @@ def test_commands_function(
             Params.model_validate(params),
             HostConfig(
                 name="check",
-                address="1.2.3.4",
-                alias="host",
-                ip_family=IPAddressFamily.IPV4,
+                ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
-            {},
         )
     ) == [expected_command]

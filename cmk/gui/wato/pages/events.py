@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Literal
+from collections.abc import Callable, Sequence
+from typing import Generic, Literal, TypeVar
 
+from cmk.utils.notify_types import EventRule
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.config import active_config
@@ -32,8 +34,10 @@ from .._check_plugin_selection import CheckPluginSelection
 from .._group_selection import sorted_contact_group_choices, sorted_service_group_choices
 from ._match_conditions import common_host_rule_match_conditions, site_rule_match_condition
 
+_T_EventSpec = TypeVar("_T_EventSpec", bound=EventRule | dict)
 
-class ABCEventsMode(WatoMode, abc.ABC):
+
+class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):
@@ -239,10 +243,10 @@ class ABCEventsMode(WatoMode, abc.ABC):
             (
                 "match_plugin_output",
                 RegExp(
-                    title=_("Match check plugin output"),
+                    title=_("Match check plug-in output"),
                     help=_(
                         "This text is a regular expression that is being searched in the output "
-                        "of the check plugins that produced the alert. It is not a prefix but an infix match."
+                        "of the check plug-ins that produced the alert. It is not a prefix but an infix match."
                     ),
                     size=40,
                     mode=RegExp.prefix,
@@ -315,26 +319,31 @@ class ABCEventsMode(WatoMode, abc.ABC):
         ]
 
     @abc.abstractmethod
-    def _add_change(self, log_what, log_text):
+    def _add_change(self, log_what: str, log_text: str) -> None:
         raise NotImplementedError()
 
-    def _generic_rule_list_actions(  # type: ignore[no-untyped-def]
-        self, rules, what, what_title, save_rules
+    def _generic_rule_list_actions(
+        self,
+        rules: Sequence[_T_EventSpec],
+        what: Literal["alert_handler", "notification"],
+        what_title: str,
+        save_rules: Callable[[list[_T_EventSpec]], None],
     ) -> None:
+        edit_rules = list(rules)
         if request.has_var("_delete"):
             nr = request.get_integer_input_mandatory("_delete")
             self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
-            del rules[nr]
-            save_rules(rules)
+            del edit_rules[nr]
+            save_rules(edit_rules)
 
         elif request.has_var("_move"):
             if transactions.check_transaction():
                 from_pos = request.get_integer_input_mandatory("_move")
                 to_pos = request.get_integer_input_mandatory("_index")
-                rule = rules[from_pos]
-                del rules[from_pos]  # make to_pos now match!
-                rules[to_pos:to_pos] = [rule]
-                save_rules(rules)
+                rule = edit_rules[from_pos]
+                del edit_rules[from_pos]  # make to_pos now match!
+                edit_rules[to_pos:to_pos] = [rule]
+                save_rules(edit_rules)
                 self._add_change(
                     what + "-move-rule", _("Changed position of %s %d") % (what_title, from_pos)
                 )

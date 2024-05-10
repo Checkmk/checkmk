@@ -1,0 +1,4 @@
+{
+    "command_line": "./run --setup-environment --clean --all",
+    "maintainers": ["team-main@checkmk.com"]
+}

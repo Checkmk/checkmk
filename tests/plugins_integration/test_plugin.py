@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import textwrap
 from contextlib import nullcontext
 
 import pytest
@@ -27,9 +28,11 @@ def test_plugin(
     tmp_path_factory: pytest.TempPathFactory,
     pytestconfig: pytest.Config,
 ) -> None:
-    with setup_host(test_site, host_name) if not pytestconfig.getoption(
-        name="--bulk-mode"
-    ) else nullcontext():
+    with (
+        setup_host(test_site, host_name)
+        if not pytestconfig.getoption(name="--bulk-mode")
+        else nullcontext()
+    ):
         disk_dump = read_disk_dump(host_name)
         dump_type = "snmp" if disk_dump[0] == "." else "agent"
         if dump_type == "agent":
@@ -40,4 +43,7 @@ def test_plugin(
         tmp_path = tmp_path_factory.mktemp("responses")
         logger.info(tmp_path)
         diffing_checks = process_check_output(test_site, host_name, tmp_path)
-        assert not diffing_checks, f"Check output mismatch for host {host_name}!"
+        err_msg = f"Check output mismatch for host {host_name}:\n" + "".join(
+            [textwrap.dedent(f"{check}:\n" + diffing_checks[check]) for check in diffing_checks]
+        )
+        assert not diffing_checks, err_msg

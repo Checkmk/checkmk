@@ -6,36 +6,25 @@ import re
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2 import (
-    check_levels_fixed,
-    check_levels_predictive,
-    get_average,
-    IgnoreResultsError,
-    Metric,
-    render,
-)
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v2 import CheckResult, get_average, IgnoreResultsError, Metric, render
 
 
-class CPUInfo(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "_CPUInfo",
-        [
-            ("name", str),
-            ("user", float),
-            ("nice", float),
-            ("system", float),
-            ("idle", float),
-            ("iowait", float),
-            ("irq", float),
-            ("softirq", float),
-            ("steal", float),
-            ("guest", float),
-            ("guest_nice", float),
-        ],
-    )
-):
+class _CPUInfo(NamedTuple):
+    name: str
+    user: float
+    nice: float
+    system: float
+    idle: float
+    iowait: float
+    irq: float
+    softirq: float
+    steal: float
+    guest: float
+    guest_nice: float
 
+
+class CPUInfo(_CPUInfo):
     """Handle CPU measurements
 
     name: name of core
@@ -144,7 +133,7 @@ def check_cpu_util(
         yield Metric(
             "util",
             util,
-            levels=levels if isinstance(levels, tuple) else None,  # type: ignore[arg-type]
+            levels=levels if isinstance(levels, tuple) else None,
             boundaries=(0, perf_max),
         )
         value_checked = get_average(
@@ -161,20 +150,24 @@ def check_cpu_util(
         metric_name = "util"
         label = "Total CPU"
 
-    yield from check_levels_predictive(
-        value_checked,
-        metric_name=metric_name,
-        levels=levels,
-        render_func=render.percent,
-        label=label,
-        boundaries=(0, None),
-    ) if isinstance(levels, dict) else check_levels_fixed(
-        value_checked,
-        metric_name=metric_name,
-        levels_upper=levels,
-        render_func=render.percent,
-        label=label,
-        boundaries=(0, None),
+    yield from (
+        check_levels_predictive(
+            value_checked,
+            metric_name=metric_name,
+            levels=levels,
+            render_func=render.percent,
+            label=label,
+            boundaries=(0, None),
+        )
+        if isinstance(levels, dict)
+        else check_levels(
+            value_checked,
+            metric_name=metric_name,
+            levels_upper=levels,
+            render_func=render.percent,
+            label=label,
+            boundaries=(0, None),
+        )
     )
 
     if "core_util_time_total" in params:
@@ -238,21 +231,21 @@ def check_cpu_util_unix(
         guest_perc = cpu_info.guest
         util_total_perc = cpu_info.util_total
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         user_perc,
         metric_name="user",
         render_func=render.percent,
         label="User",
         notice_only=True,
     )
-    yield from check_levels_fixed(
+    yield from check_levels(
         system_perc,
         metric_name="system",
         render_func=render.percent,
         label="System",
         notice_only=True,
     )
-    yield from check_levels_fixed(
+    yield from check_levels(
         wait_perc,
         metric_name="wait",
         levels_upper=params.get("iowait"),
@@ -266,7 +259,7 @@ def check_cpu_util_unix(
     # since the system boot. This avoids silly output in systems
     # where these counters are not being used
     if cpu_info.steal:
-        yield from check_levels_fixed(
+        yield from check_levels(
             steal_perc,
             metric_name="steal",
             levels_upper=params.get("steal"),
@@ -276,7 +269,7 @@ def check_cpu_util_unix(
         )
 
     if cpu_info.guest:
-        yield from check_levels_fixed(
+        yield from check_levels(
             guest_perc,
             metric_name="guest",
             render_func=render.percent,
@@ -310,7 +303,7 @@ def _check_single_core_util(
     levels: tuple[float, float] | None,
     label: str,
 ) -> CheckResult:
-    yield from check_levels_fixed(
+    yield from check_levels(
         util,
         levels_upper=levels,
         render_func=render.percent,
@@ -417,7 +410,7 @@ def cpu_util_time(
     if timestamp == this_time:
         return
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         this_time - timestamp,
         levels_upper=levels,
         render_func=render.timespan,

@@ -18,7 +18,7 @@ description:
 
  You can then define levels on the per-second amount of the statements.
 
- This check relies on data reported by the agent-side plugin {mk_postgres}
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
 
 item:
  Name of the category and the name of the database

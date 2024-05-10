@@ -7,9 +7,7 @@ from __future__ import annotations
 
 import urllib.parse
 from collections.abc import Callable, Mapping
-from typing import Any, cast, Self
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Self, TypedDict
 
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -106,7 +104,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
                         2.5,
                         "default_topic",
                         TextInput(
-                            title=_("Default Topic") + "<sup>*</sup>",
+                            title=_("Default topic") + "<sup>*</sup>",
                             size=50,
                             allow_empty=False,
                         ),
@@ -119,6 +117,8 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
                             # is exactly the thing we want. But we want to store the data as dict. This is a
                             # nasty hack to use the transform by default. Better would be to make Dict render
                             # the same way the tuple is rendered.
+                            title=_("Bookmarks"),
+                            add_label=_("Add bookmark"),
                             valuespec=Transform(
                                 valuespec=Tuple(
                                     elements=[
@@ -145,7 +145,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
                                 ),
                                 to_valuespec=bookmark_config_to_vs,
                                 from_valuespec=bookmark_vs_to_config,
-                            )
+                            ),
                         ),
                     ),
                 ],
@@ -257,7 +257,7 @@ class Bookmarks(SidebarSnapin):
     @classmethod
     def description(cls) -> str:
         return _(
-            "A simple and yet practical snapin allowing to create "
+            "A simple and yet practical snap-in allowing to create "
             "bookmarks to views and other content in the main frame"
         )
 
@@ -269,7 +269,6 @@ class Bookmarks(SidebarSnapin):
                 isopen=False,
                 title=topic,
                 indent=False,
-                icon="foldable_sidebar",
             ):
                 for bookmark in bookmarks:
                     icon = bookmark["icon"]
@@ -280,7 +279,7 @@ class Bookmarks(SidebarSnapin):
 
         begin_footnote_links()
         link(
-            _("Add Bookmark"),
+            _("Add bookmark"),
             "javascript:void(0)",
             onclick="cmk.sidebar.add_bookmark()",
         )

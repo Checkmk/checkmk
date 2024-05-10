@@ -726,3 +726,35 @@ def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
         assert "customer" not in r.json["extensions"]["basic_settings"]
         config["basic_settings"].update({"customer": "provider"})
         clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(400)
+
+
+def test_validation_layer_min_config(clients: ClientRegistry) -> None:
+    r: SiteConfig = {
+        "basic_settings": {
+            "site_id": "required_site_id",
+            "alias": "required_site_alias",
+        },
+        "status_connection": {
+            "connection": {
+                "socket_type": "unix",
+                "path": "/path/to/socket",
+            },
+            "connect_timeout": 5,
+            "proxy": {"use_livestatus_daemon": "direct"},
+            "status_host": {"status_host_set": "disabled"},
+        },
+        "configuration_connection": {
+            "enable_replication": True,
+            "url_of_remote_site": "http://localhost/heute_remote_site_id_1/check_mk/",
+            "disable_remote_configuration": True,
+            "ignore_tls_errors": False,
+            "direct_login_to_web_gui_allowed": True,
+            "user_sync": {"sync_with_ldap_connections": "all"},
+            "replicate_event_console": True,
+            "replicate_extensions": True,
+        },
+    }
+    if version.edition() is version.Edition.CME:
+        r["basic_settings"]["customer"] = "provider"
+
+    clients.SiteManagement.create(site_config=r)

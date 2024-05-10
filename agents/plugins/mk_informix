@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 # Informix
 # Make ENV-VARs avail for subshells
@@ -23,6 +23,60 @@ set -a
 #   |                   |_| |_|\___|_| .__/ \___|_|                        |
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
+
+# BEGIN COMMON PLUGIN CODE
+
+# check that no users other than root can change the file
+only_root_can_modify() {
+    permissions=$1
+    owner=$2
+    group=$3
+
+    group_write_perm=$(echo "$permissions" | cut -c 6)
+    other_write_perm=$(echo "$permissions" | cut -c 9)
+
+    if [ "$owner" != "root" ] || [ "$other_write_perm" != "-" ]; then
+        return 1
+    fi
+
+    [ "$group" = "root" ] || [ "$group_write_perm" = "-" ]
+}
+
+get_binary_owner() {
+    BINARY_PATH=$1
+    stat -c '%U' "${BINARY_PATH}"
+}
+
+get_binary_execution_mode() {
+    BINARY_PATH=$1
+    BINARY_USER=$2
+
+    # if the executable belongs to someone besides root, do not execute it as root
+    if needs_user_switch_before_executing "$BINARY_PATH"; then
+        echo "su ${BINARY_USER} -c"
+        return
+    fi
+    echo "bash -c"
+}
+
+needs_user_switch_before_executing() {
+    BINARY_PATH=$1
+
+    [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"
+}
+
+# END COMMON PLUGIN CODE
+
+set_env() {
+    # set environment variables given in the form VARNAME1=value1;VARNAME2=value2;...
+    while IFS=';' read -ra parts; do
+        for part in "${parts[@]}"; do
+            var_name="${part%%=*}"
+            var_value="${part#*=}"
+            export "$var_name"="$var_value"
+        done
+    done <<<"$1"
+}
 
 do_check() {
     # $1:section, $2:excludelist
@@ -77,10 +131,10 @@ all_sections="sessions locks tabextents dbspaces logusage"
 informix_status() {
     echo "<<<informix_status:sep(58)>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
-    "$INFORMIXDIR/bin/onstat" - >/dev/null 2>&1
+    $EXECUTION_MODE "\"$INFORMIXDIR\"/bin/onstat -" >/dev/null 2>&1
     state=$?
     echo "Status:"$state
-    "$INFORMIXDIR/bin/onstat" -g dis
+    $EXECUTION_MODE "\"$INFORMIXDIR\"/bin/onstat -g dis"
     port=$(grep "$INFORMIXSERVER" /etc/services)
     echo "PORT:$port"
 }
@@ -214,13 +268,16 @@ fi
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+INFORMIXDIR=${ONINIT_PATH%/bin*}
+
+if [ ! -f "$INFORMIXDIR/bin/onstat" ]; then
+    exit 1
+fi
+
+EXECUTION_MODE="$(get_binary_execution_mode "$INFORMIXDIR/bin/onstat" "$(get_binary_owner "$INFORMIXDIR/bin/onstat")")"
+
 for IDSENV in $(
-    # FIXME: This is supressed, so we can enable the shellcheck.
-    # I think the shellchecker is right here: INFORMIXDIR will not
-    # be available in the for-loops body.
-    # shellcheck disable=SC2030
-    export INFORMIXDIR=${ONINIT_PATH%/bin*}
-    "$INFORMIXDIR/bin/onstat" -g dis |
+    $EXECUTION_MODE "$INFORMIXDIR/bin/onstat -g dis" |
         grep -E '^Server[         ]*:|^Server Number[     ]*:|^INFORMIX|^SQLHOSTS|^ONCONFIG' |
         sed -e 's/Server Number/SERVERNUM/' \
             -e 's/Server/INFORMIXSERVER/' \
@@ -231,13 +288,12 @@ for IDSENV in $(
 
 ); do
     (
-        # Set environment
-        eval "$IDSENV"
+        set_env "$IDSENV"
         # FIXME: This is supressed, so we can enable the shellcheck.
         # I think the shellchecker is right here: INFORMIXDIR will not
         # be available in the for-loops body.
         # shellcheck disable=SC2031
-        PATH="$INFORMIXDIR/bin:$PATH"
+        PATH="$PATH:$INFORMIXDIR/bin"
 
         # try to set them via 'onstat -g env' otherwise
         # DB HAS TO BE RUNNING

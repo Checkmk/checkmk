@@ -10,7 +10,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import auto, Enum
+from pathlib import Path
 from typing import NamedTuple
+
+from cmk.utils import store
 
 
 class LicenseState(Enum):
@@ -126,5 +129,14 @@ class LicensingHandler(abc.ABC):
         raise NotImplementedError()
 
     @property
-    def remaining_trial_time(self) -> RemainingTrialTime:
+    def remaining_trial_time_rounded(self) -> RemainingTrialTime:
         raise NotImplementedError()
+
+    def persist_licensed_state(self, file_path: Path) -> None:
+        write_licensed_state(file_path, self.state)
+
+
+def write_licensed_state(file_path: Path, state: LicenseState) -> None:
+    state_repr = 1 if state is LicenseState.LICENSED else 0
+    with store.locked(file_path):
+        file_path.write_text(str(state_repr))

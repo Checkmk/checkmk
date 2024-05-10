@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
+from typing import TypedDict
+
 import pytest
-from typing_extensions import Literal, TypedDict
 
 from cmk.base.plugins.agent_based import lnx_bonding
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
@@ -58,57 +60,74 @@ def test_parse_failover() -> None:
     }
 
 
-mode_option = Literal[
-    "balance-rr",
-    "active-backup",
-    "balance-xor",
-    "broadcast",
-    "802.3ad",
-    "balance-tlb",
-    "balance-alb",
-]
-
-
-test_param_type = tuple[mode_option, Literal[0, 1, 2, 3]]
+class BondingModeConfig(TypedDict):
+    mode_0: int
+    mode_1: int
+    mode_2: int
+    mode_3: int
+    mode_4: int
+    mode_5: int
+    mode_6: int
 
 
 class Params(TypedDict):
     expect_active: str
     ieee_302_3ad_agg_id_missmatch_state: int
-    expected_bonding_mode_and_state: test_param_type
-
-
-not_expected_modes = [
-    ("balance-rr", 0),
-    ("balance-xor", 1),
-    ("broadcast", 2),
-    ("802.3ad", 3),
-    ("balance-tlb", 0),
-    ("balance-alb", 1),
-]
+    bonding_mode_states: BondingModeConfig
 
 
 @pytest.fixture(name="params")
-def default_params() -> Params:
+def configured_params() -> Params:
     params: Params = {
         "expect_active": "ignore",
         "ieee_302_3ad_agg_id_missmatch_state": 1,
-        "expected_bonding_mode_and_state": ("active-backup", 1),
+        "bonding_mode_states": {
+            "mode_0": 0,
+            "mode_1": 1,
+            "mode_2": 2,
+            "mode_3": 3,
+            "mode_4": 0,
+            "mode_5": 1,
+            "mode_6": 2,
+        },
     }
     return params
 
 
-@pytest.mark.parametrize("mode", not_expected_modes)
-def test_mode_not_as_expected(mode: test_param_type, params: Params) -> None:
-    params["expected_bonding_mode_and_state"] = mode
-    section: bonding.Section = lnx_bonding.parse_lnx_bonding(DATA_FAILOVER)
+def data_for_test() -> Iterator[tuple[str, str]]:
+    yield "mode_0", "round-robin"
+    yield "mode_1", "active-backup"
+    yield "mode_2", "xor"
+    yield "mode_3", "broadcast"
+    yield "mode_4", "802.3ad"
+    yield "mode_5", "transmit"
+    yield "mode_6", "adaptive"
+
+
+@pytest.mark.parametrize("mode, mode_str", data_for_test())
+def test_mode_matches_expected_state(mode: str, mode_str: str, params: Params) -> None:
+    COPY_OF_DATA = DATA_FAILOVER[:]
+    COPY_OF_DATA[2] = ["Bonding Mode", f"({mode_str})"]
+    section: bonding.Section = lnx_bonding.parse_lnx_bonding(COPY_OF_DATA)
     check_result = list(check_bonding(item="bond0", params=params, section=section))
-    assert check_result[1] == Result(
-        state=State(mode[1]), summary=f"Mode: active-backup (expected mode: {mode[0]})"
+    expected_state = params["bonding_mode_states"][mode]  # type: ignore[literal-required]
+
+    summary = f"Mode: {mode_str}"
+    if State(expected_state) != State.OK:
+        summary += " (not allowed)"
+
+    assert check_result[1] == Result(state=State(expected_state), summary=summary)
+
+
+def test_bonding_mode_states_not_configured(params: Params) -> None:
+    section: bonding.Section = lnx_bonding.parse_lnx_bonding(DATA_FAILOVER)
+    check_result = list(
+        check_bonding(
+            item="bond0",
+            params={k: v for k, v in params.items() if k != "bonding_mode_states"},
+            section=section,
+        )
     )
-
-
-def test_mode_as_expected(params: Params) -> None:
-    section: bonding.Section = lnx_bonding.parse_lnx_bonding(DATA_FAILOVER)
-    check_result = list(check_bonding(item="bond0", params=params, section=section))
-    assert check_result[1] == Result(state=State(0), summary="Mode: active-backup")
+    assert check_result[1] == Result(
+        state=State(0), summary="Mode: fault-tolerance (active-backup)"
+    )

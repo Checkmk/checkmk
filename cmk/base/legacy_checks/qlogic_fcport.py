@@ -17,8 +17,8 @@ from cmk.agent_based.v2 import (
     render,
     SNMPTree,
     startswith,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import StringTable
 
 # settings for inventory: which ports should be inventorized
 qlogic_fcport_inventory_opstates = ["1", "3"]

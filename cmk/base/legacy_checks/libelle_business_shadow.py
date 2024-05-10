@@ -10,7 +10,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 #   .--Example output from agent-------------------------------------------.
 # <<<libelle_business_shadow:sep(58)>>>

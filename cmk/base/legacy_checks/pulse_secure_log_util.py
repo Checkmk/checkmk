@@ -9,8 +9,7 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 import cmk.plugins.lib.pulse_secure as pulse_secure
-from cmk.agent_based.v2 import render, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 
 Section = Mapping[str, int]
 
@@ -26,14 +25,14 @@ def discover_pulse_secure_log_util(section: Section) -> Iterable[tuple[None, dic
         yield None, {}
 
 
-def check_pulse_secure_log_util(item, params, parsed):
+def check_pulse_secure_log_util(_no_item, _no_params, parsed):
     if not parsed:
         return
 
     yield check_levels(
         parsed[METRIC_PULSE_SECURE_LOG],
         METRIC_PULSE_SECURE_LOG,
-        params,
+        None,
         infoname="Percentage of log file used",
         human_readable_func=render.percent,
     )

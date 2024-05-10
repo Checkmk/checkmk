@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 ###################################################
 # plugin to retrieve data from tinkerforge devices.
@@ -117,21 +117,27 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
 
 
 def print_ambient_light(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light import BrickletAmbientLight  # type: ignore[import]
+    from tinkerforge.bricklet_ambient_light import (  # type: ignore[import-not-found]
+        BrickletAmbientLight,
+    )
 
     br = BrickletAmbientLight(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_ambient_light_v2(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2  # type: ignore[import]
+    from tinkerforge.bricklet_ambient_light_v2 import (  # type: ignore[import-not-found]
+        BrickletAmbientLightV2,
+    )
 
     br = BrickletAmbientLightV2(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_temperature(conn, settings, uid):
-    from tinkerforge.bricklet_temperature import BrickletTemperature  # type: ignore[import]
+    from tinkerforge.bricklet_temperature import (  # type: ignore[import-not-found]
+        BrickletTemperature,
+    )
 
     br = BrickletTemperature(uid, conn)
     print_generic(
@@ -140,7 +146,7 @@ def print_temperature(conn, settings, uid):
 
 
 def print_temperature_ext(conn, settings, uid):
-    from tinkerforge.bricklet_ptc import BrickletPTC  # type: ignore[import]
+    from tinkerforge.bricklet_ptc import BrickletPTC  # type: ignore[import-not-found]
 
     br = BrickletPTC(uid, conn)
     print_generic(
@@ -154,14 +160,14 @@ def print_temperature_ext(conn, settings, uid):
 
 
 def print_humidity(conn, settings, uid):
-    from tinkerforge.bricklet_humidity import BrickletHumidity  # type: ignore[import]
+    from tinkerforge.bricklet_humidity import BrickletHumidity  # type: ignore[import-not-found]
 
     br = BrickletHumidity(uid, conn)
     print_generic(settings, "humidity", br.get_identity(), 0.1, "RH", br.get_humidity())
 
 
 def print_master(conn, settings, uid):
-    from tinkerforge.brick_master import BrickMaster  # type: ignore[import]
+    from tinkerforge.brick_master import BrickMaster  # type: ignore[import-not-found]
 
     br = BrickMaster(uid, conn)
     print_generic(
@@ -177,7 +183,9 @@ def print_master(conn, settings, uid):
 
 
 def print_motion_detector(conn, settings, uid):
-    from tinkerforge.bricklet_motion_detector import BrickletMotionDetector  # type: ignore[import]
+    from tinkerforge.bricklet_motion_detector import (  # type: ignore[import-not-found]
+        BrickletMotionDetector,
+    )
 
     br = BrickletMotionDetector(uid, conn)
     print_generic(settings, "motion", br.get_identity(), 1.0, "", br.get_motion_detected())
@@ -212,7 +220,7 @@ def display_on_segment(conn, settings, text):
         "\N{DEGREE SIGN}": 0x63,
     }
 
-    from tinkerforge.bricklet_segment_display_4x7 import (  # type: ignore[import]
+    from tinkerforge.bricklet_segment_display_4x7 import (  # type: ignore[import-not-found]
         BrickletSegmentDisplay4x7,
     )
 
@@ -340,7 +348,7 @@ def main():
         return install()
 
     try:
-        from tinkerforge.ip_connection import IPConnection  # type: ignore[import]
+        from tinkerforge.ip_connection import IPConnection  # type: ignore[import-not-found]
     except ImportError:
         sys.stdout.write("<<<tinkerforge:sep(44)>>>\n")
         sys.stdout.write("master,0.0.0,tinkerforge api isn't installed\n")

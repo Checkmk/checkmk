@@ -12,7 +12,7 @@ from cmk.gui.utils.speaklater import LazyString
 
 from cmk.graphing.v1 import metrics, perfometers
 
-from ._parser import parse_color, parse_unit
+from ._parser import parse_color, parse_or_add_unit
 from ._type_defs import TranslatedMetric, UnitInfo
 
 
@@ -173,7 +173,7 @@ def evaluate_quantity(
         case metrics.Constant():
             return EvaluatedQuantity(
                 str(quantity.title),
-                parse_unit(quantity.unit),
+                parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 quantity.value,
             )
@@ -229,7 +229,7 @@ def evaluate_quantity(
                 product *= evaluate_quantity(f, translated_metrics).value
             return EvaluatedQuantity(
                 str(quantity.title),
-                parse_unit(quantity.unit),
+                parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 product,
             )
@@ -245,7 +245,7 @@ def evaluate_quantity(
         case metrics.Fraction():
             return EvaluatedQuantity(
                 str(quantity.title),
-                parse_unit(quantity.unit),
+                parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 (
                     evaluate_quantity(quantity.dividend, translated_metrics).value

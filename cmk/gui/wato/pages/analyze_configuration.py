@@ -26,6 +26,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -145,7 +146,7 @@ class ModeAnalyzeConfig(WatoMode):
             html.show_message(
                 _(
                     "Analyze configuration can only be used with the local site and "
-                    "distributed Setup slave sites. You currently have no such site configured."
+                    "distributed setup remote sites. You currently have no such site configured."
                 )
             )
             return
@@ -304,9 +305,9 @@ class ModeAnalyzeConfig(WatoMode):
         results_by_site: dict[SiteId, list[ACTestResult]] = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue: multiprocessing.JoinableQueue[
-            tuple[SiteId, str]
-        ] = multiprocessing.JoinableQueue()
+        result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]] = (
+            multiprocessing.JoinableQueue()
+        )
 
         processes = []
         site_id = SiteId("unknown_site")
@@ -407,13 +408,13 @@ class ModeAnalyzeConfig(WatoMode):
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
-            if site_is_local(site_id):
+            if site_is_local(active_config, site_id):
                 automation = AutomationCheckAnalyzeConfig()
                 results_data = automation.execute(automation.get_request())
 
             else:
                 raw_results_data = do_remote_automation(
-                    get_site_config(site_id),
+                    get_site_config(active_config, site_id),
                     "check-analyze-config",
                     [],
                     timeout=request.request_timeout - 10,

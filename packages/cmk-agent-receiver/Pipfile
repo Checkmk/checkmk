@@ -17,7 +17,6 @@ pyls-isort = "*"
 pylsp-mypy = "*"
 python-lsp-black = "*"
 python-lsp-server = "*"
-types-cryptography = "*"
 types-requests = "*"
 types-python-dateutil = "*"
 
@@ -25,4 +24,4 @@ types-python-dateutil = "*"
 cmk-agent-receiver = {editable = true, path = "."}
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"

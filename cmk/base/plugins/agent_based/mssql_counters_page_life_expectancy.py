@@ -24,9 +24,11 @@ def discover_mssql_counters_page_life_expectancy(
     """
     yield from (
         Service(
-            item=f"{obj} page_life_expectancy"
-            if instance == "None"
-            else f"{obj} {instance} page_life_expectancy"
+            item=(
+                f"{obj} page_life_expectancy"
+                if instance == "None"
+                else f"{obj} {instance} page_life_expectancy"
+            )
         )
         for (obj, instance), counters in section.items()
         if "page_life_expectancy" in counters
@@ -46,9 +48,9 @@ def _get_item(item: str, section: Section) -> Counters:
     if len(sitem) == 3:
         instance = sitem[1]
     else:
-        # This is the string set by the plugin if the instance is not defined by MSSQL.
+        # This is the string set by the plug-in if the instance is not defined by MSSQL.
         # We have to keep this for compatibility reasons with other counters. It is stripped
-        # off in the discovery of this plugin to return a prettier item name.
+        # off in the discovery of this plug-in to return a prettier item name.
         instance = "None"
 
     return section.get((obj, instance), {})

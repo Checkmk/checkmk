@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest
 from pylint.lint import PyLinter
 
@@ -56,7 +58,7 @@ def test_get_absolute_importee(
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),
-        # disallow import of one plugin in another
+        # disallow import of one plug-in in another
         (
             "cmk/base/plugins/agent_based",
             "cmk.base.plugins.agent_based.foo",

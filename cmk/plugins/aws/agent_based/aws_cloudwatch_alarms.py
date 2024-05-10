@@ -5,8 +5,15 @@
 from collections.abc import Mapping
 from typing import Final
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 _AWS_CLOUDWATCH_ALARM_STATES: Final[Mapping[str, State]] = {

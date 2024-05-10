@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # README: HISTORICAL HINT
-# This inventory plugin used to be split-up into the inventory plugins "livestatus_status",
+# This inventory plug-in used to be split-up into the inventory plugins "livestatus_status",
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Literal
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 
@@ -17,9 +17,9 @@ from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult
 
 
-def _service_status(  # type: ignore[no-untyped-def]
+def _service_status(
     status: Mapping[str, Sequence[str]], service_name: str
-):
+) -> Literal["running", "stopped", "not existent", "unknown"]:
     """
     >>> status={'stopped':['cmd', 'dcd'], 'existing':['crontab','cmd']}
     >>> _service_status(status, 'cmd')

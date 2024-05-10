@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Display information about the Checkmk check plugins
+"""Display information about the Checkmk check plug-ins
 
 The maxium depth of the catalog paths is 3. The top level is being rendered
 like the Setup main menu. The second and third level are being rendered like
@@ -16,8 +16,6 @@ from typing import Any, overload
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
 from cmk.utils.rulesets.definition import RuleGroup
-
-from cmk.checkengine.checking import CheckPluginNameStr
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
@@ -71,7 +69,7 @@ class ModeCheckPlugins(WatoMode):
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
-        return _("Catalog of check plugins")
+        return _("Catalog of check plug-ins")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = super().page_menu(breadcrumb)
@@ -81,7 +79,7 @@ class ModeCheckPlugins(WatoMode):
     def page(self) -> None:
         html.help(
             _(
-                "This catalog of check plugins gives you a complete listing of all plugins "
+                "This catalog of check plug-ins gives you a complete listing of all plug-ins "
                 "that are shipped with your Checkmk installation. It also allows you to "
                 "access the rule sets for configuring the parameters of the checks and to "
                 "manually create services in case you cannot or do not want to rely on the "
@@ -125,17 +123,17 @@ class ModeCheckPluginSearch(WatoMode):
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
-        return "{}: {}".format(_("Check plugins matching"), self._search)
+        return "{}: {}".format(_("Check plug-ins matching"), self._search)
 
     def page(self) -> None:
-        search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
+        search_form(title="%s: " % _("Search for check plug-ins"), mode="check_plugin_search")
 
         for path, manpages in self._get_manpages_after_search():
             _render_manpage_list(self._titles, manpages, path, self._titles.get(path, path))
 
     def _get_manpages_after_search(self):
         collection: dict[ManPageCatalogPath, list[dict]] = {}
-        handled_check_names: set[CheckPluginNameStr] = set()
+        handled_check_names: set[str] = set()
 
         # TODO: type of entry argument seems to be unclear.
         def entry_part_matches(entry: dict, key: str) -> bool:
@@ -205,8 +203,7 @@ class ModeCheckPluginTopic(WatoMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -234,7 +231,7 @@ class ModeCheckPluginTopic(WatoMode):
         self._path: tuple[str, ...] = tuple(self._topic.split("/"))  # e.g. [ "hw", "network" ]
 
         for comp in self._path:
-            ID().validate_value(comp, None)  # Beware against code injection!
+            ID().validate_value(comp, "")  # Beware against code injection!
 
         self._manpages = _get_check_catalog(discover_families(raise_errors=False), self._path)
         self._titles = man_pages.CATALOG_TITLES
@@ -301,7 +298,7 @@ class ModeCheckPluginTopic(WatoMode):
         text = ""
         if num_cats > 1:
             text += "%d %s<br>" % (num_cats, _("sub categories"))
-        text += "%d %s" % (num_plugins, _("check plugins"))
+        text += "%d %s" % (num_plugins, _("check plug-ins"))
         return text
 
 
@@ -391,7 +388,7 @@ def _man_page_catalog_topics():
         (
             "generic",
             False,
-            _("Generic check plugins"),
+            _("Generic check plug-ins"),
             _("Plugins for local agent extensions or communication with the agent in general"),
         ),
         (
@@ -515,10 +512,10 @@ class ModeCheckManPage(WatoMode):
         return self._manpage.title
 
     # TODO
-    # We could simply detect on how many hosts and services this plugin
+    # We could simply detect on how many hosts and services this plug-in
     # is currently in use (Livestatus query) and display this information
     # together with a link for searching. Then we can remove the dumb context
-    # button, that will always be shown - even if the plugin is not in use.
+    # button, that will always be shown - even if the plug-in is not in use.
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if self._check_plugin_name.startswith("check_"):
             command = "check_mk_active-" + self._check_plugin_name[6:]
@@ -563,7 +560,7 @@ class ModeCheckManPage(WatoMode):
         html.close_tr()
 
         html.open_tr()
-        html.th(_("Name of plugin"))
+        html.th(_("Name of plug-in"))
         html.open_td()
         html.tt(self._check_plugin_name)
         html.close_td()

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Callable, Sequence
 
 from cmk.utils.version import edition_supports_nagvis
@@ -67,6 +69,7 @@ from .notifications import (
     find_timeperiod_usage_in_notification_rules,
     find_usages_of_contact_group_in_notification_rules,
 )
+from .parent_scan import ParentScanBackgroundJob
 from .rulesets import (
     find_timeperiod_usage_in_host_and_service_rules,
     find_timeperiod_usage_in_time_specific_parameters,
@@ -151,6 +154,7 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(SearchIndexBackgroundJob)
     job_registry.register(ActivationCleanupBackgroundJob)
     job_registry.register(ActivateChangesSchedulerBackgroundJob)
+    job_registry.register(ParentScanBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)
     job_registry.register(RenameHostBackgroundJob)
     job_registry.register(DiscoveredHostLabelSyncJob)

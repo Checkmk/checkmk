@@ -45,6 +45,7 @@ def expected_output_engine():
         r"|\d+\.\d{2} \d+ \d+"
         r"|\d+ instances\:( [^ ]+)+"
         r"|\-?\d+( \d+)+ [\w\(\)]+"
+        r"|\d\d\d[2|6]( .+)+ text"
     )
     if not Globals.alone:
         re_str += r"|" + re.escape(r"<<<systemtime>>>") + r"|\d+"

@@ -1,0 +1,14 @@
+Title: Notification spooler: Fix possible wrong order of notification processing
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1700481159
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+The notification spooler used the mtime of the spool files to determine the
+order of execution.
+
+In rare cases, the mtime was too imprecise so we now use the mtime in
+nanoseconds.

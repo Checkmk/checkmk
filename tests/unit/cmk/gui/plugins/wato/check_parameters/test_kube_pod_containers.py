@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import pytest
@@ -12,7 +14,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.plugins.wato.check_parameters import kube_pod_containers
 from cmk.gui.plugins.wato.utils import rulespec_registry
 from cmk.gui.valuespec import Dictionary
-from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.watolib.rulespecs import ManualCheckParameterRulespec
 
 SECTION_ELEMENTS = ("failed_state",)
 
@@ -37,21 +39,22 @@ def test_parameter_valuespec_has_element_for_section_element(
 
 
 @pytest.fixture
-def rulespec():
+def rulespec() -> ManualCheckParameterRulespec:
     for r in rulespec_registry.get_by_group("static/applications"):
         if r.name == RuleGroup.StaticChecks("kube_pod_containers"):
+            assert isinstance(r, ManualCheckParameterRulespec)
             return r
     assert False, "Should be able to find the rulespec"
 
 
 @pytest.mark.xfail(reason="`match_type` should be dict")
-def test_rulespec_registry_match_type(rulespec: Rulespec) -> None:
+def test_rulespec_registry_match_type(rulespec: ManualCheckParameterRulespec) -> None:
     assert rulespec.match_type == "dict"
 
 
-def test_rulespec_registry_parameter_valuespec(rulespec) -> None:  # type: ignore[no-untyped-def]
+def test_rulespec_registry_parameter_valuespec(rulespec: ManualCheckParameterRulespec) -> None:
     assert rulespec._parameter_valuespec == kube_pod_containers._parameter_valuespec
 
 
-def test_rulespec_registry_title(rulespec: Rulespec) -> None:
+def test_rulespec_registry_title(rulespec: ManualCheckParameterRulespec) -> None:
     assert rulespec.title == "Kubernetes pod containers"

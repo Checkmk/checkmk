@@ -21,9 +21,7 @@
 
 import time
 from collections.abc import Callable
-from typing import Final
-
-from typing_extensions import TypedDict
+from typing import Final, TypedDict
 
 from cmk.plugins.lib.esx_vsphere import Section
 

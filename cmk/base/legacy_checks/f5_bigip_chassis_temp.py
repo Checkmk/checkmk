@@ -9,8 +9,7 @@ from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
 def inventory_f5_bigip_chassis_temp(info):

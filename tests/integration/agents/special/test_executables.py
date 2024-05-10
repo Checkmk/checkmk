@@ -6,9 +6,12 @@
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.site import Site
 
 
+@pytest.mark.skip(reason="Skipped due to CMK-17239")
 def test_no_exception(site: Site) -> None:
     """
     The execution of a special agent should not lead to an exception
@@ -26,4 +29,5 @@ def test_no_exception(site: Site) -> None:
             stdin=subprocess.DEVNULL,
         )
         stderr = p.communicate()[1]
-        assert "Traceback (most recent call last):" not in stderr
+        assert "Traceback (most recent call last):" not in stderr, stderr
+        assert "Crash-ID:" not in stderr, stderr

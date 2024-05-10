@@ -14,7 +14,7 @@ from typing import NoReturn
 from livestatus import SingleSiteConnection
 
 # This will be substituted at 'make dist' time.
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 
 @dataclass(slots=True)
@@ -171,7 +171,7 @@ def connect(socket_path: str | None) -> SingleSiteConnection:
     if socket_path is not None:
         return SingleSiteConnection(socket_path)
     if omd_root := getenv("OMD_ROOT"):
-        return SingleSiteConnection(f"unix:{omd_root}/tmp/run/live")
+        return SingleSiteConnection(f"unix:{omd_root}/tmp/run/live")  # nosec # BNS:13b2c8
     bail_out("specify Livestatus socket or set OMD_ROOT")
 
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
@@ -26,6 +28,12 @@ EXPECTED_P_NO_HASH: Final = msi_engine._Parameters(
     version="vers",
     package_code_hash=None,
 )
+
+
+def test_extract_major_version():
+    assert msi_engine._extract_major_version("2015.04.12") == "2015.04"
+    assert msi_engine._extract_major_version("2.2.0p15") == "2.2"
+    assert msi_engine._extract_major_version("ups") == "2.3"
 
 
 @pytest.mark.parametrize(

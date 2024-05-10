@@ -27,7 +27,7 @@ def check_jolokia_info(item, _no_params, parsed):
         return
 
     if line[0] == "ERROR" or len(line) < 3:
-        yield 2, " ".join(line) or "Unknown error in plugin"
+        yield 2, " ".join(line) or "Unknown error in plug-in"
         return
 
     product = line[0]

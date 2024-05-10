@@ -11,7 +11,7 @@ from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.event import Event
+import cmk.ec.export as ec
 from cmk.ec.main import EventStatus, StatusServer
 from cmk.ec.query import MKClientError
 
@@ -26,7 +26,7 @@ def test_update_event(
     set_phase_to: str,
 ) -> None:
     """Update and acknowledge one event"""
-    event: Event = {
+    event: ec.Event = {
         "host": HostName("host_1"),
         "phase": start_phase,
         "core_host": HostName("ABC"),
@@ -49,7 +49,7 @@ def test_update_events_that_cant_be_acked(
     test_phase: str,
 ) -> None:
     """Update and acknowledge an event when the phase is not 'ack' or 'open'"""
-    event: Event = {
+    event: ec.Event = {
         "host": HostName("host_1"),
         "phase": test_phase,
         "core_host": HostName("ABC"),
@@ -64,7 +64,7 @@ def test_update_events_that_cant_be_acked(
 
 def test_update_multiple_evens(event_status: EventStatus, status_server: StatusServer) -> None:
     """Update and acknowledge multiple events"""
-    events: list[Event] = [
+    events: list[ec.Event] = [
         {
             "host": HostName(f"host_{i}"),
             "phase": "open",
@@ -76,7 +76,7 @@ def test_update_multiple_evens(event_status: EventStatus, status_server: StatusS
     for event in events:
         event_status.new_event(CMKEventConsole.new_event(event))
 
-    event_ids = ",".join([str(n + 1) for n, _ in enumerate(event_status.events())])
+    event_ids = ",".join(str(n + 1) for n, _ in enumerate(event_status.events()))
     s = FakeStatusSocket(
         bytes(f"COMMAND UPDATE;{event_ids};testuser;1;test_comment;test_contact_name", "utf-8")
     )

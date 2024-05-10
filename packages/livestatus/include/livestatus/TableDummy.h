@@ -15,7 +15,6 @@ class User;
 
 class TableDummy : public Table {
 public:
-    explicit TableDummy(ICore *ic) : Table(ic) {}
     [[nodiscard]] std::string name() const override { return "dummy"; }
     [[nodiscard]] std::string namePrefix() const override { return "dummy_"; }
     void answerQuery(Query & /*unused*/, const User & /*unused*/,

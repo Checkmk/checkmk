@@ -8,7 +8,7 @@ description:
  a PostgreSQL database. You can configure limits specifiying the maximum age of the last operation.
  Without additional limits configuration this check is always OK.
 
- This check relies on data reported by the agent-side plugin {mk_postgres}.
+ This check relies on data reported by the agent-side plug-in {mk_postgres}.
 
  Check status:
 

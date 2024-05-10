@@ -9,8 +9,8 @@ from cmk.utils.crypto.password_hashing import is_unsupported_legacy_hash
 
 from cmk.gui.userdb import is_automation_user, load_users, Users
 
+from cmk.update_config.lib import format_warning
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import format_warning, UpdateActionState
 
 
 class CheckPasswordHashes(UpdateAction):
@@ -29,8 +29,8 @@ class CheckPasswordHashes(UpdateAction):
     This check informs admins about affected users.
     """
 
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        users: Users = load_users()
+    def __call__(self, logger: Logger) -> None:
+        users: Users = load_users(skip_validation=True)
         if unsupported := [
             user_id
             for user_id in users

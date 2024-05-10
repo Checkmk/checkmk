@@ -10,7 +10,7 @@ description:
 
  In order to carry out the check, the Veeam agent plugin
  needs to be installed on the backup server. See special instructions in the
- comment section of the two Veeam agent plugin scripts on how to install
+ comment section of the two Veeam agent plug-in scripts on how to install
  the scripts.
 
  - This service is {OK} if the result of the job is {Running} or {Disabled}.

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -18,8 +18,8 @@ from cmk.gui.session import SuperUserContext
 @pytest.fixture(name="dates")
 def _dates():
     return (
-        dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC")),
-        dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC")),
+        dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC")),
+        dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC")),
     )
 
 
@@ -48,8 +48,8 @@ def test_host_downtime(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_host_downtime_with_services(  # type: ignore[no-untyped-def]
-    mock_livestatus, dates
+def test_host_downtime_with_services(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 

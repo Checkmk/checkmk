@@ -211,20 +211,20 @@ err:
 }
 
 
-char *cmk_lookup_password(const char *pw_id)
+char *cmk_lookup_password(const char *pwfilepath, const char *pw_id)
 {
     const char *omd_root = getenv("OMD_ROOT");
     if (!omd_root) {
         cmk_bail_out("Environment variable OMD_ROOT is missing.");
     }
 
-    char pwfilepath[4096];  /* PATH_MAX from <linux/limits.h> */
-    int ok = snprintf(
-        pwfilepath, sizeof pwfilepath,
-        "%s/var/check_mk/stored_passwords", omd_root);
-    if (ok < 0 || ok >= sizeof pwfilepath) {
+    if (strlen(pwfilepath) > 4096) /* PATH_MAX from <linux/limits.h> */ {
+        /* possible value:
+         * $OMD_ROOT/var/check_mk/core/helper_config/latest/stored_passwords
+         */
         cmk_bail_out("stored_passwords path too long");
     }
+
     unsigned char *pwfile = NULL;
     ssize_t pwfilelen = cmk_read_file(pwfilepath, &pwfile);
     if (pwfilelen == -1) {
@@ -232,11 +232,11 @@ char *cmk_lookup_password(const char *pw_id)
     }
 
     char pwsecretpath[4096];  /* PATH_MAX from <linux/limits.h> */
-    ok = snprintf(
+    int ok = snprintf(
         pwsecretpath, sizeof pwsecretpath,
         "%s/etc/password_store.secret", omd_root);
     if (ok < 0 || ok >= sizeof pwsecretpath) {
-        cmk_bail_out("passwort_store.secret path too long");
+        cmk_bail_out("password_store.secret path too long");
     }
     unsigned char *pwsecret = NULL;
     ssize_t pwsecretlen = cmk_read_file(pwsecretpath, &pwsecret);
@@ -280,10 +280,10 @@ char **cmk_replace_passwords(int *argc, char **argv)
     else if (strncmp(argv[1], "--pwstore=", 10))
         return argv; /* no password store in use */
 
-    /* --pwstore=4@4@web,6@0@foo
+    /* --pwstore=4@4@file@web,6@0@file@foo
       In the 4th argument at char 4 replace the following bytes
-      with the passwords stored under the ID 'web'
-      In the 6th argument at char 0 insert the password with the ID 'foo'
+      with the passwords stored in <file> under the ID 'web'
+      In the 6th argument at char 0 insert the password from <file> with the ID 'foo'
     */
 
     /* Create copy of arguments and drop first argument */
@@ -316,12 +316,16 @@ char **cmk_replace_passwords(int *argc, char **argv)
         if (0 && char_index > strlen(argv[argv_index]))
             cmk_bail_out("Invalid character index");
 
+        char *pw_file = strtok_r(NULL, "@", &saveptr);
+        if (pw_file == NULL)
+            cmk_bail_out("Missing third @");
+
         char *pw_id = strtok_r(NULL, ",", &saveptr);
         if (pw_id == NULL)
             cmk_bail_out("Missing password ID");
 
         char *new_arg = strdup(new_argv[argv_index]);
-        char *password = cmk_lookup_password(pw_id);
+        char *password = cmk_lookup_password(pw_file, pw_id);
         if (!password)
             cmk_bail_out("No password with that ID found.");
         if (strlen(password) + char_index > strlen(new_arg))

@@ -183,5 +183,5 @@ This is not a proposal, but tries to make things clear
  └── docker-image-aliases       # contains image pins
    ├── IMAGE_UBUNTU_22_04
    ├── IMAGE_DEBIAN_9
-   └── IMAGE_TESTING
+   └── IMAGE_CMK_BASE
 ```

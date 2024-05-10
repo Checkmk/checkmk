@@ -232,6 +232,9 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
+    def depends_on_tags(self):
+        return ["ip-v4"]
+
     def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
@@ -278,6 +281,9 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
     def show_in_folder(self):
         return False
+
+    def depends_on_tags(self):
+        return ["ip-v6"]
 
     def valuespec(self) -> ValueSpec:
         return ListOf(
@@ -365,10 +371,10 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def is_show_more(self) -> bool:
         return True
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return True
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
     def valuespec(self) -> ValueSpec:
@@ -394,21 +400,21 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             description="A list of parents of this host.",
         )
 
-    def is_visible(self, for_what, new) -> bool:  # type: ignore[no-untyped-def]
+    def is_visible(self, for_what: str, new: bool) -> bool:
         return for_what != "cluster"
 
-    def to_nagios(self, value):
+    def to_nagios(self, value: str) -> str | None:
         if value:
             return ",".join(value)
         return None
 
-    def nagios_name(self):
+    def nagios_name(self) -> str:
         return "parents"
 
     def is_explicit(self) -> bool:
         return True
 
-    def paint(self, value, hostname):
+    def paint(self, value: str, hostname: HostName) -> tuple[str, HTML]:
         parts = [
             HTMLWriter.render_a(
                 hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)])
@@ -616,11 +622,13 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     @staticmethod
     def _time_allowed_to_valuespec(
-        v: TimeofdayRangeValue
-        |
-        # we need list as input type here because Sequence[TimeofdayRangeValue] is hard to
-        # distinguish from TimeofdayRangeValue
-        list[TimeofdayRangeValue],
+        v: (
+            TimeofdayRangeValue
+            |
+            # we need list as input type here because Sequence[TimeofdayRangeValue] is hard to
+            # distinguish from TimeofdayRangeValue
+            list[TimeofdayRangeValue]
+        ),
     ) -> list[TimeofdayRangeValue]:
         return v if isinstance(v, list) else [v]
 
@@ -1036,7 +1044,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return gui_fields.SiteField(
-            description="The site that should monitor this host.", presence="might_not_exist"
+            description="The site that should monitor this host.",
+            presence="might_not_exist_on_view",
         )
 
     def get_tag_groups(self, value):

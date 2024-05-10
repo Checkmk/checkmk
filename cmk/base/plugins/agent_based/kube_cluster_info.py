@@ -19,7 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from cmk.plugins.lib.kube import ClusterInfo
+from cmk.plugins.kube.schemata.section import ClusterInfo
 
 
 def parse_kube_cluster_info(string_table: StringTable) -> ClusterInfo:

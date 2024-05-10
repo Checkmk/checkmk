@@ -35,22 +35,34 @@
 # Returns true/false whether or not the user is permitted
 
 import copy
+from pathlib import Path
+from typing import Any, Literal
 
 import cmk.utils.store as store
+from cmk.utils.config_validation_layer.groups import GroupName
 
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
-from cmk.gui.groups import load_contact_group_information
+from cmk.gui.hooks import ClearEvent
+from cmk.gui.type_defs import Users
 from cmk.gui.utils.roles import get_role_permissions
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.utils import format_php
 
+_CalleeHooks = ClearEvent | Literal["page_hook"]
 
-def _auth_php():
+
+def _auth_php() -> Path:
     return wato_var_dir() / "auth" / "auth.php"
 
 
-def _create_php_file(callee, users, role_permissions, groups):
+def _create_php_file(
+    callee: _CalleeHooks,
+    users: Users,
+    role_permissions: dict[str, list[str]],
+    groups: dict[GroupName, Any],
+) -> None:
     # Do not change Setup internal objects
     nagvis_users = copy.deepcopy(users)
 
@@ -173,7 +185,7 @@ function permitted_maps($username) {{
     store.save_text_to_file(_auth_php(), content)
 
 
-def _create_auth_file(callee, users=None):
+def _create_auth_file(callee: _CalleeHooks, users: Users | None = None) -> None:
     if users is None:
         users = userdb.load_users()
 
@@ -186,7 +198,7 @@ def _create_auth_file(callee, users=None):
     _create_php_file(callee, users, get_role_permissions(), groups)
 
 
-def _on_userdb_job():
+def _on_userdb_job() -> None:
     # Working around the problem that the auth.php file needed for multisite based
     # authorization of external addons might not exist when setting up a new installation
     # This is a good place to replace old api based files in the future.

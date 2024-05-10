@@ -23,7 +23,7 @@ from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, 
 
 def ajax_popup_action_menu() -> None:
     site = SiteId(request.get_ascii_input_mandatory("site"))
-    host = HostName(request.get_ascii_input_mandatory("host"))
+    host = request.get_validated_type_input_mandatory(HostName, "host")
     svcdesc = request.get_str_input("service")
     what: IconObjectType = "service" if svcdesc else "host"
 

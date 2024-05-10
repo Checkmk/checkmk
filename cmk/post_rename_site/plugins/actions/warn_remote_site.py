@@ -26,9 +26,11 @@ def warn_about_renamed_remote_site(
 
     logger.info("")
     console.warning(
-        "You renamed a distributed remote site.\n\nTo make your distributed "
-        'setup work again, you will have to update the "Distributed Monitoring" '
-        "configuration in your central site.\n"
+        console.format_warning(
+            "You renamed a distributed remote site.\n\nTo make your distributed "
+            'setup work again, you will have to update the "Distributed Monitoring" '
+            "configuration in your central site.\n\n"
+        )
     )
 
 

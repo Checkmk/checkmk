@@ -3,17 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+import datetime
 import json
 import time
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
 import requests
+import time_machine
 from pytest import MonkeyPatch
-
-from tests.testlib import on_time
 
 from cmk.special_agents.agent_datadog import (
     _event_to_syslog_message,
@@ -351,7 +354,7 @@ class TestLogsQuerier:
         logs_querier: LogsQuerier,
     ) -> None:
         now = 1601310544
-        with on_time(now, "UTC"):
+        with time_machine.travel(datetime.datetime.fromtimestamp(now, tz=ZoneInfo("UTC"))):
             start, end = logs_querier._query_time_range()
             assert start.timestamp() == now - logs_querier.max_age
             assert end.timestamp() == now

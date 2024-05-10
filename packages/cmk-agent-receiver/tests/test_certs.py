@@ -23,8 +23,8 @@ def test_sign_csr() -> None:
     cert = sign_agent_csr(csr, 12, root_ca, datetime.datetime.fromtimestamp(100, tz=datetime.UTC))
 
     assert check_cn(cert, "peter")
-    assert str(cert.not_valid_before) == "1970-01-01 00:01:40"
-    assert str(cert.not_valid_after) == "1971-01-01 00:01:40"
+    assert str(cert.not_valid_before_utc) == "1970-01-01 00:01:40+00:00"
+    assert str(cert.not_valid_after_utc) == "1971-01-01 00:01:40+00:00"
     check_certificate_against_private_key(
         cert,
         key,

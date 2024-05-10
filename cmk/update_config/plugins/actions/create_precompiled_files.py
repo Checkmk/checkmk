@@ -7,7 +7,6 @@ from logging import Logger
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class CreatePrecompiledFiles(UpdateAction):
@@ -17,7 +16,7 @@ class CreatePrecompiledFiles(UpdateAction):
     Create all precompiled files for better performance.
     """
 
-    def __call__(self, _logger: Logger, _update_action_state: UpdateActionState) -> None:
+    def __call__(self, _logger: Logger) -> None:
         for folder in folder_tree().root_folder().subfolders_recursively():
             folder.save()
             folder.save_hosts()

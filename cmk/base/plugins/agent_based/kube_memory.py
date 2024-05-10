@@ -3,16 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.lib.kube import PerformanceUsage
+from cmk.plugins.kube.schemata.section import AllocatableResource, PerformanceUsage, Resources
 from cmk.plugins.lib.kube_resources import (
-    AllocatableResource,
     check_resource,
     DEFAULT_PARAMS,
     Params,
     parse_allocatable_resource,
     parse_performance_usage,
     parse_resources,
-    Resources,
 )
 
 from .agent_based_api.v1 import register, render, Service

@@ -22,7 +22,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 fsc_ipmi_mem_status_levels = [
     # Status Code, Label
@@ -48,7 +48,7 @@ def inventory_fsc_ipmi_mem_status(info):
 def check_fsc_ipmi_mem_status(name, _no_params, info):
     for line in info:
         if line[0] == "E":
-            return (3, "Error in agent plugin output (%s)" % " ".join(line[1:]))
+            return (3, "Error in agent plug-in output (%s)" % " ".join(line[1:]))
         if line[1] == name:
             return fsc_ipmi_mem_status_levels[int(line[2])]
 

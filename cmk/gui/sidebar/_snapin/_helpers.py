@@ -23,7 +23,7 @@ from cmk.gui.type_defs import Choices, Icon, TopicMenuItem, TopicMenuTopic, Visu
 from cmk.gui.utils.html import HTML
 from cmk.gui.visuals import visual_title
 
-# Constants to be used in snapins
+# Constants to be used in snap-ins
 snapin_width = 240
 
 
@@ -154,6 +154,7 @@ def make_topic_menu(visuals: Sequence[tuple[str, tuple[str, Visual]]]) -> list[T
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],
                 icon=visual["icon"],
+                megamenu_search_terms=visual["megamenu_search_terms"],
             )
         )
 
@@ -208,7 +209,6 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
         isopen=False,
         title=topic.title,
         indent=True,
-        icon="foldable_sidebar",
     ):
         for item in topic.items:
             if show_item_icons:

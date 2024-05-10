@@ -5,20 +5,20 @@
 
 import subprocess
 from collections.abc import Iterable
-from typing import Literal, TypeAlias
+from typing import assert_never, Literal, TypeAlias
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
 
 from ._utils import strip_snmp_value
 
 __all__ = ["ClassicSNMPBackend"]
 
-CommandType: TypeAlias = Literal["snmpget", "snmpgetnext", "snmpwalk", "snmpbulkwalk"]
+CommandType: TypeAlias = Literal["snmpget", "snmpgetnext", "snmpwalk"]
 
 
 class ClassicSNMPBackend(SNMPBackend):
@@ -44,7 +44,7 @@ class ClassicSNMPBackend(SNMPBackend):
             oid_prefix,
         ]
 
-        console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
+        console.debug("Running '%s'\n" % subprocess.list2cmdline(command))
 
         with subprocess.Popen(
             command,
@@ -72,7 +72,7 @@ class ClassicSNMPBackend(SNMPBackend):
             return None
         item = parts[0]
         value = parts[1].strip()
-        console.vverbose("SNMP answer: ==> [%s]\n" % value)
+        console.debug("SNMP answer: ==> [%s]\n" % value)
         if (
             value.startswith("No more variables")
             or value.startswith("End of MIB")
@@ -105,7 +105,7 @@ class ClassicSNMPBackend(SNMPBackend):
         portspec = self._snmp_port_spec()
         command = self._snmp_base_command("snmpwalk", context) + ["-Cc"]
         command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
-        console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
+        console.debug("Running '%s'\n" % subprocess.list2cmdline(command))
 
         rowinfo: SNMPRowInfo = []
         with subprocess.Popen(
@@ -190,6 +190,15 @@ class ClassicSNMPBackend(SNMPBackend):
             return ""
         return ":%d" % self.config.port
 
+    def _snmp_version_spec(self) -> Literal["-v1", "-v2c", "-v3"]:
+        match self.config.snmp_version:
+            case SNMPVersion.V1:
+                return "-v1"
+            case SNMPVersion.V2C:
+                return "-v2c"
+            case SNMPVersion.V3:
+                return "-v3"
+
     # if the credentials are a string, we use that as community,
     # if it is a four-tuple, we use it as V3 auth parameters:
     # (1) security level (-l)
@@ -201,31 +210,24 @@ class ClassicSNMPBackend(SNMPBackend):
     # (6) privacy protocol pass phrase (-X)
     def _snmp_base_command(self, cmd: CommandType, context: SNMPContext) -> list[str]:
         # pylint: disable=too-many-branches
-        options = []
+        options: list[str] = [self._snmp_version_spec()]
 
-        if cmd == "snmpget":
-            command = ["snmpget"]
-        elif cmd == "snmpgetnext":
-            command = ["snmpgetnext", "-Cf"]
-        elif self.config.is_bulkwalk_host:
-            command = ["snmpbulkwalk"]
+        match cmd:
+            case "snmpget":
+                command = ["snmpget"]
+            case "snmpgetnext":
+                command = ["snmpgetnext", "-Cf"]
+            case "snmpwalk":
+                command = (
+                    ["snmpbulkwalk", f"-Cr{self.config.bulk_walk_size_of}"]
+                    if self.config.use_bulkwalk
+                    else ["snmpwalk"]
+                )
+            case other:
+                assert_never(other)
 
-            options.append("-Cr%d" % self.config.bulk_walk_size_of)
-        else:
-            command = ["snmpwalk"]
-
-        if not self.config.is_snmpv3_host:
+        if self.config.snmp_version is not SNMPVersion.V3:
             # Handle V1 and V2C
-            if self.config.is_bulkwalk_host:
-                options.append("-v2c")
-            else:
-                if cmd == "snmpwalk":
-                    command = ["snmpwalk"]
-                if self.config.is_snmpv2or3_without_bulkwalk_host:
-                    options.append("-v2c")
-                else:
-                    options.append("-v1")
-
             if not isinstance(self.config.credentials, str):
                 raise TypeError()
             options += ["-c", self.config.credentials]
@@ -252,7 +254,6 @@ class ClassicSNMPBackend(SNMPBackend):
                     priv_pass,
                 ) = self.config.credentials
                 options += [
-                    "-v3",
                     "-l",
                     sec_level,
                     "-a",
@@ -270,7 +271,6 @@ class ClassicSNMPBackend(SNMPBackend):
             elif len(self.config.credentials) == 4:
                 sec_level, auth_proto, sec_name, auth_pass = self.config.credentials
                 options += [
-                    "-v3",
                     "-l",
                     sec_level,
                     "-a",
@@ -283,7 +283,7 @@ class ClassicSNMPBackend(SNMPBackend):
 
             else:
                 sec_level, sec_name = self.config.credentials
-                options += ["-v3", "-l", sec_level, "-u", sec_name]
+                options += ["-l", sec_level, "-u", sec_name]
 
         # Do not load *any* MIB files. This save lot's of CPU.
         options += ["-m", "", "-M", ""]

@@ -28,9 +28,7 @@ import json
 import os
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
-from typing import cast, Generic, Literal, Self, TypeVar
-
-from typing_extensions import TypedDict
+from typing import cast, Generic, Literal, Self, TypedDict, TypeVar
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -53,7 +51,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.logged_in import save_user_file, user
+from cmk.gui.logged_in import LoggedInUser, save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
@@ -309,7 +307,7 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
         """
         return [
             (
-                _("General Properties"),
+                _("General properties"),
                 [
                     (
                         1.1,
@@ -393,13 +391,11 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
 
     @classmethod
     @abc.abstractmethod
-    def type_name(cls) -> str:
-        ...
+    def type_name(cls) -> str: ...
 
     @classmethod
     @abc.abstractmethod
-    def type_icon(cls) -> Icon:
-        ...
+    def type_icon(cls) -> Icon: ...
 
 
 # .
@@ -548,14 +544,14 @@ class Overridable(Base[_T_OverridableSpec]):
         if is_user_with_publish_permissions("pagetype", user.id, cls.type_name()):
             vs_visibility: ValueSpec = Optional(
                 title=_("Visibility"),
-                label=_("Make this %s available for other users") % cls.phrase("title"),
+                label=_("Make this %s available for other users") % cls.phrase("title").lower(),
                 none_label=_("Don't publish to other users"),
                 valuespec=PublishTo(
                     publish_all=cls.has_overriding_permission("publish"),
                     publish_groups=cls.has_overriding_permission("publish_to_groups"),
                     publish_sites=cls.has_overriding_permission("publish_to_sites"),
-                    title="",
                     type_title=cls.phrase("title"),
+                    title="",
                     with_foreign_groups=cls.has_overriding_permission("publish_to_foreign_groups"),
                 ),
             )
@@ -567,7 +563,7 @@ class Overridable(Base[_T_OverridableSpec]):
 
         return parameters + [
             (
-                _("General Properties"),
+                _("General properties"),
                 [
                     (2.2, "public", vs_visibility),
                 ],
@@ -596,14 +592,16 @@ class Overridable(Base[_T_OverridableSpec]):
 
         This does not only need a flag in the page itself, but also the
         permission from its owner to publish it."""
-        if self._["public"] is False:
+        if self._["public"] is False or self._["public"] is None:
             return False
 
         return self.publish_is_allowed()
 
     def publish_is_allowed(self) -> bool:
         """Whether publishing an element to other users is allowed by the owner"""
-        return not self.owner() or user_may(self.owner(), "general.publish_" + self.type_name())
+        return not self.owner() or is_user_with_publish_permissions(
+            "pagetype", self.owner(), self.type_name()
+        )
 
     def is_public_forced(self) -> bool:
         """Whether the user is allowed to override built-in pagetypes"""
@@ -970,11 +968,18 @@ class Overridable(Base[_T_OverridableSpec]):
         assert owner is not None
 
         save_dict = {}
+        save_dict_by_owner: dict[UserId, dict[str, object]] = {}
         for page in instances.instances():
-            if page.owner() == owner:
+            if (page_owner := page.owner()) == owner:
                 save_dict[page.name()] = page.serialize()
+            elif LoggedInUser(owner).may("general.edit_foreign_%s" % cls.type_name()):
+                save_dict_by_owner.setdefault(page_owner, {}).setdefault(
+                    page.name(), page.serialize()
+                )
 
         save_user_file("user_%ss" % cls.type_name(), save_dict, owner)
+        for page_owner, save_dict_of_owner in save_dict_by_owner.items():
+            save_user_file("user_%ss" % cls.type_name(), save_dict_of_owner, page_owner)
 
     def clone(self) -> Self:
         page_dict = self._.copy()
@@ -1008,7 +1013,7 @@ class Overridable(Base[_T_OverridableSpec]):
     @classmethod
     def reserved_unique_ids(cls) -> list[str]:
         """Used to exclude names from choosing as unique ID, e.g. built-in names
-        in sidebar snapins"""
+        in sidebar snap-ins"""
         return []
 
 
@@ -1039,6 +1044,7 @@ class ListPage(Page, Generic[_T]):
                         ),
                         PageMenuEntry(
                             title=_("Delete selected"),
+                            name="delete",
                             icon_name="delete",
                             item=make_confirmed_form_submit_link(
                                 form_name="bulk_delete",
@@ -1114,6 +1120,7 @@ class ListPage(Page, Generic[_T]):
                 else:
                     self._show_table(instances, scope_instances)
 
+        html.javascript("cmk.page_menu.check_menu_entry_by_checkboxes('delete')")
         html.footer()
 
     @classmethod
@@ -1150,7 +1157,11 @@ class ListPage(Page, Generic[_T]):
         for owner in {e[0] for e in to_delete}:
             self._type.save_user_instances(instances, owner)
 
-        flash(_("The selected %s have been deleted.") % self._type.phrase("title_plural"))
+        if len(to_delete) > 1:
+            flash(_("Selected %s have been deleted.") % self._type.phrase("title_plural").lower())
+        elif len(to_delete) == 1:
+            flash(_("%s has been deleted.") % self._type.phrase("title"))
+
         html.reload_whole_page(self._type.list_url())
 
     def _show_table(
@@ -1169,13 +1180,18 @@ class ListPage(Page, Generic[_T]):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows(this.form);",
+                            onclick="cmk.selection.toggle_all_rows(this.form);"
+                            "cmk.page_menu.check_menu_entry_by_checkboxes('delete')",
                             value="X",
                         ),
                         sortable=False,
                         css=["checkbox"],
                     )
-                    html.checkbox(f"_c_{instance.owner()}+{instance.name()}")
+                    html.checkbox(
+                        f"_c_{instance.owner()}+{instance.name()}",
+                        onclick="cmk.page_menu.check_menu_entry_by_checkboxes('delete')",
+                        class_="page_checkbox",
+                    )
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons visuals"])
@@ -1184,18 +1200,18 @@ class ListPage(Page, Generic[_T]):
                 if isinstance(instance, PageRenderer):
                     html.icon_button(instance.view_url(), _("View"), self._type.type_name())
 
-                # Clone / Customize
-                html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
-
-                # Delete
-                if instance.may_delete():
-                    html.icon_button(instance.delete_url(), _("Delete!"), "delete")
-
                 # Edit
                 if instance.may_edit():
                     html.icon_button(instance.edit_url(), _("Edit"), "edit")
 
                 self._type.custom_list_buttons(instance)
+
+                # Clone / Customize
+                html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
+
+                # Delete
+                if instance.may_delete():
+                    html.icon_button(instance.delete_url(), _("Delete"), "delete")
 
                 # Internal ID of instance (we call that 'name')
                 table.cell(_("ID"), instance.name(), css=["narrow"])
@@ -1211,9 +1227,11 @@ class ListPage(Page, Generic[_T]):
                 # Owner
                 table.cell(
                     _("Owner"),
-                    HTMLWriter.render_i(_("built-in"))
-                    if instance.is_builtin()
-                    else instance.owner(),
+                    (
+                        HTMLWriter.render_i(_("built-in"))
+                        if instance.is_builtin()
+                        else instance.owner()
+                    ),
                 )
                 table.cell(_("Public"), _("yes") if instance.is_public() else _("no"))
                 table.cell(_("Hidden"), _("yes") if instance.is_hidden() else _("no"))
@@ -1271,8 +1289,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
                 assert user.id is not None
                 page_dict["owner"] = str(user.id)
                 owner_id = user.id
-
-        breadcrumb = make_breadcrumb(title, mode, self._type.list_url())
+        breadcrumb = make_breadcrumb(title, mode, self._type.list_url(), self._type.phrase("title"))
         page_menu = make_edit_form_page_menu(
             breadcrumb,
             dropdown_name=self._type.type_name(),
@@ -1290,7 +1307,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
         parameters, keys_by_topic = self._collect_parameters(mode)
 
         vs = Dictionary(
-            title=_("General Properties"),
+            title=_("General properties"),
             render="form",
             optional_keys=False,
             elements=parameters,
@@ -1342,7 +1359,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
                 # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
                 # can we simply move it there?
                 # TODO: This is not true for all cases. e.g. the BookmarkList is not
-                # of type PageRenderer but has a dedicated sidebar snapin. Maybe
+                # of type PageRenderer but has a dedicated sidebar snap-in. Maybe
                 # the best option would be to make a dedicated method to decide whether
                 # or not to reload the sidebar.
                 html.reload_whole_page(redirect_url)
@@ -1386,10 +1403,12 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
         return parameters, keys_by_topic
 
 
-def make_breadcrumb(title: str, page_name: str, list_url: str) -> Breadcrumb:
+def make_breadcrumb(
+    title: str, page_name: str, list_url: str, parent_title: str | None = None
+) -> Breadcrumb:
     breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_customize())
 
-    breadcrumb.append(BreadcrumbItem(title=title, url=list_url))
+    breadcrumb.append(BreadcrumbItem(title=parent_title or title, url=list_url))
 
     if page_name == "list":  # The list is the parent of all others
         return breadcrumb
@@ -1447,7 +1466,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
     for other_type_name, other_pagetype in page_types.items():
         if current_type_name != other_type_name:
             yield PageMenuEntry(
-                title=other_pagetype.phrase("title_plural").title(),
+                title=other_pagetype.phrase("title_plural"),
                 icon_name=other_type_name,
                 item=make_simple_link("%ss.py" % other_type_name),
             )
@@ -1470,12 +1489,12 @@ def PublishTo(
     publish_all: bool,
     publish_groups: bool,
     publish_sites: bool,
+    type_title: str,
     title: str | None = None,
-    type_title: str | None = None,
     with_foreign_groups: bool = True,
 ) -> CascadingDropdown:
     if title is None:
-        title = _("Make this %s available for other users") % type_title
+        title = _("Make this %s available for other users") % type_title.lower()
 
     choices: list[CascadingDropdownChoice] = []
     if publish_all:
@@ -1528,10 +1547,10 @@ def make_edit_form_page_menu(
         dropdowns=[
             PageMenuDropdown(
                 name=dropdown_name,
-                title=type_title.title(),
+                title=type_title.capitalize(),
                 topics=[
                     PageMenuTopic(
-                        title=_("Save this %s and go to") % type_title,
+                        title=_("Actions"),
                         entries=list(
                             _page_menu_entries_save(
                                 breadcrumb,
@@ -1583,13 +1602,13 @@ def _page_menu_entries_save(
 ) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
     yield PageMenuEntry(
-        title=_("List of %s") % type_title_plural,
+        title=_("Save & view list"),
         icon_name="save",
         item=make_form_submit_link(form_name, "_save"),
         is_list_entry=True,
         is_shortcut=True,
         is_suggested=True,
-        shortcut_title=_("Save & go to list"),
+        shortcut_title=_("Save & view list"),
         css_classes=["submit"],
     )
 
@@ -1610,7 +1629,7 @@ def _page_menu_entries_save(
         title=_("Cancel"),
         icon_name="cancel",
         item=make_simple_link(parent_item.url),
-        is_list_entry=False,
+        is_list_entry=True,
         is_shortcut=True,
         is_suggested=True,
     )
@@ -1682,8 +1701,7 @@ _T_OverridableContainerSpec = TypeVar("_T_OverridableContainerSpec", bound=Overr
 class OverridableContainer(Overridable[_T_OverridableContainerSpec]):
     @classmethod
     @abc.abstractmethod
-    def may_contain(cls, element_type_name: str) -> bool:
-        ...
+    def may_contain(cls, element_type_name: str) -> bool: ...
 
     @classmethod
     def page_menu_add_to_topics(cls, added_type: str) -> list[PageMenuTopic]:
@@ -1805,8 +1823,8 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec]):
 #   |              |___/                                                   |
 #   +----------------------------------------------------------------------+
 #   |  Base class for all things that have an URL and can be rendered as   |
-#   |  an HTML page. And that can be added to the sidebar snapin of all    |
-#   |  pages.
+#   |  an HTML page. And that can be added to the sidebar snap-in of all   |
+#   |  pages.                                                              |
 #   '----------------------------------------------------------------------'
 
 _T_PageRendererSpec = TypeVar("_T_PageRendererSpec", bound=PageRendererSpec)
@@ -1904,8 +1922,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
 
     @classmethod
     @abc.abstractmethod
-    def page_show(cls) -> None:
-        ...
+    def page_show(cls) -> None: ...
 
     @classmethod
     def requested_page(cls, instances: OverridableInstances[Self]) -> Self:
@@ -1916,12 +1933,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
 
     @classmethod
     def requested_page_by_name(cls, instances: OverridableInstances[Self], name: str) -> Self:
-        if raw_owner := request.var("owner"):
-            try:
-                owner = UserId(raw_owner)
-            except ValueError as e:
-                raise MKUserError("owner", str(e)) from e
-
+        if owner := request.get_validated_type_input(UserId, "owner"):
             cls.need_overriding_permission("see_user")
             if foreign := instances.find_foreign_page(owner, name):
                 return foreign
@@ -1991,6 +2003,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
             "public": self._["public"],
             "packaged": False,
             "link_from": {},
+            "megamenu_search_terms": [],
         }
 
 
@@ -2242,13 +2255,22 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
                 "sort_index": 100,
                 "owner": UserId.builtin(),
             },
+            "synthetic_monitoring": {
+                "name": "synthetic_monitoring",
+                "title": _("Synthetic Monitoring"),
+                "icon_name": "synthetic_monitoring_topic",
+                "description": "",
+                "public": True,
+                "sort_index": 105,
+                "owner": UserId.builtin(),
+            },
             "my_workplace": {
                 "name": "my_workplace",
                 "title": _("Workplace"),
                 "icon_name": "topic_my_workplace",
                 "description": "",
                 "public": True,
-                "sort_index": 105,
+                "sort_index": 110,
                 "owner": UserId.builtin(),
             },
             # Only fallback for items without topic
@@ -2258,7 +2280,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
                 "icon_name": "topic_other",
                 "description": "",
                 "public": True,
-                "sort_index": 110,
+                "sort_index": 115,
                 "owner": UserId.builtin(),
             },
         }
@@ -2297,6 +2319,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
         return [
             (p.name(), p.title())
             for p in sorted(instances.instances(), key=lambda p: p.sort_index())
+            if p.is_permitted()
         ]
 
     @classmethod
@@ -2368,7 +2391,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
                 title=_("Reports"),
                 url="edit_reports.py",
                 sort_index=10,
-                is_show_more=True,
+                is_show_more=False,
                 icon="report",
             )
         )
@@ -2382,7 +2405,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
             title=page_type_.phrase("title_plural"),
             url="%ss.py" % page_type_.type_name(),
             sort_index=40 + (index * 10),
-            is_show_more=page_type_.type_is_show_more(),
+            is_show_more=False,
             icon=page_type_.type_icon(),
         )
 

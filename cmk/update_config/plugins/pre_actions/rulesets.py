@@ -21,7 +21,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.update_config.plugins.actions.rulesets import REPLACED_RULESETS
+from cmk.update_config.plugins.lib.rulesets import REPLACED_RULESETS
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode, prompt, USER_INPUT_CONTINUE
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 

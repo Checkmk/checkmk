@@ -6,7 +6,6 @@
 # pylint: disable=protected-access
 
 from logging import getLogger
-from typing import Any
 
 import pytest
 
@@ -17,8 +16,6 @@ from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfiguration
 from cmk.gui.watolib.rulespecs import Rulespec
 
 from cmk.update_config.plugins.lib import rulesets as rulesets_updater
-
-RuleValue = Any
 
 
 @pytest.fixture(name="rulespec_with_migration")
@@ -88,7 +85,7 @@ def fixture_replaced_rulespec() -> Rulespec:
 
 def _instantiate_ruleset(
     ruleset_name: str,
-    param_value: RuleValue,
+    param_value: object,
     rulespec: Rulespec | None = None,
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {}, rulespec=rulespec)
@@ -112,8 +109,8 @@ def _instantiate_ruleset(
 @pytest.mark.usefixtures("request_context")
 def test_transform_wato_rulesets_params(
     rulespec_with_migration: Rulespec,
-    param_value: RuleValue,
-    transformed_param_value: RuleValue,
+    param_value: object,
+    transformed_param_value: object,
 ) -> None:
     ruleset = _instantiate_ruleset(
         rulespec_with_migration.name,
@@ -141,8 +138,8 @@ def test_transform_wato_rulesets_params(
 def test_transform_replaced_wato_rulesets_and_params(
     rulespec_with_migration: Rulespec,
     replaced_rulespec: Rulespec,
-    param_value: RuleValue,
-    transformed_param_value: RuleValue,
+    param_value: object,
+    transformed_param_value: object,
 ) -> None:
     all_rulesets = RulesetCollection(
         {

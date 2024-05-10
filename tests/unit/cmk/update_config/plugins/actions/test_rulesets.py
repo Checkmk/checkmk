@@ -5,7 +5,6 @@
 
 import logging
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -19,12 +18,10 @@ from cmk.gui.watolib.rulespecs import Rulespec
 
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
 
-RuleValue = Any
-
 
 def _instantiate_ruleset(
     ruleset_name: str,
-    param_value: RuleValue,
+    param_value: object,
     rulespec: Rulespec | None = None,
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {}, rulespec=rulespec)
@@ -78,7 +75,7 @@ def _instantiate_ruleset(
 @pytest.mark.usefixtures("request_context")
 def test_validate_rule_values(
     caplog: pytest.LogCaptureFixture,
-    rulesets: Mapping[RulesetName, RuleValue],
+    rulesets: Mapping[RulesetName, object],
     n_expected_warnings: int,
 ) -> None:
     all_rulesets = RulesetCollection(

@@ -11,8 +11,6 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.users import create_and_destroy_user
-
 # The test below executes the special agent and queries a mocked REST API endpoint. Some of the
 # action plug-in tests require an initialized UI context. This is done by referencing the ui_context
 # fixture which makes an initialized context available outside of tests.unit.cmk.gui package.
@@ -23,6 +21,7 @@ from tests.unit.cmk.gui.conftest import (  # noqa: F401 # pylint: disable=unused
     load_plugins,
     ui_context,
 )
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 from cmk.special_agents.agent_bi import AggregationRawdataGenerator
 

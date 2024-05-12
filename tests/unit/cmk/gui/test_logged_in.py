@@ -11,7 +11,7 @@ import pytest
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from tests.testlib.users import create_and_destroy_user
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 from livestatus import SiteConfigurations, SiteId
 

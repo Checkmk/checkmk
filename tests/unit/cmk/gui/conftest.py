@@ -36,7 +36,6 @@ from tests.testlib.rest_api_client import (
     Response,
     RestApiClient,
 )
-from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
 from cmk.utils.hostaddress import HostName
@@ -62,6 +61,8 @@ from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+from .users import create_and_destroy_user
 
 SPEC_LOCK = threading.Lock()
 

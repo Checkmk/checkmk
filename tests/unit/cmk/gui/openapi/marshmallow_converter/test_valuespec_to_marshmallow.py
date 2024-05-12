@@ -6,7 +6,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.users import create_and_destroy_user
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 import cmk.utils.paths
 

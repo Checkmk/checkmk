@@ -7,9 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.testlib import Check
-
-from .checktestlib import assertCheckResultsEqual, BasicCheckResult, CheckResult
+from .checktestlib import assertCheckResultsEqual, BasicCheckResult, Check, CheckResult
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

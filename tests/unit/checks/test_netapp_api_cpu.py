@@ -5,9 +5,9 @@
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from .checktestlib import Check
 
 pytestmark = pytest.mark.checks
 

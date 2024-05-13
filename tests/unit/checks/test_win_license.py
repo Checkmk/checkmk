@@ -8,9 +8,7 @@ from typing import NamedTuple, TypedDict
 
 import pytest
 
-from tests.testlib import Check
-
-from .checktestlib import assertCheckResultsEqual, CheckResult
+from .checktestlib import assertCheckResultsEqual, Check, CheckResult
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

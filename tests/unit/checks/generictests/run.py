@@ -8,8 +8,6 @@ from contextlib import contextmanager
 
 import time_machine
 
-from tests.testlib import Check, MissingCheckInfoError
-
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.hostaddress import HostName
 
@@ -22,9 +20,11 @@ from ..checktestlib import (
     assertCheckResultsEqual,
     assertDiscoveryResultsEqual,
     assertEqual,
+    Check,
     CheckResult,
     DiscoveryResult,
     Immutables,
+    MissingCheckInfoError,
     mock_item_state,
     MockHostExtraConf,
 )

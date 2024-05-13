@@ -1461,7 +1461,7 @@ def plugin_pathnames_in_directory(path: str) -> list[str]:
             [
                 f"{path}/{f}"
                 for f in os.listdir(path)
-                if not f.startswith(".") and not f.endswith(".include")
+                if not f.startswith(".") and not f.endswith(".include") and not f == "__pycache__"
             ]
         )
     return []

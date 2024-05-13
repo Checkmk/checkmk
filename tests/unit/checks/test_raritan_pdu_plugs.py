@@ -8,7 +8,7 @@ from typing import TypedDict
 
 import pytest
 
-from tests.testlib import Check
+from .checktestlib import Check
 
 pytestmark = pytest.mark.checks
 

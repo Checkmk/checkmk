@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from .checktestlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 

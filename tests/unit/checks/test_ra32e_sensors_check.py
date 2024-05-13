@@ -7,11 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.agent_based.v1.type_defs import StringTable
 
-from .checktestlib import BasicCheckResult
+from .checktestlib import BasicCheckResult, Check
 
 pytestmark = pytest.mark.checks
 

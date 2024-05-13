@@ -5,9 +5,9 @@
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.plugins.agent_based.allnet_ip_sensoric import parse_allnet_ip_sensoric
+
+from .checktestlib import Check
 
 pytestmark = pytest.mark.checks
 

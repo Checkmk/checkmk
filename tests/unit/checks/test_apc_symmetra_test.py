@@ -7,10 +7,10 @@
 import pytest
 import time_machine
 
-from tests.testlib import Check
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from .checktestlib import Check
 
 
 @time_machine.travel("2020-01-13")

@@ -5,11 +5,9 @@
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
-from .checktestlib import CheckResult
+from .checktestlib import Check, CheckResult
 
 pytestmark = pytest.mark.checks
 

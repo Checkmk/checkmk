@@ -5,7 +5,10 @@
 
 import pytest
 
-from tests.testlib import Check
+from cmk.base.legacy_checks.docker_node_disk_usage import (
+    check_docker_node_disk_usage,
+    parse_docker_node_disk_usage,
+)
 
 AGENT_OUTPUT = [
     [
@@ -21,8 +24,9 @@ AGENT_OUTPUT = [
 
 @pytest.mark.usefixtures("fix_register")
 def test_check_docker_node_disk_usage() -> None:
-    check = Check("docker_node_disk_usage")
-    result = list(check.run_check("volumes", {}, check.run_parse(AGENT_OUTPUT)))
+    result = list(
+        check_docker_node_disk_usage("volumes", {}, parse_docker_node_disk_usage(AGENT_OUTPUT))
+    )
     assert result == [
         (0, "Size: 230 KiB", [("size", 235177, None, None)]),
         (0, "Reclaimable: 93 B", [("reclaimable", 93, None, None)]),

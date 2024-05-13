@@ -5,6 +5,7 @@ common: &common
     - "debian-12"
     - "ubuntu-20.04"
     - "ubuntu-22.04"
+    - "ubuntu-24.04"
     - "centos-8"
     - "almalinux-9"
     - "sles-12sp5"
@@ -16,6 +17,7 @@ common: &common
 daily_reduced: &daily_reduced
     - "ubuntu-20.04"
     - "ubuntu-22.04"
+    - "ubuntu-24.04"
     - "debian-10"
     - "sles-15sp5"
 
@@ -23,6 +25,7 @@ daily_reduced: &daily_reduced
 daily_saas: &daily_saas
     - "ubuntu-22.04"
     - "ubuntu-23.10"
+    - "ubuntu-24.04"
 
 # Builds for those distros will only be available internally for development purpose
 internal_distros: &internal_distros
@@ -46,7 +49,7 @@ editions:
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*common]
         weekly: [*common, "cma-3", "cma-4"]
-        testbuild: ["ubuntu-22.04", "centos-8", "cma-4"]
+        testbuild: ["ubuntu-24.04", "centos-8", "cma-4"]
     cloud:
         release: [*common, "cma-3", "cma-4"]
         daily: [*daily_reduced, "cma-3", "cma-4"]

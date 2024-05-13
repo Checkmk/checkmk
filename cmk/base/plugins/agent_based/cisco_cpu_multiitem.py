@@ -64,9 +64,8 @@ def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
 def discover_cisco_cpu_multiitem(params: DiscoveryParams, section: Section) -> DiscoveryResult:
     if params["individual"]:
         for item in section:
-            if item == "average":
-                continue
-            yield Service(item=item)
+            if item and item != "average":
+                yield Service(item=item)
     if params["average"]:
         yield Service(item="average")
 

@@ -158,7 +158,8 @@ def automation_discovery(
             return DiscoveryResult(error_text=", ".join(r.summary for r in failed_sources_results))
 
         host_sections_by_host = group_by_host(
-            (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+            ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
+            lambda msg: console.debug(msg + "\n"),
         )
         store_piggybacked_sections(host_sections_by_host)
         providers = make_providers(

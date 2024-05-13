@@ -15,6 +15,7 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import Item, ServiceName
 
@@ -101,7 +102,8 @@ def execute_check_discovery(
 
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
-        (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+        ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
+        lambda msg: console.debug(msg + "\n"),
     )
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(

@@ -78,7 +78,7 @@ def _valuespec_active_checks_dns():
                 (
                     "hostname",
                     TextInput(
-                        title=_("Queried Hostname or IP address"),
+                        title=_("Queried host name or IP address"),
                         allow_empty=False,
                         help=_("The name or IPv4 address you want to query"),
                     ),

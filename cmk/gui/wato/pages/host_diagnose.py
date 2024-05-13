@@ -317,7 +317,7 @@ class ModeDiagHost(WatoMode):
                     "hostname",
                     FixedValue(
                         value=self._hostname,
-                        title=_("Hostname"),
+                        title=_("Host name"),
                     ),
                 ),
                 (

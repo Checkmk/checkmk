@@ -175,7 +175,7 @@ class HostNameValidator(Validator):
     def __call__(self, hostname):
         # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
         if len(hostname) > 255:
-            raise ValidationError("Hostname too long")
+            raise ValidationError("Host name too long")
 
         if hostname[-1] == ".":
             hostname = hostname[:-1]  # strip exactly one dot from the right, if present

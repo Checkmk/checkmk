@@ -184,7 +184,7 @@ def _active_checks_http_hostspec() -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name="direct",
-                            title=Title("Hostname / IP address"),
+                            title=Title("Host name / IP address"),
                             parameter_form=String(
                                 custom_validate=(validators.LengthInRange(min_value=1),),
                                 macro_support=True,

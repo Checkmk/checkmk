@@ -40,7 +40,7 @@ def _parameter_form() -> Dictionary:
         elements={
             "hosts": DictElement(
                 parameter_form=List(
-                    title=Title("Hostnames to query"),
+                    title=Title("Host names to query"),
                     help_text=Help(
                         "Use this option to set which host should be checked by the special agent. If the "
                         "connection to the first server fails, the next server will be queried (fallback). "

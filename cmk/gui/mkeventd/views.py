@@ -627,7 +627,7 @@ class PainterEventHost(Painter):
         return "event_host"
 
     def title(self, cell: "Cell") -> str:
-        return _("Hostname")
+        return _("Host name")
 
     def short_title(self, cell: "Cell") -> str:
         return _("Host")

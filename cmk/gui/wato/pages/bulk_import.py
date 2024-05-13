@@ -587,7 +587,7 @@ class ModeBulkImport(WatoMode):
         attributes = [
             (None, _("(please select)")),
             ("-", _("Don't import")),
-            ("host_name", _("Hostname")),
+            ("host_name", _("Host name")),
             ("alias", _("Alias")),
             ("site", _("Monitored on site")),
             ("ipaddress", _("IPv4 address")),

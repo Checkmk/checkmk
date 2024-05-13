@@ -3929,7 +3929,7 @@ builtin_views.update(
                 SorterSpec(sorter="aggr_group", negate=False),
                 SorterSpec(sorter="site_host", negate=False),
             ],
-            "title": _l("Hostname aggregations"),
+            "title": _l("Host name aggregations"),
             "topic": "bi",
             "sort_index": 20,
             "name": "aggr_hostnameaggrs",

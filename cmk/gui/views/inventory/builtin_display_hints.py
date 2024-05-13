@@ -1705,7 +1705,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".networking.total_interfaces": {"title": _l("Total interfaces"), "paint": "count"},
         ".networking.total_ethernet_ports": {"title": _l("Ports"), "paint": "count"},
-        ".networking.hostname": {"title": _l("Hostname")},
+        ".networking.hostname": {"title": _l("Host name")},
         ".networking.available_ethernet_ports": {"title": _l("Ports available"), "paint": "count"},
         ".networking.addresses:": {
             "title": _l("IP Addresses"),

@@ -613,7 +613,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             (
                 "translate_names",
                 HostnameTranslation(
-                    title=_("Translate Hostnames"),
+                    title=_("Translate host names"),
                 ),
             ),
         ]

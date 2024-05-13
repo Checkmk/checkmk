@@ -127,7 +127,7 @@ class PageValidateFilter(AjaxPage):
 def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         RegexAjaxDropdownFilter(
-            title=_l("Hostname (regex)"),
+            title=_l("Host name (regex)"),
             sort_index=100,
             info="host",
             autocompleter=AutocompleterConfig(ident="monitored_hostname", escape_regex=True),
@@ -144,7 +144,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Hostname (exact match)"),
+            title=_l("Host name (exact match)"),
             sort_index=101,
             info="host",
             autocompleter=AutocompleterConfig(ident="monitored_hostname", strict=True),
@@ -238,7 +238,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Hostname or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
+            title=_l("Host name or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
             sort_index=102,
             info="host",
             description=_l("Search field allowing regular expressions and partial matches"),

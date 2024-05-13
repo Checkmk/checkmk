@@ -2535,7 +2535,7 @@ class PainterHostBlack(Painter):
         return "host_black"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostname, red background if down or unreachable (Deprecated)")
+        return _("Host name, red background if down or unreachable (Deprecated)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Host")
@@ -2561,7 +2561,7 @@ class PainterHostWithState(Painter):
         return "host_with_state"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostname, marked red if down (Deprecated)")
+        return _("Host name, marked red if down (Deprecated)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Host")
@@ -2590,7 +2590,7 @@ class PainterHost(Painter):
         return "host"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostname")
+        return _("Host name")
 
     def short_title(self, cell: Cell) -> str:
         return _("Host")

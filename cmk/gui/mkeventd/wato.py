@@ -1311,7 +1311,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text "
                     "to match. Note that as an alternative, you may also use the rule "
-                    "Hostname translation for Incoming Messages in the Global Settings "
+                    "Host name translation for Incoming Messages in the Global Settings "
                     "of the EC to accomplish your task."
                 )
                 + _(
@@ -1619,7 +1619,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                     "host",
                     TextInput(
                         title=_("Host lookup element"),
-                        help=_("Hostname, IP address or host alias the event is relevant for"),
+                        help=_("Host name, IP address or host alias the event is relevant for"),
                         size=40,
                         default_value=_("myhost089"),
                         allow_empty=True,
@@ -3892,7 +3892,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                             ),
                             elements=[
                                 TextInput(
-                                    title=_("Hostname/IP address of Master Event Console:"),
+                                    title=_("Host name/IP address of Master Event Console:"),
                                     allow_empty=False,
                                 ),
                                 Integer(
@@ -4313,7 +4313,7 @@ class ConfigVariableHostnameTranslation(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return HostnameTranslation(
-            title=_("Hostname translation for incoming messages"),
+            title=_("Host name translation for incoming messages"),
             help=_(
                 "When the Event Console receives a message than the host name "
                 "that is contained in that message will be translated using "
@@ -5045,7 +5045,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                         ListChoice(
                             title=_("Match the hosts with..."),
                             choices=[
-                                ("$HOSTNAME$", _("Hostname")),
+                                ("$HOSTNAME$", _("Host name")),
                                 ("$HOSTADDRESS$", _("IP address")),
                                 ("$HOSTALIAS$", _("Alias")),
                             ],
@@ -5119,7 +5119,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                         Tuple(
                             elements=[
                                 TextInput(
-                                    title=_("Hostname/IP address of Event Console:"),
+                                    title=_("Host name/IP address of Event Console:"),
                                     allow_empty=False,
                                 ),
                                 Integer(

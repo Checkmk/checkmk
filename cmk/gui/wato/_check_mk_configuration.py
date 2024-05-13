@@ -6057,7 +6057,7 @@ AgentConfigOnlyFrom = HostRulespec(
 
 def _valuespec_piggyback_translation():
     return HostnameTranslation(
-        title=_("Hostname translation for piggybacked hosts"),
+        title=_("Host name translation for piggybacked hosts"),
         help=_(
             "Some agents or agent plug-ins send data not only for the queried host but also "
             "for other hosts &quot;piggyback&quot; with their own data. This is the case "
@@ -6083,7 +6083,7 @@ def _valuespec_service_description_translation():
         title=_("Translation of service descriptions"),
         help=_(
             "Within this ruleset service descriptions can be translated similar to the ruleset "
-            "<tt>Hostname translation for piggybacked hosts</tt>. Services such as "
+            "<tt>Host name translation for piggybacked hosts</tt>. Services such as "
             "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
             "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are excluded. "
             "<b>Attention:</b><ul>"

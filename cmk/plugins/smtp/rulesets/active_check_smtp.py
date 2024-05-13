@@ -67,7 +67,7 @@ def _make_parameter_form() -> Dictionary:
             ),
             "hostname": DictElement(
                 parameter_form=String(
-                    title=Title("DNS Hostname or IP address"),
+                    title=Title("DNS host name or IP address"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
                         "You can specify a host name or IP address different from the IP address "

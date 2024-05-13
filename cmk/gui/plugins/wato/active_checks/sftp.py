@@ -36,7 +36,7 @@ def _valuespec_active_checks_sftp():
             elements=[
                 (
                     "host",
-                    TextInput(title=_("Hostname"), allow_empty=False),
+                    TextInput(title=_("Host name"), allow_empty=False),
                 ),
                 (
                     "user",

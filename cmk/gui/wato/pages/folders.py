@@ -1035,7 +1035,7 @@ class ModeFolder(WatoMode):
         self._show_host_actions(host)
 
         # Hostname with link to details page (edit host)
-        table.cell(_("Hostname"))
+        table.cell(_("Host name"))
         errors = host_errors.get(hostname, []) + host.validation_errors()
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")

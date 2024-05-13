@@ -69,7 +69,7 @@ def _make_parameter_form() -> Dictionary:
             ),
             "hostname": DictElement(
                 parameter_form=String(
-                    title=Title("DNS Hostname"),
+                    title=Title("DNS host name"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
                         "If you specify a host name here, then a dynamic DNS lookup "

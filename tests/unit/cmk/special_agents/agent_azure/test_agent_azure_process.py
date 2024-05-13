@@ -142,7 +142,7 @@ class MockMgmtApiClient(MgmtApiClient):
                 [],
                 {
                     "burningman": {
-                        "myvm": {
+                        "MyVM": {
                             "statuses": [
                                 {
                                     "code": "ProvisioningState/succeeded",
@@ -169,7 +169,7 @@ class MockMgmtApiClient(MgmtApiClient):
                 "group": "burningman",
                 "id": "myid",
                 "location": "westeurope",
-                "name": "myvm",
+                "name": "MyVM",
                 "specific_info": {
                     "statuses": [
                         {
@@ -234,7 +234,7 @@ def test_process_vm(
                 [
                     '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman", "cmk/azure/vm": "instance"}\n'
                 ],
-                ["myvm"],
+                ["MyVM"],
             ),
         )
     ],
@@ -257,7 +257,7 @@ def test_get_vm_labels_section(
                 [],
                 {
                     "burningman": {
-                        "myvm": {
+                        "MyVM": {
                             "statuses": [
                                 {
                                     "code": "ProvisioningState/succeeded",
@@ -289,17 +289,17 @@ def test_get_vm_labels_section(
             [
                 (
                     LabelsSection,
-                    ["myvm"],
+                    ["MyVM"],
                     [
                         '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman", "cmk/azure/vm": "instance"}\n'
                     ],
                 ),
                 (
                     AzureSection,
-                    ["myvm"],
+                    ["MyVM"],
                     [
                         "Resource\n",
-                        '{"id": "myid", "name": "myvm", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "burningman", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
+                        '{"id": "myid", "name": "MyVM", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "burningman", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
                     ],
                 ),
             ],
@@ -310,7 +310,7 @@ def test_get_vm_labels_section(
                 [],
                 {
                     "burningman": {
-                        "myvm": {
+                        "MyVM": {
                             "statuses": [
                                 {
                                     "code": "ProvisioningState/succeeded",
@@ -349,7 +349,7 @@ def test_get_vm_labels_section(
                     ["burningman"],
                     [
                         "Resource\n",
-                        '{"id": "myid", "name": "myvm", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "burningman", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
+                        '{"id": "myid", "name": "MyVM", "type": "Microsoft.Compute/virtualMachines", "location": "westeurope", "tags": {"my-unique-tag": "unique", "tag4all": "True"}, "group": "burningman", "specific_info": {"statuses": [{"code": "ProvisioningState/succeeded", "level": "Info", "displayStatus": "Provisioning succeeded", "time": "2019-11-25T07:38:14.6999403+00:00"}]}}\n',
                     ],
                 ),
             ],
@@ -472,7 +472,7 @@ def test_get_group_labels(
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
             'monitored-groups|["burningman"]\n'
-            'monitored-resources|["myvm"]\n'
+            'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
         )
     ],

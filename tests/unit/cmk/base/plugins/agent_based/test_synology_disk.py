@@ -8,8 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.snmp import get_parsed_snmp_section
-
+from tests.unit.cmk.base.plugins.agent_based.snmp import get_parsed_snmp_section
 from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionName

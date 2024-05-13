@@ -8,8 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.snmp import get_parsed_snmp_section
-
+from tests.unit.cmk.base.plugins.agent_based.snmp import get_parsed_snmp_section
 from tests.unit.cmk.plugins.lib.test_temperature import mock_value_store
 
 from cmk.agent_based.v2 import Metric, Result, Service, State

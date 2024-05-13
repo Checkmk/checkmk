@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.snmp import snmp_is_detected
+from tests.unit.cmk.base.plugins.agent_based.snmp import snmp_is_detected
 
 from cmk.utils.sectionname import SectionName
 

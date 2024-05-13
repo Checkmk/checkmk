@@ -79,8 +79,8 @@ update_action_registry.register(
     UpdateUserAttributes(
         name="user_attributes",
         title="User attributes",
-        # Run this validation before any plug-in that deals with users (but after the user id
-        # validation) as those wouldn't be able to load them.
+        # Run this validation before any plug-in that deals with users as those wouldn't be able
+        # to load them.
         sort_index=2,
         # If users cannot be loaded, many other actions fail as well.
         continue_on_failure=False,

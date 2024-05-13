@@ -27,20 +27,9 @@ from cmk.gui.watolib.rulesets import (
     RulesetCollection,
 )
 
-REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
-    "checkgroup_parameters:fileinfo-groups": "checkgroup_parameters:fileinfo_groups_checking",
-    "checkgroup_parameters:robotmk_suite": "checkgroup_parameters:robotmk_plan",
-    "static_checks:fileinfo-groups": "static_checks:fileinfo_groups_checking",
-    "checkgroup_parameters:if": "checkgroup_parameters:interfaces",
-    "static_checks:if": "static_checks:interfaces",
-    "special_agents:3par": "special_agents:three_par",
-}
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
 
-RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {
-    "mongodb_replica_set",
-    "netapp_fcportio",
-    "azure_agent_info",
-}
+RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 
 DEPRECATED_RULESET_PATTERNS = (re.compile("^agent_simulator$"),)
 

@@ -379,7 +379,7 @@ class ModeEditHost(ABCHostMode):
                 % update_dns_cache_result.n_updated
             )
             if update_dns_cache_result.failed_hosts:
-                infotext += "<br><br><b>Hostnames failed to lookup:</b> " + ", ".join(
+                infotext += "<br><br><b>Host names failed to lookup:</b> " + ", ".join(
                     ["<tt>%s</tt>" % h for h in update_dns_cache_result.failed_hosts]
                 )
             flash(infotext)
@@ -423,7 +423,7 @@ class ModeEditHost(ABCHostMode):
     def _vs_host_name(self):
         return FixedValue(
             value=self._host.name(),
-            title=_("Hostname"),
+            title=_("Host name"),
         )
 
 
@@ -682,7 +682,7 @@ class CreateHostMode(ABCHostMode):
 
     def _vs_host_name(self):
         return Hostname(
-            title=_("Hostname"),
+            title=_("Host name"),
         )
 
 

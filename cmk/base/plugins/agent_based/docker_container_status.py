@@ -244,7 +244,7 @@ def check_docker_container_status(section: Section) -> CheckResult:
             "reflected in the fact that this host has multiple piggyback sources, see the output of the "
             "Check_MK service. Hence, no definitive information on the container can be displayed. To "
             "resolve this situation, you have two options: 1. configure the docker agent plug-in to use "
-            "the container IDs as host names, 2. use the ruleset 'Hostname translation for piggybacked "
+            "the container IDs as host names, 2. use the ruleset 'Host name translation for piggybacked "
             "hosts' to create unique host names for the affected containers.",
         )
         return

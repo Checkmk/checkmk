@@ -1058,7 +1058,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
 
     def get_match_topic(self) -> str:
         if self._livestatus_field == "name":
-            return _("Hostname")
+            return _("Host name")
         if self._livestatus_field == "address":
             return _("Hostaddress")
         return _("Hostalias")

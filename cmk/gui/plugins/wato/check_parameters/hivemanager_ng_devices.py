@@ -34,7 +34,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hivemanager_ng_devices",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Hostname of the Device")),
+        item_spec=lambda: TextInput(title=_("Host name of the Device")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hivemanager_ng_devices,
         title=lambda: _("HiveManager NG Devices"),

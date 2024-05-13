@@ -1230,7 +1230,7 @@ def _validate_reclassify_of_states(value, varprefix):
 def _vs_annotation():
     elements: list[DictionaryEntry] = [
         ("site", TextInput(title=_("Site"))),
-        ("host", TextInput(title=_("Hostname"))),
+        ("host", TextInput(title=_("Host name"))),
         (
             "host_state",
             Optional(

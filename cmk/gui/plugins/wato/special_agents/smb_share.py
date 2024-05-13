@@ -17,7 +17,7 @@ def _valuespec_special_agents_smb_share():
             (
                 "hostname",
                 TextInput(
-                    title="Hostname",
+                    title="Host name",
                     allow_empty=False,
                     help=_(
                         "<p>Usually Checkmk will use the host name of the host it is attached to. "

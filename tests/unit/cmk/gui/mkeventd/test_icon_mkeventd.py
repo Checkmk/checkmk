@@ -49,7 +49,7 @@ class IconRenderResult(NamedTuple):
                 title="Events of Host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
-            id="Match host with Hostname, IP address, Alias",
+            id="Match host with host name, IP address, Alias",
         ),
         # Host specification:
         #     Specify host explicitly
@@ -114,7 +114,7 @@ class IconRenderResult(NamedTuple):
                 title="Events of Host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
-            id="Match host with Hostname, IP address, Alias and ignore Acknowledged events",
+            id="Match host with host name, IP address, Alias and ignore Acknowledged events",
         ),
         # Host specification:
         #     Match host with

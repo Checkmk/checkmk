@@ -601,7 +601,7 @@ def _forward_to_ec_elements() -> list[DictionaryEntry]:
                     (
                         "host",
                         TextInput(
-                            title=_("Events: Hostname"),
+                            title=_("Events: Host name"),
                             help=_(
                                 "Use this host name for all created events instead of the name of the mailserver"
                             ),

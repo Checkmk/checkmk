@@ -309,7 +309,7 @@ class ModeBulkRenameHost(WatoMode):
                 (
                     "match_hostname",
                     RegExp(
-                        title=_("Hostname matching"),
+                        title=_("Host name matching"),
                         help=_(
                             "Only rename host names whose names <i>begin</i> with the regular expression entered here."
                         ),

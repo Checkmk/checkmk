@@ -825,7 +825,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
-    parser.add_argument("--hostname", help="Hostname or IP-address of NetApp Filer.")
+    parser.add_argument("--hostname", help="Host name or IP-address of NetApp Filer.")
     parser.add_argument("--username", help="Username for NetApp login")
     parser.add_argument("--password", help="Secret/Password for NetApp login")
 

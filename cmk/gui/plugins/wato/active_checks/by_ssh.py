@@ -61,7 +61,7 @@ def _valuespec_active_checks_by_ssh():
                                     (
                                         "hostname",
                                         TextInput(
-                                            title=_("DNS Hostname or IP address"),
+                                            title=_("DNS host name or IP address"),
                                             default_value="$HOSTADDRESS$",
                                             allow_empty=False,
                                             help=_(

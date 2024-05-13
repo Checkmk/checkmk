@@ -21,7 +21,7 @@ def _valuespec_active_checks_sftp():
             "deleted if it was not created by this active check."
         ),
         elements=[
-            TextInput(title=_("Hostname"), allow_empty=False),
+            TextInput(title=_("Host name"), allow_empty=False),
             TextInput(title=_("Username"), allow_empty=False),
             MigrateToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
             Dictionary(

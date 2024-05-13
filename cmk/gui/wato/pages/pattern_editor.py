@@ -167,7 +167,7 @@ class ModePatternEditor(WatoMode):
     def _show_try_form(self):
         with html.form_context("try"):
             forms.header(_("Try pattern match"))
-            forms.section(_("Hostname"))
+            forms.section(_("Host name"))
             self._vs_host().render_input("host", self._hostname)
             forms.section(_("Logfile"))
             html.help(_("Here you need to insert the original file or pathname"))

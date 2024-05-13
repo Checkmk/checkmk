@@ -302,6 +302,10 @@ def print_distros_for_use_case(args: argparse.Namespace, loaded_yaml: dict) -> N
     print(" ".join(distros_for_use_case(edition_distros, edition, use_case)))
 
 
+def print_editions(args: Args, loaded_yaml: dict) -> None:
+    print(" ".join(sorted(loaded_yaml["editions"].keys())))
+
+
 def flatten(list_to_flatten: Iterable[Iterable[str] | str]) -> Iterable[str]:
     # This is a workaround the fact that yaml cannot "extend" a predefined node which is a list:
     # https://stackoverflow.com/questions/19502522/extend-an-array-in-yaml
@@ -351,10 +355,20 @@ def parse_arguments() -> Args:
 
     subparsers = parser.add_subparsers(required=True, dest="command")
 
-    use_cases = subparsers.add_parser("use_cases", help="a help")
-    use_cases.set_defaults(func=print_distros_for_use_case)
-    use_cases.add_argument("--edition", required=True)
-    use_cases.add_argument("--use_case", required=True)
+    all_distros_subparser = subparsers.add_parser(
+        "all", help="Print distros for all use case and all distros"
+    )
+    all_distros_subparser.set_defaults(func=print_distros_for_use_case)
+    all_distros_subparser.add_argument("--edition", default="all")
+    all_distros_subparser.add_argument("--use_case", default="all")
+
+    use_cases_subparser = subparsers.add_parser("use_cases", help="Print distros for use case")
+    use_cases_subparser.set_defaults(func=print_distros_for_use_case)
+    use_cases_subparser.add_argument("--edition", required=True)
+    use_cases_subparser.add_argument("--use_case", required=True)
+
+    editions_subparser = subparsers.add_parser("editions", help="Print all supported edtions")
+    editions_subparser.set_defaults(func=print_editions)
 
     internal_build_artifacts = subparsers.add_parser("internal_build_artifacts")
     internal_build_artifacts.set_defaults(func=print_internal_build_artifacts)

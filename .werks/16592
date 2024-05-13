@@ -1,0 +1,10 @@
+Title: Add support for Ubuntu 24.04 Noble Numbat
+Class: feature
+Compatible: compat
+Component: deb
+Date: 1715604144
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+This werk adds support for Ubuntu 24.04, codename Noble Numbat.

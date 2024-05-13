@@ -6,6 +6,7 @@ common: &common
     - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "ubuntu-23.10"
+    - "ubuntu-24.04"
     - "centos-7"
     - "centos-8"
     - "almalinux-9"
@@ -20,6 +21,7 @@ common: &common
 daily_reduced: &daily_reduced
     - "ubuntu-20.04"
     - "ubuntu-22.04"
+    - "ubuntu-24.04"
     - "debian-10"
 
 daily_extended: &daily_extended
@@ -27,6 +29,7 @@ daily_extended: &daily_extended
     - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "ubuntu-23.10"
+    - "ubuntu-24.04"
     - "centos-8"
     - "almalinux-9"
     - "sles-15sp5"
@@ -40,7 +43,7 @@ editions:
         daily: [*daily_extended, "cma-4"]
         weekly: [*common, "cma-3", "cma-4"]
         daily_tests: [*daily_extended]
-        testbuild: ["ubuntu-22.04", "centos-7", "cma-3"]
+        testbuild: ["ubuntu-24.04", "centos-7", "cma-3"]
     cloud:
         release: [*common, "cma-3", "cma-4"]
         daily: *daily_reduced

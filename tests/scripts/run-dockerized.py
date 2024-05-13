@@ -38,7 +38,7 @@ def main(raw_args):
     """Run tests in docker"""
     args, command = _parse_arguments(raw_args)
 
-    distro_name = _os_environ_get("DISTRO", "ubuntu-20.04")
+    distro_name = _os_environ_get("DISTRO", "ubuntu-22.04")
     docker_tag = _os_environ_get("DOCKER_TAG", f"{current_base_branch_name()}-latest")
     version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,

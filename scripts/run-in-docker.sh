@@ -8,7 +8,7 @@
 # behavior can be customized using either @IMAGE_ALIAS or @IMAGE_ID as follows:
 #   run-in-docker.sh <CMD>                                     will use reference image
 #   IMAGE_ALIAS=IMAGE_CENTOS_8 run-in-docker.sh <CMD>          will use dereferenced image alias IMAGE_CENTOS_8
-#   IMAGE_ID=ubuntu-20.04:2.3.0-latest run-in-docker.sh <CMD>  will use provided image id directly
+#   IMAGE_ID=ubuntu-22.04:master-latest run-in-docker.sh <CMD>  will use provided image id directly
 # Also DOCKER_RUN_ADDOPTS can be set to add additional arguments to be passed to `docker run`
 #
 # To re-build the container from scratch:

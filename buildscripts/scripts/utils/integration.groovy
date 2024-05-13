@@ -41,17 +41,7 @@ def run_make_targets(Map args) {
 
                 // TODO make independent from WORKSPACE
                 sh("rm -rf \"${WORKSPACE}/${download_dir}\"")
-                if (args.DISTRO_LIST == ["ubuntu-20.04"]) {
-                    artifacts_helper.download_deb(
-                        INTERNAL_DEPLOY_DEST,
-                        INTERNAL_DEPLOY_PORT,
-                        args.cmk_version,
-                        "${WORKSPACE}/${download_dir}/${args.cmk_version}",
-                        args.EDITION,
-                        "focal",
-                    );
-                }
-                else if (args.DISTRO_LIST == ["ubuntu-22.04"]) { // needed for saas nightly int tests
+                if (args.DISTRO_LIST == ["ubuntu-22.04"]) {
                     artifacts_helper.download_deb(
                         INTERNAL_DEPLOY_DEST,
                         INTERNAL_DEPLOY_PORT,

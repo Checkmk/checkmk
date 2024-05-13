@@ -12,7 +12,7 @@ on: [push, pull_request]
 
 jobs:
   testing:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       PIPENV_IGNORE_VIRTUALENVS: 1
       USE_EXTERNAL_PIPENV_MIRROR: true

@@ -18,7 +18,7 @@ case "$DISTRO" in
         ;;
     *)
         # We need musl to build a static binary of the agent controller. The agent controller is only
-        # built in the Ubuntu 20.04 image, hence, we only need musl there.
+        # built in the reference image (usually an Ubuntu), hence, we only need musl there.
         echo "ERROR: Unhandled DISTRO: $DISTRO - musl-tools should only be available in Ubuntu!"
         exit 1
         ;;

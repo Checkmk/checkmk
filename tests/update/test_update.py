@@ -119,9 +119,9 @@ def test_update(  # pylint: disable=too-many-branches
 
     # services such as 'omd status' rely on cache data:
     # wait for the cache to be up-to-date and reschedule services
-    wait_for_agent_cache_omd_status(test_site)
+    wait_for_agent_cache_omd_status(target_site)
     for hostname in hostnames:
-        test_site.schedule_check(hostname, "Check_MK", 0)
+        target_site.schedule_check(hostname, "Check_MK", 0)
 
     for hostname in hostnames:
         target_site.reschedule_services(hostname, max_count=20)

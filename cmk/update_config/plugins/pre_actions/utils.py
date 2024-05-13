@@ -146,19 +146,17 @@ def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
     )
 
 
-def continue_on_incomp_local_file(
-    conflict_mode: ConflictMode,
-    path: Path,
-    error: BaseException,
-) -> bool:
+def continue_on_incomp_local_file(conflict_mode: ConflictMode) -> bool:
     return continue_per_users_choice(
         conflict_mode,
-        f"Incompatible local file '{path}'.\n"
-        f"Error: {error}\n\n"
         "You can abort the update process (A) and try to fix "
         "the incompatibilities or continue the update (c).\n\n"
         "Abort the update process? [A/c] \n",
     )
+
+
+def error_message_incomp_local_file(path: Path, error: BaseException) -> str:
+    return f"Incompatible local file '{path}'.\nError: {error}\n\n"
 
 
 def continue_per_users_choice(conflict_mode: ConflictMode, propt_text: str) -> bool:

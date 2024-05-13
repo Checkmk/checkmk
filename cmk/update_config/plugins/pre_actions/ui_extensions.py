@@ -19,6 +19,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_on_incomp_local_file,
     disable_incomp_mkp,
+    error_message_incomp_local_file,
     get_installer_and_package_map,
     get_path_config,
     GUI_PLUGINS_PREACTION_SORT_INDEX,
@@ -48,11 +49,8 @@ class PreUpdateUIExtensions(PreUpdateAction):
             package_id = _get_package_id(package_map, str(path))
             # unpackaged files
             if package_id is None:
-                if continue_on_incomp_local_file(
-                    conflict_mode,
-                    path,
-                    error,
-                ):
+                logger.error(error_message_incomp_local_file(path, error))
+                if continue_on_incomp_local_file(conflict_mode):
                     continue
                 raise MKUserError(None, "incompatible local file")
 

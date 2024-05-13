@@ -6,6 +6,7 @@
 import enum
 import sys
 from collections.abc import Callable, Sequence
+from logging import Logger
 from pathlib import Path
 from termios import tcflush, TCIFLUSH
 from typing import Final
@@ -98,6 +99,7 @@ USER_INPUT_DISABLE: Final[Sequence] = ["d", "disable"]
 
 
 def disable_incomp_mkp(
+    logger: Logger,
     conflict_mode: ConflictMode,
     module_name: str,
     error: BaseException,
@@ -107,10 +109,10 @@ def disable_incomp_mkp(
     path_config: PathConfig,
     path: Path,
 ) -> bool:
+    logger.error(error_message_incomp_package(path, package_id, error))
     if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
         conflict_mode is ConflictMode.ASK
-        and _request_user_input_on_incompatible_file(path, module_name, package_id, error).lower()
-        in USER_INPUT_DISABLE
+        and _request_user_input_on_incompatible_file().lower() in USER_INPUT_DISABLE
     ):
         if (
             disabled := disable(
@@ -128,15 +130,18 @@ def disable_incomp_mkp(
     return False
 
 
-def _request_user_input_on_incompatible_file(
-    path: Path, module_name: str, package_id: PackageID, error: BaseException
-) -> str:
+def _request_user_input_on_incompatible_file() -> str:
     return prompt(
-        f"Incompatible file '{path}' of extension package '{package_id.name} {package_id.version}'\n"
-        f"Error: {error}\n\n"
         "You can abort the update process (A) or disable the "
         "extension package (d) and continue the update process.\n"
         "Abort the update process? [A/d] \n"
+    )
+
+
+def error_message_incomp_package(path: Path, package_id: PackageID, error: BaseException) -> str:
+    return (
+        f"Incompatible file '{path}' of extension package '{package_id.name} "
+        f"{package_id.version}'\nError: {error}\n\n"
     )
 
 

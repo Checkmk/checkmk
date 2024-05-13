@@ -22,7 +22,6 @@ import pytest
 import urllib3
 from psutil import Process
 
-from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     add_python_paths,
@@ -432,8 +431,6 @@ __all__ = [
     "SiteFactory",
     "Check",
     "MissingCheckInfoError",
-    "CMKEventConsole",
-    "CMKEventConsoleStatus",
     "import_module_hack",
     "APIError",
     "CMKWebSession",

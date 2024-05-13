@@ -12,6 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 from cmk.base.plugins.agent_based.cisco_mem import (
     _idem_check_cisco_mem,
     discovery_cisco_mem,
+    MemEntry,
     parse_cisco_mem,
     Section,
 )
@@ -28,8 +29,8 @@ from cmk.agent_based.v1.type_defs import StringTable
                 [["MEMPOOL_DMA", "41493248", "11754752", "11743928"]],
             ],
             {
-                "System memory": ["319075344", "754665920", "731194056"],
-                "MEMPOOL_DMA": ["41493248", "11754752", "11743928"],
+                "System memory": MemEntry(319075344, 754665920),
+                "MEMPOOL_DMA": MemEntry(41493248, 11754752),
             },
         ),
         (
@@ -38,7 +39,7 @@ from cmk.agent_based.v1.type_defs import StringTable
                 [[]],
             ],
             {
-                "System memory": ["319075344", "754665920", "731194056"],
+                "System memory": MemEntry(319075344, 754665920),
             },
         ),
         (
@@ -50,9 +51,9 @@ from cmk.agent_based.v1.type_defs import StringTable
                 ]
             ],
             {
-                "System memory": ["1251166290", "3043801006"],
-                "MEMPOOL_DMA": ["0", "0"],
-                "MEMPOOL_GLOBAL_SHARED": ["0", "0"],
+                "System memory": MemEntry(1251166290, 3043801006),
+                "MEMPOOL_DMA": MemEntry(0, 0),
+                "MEMPOOL_GLOBAL_SHARED": MemEntry(0, 0),
             },
         ),
     ],
@@ -64,26 +65,24 @@ def test_parse_cisco_mem_asa(
 
 
 @pytest.mark.parametrize(
-    "string_table,expected_parsed_data",
+    "string_table,expected_items",
     [
         (
             {
-                "System memory": ["1251166290", "3043801006"],
-                "MEMPOOL_DMA": ["0", "0"],
-                "MEMPOOL_GLOBAL_SHARED": ["0", "0"],
-                "Driver text": ["1337", "42"],
+                "System memory": MemEntry(1251166290, 3043801006),
+                "MEMPOOL_DMA": MemEntry(0, 0),
+                "MEMPOOL_GLOBAL_SHARED": MemEntry(0, 0),
+                "Driver text": MemEntry(1337, 42),
             },
             [
                 "System memory",
-                "MEMPOOL_DMA",
-                "MEMPOOL_GLOBAL_SHARED",
             ],
         ),
     ],
 )
-def test_discovery_cisco_mem(string_table: Section, expected_parsed_data: Iterable[str]) -> None:
+def test_discovery_cisco_mem(string_table: Section, expected_items: Iterable[str]) -> None:
     assert list(discovery_cisco_mem(string_table)) == list(
-        Service(item=item) for item in expected_parsed_data
+        Service(item=item) for item in expected_items
     )
 
 
@@ -99,10 +98,10 @@ def test_discovery_cisco_mem(string_table: Section, expected_parsed_data: Iterab
                 "trend_timeleft": (12, 6),
             },
             {
-                "System memory": ["3848263744", "8765044672"],
-                "MEMPOOL_MSGLYR": ["123040", "8265568"],
-                "MEMPOOL_DMA": ["429262192", "378092176"],
-                "MEMPOOL_GLOBAL_SHARED": ["1092814800", "95541296"],
+                "System memory": MemEntry(3848263744, 8765044672),
+                "MEMPOOL_MSGLYR": MemEntry(123040, 8265568),
+                "MEMPOOL_DMA": MemEntry(429262192, 378092176),
+                "MEMPOOL_GLOBAL_SHARED": MemEntry(1092814800, 95541296),
             },
             (
                 Result(state=State.OK, summary="Usage: 53.17% - 409 MiB of 770 MiB"),
@@ -113,7 +112,7 @@ def test_discovery_cisco_mem(string_table: Section, expected_parsed_data: Iterab
             "Processor",
             {"levels": (80.0, 90.0)},
             {
-                "Processor": ["27086628", "46835412", "29817596"],
+                "Processor": MemEntry(27086628, 46835412),
             },
             (
                 Result(state=State.OK, summary="Usage: 36.64% - 25.8 MiB of 70.5 MiB"),
@@ -129,7 +128,7 @@ def test_discovery_cisco_mem(string_table: Section, expected_parsed_data: Iterab
             "I/O",
             {"levels": (80.0, 90.0)},
             {
-                "I/O": ["12409052", "2271012", "2086880"],
+                "I/O": MemEntry(12409052, 2271012),
             },
             (
                 Result(

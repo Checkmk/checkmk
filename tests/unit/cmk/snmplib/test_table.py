@@ -96,6 +96,7 @@ def test_get_snmp_table(
                 tree=info,
                 walk_cache={},
                 backend=backend,
+                log=logger.debug,
             )
         return [
             get_snmp_table(
@@ -103,6 +104,7 @@ def test_get_snmp_table(
                 tree=i,
                 walk_cache={},
                 backend=backend,
+                log=logger.debug,
             )
             for i in info
         ]
@@ -219,6 +221,7 @@ def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> Non
                 ),
                 logging.getLogger("test"),
             ),
+            log=logger.debug,
         )
 
     # pylint: disable=unidiomatic-typecheck
@@ -255,6 +258,7 @@ def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None
                 ),
                 logging.getLogger("test"),
             ),
+            log=logger.debug,
         )
 
     # pylint: disable=unidiomatic-typecheck

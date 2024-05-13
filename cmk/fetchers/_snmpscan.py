@@ -94,6 +94,7 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
                 oid,
                 single_oid_cache=snmp_cache.single_oid_cache(),
                 backend=backend,
+                log=lambda msg: console.debug(msg + "\n"),
             )
             is None
         ):
@@ -126,6 +127,7 @@ def _find_sections(
             section_name=name,
             single_oid_cache=snmp_cache.single_oid_cache(),
             backend=backend,
+            log=lambda msg: console.debug(msg + "\n"),
         )
         try:
             if _evaluate_snmp_detection(

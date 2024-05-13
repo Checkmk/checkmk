@@ -82,7 +82,8 @@ def snmp_is_detected(
 def get_parsed_snmp_section(
     section: SectionName | SNMPSection | SimpleSNMPSection, snmp_walk: Path
 ) -> Any | None:
-    backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logging.getLogger("test"), snmp_walk)
+    logger = logging.getLogger("test")
+    backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logger, snmp_walk)
 
     section_plugin = _get_snmp_section_plugin(section)
 
@@ -94,6 +95,7 @@ def get_parsed_snmp_section(
                 tree=BackendSNMPTree.from_frontend(base=tree.base, oids=tree.oids),
                 walk_cache={},
                 backend=backend,
+                log=logger.debug,
             )
         )
 

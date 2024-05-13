@@ -66,6 +66,7 @@ print(
                 tree=tree,
                 backend=backend(config, logger),
                 walk_cache=walk_cache,
+                log=logger.debug,
             ),
             walk_cache,
         )

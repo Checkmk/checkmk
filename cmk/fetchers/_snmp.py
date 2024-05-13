@@ -337,6 +337,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                         tree=tree,
                         walk_cache=walk_cache,
                         backend=self._backend,
+                        log=lambda msg: console.debug(msg + "\n"),
                     )
                     for tree in self.plugin_store[section_name].trees
                 ]

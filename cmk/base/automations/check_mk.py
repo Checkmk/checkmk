@@ -2292,6 +2292,7 @@ class AutomationDiagHost(Automation):
             ),
             walk_cache={},
             backend=make_snmp_backend(snmp_config, log.logger, stored_walk_path=stored_walk_path),
+            log=log.logger.debug,
         )
 
         if data:

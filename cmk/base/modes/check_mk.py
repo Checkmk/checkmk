@@ -1192,7 +1192,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
         backend = snmp_factory.make_backend(
             snmp_config, log.logger, stored_walk_path=stored_walk_path
         )
-        value = get_single_oid(oid, single_oid_cache={}, backend=backend)
+        value = get_single_oid(oid, single_oid_cache={}, backend=backend, log=log.logger.debug)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
 
 

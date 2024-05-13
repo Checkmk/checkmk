@@ -62,7 +62,10 @@ print(
     repr(
         (
             get_single_oid(
-                oid, single_oid_cache=snmp_cache.single_oid_cache(), backend=backend(config, logger)
+                oid,
+                single_oid_cache=snmp_cache.single_oid_cache(),
+                backend=backend(config, logger),
+                log=logger.debug,
             ),
             snmp_cache.single_oid_cache(),
         )

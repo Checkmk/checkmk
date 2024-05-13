@@ -205,6 +205,10 @@ filterwarnings = [
   'error::marshmallow.warnings.RemovedInMarshmallow4Warning',
   # Fun fact: pkg_resources calls declare_namespace() itself when it processes namespace_packages.txt files.
   'ignore:Deprecated call to `pkg_resources\.declare_namespace:DeprecationWarning:pkg_resources:0',
+  # ignore schemathesis testing related warnings
+  'ignore:^jsonschema\.RefResolver is deprecated.*$:DeprecationWarning:schemathesis\..*:0',
+  'ignore:^jsonschema\.exceptions\.RefResolutionError is deprecated.*$:DeprecationWarning:schemathesis\..*:0',
+  'ignore:^Generating overly large repr.*$:Warning:hypothesis\..*:0',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

@@ -23,13 +23,14 @@ class PreUpdateLegacyCheckPlugins(PreUpdateAction):
         errors = "".join(
             load_checks(get_check_api_context, plugin_pathnames_in_directory(str(local_checks_dir)))
         )
-        if errors and not continue_per_users_choice(
-            conflict_mode,
-            f"{errors}\n"
-            "You can abort the update process (A) and try to fix "
-            "the incompatibilities or continue the update (c).\n\n"
-            "Abort the update process? [A/c] \n",
-        ):
+        if errors:
+            logger.error(errors)
+            if continue_per_users_choice(
+                conflict_mode,
+                "You can abort the update process (A) and try to fix the incompatibilities or "
+                "continue the update (c).\n\nAbort the update process? [A/c] \n",
+            ):
+                return
             raise MKUserError(None, "incompatible local legacy check file(s)")
 
 

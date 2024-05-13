@@ -40,9 +40,9 @@ def _parameter_form() -> Dictionary:
             ),
             "hostname": DictElement(
                 parameter_form=String(
-                    title=Title("DNS hostname or IP address"),
+                    title=Title("DNS host name or IP address"),
                     help_text=Help(
-                        "You can specify a hostname or IP address different from the IP address "
+                        "You can specify a host name or IP address different from the IP address "
                         "of the host this check will be assigned to."
                     ),
                     macro_support=True,

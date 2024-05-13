@@ -143,7 +143,7 @@ def _valuespec_inv_exports_software_csv() -> Dictionary:
                 "filename",
                 TextInput(
                     title=_(
-                        "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+                        "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
                     ),
                     help=_(
                         "Please specify the path to the export file. The text <tt>[HOST]</tt> "

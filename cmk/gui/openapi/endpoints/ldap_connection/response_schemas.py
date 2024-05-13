@@ -60,7 +60,7 @@ class LDAPDirectoryTypeConnection(BaseSchema):
     )
     ldap_server = fields.String(
         description="Set the host address of the LDAP server. Might be an IP address or "
-        "resolvable hostname.",
+        "resolvable host name.",
         example="your_ldap_server.example.com",
     )
     failover_servers = fields.List(

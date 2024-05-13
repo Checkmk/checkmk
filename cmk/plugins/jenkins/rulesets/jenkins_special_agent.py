@@ -39,7 +39,7 @@ def _formspec_jenkins() -> Dictionary:
                     help_text=Help(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "hostname here, eg. my_jenkins.com."
+                        "host name here, eg. my_jenkins.com."
                     ),
                     custom_validate=[
                         LengthInRange(min_value=1, max_value=32),

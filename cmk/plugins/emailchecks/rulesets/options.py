@@ -46,7 +46,7 @@ def smtp() -> Dictionary:
                     title=Title("SMTP server"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
-                        "You can specify a hostname or IP address different from the IP address "
+                        "You can specify a host name or IP address different from the IP address "
                         "of the host this check will be assigned to."
                     ),
                 ),
@@ -158,7 +158,7 @@ def common(protocol: str, port_defaults: str) -> Dictionary:
                     title=Title("%s server") % protocol,
                     macro_support=True,
                     help_text=Help(
-                        "You can specify a hostname or IP address different from the IP "
+                        "You can specify a host name or IP address different from the IP "
                         "address of the host this check will be assigned to."
                     ),
                 )

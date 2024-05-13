@@ -58,7 +58,7 @@ def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branc
 
     for hostentry in hostlist:
         if hostentry == "":
-            raise MKGeneralException("Empty hostname in host list %r" % hostlist)
+            raise MKGeneralException("Empty host name in host list %r" % hostlist)
         negate = False
         use_regex = False
         if hostentry[0] == "@":

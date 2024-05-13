@@ -1221,7 +1221,7 @@ def _validate_reclassify_of_states(value, varprefix):
     if host_state is not None:
         if not value.get("host"):
             raise MKUserError(
-                "_editanno_p_host", _("Please set a hostname for host state reclassification")
+                "_editanno_p_host", _("Please set a host name for host state reclassification")
             )
 
     service_state = value.get("service_state")

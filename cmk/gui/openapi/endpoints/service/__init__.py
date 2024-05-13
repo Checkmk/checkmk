@@ -74,7 +74,7 @@ PARAMETERS = [
 
 HOST_NAME = {
     "host_name": HostField(
-        description="A hostname.",
+        description="A host name.",
         should_exist=True,
         permission_type="monitor",
     )
@@ -82,7 +82,7 @@ HOST_NAME = {
 
 OPTIONAL_HOST_NAME = {
     "host_name": HostField(
-        description="A hostname.",
+        description="A host name.",
         should_exist=True,
         required=False,
         permission_type="monitor",

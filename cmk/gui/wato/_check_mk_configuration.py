@@ -6061,9 +6061,9 @@ def _valuespec_piggyback_translation():
         help=_(
             "Some agents or agent plug-ins send data not only for the queried host but also "
             "for other hosts &quot;piggyback&quot; with their own data. This is the case "
-            "for the vSphere special agent and the SAP R/3 plugin, for example. The hostnames "
-            "that these agents send must match your hostnames in your monitoring configuration. "
-            "If that is not the case, then with this rule you can define a hostname translation. "
+            "for the vSphere special agent and the SAP R/3 plugin, for example. The host names "
+            "that these agents send must match your host names in your monitoring configuration. "
+            "If that is not the case, then with this rule you can define a host name translation. "
             "Note: This rule must be configured for the &quot;pig&quot; - i.e. the host that the "
             "agent is running on. It is not applied to the translated piggybacked hosts."
         ),

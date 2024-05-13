@@ -1507,8 +1507,8 @@ modes.register(
         argument_optional=True,
         argument_descr="[HostA, HostB]",
         long_help=[
-            "You may add hostnames as additional arguments. This enables the incremental "
-            "activate mechanism, only compiling these hostnames and using cached data for all "
+            "You may add host names as additional arguments. This enables the incremental "
+            "activate mechanism, only compiling these host names and using cached data for all "
             "other hosts. Only supported with Checkmk Micro Core."
         ],
         handler_function=mode_restart,
@@ -1556,8 +1556,8 @@ modes.register(
         argument_optional=True,
         argument_descr="[HostA, HostB]",
         long_help=[
-            "You may add hostnames as additional arguments. This enables the incremental "
-            "activate mechanism, only compiling these hostnames and using cached data for all "
+            "You may add host names as additional arguments. This enables the incremental "
+            "activate mechanism, only compiling these host names and using cached data for all "
             "other hosts. Only supported with Checkmk Micro Core."
         ],
         handler_function=mode_reload,

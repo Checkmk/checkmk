@@ -73,7 +73,7 @@ def _parameter_valuespec_heartbeat_crm() -> Dictionary:
                 TextInput(
                     allow_empty=False,
                     title=_("Expected DC"),
-                    help=_("The hostname of the expected distinguished controller of the cluster"),
+                    help=_("The host name of the expected distinguished controller of the cluster"),
                 ),
             ),
             (

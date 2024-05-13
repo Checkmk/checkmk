@@ -148,7 +148,7 @@ class IsValidRegexp(Validator):
 
 # NOTE: This was duplicated from cmk.gui.valuespec:HostAddress._is_valid_host_name to prevent import cycles.
 class HostNameValidator(Validator):
-    """Validate a hostname according to RFC1123
+    """Validate a host name according to RFC1123
 
     Examples:
 
@@ -158,12 +158,12 @@ class HostNameValidator(Validator):
         >>> validator("aol.com..")
         Traceback (most recent call last):
         ...
-        marshmallow.exceptions.ValidationError: Domain part #2: '' is not a valid hostname. [RFC1123]
+        marshmallow.exceptions.ValidationError: Domain part #2: '' is not a valid host name. [RFC1123]
 
         >>> validator("-hyphenfront")
         Traceback (most recent call last):
         ...
-        marshmallow.exceptions.ValidationError: Domain part #0: '-hyphenfront' is not a valid hostname. [RFC1123]
+        marshmallow.exceptions.ValidationError: Domain part #0: '-hyphenfront' is not a valid host name. [RFC1123]
 
         >>> validator("127.0.0.1")
         Traceback (most recent call last):
@@ -190,7 +190,7 @@ class HostNameValidator(Validator):
         for index, part in enumerate(hostname.split(".")):
             if not allowed.match(part):
                 raise ValidationError(
-                    f"Domain part #{index}: {part!r} is not a valid hostname. [RFC1123]"
+                    f"Domain part #{index}: {part!r} is not a valid host name. [RFC1123]"
                 )
 
 

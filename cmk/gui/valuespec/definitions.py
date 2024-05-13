@@ -1527,7 +1527,7 @@ def _validate_hostname(text: str | None, varprefix: str) -> None:
         raise MKUserError(
             varprefix,
             _(
-                "Please enter a valid hostname or IPv4 address. "
+                "Please enter a valid host name or IPv4 address. "
                 "Only letters, digits, dash, underscore and dot are allowed."
             ),
         ) from exception
@@ -3399,7 +3399,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         )
 
         vs_host = MonitoredHostname(
-            label=_("Filter %s selection by hostname: ") % self._hint_label,
+            label=_("Filter %s selection by host name: ") % self._hint_label,
             strict="True",
         )
         html.br()

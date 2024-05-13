@@ -65,7 +65,7 @@ def _valuespec_active_checks_by_ssh():
                                             default_value="$HOSTADDRESS$",
                                             allow_empty=False,
                                             help=_(
-                                                "You can specify a hostname or IP address different from IP address "
+                                                "You can specify a host name or IP address different from IP address "
                                                 "of the host as configured in your host properties."
                                             ),
                                         ),

@@ -89,7 +89,7 @@ class DirectoryTypeBaseRequest(BaseSchema):
 
 class DirectoryTypeManualRequest(DirectoryTypeBaseRequest):
     ldap_server = fields.String(
-        description="Set the host address of the LDAP server. Might be an IP address or resolvable hostname.",
+        description="Set the host address of the LDAP server. Might be an IP address or resolvable host name.",
         example="your_ldap_server.example.com",
         required=True,
     )

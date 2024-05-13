@@ -72,7 +72,7 @@ def _make_parameter_form() -> Dictionary:
                     title=Title("DNS Hostname"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
-                        "If you specify a hostname here, then a dynamic DNS lookup "
+                        "If you specify a host name here, then a dynamic DNS lookup "
                         "will be done instead of using the IP address of the host "
                         "as configured in your host properties."
                     ),

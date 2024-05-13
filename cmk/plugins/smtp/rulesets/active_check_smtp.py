@@ -70,7 +70,7 @@ def _make_parameter_form() -> Dictionary:
                     title=Title("DNS Hostname or IP address"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
-                        "You can specify a hostname or IP address different from the IP address "
+                        "You can specify a host name or IP address different from the IP address "
                         "of the host as configured in your host properties."
                     ),
                     macro_support=True,

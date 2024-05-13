@@ -1942,10 +1942,10 @@ class AutomationDiagHost(Automation):
             try:
                 resolved_address = config.lookup_ip_address(config_cache, host_name)
             except Exception:
-                raise MKGeneralException("Cannot resolve hostname %s into IP address" % host_name)
+                raise MKGeneralException("Cannot resolve host name %s into IP address" % host_name)
 
             if resolved_address is None:
-                raise MKGeneralException("Cannot resolve hostname %s into IP address" % host_name)
+                raise MKGeneralException("Cannot resolve host name %s into IP address" % host_name)
 
             ipaddress = resolved_address
 

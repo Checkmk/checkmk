@@ -34,9 +34,10 @@ class PreUpdateRulesets(PreUpdateAction):
                 set_global_vars()
                 rulesets = AllRulesets.load_all_rulesets()
         except Exception as exc:
+            logger.error(f"Exception while trying to load rulesets: {exc}\n\n")
             if (
                 conflict_mode is ConflictMode.ASK
-                and _request_user_input_on_ruleset_exception(exc).lower() in USER_INPUT_CONTINUE
+                and _request_user_input_on_ruleset_exception().lower() in USER_INPUT_CONTINUE
             ):
                 return None
             raise MKUserError(None, "an incompatible ruleset") from exc
@@ -72,9 +73,8 @@ class PreUpdateRulesets(PreUpdateAction):
         return None
 
 
-def _request_user_input_on_ruleset_exception(exc: Exception) -> str:
+def _request_user_input_on_ruleset_exception() -> str:
     return prompt(
-        f"Exception while trying to load rulesets: {exc}\n\n"
         "You can abort the update process (A) and try to fix "
         "the incompatibilities or try to continue the update (c).\n"
         "Abort update? [A/c]\n"

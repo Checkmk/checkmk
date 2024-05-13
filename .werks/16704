@@ -1,0 +1,11 @@
+Title: Fix discovery state filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1715587206
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+The filter "Discovery state" used, e.g. in the "Unmonitored services" view, was
+non-functional since version 2.0. No results were shown.

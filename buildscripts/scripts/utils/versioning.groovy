@@ -99,6 +99,19 @@ def configured_or_overridden_distros(edition, distros, use_case="daily") {
     }
 }
 
+def get_editions() {
+    /// read editions from edition.yml
+    docker_image_from_alias("IMAGE_TESTING").inside() {
+        dir("${checkout_dir}") {
+            return cmd_output("""scripts/run-pipenv run \
+                  buildscripts/scripts/get_distros.py \
+                  --editions_file "${checkout_dir}/editions.yml" \
+                  editions
+            """).split().grep();
+        }
+    }
+}
+
 def get_internal_distros_pattern() {
     docker_image_from_alias("IMAGE_TESTING").inside() {
         dir("${checkout_dir}") {
@@ -111,7 +124,6 @@ def get_internal_distros_pattern() {
             """, returnStdout: true).trim();
         }
     }
-
 }
 
 def get_branch_version(String git_dir=".") {

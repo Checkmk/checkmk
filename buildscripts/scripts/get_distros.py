@@ -262,10 +262,15 @@ def print_distros_for_use_case(arguments: argparse.Namespace, loaded_yaml: dict)
     print(" ".join(flatten_list(loaded_yaml["editions"][arguments.edition][arguments.use_case])))
 
 
+def print_editions(arguments: argparse.Namespace, loaded_yaml: dict) -> None:
+    print(" ".join(sorted(loaded_yaml["editions"].keys())))
+
+
 COMMANDS_TO_FUNCTION: Mapping[str, Callable[[argparse.Namespace, dict], None]] = {
     "internal_distros": print_internal_distros,
     "use_cases": print_distros_for_use_case,
     "assert_build_artifacts": assert_build_artifacts,
+    "editions": print_editions,
 }
 
 
@@ -280,13 +285,15 @@ def parse_arguments() -> argparse.Namespace:
 
     parser.add_argument("--editions_file", required=True)
     subparsers = parser.add_subparsers(required=True, dest="command")
-    use_cases = subparsers.add_parser("use_cases", help="a help")
+    use_cases = subparsers.add_parser("use_cases", help="Print distros for use case")
     use_cases.add_argument("--edition", required=True)
     use_cases.add_argument("--use_case", required=True)
 
     internal_distros = subparsers.add_parser("internal_distros")
     internal_distros.add_argument("--as-codename", default=False, action="store_true")
     internal_distros.add_argument("--as-rsync-exclude-pattern", default=False, action="store_true")
+
+    editions_subparser = subparsers.add_parser("editions", help="Print all supported edtions")
 
     sub_assert_build_artifacts = subparsers.add_parser("assert_build_artifacts")
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)

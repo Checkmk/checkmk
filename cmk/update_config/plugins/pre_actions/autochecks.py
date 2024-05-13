@@ -32,9 +32,9 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
 
         for error in rewrite_yielding_errors(write=False):
             if error.plugin is None:
+                logger.error(f"{error.host_name}: {error.message}.")
                 if continue_per_users_choice(
                     conflict_mode,
-                    f"{error.host_name}: {error.message}."
                     " You can abort and fix this manually."
                     " If you continue, the affected service(s) will be lost, but can be rediscovered."
                     " Abort the update process? [A/c] \n",
@@ -55,11 +55,11 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
 
             all_messages = list(itertools.chain(*hosts.values()))
 
+            logger.error(f"{plugin}: {all_messages[0]}. ")
             if continue_per_users_choice(
                 conflict_mode,
-                f"{plugin}: {all_messages[0]}."
-                " You can abort and fix this manually."
-                f" If you continue, {len(all_messages)} service(s) on {len(hosts)} host(s) will be lost, but can be rediscovered."
+                "You can abort and fix this manually. "
+                f"If you continue, {len(all_messages)} service(s) on {len(hosts)} host(s) will be lost, but can be rediscovered."
                 " Abort the update process? [A/c] \n",
             ):
                 continue

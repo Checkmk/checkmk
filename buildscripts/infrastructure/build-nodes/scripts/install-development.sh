@@ -230,7 +230,6 @@ install_for_cpp_dev() {
     print_green "Installing everything for CPP development ..."
 
     local PACKAGES_TO_INSTALL=(
-        "python3-dev"     # "libpython3.10.so.1.0" required by gdb, ouch
         "pkg-config"      # used by install-protobuf-cpp.sh
         "bison"           # to build binutils
         "texinfo"         # to build gdb
@@ -487,13 +486,14 @@ setup_env_variables
 
 if [[ $INSTALL_FOR_CPP -eq 1 ]]; then
     install_for_cpp_dev
-
-    # Python needs to be installed before GDB as "libpython3.10.so.1.0" is required
-    # "python3-dev" package might provide a different version than specified
-    install_for_gdb
 fi
 if [[ $INSTALL_FOR_PYTHON -eq 1 ]]; then
     install_for_python_dev
+fi
+if [[ $INSTALL_FOR_CPP -eq 1 ]]; then
+    # Python needs to be installed before GDB as "libpython3.10.so.1.0" is required
+    # "python3-dev" package might provide a different version than specified
+    install_for_gdb
 fi
 if [[ $INSTALL_FOR_RUST -eq 1 ]]; then
     install_for_rust_dev

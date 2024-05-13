@@ -26,7 +26,7 @@ PREFIX=${TARGET_DIR}/${DIR_NAME}
 BUILD_DIR="${TARGET_DIR}/src"
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID="${GDB_VERSION}-1"
+BUILD_ID="${GDB_VERSION}-2"
 
 download_sources() {
     # Get the sources from nexus or upstream

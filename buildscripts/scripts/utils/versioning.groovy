@@ -114,6 +114,19 @@ def get_distros(Map args) {
     }
 }
 
+def get_editions() {
+    /// read editions from edition.yml
+    inside_container() {
+        dir("${checkout_dir}") {
+            return cmd_output("""scripts/run-pipenv run \
+                  buildscripts/scripts/get_distros.py \
+                  --editions_file "${checkout_dir}/editions.yml" \
+                  editions
+            """).split().grep();
+        }
+    }
+}
+
 def get_internal_artifacts_pattern() {
     inside_container() {
         dir("${checkout_dir}") {

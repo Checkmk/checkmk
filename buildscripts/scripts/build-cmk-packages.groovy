@@ -497,7 +497,6 @@ def create_and_upload_bom(workspace, branch_version, version) {
                 inside_container(
                     image: scanner_image,
                     args: ["-v ${checkout_dir}:${checkout_dir}"], // why?!
-                    ensure_workspace_integrity: false, // the bom runs in an image which neither uses version.txt nor has lsb_release installed
                 ) {
                     sh("""python3 -m dependencyscanner \
                     --stage prod \
@@ -516,7 +515,6 @@ def create_and_upload_bom(workspace, branch_version, version) {
                     on_dry_run_omit(LONG_RUNNING, "Upload BOM") {
                         inside_container(
                             image: scanner_image,
-                            ensure_workspace_integrity: false, // the bom runs in an image which neither uses version.txt nor has lsb_release installed
                             args: [
                                 "-v ${checkout_dir}:${checkout_dir}", // why?!
                                 "--env DTRACK_URL,DTRACK_API_KEY",

@@ -38,6 +38,9 @@ def main() {
     stage("Prepare workspace") {
         dir("${checkout_dir}") {
 
+            inside_container() {
+                sh("buildscripts/scripts/ensure-workspace-integrity");
+            }
             sh("rm -rf ${result_dir}; mkdir ${result_dir}");
 
             /// Reason for the following try/catch block:

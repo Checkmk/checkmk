@@ -17,6 +17,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_on_incomp_local_file,
     disable_incomp_mkp,
+    error_message_incomp_local_file,
     get_installer_and_package_map,
     get_path_config,
     PACKAGE_STORE,
@@ -28,11 +29,12 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Load all agent based plugins before the real update happens"""
 
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
-        while self._disable_failure_and_reload_plugins(conflict_mode):
+        while self._disable_failure_and_reload_plugins(logger, conflict_mode):
             pass
 
     def _disable_failure_and_reload_plugins(
         self,
+        logger: Logger,
         conflict_mode: ConflictMode,
     ) -> bool:
         path_config = get_path_config()
@@ -44,11 +46,8 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             package_id = package_map.get(path.resolve())
             # unpackaged files
             if package_id is None:
-                if continue_on_incomp_local_file(
-                    conflict_mode,
-                    path,
-                    error,
-                ):
+                logger.error(error_message_incomp_local_file(path, error))
+                if continue_on_incomp_local_file(conflict_mode):
                     continue
                 raise MKUserError(None, "incompatible local file")
 

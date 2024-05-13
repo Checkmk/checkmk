@@ -55,6 +55,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 continue  # already dealt with
 
             if disable_incomp_mkp(
+                logger,
                 conflict_mode,
                 module_name,
                 error,

@@ -120,7 +120,7 @@ def _vs_element_aws_piggyback_naming_convention() -> DictionaryEntry:
             ],
             help=_(
                 "Each EC2 instance creates a piggyback host.<br><b>Note:</b> "
-                "Not every hostname is pingable and changing the piggyback name "
+                "Not every host name is pingable and changing the piggyback name "
                 "will reset the piggyback host.<br><br><b>IP - Region - Instance "
                 'ID:</b><br>The name consists of "{Private IPv4 '
                 'address}-{Region}-{Instance ID}". This uniquely identifies the '

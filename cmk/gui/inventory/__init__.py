@@ -567,14 +567,14 @@ def check_for_valid_hostname(hostname: str) -> None:
     >>> check_for_valid_hostname("klappspaten")
     >>> check_for_valid_hostname("../../etc/passwd")
     Traceback (most recent call last):
-    cmk.gui.exceptions.MKUserError: You need to provide a valid "hostname". Only letters, digits, dash, underscore and dot are allowed.
+    cmk.gui.exceptions.MKUserError: You need to provide a valid "host name". Only letters, digits, dash, underscore and dot are allowed.
     """
     if HostAddress.is_valid(hostname):
         return
     raise MKUserError(
         None,
         _(
-            'You need to provide a valid "hostname". '
+            'You need to provide a valid "host name". '
             "Only letters, digits, dash, underscore and dot are allowed.",
         ),
     )

@@ -311,7 +311,7 @@ class ModeBulkRenameHost(WatoMode):
                     RegExp(
                         title=_("Hostname matching"),
                         help=_(
-                            "Only rename hostnames whose names <i>begin</i> with the regular expression entered here."
+                            "Only rename host names whose names <i>begin</i> with the regular expression entered here."
                         ),
                         mode=RegExp.complete,
                     ),
@@ -338,8 +338,8 @@ class ModeBulkRenameHost(WatoMode):
                     _("Case translation"),
                     DropdownChoice(
                         choices=[
-                            ("upper", _("Convert hostnames to upper case")),
-                            ("lower", _("Convert hostnames to lower case")),
+                            ("upper", _("Convert host names to upper case")),
+                            ("lower", _("Convert host names to lower case")),
                         ]
                     ),
                 ),

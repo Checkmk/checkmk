@@ -333,7 +333,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                                 title=_("LDAP Server"),
                                 help=_(
                                     "Set the host address of the LDAP server. Might be an IP address or "
-                                    "resolvable hostname."
+                                    "resolvable host name."
                                 ),
                                 allow_empty=False,
                             ),

@@ -1301,7 +1301,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         (
             "set_host",
             TextInput(
-                title=_("Rewrite hostname"),
+                title=_("Rewrite host name"),
                 help=_(
                     "Replace the host name with this text. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -4988,7 +4988,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                     default_value=["$HOSTNAME$", "$HOSTADDRESS$"],
                     help=_(
                         "When querying the event status, you can match events to a particular host "
-                        "using the hostname, the IP address, or the host alias. This is due to the "
+                        "using the host name, the IP address, or the host alias. This is due to the "
                         "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
                         "same host using different specification methods. Alternatively, you can "
                         "specify an explicit host for which to show events."

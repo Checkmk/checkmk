@@ -33,7 +33,7 @@ def _valuespec_special_agents_rabbitmq():
                     help=_(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "hostname here, eg. my_rabbitmq.com. If not set, the "
+                        "host name here, eg. my_rabbitmq.com. If not set, the "
                         "assigned host is used as instance."
                     )
                     + monitoring_macro_help(),

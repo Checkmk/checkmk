@@ -45,7 +45,7 @@ class AutomationRemoveTLSRegistration(AutomationCommand):
         valid_hosts = [hostname for hostname in api_request if HostAddress.is_valid(hostname)]
         if len(valid_hosts) < len(api_request):
             logger.warning(
-                "remove-tls-registration called with the following invalid hostnames: %s",
+                "remove-tls-registration called with the following invalid host names: %s",
                 ", ".join(
                     hostname for hostname in api_request if not HostAddress.is_valid(hostname)
                 ),

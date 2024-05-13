@@ -209,7 +209,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             "host": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("DNS hostname or IP address"),
+                    title=Title("DNS host name or IP address"),
                     help_text=Help(
                         "This defaults to the host for which the active check is configured."
                     ),

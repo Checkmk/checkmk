@@ -148,11 +148,11 @@ def get_all_shared_files(
         pattern = pattern_string.strip("\\").split("\\")
         if len(pattern) < 3:
             raise SMBShareAgentError(
-                f"Invalid pattern {pattern_string}. Pattern has to consist of hostname, share and file matching pattern"
+                f"Invalid pattern {pattern_string}. Pattern has to consist of host name, share and file matching pattern"
             )
 
         if pattern[0] != hostname:
-            raise SMBShareAgentError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
+            raise SMBShareAgentError(f"Pattern {pattern_string} doesn't match {hostname} host name")
 
         share_name = pattern[1]
         if share_name.lower() not in share_names:

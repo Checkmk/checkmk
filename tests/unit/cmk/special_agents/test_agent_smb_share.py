@@ -707,7 +707,7 @@ def test_get_all_shared_files(
     [
         (
             ["\\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1"],
-            r"Pattern \\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1 doesn't match HOSTNAME hostname",
+            r"Pattern \\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1 doesn't match HOSTNAME host name",
         ),
         (
             ["\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1"],

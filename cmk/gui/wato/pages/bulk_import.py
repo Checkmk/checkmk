@@ -435,7 +435,7 @@ class ModeBulkImport(WatoMode):
                 _(
                     "Using this page you can import several hosts at once into the choosen folder. You can "
                     "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
-                    "into the textarea or simply enter a list of hostnames (one per line) to the textarea."
+                    "into the textarea or simply enter a list of host names (one per line) to the textarea."
                 )
             )
 

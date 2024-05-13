@@ -200,7 +200,7 @@ def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--use_dns",
         action="store_true",
-        help="Use DNS to convert hostnames to IP addresses.",
+        help="Use DNS to convert host names to IP addresses.",
     )
     parser.add_argument(
         "--debug",

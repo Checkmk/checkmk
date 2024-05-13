@@ -964,7 +964,7 @@ def parse_arguments(argv):
         "--spaces",
         choices=("cut", "underscore"),
         default="underscore",
-        help="""How to handle spaces in hostnames. "cut": cut everyting after the first space,
+        help="""How to handle spaces in host names. "cut": cut everyting after the first space,
         "underscore": replace with underscores. Default is "underscore".""",
     )
     parser.add_argument(
@@ -1008,7 +1008,7 @@ def parse_arguments(argv):
         "-H",
         "--hostname",
         default=None,
-        help="""Specify a hostname. This is necessary if this is different from HOST.
+        help="""Specify a host name. This is necessary if this is different from HOST.
         It is being used when outputting the hosts power state.""",
     )
 

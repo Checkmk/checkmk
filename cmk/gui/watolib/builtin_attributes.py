@@ -134,7 +134,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             title=_("IPv4 address"),
             help=_(
                 "Specify an explicit IP address or resolvable DNS name here, if "
-                "the hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. "
+                "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
                 "If you do not set this attribute, host name resolution will be "
                 "performed when the configuration is enabled. Checkmk's "
                 "built-in DNS cache is enabled by default in the global "
@@ -184,7 +184,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
             title=_("IPv6 Address"),
             help=_(
                 "Specify an explicit IPv6 address or resolvable DNS name here, if "
-                "the hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. "
+                "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
                 "If you do not set this attribute, host name resolution will be "
                 "performed when the configuration is enabled. Checkmk's "
                 "built-in DNS cache is enabled by default in the global "
@@ -504,7 +504,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 "try to detect new hosts in the configured IP ranges by sending pings "
                 "to each IP address to check whether or not a host is using this ip "
                 "address. Each new found host will be added to the current folder by "
-                "it's hostname, when resolvable via DNS, or by it's IP address."
+                "it's host name, when resolvable via DNS, or by it's IP address."
             ),
             optional_keys=["max_parallel_pings", "translate_names"],
             default_text=_("Not configured."),
@@ -517,7 +517,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 "Configuration for automatic network scan. Pings will be"
                 "sent to each IP address in the configured ranges to check"
                 "if a host is up or down. Each found host will be added to"
-                "the folder by it's hostname (if possible) or IP address."
+                "the folder by it's host name (if possible) or IP address."
             ),
         )
 
@@ -868,7 +868,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
-            description="Address (IPv4, IPv6 or hostname) under which the management board can be reached.",
+            description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
             validate=fields.ValidateAnyOfValidators(
                 [
                     fields.ValidateIPv4(),

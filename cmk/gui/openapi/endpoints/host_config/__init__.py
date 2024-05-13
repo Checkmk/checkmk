@@ -542,7 +542,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     path_params=[
         {
             "host_name": gui_fields.HostField(
-                description="A hostname.",
+                description="A host name.",
                 should_exist=True,
                 permission_type="setup_write",
             ),
@@ -748,7 +748,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     path_params=[
         {
             "host_name": gui_fields.HostField(
-                description="A hostname.",
+                description="A host name.",
                 should_exist=True,
                 permission_type="setup_read",
             )

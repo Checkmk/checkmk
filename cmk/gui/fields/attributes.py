@@ -382,7 +382,7 @@ class DirectMapping(BaseSchema, CheckmkTuple):
     tuple_fields = ("hostname", "replace_with")
 
     hostname = String(
-        description="The hostname to be replaced.",
+        description="The host name to be replaced.",
         required=True,
     )
     replace_with = String(
@@ -394,12 +394,12 @@ class DirectMapping(BaseSchema, CheckmkTuple):
 class TranslateNames(BaseSchema):
     case = String(
         data_key="convert_case",
-        description="Convert all detected hostnames to upper- or lower-case.\n\n"
+        description="Convert all detected host names to upper- or lower-case.\n\n"
         + _enum_options(
             [
                 ("nop", "Do not convert anything"),
-                ("lower", "Convert all hostnames to lowercase."),
-                ("upper", "Convert all hostnames to uppercase."),
+                ("lower", "Convert all host names to lowercase."),
+                ("upper", "Convert all host names to uppercase."),
             ]
         ),
         enum=["nop", "lower", "upper"],
@@ -407,7 +407,7 @@ class TranslateNames(BaseSchema):
     )
     drop_domain = Boolean(
         description=(
-            "Drop the rest of the domain, only keep the hostname. Will not affect "
+            "Drop the rest of the domain, only keep the host name. Will not affect "
             "IP addresses.\n\n"
             "Examples:\n\n"
             " * `192.168.0.1` -> `192.168.0.1`\n"
@@ -422,7 +422,7 @@ class TranslateNames(BaseSchema):
         Nested(RegexpRewrites),
         data_key="regexp_rewrites",
         description=(
-            "Rewrite discovered hostnames with multiple regular expressions. The "
+            "Rewrite discovered host names with multiple regular expressions. The "
             "replacements will be done one after another in the order they appear "
             "in the list. If not anchored at the end by a `$` character, the regexp"
             "will be anchored at the end implicitly by adding a `$` character.\n\n"

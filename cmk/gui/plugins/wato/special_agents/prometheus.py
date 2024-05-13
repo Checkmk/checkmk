@@ -45,7 +45,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                 "Hosts for namespaced Kubernetes objects will then be prefixed with the "
                 "name of their namespace. This makes Kubernetes resources in different "
                 "namespaces that have the same name distinguishable, but results in "
-                "longer hostnames."
+                "longer host names."
             ),
             choices=[
                 ("use_namespace", _("Use a namespace prefix")),
@@ -87,7 +87,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                                                 help=_(
                                                     "Per default, Checkmk tries to map the underlying Checkmk host "
                                                     "to the Node Exporter host which contains either the Checkmk "
-                                                    'hostname, host address or "localhost" in its endpoint address. '
+                                                    'host name, host address or "localhost" in its endpoint address. '
                                                     "The created services of the mapped Node Exporter will "
                                                     "be assigned to the Checkmk host. A piggyback host for each "
                                                     "Node Exporter host will be created if none of the options are "

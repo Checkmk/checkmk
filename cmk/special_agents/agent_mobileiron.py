@@ -92,7 +92,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--username", "-u", type=str, help="username for connection")
     parser.add_argument("--password", "-p", type=str, help="password for connection")
-    parser.add_argument("--key-fields", action="append", help="field for hostname generation")
+    parser.add_argument("--key-fields", action="append", help="field for host name generation")
     parser.add_argument(
         "--partition",
         nargs="+",

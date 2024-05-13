@@ -432,7 +432,7 @@ class PageAjaxDiagHost(AjaxPage):
 
         hostname = api_request.get("host")
         if not hostname:
-            raise MKGeneralException(_("The hostname is missing."))
+            raise MKGeneralException(_("The host name is missing."))
 
         host = Host.host(hostname)
 

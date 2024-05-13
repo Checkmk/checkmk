@@ -47,7 +47,7 @@ def _smtp_email_parameters() -> Dictionary:
                     title=_("SMTP server"),
                     allow_empty=False,
                     help=_(
-                        "You can specify a hostname or IP address different from the IP address "
+                        "You can specify a host name or IP address different from the IP address "
                         "of the host this check will be assigned to."
                     ),
                 ),
@@ -144,7 +144,7 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
                             title=f"{protocol} server",
                             allow_empty=False,
                             help=_(
-                                "You can specify a hostname or IP address different from the IP "
+                                "You can specify a host name or IP address different from the IP "
                                 "address of the host this check will be assigned to."
                             ),
                         ),
@@ -603,7 +603,7 @@ def _forward_to_ec_elements() -> list[DictionaryEntry]:
                         TextInput(
                             title=_("Events: Hostname"),
                             help=_(
-                                "Use this hostname for all created events instead of the name of the mailserver"
+                                "Use this host name for all created events instead of the name of the mailserver"
                             ),
                         ),
                     ),

@@ -89,7 +89,9 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
         image.inside(run_args_str) {
             if (ensure_workspace_integrity) {
-                sh("${checkout_dir}/buildscripts/scripts/ensure-workspace-integrity");
+                dir("${checkout_dir}") {
+                    sh("buildscripts/scripts/ensure-workspace-integrity");
+                }
             }
             body();
         }

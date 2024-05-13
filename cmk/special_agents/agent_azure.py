@@ -783,9 +783,6 @@ class ExplicitConfig:
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
-        if key == "resources":
-            self.current_group.add_key(key, value.lower())
-            return
         self.current_group.add_key(key, value)
 
     def is_configured(self, resource: AzureResource) -> bool:
@@ -977,13 +974,9 @@ class AzureResource:
 
         self.section = info["type"].split("/")[-1].lower()
         self.piggytargets = []
-
-        if name := self.info.get("name"):
-            self.info["name"] = name.lower()
         if group := self.info.get("group"):
             self.info["group"] = group.lower()
             self.piggytargets.append(group.lower())
-
         self.metrics: list = []
 
     def dumpinfo(self):

@@ -257,8 +257,8 @@ def test_selector() -> None:
     assert str(selector) == (
         "Explicit configuration:\n"
         "  [test-group]\n"
-        "  resource: resource1\n"
-        "  resource: resource2\n"
+        "  resource: Resource1\n"
+        "  resource: Resource2\n"
         "Tag based configuration:\n"
         "  required tags: tag1\n"
         "  required value for 'tag2': 'value2'"
@@ -273,7 +273,7 @@ def test_selector() -> None:
             AzureResource(
                 {
                     "id": "id1",
-                    "name": "resource1",
+                    "name": "Resource1",
                     "type": "Microsoft.Compute/virtualMachines",
                     "location": "westeurope",
                     "tags": {"tag1": "value1", "tag2": "value2", "mytag": "True"},
@@ -325,7 +325,7 @@ def test_selector() -> None:
                     "type": "Microsoft.Compute/virtualMachines",
                     "location": "westeurope",
                     "tags": {"tag1": "value1", "tag2": "value2", "mytag": "True"},
-                    "group": "TEST-GROUP",
+                    "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
             ),

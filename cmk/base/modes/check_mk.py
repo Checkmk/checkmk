@@ -2358,7 +2358,7 @@ def mode_check(
             clusters=hosts_config.clusters,
             rtc_package=None,
         )
-        with CPUTracker() as tracker:
+        with CPUTracker(lambda msg: console.debug(msg + "\n")) as tracker:
             checks_result = execute_checkmk_checks(
                 hostname=hostname,
                 fetched=((f[0], f[1]) for f in fetched),

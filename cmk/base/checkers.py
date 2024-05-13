@@ -151,7 +151,7 @@ def _do_fetch(
     Snapshot,
 ]:
     console.debug(f"  Source: {source_info}\n")
-    with CPUTracker() as tracker:
+    with CPUTracker(lambda msg: console.debug(msg + "\n")) as tracker:
         raw_data = get_raw_data(file_cache, fetcher, mode)
     return source_info, raw_data, tracker.duration
 

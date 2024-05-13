@@ -1025,7 +1025,7 @@ def get_availability_rawdata(
     headers += filterheaders
     logrow_limit = avoptions["logrow_limit"]
 
-    with CPUTracker() as fetch_rows_tracker:
+    with CPUTracker(logger.debug) as fetch_rows_tracker:
         data = query_livestatus(
             Query(
                 QuerySpecification(
@@ -1044,7 +1044,7 @@ def get_availability_rawdata(
     amount_filtered_rows = len(spans)
 
     # When a group filter is set, only care about these groups in the group fields
-    with CPUTracker() as filter_rows_tracker:
+    with CPUTracker(logger.debug) as filter_rows_tracker:
         if avoptions["grouping"] not in [None, "host"]:
             filter_groups_of_entries(context, avoptions, spans)
 

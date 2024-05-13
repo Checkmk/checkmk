@@ -23,7 +23,12 @@ from cmk.base.api.agent_based import register
 
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 
-from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
+REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {
+    CheckPluginName("arbor_peakflow_sp"): CheckPluginName("arbor_memory"),
+    CheckPluginName("arbor_peakflow_tms"): CheckPluginName("arbor_memory"),
+    CheckPluginName("arbor_peakflow_pravail"): CheckPluginName("arbor_memory"),
+    CheckPluginName("f5_bigip_mem_tmm"): CheckPluginName("f5_bigip_mem"),
+}
 
 _ALL_REPLACED_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPluginName] = {
     **REPLACED_CHECK_PLUGINS,

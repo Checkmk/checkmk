@@ -27,7 +27,7 @@ RUN apt-get install -y \
     default-jdk-headless \
     golang-go \
     jq \
-    libenchant-2-dev \
+    libenchant1c2a \
     lsb-release \
     msitools \
     wget

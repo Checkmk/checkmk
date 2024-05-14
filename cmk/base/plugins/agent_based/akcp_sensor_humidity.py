@@ -39,6 +39,7 @@ register.snmp_section(
 
 register.snmp_section(
     name="akcp_sensor2plus_humidity",
+    parse_function=parse_akcp_sensor,
     parsed_section_name="akcp_sensor_humidity",
     detect=DETEC_AKCP_SP2PLUS,
     fetch=SNMPTree(

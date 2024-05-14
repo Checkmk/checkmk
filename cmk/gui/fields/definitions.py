@@ -555,6 +555,7 @@ class HostField(base.String):
         should_exist: bool | None = True,
         should_be_monitored: bool | None = None,
         should_be_cluster: bool | None = None,
+        skip_validation_on_view: bool = False,
         permission_type: Literal["setup_write", "setup_read", "monitor"] = "monitor",
         **kwargs,
     ):
@@ -564,6 +565,7 @@ class HostField(base.String):
         self._should_exist = should_exist
         self._should_be_monitored = should_be_monitored
         self._should_be_cluster = should_be_cluster
+        self._skip_validation_on_view = skip_validation_on_view
         self._permission_type = permission_type
         super().__init__(
             example=example,
@@ -591,7 +593,7 @@ class HostField(base.String):
         data: typing.Mapping[str, Any] | None,
         **kwargs: Any,
     ) -> HostAddress:
-        value = super()._deserialize(value, attr, data)
+        value = super()._deserialize(value, attr, data, **kwargs)
         try:
             return HostAddress(value)
         except ValueError as e:
@@ -601,6 +603,9 @@ class HostField(base.String):
         super()._validate(value)
         host = Host.host(value)
         self._confirm_user_has_permission(host)
+
+        if self._skip_validation_on_view and self.context.get("object_context") == "view":
+            return
 
         # Regex gets checked through the `pattern` of the String instance
 

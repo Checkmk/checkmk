@@ -47,7 +47,7 @@ def test_main_sites(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     tmp_path.joinpath("omd/sites/disabled").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/disabled/version").symlink_to("../../versions/1.6.0p4")
 
-    main_sites(object(), object(), object(), [], {})
+    main_sites(object(), object(), object(), [], {}, tmp_path / "omd/versions")
 
     stdout = _strip_ansi(capsys.readouterr()[0])
     assert (

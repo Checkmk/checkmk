@@ -6,6 +6,7 @@
 import os
 import sys
 from collections.abc import Iterable, Mapping
+from pathlib import Path
 
 import omdlib
 from omdlib.contexts import SiteContext
@@ -20,6 +21,7 @@ def main_sites(
     _global_opts: object,
     _args: object,
     options: Mapping[str, str | None],
+    versions_path: Path = Path("/omd/versions"),
 ) -> None:
     if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
@@ -34,7 +36,7 @@ def main_sites(
             if v is None:
                 v = "(none)"
                 tags.append("empty site dir")
-            elif v == default_version():
+            elif v == default_version(versions_path):
                 tags.append("default version")
             if disabled:
                 tags.append(tty.bold + tty.red + "disabled" + tty.normal)

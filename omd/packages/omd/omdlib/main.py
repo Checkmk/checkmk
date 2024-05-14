@@ -2023,9 +2023,14 @@ def main_setversion(
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
+    versions_path: Path = Path("/omd/versions/"),
 ) -> None:
     if len(args) == 0:
-        versions = [(v, "Version %s" % v) for v in omd_versions() if not v == default_version()]
+        versions = [
+            (v, "Version %s" % v)
+            for v in omd_versions(versions_path)
+            if not v == default_version(versions_path)
+        ]
 
         if use_update_alternatives():
             versions = [("auto", "Auto (Update-Alternatives)")] + versions
@@ -2043,9 +2048,9 @@ def main_setversion(
     else:
         version = args[0]
 
-    if version != "auto" and not version_exists(version):
+    if version != "auto" and not version_exists(version, versions_path):
         bail_out("The given version does not exist.")
-    if version == default_version():
+    if version == default_version(versions_path):
         bail_out("The given version is already default.")
 
     # Special handling for debian based distros which use update-alternatives
@@ -2750,6 +2755,7 @@ def main_update(  # pylint: disable=too-many-branches
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
+    versions_path: Path = Path("/omd/versions/"),
 ) -> None:
     conflict_mode = _get_conflict_mode(options)
 
@@ -2773,7 +2779,7 @@ def main_update(  # pylint: disable=too-many-branches
     # the target version explicitely and the re-exec the bin/omd
     # of the target version he has choosen.
     if from_version == to_version:
-        possible_versions = [v for v in omd_versions() if v != from_version]
+        possible_versions = [v for v in omd_versions(versions_path) if v != from_version]
         possible_versions.sort(reverse=True)
         if len(possible_versions) == 0:
             bail_out("There is no other OMD version to update to.")
@@ -3365,13 +3371,14 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     source_descr: str,
     new_site_name: str | None,
+    versions_path: Path = Path("/omd/versions/"),
 ) -> SiteContext:
     try:
         sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
     except Exception as e:
         bail_out("%s" % e)
 
-    if not version_exists(version):
+    if not version_exists(version, versions_path):
         bail_out(
             "You need to have version %s installed to be able to restore " "this backup." % version
         )
@@ -3719,6 +3726,7 @@ def main_cleanup(
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
+    versions_path: Path = Path("/omd/versions/"),
 ) -> None:
     package_manager = PackageManager.factory(version_info)
     if package_manager is None:
@@ -3726,8 +3734,8 @@ def main_cleanup(
 
     all_installed_packages = package_manager.get_all_installed_packages()
 
-    for version in omd_versions():
-        if version == default_version():
+    for version in omd_versions(versions_path):
+        if version == default_version(versions_path):
             sys.stdout.write(
                 "%s%-20s%s Keeping this version, since it is the default.\n"
                 % (
@@ -3773,7 +3781,7 @@ def main_cleanup(
 
     # In case the last version has been removed ensure some things created globally
     # are removed.
-    if not omd_versions():
+    if not omd_versions(versions_path):
         _cleanup_global_files(version_info)
 
 

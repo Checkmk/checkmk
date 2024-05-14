@@ -1,0 +1,29 @@
+Title: Restrict check_sftp local paths
+Class: security
+Compatible: incomp
+Component: checks
+Date: 1715852900
+Edition: cre
+Level: 1
+Version: 2.1.0p44
+
+Prior to this Werk, <code>check_sftp</code> did not restrict the local paths that for files to be uploaded and downloaded.
+This allowed users with the permissions to configure <code>check_sftp</code> to read or write files within the Checkmk site home.
+
+The local paths are now restricted to the folder <code>var/check_mk/active_checks/check_sftp</code> within the Checkmk site home.
+As a consequence, the local paths in existing configurations will now be interpreted as relative to that folder.
+Since a test file is created if the local file to upload doesn't exist, the check will continue to work, but it will not pick up files from the old location.
+Similarly, the downloaded files will be stored in a new location.
+
+This issue was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 8.8 High with the following CVSS vector: <code>CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H</code> and assigned CVE <code>CVE-2024-28826</code>.

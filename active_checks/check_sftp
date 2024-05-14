@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -8,136 +7,64 @@ import getopt
 import os
 import sys
 import time
+from typing import NamedTuple, NoReturn, Union
 
 import paramiko  # type: ignore[import]
 
 from cmk.utils.password_store import replace_passwords
 
+TMP_DIR = "var/check_mk/active_checks/check_sftp"
 
-def usage():
+
+def usage() -> NoReturn:
     sys.stderr.write(
-        """
-USAGE: check_sftp [OPTIONS] HOST
+        f"""USAGE: check_sftp OPTIONS
 
 OPTIONS:
   --host HOST                SFTP server address
   --user USER                Username for sftp login
   --secret SECRET            Secret/Password for sftp login
   --private-key-file PATH    Path to private key / certificate file for SFTP login
-  --port PORT                Alternative port number (default is 22 for the connection)
-  --get-remote FILE          Path to the file which to pull from SFTP server (e.g.
-                             /tmp/testfile.txt)
-  --get-local PATH           Path to store the pulled file locally (e.g. $OMD_ROOT/tmp/)
-  --put-local FILE           Path to the file to push to the sftp server. See above for example
-  --put-remote PATH          Path to save the pushed file (e.g. /tmp/)
-  --get-timestamp PATH       Path to the file for getting the timestamp of this file
+  --port PORT                Alternative port number (default is 22)
+  --get-remote FILE          Path on the remote to the file that should be pulled from server (relative to the remote home)
+  --get-local DIRECTORY      Path where the pulled file should be stored (relative to '{TMP_DIR}' in the site's directory)
+  --put-local FILE           Path to the file to push to server (relative to '{TMP_DIR}' in the site's directory). If the file does not exist, it will be created with a test message.
+  --put-remote DIRECTORY     Path on the remote where the pushed file should be stored (relative to the remote home)
+  --get-timestamp PATH       Path to the file on the remote server for which the timestamp should be checked
   --timeout SECONDS          Set timeout for connection (default is 10 seconds)
-  --verbose                  Output some more detailed information
+  -v, --verbose              Output some more detailed information
   -h, --help                 Show this help message and exit
-    """
+"""
     )
     sys.exit(1)
 
 
-def connection(
-    opt_key_file,
-    opt_host,
-    opt_user,
-    opt_pass,
-    opt_port,
-    opt_timeout,
-):
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    if opt_key_file is None:
-        client.connect(
-            opt_host,
-            username=opt_user,
-            password=opt_pass,
-            port=opt_port,
-            timeout=opt_timeout,
-        )
-    else:
-        client.connect(
-            opt_host,
-            username=opt_user,
-            key_filename=opt_key_file,
-            port=opt_port,
-            timeout=opt_timeout,
-        )
-    return client
+class SecurityError(ValueError):
+    """Raised when a security issue is detected, such as attempted path traversal."""
 
 
-def get_paths(
-    opt_put_local,
-    opt_get_local,
-    opt_put_remote,
-    opt_get_remote,
-    opt_timestamp,
-    omd_root,
-    working_dir,
-):
-    paths = {}
-    if opt_put_local:
-        put_filename = opt_put_local.split("/")[-1]
-        paths["put_filename"] = put_filename
-        paths["local_put_path"] = "%s/%s" % (omd_root, opt_put_local)
-        if len(opt_put_remote) > 0:
-            paths["remote_put_path"] = "%s/%s/%s" % (working_dir, opt_put_remote, put_filename)
-        else:
-            paths["remote_put_path"] = "%s/%s" % (working_dir, put_filename)
-
-    if opt_get_remote:
-        get_filename = opt_get_remote.split("/")[-1]
-        paths["get_filename"] = get_filename
-        paths["remote_get_path"] = "%s/%s" % (working_dir, opt_get_remote)
-        if len(opt_get_local) > 0:
-            paths["local_get_path"] = "%s/%s/%s" % (omd_root, opt_get_local, get_filename)
-        else:
-            paths["local_get_path"] = "%s/%s" % (omd_root, get_filename)
-
-    if opt_timestamp:
-        paths["timestamp_filename"] = opt_timestamp.split("/")[-1]
-        paths["timestamp_path"] = "%s/%s" % (working_dir, opt_timestamp)
-
-    return paths
+class Args(NamedTuple):
+    host: Union[None, str]
+    user: Union[None, str]
+    pass_: Union[None, str]
+    key_file: Union[None, str]
+    port: int
+    get_remote: Union[None, str]
+    get_local: Union[None, str]
+    put_local: Union[None, str]
+    put_remote: Union[None, str]
+    timestamp: Union[None, str]
+    timeout: float
+    verbose: bool
 
 
-def file_available(opt_put_local, opt_put_remote, sftp, working_dir):
-    filename = opt_put_local.split("/")[-1]
-    return filename in sftp.listdir("%s/%s" % (working_dir, opt_put_remote))
-
-
-def create_testfile(paths):
-    path = paths["local_put_path"]
-    if not os.path.isfile(path):
-        with open(path, "w") as f:
-            f.write("This is a test by Check_MK\n")
-
-
-def put_file(sftp, paths):
-    sftp.put(paths["local_put_path"], paths["remote_put_path"])
-
-
-def get_file(sftp, paths):
-    sftp.get(paths["remote_get_path"], paths["local_get_path"])
-
-
-def get_timestamp(sftp, paths):
-    return sftp.stat(paths["timestamp_path"])
-
-
-def output_check_result(s):
-    sys.stdout.write("%s\n" % s)
-
-
-def parse_arguments(sys_args):
-    if sys_args is None:
-        sys_args = sys.argv[1:]
-
+def parse_arguments(sys_args: list[str]) -> Args:  # pylint: disable=too-many-branches
     opt_host = None
     opt_user = None
     opt_pass = None
+    # Note: WATO doesn't actually allow to configure this key file option and it is replaced
+    # by --look-for-keys in later versions. However, it seems some setups do use it.
+    # See I8c4f70d2f0831ab4f054283f95d87afdab3def80 and linked GH PR.
     opt_key_file = None
     opt_port = 22
     opt_get_remote = None
@@ -172,7 +99,7 @@ def parse_arguments(sys_args):
         sys.exit(1)
 
     for opt, arg in opts:
-        if opt in ["-h", "help"]:
+        if opt in ["-h", "--help"]:
             usage()
         elif opt in ["--host"]:
             opt_host = arg
@@ -199,7 +126,7 @@ def parse_arguments(sys_args):
         elif opt in ["-v", "--verbose"]:
             opt_verbose = True
 
-    return (
+    return Args(
         opt_host,
         opt_user,
         opt_pass,
@@ -215,97 +142,217 @@ def parse_arguments(sys_args):
     )
 
 
-def main(sys_args=None):
-    (
-        opt_host,
-        opt_user,
-        opt_pass,
-        opt_key_file,
-        opt_port,
-        opt_get_remote,
-        opt_get_local,
-        opt_put_local,
-        opt_put_remote,
-        opt_timestamp,
-        opt_timeout,
-        opt_verbose,
-    ) = parse_arguments(sys_args)
+def output_check_result(s: str) -> None:
+    sys.stdout.write("%s\n" % s)
 
-    messages = []
-    states = []
-    try:  # Establish connection
-        client = connection(opt_key_file, opt_host, opt_user, opt_pass, opt_port, opt_timeout)
-        sftp = client.open_sftp()
-        messages.append("Login successful")
-        states.append(0)
-    except Exception:
-        if opt_verbose:
-            raise
-        return 2, "Connection failed!"
 
-    # Let's prepare for some other tests...
-    omd_root = os.getenv("OMD_ROOT")
-    sftp.chdir(".")
-    working_dir = sftp.getcwd()
-    paths = get_paths(
-        opt_put_local,
-        opt_get_local,
-        opt_put_remote,
-        opt_get_remote,
-        opt_timestamp,
-        omd_root,
-        working_dir,
-    )
-    testfile_remote = True
+class CheckSftp:
+    @classmethod
+    def local_tempdir(cls) -> str:
+        omd_root = os.getenv("OMD_ROOT")
+        if omd_root is None:
+            sys.stderr.write("This check must be executed from within a site\n")
+            sys.exit(1)
 
-    # .. and eventually execute them!
-    try:  # Put a file to the server
-        if opt_put_local is not None:
-            create_testfile(paths)
-            testfile_remote = file_available(opt_put_local, opt_put_remote, sftp, working_dir)
-            put_file(sftp, paths)
-            states.append(0)
-            messages.append("Successfully put file to SFTP server")
-    except Exception:
-        if opt_verbose:
-            raise
-        states.append(2)
-        messages.append("Could not put file to SFTP server! (!!)")
+        return f"{omd_root}/{TMP_DIR}"
 
-    try:  # Get a file from the server
-        if opt_get_remote is not None:
-            get_file(sftp, paths)
-            states.append(0)
-            messages.append("Successfully got file from SFTP server")
-    except Exception:
-        if opt_verbose:
-            raise
-        states.append(2)
-        messages.append("Could not get file from SFTP server! (!!)")
+    @classmethod
+    def is_in_tempdir(cls, path: str) -> bool:
+        return os.path.normpath(path).startswith(cls.local_tempdir())
 
-    try:  # Get timestamp of a remote file
-        if opt_timestamp is not None:
-            file_stats = get_timestamp(sftp, paths)
-            states.append(0)
-            messages.append(
-                "Timestamp of %s is: %s"
-                % (paths["timestamp_filename"], time.ctime(file_stats.st_mtime))
+    class TransferOptions(NamedTuple):
+        local: str
+        remote: str
+
+    def __init__(self, client: paramiko.SSHClient, args: Args):
+        self.host: str = args.host or "localhost"
+        self.user: Union[str, None] = args.user
+        self.pass_: Union[str, None] = args.pass_
+        self.key_file: Union[str, None] = args.key_file
+        self.port: int = args.port
+        self.timeout: float = args.timeout
+        self.verbose: bool = args.verbose
+
+        self.connection = self.connect(client)
+
+        remote_workdir = self.connection.getcwd()
+        assert remote_workdir is not None  # help mypy -- we just set it above, see getcwd() docs
+
+        self.upload_options: Union[None, CheckSftp.TransferOptions] = (
+            None
+            if args.put_local is None
+            else self.process_put_options(
+                self.local_tempdir(), args.put_local, remote_workdir, args.put_remote
             )
-    except Exception:
-        if opt_verbose:
+        )
+
+        self.download_options: Union[None, CheckSftp.TransferOptions] = (
+            None
+            if args.get_remote is None
+            else self.process_get_options(
+                remote_workdir, args.get_remote, self.local_tempdir(), args.get_local
+            )
+        )
+
+        self.timestamp_path: Union[None, str] = (
+            os.path.normpath(f"{remote_workdir}/{args.timestamp}") if args.timestamp else None
+        )
+
+    @staticmethod
+    def resolve_transfer_paths(src_file: str, dst_dir: str) -> tuple[str, str]:
+        """Normalize the paths and append the src file name to the destination directory."""
+        return (
+            os.path.normpath(src_file),
+            os.path.normpath(f"{dst_dir}/{src_file.split('/')[-1]}"),
+        )
+
+    @classmethod
+    def process_put_options(
+        cls, local_base: str, local_file: str, remote_base: str, remote_dir: Union[str, None]
+    ) -> Union[None, TransferOptions]:
+        local, remote = cls.resolve_transfer_paths(
+            f"{local_base}/{local_file}", f"{remote_base}/{remote_dir or '.'}"
+        )
+
+        if not cls.is_in_tempdir(local):
+            raise SecurityError("Invalid local path for put operation")
+
+        return cls.TransferOptions(local, remote)
+
+    @classmethod
+    def process_get_options(
+        cls, remote_base: str, remote_file: str, local_base: str, local_dir: Union[str, None]
+    ) -> Union[None, TransferOptions]:
+        remote, local = cls.resolve_transfer_paths(
+            f"{remote_base}/{remote_file}", f"{local_base}/{local_dir or '.'}"
+        )
+
+        if not cls.is_in_tempdir(local):
+            raise SecurityError("Invalid local path for get operation")
+
+        return cls.TransferOptions(local, remote)
+
+    def connect(self, client: paramiko.SSHClient) -> paramiko.sftp_client.SFTPClient:
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B507
+        if self.key_file is None:
+            client.connect(
+                hostname=self.host,
+                username=self.user,
+                password=self.pass_,
+                port=self.port,
+                timeout=self.timeout,
+            )
+        else:
+            client.connect(
+                hostname=self.host,
+                username=self.user,
+                key_filename=self.key_file,
+                port=self.port,
+                timeout=self.timeout,
+            )
+        sftp = client.open_sftp()
+        sftp.chdir(".")  # make sure we have a working directory, see sftp.getcwd() docs
+        return sftp
+
+    @staticmethod
+    def remote_has_file(sftp: paramiko.sftp_client.SFTPClient, path: str) -> bool:
+        try:
+            sftp.stat(path)
+            return True
+        except FileNotFoundError:
+            return False
+
+    @staticmethod
+    def get_timestamp(sftp: paramiko.sftp_client.SFTPClient, path: str) -> Union[float, None]:
+        return sftp.stat(path).st_mtime
+
+    def check_file_upload(self) -> None:
+        assert self.upload_options is not None
+        local_file = self.upload_options.local
+
+        if not os.path.isfile(local_file):
+            os.makedirs(os.path.dirname(local_file), exist_ok=True)
+            with open(local_file, "w") as f:
+                f.write("This is a test by Check_MK\n")
+
+        self.connection.put(local_file, self.upload_options.remote)
+
+    def check_file_download(self) -> None:
+        assert self.download_options is not None
+        os.makedirs(os.path.dirname(self.download_options.local), exist_ok=True)
+        self.connection.get(self.download_options.remote, self.download_options.local)
+
+    def run_optional_checks(self) -> tuple[int, list[str]]:
+        status, messages = 0, []
+
+        # Remove the uploaded file if it didn't exist. But only at the very end, since
+        # we might need it for the download check.
+        new_file_on_remote: Union[None, str] = None
+
+        if self.upload_options is not None:
+            try:
+                if not self.remote_has_file(self.connection, self.upload_options.remote):
+                    new_file_on_remote = self.upload_options.remote
+
+                self.check_file_upload()
+                messages.append("Successfully put file to SFTP server")
+            except Exception:
+                if self.verbose:
+                    raise
+                status = max(status, 2)
+                messages.append("Could not put file to SFTP server! (!!)")
+
+        if self.download_options is not None:
+            try:
+                self.check_file_download()
+                messages.append("Successfully got file from SFTP server")
+            except Exception:
+                if self.verbose:
+                    raise
+                status = max(status, 2)
+                messages.append("Could not get file from SFTP server! (!!)")
+
+        if self.timestamp_path is not None:
+            try:
+                timestamp = self.get_timestamp(self.connection, self.timestamp_path)
+                messages.append(
+                    "Timestamp of {} is: {}".format(
+                        self.timestamp_path.split("/")[-1], time.ctime(timestamp)
+                    )
+                )
+            except Exception:
+                if self.verbose:
+                    raise
+                status = max(status, 2)
+                messages.append("Could not get timestamp of file! (!!)")
+
+        if new_file_on_remote is not None:
+            self.connection.remove(new_file_on_remote)
+
+        return status, messages
+
+
+def main() -> int:
+    replace_passwords()
+    args = parse_arguments(sys.argv[1:])
+    try:
+        check = CheckSftp(paramiko.SSHClient(), args)
+    except SecurityError as e:
+        if args.verbose:
             raise
-        states.append(2)
-        messages.append("Could not get timestamp of file! (!!)")
+        output_check_result(f"Security issue detected: {e}")
+        return 2
+    except Exception:
+        if args.verbose:
+            raise
+        output_check_result("Connection failed!")
+        return 2
 
-    # Remove useless files
-    if not testfile_remote:
-        sftp.remove(paths["remote_put_path"])
-
-    return max(states), ", ".join(messages)
+    login_info = ["Login successful"]
+    status, checks_info = check.run_optional_checks()
+    output_check_result(", ".join(login_info + checks_info))
+    return status
 
 
 if __name__ == "__main__":
-    replace_passwords()
-    exitcode, info = main()
-    output_check_result(info)
-    sys.exit(exitcode)
+    sys.exit(main())

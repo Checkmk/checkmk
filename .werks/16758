@@ -1,0 +1,13 @@
+Title: host_config: validate datatype for host attribute properly
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1715683355
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+Prior to this werk, the datatype was not properly validated allowing
+wrong values to be specified for host attributes. For instance, the
+parent attribute allowed a string instead of a list of strings which
+subsequently led to an internal error. This werk fixes this issue.

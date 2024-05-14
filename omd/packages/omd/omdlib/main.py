@@ -2268,6 +2268,7 @@ def finalize_site(
     site.load_config(load_defaults(site))
     register_with_system_apache(
         version_info,
+        Path(f"/omd/apache/{site.name}.conf"),
         site.name,
         site.dir,
         site.conf["APACHE_TCP_ADDR"],
@@ -2336,7 +2337,7 @@ def main_rm(
     # refers to a not existing site apache config.
     unregister_from_system_apache(
         version_info,
-        site.name,
+        Path(f"/omd/apache/{site.name}.conf"),
         apache_reload="apache-reload" in options,
         verbose=global_opts.verbose,
     )
@@ -2385,7 +2386,10 @@ def main_disable(
     unmount_tmpfs(site, kill="kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
     unregister_from_system_apache(
-        version_info, site.name, apache_reload=False, verbose=global_opts.verbose
+        version_info,
+        Path(f"/omd/apache/{site.name}.conf"),
+        apache_reload=False,
+        verbose=global_opts.verbose,
     )
 
 
@@ -2402,6 +2406,7 @@ def main_enable(
     sys.stdout.write("Re-enabling Apache configuration for this site...")
     register_with_system_apache(
         version_info,
+        Path(f"/omd/apache/{site.name}.conf"),
         site.name,
         site.dir,
         site.conf["APACHE_TCP_ADDR"],
@@ -2422,6 +2427,7 @@ def main_update_apache_config(
     if _is_apache_enabled(site):
         register_with_system_apache(
             version_info,
+            Path(f"/omd/apache/{site.name}.conf"),
             site.name,
             site.dir,
             site.conf["APACHE_TCP_ADDR"],
@@ -2431,7 +2437,10 @@ def main_update_apache_config(
         )
     else:
         unregister_from_system_apache(
-            version_info, site.name, apache_reload=True, verbose=global_opts.verbose
+            version_info,
+            Path(f"/omd/apache/{site.name}.conf"),
+            apache_reload=True,
+            verbose=global_opts.verbose,
         )
 
 
@@ -2508,7 +2517,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
         os.rename(old_site.dir, new_site.dir)
-        delete_apache_hook(old_site.name)
+        delete_apache_hook(Path(f"/omd/apache/{old_site.name}.conf"))
     else:
         # Make exact file-per-file copy with same user but already new name
         if not reuse:
@@ -2861,7 +2870,7 @@ def main_update(  # pylint: disable=too-many-branches
         bail_out("Aborted.")
 
     try:
-        hook_up_to_date = is_apache_hook_up_to_date(site.name)
+        hook_up_to_date = is_apache_hook_up_to_date(Path(f"/omd/apache/{site.name}.conf"))
     except PermissionError:
         # In case the hook can not be read, assume the hook needs to be updated
         hook_up_to_date = False

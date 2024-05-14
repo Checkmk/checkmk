@@ -177,26 +177,60 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 long_title="Hardware ➤ Processor",
                 # The single attribute hints are not checked here
                 attributes=OrderedDict(
-                    arch=AttributeDisplayHint.from_raw("", "arch", {}),
-                    max_speed=AttributeDisplayHint.from_raw("", "max_speed", {}),
-                    model=AttributeDisplayHint.from_raw("", "model", {}),
-                    type=AttributeDisplayHint.from_raw("", "type", {}),
-                    threads=AttributeDisplayHint.from_raw("", "threads", {}),
-                    smt_threads=AttributeDisplayHint.from_raw("", "smt_threads", {}),
-                    cpu_max_capa=AttributeDisplayHint.from_raw("", "cpu_max_capa", {}),
-                    cpus=AttributeDisplayHint.from_raw("", "cpus", {}),
-                    logical_cpus=AttributeDisplayHint.from_raw("", "logical_cpus", {}),
-                    cores=AttributeDisplayHint.from_raw("", "cores", {}),
-                    cores_per_cpu=AttributeDisplayHint.from_raw("", "cores_per_cpu", {}),
-                    threads_per_cpu=AttributeDisplayHint.from_raw("", "threads_per_cpu", {}),
-                    cache_size=AttributeDisplayHint.from_raw("", "cache_size", {}),
-                    bus_speed=AttributeDisplayHint.from_raw("", "bus_speed", {}),
-                    voltage=AttributeDisplayHint.from_raw("", "voltage", {}),
-                    sharing_mode=AttributeDisplayHint.from_raw("", "sharing_mode", {}),
-                    implementation_mode=AttributeDisplayHint.from_raw(
-                        "", "implementation_mode", {}
+                    arch=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    entitlement=AttributeDisplayHint.from_raw("", "entitlement", {}),
+                    max_speed=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    model=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    type=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    threads=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    smt_threads=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    cpu_max_capa=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    cpus=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    logical_cpus=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    cores=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    cores_per_cpu=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    threads_per_cpu=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    cache_size=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    bus_speed=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    voltage=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    sharing_mode=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    implementation_mode=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
+                    entitlement=AttributeDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
+                    ),
                 ),
                 columns=OrderedDict(),
                 table_view_name="",

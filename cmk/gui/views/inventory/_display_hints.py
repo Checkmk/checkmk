@@ -32,6 +32,21 @@ from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunc
 
 
 @dataclass(frozen=True)
+class AttributeDisplayHint:
+    title: str
+    short_title: str
+    long_title: str
+    paint_function: PaintFunction
+    sort_function: SortFunction
+    data_type: str
+    is_show_more: bool
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory attribute: %s") % self.long_title
+
+
+@dataclass(frozen=True)
 class _RelatedLegacyHints:
     for_node: InventoryHintSpec = field(
         default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
@@ -120,40 +135,22 @@ def _make_long_title(parent_title: str, title: str) -> str:
     return parent_title + " ➤ " + title if parent_title else title
 
 
-@dataclass(frozen=True)
-class AttributeDisplayHint:
-    title: str
-    short_title: str
-    long_title: str
-    paint_function: PaintFunction
-    sort_function: SortFunction
-    data_type: str
-    is_show_more: bool
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory attribute: %s") % self.long_title
-
-    @classmethod
-    def from_raw(
-        cls,
-        node_title: str,
-        key: str,
-        legacy_hint: InventoryHintSpec,
-    ) -> AttributeDisplayHint:
-        data_type, paint_function = _get_paint_function(legacy_hint)
-        title = _make_title_function(legacy_hint)(key)
-        return cls(
-            title=title,
-            short_title=(
-                title if (short_title := legacy_hint.get("short")) is None else str(short_title)
-            ),
-            long_title=_make_long_title(node_title, title),
-            paint_function=paint_function,
-            sort_function=_make_sort_function(legacy_hint),
-            data_type=data_type,
-            is_show_more=legacy_hint.get("is_show_more", True),
-        )
+def _parse_attribute_hint(
+    node_title: str, key: str, legacy_hint: InventoryHintSpec
+) -> AttributeDisplayHint:
+    data_type, paint_function = _get_paint_function(legacy_hint)
+    title = _make_title_function(legacy_hint)(key)
+    return AttributeDisplayHint(
+        title=title,
+        short_title=(
+            title if (short_title := legacy_hint.get("short")) is None else str(short_title)
+        ),
+        long_title=_make_long_title(node_title, title),
+        paint_function=paint_function,
+        sort_function=_make_sort_function(legacy_hint),
+        data_type=data_type,
+        is_show_more=legacy_hint.get("is_show_more", True),
+    )
 
 
 def _parse_column_display_hint_filter_class(
@@ -289,7 +286,7 @@ class _NodeDisplayHint:
             icon=legacy_hint.get("icon", ""),
             attributes=OrderedDict(
                 {
-                    SDKey(key): AttributeDisplayHint.from_raw(title, key, attributes.get(key, {}))
+                    SDKey(key): _parse_attribute_hint(title, key, attributes.get(key, {}))
                     for key in _complete_key_order(attributes_key_order, set(attributes))
                 }
             ),
@@ -335,7 +332,7 @@ class NodeDisplayHint:
         return (
             hint
             if (hint := self.attributes.get(SDKey(key)))
-            else AttributeDisplayHint.from_raw(self.title if self.path else "", key, {})
+            else _parse_attribute_hint(self.title if self.path else "", key, {})
         )
 
     def column_ident(self, key: SDKey) -> str:

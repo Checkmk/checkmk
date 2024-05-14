@@ -52,12 +52,14 @@ class SectionStore(Generic[_T]):
         sections: SectionMap[_T],
         cache_info: MutableSectionMap[tuple[int, int]],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
+        section_outdated: Callable[[int, int], bool],
         now: int,
         keep_outdated: bool,
     ) -> SectionMap[_T]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
+            section_outdated,
             now=now,
             keep_outdated=keep_outdated,
         )
@@ -71,6 +73,7 @@ class SectionStore(Generic[_T]):
         self,
         sections: SectionMap[_T],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
+        section_outdated: Callable[[int, int], bool],
         *,
         now: int,
         keep_outdated: bool,
@@ -91,7 +94,7 @@ class SectionStore(Generic[_T]):
         if not keep_outdated:
             for section_name in tuple(persisted_sections):
                 (_created_at, valid_until, _section_content) = persisted_sections[section_name]
-                if valid_until < now:
+                if section_outdated(valid_until, now):
                     store_sections = True
                     del persisted_sections[section_name]
 

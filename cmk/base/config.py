@@ -4036,6 +4036,7 @@ class ParserFactory:
                 section_name: self._config_cache.snmp_fetch_interval(host_name, section_name)
                 for section_name in checking_sections
             },
+            host_check_interval=self._config_cache.check_mk_check_interval(host_name),
             keep_outdated=keep_outdated,
             logger=logger,
         )

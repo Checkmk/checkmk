@@ -881,6 +881,7 @@ class TestSNMPParser:
                 logger=logging.Logger("test"),
             ),
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logging.Logger("test"),
         )
@@ -1168,6 +1169,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1189,6 +1191,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1208,6 +1211,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1229,6 +1233,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1259,6 +1264,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1282,6 +1288,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=False,
             logger=logger,
         )
@@ -1305,6 +1312,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1315,6 +1323,32 @@ class TestSNMPPersistedSectionHandling:
         }
         assert shs.piggybacked_raw_data == {}
         assert not section_store.load() == {SectionName("section"): (1000, 1042, [["old"]])}
+
+    def test_section_expired_during_checking(
+        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+
+        section_store = MockStore(
+            "/dev/null",
+            {SectionName("section"): (890, 990, [["old"]])},
+            logger=logger,
+        )
+        parser = SNMPParser(
+            HostName("testhost"),
+            section_store,
+            check_intervals={SectionName("section"): 100},
+            host_check_interval=60,
+            keep_outdated=False,
+            logger=logger,
+        )
+        shs = parser.parse({}, selection=NO_SELECTION)
+        assert shs.sections == {SectionName("section"): [["old"]]}
+        assert shs.cache_info == {
+            SectionName("section"): (890, 100),
+        }
+        assert shs.piggybacked_raw_data == {}
+        assert section_store.load() == {SectionName("section"): (890, 990, [["old"]])}
 
 
 class TestMarkers:

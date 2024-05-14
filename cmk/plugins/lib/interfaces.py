@@ -197,7 +197,7 @@ class InterfaceWithCounters:
     counters: Counters
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Rates:
     in_octets: float | None = None
     in_mcast: float | None = None
@@ -227,7 +227,7 @@ class InterfaceWithRates:
         iface_counters: InterfaceWithCounters,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
     ) -> "InterfaceWithRates":
         return cls(
             iface_counters.attributes,
@@ -244,42 +244,137 @@ class InterfaceWithRates:
         iface_counters: InterfaceWithCounters,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
     ) -> tuple[Rates, Sequence[tuple[str, GetRateError]]]:
-        rates: dict[str, float | None] = {}
-        rate_errors = []
-        for rate_name, counter_value in (
-            ("in_octets", (counters := iface_counters.counters).in_octets),
-            ("in_ucast", counters.in_ucast),
-            ("in_mcast", counters.in_mcast),
-            ("in_bcast", counters.in_bcast),
-            ("in_nucast", counters.in_nucast),
-            ("in_disc", counters.in_disc),
-            ("in_err", counters.in_err),
-            ("out_octets", counters.out_octets),
-            ("out_ucast", counters.out_ucast),
-            ("out_mcast", counters.out_mcast),
-            ("out_bcast", counters.out_bcast),
-            ("out_nucast", counters.out_nucast),
-            ("out_disc", counters.out_disc),
-            ("out_err", counters.out_err),
-        ):
-            try:
-                rates[rate_name] = (
-                    get_rate(
-                        value_store=value_store,
-                        key=f"{rate_name}.{iface_counters.attributes.id_for_value_store}",
-                        time=timestamp,
-                        value=counter_value,
-                        raise_overflow=True,
-                    )
-                    if counter_value is not None
-                    else None
-                )
-            except GetRateError as get_rate_error:
-                rates[rate_name] = None
-                rate_errors.append((rate_name, get_rate_error))
-        return Rates(**rates), rate_errors
+        rate_errors = {}
+        in_octets, rate_errors["in_octets"] = cls._compute_rate(
+            counter=iface_counters.counters.in_octets,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_octets.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_ucast, rate_errors["in_ucast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_ucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_ucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_mcast, rate_errors["in_mcast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_mcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_mcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_bcast, rate_errors["in_bcast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_bcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_bcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_nucast, rate_errors["in_nucast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_nucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_nucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_disc, rate_errors["in_disc"] = cls._compute_rate(
+            counter=iface_counters.counters.in_disc,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_disc.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_err, rate_errors["in_err"] = cls._compute_rate(
+            counter=iface_counters.counters.in_err,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_err.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_octets, rate_errors["out_octets"] = cls._compute_rate(
+            counter=iface_counters.counters.out_octets,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_octets.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_ucast, rate_errors["out_ucast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_ucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_ucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_mcast, rate_errors["out_mcast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_mcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_mcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_bcast, rate_errors["out_bcast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_bcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_bcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_nucast, rate_errors["out_nucast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_nucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_nucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_disc, rate_errors["out_disc"] = cls._compute_rate(
+            counter=iface_counters.counters.out_disc,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_disc.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_err, rate_errors["out_err"] = cls._compute_rate(
+            counter=iface_counters.counters.out_err,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_err.{iface_counters.attributes.id_for_value_store}",
+        )
+        return Rates(
+            in_octets=in_octets,
+            in_mcast=in_mcast,
+            in_bcast=in_bcast,
+            in_nucast=in_nucast,
+            in_ucast=in_ucast,
+            in_disc=in_disc,
+            in_err=in_err,
+            out_octets=out_octets,
+            out_mcast=out_mcast,
+            out_bcast=out_bcast,
+            out_nucast=out_nucast,
+            out_ucast=out_ucast,
+            out_disc=out_disc,
+            out_err=out_err,
+        ), [
+            (rate_name, get_rate_error)
+            for rate_name, get_rate_error in rate_errors.items()
+            if get_rate_error
+        ]
+
+    @staticmethod
+    def _compute_rate(
+        *,
+        counter: float | None,
+        timestamp: float,
+        value_store: MutableMapping[str, object],
+        value_store_key: str,
+    ) -> tuple[float | None, GetRateError | None]:
+        if counter is None:
+            return None, None
+        try:
+            return (
+                get_rate(
+                    value_store=value_store,
+                    key=value_store_key,
+                    time=timestamp,
+                    value=counter,
+                    raise_overflow=True,
+                ),
+                None,
+            )
+        except GetRateError as get_rate_error:
+            return None, get_rate_error
 
 
 @dataclass(frozen=True)

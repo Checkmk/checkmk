@@ -6,20 +6,23 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, TypedDict
 
-from cmk.plugins.lib import interfaces, temperature
-from cmk.plugins.lib.brocade import DETECT_MLX
-
-from .agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     Metric,
     OIDEnd,
-    register,
     Result,
+    RuleSetType,
     Service,
+    SNMPSection,
     SNMPTree,
     State,
-    type_defs,
+    StringTable,
 )
+from cmk.plugins.lib import interfaces, temperature
+from cmk.plugins.lib.brocade import DETECT_MLX
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal
@@ -128,7 +131,7 @@ def _parse_value(value_string: str) -> ValueAndStatus:
         return None, None
 
 
-def parse_brocade_optical(string_table: list[type_defs.StringTable]) -> Section:
+def parse_brocade_optical(string_table: Sequence[StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_brocade_optical([
@@ -222,7 +225,7 @@ def parse_brocade_optical(string_table: list[type_defs.StringTable]) -> Section:
     return parsed
 
 
-register.snmp_section(
+snmp_section_brocade_optical = SNMPSection(
     name="brocade_optical",
     parse_function=parse_brocade_optical,
     fetch=[
@@ -286,7 +289,7 @@ def _check_matching_conditions(
 def discover_brocade_optical(
     params: Sequence[Mapping[str, Any]],
     section: Section,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     if section:
         pad_width = max(map(len, section))
     else:
@@ -340,7 +343,7 @@ def _check_light(
     metric_name: str,
     params: Mapping[str, Any],
     lane_num: int | None = None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if any(x is None for x in reading):
         return
     txt = _infotext(
@@ -373,7 +376,7 @@ def check_brocade_optical(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     item = item.lstrip("0")
     if item not in section:
         return
@@ -459,11 +462,11 @@ def check_brocade_optical(
             )
 
 
-register.check_plugin(
+check_plugin_brocade_optical = CheckPlugin(
     name="brocade_optical",
     service_name="Interface %s Optical",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_ruleset_type=RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_brocade_optical,
     check_ruleset_name="brocade_optical",

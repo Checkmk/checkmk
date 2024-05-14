@@ -3,9 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any, TypedDict
 
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    OIDCached,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.lib.brocade import (
     brocade_fcport_getitem,
     brocade_fcport_inventory_this_port,
@@ -13,16 +25,6 @@ from cmk.plugins.lib.brocade import (
     DISCOVERY_DEFAULT_PARAMETERS,
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
-
-from .agent_based_api.v1 import (
-    check_levels,
-    get_value_store,
-    OIDCached,
-    register,
-    Service,
-    SNMPTree,
-)
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Port(TypedDict):
@@ -41,7 +43,7 @@ class Port(TypedDict):
 Section = Mapping[int, Port]
 
 
-def parse_brocade_sfp(string_table: list[StringTable]) -> Section:
+def parse_brocade_sfp(string_table: Sequence[StringTable]) -> Section:
     parsed: dict[int, Port] = {}
 
     isl_ports = [int(x[0]) for x in string_table[1]]
@@ -70,7 +72,7 @@ def parse_brocade_sfp(string_table: list[StringTable]) -> Section:
     return parsed
 
 
-register.snmp_section(
+snmp_section_brocade_sfp = SNMPSection(
     name="brocade_sfp",
     parse_function=parse_brocade_sfp,
     detect=DETECT,
@@ -159,7 +161,7 @@ def check_brocade_sfp_temp(item: str, params: TempParamDict, section: Section) -
     )
 
 
-register.check_plugin(
+check_plugin_brocade_sfp_temp = CheckPlugin(
     name="brocade_sfp_temp",
     service_name="SFP Temperature %s",
     sections=["brocade_sfp"],
@@ -236,7 +238,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
     )
 
 
-register.check_plugin(
+check_plugin_brocade_sfp = CheckPlugin(
     name="brocade_sfp",
     service_name="SFP %s",
     discovery_function=discover_brocade_sfp,

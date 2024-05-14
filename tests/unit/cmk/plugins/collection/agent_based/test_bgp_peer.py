@@ -5,17 +5,15 @@
 
 import pytest
 
-import cmk.base.plugins.agent_based.bgp_peer as bgp_peer
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+import cmk.plugins.collection.agent_based.bgp_peer as bgp_peer
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
     Metric,
     Result,
     Service,
     ServiceLabel,
     State,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
     StringByteTable,
 )
 

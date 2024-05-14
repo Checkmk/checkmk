@@ -4,11 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    contains,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.lib.cpu import Load, Section
 from cmk.plugins.lib.cpu_load import check_cpu_load
-
-from .agent_based_api.v1 import contains, register, Service, SNMPTree
-from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 
 
 def parse_blade_bx_load(string_table: StringTable) -> Section | None:
@@ -29,7 +35,7 @@ def parse_blade_bx_load(string_table: StringTable) -> Section | None:
     )
 
 
-register.snmp_section(
+snmp_section_blade_bx_load = SimpleSNMPSection(
     name="blade_bx_load",
     parse_function=parse_blade_bx_load,
     # Note: I'm not sure if this check is working at all. If yes,
@@ -49,7 +55,7 @@ def discover_blade_bx_load(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-register.check_plugin(
+check_plugin_blade_bx_load = CheckPlugin(
     name="blade_bx_load",
     service_name="CPU load",
     discovery_function=discover_blade_bx_load,

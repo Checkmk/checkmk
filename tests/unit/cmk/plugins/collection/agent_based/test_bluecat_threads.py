@@ -7,7 +7,7 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 
 
 def test_make_sure_bluecat_threads_can_handle_new_params_format(

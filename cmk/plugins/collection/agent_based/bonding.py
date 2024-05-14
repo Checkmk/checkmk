@@ -6,10 +6,8 @@
 from collections.abc import Mapping
 from typing import Any, TypedDict
 
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.lib import bonding
-
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 DEFAULT_PARAMS = {
     "ieee_302_3ad_agg_id_missmatch_state": 1,
@@ -173,7 +171,7 @@ def check_bonding(  # pylint: disable=too-many-branches
         )
 
 
-register.check_plugin(
+check_plugin_bonding = CheckPlugin(
     name="bonding",
     service_name="Bonding Interface %s",
     discovery_function=discover_bonding,
@@ -182,7 +180,7 @@ register.check_plugin(
     check_default_parameters=DEFAULT_PARAMS,
 )
 
-register.check_plugin(
+check_plugin_ovs_bonding = CheckPlugin(
     name="ovs_bonding",
     service_name="OVS Bonding interface %s",
     discovery_function=discover_bonding,
@@ -196,7 +194,7 @@ def never_discover(section: bonding.Section) -> DiscoveryResult:
     yield from ()
 
 
-register.check_plugin(
+check_plugin_windows_intel_bonding = CheckPlugin(
     name="windows_intel_bonding",
     # unfortunately, this one is written with lower 'i' :-(
     service_name="Bonding interface %s",

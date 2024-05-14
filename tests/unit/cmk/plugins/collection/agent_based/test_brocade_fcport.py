@@ -18,9 +18,8 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based import brocade_fcport as bf
-
 from cmk.agent_based.v1 import GetRateError, IgnoreResults, Metric, Result, Service, State
+from cmk.plugins.collection.agent_based import brocade_fcport as bf
 from cmk.plugins.lib.brocade import DISCOVERY_DEFAULT_PARAMETERS
 
 STRING_TABLE_INDEX_1_MISSING = [

@@ -96,24 +96,26 @@ This is the data we can extract
 from collections.abc import Mapping, Sequence
 from typing import NamedTuple, TypedDict
 
-from cmk.plugins.lib.ip_format import clean_v4_address, clean_v6_address
-
-from .agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
     all_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     exists,
     Metric,
     OIDBytes,
     OIDEnd,
-    register,
     render,
     Result,
     Service,
     ServiceLabel,
+    SNMPSection,
     SNMPTree,
     startswith,
     State,
+    StringByteTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringByteTable
+from cmk.plugins.lib.ip_format import clean_v4_address, clean_v6_address
 
 
 class BGPData(NamedTuple):
@@ -198,7 +200,7 @@ def _create_item_data(entry: list[str | list[int]]) -> BGPData:
     )
 
 
-def _check_string_table(string_table: list[StringByteTable]) -> None:
+def _check_string_table(string_table: Sequence[StringByteTable]) -> None:
     assert all(
         len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]
     ), "Not all info elements have the size guessed from known names %d: %r" % (
@@ -214,7 +216,7 @@ def _clean_address(address_as_oids: Sequence[str]) -> str:
     return clean_v4_address(addr_elements) if addr_type == 1 else clean_v6_address(addr_elements)
 
 
-def parse_bgp_peer(string_table: list[StringByteTable]) -> Section:
+def parse_bgp_peer(string_table: Sequence[StringByteTable]) -> Section:
     def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
         aristaBgp4V2PrefixGaugesEntry:
@@ -231,7 +233,7 @@ def parse_bgp_peer(string_table: list[StringByteTable]) -> Section:
     return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
 
 
-def parse_bgp_peer_cisco_2(string_table: list[StringByteTable]) -> Section:
+def parse_bgp_peer_cisco_2(string_table: Sequence[StringByteTable]) -> Section:
     def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
         cbgpPeer2Entry:
@@ -245,7 +247,7 @@ def parse_bgp_peer_cisco_2(string_table: list[StringByteTable]) -> Section:
     return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
 
 
-def parse_bgp_peer_cisco_3(string_table: list[StringByteTable]) -> Section:
+def parse_bgp_peer_cisco_3(string_table: Sequence[StringByteTable]) -> Section:
     def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
         cbgpPeer3Entry:
@@ -301,7 +303,7 @@ def check_bgp_peer(
     yield Metric("uptime", peer.established_time)
 
 
-register.snmp_section(
+snmp_section_arista_bgp_peer = SNMPSection(
     name="arista_bgp_peer",
     parse_function=parse_bgp_peer,
     parsed_section_name="bgp_peer",
@@ -326,7 +328,7 @@ register.snmp_section(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.30065"),
 )
 
-register.snmp_section(
+snmp_section_cisco_bgp_peerv2 = SNMPSection(
     name="cisco_bgp_peerv2",
     parse_function=parse_bgp_peer_cisco_2,
     parsed_section_name="bgp_peer",
@@ -351,7 +353,7 @@ register.snmp_section(
         exists(".1.3.6.1.4.1.9.9.187.1.2.5.1.*"),
     ),
 )
-register.snmp_section(
+snmp_section_cisco_bgp_peerv3 = SNMPSection(
     name="cisco_bgp_peerv3",
     parse_function=parse_bgp_peer_cisco_3,
     parsed_section_name="bgp_peer",
@@ -378,7 +380,7 @@ register.snmp_section(
     ),
 )
 
-register.check_plugin(
+check_plugin_bgp_peer = CheckPlugin(
     name="bgp_peer",
     service_name="BGP Peer %s",
     discovery_function=discover_bgp_peer,

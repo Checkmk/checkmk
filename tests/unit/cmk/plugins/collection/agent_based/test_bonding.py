@@ -7,10 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.bonding import _check_ieee_302_3ad_specific
-
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.plugins.collection.agent_based.bonding import _check_ieee_302_3ad_specific
 from cmk.plugins.lib.bonding import Bond
 
 

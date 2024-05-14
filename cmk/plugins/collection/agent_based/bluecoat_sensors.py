@@ -6,19 +6,21 @@
 import dataclasses
 from collections.abc import Mapping
 
-from cmk.plugins.lib.temperature import check_temperature, TempParamType
-
-from .agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
     contains,
+    DiscoveryResult,
     get_value_store,
     Metric,
-    register,
     Result,
     Service,
+    SimpleSNMPSection,
     SNMPTree,
     State,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # OID branch 3 means the sensor unit type (from SENSOR-MIB):
 # other(1)
@@ -71,7 +73,7 @@ def parse_bluecoat_sensors(string_table: StringTable) -> Section:
     )
 
 
-register.snmp_section(
+snmp_section_bluecoat_sensors = SimpleSNMPSection(
     name="bluecoat_sensors",
     parse_function=parse_bluecoat_sensors,
     fetch=SNMPTree(
@@ -124,7 +126,7 @@ def check_bluecoat_sensors(
     )
 
 
-register.check_plugin(
+check_plugin_bluecoat_sensors = CheckPlugin(
     name="bluecoat_sensors",
     service_name="%s",
     discovery_function=discover_bluecoat_sensors,
@@ -153,7 +155,7 @@ def check_bluecoat_sensors_temp(
     )
 
 
-register.check_plugin(
+check_plugin_bluecoat_sensors_temp = CheckPlugin(
     name="bluecoat_sensors_temp",
     sections=["bluecoat_sensors"],
     service_name="Temperature %s",

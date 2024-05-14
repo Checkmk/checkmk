@@ -2,15 +2,25 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.elphase import check_elphase
 from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
-
-from .agent_based_api.v1 import contains, OIDEnd, register, Result, Service, SNMPTree, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 #   .--output--------------------------------------------------------------.
 #   |                               _               _                      |
@@ -117,7 +127,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
 ) -> dict:
     map_status = {
         "0": (0, "expected"),
@@ -252,7 +262,7 @@ def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
     return parsed
 
 
-register.snmp_section(
+snmp_section_bluenet2_powerrail = SNMPSection(
     name="bluenet2_powerrail",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.31770.2.1"),
     parse_function=parse_bluenet2_powerrail,
@@ -327,7 +337,7 @@ def check_bluenet2_powerrail_phases(
     yield from check_elphase(item, params, section["phases"])
 
 
-register.check_plugin(
+check_plugin_bluenet2_powerrail = CheckPlugin(
     name="bluenet2_powerrail",
     sections=["bluenet2_powerrail"],
     service_name="Inlet %s",
@@ -359,7 +369,7 @@ def check_bluenet2_powerrail_rcm_phases(
     yield from check_elphase(item, params, section["rcm_phases"])
 
 
-register.check_plugin(
+check_plugin_bluenet2_powerrail_rcm = CheckPlugin(
     name="bluenet2_powerrail_rcm",
     sections=["bluenet2_powerrail"],
     service_name="Inlet %s",
@@ -397,7 +407,7 @@ def check_bluenet2_powerrail_sockets(
     yield from check_elphase(item, params, section["sockets"])
 
 
-register.check_plugin(
+check_plugin_bluenet2_powerrail_sockets = CheckPlugin(
     name="bluenet2_powerrail_sockets",
     sections=["bluenet2_powerrail"],
     service_name="Socket %s",
@@ -431,7 +441,7 @@ def check_bluenet2_powerrail_fuses(
     yield from check_elphase(item, params, section["fuses"])
 
 
-register.check_plugin(
+check_plugin_bluenet2_powerrail_fuses = CheckPlugin(
     name="bluenet2_powerrail_fuses",
     sections=["bluenet2_powerrail"],
     service_name="Fuse %s",
@@ -465,7 +475,7 @@ def check_bluenet2_powerrail_inlet(
     yield from check_elphase(item, params, section["inlet"])
 
 
-register.check_plugin(
+check_plugin_bluenet2_powerrail_inlet = CheckPlugin(
     name="bluenet2_powerrail_inlet",
     sections=["bluenet2_powerrail"],
     service_name="Inlet %s",
@@ -502,7 +512,7 @@ def check_bluenet2_powerrail_temp(item: str, params: TempParamType, section: dic
         )
 
 
-register.check_plugin(
+check_plugin_bluenet2_powerrail_temp = CheckPlugin(
     name="bluenet2_powerrail_temp",
     sections=["bluenet2_powerrail"],
     service_name="Temperature %s",
@@ -543,7 +553,7 @@ def check_bluenet2_powerrail_humidity(
         )
 
 
-register.check_plugin(
+check_plugin_bluenet2_powerrail_humidity = CheckPlugin(
     name="bluenet2_powerrail_humidity",
     sections=["bluenet2_powerrail"],
     service_name="Humidity %s",

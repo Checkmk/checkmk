@@ -9,8 +9,16 @@ from typing import Any, TypedDict
 
 from cmk.checkengine.checkresults import state_markers  # pylint: disable=cmk-module-layer-violation
 
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 Section = Mapping[str, Any]
 
@@ -53,7 +61,7 @@ def parse_bi_aggregation(string_table: StringTable) -> Section:
     return parsed
 
 
-register.agent_section(
+agent_section_bi_aggregation = AgentSection(
     name="bi_aggregation",
     parse_function=parse_bi_aggregation,
 )
@@ -147,7 +155,7 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
         yield Result(state=State.OK, notice="\n".join(infos))
 
 
-register.check_plugin(
+check_plugin_bi_aggregation = CheckPlugin(
     name="bi_aggregation",
     service_name="Aggr %s",
     discovery_function=discover_bi_aggregation,

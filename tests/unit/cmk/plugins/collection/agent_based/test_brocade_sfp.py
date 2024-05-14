@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based import brocade_sfp
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.collection.agent_based import brocade_sfp
 
 
 @pytest.mark.parametrize(

@@ -184,19 +184,9 @@ def get_short_inventory_filepath(hostname: HostName) -> Path:
 #   '----------------------------------------------------------------------'
 
 
-_DEFAULT_PATH_TO_TREE = Path()
-
-
 class InventoryHistoryPath(NamedTuple):
     path: Path
     timestamp: int | None
-
-    @classmethod
-    def default(cls) -> InventoryHistoryPath:
-        return InventoryHistoryPath(
-            path=_DEFAULT_PATH_TO_TREE,
-            timestamp=None,
-        )
 
     @property
     def short(self) -> Path:
@@ -228,7 +218,7 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
             raise FilterInventoryHistoryPathsError()
         return FilteredInventoryHistoryPaths(
             start_tree_path=(
-                InventoryHistoryPath.default() if len(tree_paths) == 1 else tree_paths[-2]
+                InventoryHistoryPath(Path(), None) if len(tree_paths) == 1 else tree_paths[-2]
             ),
             tree_paths=[tree_paths[-1]],
         )
@@ -256,7 +246,7 @@ def load_delta_tree(
             if tree_path.timestamp == timestamp:
                 if idx == 0:
                     return FilteredInventoryHistoryPaths(
-                        start_tree_path=InventoryHistoryPath.default(),
+                        start_tree_path=InventoryHistoryPath(Path(), None),
                         tree_paths=[tree_path],
                     )
                 return FilteredInventoryHistoryPaths(
@@ -285,7 +275,7 @@ def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[st
     return _get_history(
         hostname,
         filter_tree_paths=lambda tree_paths: FilteredInventoryHistoryPaths(
-            start_tree_path=InventoryHistoryPath.default(),
+            start_tree_path=InventoryHistoryPath(Path(), None),
             tree_paths=tree_paths,
         ),
     )
@@ -394,7 +384,7 @@ class _CachedTreeLoader:
     _lookup: dict[Path, ImmutableTree] = field(default_factory=dict)
 
     def get_tree(self, filepath: Path) -> ImmutableTree:
-        if filepath == _DEFAULT_PATH_TO_TREE:
+        if filepath == Path():
             return ImmutableTree()
 
         if filepath in self._lookup:

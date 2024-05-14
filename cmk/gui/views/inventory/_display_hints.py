@@ -256,6 +256,37 @@ def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> 
     return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
 
+def _parse_node_hint(
+    path: SDPath,
+    legacy_hint: InventoryHintSpec,
+    attributes_key_order: Sequence[str],
+    attributes: Mapping[str, InventoryHintSpec],
+    table_key_order: Sequence[str],
+    columns: Mapping[str, InventoryHintSpec],
+) -> _NodeDisplayHint:
+    title = _make_title_function(legacy_hint)(path[-1] if path else "")
+    return _NodeDisplayHint(
+        path=path,
+        title=title,
+        short_title=title,
+        icon=legacy_hint.get("icon", ""),
+        attributes=OrderedDict(
+            {
+                SDKey(key): _parse_attribute_hint(title, key, attributes.get(key, {}))
+                for key in _complete_key_order(attributes_key_order, set(attributes))
+            }
+        ),
+        columns=OrderedDict(
+            {
+                key: _parse_column_hint(title, key, columns.get(key, {}))
+                for key in _complete_key_order(table_key_order, set(columns))
+            }
+        ),
+        table_view_name="" if "*" in path else _parse_view_name(legacy_hint.get("view")),
+        table_is_show_more=legacy_hint.get("is_show_more", True),
+    )
+
+
 @dataclass(frozen=True)
 class _NodeDisplayHint:
     path: SDPath
@@ -266,38 +297,6 @@ class _NodeDisplayHint:
     columns: OrderedDict[SDKey, ColumnDisplayHint]
     table_view_name: str
     table_is_show_more: bool
-
-    @classmethod
-    def from_raw(
-        cls,
-        path: SDPath,
-        legacy_hint: InventoryHintSpec,
-        attributes_key_order: Sequence[str],
-        attributes: Mapping[str, InventoryHintSpec],
-        table_key_order: Sequence[str],
-        columns: Mapping[str, InventoryHintSpec],
-    ) -> _NodeDisplayHint:
-        title = _make_title_function(legacy_hint)(path[-1] if path else "")
-        return cls(
-            path=path,
-            title=title,
-            short_title=title,
-            icon=legacy_hint.get("icon", ""),
-            attributes=OrderedDict(
-                {
-                    SDKey(key): _parse_attribute_hint(title, key, attributes.get(key, {}))
-                    for key in _complete_key_order(attributes_key_order, set(attributes))
-                }
-            ),
-            columns=OrderedDict(
-                {
-                    key: _parse_column_hint(title, key, columns.get(key, {}))
-                    for key in _complete_key_order(table_key_order, set(columns))
-                }
-            ),
-            table_view_name="" if "*" in path else _parse_view_name(legacy_hint.get("view")),
-            table_is_show_more=legacy_hint.get("is_show_more", True),
-        )
 
 
 @dataclass(frozen=True)
@@ -437,7 +436,7 @@ def _parse_legacy_display_hints(
         # - real nodes, eg. ".hardware.chassis.",
         # - nodes with attributes, eg. ".hardware.cpu." or
         # - nodes with a table, eg. ".software.packages:"
-        yield _NodeDisplayHint.from_raw(
+        yield _parse_node_hint(
             path,
             node_or_table_hints,
             related_legacy_hints.for_node.get("keyorder", []),

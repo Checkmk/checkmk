@@ -57,6 +57,7 @@ from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from . import _rulespec
 from ._icon import InventoryIcon
 from ._inventory_path import InventoryPath as InventoryPath
+from ._inventory_path import parse_inventory_path as parse_inventory_path
 from ._inventory_path import TreeSource as TreeSource
 from ._rulespec import RulespecGroupInventory as RulespecGroupInventory
 from ._store import has_inventory as has_inventory
@@ -85,7 +86,7 @@ def register(
 
 
 # TODO Cleanup variation:
-#   - InventoryPath.parse parses NOT visible, internal tree paths used in displayhints/views
+#   - parse_inventory_path parses NOT visible, internal tree paths used in displayhints/views
 #   - cmk.utils.structured_data.py::parse_visible_raw_path
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
@@ -647,7 +648,7 @@ def _make_filter_choices_from_api_request_paths(
             nodes="all",
         )
 
-    return [_make_filter_choice(InventoryPath.parse(raw_path)) for raw_path in api_request_paths]
+    return [_make_filter_choice(parse_inventory_path(raw_path)) for raw_path in api_request_paths]
 
 
 def inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRawTree:

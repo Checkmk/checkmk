@@ -289,7 +289,7 @@ def ajax_inv_render_tree() -> None:
     except _LoadTreeError:
         return
 
-    inventory_path = inventory.InventoryPath.parse(raw_path or "")
+    inventory_path = inventory.parse_inventory_path(raw_path or "")
     if not (tree := tree.get_tree(inventory_path.path)):
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return

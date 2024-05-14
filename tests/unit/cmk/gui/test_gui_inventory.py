@@ -18,6 +18,7 @@ from cmk.gui.inventory import (
     _make_filter_choices_from_api_request_paths,
     _make_filter_choices_from_permitted_paths,
     InventoryPath,
+    parse_inventory_path,
     PermittedPath,
     TreeSource,
 )
@@ -136,7 +137,7 @@ from cmk.gui.type_defs import Row
 def test_parse_tree_path(
     raw_path: str, expected_path: InventoryPath, expected_node_name: str
 ) -> None:
-    inventory_path = InventoryPath.parse(raw_path)
+    inventory_path = parse_inventory_path(raw_path)
     assert inventory_path == expected_path
     assert inventory_path.node_name == expected_node_name
 

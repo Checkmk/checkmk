@@ -10,7 +10,7 @@ import enum
 import json
 import os
 import tarfile
-from collections.abc import Collection, Iterator, Sequence
+from collections.abc import Collection, Iterator
 from dataclasses import asdict
 from typing import NamedTuple
 
@@ -78,9 +78,7 @@ class ActivationState(enum.Enum):
     ERROR = 2
 
 
-def _show_activation_state_messages(
-    title: str, messages: Sequence[str], state: ActivationState
-) -> None:
+def _show_activation_state_messages(title: str, message: str, state: ActivationState) -> None:
     html.open_div(id="activation_state_message_container")
 
     html.open_div(class_="state_bar state%s" % state.value)
@@ -96,8 +94,7 @@ def _show_activation_state_messages(
     html.open_div(class_="message_container")
     html.h2(title)
     html.open_div()
-    for msg in messages:
-        html.span(msg)
+    html.span(message)
     html.close_div()
     html.close_div()  # activation_state_message
 
@@ -601,15 +598,17 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         init_rowselect(self.name())
 
     def _show_license_validity(self) -> None:
-        errors = []
-        warnings = []
-
         if block_effect := get_licensing_user_effect(
             licensing_settings_link=makeuri_contextless(
                 request, [("mode", "licensing")], filename="wato.py"
             ),
         ).block:
-            errors.append(block_effect.message_html)
+            _show_activation_state_messages(
+                _("Activation not possible because of the following licensing issues:"),
+                block_effect.message_html,
+                ActivationState.ERROR,
+            )
+            return
 
         if is_cloud_edition():
             # TODO move to CCE handler to avoid is_cloud_edition check
@@ -617,25 +616,26 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 self._license_usage_report_validity
                 == LicenseUsageReportValidity.older_than_five_days
             ):
-                errors.append(_("The license usage history is older than five days."))
+                _show_activation_state_messages(
+                    "",
+                    _(
+                        "The license usage history is older than five days. In order to have a"
+                        " reliable average of the number of services the license usage report must"
+                        " contain a significant number of license usage samples. Please execute"
+                        " the following command as site user 'cmk-update-license-usage --force' in"
+                        " order to solve this situation."
+                    ),
+                    ActivationState.WARNING,
+                )
             elif (
                 self._license_usage_report_validity
                 == LicenseUsageReportValidity.older_than_three_days
             ):
-                warnings.append(
-                    _(
-                        "The license usage history was updated at least three days ago."
-                        "<br>Note: If it cannot be updated within five days activate changes"
-                        " will be blocked."
-                    )
+                _show_activation_state_messages(
+                    "",
+                    _("The license usage history was updated at least three days ago."),
+                    ActivationState.WARNING,
                 )
-        if errors:
-            error_title = _("Activation not possible because of the following licensing issues:")
-            _show_activation_state_messages(error_title, errors, ActivationState.ERROR)
-
-            return
-        if warnings:
-            _show_activation_state_messages("", warnings, ActivationState.WARNING)
 
     def _activation_status(self):
         with table_element(

@@ -1,0 +1,17 @@
+Title: License usage history which is older than five days does not block activation anymore
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1715699727
+Edition: cce
+Level: 1
+Version: 2.2.0p27
+
+If the license usage history is older than five days then activation may be
+blocked.  We removed this restriction and show a warning instead. If you run
+into this issue the situation can be solved by executing this command as site
+user:
+
+C+:
+cmk-update-license-usage --force
+C-:

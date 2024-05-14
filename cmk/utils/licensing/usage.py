@@ -88,7 +88,7 @@ def try_update_license_usage(
 
     report_filepath = get_license_usage_report_filepath()
     licensing_dir.mkdir(parents=True, exist_ok=True)
-    next_run_filepath = licensing_dir / "next_run"
+    next_run_filepath = get_next_run_file_path()
 
     with store.locked(next_run_filepath), store.locked(report_filepath):
         if now.dt.timestamp() < _get_next_run_ts(next_run_filepath):
@@ -279,6 +279,10 @@ def _create_next_run_ts(now: Now) -> int:
 
 def get_license_usage_report_filepath() -> Path:
     return licensing_dir / "history.json"
+
+
+def get_next_run_file_path() -> Path:
+    return licensing_dir / "next_run"
 
 
 def save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsageReport) -> None:

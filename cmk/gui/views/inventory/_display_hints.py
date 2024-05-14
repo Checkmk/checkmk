@@ -32,44 +32,6 @@ from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunc
 
 
 @dataclass(frozen=True)
-class AttributeDisplayHint:
-    title: str
-    short_title: str
-    long_title: str
-    paint_function: PaintFunction
-    sort_function: SortFunction
-    data_type: str
-    is_show_more: bool
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory attribute: %s") % self.long_title
-
-
-@dataclass(frozen=True)
-class ColumnDisplayHint:
-    title: str
-    short_title: str
-    long_title: str
-    paint_function: PaintFunction
-    sort_function: SortFunction
-    filter_class: (
-        type[FilterInvtableAdminStatus]
-        | type[FilterInvtableAvailable]
-        | type[FilterInvtableIntegerRange]
-        | type[FilterInvtableInterfaceType]
-        | type[FilterInvtableOperStatus]
-        | type[FilterInvtableText]
-        | type[FilterInvtableTimestampAsAge]
-        | type[FilterInvtableVersion]
-    )
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory column: %s") % self.long_title
-
-
-@dataclass(frozen=True)
 class _RelatedLegacyHints:
     for_node: InventoryHintSpec = field(
         default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
@@ -256,6 +218,18 @@ def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> 
     return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
 
+@dataclass(frozen=True)
+class _NodeDisplayHint:
+    path: SDPath
+    title: str
+    short_title: str
+    icon: str
+    attributes: OrderedDict[SDKey, AttributeDisplayHint]
+    columns: OrderedDict[SDKey, ColumnDisplayHint]
+    table_view_name: str
+    table_is_show_more: bool
+
+
 def _parse_node_hint(
     path: SDPath,
     legacy_hint: InventoryHintSpec,
@@ -287,16 +261,100 @@ def _parse_node_hint(
     )
 
 
+# TODO Workaround for InventoryHintSpec (TypedDict)
+# https://github.com/python/mypy/issues/7178
+_ALLOWED_KEYS: Sequence[
+    Literal[
+        "title",
+        "short",
+        "icon",
+        "paint",
+        "view",
+        "keyorder",
+        "sort",
+        "filter",
+        "is_show_more",
+    ]
+] = [
+    "title",
+    "short",
+    "icon",
+    "paint",
+    "view",
+    "keyorder",
+    "sort",
+    "filter",
+    "is_show_more",
+]
+
+
+def _parse_legacy_display_hints(
+    legacy_hints: Mapping[str, InventoryHintSpec]
+) -> Iterator[_NodeDisplayHint]:
+    for path, related_legacy_hints in sorted(
+        _get_related_legacy_hints(legacy_hints).items(), key=lambda t: t[0]
+    ):
+        if not path:
+            continue
+
+        node_or_table_hints = InventoryHintSpec()
+        for key in _ALLOWED_KEYS:
+            if (value := related_legacy_hints.for_table.get(key)) is not None:
+                node_or_table_hints[key] = value
+            elif (value := related_legacy_hints.for_node.get(key)) is not None:
+                node_or_table_hints[key] = value
+
+        # Some fields like 'title' or 'keyorder' of legacy display hints are declared
+        # either for
+        # - real nodes, eg. ".hardware.chassis.",
+        # - nodes with attributes, eg. ".hardware.cpu." or
+        # - nodes with a table, eg. ".software.packages:"
+        yield _parse_node_hint(
+            path,
+            node_or_table_hints,
+            related_legacy_hints.for_node.get("keyorder", []),
+            related_legacy_hints.by_key,
+            related_legacy_hints.for_table.get("keyorder", []),
+            related_legacy_hints.by_column,
+        )
+
+
 @dataclass(frozen=True)
-class _NodeDisplayHint:
-    path: SDPath
+class AttributeDisplayHint:
     title: str
     short_title: str
-    icon: str
-    attributes: OrderedDict[SDKey, AttributeDisplayHint]
-    columns: OrderedDict[SDKey, ColumnDisplayHint]
-    table_view_name: str
-    table_is_show_more: bool
+    long_title: str
+    paint_function: PaintFunction
+    sort_function: SortFunction
+    data_type: str
+    is_show_more: bool
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory attribute: %s") % self.long_title
+
+
+@dataclass(frozen=True)
+class ColumnDisplayHint:
+    title: str
+    short_title: str
+    long_title: str
+    paint_function: PaintFunction
+    sort_function: SortFunction
+    filter_class: (
+        type[FilterInvtableAdminStatus]
+        | type[FilterInvtableAvailable]
+        | type[FilterInvtableIntegerRange]
+        | type[FilterInvtableInterfaceType]
+        | type[FilterInvtableOperStatus]
+        | type[FilterInvtableText]
+        | type[FilterInvtableTimestampAsAge]
+        | type[FilterInvtableVersion]
+    )
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory column: %s") % self.long_title
 
 
 @dataclass(frozen=True)
@@ -400,64 +458,6 @@ class DisplayHints:
             OrderedDict(),
             "",
             True,
-        )
-
-
-# TODO Workaround for InventoryHintSpec (TypedDict)
-# https://github.com/python/mypy/issues/7178
-_ALLOWED_KEYS: Sequence[
-    Literal[
-        "title",
-        "short",
-        "icon",
-        "paint",
-        "view",
-        "keyorder",
-        "sort",
-        "filter",
-        "is_show_more",
-    ]
-] = [
-    "title",
-    "short",
-    "icon",
-    "paint",
-    "view",
-    "keyorder",
-    "sort",
-    "filter",
-    "is_show_more",
-]
-
-
-def _parse_legacy_display_hints(
-    legacy_hints: Mapping[str, InventoryHintSpec]
-) -> Iterator[_NodeDisplayHint]:
-    for path, related_legacy_hints in sorted(
-        _get_related_legacy_hints(legacy_hints).items(), key=lambda t: t[0]
-    ):
-        if not path:
-            continue
-
-        node_or_table_hints = InventoryHintSpec()
-        for key in _ALLOWED_KEYS:
-            if (value := related_legacy_hints.for_table.get(key)) is not None:
-                node_or_table_hints[key] = value
-            elif (value := related_legacy_hints.for_node.get(key)) is not None:
-                node_or_table_hints[key] = value
-
-        # Some fields like 'title' or 'keyorder' of legacy display hints are declared
-        # either for
-        # - real nodes, eg. ".hardware.chassis.",
-        # - nodes with attributes, eg. ".hardware.cpu." or
-        # - nodes with a table, eg. ".software.packages:"
-        yield _parse_node_hint(
-            path,
-            node_or_table_hints,
-            related_legacy_hints.for_node.get("keyorder", []),
-            related_legacy_hints.by_key,
-            related_legacy_hints.for_table.get("keyorder", []),
-            related_legacy_hints.by_column,
         )
 
 

@@ -286,7 +286,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                     elements=[
                                         SingleChoiceElement(
                                             name="auto",
-                                            title=Title('Use "CERT as prefix"'),
+                                            title=Title('Use "CERT" as service name prefix'),
                                         ),
                                         SingleChoiceElement(
                                             name="none",

@@ -179,12 +179,14 @@ class Counters:
     in_octets: float | None = None
     in_mcast: float | None = None
     in_bcast: float | None = None
+    in_nucast: float | None = None
     in_ucast: float | None = None
     in_disc: float | None = None
     in_err: float | None = None
     out_octets: float | None = None
     out_mcast: float | None = None
     out_bcast: float | None = None
+    out_nucast: float | None = None
     out_ucast: float | None = None
     out_disc: float | None = None
     out_err: float | None = None
@@ -202,12 +204,14 @@ class Rates:
     in_mcast: float | None = None
     in_bcast: float | None = None
     in_ucast: float | None = None
+    in_nucast: float | None = None
     in_disc: float | None = None
     in_err: float | None = None
     out_octets: float | None = None
     out_mcast: float | None = None
     out_bcast: float | None = None
     out_ucast: float | None = None
+    out_nucast: float | None = None
     out_disc: float | None = None
     out_err: float | None = None
 
@@ -250,12 +254,14 @@ class InterfaceWithRates:
             ("in_ucast", counters.in_ucast),
             ("in_mcast", counters.in_mcast),
             ("in_bcast", counters.in_bcast),
+            ("in_nucast", counters.in_nucast),
             ("in_disc", counters.in_disc),
             ("in_err", counters.in_err),
             ("out_octets", counters.out_octets),
             ("out_ucast", counters.out_ucast),
             ("out_mcast", counters.out_mcast),
             ("out_bcast", counters.out_bcast),
+            ("out_nucast", counters.out_nucast),
             ("out_disc", counters.out_disc),
             ("out_err", counters.out_err),
         ):
@@ -307,7 +313,7 @@ class RateWithAverage:
         )
 
 
-@dataclass(frozen=True)
+@dataclass
 class RatesWithAverages:
     in_octets: RateWithAverage | None = None
     in_mcast: RateWithAverage | None = None
@@ -370,60 +376,63 @@ class InterfaceWithRatesAndAverages:
             average_backlog_octets=params.get("average"),
             average_backlog_bmcast=params.get("average_bm"),
         )
-        return cls(
-            attributes=iface.attributes,
-            rates_with_averages=RatesWithAverages(
-                **{
-                    rate_name: (
+        rates_with_averages = RatesWithAverages(
+            **{
+                rate_name: (
+                    None
+                    if rate is None
+                    else RateWithAverage(
+                        rate=rate,
+                        average=averages.get(rate_name),
+                    )
+                )
+                for rate_name, rate in asdict(iface_rates.rates).items()
+            }
+        )
+        if rates_with_averages.in_nucast is None:
+            rates_with_averages.in_nucast = cls._add_rates_and_averages(
+                *(
+                    (
                         None
-                        if rate is None
+                        if (rate := getattr(iface_rates.rates, rate_name)) is None
                         else RateWithAverage(
-                            rate=rate,
-                            average=averages.get(rate_name),
+                            rate,
+                            averages.get(rate_name),
                         )
                     )
-                    for rate_name, rate in asdict(iface_rates.rates).items()
-                },
-                in_nucast=cls._add_rates_and_averages(
-                    *(
-                        (
-                            None
-                            if (rate := getattr(iface_rates.rates, rate_name)) is None
-                            else RateWithAverage(
-                                rate,
-                                averages.get(rate_name),
-                            )
-                        )
-                        for rate_name in ("in_mcast", "in_bcast")
-                    ),
+                    for rate_name in ("in_mcast", "in_bcast")
                 ),
-                out_nucast=cls._add_rates_and_averages(
-                    *(
-                        (
-                            None
-                            if (rate := getattr(iface_rates.rates, rate_name)) is None
-                            else RateWithAverage(
-                                rate,
-                                averages.get(rate_name),
-                            )
+            )
+        if rates_with_averages.out_nucast is None:
+            rates_with_averages.out_nucast = cls._add_rates_and_averages(
+                *(
+                    (
+                        None
+                        if (rate := getattr(iface_rates.rates, rate_name)) is None
+                        else RateWithAverage(
+                            rate,
+                            averages.get(rate_name),
                         )
-                        for rate_name in ("out_mcast", "out_bcast")
-                    ),
+                    )
+                    for rate_name in ("out_mcast", "out_bcast")
                 ),
-                total_octets=cls._add_rates_and_averages(
-                    *(
-                        (
-                            None
-                            if (rate := getattr(iface_rates.rates, rate_name)) is None
-                            else RateWithAverage(
-                                rate,
-                                averages.get(rate_name),
-                            )
-                        )
-                        for rate_name in ("in_octets", "out_octets")
-                    ),
-                ),
+            )
+        rates_with_averages.total_octets = cls._add_rates_and_averages(
+            *(
+                (
+                    None
+                    if (rate := getattr(iface_rates.rates, rate_name)) is None
+                    else RateWithAverage(
+                        rate,
+                        averages.get(rate_name),
+                    )
+                )
+                for rate_name in ("in_octets", "out_octets")
             ),
+        )
+        return cls(
+            attributes=iface.attributes,
+            rates_with_averages=rates_with_averages,
             get_rate_errors=iface_rates.get_rate_errors,
         )
 

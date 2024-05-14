@@ -18,7 +18,7 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
-from dataclasses import asdict, dataclass, fields, replace
+from dataclasses import dataclass, fields, replace
 from functools import partial
 from typing import Any, assert_never, Final, Literal, ParamSpec, TypedDict, TypeVar
 
@@ -407,7 +407,7 @@ class RateWithAverage:
         )
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RatesWithAverages:
     in_octets: RateWithAverage | None = None
     in_mcast: RateWithAverage | None = None
@@ -439,6 +439,14 @@ class RatesWithAverages:
         )
 
 
+@dataclass(frozen=True, kw_only=True)
+class _AveragingParams:
+    value_store: MutableMapping[str, object]
+    value_store_key: str
+    timestamp: float
+    backlog_minutes: int
+
+
 @dataclass
 class InterfaceWithRatesAndAverages:
     attributes: Attributes
@@ -451,7 +459,7 @@ class InterfaceWithRatesAndAverages:
         iface: InterfaceWithCounters | InterfaceWithRates,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
         params: Mapping[str, Any],
     ) -> "InterfaceWithRatesAndAverages":
         iface_rates = (
@@ -463,115 +471,181 @@ class InterfaceWithRatesAndAverages:
                 value_store=value_store,
             )
         )
-        averages = cls._compute_averages(
-            iface_rates,
-            timestamp=timestamp,
-            value_store=value_store,
-            average_backlog_octets=params.get("average"),
-            average_backlog_bmcast=params.get("average_bm"),
-        )
-        rates_with_averages = RatesWithAverages(
-            **{
-                rate_name: (
-                    None
-                    if rate is None
-                    else RateWithAverage(
-                        rate=rate,
-                        average=averages.get(rate_name),
-                    )
+        in_octets = cls._rate_with_average(
+            rate=iface_rates.rates.in_octets,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_octets.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=backlog_minutes_in_octets,
                 )
-                for rate_name, rate in asdict(iface_rates.rates).items()
-            }
-        )
-        if rates_with_averages.in_nucast is None:
-            rates_with_averages.in_nucast = cls._add_rates_and_averages(
-                *(
-                    (
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
-                        )
-                    )
-                    for rate_name in ("in_mcast", "in_bcast")
-                ),
-            )
-        if rates_with_averages.out_nucast is None:
-            rates_with_averages.out_nucast = cls._add_rates_and_averages(
-                *(
-                    (
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
-                        )
-                    )
-                    for rate_name in ("out_mcast", "out_bcast")
-                ),
-            )
-        rates_with_averages.total_octets = cls._add_rates_and_averages(
-            *(
-                (
-                    None
-                    if (rate := getattr(iface_rates.rates, rate_name)) is None
-                    else RateWithAverage(
-                        rate,
-                        averages.get(rate_name),
-                    )
-                )
-                for rate_name in ("in_octets", "out_octets")
+                if (backlog_minutes_in_octets := params.get("average")) is not None
+                else None
             ),
+        )
+        out_octets = cls._rate_with_average(
+            rate=iface_rates.rates.out_octets,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_octets.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=backlog_minutes_out_octets,
+                )
+                if (backlog_minutes_out_octets := params.get("average")) is not None
+                else None
+            ),
+        )
+        in_ucast = cls._rate_with_average(
+            rate=iface_rates.rates.in_ucast,
+            averaging_params=None,
+        )
+        out_ucast = cls._rate_with_average(
+            rate=iface_rates.rates.out_ucast,
+            averaging_params=None,
+        )
+        in_mcast = cls._rate_with_average(
+            rate=iface_rates.rates.in_mcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_mcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_in_mcast,
+                )
+                if (average_backlog_in_mcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        out_mcast = cls._rate_with_average(
+            rate=iface_rates.rates.out_mcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_mcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_out_mcast,
+                )
+                if (average_backlog_out_mcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        in_bcast = cls._rate_with_average(
+            rate=iface_rates.rates.in_bcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_bcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_in_bcast,
+                )
+                if (average_backlog_in_bcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        out_bcast = cls._rate_with_average(
+            rate=iface_rates.rates.out_bcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_bcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_out_bcast,
+                )
+                if (average_backlog_out_bcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        in_nucast = cls._rate_with_average(
+            rate=iface_rates.rates.in_nucast,
+            averaging_params=None,
+        ) or cls._add_rates_and_averages(
+            in_mcast,
+            in_bcast,
+        )
+        out_nucast = cls._rate_with_average(
+            rate=iface_rates.rates.out_nucast,
+            averaging_params=None,
+        ) or cls._add_rates_and_averages(
+            out_mcast,
+            out_bcast,
+        )
+        in_disc = cls._rate_with_average(
+            rate=iface_rates.rates.in_disc,
+            averaging_params=None,
+        )
+        out_disc = cls._rate_with_average(
+            rate=iface_rates.rates.out_disc,
+            averaging_params=None,
+        )
+        in_err = cls._rate_with_average(
+            rate=iface_rates.rates.in_err,
+            averaging_params=None,
+        )
+        out_err = cls._rate_with_average(
+            rate=iface_rates.rates.out_err,
+            averaging_params=None,
+        )
+        total_octets = cls._add_rates_and_averages(
+            in_octets,
+            out_octets,
         )
         return cls(
             attributes=iface.attributes,
-            rates_with_averages=rates_with_averages,
+            rates_with_averages=RatesWithAverages(
+                in_octets=in_octets,
+                in_mcast=in_mcast,
+                in_bcast=in_bcast,
+                in_nucast=in_nucast,
+                in_ucast=in_ucast,
+                in_disc=in_disc,
+                in_err=in_err,
+                out_octets=out_octets,
+                out_mcast=out_mcast,
+                out_bcast=out_bcast,
+                out_nucast=out_nucast,
+                out_ucast=out_ucast,
+                out_disc=out_disc,
+                out_err=out_err,
+                total_octets=total_octets,
+            ),
             get_rate_errors=iface_rates.get_rate_errors,
         )
 
     @staticmethod
-    def _compute_averages(
-        iface_rates: InterfaceWithRates,
+    def _rate_with_average(
         *,
-        timestamp: float,
-        value_store: MutableMapping[str, Any],
-        average_backlog_octets: int | None,
-        average_backlog_bmcast: int | None,
-    ) -> Mapping[str, Average]:
-        return {
-            rate_name: Average(
-                value=get_average(
-                    value_store=value_store,
-                    key=f"{rate_name}.{iface_rates.attributes.id_for_value_store}.average",
-                    time=timestamp,
-                    value=rate,
-                    backlog_minutes=average_backlog,
-                ),
-                backlog=average_backlog,
+        rate: float | None,
+        averaging_params: _AveragingParams | None,
+    ) -> RateWithAverage | None:
+        if rate is None:
+            return None
+        if averaging_params is None:
+            return RateWithAverage(
+                rate=rate,
+                average=None,
             )
-            for average_backlog, rate_names in (
-                (
-                    average_backlog_octets,
-                    (
-                        "in_octets",
-                        "out_octets",
-                    ),
-                ),
-                (
-                    average_backlog_bmcast,
-                    (
-                        "in_mcast",
-                        "in_bcast",
-                        "out_mcast",
-                        "out_bcast",
-                    ),
-                ),
-            )
-            for rate_name in rate_names
-            if average_backlog is not None
-            and (rate := getattr(iface_rates.rates, rate_name)) is not None
-        }
+        return RateWithAverage(
+            rate=rate,
+            average=(
+                Average(
+                    value=average,
+                    backlog=averaging_params.backlog_minutes,
+                )
+                if (
+                    average := get_average(
+                        value_store=averaging_params.value_store,
+                        key=averaging_params.value_store_key,
+                        time=averaging_params.timestamp,
+                        value=rate,
+                        backlog_minutes=averaging_params.backlog_minutes,
+                    )
+                )
+                is not None
+                else None
+            ),
+        )
 
     @staticmethod
     def _add_rates_and_averages(

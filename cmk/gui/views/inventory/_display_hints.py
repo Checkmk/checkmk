@@ -327,21 +327,36 @@ class NodeDisplayHint:
         return f"{self.ident}_{key}"
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
-        return (
-            hint
-            if (hint := self.attributes.get(SDKey(key)))
-            else _parse_attribute_hint(self.title if self.path else "", key, {})
-        )
+        def _default() -> AttributeDisplayHint:
+            title = key.replace("_", " ").title()
+            return AttributeDisplayHint(
+                title=title,
+                short_title=title,
+                long_title=_make_long_title(self.title if self.path else "", title),
+                paint_function=inv_paint_funtions["inv_paint_generic"]["func"],
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                data_type="str",
+                is_show_more=True,
+            )
+
+        return hint if (hint := self.attributes.get(SDKey(key))) else _default()
 
     def column_ident(self, key: SDKey) -> str:
         return f"{self.table_view_name}_{key}" if self.table_view_name else ""
 
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
-        return (
-            hint
-            if (hint := self.columns.get(SDKey(key)))
-            else _parse_column_hint(self.title if self.path else "", key, {})
-        )
+        def _default() -> ColumnDisplayHint:
+            title = key.replace("_", " ").title()
+            return ColumnDisplayHint(
+                title=title,
+                short_title=title,
+                long_title=_make_long_title(self.title if self.path else "", title),
+                paint_function=inv_paint_funtions["inv_paint_generic"]["func"],
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                filter_class=FilterInvtableText,
+            )
+
+        return hint if (hint := self.columns.get(SDKey(key))) else _default()
 
 
 @dataclass(frozen=True)

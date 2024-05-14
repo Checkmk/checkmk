@@ -253,13 +253,27 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 attributes=OrderedDict(),
                 # The single column hints are not checked here
                 columns=OrderedDict(
-                    id=ColumnDisplayHint.from_raw("", "id", {}),
-                    creation=ColumnDisplayHint.from_raw("", "creation", {}),
-                    size=ColumnDisplayHint.from_raw("", "size", {}),
-                    labels=ColumnDisplayHint.from_raw("", "labels", {}),
-                    amount_containers=ColumnDisplayHint.from_raw("", "amount_containers", {}),
-                    repotags=ColumnDisplayHint.from_raw("", "repotags", {}),
-                    repodigests=ColumnDisplayHint.from_raw("", "repodigests", {}),
+                    id=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    creation=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    size=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    labels=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    amount_containers=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    repotags=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    repodigests=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
                 ),
                 table_view_name="invdockerimages",
                 table_is_show_more=False,
@@ -358,12 +372,24 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 attributes=OrderedDict(),
                 # The single column hints are not checked here
                 columns=OrderedDict(
-                    id=ColumnDisplayHint.from_raw("", "id", {}),
-                    creation=ColumnDisplayHint.from_raw("", "creation", {}),
-                    name=ColumnDisplayHint.from_raw("", "name", {}),
-                    labels=ColumnDisplayHint.from_raw("", "labels", {}),
-                    status=ColumnDisplayHint.from_raw("", "status", {}),
-                    image=ColumnDisplayHint.from_raw("", "image", {}),
+                    id=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    creation=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    name=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    labels=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    status=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
+                    image=ColumnDisplayHint(
+                        "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
+                    ),
                 ),
                 table_view_name="invdockercontainers",
                 table_is_show_more=False,

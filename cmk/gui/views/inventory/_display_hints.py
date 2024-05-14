@@ -47,6 +47,29 @@ class AttributeDisplayHint:
 
 
 @dataclass(frozen=True)
+class ColumnDisplayHint:
+    title: str
+    short_title: str
+    long_title: str
+    paint_function: PaintFunction
+    sort_function: SortFunction
+    filter_class: (
+        type[FilterInvtableAdminStatus]
+        | type[FilterInvtableAvailable]
+        | type[FilterInvtableIntegerRange]
+        | type[FilterInvtableInterfaceType]
+        | type[FilterInvtableOperStatus]
+        | type[FilterInvtableText]
+        | type[FilterInvtableTimestampAsAge]
+        | type[FilterInvtableVersion]
+    )
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory column: %s") % self.long_title
+
+
+@dataclass(frozen=True)
 class _RelatedLegacyHints:
     for_node: InventoryHintSpec = field(
         default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
@@ -200,47 +223,23 @@ def _parse_column_display_hint_filter_class(
     raise TypeError(filter_class)
 
 
-@dataclass(frozen=True)
-class ColumnDisplayHint:
-    title: str
-    short_title: str
-    long_title: str
-    paint_function: PaintFunction
-    sort_function: SortFunction
-    filter_class: (
-        type[FilterInvtableAdminStatus]
-        | type[FilterInvtableAvailable]
-        | type[FilterInvtableIntegerRange]
-        | type[FilterInvtableInterfaceType]
-        | type[FilterInvtableOperStatus]
-        | type[FilterInvtableText]
-        | type[FilterInvtableTimestampAsAge]
-        | type[FilterInvtableVersion]
+def _parse_column_hint(
+    node_title: str,
+    key: str,
+    legacy_hint: InventoryHintSpec,
+) -> ColumnDisplayHint:
+    _data_type, paint_function = _get_paint_function(legacy_hint)
+    title = _make_title_function(legacy_hint)(key)
+    return ColumnDisplayHint(
+        title=title,
+        short_title=(
+            title if (short_title := legacy_hint.get("short")) is None else str(short_title)
+        ),
+        long_title=_make_long_title(node_title, title),
+        paint_function=paint_function,
+        sort_function=_make_sort_function(legacy_hint),
+        filter_class=_parse_column_display_hint_filter_class(legacy_hint.get("filter")),
     )
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory column: %s") % self.long_title
-
-    @classmethod
-    def from_raw(
-        cls,
-        node_title: str,
-        key: str,
-        legacy_hint: InventoryHintSpec,
-    ) -> ColumnDisplayHint:
-        _data_type, paint_function = _get_paint_function(legacy_hint)
-        title = _make_title_function(legacy_hint)(key)
-        return cls(
-            title=title,
-            short_title=(
-                title if (short_title := legacy_hint.get("short")) is None else str(short_title)
-            ),
-            long_title=_make_long_title(node_title, title),
-            paint_function=paint_function,
-            sort_function=_make_sort_function(legacy_hint),
-            filter_class=_parse_column_display_hint_filter_class(legacy_hint.get("filter")),
-        )
 
 
 def _parse_view_name(view_name: str | None) -> str:
@@ -292,7 +291,7 @@ class _NodeDisplayHint:
             ),
             columns=OrderedDict(
                 {
-                    key: ColumnDisplayHint.from_raw(title, key, columns.get(key, {}))
+                    key: _parse_column_hint(title, key, columns.get(key, {}))
                     for key in _complete_key_order(table_key_order, set(columns))
                 }
             ),
@@ -342,7 +341,7 @@ class NodeDisplayHint:
         return (
             hint
             if (hint := self.columns.get(SDKey(key)))
-            else ColumnDisplayHint.from_raw(self.title if self.path else "", key, {})
+            else _parse_column_hint(self.title if self.path else "", key, {})
         )
 
 

@@ -641,6 +641,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             sections,
             cache_info,
             lookup_persist,
+            lambda valid_until, now: valid_until < now,
             now=now,
             keep_outdated=self.keep_outdated,
         )

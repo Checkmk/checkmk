@@ -84,6 +84,7 @@ def make_parser(
                 section_name: config_cache.snmp_fetch_interval(hostname, section_name)
                 for section_name in checking_sections
             },
+            host_check_interval=config_cache.check_mk_check_interval(hostname),
             keep_outdated=keep_outdated,
             logger=logger,
         )

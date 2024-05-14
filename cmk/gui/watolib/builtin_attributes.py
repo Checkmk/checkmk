@@ -388,7 +388,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.List(
-            gui_fields.HostField(should_exist=True),
+            gui_fields.HostField(should_exist=True, skip_validation_on_view=True),
             description="A list of parents of this host.",
         )
 

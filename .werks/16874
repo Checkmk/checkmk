@@ -1,0 +1,14 @@
+Title: host_config: skip host parent validation on host return
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1715689497
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+Prior to this werk, the REST API always validated if a specified
+host parent is an existing host. This validation behavior differs
+to the mechanism of the UI where it is possible that a host has
+non existing hosts as parent. This werk modifies the behaviour of the
+REST API to skip the host existence validation when a host is returned.

@@ -2420,3 +2420,50 @@ def test_matching_interfaces_for_item(
             section,
         )
     ] == expected_matches
+
+
+def test_non_unicast_packets_handling() -> None:
+    iface_with_counters = interfaces.InterfaceWithCounters(
+        interfaces.Attributes(
+            index="1",
+            descr="lo",
+            alias="lo",
+            type="24",
+            speed=0,
+            oper_status="1",
+            phys_address="\x00\x00\x00\x00\x00\x00",
+        ),
+        interfaces.Counters(
+            in_nucast=0,
+            out_nucast=0,
+        ),
+    )
+    value_store: dict[str, object] = {}
+
+    # first call: value store initalization
+    interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+        iface_with_counters,
+        timestamp=0,
+        value_store=value_store,
+        params={},
+    )
+    # second call: rate computation
+    iface_with_rates_and_averages = (
+        interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+            iface_with_counters,
+            timestamp=1,
+            value_store=value_store,
+            params={},
+        )
+    )
+
+    assert list(interfaces.check_single_interface("1", {}, iface_with_rates_and_averages)) == [
+        Result(state=State.OK, summary="[lo]"),
+        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+        Result(state=State.OK, summary="MAC: 00:00:00:00:00:00"),
+        Result(state=State.OK, summary="Speed: unknown"),
+        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+        Metric("innucast", 0.0),
+        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+        Metric("outnucast", 0.0),
+    ]

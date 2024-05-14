@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.allnet_ip_sensoric import parse_allnet_ip_sensoric
+from cmk.plugins.collection.agent_based.allnet_ip_sensoric import parse_allnet_ip_sensoric
 
 from .checktestlib import Check
 

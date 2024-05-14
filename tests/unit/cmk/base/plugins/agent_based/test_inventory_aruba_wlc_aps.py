@@ -8,7 +8,11 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.aruba_wlc_aps import inventory_aruba_wlc_aps, parse_aruba_wlc_aps
+
+from cmk.plugins.collection.agent_based.aruba_wlc_aps import (
+    inventory_aruba_wlc_aps,
+    parse_aruba_wlc_aps,
+)
 
 from .utils_inventory import sort_inventory_result
 

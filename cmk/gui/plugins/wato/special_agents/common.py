@@ -225,7 +225,7 @@ def connection_set(options: list[str] | None = None, auth_option: str | None = N
                     title=_("Custom URL prefix"),
                     help=_(
                         "Specifies a URL prefix which is prepended to the path in calls to "
-                        "the API. This is e.g. useful if you use the ip address or the hostname "
+                        "the API. This is e.g. useful if you use the ip address or the host name "
                         "as base address but require some additional prefix to make the correct "
                         "API call. Use the custom URL option if you need to specify a more "
                         "complex API url."
@@ -243,7 +243,7 @@ def connection_set(options: list[str] | None = None, auth_option: str | None = N
                     title=_("Custom path prefix"),
                     help=_(
                         "Specifies an URL path suffix which is appended to the path in calls "
-                        "to the API. This is e.g. useful if you use the ip address or the hostname "
+                        "to the API. This is e.g. useful if you use the ip address or the host name "
                         "as base address and require to specify a path URL in order to make the "
                         'correct API calls. Do not prepend or append your custom path with "/". '
                         "Use the custom URL option if you need to specify a "

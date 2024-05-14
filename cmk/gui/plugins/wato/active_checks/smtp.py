@@ -48,10 +48,10 @@ def _valuespec_active_checks_smtp() -> Migrate:
                 (
                     "hostname",
                     TextInput(
-                        title=_("DNS Hostname or IP address"),
+                        title=_("DNS host name or IP address"),
                         allow_empty=False,
                         help=_(
-                            "You can specify a hostname or IP address different from the IP address "
+                            "You can specify a host name or IP address different from the IP address "
                             "of the host as configured in your host properties."
                         ),
                     ),

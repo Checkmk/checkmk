@@ -86,7 +86,7 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
             ),
             "key_fields": DictElement(
                 parameter_form=SingleChoice(
-                    title=Title("Field(s) to use as a hostname key"),
+                    title=Title("Field(s) to use as a host name key"),
                     elements=[
                         SingleChoiceElement(name="serialNumber", title=Title("serialNumber")),
                         SingleChoiceElement(name="emailAddress", title=Title("emailAddress")),

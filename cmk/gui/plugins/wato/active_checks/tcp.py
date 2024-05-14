@@ -69,7 +69,7 @@ def _valuespec_active_checks_tcp() -> Migrate:
                 (
                     "hostname",
                     TextInput(
-                        title=_("DNS Hostname"),
+                        title=_("DNS host name"),
                         allow_empty=False,
                         help=_(
                             "If you specify a hostname here, then a dynamic DNS lookup "

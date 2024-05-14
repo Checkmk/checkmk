@@ -22,7 +22,7 @@ EXISTING_HOST_NAME = gui_fields.HostField(
 
 class CreateClusterHost(BaseSchema):
     host_name = gui_fields.HostField(
-        description="The hostname of the cluster host.",
+        description="The host name of the cluster host.",
         required=True,
         should_exist=False,
     )
@@ -53,7 +53,7 @@ class UpdateNodes(BaseSchema):
 
 class CreateHost(BaseSchema):
     host_name = gui_fields.HostField(
-        description="The hostname or IP address of the host to be created.",
+        description="The host name or IP address of the host to be created.",
         required=True,
         should_exist=False,
     )
@@ -151,7 +151,7 @@ class UpdateHost(BaseSchema):
 
 class UpdateHostEntry(UpdateHost):
     host_name = gui_fields.HostField(
-        description="The hostname or IP address itself.",
+        description="The host name or IP address itself.",
         required=True,
         should_exist=True,
     )

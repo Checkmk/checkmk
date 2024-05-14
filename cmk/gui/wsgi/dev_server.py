@@ -121,7 +121,7 @@ def parse_arguments() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--host", nargs=1, type=str, help="The hostname to listen on. Defaults to %(default)r"
+        "--host", nargs=1, type=str, help="The host name to listen on. Defaults to %(default)r"
     )
     parser.add_argument(
         "--port", nargs=1, type=int, help="The port to listen on. Defaults to %(default)s"

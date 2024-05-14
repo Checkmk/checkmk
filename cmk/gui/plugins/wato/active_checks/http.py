@@ -85,7 +85,7 @@ def _active_checks_http_hostspec() -> Dictionary:
                     choices=[
                         (
                             "direct",
-                            _("Hostname / IP address"),
+                            _("Host name / IP address"),
                             TextInput(
                                 allow_empty=False,
                                 size=45,
@@ -501,7 +501,7 @@ def _valuespec_active_checks_http() -> Migrate:
                     FixedValue(
                         value=True,
                         totext="",
-                        title=_("Advanced: Disable SSL/TLS hostname extension support (SNI)"),
+                        title=_("Advanced: Disable SSL/TLS host name extension support (SNI)"),
                         help=_(
                             "In earlier versions of Checkmk users had to enable SNI explicitly."
                             " We now assume users allways want SNI support. If you don't, you"

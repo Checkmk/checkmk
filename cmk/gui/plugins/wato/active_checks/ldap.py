@@ -123,9 +123,9 @@ def _valuespec_active_checks_ldap():
                 (
                     "hostname",
                     TextInput(
-                        title=_("Alternative Hostname"),
+                        title=_("Alternative host name"),
                         help=_(
-                            "Use a alternative field as Hostname in case of SSL Certificate Problems (eg. the Hostalias )"
+                            "Use a alternative field as host name in case of SSL Certificate Problems (eg. the Hostalias )"
                         ),
                         size=40,
                         allow_empty=False,

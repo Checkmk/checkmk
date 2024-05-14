@@ -1,0 +1,11 @@
+Title: agent_netapp_ontap: fix crash in call without arguments
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1715690810
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+The agent was crashing when called manually from the command line without any arguments.
+Now the agent fails gracefully in such case.

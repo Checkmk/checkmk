@@ -10866,7 +10866,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Check the resolution of a hostname into an IP address by a DNS server. This "
+"Check the resolution of a host name into an IP address by a DNS server. This "
 "check uses <tt>check_dns</tt> from the standard Nagios plug-ins. Note, that "
 "check_dns will always be executed in the monitoring site. By default, the "
 "configured host(s) that this rule applies to is used as DNS server. This "
@@ -13642,10 +13642,12 @@ msgstr "Conversia FQHN"
 msgid "Convert IP addresses of hosts into host their DNS names"
 msgstr "Conversia adreselor IP ale gazdelor în nume DNS ale acestora"
 
-msgid "Convert hostnames to lower case"
+#, fuzzy
+msgid "Convert host names to lower case"
 msgstr "Conversia numelor de gazde în minuscule"
 
-msgid "Convert hostnames to upper case"
+#, fuzzy
+msgid "Convert host names to upper case"
 msgstr "Conversia numelor de gazde în majuscule"
 
 msgid "Convert imported User-IDs to lower case during synchronization."
@@ -15243,9 +15245,6 @@ msgstr "Nume gazdă DNS"
 msgid "DNS Hostname or IP address"
 msgstr "Numele de gazdă DNS sau adresa IP"
 
-msgid "DNS Hostname or IP-address of database server"
-msgstr "DNS Numele de gazdă sau adresa IP a serverului bazei de date"
-
 msgid "DNS Resolution"
 msgstr "Rezoluția DNS"
 
@@ -15258,8 +15257,13 @@ msgstr "Numele de domeniu DNS pentru a descoperi serverele LDAP de"
 msgid "DNS failed queries"
 msgstr "Interogări DNS eșuate"
 
-msgid "DNS hostname or IP address"
+#, fuzzy
+msgid "DNS host name or IP address"
 msgstr "Numele de gazdă DNS sau adresa IP"
+
+#, fuzzy
+msgid "DNS host name or IP-address of database server"
+msgstr "DNS Numele de gazdă sau adresa IP a serverului bazei de date"
 
 msgid "DNS lookup"
 msgstr "Căutarea DNS"
@@ -19150,6 +19154,11 @@ msgstr ""
 "Metre \"duble\" sau \"suprapuse\"."
 
 msgid ""
+"Due to a limitation in how Checkmk handles metrics internally, the results "
+"contain conflicting metrics and this top list may be incorrect or incomplete."
+msgstr ""
+
+msgid ""
 "Due to security reasons the plugin being executed as admin will check "
 "permissions for Oracle executables. If modification of oracle binaries is "
 "allowed for non-admin users or groups then the plugin stop processing thus "
@@ -19391,12 +19400,13 @@ msgstr "SAP"
 msgid "EXITED"
 msgstr "IEȘIT"
 
+#, fuzzy
 msgid ""
-"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
-"hostname is pingable and changing the piggyback name will reset the "
-"piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
-"consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely "
-"identifies the EC2 instance. It is not possible to ping this host name."
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
+"name is pingable and changing the piggyback name will reset the piggyback "
+"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
+"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
+"the EC2 instance. It is not possible to ping this host name."
 msgstr ""
 "Fiecare instanță EC2 creează o gazdă piggyback.<br><b>Notă:</b> Nu orice "
 "nume de gazdă este pingabil și schimbarea numelui piggyback va reseta gazda "
@@ -21149,7 +21159,8 @@ msgstr "Evenimentele din ultimele 4 ore (pentru tabloul de bord)"
 msgid "Events of the last 4 hours."
 msgstr "Evenimentele din ultimele 4 ore."
 
-msgid "Events: Hostname"
+#, fuzzy
+msgid "Events: Host name"
 msgstr "Evenimente: Numele gazdei"
 
 msgid "Events: Syslog application"
@@ -21738,8 +21749,9 @@ msgstr "Exportați ca PNG"
 msgid "Export data of views using the CSV export"
 msgstr "Exportați datele din vizualizări utilizând exportul CSV"
 
+#, fuzzy
 msgid ""
-"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
 msgstr ""
 "Fișier de export care urmează să fie creat, conținând <tt>&lt;HOST&gt;</tt> "
 "pentru numele de gazdă"
@@ -21991,7 +22003,8 @@ msgstr "Nu s-a reușit să se calculeze o rețetă de grafic. (%s)"
 msgid "Failed to compile your module: %s"
 msgstr "Nu s-a reușit compilarea modulului dumneavoastră: %s"
 
-msgid "Failed to compute hostname"
+#, fuzzy
+msgid "Failed to compute host name"
 msgstr "Nu a reușit să calculeze numele de gazdă"
 
 #, python-format
@@ -22604,8 +22617,8 @@ msgstr "Utilizarea sistemelor de fișiere"
 msgid "Filter"
 msgstr "Filtru"
 
-#, python-format
-msgid "Filter %s selection by hostname: "
+#, fuzzy, python-format
+msgid "Filter %s selection by host name: "
 msgstr "Filtrați selecția %s după numele de gazdă: "
 
 #, python-format
@@ -23061,11 +23074,12 @@ msgstr ""
 msgid "For devices that measure smoke in percent"
 msgstr "Pentru dispozitivele care măsoară fumul în procente"
 
+#, fuzzy
 msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
 "address to check whether or not a host is using this ip address. Each new "
-"found host will be added to the current folder by it's hostname, when "
+"found host will be added to the current folder by it's host name, when "
 "resolvable via DNS, or by it's IP address."
 msgstr ""
 "Pentru fiecare dosar poate fi configurată o scanare automată a rețelei. "
@@ -23173,8 +23187,9 @@ msgstr ""
 msgid "For specific SIDs"
 msgstr "Pentru SID-uri specifice"
 
+#, fuzzy
 msgid ""
-"For the Hostname field, a partial word search (infix search) is used — the "
+"For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
 "you can limit the search using other host attributes. Please note that you "
 "can search for the attributes configured in the hosts and folders and not "
@@ -26410,8 +26425,108 @@ msgstr "Numele gazdei"
 msgid "Host name (as sent by syslog)"
 msgstr "Numele gazdei (așa cum este trimis de syslog)"
 
+#, fuzzy
+msgid "Host name (exact match)"
+msgstr "Numele gazdei (potrivire exactă)"
+
+#, fuzzy
+msgid "Host name (regex)"
+msgstr "Numele gazdei (regex)"
+
+#, fuzzy
+msgid "Host name / IP address of Graphite server"
+msgstr "Numele gazdei / adresa IP a serverului Graphite"
+
+#, fuzzy
+msgid "Host name aggregations"
+msgstr "Agregări de nume de gazdă"
+
+#, fuzzy
+msgid "Host name computation"
+msgstr "Calcularea numelui de gazdă"
+
+#, fuzzy
+msgid "Host name conflict"
+msgstr "Conflict de nume de gazdă"
+
+#, fuzzy, python-format
+msgid "Host name contains illegal characters: %s"
+msgstr "Numele gazdei conține caractere ilegale: %s."
+
+#, fuzzy
+msgid "Host name matching"
+msgstr "Potrivirea numelui de gazdă"
+
+#, fuzzy
+msgid "Host name of event (exact match)"
+msgstr "Numele de gazdă al evenimentului (potrivire exactă)"
+
+#, fuzzy
+msgid "Host name of original event (regex)"
+msgstr "Numele de gazdă al evenimentului original (regex)"
+
+#, fuzzy
+msgid "Host name of the Device"
+msgstr "Numele de gazdă al dispozitivului"
+
+#, fuzzy
+msgid "Host name or IPv4 address for listener"
+msgstr "Numele de gazdă sau adresa IPv4 pentru ascultător"
+
+#, fuzzy
+msgid "Host name or alias (regex)"
+msgstr "Numele de gazdă sau alias (regex)"
+
+#, fuzzy
+msgid "Host name template"
+msgstr "Șablon de nume de gazdă"
+
+#, fuzzy
+msgid "Host name translation for incoming messages"
+msgstr "Traducerea numelui de gazdă pentru mesajele primite"
+
+#, fuzzy
+msgid "Host name translation for piggybacked hosts"
+msgstr "Traducerea numelui de gazdă pentru gazdele piggybacked"
+
 msgid "Host name used for containers"
 msgstr "Numele de gazdă utilizat pentru containere"
+
+#, fuzzy
+msgid "Host name, IP address or host alias the event is relevant for"
+msgstr ""
+"Numele de gazdă, adresa IP sau aliasul de gazdă pentru care este relevant "
+"evenimentul"
+
+#, fuzzy
+msgid "Host name, marked red if down (Deprecated)"
+msgstr "Numele de gazdă, marcat cu roșu dacă nu este disponibil (Depreciat)"
+
+#, fuzzy
+msgid "Host name, red background if down or unreachable (Deprecated)"
+msgstr ""
+"Numele gazdei, pe fundal roșu dacă nu este activată sau este inaccesibilă "
+"(Depreciat)"
+
+#, fuzzy
+msgid "Host name/IP address of Event Console:"
+msgstr "Numele gazdei/adresa IP a consolei de evenimente:"
+
+#, fuzzy
+msgid "Host name/IP address of Master Event Console:"
+msgstr "Numele gazdei/adresa IP a consolei de evenimente principale:"
+
+#, fuzzy, python-format
+msgid "Host name: %s"
+msgstr "Numele gazdei: %s"
+
+#, fuzzy
+msgid "Host names to query"
+msgstr "Nume de gazde de interogat"
+
+#, fuzzy
+msgid "Host names to resolve"
+msgstr "Nume de gazde de rezolvat"
 
 msgid "Host needs agent update"
 msgstr "Gazda are nevoie de o actualizare a agentului"
@@ -26625,89 +26740,8 @@ msgstr "Hostalias"
 msgid "Hostalias (regex)"
 msgstr "Hostalias (regex)"
 
-msgid "Hostname"
-msgstr "Nume gazdă"
-
-msgid "Hostname (exact match)"
-msgstr "Numele gazdei (potrivire exactă)"
-
-msgid "Hostname (regex)"
-msgstr "Numele gazdei (regex)"
-
 msgid "Hostname / IP address"
 msgstr "Nume gazdă / adresă IP"
-
-msgid "Hostname / IP address of Graphite server"
-msgstr "Numele gazdei / adresa IP a serverului Graphite"
-
-msgid "Hostname aggregations"
-msgstr "Agregări de nume de gazdă"
-
-msgid "Hostname computation"
-msgstr "Calcularea numelui de gazdă"
-
-msgid "Hostname conflict"
-msgstr "Conflict de nume de gazdă"
-
-#, python-format
-msgid "Hostname contains illegal characters: %s"
-msgstr "Numele gazdei conține caractere ilegale: %s."
-
-msgid "Hostname matching"
-msgstr "Potrivirea numelui de gazdă"
-
-msgid "Hostname of event (exact match)"
-msgstr "Numele de gazdă al evenimentului (potrivire exactă)"
-
-msgid "Hostname of original event (regex)"
-msgstr "Numele de gazdă al evenimentului original (regex)"
-
-msgid "Hostname of the Device"
-msgstr "Numele de gazdă al dispozitivului"
-
-msgid "Hostname or IPv4 address for listener"
-msgstr "Numele de gazdă sau adresa IPv4 pentru ascultător"
-
-msgid "Hostname or alias (regex)"
-msgstr "Numele de gazdă sau alias (regex)"
-
-msgid "Hostname template"
-msgstr "Șablon de nume de gazdă"
-
-msgid "Hostname translation for incoming messages"
-msgstr "Traducerea numelui de gazdă pentru mesajele primite"
-
-msgid "Hostname translation for piggybacked hosts"
-msgstr "Traducerea numelui de gazdă pentru gazdele piggybacked"
-
-msgid "Hostname, IP address or host alias the event is relevant for"
-msgstr ""
-"Numele de gazdă, adresa IP sau aliasul de gazdă pentru care este relevant "
-"evenimentul"
-
-msgid "Hostname, marked red if down (Deprecated)"
-msgstr "Numele de gazdă, marcat cu roșu dacă nu este disponibil (Depreciat)"
-
-msgid "Hostname, red background if down or unreachable (Deprecated)"
-msgstr ""
-"Numele gazdei, pe fundal roșu dacă nu este activată sau este inaccesibilă "
-"(Depreciat)"
-
-msgid "Hostname/IP address of Event Console:"
-msgstr "Numele gazdei/adresa IP a consolei de evenimente:"
-
-msgid "Hostname/IP address of Master Event Console:"
-msgstr "Numele gazdei/adresa IP a consolei de evenimente principale:"
-
-#, python-format
-msgid "Hostname: %s"
-msgstr "Numele gazdei: %s"
-
-msgid "Hostnames to query"
-msgstr "Nume de gazde de interogat"
-
-msgid "Hostnames to resolve"
-msgstr "Nume de gazde de rezolvat"
 
 msgid "Hosts"
 msgstr "Gazde"
@@ -27513,11 +27547,12 @@ msgstr ""
 "reduceți avertismentele de mai sus în timpul procesului de actualizare a "
 "site-urilor și agenților Checkmk."
 
+#, fuzzy
 msgid ""
 "If a cluster uses multiple namespaces you need to activate this option. "
 "Hosts for namespaced Kubernetes objects will then be prefixed with the name "
 "of their namespace. This makes Kubernetes resources in different namespaces "
-"that have the same name distinguishable, but results in longer hostnames."
+"that have the same name distinguishable, but results in longer host names."
 msgstr ""
 "Dacă un cluster utilizează mai multe spații de nume, trebuie să activați "
 "această opțiune. Gazdele pentru obiectele Kubernetes cu spațiu de nume vor "
@@ -37767,7 +37802,8 @@ msgstr "Numele mașinii virtuale și/sau<br>tipul de colectare a gunoiului"
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Numele mașinii virtuale și/sau al<br>threadpool-ului"
 
-msgid "Name or IP address of the host where MS SQL runs if hostname fail"
+#, fuzzy
+msgid "Name or IP address of the host where MS SQL runs if host name fail"
 msgstr ""
 "Numele sau adresa IP a gazdei unde se execută MS SQL, în cazul în care "
 "numele de gazdă nu reușește"
@@ -40655,8 +40691,9 @@ msgstr ""
 "agenților Checkmk cu site-ul de monitorizare. Această etapă stabilește "
 "încrederea între agent și site-ul de monitorizare."
 
+#, fuzzy
 msgid ""
-"Only rename hostnames whose names <i>begin</i> with the regular expression "
+"Only rename host names whose names <i>begin</i> with the regular expression "
 "entered here."
 msgstr ""
 "Redenumiți numai numele de gazdă ale căror nume <i>încep</i> cu expresia "
@@ -42385,9 +42422,10 @@ msgstr ""
 "formatul obiectului dvs. de contorizare nu este compatibil, puteți adapta "
 "manual decalajele de contorizare."
 
+#, fuzzy
 msgid ""
 "Per default, Checkmk tries to map the underlying Checkmk host to the Node "
-"Exporter host which contains either the Checkmk hostname, host address or "
+"Exporter host which contains either the Checkmk host name, host address or "
 "\"localhost\" in its endpoint address. The created services of the mapped "
 "Node Exporter will be assigned to the Checkmk host. A piggyback host for "
 "each Node Exporter host will be created if none of the options are valid. "
@@ -43223,8 +43261,9 @@ msgstr ""
 "Vă rugăm să introduceți un nume de cale absolut valid cu / ca separator de "
 "cale."
 
+#, fuzzy
 msgid ""
-"Please enter a valid hostname or IPv4 address. Only letters, digits, dash, "
+"Please enter a valid host name or IPv4 address. Only letters, digits, dash, "
 "underscore and dot are allowed."
 msgstr ""
 "Vă rugăm să introduceți un nume de gazdă sau o adresă IPv4 validă. Sunt "
@@ -43495,7 +43534,8 @@ msgstr ""
 "Vă rugăm să selectați ce stare trebuie să adopte serviciile de verificare a "
 "descoperirii de servicii în cazul în care sunt găsite noi etichete de gazdă."
 
-msgid "Please set a hostname for host state reclassification"
+#, fuzzy
+msgid "Please set a host name for host state reclassification"
 msgstr ""
 "Vă rugăm să setați un nume de gazdă pentru reclasificarea statului de gazdă"
 
@@ -44043,7 +44083,8 @@ msgstr ""
 "Prefix pentru numele de gazdă GCE piggyback. Valoarea implicită este ID-ul "
 "proiectului"
 
-msgid "Prefix for piggyback hostname"
+#, fuzzy
+msgid "Prefix for piggyback host name"
 msgstr "Prefix pentru numele de gazdă piggyback"
 
 msgid "Prefix match"
@@ -44739,14 +44780,15 @@ msgstr "Starea Quantum Storage"
 msgid "Quarantine Usage"
 msgstr "Utilizarea carantinei"
 
-msgid "Queried Hostname or IP address"
-msgstr "Numele de gazdă sau adresa IP interogată"
-
 msgid "Queried host is a host system"
 msgstr "Gazda interogată este un sistem gazdă"
 
 msgid "Queried host is the vCenter"
 msgstr "Gazda interogată este vCenter"
+
+#, fuzzy
+msgid "Queried host name or IP address"
+msgstr "Numele de gazdă sau adresa IP interogată"
 
 msgid "Queries per second"
 msgstr "Interogări pe secundă"
@@ -47211,7 +47253,8 @@ msgstr "Rotații pe minut"
 msgid "Rewrite application"
 msgstr "Rescrieți aplicația"
 
-msgid "Rewrite hostname"
+#, fuzzy
+msgid "Rewrite host name"
 msgstr "Rescrieți numele de gazdă"
 
 msgid "Rewrite message text"
@@ -50235,9 +50278,10 @@ msgstr ""
 msgid "Set the height"
 msgstr "Setați înălțimea"
 
+#, fuzzy
 msgid ""
 "Set the host address of the LDAP server. Might be an IP address or "
-"resolvable hostname."
+"resolvable host name."
 msgstr ""
 "Setați adresa gazdă a serverului LDAP. Poate fi o adresă IP sau un nume de "
 "gazdă rezolvabil."
@@ -51859,9 +51903,9 @@ msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts &quot;piggyback&quot; with their own data. This is the "
 "case for the vSphere special agent and the SAP R/3 plugin, for example. The "
-"hostnames that these agents send must match your hostnames in your "
+"host names that these agents send must match your host names in your "
 "monitoring configuration. If that is not the case, then with this rule you "
-"can define a hostname translation. Note: This rule must be configured for "
+"can define a host name translation. Note: This rule must be configured for "
 "the &quot;pig&quot; - i.e. the host that the agent is running on. It is not "
 "applied to the translated piggybacked hosts."
 msgstr ""
@@ -52199,7 +52243,8 @@ msgstr ""
 msgid "Space savings"
 msgstr "Economii de spațiu"
 
-msgid "Spaces in hostnames"
+#, fuzzy
+msgid "Spaces in host names"
 msgstr "Spații în numele de gazdă"
 
 msgid "Spare and broken disks"
@@ -52376,8 +52421,9 @@ msgstr ""
 msgid "Specify an arbitrary name of this connection here"
 msgstr "Specificați aici un nume arbitrar al acestei conexiuni"
 
+#, fuzzy
 msgid ""
-"Specify an explicit IP address or resolvable DNS name here, if the hostname "
+"Specify an explicit IP address or resolvable DNS name here, if the host name "
 "is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set this "
 "attribute, host name resolution will be performed when the configuration is "
 "enabled. Checkmk's built-in DNS cache is enabled by default in the global "
@@ -52399,9 +52445,10 @@ msgstr ""
 "introduceți un nume DNS aici, rezoluția DNS va fi efectuată de fiecare dată "
 "când se verifică gazda. Cache-ul DNS al Checkmk nu este <b>NU</b> interogat."
 
+#, fuzzy
 msgid ""
-"Specify an explicit IPv6 address or resolvable DNS name here, if the "
-"hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
+"Specify an explicit IPv6 address or resolvable DNS name here, if the host "
+"name is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
 "this attribute, host name resolution will be performed when the "
 "configuration is enabled. Checkmk's built-in DNS cache is enabled by default "
 "in the global configuration to speed up the activation process. The cache is "
@@ -52637,6 +52684,12 @@ msgstr ""
 "atribut este setat de mai multe grupuri și un utilizator este membru al mai "
 "multor grupuri, ultimul plugin din listă le va înlocui pe celelalte."
 
+#, fuzzy
+msgid "Specify the host name or IP address of the PLC to communicate with."
+msgstr ""
+"Specificați numele de gazdă sau adresa IP a automatului programabil cu care "
+"trebuie să comunicați."
+
 msgid ""
 "Specify the host name or IP address of the master Event Console that you "
 "want to replicate from. The port number must be the same as set in the "
@@ -52652,11 +52705,6 @@ msgid ""
 msgstr ""
 "Specificați gazda căreia îi va fi atribuit serviciul rezultat. Gazda trebuie "
 "să fie configurată pentru a permite datele Piggyback."
-
-msgid "Specify the hostname or IP address of the PLC to communicate with."
-msgstr ""
-"Specificați numele de gazdă sau adresa IP a automatului programabil cu care "
-"trebuie să comunicați."
 
 msgid "Specify the initial contact groups of an automatically created user."
 msgstr ""
@@ -52681,8 +52729,9 @@ msgstr ""
 "urmare, nu se poate calcula consumul mediu pentru aceste tabele dacă nu se "
 "specifică această valoare."
 
+#, fuzzy
 msgid ""
-"Specify the logical name, e.g. the hostname, of the PLC. This name is used "
+"Specify the logical name, e.g. the host name, of the PLC. This name is used "
 "to name the resulting services."
 msgstr ""
 "Specificați numele logic, de exemplu, numele de gazdă, al PLC-ului. Acest "
@@ -55387,7 +55436,8 @@ msgstr "Testați conexiunea cu gazda"
 msgid "Test event generated and sent to Event Console."
 msgstr "Eveniment de testare generat și trimis către Consola de evenimente."
 
-msgid "Test hostname before activation"
+#, fuzzy
+msgid "Test host name before activation"
 msgstr "Testați numele de gazdă înainte de activare"
 
 msgid "Test notification"
@@ -55864,9 +55914,6 @@ msgstr "DN-ul de bază al grupului nu a putut fi găsit."
 
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr "DN-ul de bază al grupului nu este configurat, nu se preia niciun grup."
-
-msgid "The Hostname of the MongoDB Server."
-msgstr "Numele de gazdă al serverului MongoDB."
 
 msgid "The ID is already used by another role"
 msgstr "ID-ul este deja utilizat de un alt rol"
@@ -57679,8 +57726,36 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "Atributul \"host name\" trebuie să fie atribuit unei coloane."
 
+#, fuzzy
+msgid "The host name is missing."
+msgstr "Numele de gazdă lipsește."
+
 msgid "The host name may not contain spaces."
 msgstr "Numele gazdei nu poate conține spații."
+
+#, fuzzy
+msgid "The host name of the MongoDB Server."
+msgstr "Numele de gazdă al serverului MongoDB."
+
+#, fuzzy
+msgid "The host name of the expected distinguished controller of the cluster"
+msgstr "Numele de gazdă al controlorului distins așteptat al clusterului"
+
+#, fuzzy
+msgid "The host name of the expected node to hold this resource."
+msgstr "Numele de gazdă al nodului care urmează să dețină această resursă."
+
+#, fuzzy
+msgid "The host name or IP address for the Microsoft SQL Server instance"
+msgstr "Numele de gazdă sau adresa IP pentru instanța Microsoft SQL Server"
+
+#, fuzzy
+msgid "The host name template does not contain any label."
+msgstr "Șablonul de nume de gazdă nu conține nicio etichetă."
+
+#, fuzzy, python-format
+msgid "The host name template must not contain the label '%s'."
+msgstr "Șablonul de nume de gazdă nu trebuie să conțină eticheta '%s'."
 
 msgid "The host or service was in a scheduled downtime"
 msgstr "Gazda sau serviciul se afla într-o perioadă de întrerupere programată"
@@ -57705,25 +57780,6 @@ msgstr "Gazda/serviciul trebuie să aibă unul dintre contactele selectate."
 
 msgid "The hostaddress of the ntopng instance."
 msgstr "Adresa hostaddress a instanței ntopng."
-
-msgid "The hostname is missing."
-msgstr "Numele de gazdă lipsește."
-
-msgid "The hostname of the expected distinguished controller of the cluster"
-msgstr "Numele de gazdă al controlorului distins așteptat al clusterului"
-
-msgid "The hostname of the expected node to hold this resource."
-msgstr "Numele de gazdă al nodului care urmează să dețină această resursă."
-
-msgid "The hostname or IP address for the Microsoft SQL Server instance"
-msgstr "Numele de gazdă sau adresa IP pentru instanța Microsoft SQL Server"
-
-msgid "The hostname template does not contain any label."
-msgstr "Șablonul de nume de gazdă nu conține nicio etichetă."
-
-#, python-format
-msgid "The hostname template must not contain the label '%s'."
-msgstr "Șablonul de nume de gazdă nu trebuie să conțină eticheta '%s'."
 
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
@@ -58099,6 +58155,10 @@ msgstr "Potrivirea este insensibilă la majuscule și minuscule."
 
 msgid "The match is case sensitive."
 msgstr "Potrivirea este sensibilă la majuscule și minuscule."
+
+msgid ""
+"The match type is defined by the discovery ruleset type of the check plugin."
+msgstr ""
 
 #, python-format
 msgid "The matching criteria must contain the label '%s'."
@@ -58896,9 +58956,10 @@ msgstr ""
 "este independent de nivelurile reale de verificare, care pot fi setate atât "
 "pentru nivelurile de memorie liberă, cât și pentru cele de memorie ocupată."
 
+#, fuzzy
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Hostname translation "
+"Note that as an alternative, you may also use the rule Host name translation "
 "for Incoming Messages in the Global Settings of the EC to accomplish your "
 "task."
 msgstr ""
@@ -59759,8 +59820,9 @@ msgstr "Textul"
 msgid "The text entered here is handled as a regular expression pattern."
 msgstr "Textul introdus aici este tratat ca un model de expresie regulată."
 
+#, fuzzy
 msgid ""
-"The text entered here well be prefixed to the hostname. Ending the prefix "
+"The text entered here well be prefixed to the host name. Ending the prefix "
 "with a period will create a separate folder in Graphite"
 msgstr ""
 "Textul introdus aici trebuie să fie prefixat la numele de gazdă. Terminarea "
@@ -61496,6 +61558,11 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Aceasta este o regulă de nivel superior. Afișați arborele de reguli"
+
+msgid ""
+"This is caused by the service check commands with an example host and "
+"service in the following table."
+msgstr ""
 
 msgid ""
 "This is essentially the raw agent updater script that gets packaged within "
@@ -64674,7 +64741,7 @@ msgid ""
 "userstore specified in $MK_CONFDIR/sap_hana.cfg. Moreover you can configure "
 "'RUNAS' with the following values 'agent' or 'instance'. The latter one is "
 "default.  Use the FQDN in the query if HOSTNAME is not set, other the short "
-"hostname."
+"host name."
 msgstr ""
 "Aceasta va implementa și configura pluginul agentului Checkmk "
 "<tt>mk_sap_hana</tt>. Pentru ca acest plugin să funcționeze, trebuie să "
@@ -68182,9 +68249,6 @@ msgstr "Transformare pe metrica selectată"
 msgid "Transformed the user tag group \"%s\" to built-in."
 msgstr "A transformat grupul de etichete de utilizator \"%s\" în built-in."
 
-msgid "Translate Hostnames"
-msgstr "Traducere nume de gazde"
-
 msgid "Translate SNMP traps"
 msgstr "Traduceți capcanele SNMP"
 
@@ -68193,6 +68257,10 @@ msgstr "Traduceți capcanele SNMP utilizând MIB-urile disponibile"
 
 msgid "Translate UCS Bladecenter state to monitoring state"
 msgstr "Conversia stării UCS Bladecenter în stare de monitorizare"
+
+#, fuzzy
+msgid "Translate host names"
+msgstr "Traducere nume de gazde"
 
 #, python-format
 msgid "Translated %s"
@@ -70171,7 +70239,8 @@ msgstr "Utilizați memoria cache de căutare DNS"
 msgid "Use DNS resolution to lookup addresses"
 msgstr "Utilizați rezoluția DNS pentru a căuta adrese"
 
-msgid "Use DNS to convert IP addresses into hostnames"
+#, fuzzy
+msgid "Use DNS to convert IP addresses into host names"
 msgstr "Utilizați DNS pentru a converti adresele IP în nume de gazdă"
 
 msgid "Use FreeIPMI"
@@ -70415,7 +70484,8 @@ msgstr "Utilizați titlul graficului"
 msgid "Use host address"
 msgstr "Utilizați adresa gazdă"
 
-msgid "Use hostname"
+#, fuzzy
+msgid "Use host name"
 msgstr "Utilizați numele de gazdă"
 
 msgid "Use in notifications"
@@ -70482,7 +70552,8 @@ msgstr "Utilizați unul dintre codurile de rezervă pentru a vă conecta."
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
 
-msgid "Use other hostname"
+#, fuzzy
+msgid "Use other host name"
 msgstr "Utilizați alt nume de gazdă"
 
 msgid "Use parent host information for the NetBIOS server name"
@@ -70571,7 +70642,8 @@ msgstr ""
 "Utilizați modulul Setup BI, creați, modificați și ștergeți reguli și "
 "agregări BI în pachetele în care sunteți persoană de contact."
 
-msgid "Use the VMs hostname if set, otherwise fall back to ESX name"
+#, fuzzy
+msgid "Use the VMs host name if set, otherwise fall back to ESX name"
 msgstr ""
 "Utilizați numele de gazdă al mașinii virtuale dacă este setat, altfel "
 "reveniți la numele ESX"
@@ -70719,8 +70791,9 @@ msgstr ""
 "deodată, împachetându-le într-un fișier <tt>.zip</tt>. Doar fișierele din "
 "directorul rădăcină al fișierului zip vor fi procesate.<br><br>"
 
+#, fuzzy
 msgid ""
-"Use this hostname for all created events instead of the name of the "
+"Use this host name for all created events instead of the name of the "
 "mailserver"
 msgstr ""
 "Utilizați acest nume de gazdă pentru toate evenimentele create în locul "
@@ -70805,34 +70878,38 @@ msgstr ""
 "interogat următorul server (fallback). Verificarea va emite date numai de la "
 "prima gazdă care trimite un răspuns."
 
+#, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the hostname here, eg. my_graylog.com."
+"agent. Please add the host name here, eg. my_graylog.com."
 msgstr ""
 "Utilizați această opțiune pentru a seta instanța care trebuie verificată de "
 "către agentul special. Vă rugăm să adăugați aici numele de gazdă, de exemplu "
 "my_graylog.com."
 
+#, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the hostname here, eg. my_jenkins.com."
+"agent. Please add the host name here, eg. my_jenkins.com."
 msgstr ""
 "Utilizați această opțiune pentru a seta instanța care trebuie verificată de "
 "către agentul special. Vă rugăm să adăugați aici numele de gazdă, de exemplu "
 "my_jenkins.com."
 
+#, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the hostname here, eg. my_jira.com. If not set, the "
+"agent. Please add the host name here, eg. my_jira.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "Folosiți această opțiune pentru a seta instanța care trebuie verificată de "
 "către agentul special. Vă rugăm să adăugați aici numele de gazdă, de exemplu "
 "my_jira.com. Dacă nu este setat, gazda atribuită este utilizată ca instanță."
 
+#, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the hostname here, eg. my_rabbitmq.com. If not set, the "
+"agent. Please add the host name here, eg. my_rabbitmq.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "Utilizați această opțiune pentru a seta instanța care trebuie verificată de "
@@ -71419,11 +71496,12 @@ msgstr ""
 "Cu ajutorul acestei opțiuni puteți suprascrie setarea configurată la nivel "
 "global pentru expirarea timpului de verificare pentru servicii individuale."
 
+#, fuzzy
 msgid ""
 "Using this page you can import several hosts at once into the choosen "
 "folder. You can choose a CSV file from your workstation to be uploaded, "
-"paste a CSV files contents into the textarea or simply enter a list of "
-"hostnames (one per line) to the textarea."
+"paste a CSV files contents into the textarea or simply enter a list of host "
+"names (one per line) to the textarea."
 msgstr ""
 "Folosind această pagină puteți importa mai multe gazde simultan în dosarul "
 "ales. Puteți alege un fișier CSV de pe stația dumneavoastră de lucru pentru "
@@ -73086,9 +73164,10 @@ msgstr ""
 "asemenea, trebuie selectată o opțiune adecvată din secțiunea \"Alternative "
 "address to ping\" de mai sus."
 
+#, fuzzy
 msgid ""
 "When querying the event status, you can match events to a particular host "
-"using the hostname, the IP address, or the host alias. This is due to the "
+"using the host name, the IP address, or the host alias. This is due to the "
 "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
 "same host using different specification methods. Alternatively, you can "
 "specify an explicit host for which to show events."
@@ -74236,9 +74315,10 @@ msgstr ""
 "Cu această setare, agentul special va contacta, de asemenea, agentul "
 "Check_MK de pe același sistem la portul specificat."
 
+#, fuzzy
 msgid ""
 "Within this ruleset service descriptions can be translated similar to the "
-"ruleset <tt>Hostname translation for piggybacked hosts</tt>. Services such "
+"ruleset <tt>Host name translation for piggybacked hosts</tt>. Services such "
 "as <tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
 "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are "
 "excluded. <b>Attention:</b><ul><li>Downtimes and other configured rules "
@@ -75295,12 +75375,21 @@ msgid "You can simulate an event here and check out which rules are matching."
 msgstr ""
 "Aici puteți simula un eveniment și puteți verifica ce reguli se potrivesc."
 
+#, fuzzy
 msgid ""
-"You can specify a hostname or IP address different from IP address of the "
+"You can specify a host name or IP address different from IP address of the "
 "host as configured in your host properties."
 msgstr ""
 "Puteți specifica un nume de gazdă sau o adresă IP diferită de adresa IP a "
 "gazdei, așa cum este configurată în proprietățile gazdei dumneavoastră."
+
+#, fuzzy
+msgid ""
+"You can specify a host name or IP address different from the IP address of "
+"the host this check will be assigned to."
+msgstr ""
+"Puteți specifica un nume de gazdă sau o adresă IP diferită de adresa IP a "
+"gazdei căreia îi va fi atribuită această verificare."
 
 msgid ""
 "You can specify a hostname or IP address different from the IP address of "
@@ -75309,17 +75398,11 @@ msgstr ""
 "Puteți specifica un nume de gazdă sau o adresă IP diferită de adresa IP a "
 "gazdei, așa cum este configurată în proprietățile gazdei."
 
-msgid ""
-"You can specify a hostname or IP address different from the IP address of "
-"the host this check will be assigned to."
-msgstr ""
-"Puteți specifica un nume de gazdă sau o adresă IP diferită de adresa IP a "
-"gazdei căreia îi va fi atribuită această verificare."
-
+#, fuzzy
 msgid ""
 "You can specify a list of regex patterns for android host names. Several "
 "patterns can be provided. Only those that match any of the patterns will be "
-"monitored. By default all hostnames are accepted"
+"monitored. By default all host names are accepted"
 msgstr ""
 "Puteți specifica o listă de modele regex pentru numele de gazdă android. Se "
 "pot furniza mai multe modele. Vor fi monitorizate numai cele care se "
@@ -75583,6 +75666,11 @@ msgstr ""
 "<tt>10</tt>, iar pictograma graficului un indice de sortare de <tt>20</tt>. "
 "Toate celelalte pictograme implicite au configurat un indice de sortare de "
 "<tt>30</tt>."
+
+msgid ""
+"You can use these examples to identify hosts and services that must be "
+"filtered out in the top list configuration to resolve the problem."
+msgstr ""
 
 msgid ""
 "You can use these options to tune the way packages are baked for your hosts "
@@ -76240,8 +76328,9 @@ msgstr "Trebuie să furnizați un fișier cheie."
 msgid "You need to provide a text."
 msgstr "Trebuie să furnizați un text."
 
+#, fuzzy
 msgid ""
-"You need to provide a valid \"hostname\". Only letters, digits, dash, "
+"You need to provide a valid \"host name\". Only letters, digits, dash, "
 "underscore and dot are allowed."
 msgstr ""
 "Trebuie să furnizați un \"nume de gazdă\" valid. Sunt permise numai litere, "
@@ -76386,7 +76475,8 @@ msgstr "Extensiile dvs. au o dimensiune de %s."
 msgid "Your filename must not end with a slash."
 msgstr "Numele de fișier nu trebuie să se termine cu o bară oblică."
 
-msgid "Your hostname has an invalid format."
+#, fuzzy
+msgid "Your host name has an invalid format."
 msgstr "Numele dvs. de gazdă are un format invalid."
 
 msgid ""
@@ -77412,14 +77502,15 @@ msgid "host is up but has services in warning state"
 msgstr "gazda este în funcțiune, dar are servicii în stare de avertizare"
 
 #, fuzzy
+msgid "host name will be ignored when agent_hash is given."
+msgstr "numele de gazdă va fi ignorat atunci când se indică agent_hash."
+
+#, fuzzy
 msgid "host names"
 msgstr "Nume Vhost"
 
 msgid "host tags"
 msgstr "Etichete gazdă"
-
-msgid "hostname will be ignored when agent_hash is given."
-msgstr "numele de gazdă va fi ignorat atunci când se indică agent_hash."
 
 msgid "hosts"
 msgstr "gazde"
@@ -78751,6 +78842,9 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Hostname"
+#~ msgstr "Nume gazdă"
 
 #, fuzzy
 #~| msgid "Service plugin output"

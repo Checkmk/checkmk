@@ -10737,7 +10737,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Check the resolution of a hostname into an IP address by a DNS server. This "
+"Check the resolution of a host name into an IP address by a DNS server. This "
 "check uses <tt>check_dns</tt> from the standard Nagios plug-ins. Note, that "
 "check_dns will always be executed in the monitoring site. By default, the "
 "configured host(s) that this rule applies to is used as DNS server. This "
@@ -13495,10 +13495,12 @@ msgstr "Convertire FQHN"
 msgid "Convert IP addresses of hosts into host their DNS names"
 msgstr "Convertire gli indirizzi IP degli host in host i loro nomi DNS"
 
-msgid "Convert hostnames to lower case"
+#, fuzzy
+msgid "Convert host names to lower case"
 msgstr "Convertire i nomi di host in minuscolo"
 
-msgid "Convert hostnames to upper case"
+#, fuzzy
+msgid "Convert host names to upper case"
 msgstr "Convertire i nomi di host in maiuscolo"
 
 msgid "Convert imported User-IDs to lower case during synchronization."
@@ -15077,9 +15079,6 @@ msgstr "Hostname DNS"
 msgid "DNS Hostname or IP address"
 msgstr "Hostname DNS o indirizzo IP"
 
-msgid "DNS Hostname or IP-address of database server"
-msgstr "Hostname DNS o indirizzo IP del server di database"
-
 msgid "DNS Resolution"
 msgstr "Risoluzione DNS"
 
@@ -15092,8 +15091,13 @@ msgstr "Nome di dominio DNS per scoprire i server LDAP di"
 msgid "DNS failed queries"
 msgstr "Richieste DNS fallite"
 
-msgid "DNS hostname or IP address"
+#, fuzzy
+msgid "DNS host name or IP address"
 msgstr "Hostname DNS o indirizzo IP"
+
+#, fuzzy
+msgid "DNS host name or IP-address of database server"
+msgstr "Hostname DNS o indirizzo IP del server di database"
 
 msgid "DNS lookup"
 msgstr "Ricerca DNS"
@@ -18943,6 +18947,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Due to a limitation in how Checkmk handles metrics internally, the results "
+"contain conflicting metrics and this top list may be incorrect or incomplete."
+msgstr ""
+
+msgid ""
 "Due to security reasons the plugin being executed as admin will check "
 "permissions for Oracle executables. If modification of oracle binaries is "
 "allowed for non-admin users or groups then the plugin stop processing thus "
@@ -19186,12 +19195,13 @@ msgstr "EWS"
 msgid "EXITED"
 msgstr "USCITO"
 
+#, fuzzy
 msgid ""
-"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
-"hostname is pingable and changing the piggyback name will reset the "
-"piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
-"consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely "
-"identifies the EC2 instance. It is not possible to ping this host name."
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
+"name is pingable and changing the piggyback name will reset the piggyback "
+"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
+"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
+"the EC2 instance. It is not possible to ping this host name."
 msgstr ""
 "Ogni istanza EC2 crea un host piggyback.<br><b>Nota:</b>Non tutti i nomi di "
 "host sono pingabili e la modifica del nome piggyback ripristinerà l'host "
@@ -20917,7 +20927,8 @@ msgstr "Eventi delle ultime 4 ore (per il cruscotto)"
 msgid "Events of the last 4 hours."
 msgstr "Eventi delle ultime 4 ore."
 
-msgid "Events: Hostname"
+#, fuzzy
+msgid "Events: Host name"
 msgstr "Eventi: Hostname"
 
 msgid "Events: Syslog application"
@@ -21501,8 +21512,9 @@ msgstr "Esportazione come PNG"
 msgid "Export data of views using the CSV export"
 msgstr "Esportare i dati delle viste utilizzando l'esportazione CSV"
 
+#, fuzzy
 msgid ""
-"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
 msgstr ""
 "File di esportazione da creare, contenente <tt>&lt;HOST&gt;</tt> per "
 "l'hostname"
@@ -21753,7 +21765,8 @@ msgstr "Impossibile calcolare una ricetta del grafico. (%s)"
 msgid "Failed to compile your module: %s"
 msgstr "Fallita la compilazione del tuo modulo: %s"
 
-msgid "Failed to compute hostname"
+#, fuzzy
+msgid "Failed to compute host name"
 msgstr "Impossibile calcolare il nome dell'host"
 
 #, python-format
@@ -22363,8 +22376,8 @@ msgstr "Uso dei file system"
 msgid "Filter"
 msgstr "Filtro"
 
-#, python-format
-msgid "Filter %s selection by hostname: "
+#, fuzzy, python-format
+msgid "Filter %s selection by host name: "
 msgstr "Filtra la selezione %s per nome dell'host: "
 
 #, python-format
@@ -22821,11 +22834,12 @@ msgstr ""
 msgid "For devices that measure smoke in percent"
 msgstr "Per i dispositivi che misurano il fumo in percentuale"
 
+#, fuzzy
 msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
 "address to check whether or not a host is using this ip address. Each new "
-"found host will be added to the current folder by it's hostname, when "
+"found host will be added to the current folder by it's host name, when "
 "resolvable via DNS, or by it's IP address."
 msgstr ""
 "Per ogni cartella può essere configurata una scansione automatica della "
@@ -22929,8 +22943,9 @@ msgstr ""
 msgid "For specific SIDs"
 msgstr "Per i SID specifici"
 
+#, fuzzy
 msgid ""
-"For the Hostname field, a partial word search (infix search) is used — the "
+"For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
 "you can limit the search using other host attributes. Please note that you "
 "can search for the attributes configured in the hosts and folders and not "
@@ -26148,8 +26163,104 @@ msgstr "Nome dell'host"
 msgid "Host name (as sent by syslog)"
 msgstr "Nome dell'host (come inviato dal syslog)"
 
+#, fuzzy
+msgid "Host name (exact match)"
+msgstr "Nome host (corrispondenza esatta)"
+
+#, fuzzy
+msgid "Host name (regex)"
+msgstr "Nome host (regex)"
+
+#, fuzzy
+msgid "Host name / IP address of Graphite server"
+msgstr "Hostname / indirizzo IP del server Graphite"
+
+#, fuzzy
+msgid "Host name aggregations"
+msgstr "Aggregazioni di nomi di host"
+
+#, fuzzy
+msgid "Host name computation"
+msgstr "Calcolo del nome host"
+
+#, fuzzy
+msgid "Host name conflict"
+msgstr "Conflitto tra hostname"
+
+#, fuzzy, python-format
+msgid "Host name contains illegal characters: %s"
+msgstr "Il nome dell'host contiene caratteri illegali: %s"
+
+#, fuzzy
+msgid "Host name matching"
+msgstr "Corrispondenza del nome dell'host"
+
+#, fuzzy
+msgid "Host name of event (exact match)"
+msgstr "Nome host dell'evento (corrispondenza esatta)"
+
+#, fuzzy
+msgid "Host name of original event (regex)"
+msgstr "Nome host dell'evento originale (regex)"
+
+#, fuzzy
+msgid "Host name of the Device"
+msgstr "Hostname del dispositivo"
+
+#, fuzzy
+msgid "Host name or IPv4 address for listener"
+msgstr "Hostname o indirizzo IPv4 per l'ascoltatore"
+
+#, fuzzy
+msgid "Host name or alias (regex)"
+msgstr "Nome host o alias (regex)"
+
+#, fuzzy
+msgid "Host name template"
+msgstr "Modello di hostname"
+
+#, fuzzy
+msgid "Host name translation for incoming messages"
+msgstr "Traduzione di hostname per i messaggi in arrivo"
+
+#, fuzzy
+msgid "Host name translation for piggybacked hosts"
+msgstr "Traduzione di hostname per gli host piggybacked"
+
 msgid "Host name used for containers"
 msgstr "Nome dell'host usato per i container"
+
+#, fuzzy
+msgid "Host name, IP address or host alias the event is relevant for"
+msgstr "Hostname, indirizzo IP o alias di host per cui l'evento è rilevante"
+
+#, fuzzy
+msgid "Host name, marked red if down (Deprecated)"
+msgstr "Hostname, contrassegnato in rosso se inattivo (Deprecato)"
+
+#, fuzzy
+msgid "Host name, red background if down or unreachable (Deprecated)"
+msgstr "Hostname, sfondo rosso se giù o irraggiungibile (Deprecato)"
+
+#, fuzzy
+msgid "Host name/IP address of Event Console:"
+msgstr "Nome dell'host/indirizzo IP di Event Console:"
+
+#, fuzzy
+msgid "Host name/IP address of Master Event Console:"
+msgstr "Nome dell'host/indirizzo IP di Master Event Console:"
+
+#, fuzzy, python-format
+msgid "Host name: %s"
+msgstr "Nome host: %s"
+
+#, fuzzy
+msgid "Host names to query"
+msgstr "Nomi di host da interrogare"
+
+#, fuzzy
+msgid "Host names to resolve"
+msgstr "Nomi di host da risolvere"
 
 msgid "Host needs agent update"
 msgstr "L'host necessita di un aggiornamento dell'agente"
@@ -26360,85 +26471,8 @@ msgstr "Hostalias"
 msgid "Hostalias (regex)"
 msgstr "Hostalias (regex)"
 
-msgid "Hostname"
-msgstr "Hostname"
-
-msgid "Hostname (exact match)"
-msgstr "Nome host (corrispondenza esatta)"
-
-msgid "Hostname (regex)"
-msgstr "Nome host (regex)"
-
 msgid "Hostname / IP address"
 msgstr "Nome host / indirizzo IP"
-
-msgid "Hostname / IP address of Graphite server"
-msgstr "Hostname / indirizzo IP del server Graphite"
-
-msgid "Hostname aggregations"
-msgstr "Aggregazioni di nomi di host"
-
-msgid "Hostname computation"
-msgstr "Calcolo del nome host"
-
-msgid "Hostname conflict"
-msgstr "Conflitto tra hostname"
-
-#, python-format
-msgid "Hostname contains illegal characters: %s"
-msgstr "Il nome dell'host contiene caratteri illegali: %s"
-
-msgid "Hostname matching"
-msgstr "Corrispondenza del nome dell'host"
-
-msgid "Hostname of event (exact match)"
-msgstr "Nome host dell'evento (corrispondenza esatta)"
-
-msgid "Hostname of original event (regex)"
-msgstr "Nome host dell'evento originale (regex)"
-
-msgid "Hostname of the Device"
-msgstr "Hostname del dispositivo"
-
-msgid "Hostname or IPv4 address for listener"
-msgstr "Hostname o indirizzo IPv4 per l'ascoltatore"
-
-msgid "Hostname or alias (regex)"
-msgstr "Nome host o alias (regex)"
-
-msgid "Hostname template"
-msgstr "Modello di hostname"
-
-msgid "Hostname translation for incoming messages"
-msgstr "Traduzione di hostname per i messaggi in arrivo"
-
-msgid "Hostname translation for piggybacked hosts"
-msgstr "Traduzione di hostname per gli host piggybacked"
-
-msgid "Hostname, IP address or host alias the event is relevant for"
-msgstr "Hostname, indirizzo IP o alias di host per cui l'evento è rilevante"
-
-msgid "Hostname, marked red if down (Deprecated)"
-msgstr "Hostname, contrassegnato in rosso se inattivo (Deprecato)"
-
-msgid "Hostname, red background if down or unreachable (Deprecated)"
-msgstr "Hostname, sfondo rosso se giù o irraggiungibile (Deprecato)"
-
-msgid "Hostname/IP address of Event Console:"
-msgstr "Nome dell'host/indirizzo IP di Event Console:"
-
-msgid "Hostname/IP address of Master Event Console:"
-msgstr "Nome dell'host/indirizzo IP di Master Event Console:"
-
-#, python-format
-msgid "Hostname: %s"
-msgstr "Nome host: %s"
-
-msgid "Hostnames to query"
-msgstr "Nomi di host da interrogare"
-
-msgid "Hostnames to resolve"
-msgstr "Nomi di host da risolvere"
 
 msgid "Hosts"
 msgstr "Ospiti"
@@ -27241,11 +27275,12 @@ msgstr ""
 "servizio di default. Questo ti aiuterà a ridurre i suddetti avvertimenti "
 "durante il processo di aggiornamento dei tuoi siti e agenti Checkmk."
 
+#, fuzzy
 msgid ""
 "If a cluster uses multiple namespaces you need to activate this option. "
 "Hosts for namespaced Kubernetes objects will then be prefixed with the name "
 "of their namespace. This makes Kubernetes resources in different namespaces "
-"that have the same name distinguishable, but results in longer hostnames."
+"that have the same name distinguishable, but results in longer host names."
 msgstr ""
 "Se un cluster utilizza più namespace è necessario attivare questa opzione. "
 "Gli host per gli oggetti Kubernetes con namespace saranno quindi prefissati "
@@ -37368,8 +37403,9 @@ msgstr "Nome della macchina virtuale e/o<br>tipo di garbage collection"
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Nome della macchina virtuale e/o<br>threadpool"
 
-msgid "Name or IP address of the host where MS SQL runs if hostname fail"
-msgstr ""
+#, fuzzy
+msgid "Name or IP address of the host where MS SQL runs if host name fail"
+msgstr "Il nome host o l'indirizzo IP dell'istanza di Microsoft SQL Server."
 
 msgid "Name resolution"
 msgstr "Risoluzione del nome"
@@ -40213,8 +40249,9 @@ msgstr ""
 "Accoppiamento degli agenti Checkmk con il sito di monitoraggio. Questa fase "
 "stabilisce la fiducia tra l'agente e il sito di monitoraggio."
 
+#, fuzzy
 msgid ""
-"Only rename hostnames whose names <i>begin</i> with the regular expression "
+"Only rename host names whose names <i>begin</i> with the regular expression "
 "entered here."
 msgstr ""
 "Rinomina solo gli hostname i cui nomi <i>cominciano</i> con l'espressione "
@@ -41932,9 +41969,10 @@ msgstr ""
 "preconfigurati nel controllo. Se il formato del tuo oggetto contatori non è "
 "compatibile, puoi adattare gli offset dei contatori manualmente."
 
+#, fuzzy
 msgid ""
 "Per default, Checkmk tries to map the underlying Checkmk host to the Node "
-"Exporter host which contains either the Checkmk hostname, host address or "
+"Exporter host which contains either the Checkmk host name, host address or "
 "\"localhost\" in its endpoint address. The created services of the mapped "
 "Node Exporter will be assigned to the Checkmk host. A piggyback host for "
 "each Node Exporter host will be created if none of the options are valid. "
@@ -42763,8 +42801,9 @@ msgid "Please enter a valid absolut pathname with / as a path separator."
 msgstr ""
 "Inserisci un percorso assoluto valido con / come separatore di percorso."
 
+#, fuzzy
 msgid ""
-"Please enter a valid hostname or IPv4 address. Only letters, digits, dash, "
+"Please enter a valid host name or IPv4 address. Only letters, digits, dash, "
 "underscore and dot are allowed."
 msgstr ""
 "Inserisci un hostname o un indirizzo IPv4 valido. Sono ammesse solo lettere, "
@@ -43027,7 +43066,8 @@ msgstr ""
 "Selezionate quale stato i servizi di controllo della ricerca dei servizi "
 "devono assumere nel caso in cui vengano trovate nuove etichette di host."
 
-msgid "Please set a hostname for host state reclassification"
+#, fuzzy
+msgid "Please set a host name for host state reclassification"
 msgstr "Impostare un nome host per la riclassificazione dello stato dell'host"
 
 msgid "Please set a service description for service state reclassification"
@@ -43570,7 +43610,8 @@ msgid "Prefix for GCE piggyback host names. Defaults to project ID"
 msgstr ""
 "Prefisso per i nomi di host GCE piggyback. Predefinito come ID progetto"
 
-msgid "Prefix for piggyback hostname"
+#, fuzzy
+msgid "Prefix for piggyback host name"
 msgstr "Prefisso per l'hostname piggyback"
 
 msgid "Prefix match"
@@ -44257,14 +44298,15 @@ msgstr "Stato dello stoccaggio Quantum"
 msgid "Quarantine Usage"
 msgstr "Uso della quarantena"
 
-msgid "Queried Hostname or IP address"
-msgstr "Hostname o indirizzo IP richiesto"
-
 msgid "Queried host is a host system"
 msgstr "L'host richiesto è un sistema host"
 
 msgid "Queried host is the vCenter"
 msgstr "L'host interrogato è il vCenter"
+
+#, fuzzy
+msgid "Queried host name or IP address"
+msgstr "Hostname o indirizzo IP richiesto"
 
 msgid "Queries per second"
 msgstr "Query al secondo"
@@ -46717,7 +46759,8 @@ msgstr "Giri al minuto"
 msgid "Rewrite application"
 msgstr "Riscrivere l'applicazione"
 
-msgid "Rewrite hostname"
+#, fuzzy
+msgid "Rewrite host name"
 msgstr "Riscrivere l'hostname"
 
 msgid "Rewrite message text"
@@ -49668,9 +49711,10 @@ msgstr ""
 msgid "Set the height"
 msgstr "Impostare l'altezza"
 
+#, fuzzy
 msgid ""
 "Set the host address of the LDAP server. Might be an IP address or "
-"resolvable hostname."
+"resolvable host name."
 msgstr ""
 "Imposta l'indirizzo dell'host del server LDAP. Potrebbe essere un indirizzo "
 "IP o un hostname risolvibile."
@@ -51265,9 +51309,9 @@ msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts &quot;piggyback&quot; with their own data. This is the "
 "case for the vSphere special agent and the SAP R/3 plugin, for example. The "
-"hostnames that these agents send must match your hostnames in your "
+"host names that these agents send must match your host names in your "
 "monitoring configuration. If that is not the case, then with this rule you "
-"can define a hostname translation. Note: This rule must be configured for "
+"can define a host name translation. Note: This rule must be configured for "
 "the &quot;pig&quot; - i.e. the host that the agent is running on. It is not "
 "applied to the translated piggybacked hosts."
 msgstr ""
@@ -51601,7 +51645,8 @@ msgstr ""
 msgid "Space savings"
 msgstr "Risparmio di spazio"
 
-msgid "Spaces in hostnames"
+#, fuzzy
+msgid "Spaces in host names"
 msgstr "Spazi nei nomi di host"
 
 msgid "Spare and broken disks"
@@ -51779,8 +51824,9 @@ msgstr ""
 msgid "Specify an arbitrary name of this connection here"
 msgstr "Specificare qui un nome arbitrario di questa connessione"
 
+#, fuzzy
 msgid ""
-"Specify an explicit IP address or resolvable DNS name here, if the hostname "
+"Specify an explicit IP address or resolvable DNS name here, if the host name "
 "is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set this "
 "attribute, host name resolution will be performed when the configuration is "
 "enabled. Checkmk's built-in DNS cache is enabled by default in the global "
@@ -51802,9 +51848,10 @@ msgstr ""
 "risoluzione DNS verrà eseguita ogni volta che l'host viene controllato. La "
 "cache DNS di Checkmk'è <b>NON</b> interrogata."
 
+#, fuzzy
 msgid ""
-"Specify an explicit IPv6 address or resolvable DNS name here, if the "
-"hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
+"Specify an explicit IPv6 address or resolvable DNS name here, if the host "
+"name is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
 "this attribute, host name resolution will be performed when the "
 "configuration is enabled. Checkmk's built-in DNS cache is enabled by default "
 "in the global configuration to speed up the activation process. The cache is "
@@ -52027,6 +52074,11 @@ msgstr ""
 "utente è membro di più di questi gruppi, il plugin successivo nella lista "
 "sovrascriverà gli altri."
 
+#, fuzzy
+msgid "Specify the host name or IP address of the PLC to communicate with."
+msgstr ""
+"Specificare il nome dell'host o l'indirizzo IP del PLC con cui comunicare."
+
 msgid ""
 "Specify the host name or IP address of the master Event Console that you "
 "want to replicate from. The port number must be the same as set in the "
@@ -52042,10 +52094,6 @@ msgid ""
 msgstr ""
 "Specificare l'host a cui sarà assegnato il servizio risultante. L'host "
 "dovrebbe essere configurato per consentire i dati Piggyback."
-
-msgid "Specify the hostname or IP address of the PLC to communicate with."
-msgstr ""
-"Specificare il nome dell'host o l'indirizzo IP del PLC con cui comunicare."
 
 msgid "Specify the initial contact groups of an automatically created user."
 msgstr ""
@@ -52071,8 +52119,9 @@ msgstr ""
 "on-demand. Pertanto, nessun utilizzo medio può essere calcolato per queste "
 "tabelle se questo valore non è specificato."
 
+#, fuzzy
 msgid ""
-"Specify the logical name, e.g. the hostname, of the PLC. This name is used "
+"Specify the logical name, e.g. the host name, of the PLC. This name is used "
 "to name the resulting services."
 msgstr ""
 "Specificare il nome logico, ad esempio l'hostname, del PLC. Questo nome "
@@ -54740,7 +54789,8 @@ msgstr "Test di connessione all'host"
 msgid "Test event generated and sent to Event Console."
 msgstr "Evento di prova generato e inviato a Event Console."
 
-msgid "Test hostname before activation"
+#, fuzzy
+msgid "Test host name before activation"
 msgstr "Test dell'hostname prima dell'attivazione"
 
 msgid "Test notification"
@@ -55216,9 +55266,6 @@ msgstr "Non è stato possibile trovare il DN di base del gruppo."
 
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr "Il DN di base del gruppo non è configurato, non recupera alcun gruppo."
-
-msgid "The Hostname of the MongoDB Server."
-msgstr "Il nome host del server MongoDB."
 
 msgid "The ID is already used by another role"
 msgstr "L'ID è già usato da un altro ruolo"
@@ -57002,8 +57049,36 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "L'attributo del nome dell'host deve essere assegnato a una colonna."
 
+#, fuzzy
+msgid "The host name is missing."
+msgstr "Manca il nome dell'host."
+
 msgid "The host name may not contain spaces."
 msgstr "Il nome dell'host non può contenere spazi."
+
+#, fuzzy
+msgid "The host name of the MongoDB Server."
+msgstr "Il nome host del server MongoDB."
+
+#, fuzzy
+msgid "The host name of the expected distinguished controller of the cluster"
+msgstr "L'hostname del controllore distinto previsto per il cluster"
+
+#, fuzzy
+msgid "The host name of the expected node to hold this resource."
+msgstr "L'hostname del nodo previsto per tenere questa risorsa."
+
+#, fuzzy
+msgid "The host name or IP address for the Microsoft SQL Server instance"
+msgstr "Il nome host o l'indirizzo IP dell'istanza di Microsoft SQL Server."
+
+#, fuzzy
+msgid "The host name template does not contain any label."
+msgstr "Il modello di hostname non contiene alcuna etichetta."
+
+#, fuzzy, python-format
+msgid "The host name template must not contain the label '%s'."
+msgstr "Il modello di hostname non deve contenere l'etichetta '%s'."
 
 msgid "The host or service was in a scheduled downtime"
 msgstr "L'host o il servizio era in un downtime programmato"
@@ -57028,25 +57103,6 @@ msgstr "L'host/servizio deve avere uno dei contatti selezionati."
 
 msgid "The hostaddress of the ntopng instance."
 msgstr "L'hostaddress dell'istanza ntopng."
-
-msgid "The hostname is missing."
-msgstr "Manca il nome dell'host."
-
-msgid "The hostname of the expected distinguished controller of the cluster"
-msgstr "L'hostname del controllore distinto previsto per il cluster"
-
-msgid "The hostname of the expected node to hold this resource."
-msgstr "L'hostname del nodo previsto per tenere questa risorsa."
-
-msgid "The hostname or IP address for the Microsoft SQL Server instance"
-msgstr "Il nome host o l'indirizzo IP dell'istanza di Microsoft SQL Server."
-
-msgid "The hostname template does not contain any label."
-msgstr "Il modello di hostname non contiene alcuna etichetta."
-
-#, python-format
-msgid "The hostname template must not contain the label '%s'."
-msgstr "Il modello di hostname non deve contenere l'etichetta '%s'."
 
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
@@ -57420,6 +57476,10 @@ msgstr "La corrispondenza è insensibile alle maiuscole e alle minuscole."
 
 msgid "The match is case sensitive."
 msgstr "La corrispondenza è sensibile alle maiuscole e alle minuscole."
+
+msgid ""
+"The match type is defined by the discovery ruleset type of the check plugin."
+msgstr ""
 
 #, python-format
 msgid "The matching criteria must contain the label '%s'."
@@ -58202,9 +58262,10 @@ msgstr ""
 "indipendente dai livelli di controllo effettivi che possono essere impostati "
 "sia per la memoria libera che per quella occupata."
 
+#, fuzzy
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original text to match. "
-"Note that as an alternative, you may also use the rule Hostname translation "
+"Note that as an alternative, you may also use the rule Host name translation "
 "for Incoming Messages in the Global Settings of the EC to accomplish your "
 "task."
 msgstr ""
@@ -59057,8 +59118,9 @@ msgid "The text entered here is handled as a regular expression pattern."
 msgstr ""
 "Il testo inserito qui è gestito come un modello di espressione regolare."
 
+#, fuzzy
 msgid ""
-"The text entered here well be prefixed to the hostname. Ending the prefix "
+"The text entered here well be prefixed to the host name. Ending the prefix "
 "with a period will create a separate folder in Graphite"
 msgstr ""
 "Il testo inserito qui deve avere un prefisso al nome dell'host. Finendo il "
@@ -60747,6 +60809,11 @@ msgstr ""
 
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Questa è una regola di primo livello. Mostra l'albero delle regole"
+
+msgid ""
+"This is caused by the service check commands with an example host and "
+"service in the following table."
+msgstr ""
 
 msgid ""
 "This is essentially the raw agent updater script that gets packaged within "
@@ -63879,7 +63946,7 @@ msgid ""
 "userstore specified in $MK_CONFDIR/sap_hana.cfg. Moreover you can configure "
 "'RUNAS' with the following values 'agent' or 'instance'. The latter one is "
 "default.  Use the FQDN in the query if HOSTNAME is not set, other the short "
-"hostname."
+"host name."
 msgstr ""
 "Questo distribuirà e configurerà il plugin dell'agente Checkmk "
 "<tt>mk_sap_hana</tt>. Per far funzionare questo plugin è necessario "
@@ -67368,9 +67435,6 @@ msgstr "Trasformazione sulla metrica selezionata"
 msgid "Transformed the user tag group \"%s\" to built-in."
 msgstr "Trasformato il gruppo di tag utente \"%s\" in incorporato."
 
-msgid "Translate Hostnames"
-msgstr "Tradurre i nomi di host"
-
 msgid "Translate SNMP traps"
 msgstr "Tradurre le trappole SNMP"
 
@@ -67379,6 +67443,10 @@ msgstr "Tradurre le trappole SNMP utilizzando le MIB disponibili"
 
 msgid "Translate UCS Bladecenter state to monitoring state"
 msgstr "Tradurre lo stato UCS Bladecenter in stato di monitoraggio"
+
+#, fuzzy
+msgid "Translate host names"
+msgstr "Tradurre i nomi di host"
 
 #, python-format
 msgid "Translated %s"
@@ -69345,7 +69413,8 @@ msgstr "Utilizzare la cache di ricerca DNS"
 msgid "Use DNS resolution to lookup addresses"
 msgstr "Utilizzare la risoluzione DNS per cercare gli indirizzi"
 
-msgid "Use DNS to convert IP addresses into hostnames"
+#, fuzzy
+msgid "Use DNS to convert IP addresses into host names"
 msgstr "Utilizzare il DNS per convertire gli indirizzi IP in nomi di host"
 
 msgid "Use FreeIPMI"
@@ -69587,7 +69656,8 @@ msgstr "Usa il titolo del grafico"
 msgid "Use host address"
 msgstr "Usa l'indirizzo dell'host"
 
-msgid "Use hostname"
+#, fuzzy
+msgid "Use host name"
 msgstr "Usa il nome dell'host"
 
 msgid "Use in notifications"
@@ -69652,7 +69722,8 @@ msgstr ""
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Usa solo lettere minuscole, cifre e caratteri di sottolineatura qui."
 
-msgid "Use other hostname"
+#, fuzzy
+msgid "Use other host name"
 msgstr "Usa un altro hostname"
 
 msgid "Use parent host information for the NetBIOS server name"
@@ -69738,7 +69809,8 @@ msgstr ""
 "Utilizzando il modulo Setup BI, è possibile creare, modificare ed eliminare "
 "regole e aggregazioni di BI nei pacchetti di cui si è referenti."
 
-msgid "Use the VMs hostname if set, otherwise fall back to ESX name"
+#, fuzzy
+msgid "Use the VMs host name if set, otherwise fall back to ESX name"
 msgstr "Usa l'hostname della VM se impostato, altrimenti torna al nome ESX"
 
 msgid "Use the address of the host for which the service is generated"
@@ -69883,8 +69955,9 @@ msgstr ""
 "in un file <tt>.zip</tt>. Solo i file nella directory principale del file "
 "zip saranno processati.<br><br>"
 
+#, fuzzy
 msgid ""
-"Use this hostname for all created events instead of the name of the "
+"Use this host name for all created events instead of the name of the "
 "mailserver"
 msgstr ""
 "Usa questo hostname per tutti gli eventi creati invece del nome del "
@@ -69970,33 +70043,37 @@ msgstr ""
 "interrogato il server successivo (fallback). Il controllo emetterà solo dati "
 "dal primo host che invia una risposta."
 
+#, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the hostname here, eg. my_graylog.com."
+"agent. Please add the host name here, eg. my_graylog.com."
 msgstr ""
 "Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
 "dall'agente speciale. Aggiungi qui l'hostname, ad esempio my_graylog.com."
 
+#, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the hostname here, eg. my_jenkins.com."
+"agent. Please add the host name here, eg. my_jenkins.com."
 msgstr ""
 "Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
 "dall'agente speciale. Aggiungi qui il nome dell'host, ad esempio mio_jenkins."
 "com."
 
+#, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the hostname here, eg. my_jira.com. If not set, the "
+"agent. Please add the host name here, eg. my_jira.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
 "dall'agente speciale. Aggiungi qui il nome dell'host, ad esempio my_jira."
 "com. Se non è impostato, l'host assegnato viene usato come istanza."
 
+#, fuzzy
 msgid ""
 "Use this option to set which instance should be checked by the special "
-"agent. Please add the hostname here, eg. my_rabbitmq.com. If not set, the "
+"agent. Please add the host name here, eg. my_rabbitmq.com. If not set, the "
 "assigned host is used as instance."
 msgstr ""
 "Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
@@ -70575,11 +70652,12 @@ msgstr ""
 "Usando questa opzione si può sovrascrivere l'impostazione configurata "
 "globalmente per i timeout di controllo per i singoli servizi."
 
+#, fuzzy
 msgid ""
 "Using this page you can import several hosts at once into the choosen "
 "folder. You can choose a CSV file from your workstation to be uploaded, "
-"paste a CSV files contents into the textarea or simply enter a list of "
-"hostnames (one per line) to the textarea."
+"paste a CSV files contents into the textarea or simply enter a list of host "
+"names (one per line) to the textarea."
 msgstr ""
 "Usando questa pagina puoi importare diversi host in una volta sola nella "
 "cartella scelta. Puoi scegliere un file CSV dalla tua postazione da "
@@ -72227,9 +72305,10 @@ msgstr ""
 "grande di quello suggerito porterà sempre ad uno Status Crit. Si deve anche "
 "selezionare un'opzione adatta da \"Indirizzo alternativo per il ping\" sopra."
 
+#, fuzzy
 msgid ""
 "When querying the event status, you can match events to a particular host "
-"using the hostname, the IP address, or the host alias. This is due to the "
+"using the host name, the IP address, or the host alias. This is due to the "
 "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
 "same host using different specification methods. Alternatively, you can "
 "specify an explicit host for which to show events."
@@ -73357,9 +73436,10 @@ msgstr ""
 "Con questa impostazione, l'agente speciale contatterà anche l'agente Checkmk "
 "sullo stesso sistema alla porta specificata."
 
+#, fuzzy
 msgid ""
 "Within this ruleset service descriptions can be translated similar to the "
-"ruleset <tt>Hostname translation for piggybacked hosts</tt>. Services such "
+"ruleset <tt>Host name translation for piggybacked hosts</tt>. Services such "
 "as <tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
 "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are "
 "excluded. <b>Attention:</b><ul><li>Downtimes and other configured rules "
@@ -74415,12 +74495,21 @@ msgstr ""
 msgid "You can simulate an event here and check out which rules are matching."
 msgstr "Qui si può simulare un evento e verificare quali regole corrispondono."
 
+#, fuzzy
 msgid ""
-"You can specify a hostname or IP address different from IP address of the "
+"You can specify a host name or IP address different from IP address of the "
 "host as configured in your host properties."
 msgstr ""
 "Puoi specificare un nome di host o un indirizzo IP diverso dall'indirizzo IP "
 "dell'host come configurato nelle proprietà dell'host."
+
+#, fuzzy
+msgid ""
+"You can specify a host name or IP address different from the IP address of "
+"the host this check will be assigned to."
+msgstr ""
+"Potete specificare un nome di host o un indirizzo IP diverso dall'indirizzo "
+"IP dell'host a cui sarà assegnato questo controllo."
 
 msgid ""
 "You can specify a hostname or IP address different from the IP address of "
@@ -74429,17 +74518,11 @@ msgstr ""
 "Puoi specificare un nome di host o un indirizzo IP diverso dall'indirizzo IP "
 "dell'host come configurato nelle proprietà dell'host."
 
-msgid ""
-"You can specify a hostname or IP address different from the IP address of "
-"the host this check will be assigned to."
-msgstr ""
-"Potete specificare un nome di host o un indirizzo IP diverso dall'indirizzo "
-"IP dell'host a cui sarà assegnato questo controllo."
-
+#, fuzzy
 msgid ""
 "You can specify a list of regex patterns for android host names. Several "
 "patterns can be provided. Only those that match any of the patterns will be "
-"monitored. By default all hostnames are accepted"
+"monitored. By default all host names are accepted"
 msgstr ""
 "È possibile specificare un elenco di modelli regex per i nomi di host "
 "Android. È possibile fornire diversi pattern. Verranno monitorati solo "
@@ -74705,6 +74788,11 @@ msgstr ""
 "<tt>10</tt>, l'icona del grafico un indice di ordinamento di <tt>20</tt>. "
 "Tutte le altre icone predefinite hanno un indice di ordinamento di <tt>30</"
 "tt> configurato."
+
+msgid ""
+"You can use these examples to identify hosts and services that must be "
+"filtered out in the top list configuration to resolve the problem."
+msgstr ""
 
 msgid ""
 "You can use these options to tune the way packages are baked for your hosts "
@@ -75355,8 +75443,9 @@ msgstr "È necessario fornire un file chiave."
 msgid "You need to provide a text."
 msgstr "È necessario fornire un testo."
 
+#, fuzzy
 msgid ""
-"You need to provide a valid \"hostname\". Only letters, digits, dash, "
+"You need to provide a valid \"host name\". Only letters, digits, dash, "
 "underscore and dot are allowed."
 msgstr ""
 "È necessario fornire un \"nome host\" valido. Sono ammessi solo lettere, "
@@ -75501,7 +75590,8 @@ msgstr "Le tue estensioni hanno una dimensione di %s."
 msgid "Your filename must not end with a slash."
 msgstr "Il tuo nome di file non deve finire con una barra."
 
-msgid "Your hostname has an invalid format."
+#, fuzzy
+msgid "Your host name has an invalid format."
 msgstr "Il tuo hostname ha un formato non valido."
 
 msgid ""
@@ -76505,14 +76595,15 @@ msgid "host is up but has services in warning state"
 msgstr "gli host sono attivi ma hanno servizi in stato di avvertimento"
 
 #, fuzzy
+msgid "host name will be ignored when agent_hash is given."
+msgstr "hostname sarà ignorato quando viene dato agent_hash."
+
+#, fuzzy
 msgid "host names"
 msgstr "Nome del vhost"
 
 msgid "host tags"
 msgstr "tag dell'host"
-
-msgid "hostname will be ignored when agent_hash is given."
-msgstr "hostname sarà ignorato quando viene dato agent_hash."
 
 msgid "hosts"
 msgstr "ospita"
@@ -77835,6 +77926,9 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Hostname"
+#~ msgstr "Hostname"
 
 #, fuzzy
 #~| msgid "Service plugin output"

@@ -32,6 +32,7 @@ register.snmp_section(
 
 register.snmp_section(
     name="akcp_sensor2plus_drycontact",
+    parse_function=parse_akcp_sensor,
     parsed_section_name="akcp_sensor_drycontact",
     detect=DETEC_AKCP_SP2PLUS,
     fetch=SNMPTree(

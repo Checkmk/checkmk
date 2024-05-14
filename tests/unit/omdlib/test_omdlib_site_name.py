@@ -11,29 +11,31 @@ from omdlib.contexts import SiteContext
 from omdlib.site_name import sitename_must_be_valid
 
 
-def test_sitename_must_be_valid_ok(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "name",
+    [
+        "lulu",
+        "asd0",
+        "aaaaaaaaaaaaaaaa",
+    ],
+)
+def test_sitename_must_be_valid_ok(tmp_path: Path, name: str) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-    sitename_must_be_valid(SiteContext("lulu"))
+    sitename_must_be_valid(SiteContext(name))
 
 
 @pytest.mark.parametrize(
-    "name,expected_result",
+    "name",
     [
-        ("0asd", False),
-        ("asd0", True),
-        ("", False),
-        ("aaaaaaaaaaaaaaaa", True),
-        ("aaaaaaaaaaaaaaaaa", False),
+        "0asd",
+        "",
+        "aaaaaaaaaaaaaaaaa",
     ],
 )
-def test_sitename_must_be_valid_regex(tmp_path: Path, name: str, expected_result: bool) -> None:
+def test_sitename_must_be_valid_not_ok(tmp_path: Path, name: str) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-
-    if expected_result:
+    with pytest.raises(SystemExit, match="Invalid site name"):
         sitename_must_be_valid(SiteContext(name))
-    else:
-        with pytest.raises(SystemExit, match="Invalid site name"):
-            sitename_must_be_valid(SiteContext(name))
 
 
 def test_sitename_must_be_valid_already_exists(tmp_path: Path) -> None:

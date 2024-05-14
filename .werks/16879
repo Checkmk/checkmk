@@ -1,0 +1,13 @@
+Title: Interface checks for Windows hosts: Fix broad- and non-unicast packets mixup
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1715690493
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+Before this werk, for Windows hosts, the interface check reported non-unicast packets as broadcast
+packets. As a side-effect, depending on the configuration, other rates such as the error rates,
+might not have been reported. This happened if percentual levels were configured, which is the
+default for error rates.

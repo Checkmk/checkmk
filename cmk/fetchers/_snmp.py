@@ -12,7 +12,6 @@ from typing import Any, Final
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKFetcherError, MKTimeout
-from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib import (
@@ -46,11 +45,12 @@ class WalkCache(
     is true).
     """
 
-    __slots__ = ("_store", "_path")
+    __slots__ = ("_store", "_path", "_logger")
 
-    def __init__(self, walk_cache: Path) -> None:
+    def __init__(self, walk_cache: Path, logger: logging.Logger) -> None:
         self._store: dict[tuple[str, str, bool], SNMPRowInfo] = {}
         self._path = walk_cache
+        self._logger = logger
 
     def _read_row(self, path: Path) -> SNMPRowInfo:
         return store.load_object_from_file(path, default=None)
@@ -97,13 +97,13 @@ class WalkCache(
         for path in self._iterfiles():
             fetchoid, context_hash = self._name2oid(path.name)
 
-            console.debug(f"  Loading {fetchoid} from walk cache {path}\n")
+            self._logger.debug(f"  Loading {fetchoid} from walk cache {path}")
             try:
                 read_walk = self._read_row(path)
             except MKTimeout:
                 raise
             except Exception:
-                console.debug(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                self._logger.debug(f"  Failed to load {fetchoid} from walk cache {path}")
                 continue
 
             if read_walk is not None:
@@ -117,7 +117,7 @@ class WalkCache(
                 continue
 
             path = self._path / self._oid2name(fetchoid, context_hash)
-            console.debug(f"  Saving walk of {fetchoid} to walk cache {path}\n")
+            self._logger.debug(f"  Saving walk of {fetchoid} to walk cache {path}")
             self._write_row(path, rowinfo)
 
 
@@ -314,7 +314,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             # Nothing to discover? That can't be right.
             raise MKFetcherError("Got no data")
 
-        walk_cache = WalkCache(self.walk_cache_path / str(self._backend.hostname))
+        walk_cache = WalkCache(self.walk_cache_path / str(self._backend.hostname), self._logger)
         if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             walk_cache.load()
@@ -337,7 +337,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                         tree=tree,
                         walk_cache=walk_cache,
                         backend=self._backend,
-                        log=lambda msg: console.debug(msg + "\n"),
+                        log=self._logger.debug,
                     )
                     for tree in self.plugin_store[section_name].trees
                 ]

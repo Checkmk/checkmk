@@ -334,7 +334,7 @@ def _get_history(
         try:
             previous_tree = cached_tree_loader.get_tree(previous.path)
             current_tree = cached_tree_loader.get_tree(current.path)
-        except LoadStructuredDataError:
+        except (FileNotFoundError, ValueError):
             corrupted_history_files.add(current.short)
             continue
 
@@ -400,19 +400,10 @@ class _CachedTreeLoader:
         if filepath in self._lookup:
             return self._lookup[filepath]
 
-        return self._lookup.setdefault(filepath, self._load_tree_from_file(filepath))
+        if not (tree := load_tree(filepath)):
+            raise ValueError(tree)
 
-    def _load_tree_from_file(self, filepath: Path) -> ImmutableTree:
-        try:
-            tree = load_tree(filepath)
-        except FileNotFoundError:
-            raise LoadStructuredDataError()
-
-        if not tree:
-            # load_file may return an empty tree
-            raise LoadStructuredDataError()
-
-        return tree
+        return self._lookup.setdefault(filepath, tree)
 
 
 @dataclass(frozen=True)

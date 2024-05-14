@@ -4014,7 +4014,7 @@ class ParserFactory:
             host_name,
             section_store,
             keep_outdated=keep_outdated,
-            check_interval=self._config_cache.check_mk_check_interval(host_name),
+            host_check_interval=self._config_cache.check_mk_check_interval(host_name),
             translation=get_piggyback_translations(self._ruleset_matcher, host_name),
             encoding_fallback=fallback_agent_output_encoding,
             logger=logger,

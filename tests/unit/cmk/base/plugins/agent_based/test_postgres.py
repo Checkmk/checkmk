@@ -46,7 +46,7 @@ def parse(tmp_path: Path, section_raw: AgentRawData) -> StringTable:
     parser = AgentParser(
         host_name,
         store,
-        check_interval=0,
+        host_check_interval=0,
         keep_outdated=True,
         translation=TranslationOptions(),
         encoding_fallback="ascii",

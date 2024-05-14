@@ -62,7 +62,7 @@ class TestAgentParser:
         return AgentParser(
             hostname,
             store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
@@ -960,7 +960,7 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
@@ -983,7 +983,7 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
@@ -1002,7 +1002,7 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
@@ -1025,7 +1025,7 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
@@ -1054,7 +1054,7 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
@@ -1086,7 +1086,7 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=0,
+            host_check_interval=0,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
@@ -1113,7 +1113,7 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=42,
+            host_check_interval=42,
             keep_outdated=False,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
@@ -1140,7 +1140,7 @@ class TestAgentPersistentSectionHandling:
         parser = AgentParser(
             HostName("testhost"),
             section_store,
-            check_interval=42,
+            host_check_interval=42,
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",

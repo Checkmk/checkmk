@@ -11,7 +11,7 @@ from typing import Iterator
 import pytest
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site
 from tests.testlib.utils import makedirs, repo_path
 

@@ -15,7 +15,7 @@ from playwright.sync_api import BrowserContext
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site
 
 

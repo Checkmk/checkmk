@@ -8,7 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site
 
 

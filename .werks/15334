@@ -1,0 +1,15 @@
+Title: FIX mongodb_replica_set: compatibility with pymongo 3
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1715766843
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+<a href="https://checkmk.com/werk/16174">Werk #16174</a> introduced a regression: If the
+checkmk agent plugin is running with pymongo version 3 the replication lag time
+stamp is interpreted as seconds, but its actually milliseconds. This results in
+errors like <code>ValueError (year 56319 is out of range)</code>.
+
+The check is now compatible with pymongo version 3 and 4.

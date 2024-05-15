@@ -6,7 +6,7 @@
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 
 
 def test_user_color_theme(logged_in_page: LoginPage, credentials: CmkCredentials) -> None:

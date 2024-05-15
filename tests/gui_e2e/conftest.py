@@ -12,7 +12,7 @@ import pytest
 from playwright.sync_api import BrowserContext, Page
 
 from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
 
 logger = logging.getLogger(__name__)

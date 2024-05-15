@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 
 
 def test_help_beginners_guide(logged_in_page: LoginPage) -> None:

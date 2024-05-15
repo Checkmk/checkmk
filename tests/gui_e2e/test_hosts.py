@@ -11,7 +11,7 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.playwright.pom.setup.hosts import HostDetails, HostProperties
 
 

@@ -10,7 +10,7 @@ from urllib.parse import parse_qs, urljoin, urlparse
 from playwright.sync_api import expect, Page, Response
 
 from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.navigation import CmkPage
+from tests.testlib.playwright.pom.page import CmkPage
 
 
 class LoginPage(CmkPage):

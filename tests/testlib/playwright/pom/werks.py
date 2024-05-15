@@ -5,7 +5,7 @@
 
 from typing import override
 
-from tests.testlib.playwright.pom.navigation import CmkPage
+from tests.testlib.playwright.pom.page import CmkPage
 
 
 class Werks(CmkPage):

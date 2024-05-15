@@ -26,7 +26,7 @@ def test_root_context() -> None:
     assert not site.is_site_context()
 
 
-def test_site_context(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_site_context() -> None:
     site = SiteContext("dingeling")
     assert site.name == "dingeling"
     assert site.dir == "/omd/sites/dingeling"
@@ -75,7 +75,7 @@ def test_site_context_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
     assert not site.is_empty()
 
 
-def test_site_context_is_autostart(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_site_context_is_autostart() -> None:
     site = SiteContext("dingeling")
 
     with pytest.raises(Exception) as e:

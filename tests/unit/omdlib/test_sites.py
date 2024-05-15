@@ -16,11 +16,7 @@ def _strip_ansi(s: str) -> str:
     return ansi_escape.sub("", s)
 
 
-def test_main_sites(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_main_sites(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)

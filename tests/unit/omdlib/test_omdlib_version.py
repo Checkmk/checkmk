@@ -40,9 +40,7 @@ def test_main_version_root_specific_site_broken_version(tmp_path: Path) -> None:
 
 
 def test_main_version_root_specific_site(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
@@ -56,7 +54,6 @@ def test_main_version_root_specific_site(
 def test_main_version_root_specific_site_bare(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
@@ -67,11 +64,7 @@ def test_main_version_root_specific_site_bare(
     assert stdout == "1.2.3p4\n"
 
 
-def test_main_versions(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_main_versions(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
@@ -82,11 +75,7 @@ def test_main_versions(
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4 (default)\n"
 
 
-def test_main_versions_bare(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_main_versions_bare(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)

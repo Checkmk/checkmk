@@ -12,12 +12,6 @@ import pytest
 from omdlib.contexts import RootContext, SiteContext
 
 
-# Explicitly don't patch the base path here
-@pytest.fixture(autouse=True)
-def omd_base_path() -> None:
-    pass
-
-
 def test_root_context() -> None:
     site = RootContext()
     assert site.name is None

@@ -38,6 +38,7 @@ def test_sitename_must_be_valid_not_ok(tmp_path: Path, name: str) -> None:
         sitename_must_be_valid(SiteContext(name))
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_sitename_must_be_valid_already_exists(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
 

@@ -24,6 +24,7 @@ from omdlib.system_apache import (
 from omdlib.version_info import VersionInfo
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
     version_info = VersionInfo(omdlib.__version__)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
@@ -47,6 +48,7 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
     version_info = VersionInfo(omdlib.__version__)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
@@ -64,6 +66,7 @@ def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) ->
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_delete_apache_hook(tmp_path: Path) -> None:
     version_info = VersionInfo(omdlib.__version__)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
@@ -78,6 +81,7 @@ def test_delete_apache_hook(tmp_path: Path) -> None:
     assert not apache_config.exists()
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_delete_apache_hook_not_existing(tmp_path: Path) -> None:
     version_info = VersionInfo(omdlib.__version__)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
@@ -86,6 +90,7 @@ def test_delete_apache_hook_not_existing(tmp_path: Path) -> None:
     assert not apache_config.exists()
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_is_apache_hook_up_to_date(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
@@ -95,6 +100,7 @@ def test_is_apache_hook_up_to_date(tmp_path: Path) -> None:
     assert is_apache_hook_up_to_date("unit") is True
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_is_apache_hook_up_to_date_not_readable(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
@@ -106,6 +112,7 @@ def test_is_apache_hook_up_to_date_not_readable(tmp_path: Path) -> None:
         is_apache_hook_up_to_date("unit")
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_is_apache_hook_up_to_date_outdated(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
@@ -115,6 +122,7 @@ def test_is_apache_hook_up_to_date_outdated(tmp_path: Path) -> None:
     assert is_apache_hook_up_to_date("unit") is False
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_has_old_apache_hook_in_site(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
@@ -124,6 +132,7 @@ def test_has_old_apache_hook_in_site(tmp_path: Path) -> None:
     assert is_apache_hook_up_to_date("unit") is False
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_has_apache_hook_in_site(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
@@ -134,6 +143,7 @@ def test_has_apache_hook_in_site(tmp_path: Path) -> None:
     assert is_apache_hook_up_to_date("unit") is False
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_create_apache_hook_world_readable(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)

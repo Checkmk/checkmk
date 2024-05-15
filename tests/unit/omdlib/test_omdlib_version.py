@@ -17,6 +17,7 @@ from omdlib.version import (
 )
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_main_version_of_omd_tool(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
@@ -28,17 +29,20 @@ def test_main_version_of_omd_tool(
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_main_version_root_not_existing_site() -> None:
     with pytest.raises(SystemExit, match="No such site: testsite"):
         main_version(object(), object(), object(), ["testsite"], {})
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_main_version_root_specific_site_broken_version(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     with pytest.raises(SystemExit, match="Failed to determine site version"):
         main_version(object(), object(), object(), ["testsite"], {})
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_main_version_root_specific_site(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -51,6 +55,7 @@ def test_main_version_root_specific_site(
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_main_version_root_specific_site_bare(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -64,6 +69,7 @@ def test_main_version_root_specific_site_bare(
     assert stdout == "1.2.3p4\n"
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_main_versions(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
@@ -75,6 +81,7 @@ def test_main_versions(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> No
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4 (default)\n"
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_main_versions_bare(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
@@ -86,6 +93,7 @@ def test_main_versions_bare(tmp_path: Path, capsys: pytest.CaptureFixture[str]) 
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4\n"
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_default_version(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/versions").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/default").symlink_to("2019.12.11.cee")
@@ -93,6 +101,7 @@ def test_default_version(tmp_path: Path) -> None:
     assert isinstance(default_version(), str)
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_omd_versions(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/versions").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/2019.12.11.cee").mkdir(parents=True)
@@ -111,6 +120,7 @@ def test_omd_versions(tmp_path: Path) -> None:
     ]
 
 
+@pytest.mark.usefixtures("omd_base_path")
 def test_version_exists(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/versions/1.6.0p7").mkdir(parents=True)
     assert version_exists("1.6.0p7") is True

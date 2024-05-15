@@ -37,19 +37,6 @@ from tests.testlib.web_session import APIError, CMKWebSession
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def skip_unwanted_test_types(item: pytest.Item) -> None:
-    test_type = item.get_closest_marker("type")
-    if test_type is None:
-        raise Exception("Test is not TYPE marked: %s" % item)
-
-    if not item.config.getoption("-T"):
-        raise SystemExit("Please specify type of tests to be executed (py.test -T TYPE)")
-
-    test_type_name = test_type.args[0]
-    if test_type_name != item.config.getoption("-T"):
-        pytest.skip("Not testing type %r" % test_type_name)
-
-
 _UNPATCHED_PATHS: Final = {
     # FIXME :-(
     # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
@@ -136,7 +123,6 @@ __all__ = [
     "repo_path",
     "add_python_paths",
     "fake_version_and_paths",
-    "skip_unwanted_test_types",
     "Site",
     "SiteFactory",
     "import_module_hack",

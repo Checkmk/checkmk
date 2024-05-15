@@ -172,9 +172,22 @@ def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Confi
             item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]
 
 
-def pytest_runtest_setup(item):
+def pytest_runtest_setup(item: pytest.Item) -> None:
     """Skip tests of unwanted types"""
-    testlib.skip_unwanted_test_types(item)
+    _skip_unwanted_test_types(item)
+
+
+def _skip_unwanted_test_types(item: pytest.Item) -> None:
+    test_type = item.get_closest_marker("type")
+    if test_type is None:
+        raise Exception("Test is not TYPE marked: %s" % item)
+
+    if not item.config.getoption("-T"):
+        raise SystemExit("Please specify type of tests to be executed (py.test -T TYPE)")
+
+    test_type_name = test_type.args[0]
+    if test_type_name != item.config.getoption("-T"):
+        pytest.skip("Not testing type %r" % test_type_name)
 
 
 # Cleanup temporary directory created above

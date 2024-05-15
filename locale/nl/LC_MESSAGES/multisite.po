@@ -511,6 +511,10 @@ msgid "%s"
 msgstr "%s"
 
 #, python-format
+msgid "%s (%s)"
+msgstr ""
+
+#, python-format
 msgid "%s (Customer missing)"
 msgstr "%s (Klant ontbreekt)"
 
@@ -689,6 +693,10 @@ msgstr "%s per Seconde"
 #, python-format
 msgid "%s properties"
 msgstr "%s eigenschappen"
+
+#, python-format
+msgid "%s rate"
+msgstr "%s ratio"
 
 #, python-format
 msgid "%s read %s"
@@ -4448,7 +4456,8 @@ msgstr "Beschikbare opties"
 msgid "Advanced options"
 msgstr "Beschikbare opties"
 
-msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
+#, fuzzy
+msgid "Advanced: Disable SSL/TLS host name extension support (SNI)"
 msgstr ""
 "Geavanceerd: Ondersteuning voor hostnaamextensie SSL/TLS uitschakelen (SNI)"
 
@@ -5947,9 +5956,6 @@ msgstr ""
 msgid "Altered"
 msgstr "Altered"
 
-msgid "Alternative Hostname"
-msgstr "Alternatieve hostnaam"
-
 msgid "Alternative Service description"
 msgstr "Beschrijving van de alternatieve dienst"
 
@@ -5965,6 +5971,10 @@ msgstr "Alternatieve weergavenaam voor diensten"
 
 msgid "Alternative display name of the service, regex match"
 msgstr "Alternatieve weergavenaam van de dienst, regex match"
+
+#, fuzzy
+msgid "Alternative host name"
+msgstr "Alternatieve hostnaam"
 
 msgid "Alternative names for the service"
 msgstr "Alternatieve namen voor de dienst"
@@ -15239,12 +15249,6 @@ msgstr "DNS"
 msgid "DNS FQDN"
 msgstr "DNS FQDN"
 
-msgid "DNS Hostname"
-msgstr "DNS Hostnaam"
-
-msgid "DNS Hostname or IP address"
-msgstr "DNS Hostnaam of IP-adres"
-
 msgid "DNS Resolution"
 msgstr "DNS Resolutie"
 
@@ -15256,6 +15260,10 @@ msgstr "DNS-domeinnaam om LDAP-servers te ontdekken van"
 
 msgid "DNS failed queries"
 msgstr "DNS mislukte queries"
+
+#, fuzzy
+msgid "DNS host name"
+msgstr "DNS Hostnaam"
 
 #, fuzzy
 msgid "DNS host name or IP address"
@@ -22407,7 +22415,8 @@ msgstr "Naam van het veld: "
 msgid "Field data size"
 msgstr "Grootte van de veldgegevens"
 
-msgid "Field(s) to use as a hostname key"
+#, fuzzy
+msgid "Field(s) to use as a host name key"
 msgstr "Veld(en) om als hostnamesleutel te gebruiken"
 
 msgid "Fieldnames to query"
@@ -26438,6 +26447,10 @@ msgid "Host name (regex)"
 msgstr "Gastheer Contact (Regex)"
 
 #, fuzzy
+msgid "Host name / IP address"
+msgstr "Hostnaam / IP-adres"
+
+#, fuzzy
 msgid "Host name / IP address of Graphite server"
 msgstr "Hostnaam / IP-adres van Graphite server"
 
@@ -26737,9 +26750,6 @@ msgstr "Hostalias"
 #, fuzzy
 msgid "Hostalias (regex)"
 msgstr "Hostalias"
-
-msgid "Hostname / IP address"
-msgstr "Hostnaam / IP-adres"
 
 msgid "Hosts"
 msgstr "Hosts"
@@ -52198,9 +52208,10 @@ msgstr "Specifieke sites"
 msgid "Specific version"
 msgstr "Specifieke versie"
 
+#, fuzzy
 msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
-"This is e.g. useful if you use the ip address or the hostname as base "
+"This is e.g. useful if you use the ip address or the host name as base "
 "address but require some additional prefix to make the correct API call. Use "
 "the custom URL option if you need to specify a more complex API url."
 msgstr ""
@@ -52210,9 +52221,10 @@ msgstr ""
 "juiste API oproep te maken. Gebruik de custom URL optie als u een meer "
 "complexe API url wilt specificeren."
 
+#, fuzzy
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
-"API. This is e.g. useful if you use the ip address or the hostname as base "
+"API. This is e.g. useful if you use the ip address or the host name as base "
 "address and require to specify a path URL in order to make the correct API "
 "calls. Do not prepend or append your custom path with \"/\". Use the custom "
 "URL option if you need to specify a more complex API URL"
@@ -70246,9 +70258,10 @@ msgstr "Gebruik WATO"
 msgid "Use WMI"
 msgstr "Gebruik WMI"
 
+#, fuzzy
 msgid ""
-"Use a alternative field as Hostname in case of SSL Certificate Problems (eg. "
-"the Hostalias )"
+"Use a alternative field as host name in case of SSL Certificate Problems "
+"(eg. the Hostalias )"
 msgstr ""
 "Gebruik een alternatief veld als Hostname in geval van SSL Certificaat "
 "Problemen (bv. de Hostalias )"
@@ -75287,17 +75300,18 @@ msgstr ""
 #, fuzzy
 msgid ""
 "You can specify a host name or IP address different from the IP address of "
-"the host this check will be assigned to."
-msgstr ""
-"U kunt een hostnaam of IP-adres opgeven dat verschilt van het IP-adres van "
-"de host waaraan deze controle zal worden toegewezen."
-
-msgid ""
-"You can specify a hostname or IP address different from the IP address of "
 "the host as configured in your host properties."
 msgstr ""
 "U kunt een hostnaam of IP-adres opgeven dat afwijkt van het IP-adres van de "
 "host zoals dat in uw hosteigenschappen is geconfigureerd."
+
+#, fuzzy
+msgid ""
+"You can specify a host name or IP address different from the IP address of "
+"the host this check will be assigned to."
+msgstr ""
+"U kunt een hostnaam of IP-adres opgeven dat verschilt van het IP-adres van "
+"de host waaraan deze controle zal worden toegewezen."
 
 #, fuzzy
 msgid ""
@@ -78733,16 +78747,12 @@ msgstr "{actual} is te hoog. De maximaal toegestane waarde is {bound}."
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 
-#, python-brace-format
-msgid "{sa._name} ({sa.dotted_string})"
-msgstr ""
-
-msgid "{what.title()} rate"
-msgstr ""
-
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "DNS Hostname or IP address"
+#~ msgstr "DNS Hostnaam of IP-adres"
 
 #~ msgid "Hostname"
 #~ msgstr "Hostnaam"
@@ -78808,10 +78818,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #~ "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
 #~ "users, roles, qos.\n"
 #~ "Als u geen waarde opgeeft, worden de eerste zeven als standaard gebruikt."
-
-#, python-format
-#~ msgid "%s rate"
-#~ msgstr "%s ratio"
 
 #~ msgid "Asserts / s"
 #~ msgstr "Asserts / s"

@@ -510,6 +510,10 @@ msgid "%s"
 msgstr "%s"
 
 #, python-format
+msgid "%s (%s)"
+msgstr ""
+
+#, python-format
 msgid "%s (Customer missing)"
 msgstr "%s (Client lipsă)"
 
@@ -691,6 +695,10 @@ msgstr "%s pe secundă"
 #, python-format
 msgid "%s properties"
 msgstr "%s proprietăți"
+
+#, python-format
+msgid "%s rate"
+msgstr "%s rata"
 
 #, python-format
 msgid "%s read %s"
@@ -4444,7 +4452,8 @@ msgstr "Opțiuni avansate de configurare"
 msgid "Advanced options"
 msgstr "Opțiuni avansate"
 
-msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
+#, fuzzy
+msgid "Advanced: Disable SSL/TLS host name extension support (SNI)"
 msgstr ""
 "Avansat: Dezactivați suportul pentru extensia de nume de gazdă SSL/TLS (SNI)"
 
@@ -5946,9 +5955,6 @@ msgstr ""
 msgid "Altered"
 msgstr "Alterat"
 
-msgid "Alternative Hostname"
-msgstr "Nume gazdă alternativ"
-
 msgid "Alternative Service description"
 msgstr "Descriere alternativă a serviciului"
 
@@ -5963,6 +5969,10 @@ msgstr "Denumire alternativă de afișare pentru servicii"
 
 msgid "Alternative display name of the service, regex match"
 msgstr "Denumirea alternativă de afișare a serviciului, potrivire regex"
+
+#, fuzzy
+msgid "Alternative host name"
+msgstr "Nume gazdă alternativ"
 
 msgid "Alternative names for the service"
 msgstr "Denumiri alternative pentru acest serviciu"
@@ -15239,12 +15249,6 @@ msgstr "DNS"
 msgid "DNS FQDN"
 msgstr "DNS FQDN"
 
-msgid "DNS Hostname"
-msgstr "Nume gazdă DNS"
-
-msgid "DNS Hostname or IP address"
-msgstr "Numele de gazdă DNS sau adresa IP"
-
 msgid "DNS Resolution"
 msgstr "Rezoluția DNS"
 
@@ -15256,6 +15260,10 @@ msgstr "Numele de domeniu DNS pentru a descoperi serverele LDAP de"
 
 msgid "DNS failed queries"
 msgstr "Interogări DNS eșuate"
+
+#, fuzzy
+msgid "DNS host name"
+msgstr "Nume gazdă DNS"
 
 #, fuzzy
 msgid "DNS host name or IP address"
@@ -22428,7 +22436,8 @@ msgstr "Denumirea câmpului: "
 msgid "Field data size"
 msgstr "Dimensiunea datelor de câmp"
 
-msgid "Field(s) to use as a hostname key"
+#, fuzzy
+msgid "Field(s) to use as a host name key"
 msgstr "Câmpul (câmpurile) care trebuie utilizat(e) ca cheie de nume de gazdă"
 
 msgid "Fieldnames to query"
@@ -26434,6 +26443,10 @@ msgid "Host name (regex)"
 msgstr "Numele gazdei (regex)"
 
 #, fuzzy
+msgid "Host name / IP address"
+msgstr "Nume gazdă / adresă IP"
+
+#, fuzzy
 msgid "Host name / IP address of Graphite server"
 msgstr "Numele gazdei / adresa IP a serverului Graphite"
 
@@ -26739,9 +26752,6 @@ msgstr "Hostalias"
 
 msgid "Hostalias (regex)"
 msgstr "Hostalias (regex)"
-
-msgid "Hostname / IP address"
-msgstr "Nume gazdă / adresă IP"
 
 msgid "Hosts"
 msgstr "Gazde"
@@ -52277,9 +52287,10 @@ msgstr "Situri specifice"
 msgid "Specific version"
 msgstr "Versiune specifică"
 
+#, fuzzy
 msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
-"This is e.g. useful if you use the ip address or the hostname as base "
+"This is e.g. useful if you use the ip address or the host name as base "
 "address but require some additional prefix to make the correct API call. Use "
 "the custom URL option if you need to specify a more complex API url."
 msgstr ""
@@ -52289,9 +52300,10 @@ msgstr ""
 "pentru a efectua apelul API corect. Utilizați opțiunea Custom URL (URL "
 "personalizat) dacă trebuie să specificați un URL API mai complex."
 
+#, fuzzy
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
-"API. This is e.g. useful if you use the ip address or the hostname as base "
+"API. This is e.g. useful if you use the ip address or the host name as base "
 "address and require to specify a path URL in order to make the correct API "
 "calls. Do not prepend or append your custom path with \"/\". Use the custom "
 "URL option if you need to specify a more complex API URL"
@@ -70341,9 +70353,10 @@ msgstr "Utilizați WATO"
 msgid "Use WMI"
 msgstr "Utilizați WMI"
 
+#, fuzzy
 msgid ""
-"Use a alternative field as Hostname in case of SSL Certificate Problems (eg. "
-"the Hostalias )"
+"Use a alternative field as host name in case of SSL Certificate Problems "
+"(eg. the Hostalias )"
 msgstr ""
 "Utilizați un câmp alternativ ca nume de gazdă în cazul în care există "
 "probleme cu certificatul SSL (de exemplu, Hostalias)."
@@ -75386,17 +75399,18 @@ msgstr ""
 #, fuzzy
 msgid ""
 "You can specify a host name or IP address different from the IP address of "
-"the host this check will be assigned to."
-msgstr ""
-"Puteți specifica un nume de gazdă sau o adresă IP diferită de adresa IP a "
-"gazdei căreia îi va fi atribuită această verificare."
-
-msgid ""
-"You can specify a hostname or IP address different from the IP address of "
 "the host as configured in your host properties."
 msgstr ""
 "Puteți specifica un nume de gazdă sau o adresă IP diferită de adresa IP a "
 "gazdei, așa cum este configurată în proprietățile gazdei."
+
+#, fuzzy
+msgid ""
+"You can specify a host name or IP address different from the IP address of "
+"the host this check will be assigned to."
+msgstr ""
+"Puteți specifica un nume de gazdă sau o adresă IP diferită de adresa IP a "
+"gazdei căreia îi va fi atribuită această verificare."
 
 #, fuzzy
 msgid ""
@@ -78832,16 +78846,12 @@ msgstr "{actual} este prea mare. Valoarea maximă admisă este {bound}."
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 
-#, python-brace-format
-msgid "{sa._name} ({sa.dotted_string})"
-msgstr ""
-
-msgid "{what.title()} rate"
-msgstr ""
-
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "DNS Hostname or IP address"
+#~ msgstr "Numele de gazdă DNS sau adresa IP"
 
 #~ msgid "Hostname"
 #~ msgstr "Nume gazdă"
@@ -78911,10 +78921,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ "users, roles, qos.\n"
 #~ "Dacă nu specificați nicio valoare, primele șapte sunt utilizate ca "
 #~ "valoare implicită."
-
-#, python-format
-#~ msgid "%s rate"
-#~ msgstr "%s rata"
 
 #~ msgid "Asserts / s"
 #~ msgstr "Afirmații / s"

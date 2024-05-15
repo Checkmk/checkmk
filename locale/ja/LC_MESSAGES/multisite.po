@@ -502,6 +502,10 @@ msgid "%s"
 msgstr "%s"
 
 #, python-format
+msgid "%s (%s)"
+msgstr ""
+
+#, python-format
 msgid "%s (Customer missing)"
 msgstr "%s(顧客がいません)"
 
@@ -682,6 +686,10 @@ msgstr "%s/秒"
 #, python-format
 msgid "%s properties"
 msgstr "%s プロパティ"
+
+#, python-format
+msgid "%s rate"
+msgstr "%sレート"
 
 #, python-format
 msgid "%s read %s"
@@ -4340,7 +4348,8 @@ msgstr "利用可能なオプション"
 msgid "Advanced options"
 msgstr "利用可能なオプション"
 
-msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
+#, fuzzy
+msgid "Advanced: Disable SSL/TLS host name extension support (SNI)"
 msgstr "詳細:SSL / TLSホスト名拡張サポート(SNI)を無効にする"
 
 #, fuzzy
@@ -5780,9 +5789,6 @@ msgstr ""
 msgid "Altered"
 msgstr "アラートされた"
 
-msgid "Alternative Hostname"
-msgstr "代替ホスト名"
-
 msgid "Alternative Service description"
 msgstr "代替サービスの説明"
 
@@ -5797,6 +5803,10 @@ msgstr "サービスの代替表示名"
 
 msgid "Alternative display name of the service, regex match"
 msgstr "サービスの代替表示名、正規表現との一致"
+
+#, fuzzy
+msgid "Alternative host name"
+msgstr "代替ホスト名"
 
 msgid "Alternative names for the service"
 msgstr "サービスの別名"
@@ -14858,12 +14868,6 @@ msgstr "DNS"
 msgid "DNS FQDN"
 msgstr "DNS FQDN"
 
-msgid "DNS Hostname"
-msgstr "DNSホスト名"
-
-msgid "DNS Hostname or IP address"
-msgstr "DNSホスト名またはIPアドレス"
-
 msgid "DNS Resolution"
 msgstr "DNS解決"
 
@@ -14875,6 +14879,10 @@ msgstr "のLDAPサーバーを検出するためのDNSドメイン名"
 
 msgid "DNS failed queries"
 msgstr "DNSがクエリに失敗しました"
+
+#, fuzzy
+msgid "DNS host name"
+msgstr "DNSホスト名"
 
 #, fuzzy
 msgid "DNS host name or IP address"
@@ -21932,7 +21940,8 @@ msgstr "フィールド名: "
 msgid "Field data size"
 msgstr "フィールドデータサイズ"
 
-msgid "Field(s) to use as a hostname key"
+#, fuzzy
+msgid "Field(s) to use as a host name key"
 msgstr "ホスト名キーとして使用するフィールド(複数可)"
 
 msgid "Fieldnames to query"
@@ -25886,6 +25895,10 @@ msgid "Host name (regex)"
 msgstr "ホスト名(正規表現)"
 
 #, fuzzy
+msgid "Host name / IP address"
+msgstr "ホスト名/IPアドレス"
+
+#, fuzzy
 msgid "Host name / IP address of Graphite server"
 msgstr "Graphiteサーバーのホスト名/IPアドレス"
 
@@ -26184,9 +26197,6 @@ msgstr "Hostalias"
 
 msgid "Hostalias (regex)"
 msgstr "ホストのエイリアス(正規表現)"
-
-msgid "Hostname / IP address"
-msgstr "ホスト名/IPアドレス"
 
 msgid "Hosts"
 msgstr "ホスト"
@@ -51149,9 +51159,10 @@ msgstr "特定のサイト"
 msgid "Specific version"
 msgstr "特定のバージョン"
 
+#, fuzzy
 msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
-"This is e.g. useful if you use the ip address or the hostname as base "
+"This is e.g. useful if you use the ip address or the host name as base "
 "address but require some additional prefix to make the correct API call. Use "
 "the custom URL option if you need to specify a more complex API url."
 msgstr ""
@@ -51161,9 +51172,10 @@ msgstr ""
 "なAPI URLを指定する必要がある場合は、カスタムURLオプションを使用してくださ"
 "い。"
 
+#, fuzzy
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
-"API. This is e.g. useful if you use the ip address or the hostname as base "
+"API. This is e.g. useful if you use the ip address or the host name as base "
 "address and require to specify a path URL in order to make the correct API "
 "calls. Do not prepend or append your custom path with \"/\". Use the custom "
 "URL option if you need to specify a more complex API URL"
@@ -68559,9 +68571,10 @@ msgstr "WATOを使用する"
 msgid "Use WMI"
 msgstr "WMIを使用する"
 
+#, fuzzy
 msgid ""
-"Use a alternative field as Hostname in case of SSL Certificate Problems (eg. "
-"the Hostalias )"
+"Use a alternative field as host name in case of SSL Certificate Problems "
+"(eg. the Hostalias )"
 msgstr ""
 "SSL証明書に問題がある場合は、ホスト名として代替フィールドを使用します(例: "
 "Hostalias)"
@@ -73382,17 +73395,18 @@ msgstr ""
 #, fuzzy
 msgid ""
 "You can specify a host name or IP address different from the IP address of "
-"the host this check will be assigned to."
-msgstr ""
-"このチェックが割り当てられるホストのIPアドレスとは異なるホスト名またはIPアド"
-"レスを指定できます。"
-
-msgid ""
-"You can specify a hostname or IP address different from the IP address of "
 "the host as configured in your host properties."
 msgstr ""
 "ホストのプロパティで構成されているホストのIPアドレスとは異なるホスト名または"
 "IPアドレスを指定できます。"
+
+#, fuzzy
+msgid ""
+"You can specify a host name or IP address different from the IP address of "
+"the host this check will be assigned to."
+msgstr ""
+"このチェックが割り当てられるホストのIPアドレスとは異なるホスト名またはIPアド"
+"レスを指定できます。"
 
 #, fuzzy
 msgid ""
@@ -76746,16 +76760,12 @@ msgstr "{actual}%s が高すぎます。最大許容値は {bound}です。"
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 
-#, python-brace-format
-msgid "{sa._name} ({sa.dotted_string})"
-msgstr ""
-
-msgid "{what.title()} rate"
-msgstr ""
-
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "DNS Hostname or IP address"
+#~ msgstr "DNSホスト名またはIPアドレス"
 
 #~ msgid "Hostname"
 #~ msgstr "ホスト名"
@@ -76820,10 +76830,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ "可能な値は次のとおりです:cpgs、volumes、hosts、capacity、system、ports、"
 #~ "remotecopy、hostsets、volumesets、vluns、flashcache、users、roles、qos。\n"
 #~ "値を指定しない場合、最初の7つがデフォルトとして使用されます。"
-
-#, python-format
-#~ msgid "%s rate"
-#~ msgstr "%sレート"
 
 #~ msgid "Asserts / s"
 #~ msgstr "アサート/秒"

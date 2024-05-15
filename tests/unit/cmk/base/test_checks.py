@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import tests.testlib as testlib
+from tests.testlib import repo_path
 
 
 def test_check_plugin_header() -> None:
     for plugin in (
-        p
-        for p in (testlib.repo_path() / "cmk/base/legacy_checks").iterdir()
-        if p.name != "__pycache__"
+        p for p in (repo_path() / "cmk/base/legacy_checks").iterdir() if p.name != "__pycache__"
     ):
         with plugin.open() as handle:
             shebang = handle.readline().strip()

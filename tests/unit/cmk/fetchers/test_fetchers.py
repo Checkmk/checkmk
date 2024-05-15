@@ -20,7 +20,7 @@ import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib import (
     BackendOIDSpec,
@@ -442,19 +442,24 @@ class TestSNMPFetcherFetch:
             }
         )
 
-    @pytest.fixture
-    def fetcher(self, tmp_path: Path) -> SNMPFetcher:
+    @staticmethod
+    def create_fetcher(
+        *,
+        path: Path,
+        sections: SectionMap[SNMPSectionMeta] | None = None,
+        do_status_data_inventory: bool = False,
+    ) -> SNMPFetcher:
         return SNMPFetcher(
-            sections={},
+            sections={} if sections is None else sections,
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=False,
-                oid_cache_dir=tmp_path,
+                oid_cache_dir=path,
             ),
-            do_status_data_inventory=False,
+            do_status_data_inventory=do_status_data_inventory,
             section_store_path="/tmp/db",
-            stored_walk_path=tmp_path,
-            walk_cache_path=tmp_path,
+            stored_walk_path=path,
+            walk_cache_path=path,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
@@ -472,14 +477,13 @@ class TestSNMPFetcherFetch:
             ),
         )
 
-    def test_fetch_from_io_non_empty(self, fetcher: SNMPFetcher, monkeypatch: MonkeyPatch) -> None:
+    def test_fetch_from_io_non_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         table = [["1"]]
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: table)
         section_name = SectionName("pim")
-        monkeypatch.setattr(
-            fetcher,
-            "sections",
-            {
+        fetcher = self.create_fetcher(
+            path=tmp_path,
+            sections={
                 section_name: SNMPSectionMeta(
                     checking=True,
                     disabled=False,
@@ -512,14 +516,11 @@ class TestSNMPFetcherFetch:
             {section_name: [table]}
         )
 
-    def test_fetch_from_io_partially_empty(
-        self, fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
-    ) -> None:
+    def test_fetch_from_io_partially_empty(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
         section_name = SectionName("pum")
-        monkeypatch.setattr(
-            fetcher,
-            "sections",
-            {
+        fetcher = self.create_fetcher(
+            path=tmp_path,
+            sections={
                 section_name: SNMPSectionMeta(
                     checking=True,
                     disabled=False,
@@ -547,7 +548,7 @@ class TestSNMPFetcherFetch:
             {section_name: [table, []]}
         )
 
-    def test_fetch_from_io_empty(self, monkeypatch: MonkeyPatch, fetcher: SNMPFetcher) -> None:
+    def test_fetch_from_io_empty(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: [])
         monkeypatch.setattr(
             snmp,
@@ -561,6 +562,7 @@ class TestSNMPFetcherFetch:
             use_only_cache=False,
             file_cache_mode=FileCacheMode.DISABLED,
         )
+        fetcher = self.create_fetcher(path=tmp_path)
         assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
             {SectionName("pam"): [[]]}
         )
@@ -580,10 +582,10 @@ class TestSNMPFetcherFetch:
         return table
 
     def test_mode_inventory_do_status_data_inventory(
-        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
-        monkeypatch.setattr(fetcher, "do_status_data_inventory", True)
+        fetcher = self.create_fetcher(path=tmp_path, do_status_data_inventory=True)
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",
@@ -601,10 +603,10 @@ class TestSNMPFetcherFetch:
         )
 
     def test_mode_inventory_not_do_status_data_inventory(
-        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
-        monkeypatch.setattr(fetcher, "do_status_data_inventory", False)
+        fetcher = self.create_fetcher(path=tmp_path)
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",
@@ -622,10 +624,10 @@ class TestSNMPFetcherFetch:
         )
 
     def test_mode_checking_do_status_data_inventory(
-        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
-        monkeypatch.setattr(fetcher, "do_status_data_inventory", True)
+        fetcher = self.create_fetcher(path=tmp_path, do_status_data_inventory=True)
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",
@@ -643,9 +645,9 @@ class TestSNMPFetcherFetch:
         )
 
     def test_mode_checking_not_do_status_data_inventory(
-        self, fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        monkeypatch.setattr(fetcher, "do_status_data_inventory", False)
+        fetcher = self.create_fetcher(path=tmp_path)
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",

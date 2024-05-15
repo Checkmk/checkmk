@@ -54,6 +54,7 @@ max-complexity = 15
 [tool.isort]
 known_testlib = "tests.testlib"
 known_compositiontests = "tests.composition"
+known_integrationtests = "tests.integration"
 known_unittests = "tests.unit,tests.plugins_integration,tests.update"
 known_livestatus = "livestatus"
 known_omd = "omdlib"
@@ -72,7 +73,7 @@ known_werks = "werks"
 known_first_party = "cmk"
 
 # Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
+sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,INTEGRATIONTESTS,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
 CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
 CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
 

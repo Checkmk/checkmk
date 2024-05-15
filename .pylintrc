@@ -150,7 +150,12 @@ disable=
     broad-exception-raised,
     #---------------------------------------------------------------------------
     # Import order is checked by isort
-    wrong-import-order
+    wrong-import-order,
+    #---------------------------------------------------------------------------
+    # New in version 3.2.0 which causes new findings
+    # TODO: fix these new findings - https://jira.lan.tribe29.com/browse/CMK-17473
+    possibly-used-before-assignment,
+    contextmanager-generator-missing-cleanup
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

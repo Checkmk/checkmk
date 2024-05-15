@@ -467,7 +467,9 @@ class RulesetCollection:
             for rule in rules.get_folder_rules(folder)
             if isinstance(rule.value, dict)  # this is true for all _FormSpec_ SSC rules.
         ):
-            subprocess.check_call(["cmk", "--automation", "update-passwords-merged-file"])
+            subprocess.check_call(
+                ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
+            )
 
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets

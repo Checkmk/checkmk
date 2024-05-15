@@ -72,7 +72,9 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
 
 def update_passwords_merged_file() -> None:
     # update the "live" merged passwords file
-    subprocess.check_call(["cmk", "--automation", "update-passwords-merged-file"])
+    subprocess.check_call(
+        ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
+    )
 
 
 def join_password_specs(

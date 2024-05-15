@@ -1,0 +1,12 @@
+Title: check_mailboxes: fix issue with EWS distinguished folder
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1715759263
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+The active check "check_mailboxes" could fail with a <code>KeyError: 'folders'</code> when trying to retrieve an exchange mailbox's folders via the EWS protocol.
+
+With this werk the used library <code>exchangelib</code> is updated to v5.4.0, which prevents the underlying issue in retrieving certain exchange folders.

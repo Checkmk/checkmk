@@ -562,21 +562,15 @@ class TestSNMPFetcherFetch:
             {SectionName("pam"): [[]]}
         )
 
-    @pytest.fixture(name="set_sections")
-    def _set_sections(self, monkeypatch: MonkeyPatch) -> list[list[str]]:
-        table = [["1"]]
-        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: table)
+    def test_mode_inventory_do_status_data_inventory(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: [["1"]])
         monkeypatch.setattr(
             SNMPFetcher,
             "inventory_sections",
             property(lambda self: {SectionName("pim"), SectionName("pam")}),
         )
-        return table
-
-    def test_mode_inventory_do_status_data_inventory(
-        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
-    ) -> None:
-        table = set_sections
         fetcher = self.create_fetcher(
             path=tmp_path,
             sections={
@@ -602,13 +596,18 @@ class TestSNMPFetcherFetch:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(
-            {SectionName("pim"): [table]}
+            {SectionName("pim"): [[["1"]]]}
         )
 
     def test_mode_inventory_not_do_status_data_inventory(
-        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        table = set_sections
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: [["1"]])
+        monkeypatch.setattr(
+            SNMPFetcher,
+            "inventory_sections",
+            property(lambda self: {SectionName("pim"), SectionName("pam")}),
+        )
         fetcher = self.create_fetcher(
             path=tmp_path,
             sections={
@@ -633,13 +632,18 @@ class TestSNMPFetcherFetch:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(
-            {SectionName("pim"): [table]}
+            {SectionName("pim"): [[["1"]]]}
         )
 
     def test_mode_checking_do_status_data_inventory(
-        self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        table = set_sections
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: [["1"]])
+        monkeypatch.setattr(
+            SNMPFetcher,
+            "inventory_sections",
+            property(lambda self: {SectionName("pim"), SectionName("pam")}),
+        )
         fetcher = self.create_fetcher(
             path=tmp_path,
             sections={
@@ -665,7 +669,7 @@ class TestSNMPFetcherFetch:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(
-            {SectionName("pim"): [table]}
+            {SectionName("pim"): [[["1"]]]}
         )
 
     def test_mode_checking_not_do_status_data_inventory(

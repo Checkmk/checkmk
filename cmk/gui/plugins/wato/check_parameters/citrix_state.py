@@ -27,7 +27,20 @@ def _parameter_valuespec_citrix_state():
                     ],
                     optional_keys=False,
                 ),
-            )
+            ),
+            (
+                "vmtoolsstate",
+                Dictionary(
+                    title=_("Interpretation of VM Tools States"),
+                    elements=[
+                        ("NotPresent", MonitoringState(title=_("Not Present"), default_value=2)),
+                        ("Unknown", MonitoringState(title=_("Unknown"), default_value=3)),
+                        ("NotStarted", MonitoringState(title=_("Not Started"), default_value=1)),
+                        ("Running", MonitoringState(title=_("Running"), default_value=0)),
+                    ],
+                    optional_keys=False,
+                ),
+            ),
         ],
     )
 

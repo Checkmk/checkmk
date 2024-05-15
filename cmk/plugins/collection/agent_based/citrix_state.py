@@ -16,6 +16,12 @@ DEFAULT_PARAMS = {
         "Registered": 0,
         "AgentError": 2,
     },
+    "vmtoolsstate": {
+        "NotPresent": 2,
+        "Unknown": 3,
+        "NotStarted": 1,
+        "Running": 0,
+    },
 }
 _CONSTANTS_MAP = {
     "maintenancemode": {

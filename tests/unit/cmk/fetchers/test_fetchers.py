@@ -227,6 +227,11 @@ class TestIPMISensor:
         )
 
 
+class IPMIFetcherStub(IPMIFetcher):
+    def open(self) -> None:
+        raise IpmiException()
+
+
 class TestIPMIFetcher:
     @pytest.fixture
     def fetcher(self) -> IPMIFetcher:
@@ -235,12 +240,7 @@ class TestIPMIFetcher:
     def test_repr(self, fetcher: IPMIFetcher) -> None:
         assert isinstance(repr(fetcher), str)
 
-    def test_with_cached_does_not_open(self, monkeypatch: MonkeyPatch) -> None:
-        def open_(*args):
-            raise IpmiException()
-
-        monkeypatch.setattr(IPMIFetcher, "open", open_)
-
+    def test_with_cached_does_not_open(self) -> None:
         file_cache = StubFileCache[AgentRawData](
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
@@ -250,15 +250,10 @@ class TestIPMIFetcher:
         )
         file_cache.write(AgentRawData(b"<<<whatever>>>"), Mode.CHECKING)
 
-        with IPMIFetcher(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
+        with IPMIFetcherStub(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING).is_ok()
 
-    def test_command_raises_IpmiException_handling(self, monkeypatch: MonkeyPatch) -> None:
-        def open_(*args: object) -> None:
-            raise IpmiException()
-
-        monkeypatch.setattr(IPMIFetcher, "open", open_)
-
+    def test_command_raises_IpmiException_handling(self) -> None:
         file_cache = StubFileCache[AgentRawData](
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
@@ -267,7 +262,7 @@ class TestIPMIFetcher:
             file_cache_mode=FileCacheMode.DISABLED,
         )
 
-        with IPMIFetcher(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
+        with IPMIFetcherStub(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
         assert isinstance(raw_data.error, MKFetcherError)

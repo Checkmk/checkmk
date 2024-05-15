@@ -12,7 +12,7 @@ import pytest
 from pylint.lint import PyLinter
 from pytest_mock import MockerFixture
 
-from tests.testlib.pylint_checker_forbidden_objects import (
+from tests.pylint.checker_forbidden_objects import (
     ABCMetaChecker,
     ForbiddenFunctionChecker,
     SixEnsureStrBinChecker,

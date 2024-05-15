@@ -9,11 +9,11 @@ init-hook=
     sys.path.insert(0, __file__[:__file__.rfind("/.venv")]);  # __file__ is somewhere deep inside the .venv
     import tests.conftest;
 load-plugins=
-    tests.testlib.pylint_cmk,
-    tests.testlib.pylint_checker_localization,
-    tests.testlib.pylint_checker_forbidden_objects,
-    tests.testlib.pylint_checker_cmk_module_layers,
-    tests.testlib.pylint_checker_layering_violation,
+    tests.pylint.cmk_edition_ignores,
+    tests.pylint.checker_localization,
+    tests.pylint.checker_forbidden_objects,
+    tests.pylint.checker_cmk_module_layers,
+    tests.pylint.checker_layering_violation,
     pylint.extensions.bad_builtin,
     pylint_pydantic
 jobs=0

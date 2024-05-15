@@ -58,7 +58,6 @@ def main() {
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
 
     def build_image = true;
-    def build_cloud_images = edition == "cloud";
 
     def run_integration_tests = true;
     def run_image_tests = true;
@@ -70,7 +69,6 @@ def main() {
         |edition:............... │${edition}│
         |base_folder:........... │${base_folder}│
         |build_image:........... │${build_image}│
-        |build_cloud_images:.... │${build_cloud_images}│
         |run_integration_tests:. │${run_integration_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |run_update_tests:...... │${run_update_tests}│
@@ -89,13 +87,6 @@ def main() {
             condition: build_image,
             raiseOnError: false) {
         build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
-    }
-
-    success &= smart_stage(
-            name: "Build Cloud Images",
-            condition: build_cloud_images,
-            raiseOnError: false) {
-        build(job: "${base_folder}/build-cmk-cloud-images", parameters: job_parameters);
     }
 
     parallel([

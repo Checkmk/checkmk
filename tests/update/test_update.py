@@ -3,15 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import (
-    register_controller,
-    wait_for_agent_cache_omd_status,
-    wait_until_host_receives_data,
-)
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name, get_services_with_status
 from tests.testlib.version import CMKVersion, version_from_env
@@ -28,7 +22,6 @@ logger = logging.getLogger(__name__)
 @pytest.mark.cee
 def test_update(
     test_setup: tuple[Site, bool],
-    agent_ctl: Path,
 ) -> None:
     test_site, disable_interactive_mode = test_setup
     base_version = test_site.version
@@ -40,14 +33,11 @@ def test_update(
         hostname=hostname, attributes={"ipaddress": ip_address, "tag_agent": "cmk-agent"}
     )
     test_site.activate_changes_and_wait_for_core_reload()
-    register_controller(agent_ctl, test_site, hostname, site_address=ip_address)
-    wait_until_host_receives_data(test_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
     test_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
     test_site.openapi.activate_changes_and_wait_for_completion()
-
-    test_site.reschedule_services(hostname, max_count=20)
+    test_site.schedule_check(hostname, "Check_MK", 0)
 
     # get baseline monitoring data for each host
     base_data = test_site.get_host_services(hostname)
@@ -79,17 +69,10 @@ def test_update(
     logger.info("Discovering services and waiting for completion...")
     target_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
     target_site.openapi.activate_changes_and_wait_for_completion()
-
-    # services such as 'omd status' rely on cache data:
-    # wait for the cache to be up-to-date and reschedule services
-    wait_for_agent_cache_omd_status(target_site)
     target_site.schedule_check(hostname, "Check_MK", 0)
-
-    target_site.reschedule_services(hostname, max_count=20)
 
     # get update monitoring data
     target_data = target_site.get_host_services(hostname)
-
     target_ok_services = get_services_with_status(target_data, 0)
 
     not_found_services = [service for service in base_data if service not in target_data]

@@ -155,6 +155,34 @@ pytestmark = pytest.mark.checks
             ],
             id="all_parameters",
         ),
+        pytest.param(
+            {
+                "service_description": "Email",
+                "fetch": (
+                    "IMAP",
+                    {
+                        "server": "imap.gmx.de",
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                        "connection": {"disable_tls": True, "port": 123},
+                    },
+                ),
+                "forward": {
+                    "method": ("udp", "localhost", 123),
+                },
+            },
+            [
+                "--fetch-protocol=IMAP",
+                "--fetch-server=imap.gmx.de",
+                "--fetch-port=123",
+                "--fetch-username=me@gmx.de",
+                "--fetch-password=p4ssw0rd",
+                "--forward-ec",
+                # I don't see how this is supposed to work.
+                # The active check will try to open a TCP (!) connection to "'localhost'" on port "'123)'" AFAICT.
+                "--forward-method=('udp', 'localhost', 123)",
+            ],
+            id="syslog forwarding",
+        ),
     ],
 )
 def test_check_mail_argument_parsing(

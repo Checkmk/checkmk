@@ -293,25 +293,6 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
     )
 
 
-def _set_tz(timezone: str | None) -> str | None:
-    old_tz = os.environ.get("TZ")
-    if timezone is None:
-        del os.environ["TZ"]
-    else:
-        os.environ["TZ"] = timezone
-    time.tzset()
-    return old_tz
-
-
-@contextmanager
-def set_timezone(timezone: str) -> Iterator[None]:
-    old_tz = _set_tz(timezone)
-    try:
-        yield
-    finally:
-        _set_tz(old_tz)
-
-
 __all__ = [
     "repo_path",
     "add_python_paths",
@@ -319,7 +300,6 @@ __all__ = [
     "fake_version_and_paths",
     "skip_unwanted_test_types",
     "wait_until_liveproxyd_ready",
-    "set_timezone",
     "Site",
     "SiteFactory",
     "import_module_hack",

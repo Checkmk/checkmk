@@ -6,7 +6,8 @@
 
 def main() {
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/";
-    def editions = versioning.get_editions().split(' ').grep();
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def editions = versioning.get_editions();
 
     def job_parameters = [
         [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE],

@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import Counter
+
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import (
@@ -20,6 +23,25 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+
+
+def _validate_input_parameters(value: str, varprefix: str) -> None:
+    input_parameters = value.split(",")
+    for parameter in input_parameters:
+        if parameter.strip() in ["''", "\\"]:
+            raise MKUserError(
+                varprefix,
+                _(
+                    "Input parameters must have a value and cannot be an empty string or be a single backslash."
+                ),
+            )
+
+        characters = Counter(parameter)
+        if characters["'"] % 2 != 0:
+            raise MKUserError(
+                varprefix,
+                _("Input parameters must not contain an odd number of single quotes."),
+            )
 
 
 def _valuespec_active_checks_sql() -> Dictionary:
@@ -132,6 +154,7 @@ def _valuespec_active_checks_sql() -> Dictionary:
                                     "Input parameters, if required by the database procedure. "
                                     "If several parameters are required, use commas to separate them."
                                 ),
+                                validate=_validate_input_parameters,
                             ),
                         ),
                     ],

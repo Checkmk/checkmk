@@ -10,7 +10,7 @@ from types import ModuleType
 
 import pytest
 
-from tests.testlib import import_module_hack
+from tests.unit.import_module_hack import import_module_hack
 
 from cmk.utils.mailbox import _active_check_main_core
 

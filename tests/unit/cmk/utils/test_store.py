@@ -19,8 +19,9 @@ import pytest
 from pydantic import BaseModel
 from pytest import MonkeyPatch
 
-from tests.testlib import import_module_hack
 from tests.testlib.utils import wait_until
+
+from tests.unit.import_module_hack import import_module_hack
 
 import cmk.utils.debug
 import cmk.utils.store as store

@@ -691,10 +691,14 @@ class TestSNMPFetcherFetch:
         assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK({})
 
 
+class SNMPFetcherStub(SNMPFetcher):
+    def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
+        return {SectionName("section"): [[b"fetched"]]}
+
+
 class TestSNMPFetcherFetchCache:
-    @pytest.fixture
-    def fetcher(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SNMPFetcher:
-        fetcher = SNMPFetcher(
+    def test_fetch_reading_cache_in_discovery_mode(self, tmp_path: Path) -> None:
+        fetcher = SNMPFetcherStub(
             sections={},
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,
@@ -721,14 +725,6 @@ class TestSNMPFetcherFetchCache:
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
         )
-        monkeypatch.setattr(
-            fetcher,
-            "_fetch_from_io",
-            lambda mode: {SectionName("section"): [[b"fetched"]]},
-        )
-        return fetcher
-
-    def test_fetch_reading_cache_in_discovery_mode(self, fetcher: SNMPFetcher) -> None:
         file_cache = StubFileCache[SNMPRawData](
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),

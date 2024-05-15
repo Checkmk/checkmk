@@ -41,15 +41,6 @@ def test_update(
 
     # get baseline monitoring data for each host
     base_data = test_site.get_host_services(hostname)
-    ignore_data = [
-        # Check_MK service turning into CRIT after the update.
-        # See CMK-17002. TODO: restore service after ticket is done.
-        "Check_MK",
-    ]
-
-    for data in ignore_data:
-        if data in base_data:
-            base_data.pop(data)
 
     base_ok_services = get_services_with_status(base_data, 0)
     assert len(base_ok_services) > 0

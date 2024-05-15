@@ -118,7 +118,7 @@ class LicenseUsageExtensions:
     ntop: bool
 
     def for_report(self) -> RawLicenseUsageExtensions:
-        return {"ntop": self.ntop}
+        return RawLicenseUsageExtensions(ntop=self.ntop)
 
 
 class RawLicenseUsageSample(TypedDict):

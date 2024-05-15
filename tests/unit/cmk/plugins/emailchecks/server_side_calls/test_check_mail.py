@@ -7,9 +7,10 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from .checktestlib import ActiveCheck
+from cmk.plugins.emailchecks.server_side_calls.check_mail import active_check_mail
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config, Secret
 
-pytestmark = pytest.mark.checks
+HOST_CONFIG = HostConfig(name="myhost", ipv4_config=IPv4Config(address="0.0.0.1"))
 
 
 @pytest.mark.parametrize(
@@ -17,49 +18,52 @@ pytestmark = pytest.mark.checks
     [
         pytest.param(
             {
+                "service_description": "Email",
                 "fetch": (
                     "IMAP",
                     {
                         "connection": {"disable_tls": False, "port": 143},
-                        "auth": ("basic", ("foo", "bar")),
+                        "auth": ("basic", {"username": "foo", "password": Secret(0)}),
                     },
                 ),
-                "connect_timeout": 15,
+                "connect_timeout": 15.0,
             },
-            [
+            (
                 "--fetch-protocol=IMAP",
-                "--fetch-server=$HOSTADDRESS$",
+                "--fetch-server=0.0.0.1",
                 "--fetch-tls",
                 "--fetch-port=143",
                 "--fetch-username=foo",
-                "--fetch-password=bar",
+                Secret(0).unsafe("--fetch-password=%s"),
                 "--connect-timeout=15",
-            ],
+            ),
             id="imap",
         ),
         pytest.param(
             {
+                "service_description": "Email",
                 "fetch": (
                     "EWS",
                     {
                         "connection": {"disable_tls": True, "port": 143},
-                        "auth": ("basic", ("foo", "bar")),
+                        "auth": ("basic", {"username": "foo", "password": Secret(0)}),
                     },
                 ),
                 "connect_timeout": 15,
             },
-            [
+            (
                 "--fetch-protocol=EWS",
-                "--fetch-server=$HOSTADDRESS$",
+                "--fetch-server=0.0.0.1",
                 "--fetch-port=143",
                 "--fetch-username=foo",
-                "--fetch-password=bar",
+                Secret(0).unsafe("--fetch-password=%s"),
                 "--connect-timeout=15",
-            ],
+            ),
             id="ews_no_tls",
         ),
         pytest.param(
             {
+                "service_description": "Email",
                 "fetch": (
                     "EWS",
                     {
@@ -67,23 +71,27 @@ pytestmark = pytest.mark.checks
                         "connection": {"disable_tls": True, "port": 143},
                         "auth": (
                             "oauth2",
-                            ("client_id", ("password", "client_secret"), "tenant_id"),
+                            {
+                                "client_id": "client_id",
+                                "client_secret": Secret(0),
+                                "tenant_id": "tenant_id",
+                            },
                         ),
                         "email_address": "foo@bar.com",
                     },
                 ),
                 "connect_timeout": 15,
             },
-            [
+            (
                 "--fetch-protocol=EWS",
                 "--fetch-server=$HOSTNAME$",
                 "--fetch-port=143",
                 "--fetch-client-id=client_id",
-                "--fetch-client-secret=client_secret",
+                Secret(0).unsafe("--fetch-client-secret=%s"),
                 "--fetch-tenant-id=tenant_id",
                 "--fetch-email-address=foo@bar.com",
                 "--connect-timeout=15",
-            ],
+            ),
             id="ews_oauth",
         ),
         pytest.param(
@@ -93,28 +101,28 @@ pytestmark = pytest.mark.checks
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                        "auth": ("basic", {"username": "me@gmx.de", "password": Secret(0)}),
                         "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
                 "forward": {
-                    "facility": 2,
+                    "facility": ("mail", 2),
                     "application": None,
                     "host": "me.too@checkmk.com",
-                    "cleanup": True,
+                    "cleanup": ("delete", "delete"),
                 },
             },
-            [
+            (
                 "--fetch-protocol=IMAP",
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                "--fetch-password=p4ssw0rd",
+                Secret(0).unsafe("--fetch-password=%s"),
                 "--forward-ec",
                 "--forward-facility=2",
                 "--forward-host=me.too@checkmk.com",
                 "--cleanup=delete",
-            ],
+            ),
             id="imap_with_forward",
         ),
         pytest.param(
@@ -124,26 +132,26 @@ pytestmark = pytest.mark.checks
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                        "auth": ("basic", {"username": "me@gmx.de", "password": Secret(0)}),
                         "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
                 "forward": {
-                    "facility": 2,
+                    "facility": ("mail", 2),
                     "host": "me.too@checkmk.com",
-                    "method": "my_method",
+                    "method": ("ec", ("socket", "my_method")),
                     "match_subject": "subject",
-                    "application": "application",
+                    "application": ("spec", "application"),
                     "body_limit": 1000,
-                    "cleanup": "archive",
+                    "cleanup": ("move", "archive"),
                 },
             },
-            [
+            (
                 "--fetch-protocol=IMAP",
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                "--fetch-password=p4ssw0rd",
+                Secret(0).unsafe("--fetch-password=%s"),
                 "--forward-ec",
                 "--forward-method=my_method",
                 "--match-subject=subject",
@@ -152,7 +160,7 @@ pytestmark = pytest.mark.checks
                 "--forward-app=application",
                 "--body-limit=1000",
                 "--cleanup=archive",
-            ],
+            ),
             id="all_parameters",
         ),
         pytest.param(
@@ -162,32 +170,35 @@ pytestmark = pytest.mark.checks
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                        "auth": ("basic", {"username": "me@gmx.de", "password": Secret(0)}),
                         "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
                 "forward": {
-                    "method": ("udp", "localhost", 123),
+                    "method": ("syslog", {"protocol": "udp", "address": "localhost", "port": 123}),
                 },
             },
-            [
+            (
                 "--fetch-protocol=IMAP",
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                "--fetch-password=p4ssw0rd",
+                Secret(0).unsafe("--fetch-password=%s"),
                 "--forward-ec",
                 # I don't see how this is supposed to work.
                 # The active check will try to open a TCP (!) connection to "'localhost'" on port "'123)'" AFAICT.
                 "--forward-method=('udp', 'localhost', 123)",
-            ],
+            ),
             id="syslog forwarding",
         ),
     ],
 )
 def test_check_mail_argument_parsing(
-    params: Mapping[str, object], expected_args: Sequence[str]
+    params: Mapping[str, object], expected_args: Sequence[str | Secret]
 ) -> None:
     """Tests if all required arguments are present."""
-    active_check = ActiveCheck("check_mail")
-    assert active_check.run_argument_function(params) == expected_args
+    (actual,) = active_check_mail(params, HOST_CONFIG)
+    assert actual == ActiveCheckCommand(
+        service_description="Email",
+        command_arguments=expected_args,
+    )

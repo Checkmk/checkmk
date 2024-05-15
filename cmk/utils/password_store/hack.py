@@ -59,6 +59,7 @@ HACK_CHECKS = {
     "ldap": True,
     "mail_loop": True,  # TODO
     "mailboxes": True,  # TODO
+    "mail": True,  # TODO
     "mkevents": False,  # has no secret
     "notify_count": False,  # has no secret
     "smtp": True,

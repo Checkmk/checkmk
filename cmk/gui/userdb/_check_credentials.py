@@ -91,6 +91,7 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
 
     users = load_users(lock=True)
     users[username] = new_user_template(connection_id)
+    users[username].setdefault("alias", username)
     save_users(users, now)
 
     # Call the sync function for this new user

@@ -436,3 +436,12 @@ class CollectFailedHosts:
 
     def __call__(self, host_name: HostName, exc: Exception) -> None:
         self._failed_ip_lookups[host_name] = exc
+
+    def format_errors(self) -> Sequence[str]:
+        return [
+            (
+                f"Cannot lookup IP address of '{host}' ({exc}). "
+                "The host will not be monitored correctly."
+            )
+            for host, exc in self.failed_ip_lookups.items()
+        ]

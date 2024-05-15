@@ -680,7 +680,12 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     config.load()
     config_cache = config.get_config_cache()
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
+        config_cache,
+        # error handling: we're redirecting stdout to /dev/null anyway,
+        # and not using the collected errors.
+        # However: Currently the config creation expects an IPLookup that
+        # allows to access the lookup faiures.
+        error_handler=ip_lookup.CollectFailedHosts(),
     )
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
@@ -1661,7 +1666,7 @@ class AutomationRestart(Automation):
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
         ip_address_of = config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            config_cache, error_handler=ip_lookup.CollectFailedHosts()
         )
         return _execute_silently(
             config_cache, self._mode(), ip_address_of, hosts_config, hosts_to_update=nodes
@@ -1719,12 +1724,14 @@ automations.register(AutomationReload())
 def _execute_silently(
     config_cache: ConfigCache,
     action: CoreAction,
-    ip_address_of: config.IPLookup,
+    ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_config: Hosts,
     hosts_to_update: set[HostName] | None = None,
     skip_config_locking_for_bakery: bool = False,
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
+        # The IP lookup used to write to stdout, that is not the case anymore.
+        # The redirect might not be needed anymore.
         log.setup_console_logging()
         try:
             do_restart(
@@ -1750,7 +1757,11 @@ def _execute_silently(
                 raise
             raise MKAutomationError(str(e))
 
-        return RestartResult(config_warnings.get_configuration())
+        return RestartResult(
+            config_warnings.get_configuration(
+                additional_warnings=ip_address_of.error_handler.format_errors()
+            )
+        )
 
 
 class AutomationGetConfiguration(Automation):

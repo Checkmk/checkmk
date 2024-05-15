@@ -20,8 +20,8 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.base.nagios_utils
-from cmk.base import core_config
-from cmk.base.config import ConfigCache, IPLookup
+from cmk.base import core_config, ip_lookup
+from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
 
 # suppress "Cannot find module" error from mypy
@@ -51,7 +51,7 @@ class CoreAction(enum.Enum):
 
 def do_reload(
     config_cache: ConfigCache,
-    ip_address_of: IPLookup,
+    ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
     *,
     all_hosts: Iterable[HostName],
@@ -73,7 +73,7 @@ def do_reload(
 
 def do_restart(
     config_cache: ConfigCache,
-    ip_address_of: IPLookup,
+    ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
     *,
     all_hosts: Iterable[HostName],

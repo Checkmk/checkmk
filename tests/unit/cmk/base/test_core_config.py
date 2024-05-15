@@ -27,7 +27,7 @@ from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.nagios_utils
-from cmk.base import config, core_config
+from cmk.base import config, core_config, ip_lookup
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
 from cmk.base.core_factory import create_core
@@ -70,7 +70,7 @@ def test_do_create_config_nagios(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
     ip_address_of = config.ConfiguredIPLookup(
-        core_scenario, error_handler=config.handle_ip_lookup_failure
+        core_scenario, error_handler=ip_lookup.CollectFailedHosts()
     )
     core_config.do_create_config(
         create_core("nagios"),
@@ -89,7 +89,7 @@ def test_do_create_config_nagios_collects_passwords(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
     ip_address_of = config.ConfiguredIPLookup(
-        core_scenario, error_handler=config.handle_ip_lookup_failure
+        core_scenario, error_handler=ip_lookup.CollectFailedHosts()
     )
 
     password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())

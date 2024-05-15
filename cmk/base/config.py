@@ -49,7 +49,7 @@ import cmk.utils.store.host_storage
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
-from cmk.utils import config_warnings, password_store, piggyback, store
+from cmk.utils import config_warnings, password_store, piggyback, store, tty
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
@@ -403,16 +403,13 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
         return ip_lookup.fallback_ip_for(family)
 
 
-# This is an going refactoring. Hopefully this will be untangled soon.
 def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
-    """Error handler for IP lookup failures.
-
-    * collects error messages for failed lookups in a global variable
-    * writes error messages to the console
-    """
-    config_warnings.warn(
-        f"Cannot lookup IP address of '{host_name}' ({exc}). "
-        "The host will not be monitored correctly."
+    """Writes error messages to the console (stdout)."""
+    console.warning(
+        tty.format_warning(
+            f"\nCannot lookup IP address of '{host_name}' ({exc}). "
+            "The host will not be monitored correctly.\n"
+        )
     )
 
 

@@ -1359,7 +1359,7 @@ def mode_update() -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
+        config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
@@ -1379,6 +1379,9 @@ def mode_update() -> None:
         if cmk.utils.debug.enabled():
             raise
         sys.exit(1)
+
+    for warning in ip_address_of.error_handler.format_errors():
+        console.warning(tty.format_warning(f"\n{warning}"))
 
 
 modes.register(
@@ -1413,7 +1416,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
+        config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
     cmk.base.core.do_restart(
         config_cache,
@@ -1428,6 +1431,8 @@ def mode_restart(args: Sequence[HostName]) -> None:
             )
         ),
     )
+    for warning in ip_address_of.error_handler.format_errors():
+        console.warning(tty.format_warning(f"\n{warning}"))
 
 
 modes.register(
@@ -1462,7 +1467,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
+        config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
     cmk.base.core.do_reload(
         config_cache,
@@ -1477,6 +1482,8 @@ def mode_reload(args: Sequence[HostName]) -> None:
             ),
         ),
     )
+    for warning in ip_address_of.error_handler.format_errors():
+        console.warning(tty.format_warning(f"\n{warning}"))
 
 
 modes.register(

@@ -14,21 +14,22 @@ from unittest.mock import patch
 import pytest
 from fakeredis import FakeRedis
 
-# Import this fixture to not clutter this file, but it's unused here...
-from tests.testlib.certs import (  # pylint: disable=unused-import # noqa: F401
-    fixture_ed25519_private_key,
-    fixture_rsa_private_key,
-    fixture_secp256k1_private_key,
-    fixture_self_signed,
-    fixture_self_signed_ec,
-    fixture_self_signed_ed25519,
-)
 from tests.testlib.utils import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
     is_saas_repo,
     repo_path,
+)
+
+# Import this fixture to not clutter this file, but it's unused here...
+from tests.unit.cmk.utils.crypto.certs import (  # pylint: disable=unused-import # noqa: F401
+    fixture_ed25519_private_key,
+    fixture_rsa_private_key,
+    fixture_secp256k1_private_key,
+    fixture_self_signed,
+    fixture_self_signed_ec,
+    fixture_self_signed_ed25519,
 )
 
 import livestatus

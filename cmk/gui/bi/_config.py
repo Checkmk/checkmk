@@ -1176,7 +1176,11 @@ class ModeBIEditRule(ABCBIMode):
         vs_rule = self.valuespec(rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars("rule")
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), "rule")
-        schema_validated_config = BIRuleSchema().dump(vs_rule_config)
+        # We use the schema only for validation here. We need this schema.load(schema.dump(...))
+        # call, because the value for label conditions as given in the schema format cannot be
+        # processed later on, e.g. in the BI searcher's label filtering
+        schema_inst = BIRuleSchema()
+        schema_validated_config = schema_inst.load(schema_inst.dump(vs_rule_config))
         self._validate_rule_id(schema_validated_config["id"])
         new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
@@ -1238,6 +1242,7 @@ class ModeBIEditRule(ABCBIMode):
 
     def page(self) -> None:
         self.verify_pack_permission(self.bi_pack)
+        schema_inst = BIRuleSchema()
 
         if self._new:
             cloneid = request.var("clone")
@@ -1248,7 +1253,7 @@ class ModeBIEditRule(ABCBIMode):
                 except KeyError:
                     raise MKGeneralException(_("This BI rule does not exist"))
             else:
-                default_value = BIRuleSchema().dump({"pack_id": self.bi_pack.id})
+                default_value = schema_inst.dump({"pack_id": self.bi_pack.id})
                 bi_rule = BIRule(default_value)
         else:
             bi_rule = self.bi_pack.get_rule_mandatory(self.rule_id)
@@ -1256,7 +1261,10 @@ class ModeBIEditRule(ABCBIMode):
         self._may_use_rules_from_packs(bi_rule)
 
         with html.form_context("birule", method="POST"):
-            rule_vs_config = BIRuleSchema().dump(bi_rule)
+            # For rendering of the BI rule valuespecs we need this schema.load(schema.dump(...))
+            # call, because the value for label conditions as given in the schema format cannot be
+            # rendered by the LabelGroups valuespec
+            rule_vs_config = schema_inst.load(schema_inst.dump(bi_rule))
             self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
             forms.end()
             html.hidden_fields()
@@ -1736,7 +1744,11 @@ class BIModeEditAggregation(ABCBIMode):
         vs_aggregation_config = vs_aggregation.from_html_vars("aggr")
         vs_aggregation.validate_value(vs_aggregation_config, "aggr")
 
-        schema_validated_config = BIAggregationSchema().dump(vs_aggregation_config)
+        # We use the schema only for validation here. We need this schema.load(schema.dump(...))
+        # call, because the value for label conditions as given in the schema format cannot be
+        # processed later on, e.g. in the BI searcher's label filtering
+        schema_inst = BIAggregationSchema()
+        schema_validated_config = schema_inst.load(schema_inst.dump(vs_aggregation_config))
         new_bi_aggregation = BIAggregation(schema_validated_config)
 
         aggregation_ids = self._get_aggregations_by_id()
@@ -1777,7 +1789,12 @@ class BIModeEditAggregation(ABCBIMode):
 
     def page(self) -> None:
         with html.form_context("biaggr", method="POST"):
-            aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
+            # For rendering of the BI aggregation valuespecs we need this
+            # schema.load(schema.dump(...)) call, because the value for label conditions as given in
+            # the schema format cannot be rendered by the LabelGroups valuespec
+            schema_inst = BIAggregationSchema()
+            aggr_vs_config = schema_inst.load(schema_inst.dump(self._bi_aggregation))
+
             self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id).render_input(
                 "aggr", aggr_vs_config
             )

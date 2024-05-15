@@ -11,26 +11,32 @@ from pytest import MonkeyPatch
 import cmk.utils.notify
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import CollectedHostLabels
-from cmk.utils.notify import read_notify_host_file, write_notify_host_file
+from cmk.utils.notify import NotificationHostConfig, read_notify_host_file, write_notify_host_file
+from cmk.utils.tags import TagGroupID, TagID
 
 
 @pytest.mark.parametrize(
-    "versioned_config_path, host_name, host_labels, expected",
+    "versioned_config_path, host_name, config, expected",
     [
         pytest.param(
             VersionedConfigPath(1),
             "horsthost",
-            CollectedHostLabels(
+            NotificationHostConfig(
                 host_labels={"owe": "owe"},
                 service_labels={
                     "svc": {"lbl": "blub"},
                     "svc2": {},
                 },
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                },
             ),
-            CollectedHostLabels(
+            NotificationHostConfig(
                 host_labels={"owe": "owe"},
                 service_labels={"svc": {"lbl": "blub"}},
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                },
             ),
         )
     ],
@@ -38,11 +44,11 @@ from cmk.utils.notify import read_notify_host_file, write_notify_host_file
 def test_write_and_read_notify_host_file(
     versioned_config_path: VersionedConfigPath,
     host_name: HostName,
-    host_labels: CollectedHostLabels,
-    expected: CollectedHostLabels,
+    config: NotificationHostConfig,
+    expected: NotificationHostConfig,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    notify_labels_path: Path = Path(versioned_config_path) / "notify" / "labels"
+    notify_labels_path: Path = Path(versioned_config_path) / "notify" / "host_config"
     monkeypatch.setattr(
         cmk.utils.notify,
         "_get_host_file_path",
@@ -51,7 +57,7 @@ def test_write_and_read_notify_host_file(
 
     write_notify_host_file(
         versioned_config_path,
-        {host_name: host_labels},
+        {host_name: config},
     )
 
     assert notify_labels_path.exists()

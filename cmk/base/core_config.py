@@ -28,6 +28,7 @@ from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.store import lock_checkmk_configuration
+from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.parameters import TimespecificParameters
@@ -527,3 +528,13 @@ def _extra_service_attributes(
 
 def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:
     return {key[8:]: value for key, value in key_value_pairs if key.startswith("__LABEL_")}
+
+
+def get_tags_with_groups_from_attributes(
+    key_value_pairs: list[tuple[str, str]]
+) -> dict[TagGroupID, TagID]:
+    return {
+        TagGroupID(key[6:]): TagID(value)
+        for key, value in key_value_pairs
+        if key.startswith("__TAG_")
+    }

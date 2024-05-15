@@ -21,11 +21,13 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.i18n import _
-from cmk.utils.labels import CollectedHostLabels
+from cmk.utils.labels import Labels
 from cmk.utils.notify_types import EnrichedEventContext
 from cmk.utils.notify_types import NotificationContext as NotificationContext
 from cmk.utils.paths import core_helper_config_dir
+from cmk.utils.servicename import ServiceName
 from cmk.utils.store import load_object_from_file, save_object_to_file
+from cmk.utils.tags import TagGroupID, TagID
 
 logger = logging.getLogger("cmk.utils.notify")
 
@@ -59,6 +61,13 @@ class NotificationForward(TypedDict):
 class NotificationViaPlugin(TypedDict):
     plugin: str
     context: NotificationContext
+
+
+@dataclasses.dataclass(frozen=True)
+class NotificationHostConfig:
+    host_labels: Labels
+    service_labels: Mapping[ServiceName, Labels]
+    tags: Mapping[TagGroupID, TagID]
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
@@ -238,17 +247,18 @@ def transform_flexible_and_plain_plugin(
 
 def write_notify_host_file(
     config_path: VersionedConfigPath,
-    labels_per_host: Mapping[HostName, CollectedHostLabels],
+    config_per_host: Mapping[HostName, NotificationHostConfig],
 ) -> None:
-    notify_labels_path: Path = _get_host_file_path(config_path)
-    for host, labels in labels_per_host.items():
-        host_path = notify_labels_path / host
+    notify_config_path: Path = _get_host_file_path(config_path)
+    for host, labels in config_per_host.items():
+        host_path = notify_config_path / host
         save_object_to_file(
             host_path,
             dataclasses.asdict(
-                CollectedHostLabels(
+                NotificationHostConfig(
                     host_labels=labels.host_labels,
                     service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
+                    tags=labels.tags,
                 )
             ),
         )
@@ -256,12 +266,12 @@ def write_notify_host_file(
 
 def read_notify_host_file(
     host_name: HostName,
-) -> CollectedHostLabels:
+) -> NotificationHostConfig:
     host_file_path: Path = _get_host_file_path(host_name=host_name)
-    return CollectedHostLabels(
+    return NotificationHostConfig(
         **load_object_from_file(
             path=host_file_path,
-            default={"host_labels": {}, "service_labels": {}},
+            default={"host_labels": {}, "service_labels": {}, "tags": {}},
         )
     )
 
@@ -272,5 +282,5 @@ def _get_host_file_path(
 ) -> Path:
     root_path = Path(config_path) if config_path else core_helper_config_dir / Path("latest")
     if host_name:
-        return root_path / "notify" / "labels" / host_name
-    return root_path / "notify" / "labels"
+        return root_path / "notify" / "host_config" / host_name
+    return root_path / "notify" / "host_config"

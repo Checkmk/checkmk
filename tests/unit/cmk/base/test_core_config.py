@@ -29,7 +29,7 @@ from cmk.checkengine.parameters import TimespecificParameters
 import cmk.base.nagios_utils
 from cmk.base import config, core_config
 from cmk.base.config import ConfigCache, ObjectAttributes
-from cmk.base.core_config import get_labels_from_attributes
+from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
 from cmk.base.core_factory import create_core
 
 
@@ -315,3 +315,34 @@ def test_template_translation(
 )
 def test_get_labels_from_attributes(attributes: dict[str, str], expected: Labels) -> None:
     assert get_labels_from_attributes(list(attributes.items())) == expected
+
+
+@pytest.mark.parametrize(
+    "attributes, expected",
+    [
+        pytest.param(
+            {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__LABEL_ding": "dong",
+                "__LABEL_cmk/site": "NO_SITE",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABELSOURCE_ding": "explicit",
+                "address": "0.0.0.0",
+                "alias": "test-host",
+            },
+            {
+                "piggyback": "auto-piggyback",
+                "site": "unit",
+                "snmp_ds": "no-snmp",
+            },
+        ),
+    ],
+)
+def test_get_tags_with_groups_from_attributes(
+    attributes: dict[str, str], expected: dict[TagGroupID, TagID]
+) -> None:
+    assert get_tags_with_groups_from_attributes(list(attributes.items())) == expected

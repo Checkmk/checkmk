@@ -8,8 +8,9 @@ from typing import Final
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.labels import CollectedHostLabels
+from cmk.utils.notify import NotificationHostConfig
 from cmk.utils.notify_types import EnrichedEventContext, EventContext
+from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.base.events
 from cmk.base.events import (
@@ -221,7 +222,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
 
 
 @pytest.mark.parametrize(
-    "enriched_context, labels, expected",
+    "enriched_context, config, expected",
     [
         pytest.param(
             {
@@ -231,7 +232,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "SERVICEDESC": "Interface 1",
                 "WHAT": "SERVICE",
             },
-            CollectedHostLabels(
+            NotificationHostConfig(
                 host_labels={
                     "cmk/check_mk_server": "yes",
                     "cmk/docker_object": "node",
@@ -241,6 +242,9 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                     "cmk/site": "heute",
                 },
                 service_labels={"Interface 1": {"dicovered": "label", "rule": "label"}},
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                },
             ),
             {
                 "CONTACTS": "cmkadmin",
@@ -266,7 +270,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "HOSTNAME": "heute",
                 "WHAT": "HOST",
             },
-            CollectedHostLabels(
+            NotificationHostConfig(
                 host_labels={
                     "cmk/check_mk_server": "yes",
                     "cmk/docker_object": "node",
@@ -276,6 +280,9 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                     "cmk/site": "heute",
                 },
                 service_labels={"Interface 1": {"dicovered": "label", "rule": "label"}},
+                tags={
+                    TagGroupID("criticality"): TagID("prod"),
+                },
             ),
             {
                 "CONTACTS": "cmkadmin",
@@ -295,14 +302,14 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
 )
 def test_update_enriched_contect_with_labels(
     enriched_context: EnrichedEventContext,
-    labels: CollectedHostLabels,
+    config: NotificationHostConfig,
     expected: EventContext,
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         cmk.base.events,
         "read_notify_host_file",
-        lambda *args, **kw: labels,
+        lambda *args, **kw: config,
     )
     _update_enriched_context_with_labels(enriched_context)
     assert enriched_context == expected

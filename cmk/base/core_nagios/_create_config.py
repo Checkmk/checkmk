@@ -20,10 +20,10 @@ from cmk.utils import config_warnings, password_store, store, tty
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
-from cmk.utils.labels import CollectedHostLabels, Labels
+from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notify import write_notify_host_file
+from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
@@ -38,6 +38,7 @@ from cmk.base.core_config import (
     CoreCommand,
     CoreCommandName,
     get_labels_from_attributes,
+    get_tags_with_groups_from_attributes,
 )
 from cmk.base.ip_lookup import IPStackConfig
 
@@ -166,15 +167,15 @@ def create_config(
     _output_conf_header(cfg)
 
     licensing_counter = Counter("services")
-    all_host_labels: dict[HostName, CollectedHostLabels] = {}
+    all_notify_host_configs: dict[HostName, NotificationHostConfig] = {}
     for hostname in hostnames:
-        all_host_labels[hostname] = _create_nagios_config_host(
+        all_notify_host_configs[hostname] = _create_nagios_config_host(
             cfg, config_cache, hostname, passwords, licensing_counter, ip_address_of
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
 
-    write_notify_host_file(config_path, all_host_labels)
+    write_notify_host_file(config_path, all_notify_host_configs)
 
     _create_nagios_config_contacts(cfg, hostnames)
     _create_nagios_config_hostgroups(cfg)
@@ -205,7 +206,7 @@ def _create_nagios_config_host(
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
     ip_address_of: config.IPLookup,
-) -> CollectedHostLabels:
+) -> NotificationHostConfig:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
@@ -215,7 +216,7 @@ def _create_nagios_config_host(
         host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
         cfg.write(format_nagios_object("host", host_spec))
 
-    return CollectedHostLabels(
+    return NotificationHostConfig(
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
         service_labels=create_nagios_servicedefs(
             cfg,
@@ -226,6 +227,7 @@ def _create_nagios_config_host(
             license_counter,
             ip_address_of,
         ),
+        tags=get_tags_with_groups_from_attributes(list(host_attrs.items())),
     )
 
 

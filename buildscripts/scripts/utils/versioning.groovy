@@ -92,43 +92,38 @@ def configured_or_overridden_distros(edition, distros, use_case="daily") {
     if(distro_list) {
         return distro_list;
     }
-    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
-        dir("${checkout_dir}") {
-            return cmd_output("""scripts/run-pipenv run \
-                  buildscripts/scripts/get_distros.py \
-                  --editions_file "${checkout_dir}/editions.yml" \
-                  use_cases \
-                  --edition "${edition}" \
-                  --use_case "${use_case}"
-            """).split().grep();
-        }
+    /// read distros from edition.yml otherwise.
+    dir("${checkout_dir}") {
+        return cmd_output("""python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "${checkout_dir}/editions.yml" \
+              use_cases \
+              --edition "${edition}" \
+              --use_case "${use_case}"
+        """).split().grep();
     }
 }
 
 def get_editions() {
     /// read editions from edition.yml
-    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
-        dir("${checkout_dir}") {
-            return cmd_output("""scripts/run-pipenv run \
-                  buildscripts/scripts/get_distros.py \
-                  --editions_file "${checkout_dir}/editions.yml" \
-                  editions
-            """).split().grep();
-        }
+    dir("${checkout_dir}") {
+        return cmd_output("""python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "${checkout_dir}/editions.yml" \
+              editions
+        """).split().grep();
     }
 }
 
 def get_internal_artifacts_pattern() {
-    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
-        dir("${checkout_dir}") {
-            return sh(script: """scripts/run-pipenv run \
-                  buildscripts/scripts/get_distros.py \
-                  --editions_file "editions.yml" \
-                  internal_build_artifacts \
-                  --as-codename \
-                  --as-rsync-exclude-pattern;
-            """, returnStdout: true).trim();
-        }
+    dir("${checkout_dir}") {
+        return sh(script: """python3 \
+              buildscripts/scripts/get_distros.py \
+              --editions_file "editions.yml" \
+              internal_build_artifacts \
+              --as-codename \
+              --as-rsync-exclude-pattern;
+        """, returnStdout: true).trim();
     }
 
 }

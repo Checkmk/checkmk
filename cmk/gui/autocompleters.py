@@ -12,6 +12,7 @@ from livestatus import LivestatusColumn, MultiSiteConnection
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import MetricName
+from cmk.utils.version import is_managed_edition
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -111,10 +112,10 @@ def sites_autocompleter(
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
 
-    choices: Choices = sorted(
-        (v for v in sites_options() if _matches_id_or_title(value, v)),
-        key=lambda a: a[1].lower(),
-    )
+    choices: Choices = [v for v in sites_options() if _matches_id_or_title(value, v)]
+    # CME sort order is already in place
+    if not is_managed_edition():
+        choices.sort(key=lambda a: a[1].lower())
 
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
     if not params.get("strict"):

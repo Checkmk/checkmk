@@ -1,0 +1,11 @@
+Title: Ensure correct sort order in "Site" filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1715757518
+Edition: cme
+Level: 1
+Version: 2.2.0p27
+
+The sorting order of the sites listed in the autocompleter of the "Site" filter
+was wrong and mixed up with customer names.

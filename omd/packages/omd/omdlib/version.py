@@ -10,6 +10,7 @@ from pathlib import Path
 
 import omdlib
 from omdlib.contexts import SiteContext
+from omdlib.utils import site_exists
 
 
 def main_version(
@@ -21,7 +22,7 @@ def main_version(
 ) -> None:
     if len(args) > 0:
         site = SiteContext(args[0])
-        if not site.exists():
+        if not site_exists(Path(site.dir)):
             sys.exit("No such site: %s" % site.name)
         version = site.version
     else:

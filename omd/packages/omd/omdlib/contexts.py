@@ -19,7 +19,6 @@ from omdlib.skel_permissions import (
     skel_permissions_file_path,
 )
 from omdlib.type_defs import Config, Replacements
-from omdlib.utils import is_containerized
 
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.version import Edition
@@ -76,10 +75,6 @@ class AbstractSiteContext(abc.ABC):
 
     @abc.abstractmethod
     def load_config(self, defaults: dict[str, str]) -> None:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def exists(self) -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -168,21 +163,6 @@ class SiteContext(AbstractSiteContext):
 
         return config
 
-    def exists(self) -> bool:
-        # In container environments the tmpfs may be managed by the container runtime (when
-        # using the --tmpfs option).  In this case the site directory is
-        # created as parent of the tmp directory to mount the tmpfs during
-        # container initialization. Detect this situation and don't treat the
-        # site as existing in that case.
-        if is_containerized():
-            if not os.path.exists(self.dir):
-                return False
-            if os.listdir(self.dir) == ["tmp"]:
-                return False
-            return True
-
-        return os.path.exists(self.dir)
-
     def is_empty(self) -> bool:
         for entry in os.listdir(self.dir):
             if entry not in [".", ".."]:
@@ -268,9 +248,6 @@ class RootContext(AbstractSiteContext):
 
     def load_config(self, defaults: dict[str, str]) -> None:
         pass
-
-    def exists(self) -> bool:
-        return False
 
     def is_empty(self) -> bool:
         return False

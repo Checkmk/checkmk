@@ -47,16 +47,6 @@ def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(replacements) == 3
 
 
-def test_site_context_exists(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/sites/dingeling")
-
-    site = SiteContext("dingeling")
-    assert site.exists()
-
-    site = SiteContext("dingelang")
-    assert not site.exists()
-
-
 def test_site_context_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"]

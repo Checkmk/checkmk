@@ -28,7 +28,7 @@ def test_main_version_of_omd_tool(
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
-def test_main_version_root_not_existing_site() -> None:
+def test_main_version_root_not_existing_site(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match="No such site: testsite"):
         main_version(object(), object(), object(), ["testsite"], {})
 

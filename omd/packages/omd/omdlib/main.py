@@ -106,6 +106,7 @@ from omdlib.utils import (
     get_editor,
     get_site_distributed_setup,
     replace_tags,
+    site_exists,
     SiteDistributedSetup,
 )
 from omdlib.version import (
@@ -1948,7 +1949,7 @@ def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
     if not site_must_exist:
         return
 
-    if not site.exists():
+    if not site_exists(Path(site.dir)):
         bail_out(
             "omd: The site '%s' does not exist. You need to execute "
             "omd as root or site user." % site.name
@@ -2087,7 +2088,7 @@ def main_create(
         if not user_verify(version_info, site):
             bail_out("Error verifying site user.")
 
-    sitename_must_be_valid(site, reuse)
+    sitename_must_be_valid(site.name, Path(site.dir), reuse)
 
     # Create operating system user for site
     uid = options.get("uid")
@@ -2484,7 +2485,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
             bail_out("Error verifying site user.")
         fstab_verify(new_site)
 
-    sitename_must_be_valid(new_site, reuse)
+    sitename_must_be_valid(new_site.name, Path(new_site.dir), reuse)
 
     if not old_site.is_stopped():
         bail_out(f"Cannot {action} site '{old_site.name}' while it is running.")
@@ -3523,7 +3524,7 @@ def prepare_restore_as_root(
             bail_out("Error verifying site user.")
         fstab_verify(site)
 
-    sitename_must_be_valid(site, reuse)
+    sitename_must_be_valid(site.name, Path(site.dir), reuse)
 
     if reuse:
         if not site.is_stopped() and "kill" not in options:

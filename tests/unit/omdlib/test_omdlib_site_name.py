@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from omdlib.contexts import SiteContext
 from omdlib.site_name import sitename_must_be_valid
 
 
@@ -21,7 +20,7 @@ from omdlib.site_name import sitename_must_be_valid
 )
 def test_sitename_must_be_valid_ok(tmp_path: Path, name: str) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-    sitename_must_be_valid(SiteContext(name))
+    sitename_must_be_valid(name, tmp_path / f"omd/sites/{name}")
 
 
 @pytest.mark.parametrize(
@@ -35,12 +34,11 @@ def test_sitename_must_be_valid_ok(tmp_path: Path, name: str) -> None:
 def test_sitename_must_be_valid_not_ok(tmp_path: Path, name: str) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
     with pytest.raises(SystemExit, match="Invalid site name"):
-        sitename_must_be_valid(SiteContext(name))
+        sitename_must_be_valid(name, tmp_path / f"omd/sites/{name}")
 
 
-@pytest.mark.usefixtures("omd_base_path")
 def test_sitename_must_be_valid_already_exists(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
 
     with pytest.raises(SystemExit, match="already existing"):
-        sitename_must_be_valid(SiteContext("lala"))
+        sitename_must_be_valid("lala", tmp_path / "omd/sites/lala")

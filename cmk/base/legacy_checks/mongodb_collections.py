@@ -162,7 +162,7 @@ def _mongodb_collections_long_output(data):
         "- Number of Indexes: %s" % _mongodb_collections_get_as_int(data, "nindexes")
     )
     for index in _mongodb_collections_get_indexes_as_list(data):
-        timestamp_for_humans = _mongodb_collections_timestamp_human_readable(index[2] / 1000.0)
+        timestamp_for_humans = _mongodb_collections_timestamp_human_readable(index[2])
         long_output.append(
             f"-- Index '{index[0]}' used {index[1]} times since {timestamp_for_humans}"
         )

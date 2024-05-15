@@ -49,7 +49,8 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
+from cmk.gui.userdb import UserRole
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link

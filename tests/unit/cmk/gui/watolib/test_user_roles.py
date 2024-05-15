@@ -12,7 +12,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.utils.transaction_manager
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.type_defs import UserRole
+from cmk.gui.userdb import UserRole
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.userroles import RoleID
 

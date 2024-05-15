@@ -46,7 +46,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.permissions import load_dynamic_permissions
-from cmk.gui.type_defs import UserRole
+from cmk.gui.userdb import UserRole
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib import userroles

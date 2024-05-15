@@ -50,6 +50,9 @@ class WatoConfigFile(ABC, Generic[_G]):
     def name(self) -> str:
         return self._config_file_path.relative_to(omd_root).as_posix()
 
+    def read_file_and_validate(self) -> None:
+        raise NotImplementedError("NotImplemented")
+
 
 class WatoListConfigFile(WatoConfigFile, Generic[_G]):
     """Manage simple .mk config file containing a list of objects."""

@@ -2317,9 +2317,10 @@ class AutomationActiveCheck(Automation):
 
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        ip_address_of = config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
-        )
+
+        # Maybe we add some meaningfull error handling here someday?
+        # This reflects the effetive behavior when the error handler was inroduced.
+        ip_address_of = config.ConfiguredIPLookup(config_cache, error_handler=lambda *a, **kw: None)
 
         if plugin == "custom":
             for entry in config_cache.custom_checks(host_name):
@@ -2342,9 +2343,8 @@ class AutomationActiveCheck(Automation):
                 )
 
         with redirect_stdout(open(os.devnull, "w")):
-            # TODO: we're redirecting stdout to /dev/null here; so we might want to create
-            # a version of ip_address_of that does not write to stdout in the first place.
-            # Also I don't think we ever revisit the collected errors.
+            # The IP lookup used to write to stdout, that is not the case anymore.
+            # The redirect might not be needed anymore.
             host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)

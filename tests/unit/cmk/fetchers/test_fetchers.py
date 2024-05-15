@@ -503,8 +503,8 @@ class TestSNMPFetcherFetch:
         )
 
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            fetcher,
+            "_detect",
             lambda *_, **__: {SectionName("pim")},
         )
         assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
@@ -545,11 +545,6 @@ class TestSNMPFetcherFetch:
 
     def test_fetch_from_io_empty(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: [])
-        monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
-            lambda *_, **__: {SectionName("pam")},
-        )
         file_cache = SNMPFileCache(
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
@@ -558,6 +553,11 @@ class TestSNMPFetcherFetch:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         fetcher = self.create_fetcher(path=tmp_path)
+        monkeypatch.setattr(
+            fetcher,
+            "_detect",
+            lambda *_, **__: {SectionName("pam")},
+        )
         assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(
             {SectionName("pam"): [[]]}
         )
@@ -584,8 +584,8 @@ class TestSNMPFetcherFetch:
             do_status_data_inventory=True,
         )
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            fetcher,
+            "_detect",
             lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
         )
         file_cache = SNMPFileCache(
@@ -620,8 +620,8 @@ class TestSNMPFetcherFetch:
             },
         )
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            fetcher,
+            "_detect",
             lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
         )
         file_cache = SNMPFileCache(
@@ -657,8 +657,8 @@ class TestSNMPFetcherFetch:
             do_status_data_inventory=True,
         )
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            fetcher,
+            "_detect",
             lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
         )
         file_cache = SNMPFileCache(
@@ -677,8 +677,8 @@ class TestSNMPFetcherFetch:
     ) -> None:
         fetcher = self.create_fetcher(path=tmp_path)
         monkeypatch.setattr(
-            snmp,
-            "gather_available_raw_section_names",
+            fetcher,
+            "_detect",
             lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
         )
         file_cache = SNMPFileCache(

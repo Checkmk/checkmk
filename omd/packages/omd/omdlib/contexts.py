@@ -39,11 +39,6 @@ class AbstractSiteContext(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def version(self) -> str | None:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
     def dir(self) -> str:
         raise NotImplementedError()
 
@@ -241,10 +236,6 @@ class RootContext(AbstractSiteContext):
     @property
     def real_tmp_dir(self) -> str:
         return "%s/tmp" % self.real_dir
-
-    @property
-    def version(self) -> str:
-        return omdlib.__version__
 
     def load_config(self, defaults: dict[str, str]) -> None:
         pass

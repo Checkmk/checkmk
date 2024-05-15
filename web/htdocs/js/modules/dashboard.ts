@@ -483,8 +483,8 @@ export function calculate_dashboard() {
 
     g_dashboard_top = dashboard_rect.top;
     g_dashboard_left = dashboard_rect.left;
-    g_dashboard_width = utils.page_width() || 0 - g_dashboard_left;
-    g_dashboard_height = utils.page_height() || 0 - g_dashboard_top;
+    g_dashboard_width = (utils.page_width() || 0) - g_dashboard_left;
+    g_dashboard_height = (utils.page_height() || 0) - g_dashboard_top;
     oDash.style.width = g_dashboard_width + "px";
     oDash.style.height = g_dashboard_height + "px";
 

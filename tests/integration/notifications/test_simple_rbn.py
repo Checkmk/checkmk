@@ -10,10 +10,11 @@ from typing import Final
 
 import pytest
 
-from tests.testlib import WatchLog
 from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
+
+from .watch_log import WatchLog
 
 
 @pytest.fixture(name="fake_sendmail")

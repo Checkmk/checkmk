@@ -58,7 +58,6 @@ def main() {
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = edition != "managed";
-    def build_cloud_images = edition == "cloud";
 
     // TODO: saas has all tests disabled for now. Need some way to login in those tests, SAASDEV-664
     def run_int_tests = true;
@@ -72,7 +71,6 @@ def main() {
         |edition:............... │${edition}│
         |base_folder:........... │${base_folder}│
         |build_image:........... │${build_image}│
-        |build_cloud_images:.... │${build_cloud_images}│
         |run_comp_tests:........ │${run_comp_tests}│
         |run_int_tests:..........│${run_int_tests}│
         |run_image_tests:....... │${run_image_tests}│
@@ -92,13 +90,6 @@ def main() {
             condition: build_image,
             raiseOnError: false,) {
         build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
-    }
-
-    success &= smart_stage(
-            name: "Build Cloud Images",
-            condition: build_cloud_images,
-            raiseOnError: false,) {
-        build(job: "${base_folder}/build-cmk-cloud-images", parameters: job_parameters);
     }
 
     parallel([

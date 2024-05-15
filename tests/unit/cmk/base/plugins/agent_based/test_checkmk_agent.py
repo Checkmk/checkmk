@@ -7,10 +7,10 @@ import json
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
@@ -24,11 +24,12 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_version,
 )
 from cmk.base.plugins.agent_based.checkmk_agent import (
-    _normalize_ip_addresses as normalize_ip_addresses,
+    _expand_curly_address_notation as expand_curly_address_notation,
 )
 from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
-from cmk.base.plugins.agent_based.utils.checkmk import (
+
+from cmk.plugins.lib.checkmk import (
     CachedPlugin,
     CachedPluginsSection,
     CachedPluginType,
@@ -419,6 +420,43 @@ def test_check_no_check_yet_pydantic() -> None:
                 ),
             ],
         ),
+        (
+            {
+                0: {
+                    "corrupt": True,
+                    "not_after": None,
+                    "signature_algorithm": None,
+                    "common_name": None,
+                },
+                1: {
+                    "corrupt": False,
+                    "not_after": "2023-12-20T09:22:17+00:00",
+                    "signature_algorithm": "sha512",
+                    "common_name": "signed",
+                },
+                2: {
+                    "corrupt": False,
+                    "not_after": "2023-12-20T09:28:55+00:00",
+                    "signature_algorithm": "sha1",
+                    "common_name": "Lorem ipsum",
+                },
+            },
+            [
+                Result(state=State.WARN, notice="Updater certificate #0 is corrupt"),
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #1 (CN='signed') will expire: 22 years 213 days",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #2 (CN='Lorem ipsum') will expire: 22 years 213 days",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until all updater certificates are expired: 22 years 213 days",
+                ),
+            ],
+        ),
     ),
 )
 def test_certificate_results(
@@ -434,7 +472,7 @@ def test_certificate_results(
                         "last_update": None,
                         "pending_hash": None,
                         "update_url": "foo",
-                        "last_check": 990789180,  # Fri May 25 2001 11:13:00 GMT+0000
+                        "last_check": 990789180,  # Fri 2001-05-25 11:13:00 GMT+0000
                         "trusted_certs": trusted_certs,
                         "error": None,
                     }
@@ -443,12 +481,10 @@ def test_certificate_results(
         ]
     )
 
-    with on_time(datetime(2001, 5, 25, 13, 13, 13), "CEST"):
+    with time_machine.travel(datetime(2001, 5, 25, 13, 13, 13, tzinfo=ZoneInfo("UTC"))):
         assert [*_check_cmk_agent_update({}, None, section)] == [
-            Result(
-                state=State.OK, notice="Time since last update check: 2 hours 0 minutes"
-            ),  # timezones?
-            Result(state=State.OK, notice="Last update check: May 25 2001 11:13:00"),
+            Result(state=State.OK, notice="Time since last update check: 2 hours 0 minutes"),
+            Result(state=State.OK, notice="Last update check: 2001-05-25 11:13:00"),
             Result(state=State.OK, notice="Update URL: foo"),
             *results,
         ]
@@ -456,7 +492,7 @@ def test_certificate_results(
 
 @pytest.mark.parametrize("duplicate", [False, True])
 def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
-    with on_time(1645800081.5039608, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(1645800081.5039608, tz=ZoneInfo("UTC"))):
         actual = list(
             _check_cmk_agent_update(
                 {},
@@ -487,11 +523,11 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             state=State.WARN,
             summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/never)",
         ),
-        Result(state=State.OK, notice="Last update check: Feb 16 2022 08:28:01"),
-        Result(state=State.OK, summary="Last update: Feb 16 2022 08:29:41"),
+        Result(state=State.OK, notice="Last update check: 2022-02-16 08:28:01"),
+        Result(state=State.OK, summary="Last update: 2022-02-16 08:29:41"),
         Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
-        Result(state=State.OK, notice="Agent configuration: 38bf6e44"),
-        Result(state=State.OK, notice="Pending installation: 1234abcd"),
+        Result(state=State.OK, notice="Agent configuration: 38bf6e44175732bc"),
+        Result(state=State.OK, notice="Pending installation: 1234abcd5678efgh"),
     ]
 
 
@@ -536,14 +572,14 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 3",
+                    summary="Agent plug-ins: 3",
                 ),
                 Result(
                     state=State.OK,
                     summary="Local checks: 0",
                 ),
             ],
-            id="agent plugins only",
+            id="agent plug-ins only",
         ),
         pytest.param(
             {},
@@ -573,7 +609,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 0",
+                    summary="Agent plug-ins: 0",
                 ),
                 Result(
                     state=State.OK,
@@ -656,7 +692,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 4",
+                    summary="Agent plug-ins: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -664,19 +700,19 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    notice="Agent plugin 'plugin1': 2.1.0i1",
+                    notice="Agent plug-in 'plugin1': 2.1.0i1",
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Agent plugin 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
+                    summary="Agent plug-in 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
                 ),
                 Result(
                     state=State.UNKNOWN,
-                    summary="Agent plugin 'custom_plugin3': unable to parse version '??'",
+                    summary="Agent plug-in 'custom_plugin3': unable to parse version '??'",
                 ),
                 Result(
                     state=State.OK,
-                    notice="Agent plugin 'custom_plugin4': no version specified",
+                    notice="Agent plug-in 'custom_plugin4': no version specified",
                 ),
                 Result(
                     state=State.OK,
@@ -773,7 +809,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 4",
+                    summary="Agent plug-ins: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -781,11 +817,11 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    notice="Agent plugin 'plugin1': 2.1.0i1",
+                    notice="Agent plug-in 'plugin1': 2.1.0i1",
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Agent plugin 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
+                    summary="Agent plug-in 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
                 ),
                 Result(
                     state=State.OK,
@@ -849,7 +885,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 3",
+                    summary="Agent plug-ins: 3",
                 ),
                 Result(
                     state=State.OK,
@@ -857,7 +893,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Agent plugin plugin1: found 2 times",
+                    summary="Agent plug-in plugin1: found 2 times",
                     details="Consult the hardware/software inventory for a complete list of files",
                 ),
                 Result(
@@ -930,7 +966,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 4",
+                    summary="Agent plug-ins: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -938,7 +974,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Agent plugin plugin1: found 2 times",
+                    summary="Agent plug-in plugin1: found 2 times",
                     details="Consult the hardware/software inventory for a complete list of files",
                 ),
                 Result(
@@ -1120,7 +1156,7 @@ def test_certificate_validity(
     controller_section: ControllerSection,
     expected_result: CheckResult,
 ) -> None:
-    with on_time(1674578645.3644419, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(1674578645.3644419, tz=ZoneInfo("UTC"))):
         assert (
             list(check_checkmk_agent({}, None, None, controller_section, None, None))
             == expected_result
@@ -1149,7 +1185,7 @@ def test_certificate_validity(
                 Result(
                     state=State.WARN,
                     summary="Timed out plugin(s): some_plugin",
-                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 123s, PID: 4711) - "
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plug-in, Timeout: 123s, PID: 4711) - "
                     "Corresponding output is outdated and/or dropped.",
                 ),
             ],
@@ -1212,14 +1248,14 @@ def test_certificate_validity(
                 Result(
                     state=State.WARN,
                     summary="Timed out plugin(s): some_plugin, other_process",
-                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 7200s, PID: 1234), "
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plug-in, Timeout: 7200s, PID: 1234), "
                     "other_process (Timeout: 7200s, PID: 1234) - Corresponding output is outdated and/or dropped.",
                 ),
                 Result(
                     state=State.WARN,
                     summary="Termination failed: my_local_check, destroy_db",
                     details="Cached plugins(s) that failed to be terminated after timeout: "
-                    "my_local_check (Local check, Timeout: 7200s, PID: 1234), destroy_db (mk_oracle plugin, Timeout: 123s, PID: 4711) - "
+                    "my_local_check (Local check, Timeout: 7200s, PID: 1234), destroy_db (mk_oracle plug-in, Timeout: 123s, PID: 4711) - "
                     "Dysfunctional until successful termination.",
                 ),
             ],
@@ -1246,7 +1282,7 @@ def test_cached_plugins(
     )
 
 
-def test_normalize_ip() -> None:
-    assert normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
-    assert normalize_ip_addresses(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
-    assert normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]
+def test_expand_curly_address_notation() -> None:
+    assert expand_curly_address_notation("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
+    assert expand_curly_address_notation(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
+    assert expand_curly_address_notation("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]

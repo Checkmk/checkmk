@@ -6,22 +6,22 @@
 import argparse
 import sys
 import urllib.parse
+from pathlib import Path
 
 import requests
 import urllib3
 
-import cmk.utils.password_store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils import password_store
 
-cmk.utils.password_store.replace_passwords()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def main():
     args = parse_arguments()
 
+    auth = _make_auth(args.user, args.password, args.password_id)
     try:
-        msg, state, perfdata = handle_request(args)
+        msg, state, perfdata = handle_request(args, auth)
     except Exception as exc:
         sys.stdout.write("UNKNOWN - %s\n" % exc)
         return 3
@@ -30,7 +30,22 @@ def main():
     sys.exit(state)
 
 
-def handle_request(args):
+def _make_auth(
+    user: str | None,
+    password: str | None,
+    password_ref: str | None,
+) -> tuple[str, str] | None:
+    if user is None:
+        return None
+    if password is not None:
+        return (user, password)
+    if password_ref is not None:
+        pw_id, pw_file = password_ref.split(":", 1)
+        return (user, password_store.lookup(Path(pw_file), pw_id))
+    return None
+
+
+def handle_request(args: argparse.Namespace, auth: tuple[str, str] | None) -> tuple[str, int, str]:
     url = urllib.parse.urlunparse(
         (
             args.protocol,
@@ -56,21 +71,20 @@ def handle_request(args):
     if args.fieldname:
         query["query"]["bool"]["must"][0]["query_string"]["fields"] = args.fieldname.split(" ")
 
-    if args.user and args.password:
-        raw_response = requests.get(url, json=query, auth=(args.user, args.password))  # nosec B113
-    else:
-        raw_response = requests.get(url, json=query)  # nosec B113
+    raw_response = requests.get(url, json=query, auth=auth)  # nosec B113
 
-    msg, state, perfdata = handle_query(raw_response, args.warn, args.crit, args.timerange)
+    msg, state, perfdata = handle_query(raw_response, args.warn, args.crit)
 
     return msg, state, perfdata
 
 
-def handle_query(raw_response, warn, crit, timerange):
+def handle_query(
+    raw_response: requests.Response, warn: int | None, crit: int | None
+) -> tuple[str, int, str]:
     response_data = raw_response.json()
 
     if "count" not in response_data:
-        raise MKGeneralException("Missing section count in raw response data")
+        raise ValueError("Missing section count in raw response data")
 
     state = 0
     value = response_data["count"]
@@ -101,11 +115,17 @@ def parse_arguments(argv=None):
         default=None,
         help="Username for elasticsearch login",
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-s",
         "--password",
         default=None,
-        help="Password for easticsearch login",
+        help="Password for easticsearch login. Preferred over --password-id",
+    )
+    group.add_argument(
+        "--password-id",
+        default=None,
+        help="Password store reference to the password for easticsearch login",
     )
     parser.add_argument(
         "-P",

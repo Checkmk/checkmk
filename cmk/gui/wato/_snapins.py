@@ -112,7 +112,7 @@ def get_wato_menu_items() -> list[TopicMenuTopic]:
                 sort_index=module.sort_index,
                 is_show_more=module.is_show_more,
                 icon=module.icon,
-                additional_matches_setup_search=module.additional_matches_setup_search(),
+                megamenu_search_terms=module.megamenu_search_terms(),
             )
         )
 
@@ -134,25 +134,28 @@ class SetupSearch(ABCMegaMenuSearch):
     def show_search_field(self) -> None:
         html.open_div(id_="mk_side_search_setup")
         # TODO: Implement submit action (e.g. show all results of current query)
-        html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
-        tooltip = _("Search for menu entries, settings, hosts and rulesets.")
-        html.input(
-            id_=f"mk_side_search_field_{self.name}",
-            type_="text",
-            name="search",
-            title=tooltip,
-            autocomplete="off",
-            placeholder=_("Search in Setup"),
-            onkeydown="cmk.search.on_key_down('setup')",
-            oninput="cmk.search.on_input_search('setup');",
-        )
-        html.input(
-            id_=f"mk_side_search_field_clear_{self.name}",
-            name="reset",
-            type_="button",
-            onclick="cmk.search.on_click_reset('setup');",
-        )
-        html.end_form()
+        with html.form_context(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;"):
+            tooltip = _("Search for menu entries, settings, hosts and rulesets.")
+            html.input(
+                id_=f"mk_side_search_field_{self.name}",
+                type_="text",
+                name="search",
+                title=tooltip,
+                autocomplete="off",
+                placeholder=_("Search in Setup"),
+                onkeydown="cmk.search.on_key_down('setup')",
+                oninput="cmk.search.on_input_search('setup');",
+            )
+            html.input(
+                id_=f"mk_side_search_field_clear_{self.name}",
+                name="reset",
+                type_="button",
+                onclick="cmk.search.on_click_reset('setup');",
+                # When the user searched for something, let him jump to the first result with the first
+                # <TAB> key press instead of jumping to the reset button. The reset can be triggered via
+                # the <ESC> key.
+                tabindex="-1",
+            )
         html.close_div()
         html.div("", id_="mk_side_clear")
 
@@ -185,7 +188,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                 url=topic_menu_item.url,
                 match_texts=[
                     topic_menu_item.title,
-                    *topic_menu_item.additional_matches_setup_search,
+                    *topic_menu_item.megamenu_search_terms,
                 ],
             )
             for topic_menu_topic in self._topic_generator()
@@ -331,7 +334,6 @@ def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-unt
             id_="/" + folder[".path"],
             isopen=False,
             title=HTML(title),
-            icon="foldable_sidebar",
             padding=6,
         ):
             for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
@@ -354,9 +356,9 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
     @classmethod
     def description(cls):
         return _(
-            "This snapin shows the folders defined in Setup. It can be used to "
+            "This snap-in shows the folders defined in Setup. It can be used to "
             "open views filtered by the Setup folder. It works standalone, without "
-            "interaction with any other snapin."
+            "interaction with any other snap-in."
         )
 
     def show(self):

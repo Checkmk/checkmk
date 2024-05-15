@@ -6,12 +6,18 @@
 from collections.abc import MutableMapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib.cpu import Load, ProcessorType
+from cmk.plugins.lib.cpu import Section as CPUSection
+from cmk.plugins.lib.cpu_load import check_cpu_load, CPULoadParams
+from cmk.plugins.lib.wmi import (
+    get_wmi_time,
+    parse_wmi_table,
+    required_tables_missing,
+    WMIQueryTimeoutError,
+)
+
 from .agent_based_api.v1 import get_average, get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cpu import Load, ProcessorType
-from .utils.cpu import Section as CPUSection
-from .utils.cpu_load import check_cpu_load, CPULoadParams
-from .utils.wmi import get_wmi_time, parse_wmi_table, required_tables_missing, WMIQueryTimeoutError
 
 
 class Section(NamedTuple):

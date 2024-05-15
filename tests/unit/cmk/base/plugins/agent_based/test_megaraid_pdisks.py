@@ -9,7 +9,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import megaraid_pdisks
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.utils import megaraid
+
+from cmk.plugins.lib import megaraid
 
 STRING_TABLE: Final = [
     ["Enclosure", "Device", "ID:", "10"],

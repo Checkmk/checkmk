@@ -1,0 +1,13 @@
+Title: Add --snmp-backend option to cmk
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1697629280
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Add <tt>--snmp-backend = classic|inline|stored-walk</tt> option to
+the cmk command-line utility.  The following modes are affected:
+dump-agent, snmpwalk, snmpget, check-discovery, discover, check,
+inventory, inventory-as-check, inventorize-marked-hosts.

@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any
 
-from .agent_based_api.v1 import register, Service, SNMPTree, type_defs
-from .utils.bluecat import (
+from cmk.plugins.lib.bluecat import (
     check_bluecat_operational_state,
     CHECK_DEFAULT_PARAMETERS,
     cluster_check_bluecat_operational_state,
@@ -15,6 +13,8 @@ from .utils.bluecat import (
     parse_bluecat,
     Section,
 )
+
+from .agent_based_api.v1 import register, Service, SNMPTree, type_defs
 
 register.snmp_section(
     name="bluecat_dns",
@@ -38,7 +38,7 @@ def discover_bluecat_dns(section: Section) -> type_defs.DiscoveryResult:
 
 
 def check_bluecat_dns(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from check_bluecat_operational_state(
@@ -48,7 +48,7 @@ def check_bluecat_dns(
 
 
 def cluster_check_bluecat_dns(
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
     yield from cluster_check_bluecat_operational_state(

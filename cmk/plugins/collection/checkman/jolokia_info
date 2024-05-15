@@ -1,0 +1,16 @@
+title: Java Application Servers: Type and Version
+agents: linux, windows
+catalog: app/java
+license: GPLv2
+distribution: check_mk
+description:
+ monitor the uptime of a Java application server like
+ Tomcat or JBoss.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
+
+item:
+ The name of the application server instance as configured by the agent.
+
+discovery:
+ One service is created for each Jolokia instance sent by the agent.

@@ -13,7 +13,7 @@ CMK_VERSION=${CMK_VERSION%.*}
 
 # Needed by {managed,cloud,saas}/cmk/.f12 to set the correct edition after .f12
 if [ -z "$ORIG_EDITION" ]; then
-    ORIG_EDITION=$(sudo su - "$SITE" -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)'")
+    ORIG_EDITION=$("$ROOT/bin/python3" -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)')
     export ORIG_EDITION
 fi
 
@@ -30,6 +30,7 @@ PYTHON3_PATHS=(
     fields
     gui
     notification_plugins
+    plugins
     post_rename_site
     snmplib
     special_agents
@@ -42,25 +43,31 @@ echo "Copy check files (checks from the CRE are special: remove vanished files).
 TARGET="${ROOT}/share/check_mk/checks/"
 # NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it
 # would screw up our include caching mechanism!
-sudo rsync -rlpgoD --exclude="__pycache__" --delete-after "base/legacy_checks/" "${TARGET}"
-sudo find "${TARGET}" -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
-# modern check plugins:
-sudo rsync -rlpgoD --exclude="__pycache__" --delete-after "base/plugins/agent_based/" "${ROOT}/lib/python3/cmk/base/plugins/agent_based/"
+rsync \
+    -rlD \
+    --exclude="__pycache__" \
+    --exclude ".mypy_cache" \
+    --delete-after "base/legacy_checks/" \
+    "${TARGET}"
+find "${TARGET}" -iname "*.py" -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
 
 echo "Copy files..."
-sudo rsync \
+rsync \
     --exclude="*.pyc" \
     --exclude="flycheck*" \
     --exclude="base/legacy_checks" \
-    --exclude="base/plugins/agent_based" \
-    -aR \
+    --exclude="__pycache__" \
+    --exclude ".mypy_cache" \
+    --delete-after \
+    -rlDR \
     "${PYTHON3_PATHS[@]}" \
     "$ROOT"/lib/python3/cmk/
 
 # Transform required packages to namespace package
-sudo rm -f \
+rm -f \
     "$ROOT/lib/python3/cmk/__init__.py" \
     "$ROOT/lib/python3/cmk/active_checks/__init__.py" \
+    "$ROOT/lib/python3/cmk/plugins/collection/server_side_calls/__init__.py" \
     "$ROOT/lib/python3/cmk/special_agents/__init__.py" \
     "$ROOT/lib/python3/cmk/base/__init__.py" \
     "$ROOT/lib/python3/cmk/base/check_legacy_includes/__init__.py" \
@@ -93,7 +100,6 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/update_config/__init__.py" \
     "$ROOT/lib/python3/cmk/update_config/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/update_config/plugins/actions/__init__.py" \
-    \
     "$ROOT/lib/python3/cmk/cee/__init__.py" \
     "$ROOT/lib/python3/cmk/cee/dcd/__init__.py" \
     "$ROOT/lib/python3/cmk/cee/dcd/plugins/__init__.py" \
@@ -114,7 +120,6 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/sla/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py" \
-    \
     "$ROOT/lib/python3/cmk/gui/cce/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cce/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cce/plugins/wato/__init__.py" \
@@ -123,18 +128,18 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/base/cce/plugins/agent_based/__init__.py"
 
 # Restore site version after .f12
-sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py
+sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py
 
 # Make the target a CME version in case the version is already a CME version
 # (The dev is working on CME files)
 if [ "$ORIG_EDITION" = "cme" ]; then
     echo "Make the target version a CME version..."
-    sudo sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/utils/version.py"
+    sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/utils/version.py"
 fi
 
 if [ -z "$ONLY_COPY" ]; then
     (
         cd "$ROOT"/lib/python3/cmk
-        sudo "$ROOT"/bin/python3 -m compileall -qq "${PYTHON3_PATHS[@]}"
+        "$ROOT"/bin/python3 -m compileall -qq "${PYTHON3_PATHS[@]}"
     )
 fi

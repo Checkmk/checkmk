@@ -10,14 +10,6 @@ from unittest import mock
 import pytest
 
 
-# Automatically refresh caches for each test
-@pytest.fixture(autouse=True, scope="function")
-def clear_config_caches():
-    from cmk.utils.caching import cache_manager
-
-    cache_manager.clear()
-
-
 class _MockVSManager(typing.NamedTuple):
     active_service_interface: abc.Mapping[str, object]
 
@@ -26,7 +18,7 @@ class _MockVSManager(typing.NamedTuple):
 def initialised_item_state():
     mock_vs = _MockVSManager({})
     with mock.patch(
-        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+        "cmk.agent_based.v1.value_store._active_host_value_store",
         mock_vs,
     ):
         yield

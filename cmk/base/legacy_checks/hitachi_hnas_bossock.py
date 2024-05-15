@@ -3,37 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
 
-hitachi_hnas_bossock_default_levels = (250, 350)
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.hitachi_hnas import DETECT
 
-
-def inventory_hitachi_hnas_bossock(info):
-    for clusternode, _fibers in info:
-        yield clusternode, hitachi_hnas_bossock_default_levels
+DiscoveryResult = Iterable[tuple[str, Mapping]]
+CheckResult = Iterable[tuple[int, str, list]]
+Section = Mapping[str, int]
 
 
-def check_hitachi_hnas_bossock(item, params, info):
-    for clusternode, fibers in info:
-        if clusternode == item:
-            warn, crit = params
-            infotext = "%s running (levels %d/%d)" % (fibers, warn, crit)
+def parse_hitachi_hnas_bossock(string_table: StringTable) -> Section:
+    return {clusternode: int(fibers) for clusternode, fibers in string_table}
 
-            if int(fibers) >= crit:
-                state = 2
-            elif int(fibers) >= warn:
-                state = 1
-            else:
-                state = 0
 
-            perfdata = [("fibers", fibers, warn, crit)]
+def discover_hitachi_hnas_bossock(section: Section) -> DiscoveryResult:
+    for clusternode in section:
+        yield clusternode, {}
 
-            return state, infotext, perfdata
-    return None
+
+def check_hitachi_hnas_bossock(
+    item: str, params: Mapping[str, tuple[int, int]], section: Section
+) -> CheckResult:
+    if (fibers := section.get(item)) is None:
+        return
+
+    yield check_levels(
+        fibers, "fibers", params["levels"], human_readable_func=str, infoname="Running"
+    )
 
 
 check_info["hitachi_hnas_bossock"] = LegacyCheckDefinition(
@@ -43,7 +43,9 @@ check_info["hitachi_hnas_bossock"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="Bossock Fibers on Node %s",
-    discovery_function=inventory_hitachi_hnas_bossock,
+    parse_function=parse_hitachi_hnas_bossock,
+    discovery_function=discover_hitachi_hnas_bossock,
     check_function=check_hitachi_hnas_bossock,
     check_ruleset_name="bossock_fibers",
+    check_default_parameters={"levels": (250, 350)},
 )

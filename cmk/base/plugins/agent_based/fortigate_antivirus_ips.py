@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from time import time
 
+from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
+
 from .agent_based_api.v1 import (
     check_levels,
     get_rate,
@@ -16,7 +18,6 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.fortinet import DETECT_FORTIGATE
 
 Section = Mapping[str, Mapping[str, int]]
 

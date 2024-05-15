@@ -3,17 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.utils import version as cmk_version
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
 
 from cmk.automations.results import (
     ABCAutomationResult,
+    Gateway,
+    GatewayResult,
     result_type_registry,
+    ScanParentsResult,
+    SerializedResult,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
@@ -112,17 +118,21 @@ class TestTryDiscoveryResult:
                     check_source="my_check_source",
                     check_plugin_name="my_check_plugin_name",
                     ruleset_name=None,
+                    discovery_ruleset_name=None,
                     item=None,
-                    discovered_parameters=None,
-                    effective_parameters=None,
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
+                    effective_parameters={},
                     description="description",
                     state=0,
                     output="output",
                     metrics=[],
-                    labels={},
+                    old_labels={},
+                    new_labels={},
                     found_on_nodes=[],
                 )
             ],
+            nodes_check_table={},
             host_labels={},
             new_labels={},
             vanished_labels={},
@@ -136,3 +146,31 @@ class TestTryDiscoveryResult:
             )
             == result
         )
+
+
+class TestScanParentsResult:
+    SERIALIZED_RESULT = SerializedResult("([((None, '108.170.228.254', None), 'gateway', 0, '')],)")
+
+    DESERIALIZED_RESULT = ScanParentsResult(
+        results=[
+            GatewayResult(
+                gateway=Gateway(None, HostAddress("108.170.228.254"), None),
+                state="gateway",
+                ping_fails=0,
+                message="",
+            )
+        ]
+    )
+
+    def test_serialization_roundtrip(self) -> None:
+        assert (
+            ScanParentsResult.deserialize(
+                self.DESERIALIZED_RESULT.serialize(
+                    cmk_version.Version.from_str(cmk_version.__version__)
+                )
+            )
+            == self.DESERIALIZED_RESULT
+        )
+
+    def test_deserialization(self) -> None:
+        assert ScanParentsResult.deserialize(self.SERIALIZED_RESULT) == self.DESERIALIZED_RESULT

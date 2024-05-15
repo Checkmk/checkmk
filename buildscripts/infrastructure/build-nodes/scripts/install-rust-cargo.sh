@@ -9,19 +9,27 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-
-# provide common functions
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 # define toolchain version explicitly
 # 'stable' is allowed only for main(master) branch
-# https://github.com/rust-lang/rust/issues/112286 for the reason of pinning the version
-TOOLCHAIN_VERSION="1.72"
+DEFAULT_TOOLCHAIN_VERSION="1.75"
+# Some packages require specific toolchain versions.
+# These versions will be installed in addition to the default toolchain version.
+# List the versions separated by space, e.g. "1 2 3", and add a reason below.
+#
+# Reasons for added toolchains:
+# - 1.72: mk-sql is currently known to properly work with this version
+ADDITIONAL_TOOLCHAIN_VERSIONS="1.72"
 
-DEFAULT_TOOLCHAIN="${TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
+DEFAULT_TARGET="x86_64-unknown-linux-gnu"
+# List additional targets here, separated by space.
+# These targets will be installed for all toolchain versions.
+ADDITIONAL_TARGETS="x86_64-unknown-linux-musl"
+DEFAULT_TOOLCHAIN="${DEFAULT_TOOLCHAIN_VERSION}-${DEFAULT_TARGET}"
 DIR_NAME="rust"
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 
 CARGO_HOME="$TARGET_DIR/$DIR_NAME/cargo"
 export CARGO_HOME
@@ -29,7 +37,18 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID="8-$TOOLCHAIN_VERSION"
+BUILD_ID="9-$DEFAULT_TOOLCHAIN_VERSION"
+# This adds all present toolchain versions to the build ID to make sure they are
+# included in the cached archive.
+for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
+    BUILD_ID="$BUILD_ID-$toolchain_version"
+done
+# This adds all present targets to the build ID to make sure they are included
+# in the cached archive.
+BUILD_ID="$BUILD_ID-$DEFAULT_TARGET"
+for target in $ADDITIONAL_TARGETS; do
+    BUILD_ID="$BUILD_ID-$target"
+done
 
 build_package() {
     WORK_DIR=$(mktemp -d)
@@ -50,17 +69,45 @@ build_package() {
     mirrored_download "rustup-init.sh" "https://sh.rustup.rs"
     chmod +x rustup-init.sh
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
+    "${CARGO_HOME}"/bin/rustup toolchain install $DEFAULT_TOOLCHAIN_VERSION $ADDITIONAL_TOOLCHAIN_VERSIONS
+
+    # Install additional targets for all versions
+    for target in $ADDITIONAL_TARGETS; do
+        "${CARGO_HOME}/bin/rustup" target add "${target}" --toolchain $DEFAULT_TOOLCHAIN_VERSION
+
+        for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
+            "${CARGO_HOME}/bin/rustup" target add "${target}" --toolchain "${toolchain_version}"
+        done
+    done
+    "${CARGO_HOME}"/bin/rustup default $DEFAULT_TOOLCHAIN_VERSION
     "${CARGO_HOME}"/bin/rustup update
-    "${CARGO_HOME}"/bin/rustup target add x86_64-unknown-linux-musl
-    "${CARGO_HOME}"/bin/rustup default $TOOLCHAIN_VERSION
 
     # saves space
-    rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
-    rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/man/"
-    rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/zsh/"
+    remove_doc_dirs() {
+        echo "Removing rust documentation for $1"
+        rm -rf "$RUSTUP_HOME/toolchains/$1/share/doc/"
+        rm -rf "$RUSTUP_HOME/toolchains/$1/share/man/"
+        rm -rf "$RUSTUP_HOME/toolchains/$1/share/zsh/"
+    }
+
+    remove_doc_dirs "$DEFAULT_TOOLCHAIN"
+    for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
+        remove_doc_dirs "${toolchain_version}-${DEFAULT_TARGET}"
+    done
+    for target in $ADDITIONAL_TARGETS; do
+        remove_doc_dirs "${DEFAULT_TOOLCHAIN_VERSION}-${target}"
+        for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
+            remove_doc_dirs "${toolchain_version}-${target}"
+        done
+    done
 }
 
 if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 fi
 ln -sf "${CARGO_HOME}/bin/"* /usr/bin/
+
+test_package "rustc --version" "^rustc $DEFAULT_TOOLCHAIN_VERSION\."
+for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
+    test_package "$RUSTUP_HOME/toolchains/${toolchain_version}-${DEFAULT_TARGET}/bin/rustc --version" "^rustc $toolchain_version\."
+done

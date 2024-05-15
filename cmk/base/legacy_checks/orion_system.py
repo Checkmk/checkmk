@@ -10,10 +10,15 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith
 
 
 def parse_orion_system(string_table):
+    if not string_table:
+        return None
+
+    # states do not belong to the parsing :-(
     map_charge_states = {
         "1": (0, "float charging"),
         "2": (0, "discharge"),
@@ -36,7 +41,7 @@ def parse_orion_system(string_table):
         system_power,
     ) = string_table[0]
 
-    parsed = {
+    parsed: dict[str, object] = {
         "charging": {
             "Battery": map_charge_states.get(charge_state, (3, "unknown[%s]" % charge_state))
         },

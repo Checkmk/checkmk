@@ -12,8 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import hitachi_hnas
-from cmk.base.plugins.agent_based.utils.df import (
+
+from cmk.plugins.lib import hitachi_hnas
+from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,
     FILESYSTEM_DEFAULT_PARAMS,

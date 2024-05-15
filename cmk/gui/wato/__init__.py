@@ -101,9 +101,11 @@ from ._notification_parameter import (
     notification_parameter_registry as notification_parameter_registry,
 )
 from ._notification_parameter import NotificationParameter as NotificationParameter
+from ._notification_parameter import NotificationParameterMail as NotificationParameterMail
 from ._notification_parameter import NotificationParameterRegistry as NotificationParameterRegistry
 from ._notification_parameter import register_notification_parameters
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
+from ._rulespec_groups import RulespecGroupActiveChecks as RulespecGroupActiveChecks
 from ._rulespec_groups import (
     RulespecGroupCheckParametersApplications as RulespecGroupCheckParametersApplications,
 )
@@ -131,32 +133,48 @@ from ._rulespec_groups import (
 from ._rulespec_groups import (
     RulespecGroupCheckParametersVirtualization as RulespecGroupCheckParametersVirtualization,
 )
+from ._rulespec_groups import RulespecGroupDatasourcePrograms as RulespecGroupDatasourcePrograms
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsApps as RulespecGroupDatasourceProgramsApps,
+)
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsCloud as RulespecGroupDatasourceProgramsCloud,
+)
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsCustom as RulespecGroupDatasourceProgramsCustom,
+)
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsHardware as RulespecGroupDatasourceProgramsHardware,
+)
+from ._rulespec_groups import RulespecGroupDatasourceProgramsOS as RulespecGroupDatasourceProgramsOS
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsTesting as RulespecGroupDatasourceProgramsTesting,
+)
 from ._rulespec_groups import (
     RulespecGroupDiscoveryCheckParameters as RulespecGroupDiscoveryCheckParameters,
 )
+from ._rulespec_groups import (
+    RulespecGroupIntegrateOtherServices as RulespecGroupIntegrateOtherServices,
+)
+from ._rulespec_groups import RulespecGroupVMCloudContainer as RulespecGroupVMCloudContainer
+from .pages import IndividualOrStoredPassword as IndividualOrStoredPassword
+from .pages import (
+    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
+)
+from .pages import MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword
 from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
 from .pages._match_conditions import (
     multifolder_host_rule_match_conditions as multifolder_host_rule_match_conditions,
 )
-from .pages._password_store_valuespecs import (
-    IndividualOrStoredPassword as IndividualOrStoredPassword,
-)
-from .pages._password_store_valuespecs import (
-    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
-)
-from .pages._password_store_valuespecs import (
-    MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword,
-)
 from .pages._password_store_valuespecs import PasswordFromStore as PasswordFromStore
 from .pages._rule_conditions import DictHostTagCondition as DictHostTagCondition
-from .pages._rule_conditions import LabelCondition as LabelCondition
 from .pages._simple_modes import SimpleEditMode as SimpleEditMode
 from .pages._simple_modes import SimpleListMode as SimpleListMode
 from .pages._simple_modes import SimpleModeType as SimpleModeType
 from .pages._tile_menu import TileMenuRenderer as TileMenuRenderer
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
-# calls in the Setup plugin context
+# calls in the Setup plug-in context
 subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
 subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
 subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name

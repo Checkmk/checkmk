@@ -69,7 +69,6 @@ target_link_libraries(
   PRIVATE -static-libstdc++ -lpthread
   PUBLIC ${livestatus_so})
 
-target_compile_features(neb PUBLIC cxx_std_17)
 set_target_properties(neb PROPERTIES NO_SONAME 1)
 
 add_custom_target(build DEPENDS neb)

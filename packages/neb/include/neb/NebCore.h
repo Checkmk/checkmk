@@ -182,6 +182,7 @@ public:
     [[nodiscard]] std::chrono::system_clock::time_point lastCommandCheckTime()
         const override;
     [[nodiscard]] int32_t intervalLength() const override;
+    [[nodiscard]] int32_t maxLongOutputSize() const override;
     [[nodiscard]] int32_t numHosts() const override;
     [[nodiscard]] int32_t numServices() const override;
     [[nodiscard]] std::string programVersion() const override;
@@ -231,9 +232,9 @@ public:
     [[nodiscard]] bool isPnpGraphPresent(const IHost &h) const override;
     [[nodiscard]] bool isPnpGraphPresent(const IService &s) const override;
     [[nodiscard]] std::vector<std::string> metrics(
-        const IHost &h, Logger *logger) const override;
+        const IHost &h) const override;
     [[nodiscard]] std::vector<std::string> metrics(
-        const IService &s, Logger *logger) const override;
+        const IService &s) const override;
 
     [[nodiscard]] MetricLocation metricLocation(
         const std::string &host_name, const std::string &service_description,
@@ -246,7 +247,7 @@ public:
     std::map<unsigned long, std::unique_ptr<Comment>> &_comments;
 
 private:
-    Logger *_logger_livestatus;
+    Logger *_logger;
     const NagiosPathConfig _paths;
     const NagiosLimits _limits;
     const NagiosAuthorization _authorization;
@@ -278,6 +279,10 @@ private:
 
     void *implInternal() const override { return const_cast<NebCore *>(this); }
 
+    void logRequest(const std::string &line,
+                    const std::vector<std::string> &lines);
+    bool handleGet(InputBuffer &input, OutputBuffer &output,
+                   const std::string &line, const std::string &table_name);
     void answerCommandRequest(const ExternalCommand &command);
     void answerCommandMkLogwatchAcknowledge(const ExternalCommand &command);
     void answerCommandDelCrashReport(const ExternalCommand &command);

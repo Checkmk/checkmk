@@ -24,11 +24,13 @@ import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.config.base import CREConfig
+from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.type_defs import Key, RoleName
 
 if cmk_version.edition() is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
+    from cmk.gui.cee.plugins.config.cee import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+        CEEConfig,
+    )
 else:
     # Stub needed for non enterprise edition
     class CEEConfig:  # type: ignore[no-redef]
@@ -36,7 +38,9 @@ else:
 
 
 if cmk_version.edition() is cmk_version.Edition.CME:
-    from cmk.gui.cme.plugins.config.cme import CMEConfig  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.config import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+        CMEConfig,
+    )
 else:
     # Stub needed for non managed services edition
     class CMEConfig:  # type: ignore[no-redef]
@@ -136,7 +140,7 @@ def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
     """Load the given GUI configuration file"""
     try:
         with Path(path).open("rb") as f:
-            exec(f.read(), {}, raw_config)  # nosec B102 # BNS:aee528
+            exec(compile(f.read(), path, "exec"), {}, raw_config)  # nosec B102 # BNS:aee528
     except FileNotFoundError:
         pass
     except Exception as e:
@@ -147,7 +151,7 @@ def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
 # for *each* HTTP request.
 # FIXME: Optimize this to cache the config etc. until either the config files or plugins
 # have changed. We could make this being cached for multiple requests just like the
-# plugins of other modules. This may save significant time in case of small requests like
+# plug-ins of other modules. This may save significant time in case of small requests like
 # the graph ajax page or similar.
 def load_config() -> None:
     # Set default values for all user-changable configuration settings
@@ -185,7 +189,7 @@ def load_config() -> None:
     # to be done in make_config_object() in the next step.
     if "agent_signature_keys" in raw_config:
         raw_config["agent_signature_keys"] = {
-            key_id: Key.parse_obj(raw_key)
+            key_id: Key.model_validate(raw_key)
             for key_id, raw_key in raw_config["agent_signature_keys"].items()
         }
 
@@ -250,7 +254,7 @@ def _get_default_config_from_legacy_plugins() -> dict[str, Any]:
 
 
 def _get_default_config_from_module_plugins() -> dict[str, Any]:
-    """Plugins from the config plugin package are loaded here
+    """Plugins from the config plug-in package are loaded here
 
     These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
     `cmk.gui.cme.plugins.config`.

@@ -487,7 +487,7 @@ def test_log_lines_iter_encoding(monkeypatch:pytest.MonkeyPatch, buff:bytes, enc
 
 def test_log_lines_iter() -> None:
     txt_file = lw.__file__.rstrip('c')
-    with lw.LogLinesIter(txt_file, "utf-8" if os.name == "nt" else None) as log_iter:
+    with lw.LogLinesIter(txt_file, None) as log_iter:
         log_iter.set_position(122)
         assert log_iter.get_position() == 122
 
@@ -616,7 +616,7 @@ class MockStdout:  # pylint: disable=useless-object-inheritance
             },
             [
                 "[[[%s]]]\n" % __file__,
-                "W                 ('W', re.compile(u'^[^u]*W.*I m\xe4tch \xf6nly mys\xe9lf \U0001f9da', re.UNICODE), [], []),\n"
+                "W                 ('W', re.compile('^[^u]*W.*I m\xe4tch \xf6nly mys\xe9lf \U0001f9da', re.UNICODE), [], []),\n"
             ],
         ),
         (
@@ -657,7 +657,7 @@ class MockStdout:  # pylint: disable=useless-object-inheritance
             },
             [
                 "[[[%s]]]\n" % __file__,
-                "C                 ('C', re.compile(u'\U0001f409', re.UNICODE), [], []),\n",
+                "C                 ('C', re.compile('\U0001f409', re.UNICODE), [], []),\n",
             ],
         ),
         ('locked door', [], {}, {}, ["[[[locked door:cannotopen]]]\n"]),

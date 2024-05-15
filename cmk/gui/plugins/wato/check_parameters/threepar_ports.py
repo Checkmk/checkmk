@@ -53,6 +53,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Port"), help=_("The Port Description")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_threepar_ports,
-        title=lambda: _("3PAR Ports"),
+        title=lambda: _("3PAR ports"),
     )
 )

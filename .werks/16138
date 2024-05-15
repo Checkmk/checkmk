@@ -1,0 +1,15 @@
+Title: host_config: set start field as nullable
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1695887849
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses a small issue with our host_config response schema. We
+in some cases return a null value for the start field in network_scan_result.
+This violates the response schema.  To fix this, we set the schema field
+to allow_none.
+

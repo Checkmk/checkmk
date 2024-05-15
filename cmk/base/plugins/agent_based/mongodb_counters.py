@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -26,7 +26,7 @@ Section = Mapping[str, Mapping[str, int]]
 
 
 def parse_mongodb_counters(string_table: StringTable) -> Section:
-    parsed: MutableMapping[str, MutableMapping[str, int]] = {}
+    parsed: dict[str, dict[str, int]] = {}
     for line in string_table:
         document, counter_name, *counter_values = line
 

@@ -6,10 +6,11 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import esx_vsphere
+from cmk.plugins.lib.esx_vsphere import HeartBeatStatus
+
 from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import esx_vsphere
-from .utils.esx_vsphere import HeartBeatStatus
 
 
 def discovery_heartbeat(section: esx_vsphere.SectionVM) -> DiscoveryResult:

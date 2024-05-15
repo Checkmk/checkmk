@@ -3,24 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import logging
 import socket
 import ssl
-import sys
-from collections.abc import Mapping
-from typing import Any, Final
+from collections.abc import Buffer
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Final
 
-import cmk.utils.debug
-from cmk.utils import paths
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.certs import write_cert_store
 from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.fetchers import Fetcher, Mode
-
+from ._abstract import Fetcher, Mode
 from ._agentprtcl import (
     AgentCtlMessage,
     decrypt_by_agent_protocol,
@@ -29,13 +26,14 @@ from ._agentprtcl import (
     validate_agent_protocol,
 )
 
-if sys.version_info < (3, 12):
-    from typing_extensions import Buffer
-else:
-    from collections.abc import Buffer
+__all__ = ["TCPFetcher", "TLSConfig"]
 
 
-__all__ = ["TCPFetcher"]
+@dataclass(frozen=True, kw_only=True)
+class TLSConfig:
+    cas_dir: Path
+    ca_store: Path
+    site_crt: Path
 
 
 def recvall(sock: socket.socket, flags: int = 0) -> bytes:
@@ -47,21 +45,19 @@ def recvall(sock: socket.socket, flags: int = 0) -> bytes:
                 break
             buffer += data
     except OSError as e:
-        if cmk.utils.debug.enabled():
-            raise
         raise MKFetcherError("Communication failed: %s" % e)
 
     return bytes(buffer)
 
 
-def wrap_tls(sock: socket.socket, server_hostname: str) -> ssl.SSLSocket:
-    if not paths.agent_cert_store.exists():
+def wrap_tls(sock: socket.socket, server_hostname: str, *, tls_config: TLSConfig) -> ssl.SSLSocket:
+    if not tls_config.ca_store.exists():
         # agent cert store should be written on agent receiver startup.
         # However, if it's missing for some reason, we have to write it.
-        write_cert_store(source_dir=paths.agent_cas_dir, store_path=paths.agent_cert_store)
+        write_cert_store(source_dir=tls_config.cas_dir, store_path=tls_config.ca_store)
     try:
-        ctx = ssl.create_default_context(cafile=str(paths.agent_cert_store))
-        ctx.load_cert_chain(certfile=paths.site_cert_file)
+        ctx = ssl.create_default_context(cafile=str(tls_config.ca_store))
+        ctx.load_cert_chain(certfile=tls_config.site_crt)
         return ctx.wrap_socket(sock, server_hostname=server_hostname)
     except ssl.SSLError as e:
         raise MKFetcherError("Error establishing TLS connection") from e
@@ -77,22 +73,18 @@ class TCPFetcher(Fetcher[AgentRawData]):
         host_name: HostName,
         encryption_handling: TCPEncryptionHandling,
         pre_shared_secret: str | None,
+        tls_config: TLSConfig,
     ) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.tcp"))
-        self.family: Final = socket.AddressFamily(family)
-        # json has no builtin tuple, we have to convert
-        self.address: Final[tuple[HostAddress, int]] = (address[0], address[1])
+        super().__init__()
+        self.family: Final = family
+        self.address: Final = address
         self.timeout: Final = timeout
         self.host_name: Final = host_name
         self.encryption_handling: Final = encryption_handling
         self.pre_shared_secret: Final = pre_shared_secret
-        self._opt_socket: socket.socket | None = None
-
-    @property
-    def _socket(self) -> socket.socket:
-        if self._opt_socket is None:
-            raise MKFetcherError("Not connected")
-        return self._opt_socket
+        self.tls_config: Final = tls_config
+        self._logger: Final = logging.getLogger("cmk.helper.tcp")
+        self._socket: socket.socket | None = None
 
     def __repr__(self) -> str:
         return (
@@ -109,28 +101,18 @@ class TCPFetcher(Fetcher[AgentRawData]):
             + ")"
         )
 
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
-        serialized_ = copy.deepcopy(dict(serialized))
-        address: tuple[HostAddress, int] = serialized_.pop("address")
-        host_name = HostName(serialized_.pop("host_name"))
-        encryption_handling = TCPEncryptionHandling(serialized_.pop("encryption_handling"))
-        return cls(
-            address=address,
-            host_name=host_name,
-            encryption_handling=encryption_handling,
-            **serialized_,
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TCPFetcher):
+            return False
+        return (
+            self.family == other.family
+            and self.address == other.address
+            and self.timeout == other.timeout
+            and self.host_name == other.host_name
+            and self.encryption_handling == other.encryption_handling
+            and self.pre_shared_secret == other.pre_shared_secret
+            and self.tls_config == other.tls_config
         )
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "family": self.family,
-            "address": self.address,
-            "timeout": self.timeout,
-            "host_name": str(self.host_name),
-            "encryption_handling": self.encryption_handling.value,
-            "pre_shared_secret": self.pre_shared_secret,
-        }
 
     def open(self) -> None:
         self._logger.debug(
@@ -139,12 +121,13 @@ class TCPFetcher(Fetcher[AgentRawData]):
             self.address[1],
             self.timeout,
         )
-        self._opt_socket = socket.socket(self.family, socket.SOCK_STREAM)
+        self.close()
+        self._socket = socket.socket(self.family, socket.SOCK_STREAM)
         # For an explanation on these options have a look at tcp(7) (man tcp)
-        self._opt_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120)  # start after
-        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)  # wait between
-        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)  # how many tries
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120)  # start after
+        self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)  # wait between
+        self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)  # how many tries
         try:
             self._socket.settimeout(self.timeout)
             self._socket.connect(self.address)
@@ -153,32 +136,32 @@ class TCPFetcher(Fetcher[AgentRawData]):
             # so we set the KEEPALIVE settings above.
             self._socket.settimeout(None)
         except OSError as e:
-            self._close_socket()
-
-            if cmk.utils.debug.enabled():
-                raise
+            self.close()
             raise MKFetcherError("Communication failed: %s" % e)
 
     def close(self) -> None:
-        self._close_socket()
-
-    def _close_socket(self) -> None:
-        if self._opt_socket is None:
+        if self._socket is None:
             return
         self._logger.debug("Closing TCP connection to %s:%d", self.address[0], self.address[1])
-        self._opt_socket.close()
-        self._opt_socket = None
+        self._socket.close()
+        self._socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
+        sock = self._socket
+        if sock is None:
+            raise MKFetcherError("Not connected")
+
         controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
         agent_data = self._get_agent_data(
-            str(controller_uuid) if controller_uuid is not None else None
+            sock, str(controller_uuid) if controller_uuid is not None else None
         )
         return agent_data
 
-    def _from_tls(self, server_hostname: str) -> tuple[TransportProtocol, Buffer]:
+    def _from_tls(
+        self, sock: socket.socket, server_hostname: str
+    ) -> tuple[TransportProtocol, Buffer]:
         self._logger.debug("Reading data from agent via TLS socket")
-        with wrap_tls(self._socket, server_hostname) as ssock:
+        with wrap_tls(sock, server_hostname, tls_config=self.tls_config) as ssock:
             self._logger.debug("Reading data from agent")
             raw_agent_data = recvall(ssock)
         try:
@@ -200,9 +183,9 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._logger.debug("Detected transport protocol: %s", protocol)
         return protocol, memoryview(agent_data)[2:]
 
-    def _get_agent_data(self, server_hostname: str | None) -> AgentRawData:
+    def _get_agent_data(self, sock: socket.socket, server_hostname: str | None) -> AgentRawData:
         try:
-            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
+            raw_protocol = sock.recv(2, socket.MSG_WAITALL)
         except OSError as e:
             raise MKFetcherError(f"Communication failed: {e}") from e
 
@@ -223,10 +206,10 @@ class TCPFetcher(Fetcher[AgentRawData]):
             if server_hostname is None:
                 raise MKFetcherError("Agent controller not registered")
 
-            protocol, output = self._from_tls(server_hostname)
+            protocol, output = self._from_tls(sock, server_hostname)
         else:
             self._logger.debug("Reading data from agent")
-            output = recvall(self._socket, socket.MSG_WAITALL)
+            output = recvall(sock, socket.MSG_WAITALL)
 
         if not output:
             return AgentRawData(b"")  # nothing to to, validation will fail

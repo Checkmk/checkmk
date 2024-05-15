@@ -12,9 +12,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.threepar import parse_3par
+
 from .agent_based_api.v1 import check_levels, get_value_store, register, render, Service
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from .utils.threepar import parse_3par
 
 
 @dataclass

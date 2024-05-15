@@ -1,4 +1,4 @@
-Title: Linux agent: Produce <tt>ntp</tt> section on additional systems (eg. Slackware)
+Title: Linux agent: Produce ntp section on additional systems (eg. Slackware)
 Class: fix
 Compatible: compat
 Component: checks

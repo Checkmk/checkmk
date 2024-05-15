@@ -33,9 +33,12 @@ public:
     }
 
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
-        auto ctc = static_cast<const NebContact &>(contact).handle();
+        const auto &ctc = static_cast<const NebContact &>(contact).handle();
         // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         auto *h = const_cast<::host *>(&host_);
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         auto *c = const_cast<::contact *>(&ctc);
         return ::is_contact_for_host(h, c) != 0 ||
                ::is_escalated_contact_for_host(h, c) != 0;

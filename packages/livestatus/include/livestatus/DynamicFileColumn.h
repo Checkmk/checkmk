@@ -18,7 +18,7 @@
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/FileSystemHelper.h"
 
-template <class T>
+template <typename T>
 class DynamicFileColumn : public DynamicColumn {
 public:
     DynamicFileColumn(
@@ -36,7 +36,7 @@ private:
         _filepath;
 };
 
-template <class T>
+template <typename T>
 DynamicFileColumn<T>::DynamicFileColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets,
@@ -46,14 +46,14 @@ DynamicFileColumn<T>::DynamicFileColumn(
     , _basepath{std::move(basepath)}
     , _filepath{std::move(filepath)} {}
 
-template <class T>
+template <typename T>
 [[nodiscard]] std::filesystem::path DynamicFileColumn<T>::basepath(
     const T &data) const {
     // This delays the call to mc to after it is constructed.
     return _basepath(data);
 }
 
-template <class T>
+template <typename T>
 std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
     const std::string &name, const std::string &arguments) {
     // Arguments contains a path relative to basepath and possibly escaped.

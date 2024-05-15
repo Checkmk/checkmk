@@ -18,9 +18,8 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
-ad_replication_default_params = (15, 20)
+from cmk.agent_based.v2 import render, StringTable
 
 
 def _get_relative_date_human_readable(timestamp: float) -> str:
@@ -62,10 +61,10 @@ def inventory_ad_replication(info):
             source_dc = line[4]
         else:
             break  # unhandled data
-        entry = (f"{source_site}/{source_dc}", ad_replication_default_params)
+        entry = f"{source_site}/{source_dc}"
         if line[0] == "showrepl_INFO" and entry not in inv:
             inv.append(entry)
-    return inv
+    yield from ((entry, {}) for entry in inv)
 
 
 def check_ad_replication(item, params, info):
@@ -74,7 +73,7 @@ def check_ad_replication(item, params, info):
     found_line = False
     count_failures = 0
     count_failed_repl = 0
-    max_failures_warn, max_failures_crit = params
+    max_failures_warn, max_failures_crit = params["failure_levels"]
 
     for line in parse_ad_replication_info(info):
         if len(line) == 11:
@@ -178,9 +177,17 @@ def check_ad_replication(item, params, info):
     return
 
 
+def parse_ad_replication(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ad_replication"] = LegacyCheckDefinition(
+    parse_function=parse_ad_replication,
     service_name="AD Replication %s",
     discovery_function=inventory_ad_replication,
     check_function=check_ad_replication,
     check_ruleset_name="ad_replication",
+    check_default_parameters={
+        "failure_levels": (15, 20),
+    },
 )

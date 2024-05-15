@@ -5,13 +5,13 @@
 
 from collections.abc import Mapping
 from time import time
+from typing import TypedDict
 
-from typing_extensions import TypedDict
+from cmk.plugins.lib.cpu_util import check_cpu_util
+from cmk.plugins.lib.juniper import DETECT_JUNIPER
 
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cpu_util import check_cpu_util
-from .utils.juniper import DETECT_JUNIPER
 
 Section = Mapping[str, int]
 

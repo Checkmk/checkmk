@@ -1,0 +1,32 @@
+title: Check Number of Notifications per Contact
+agents: active
+catalog: agentless
+license: GPLv2
+distribution: check_mk
+
+item:
+ The name of the device
+
+description:
+ Check the number of sent notifications per contact using the plug-in check_notify_count
+ provided with Checkmk. This plug-in counts the total number of notifications sent by the local
+ monitoring core and creates graphs for each individual contact. You can configure thresholds
+ on the number of notifications per contact in a defined time interval.
+
+ This plug-in queries livestatus to extract the notification related log entries from the
+ log file of your monitoring core. By default, in OMD environments, the livestatus of the local
+ site is queried.
+
+ This check can be configured by WATO.
+
+ See the {usage} page of the check for details about the invocation on the command line.
+
+Examples:
+ Count all notifications within last 60 minutes:
+
+ ./check_notify_count -r 60
+
+ Count all notifications within last 60 minutes and raise alerts when too many notifications
+ are sent to a contact:
+
+ ./check_notify_count -r 60 -w 20 -c 30

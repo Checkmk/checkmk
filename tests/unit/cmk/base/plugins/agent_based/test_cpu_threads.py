@@ -11,7 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.cpu import parse_cpu
 from cmk.base.plugins.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads
-from cmk.base.plugins.agent_based.utils.cpu import Load, Section, Threads
+
+from cmk.plugins.lib.cpu import Load, ProcessorType, Section, Threads
 
 
 def test_cpu_threads() -> None:
@@ -110,3 +111,17 @@ def test_relative_but_no_absolute_levels(
         if isinstance(element, Metric):
             found_levels[element.name] = element.levels
     assert found_levels == levels
+
+
+def test_parse_missing_thread_info():
+    # thread info can be missing on an AIX system:
+    # $ ps -eo thcount | awk '{SUM+=$1} END {print SUM}'
+    #   ps: 0509-001 There is not enough memory available now.
+    #    Try again later or
+    #    follow local problem reporting procedures.
+    assert parse_cpu([["0.88", "0.83", "0.87", "2/", "21050", "8"]]) == Section(
+        load=Load(load1=0.88, load5=0.83, load15=0.87),
+        num_cpus=8,
+        threads=Threads(count=None, max=None),
+        type=ProcessorType.unspecified,
+    )

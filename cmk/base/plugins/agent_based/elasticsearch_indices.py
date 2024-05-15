@@ -8,10 +8,9 @@ import json
 import re
 import time
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, NotRequired
+from typing import Any, NotRequired, TypedDict
 
 import pydantic
-from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -67,7 +66,7 @@ def parse_elasticsearch_indices(string_table: StringTable) -> _Section:
             size=index_response.total.store.size_in_bytes,
         )
         for index_name, index_response in (
-            (index_name, _IndexResponse.parse_obj(raw_dict))
+            (index_name, _IndexResponse.model_validate(raw_dict))
             for index_name, raw_dict in json.loads(string_table[0][0]).items()
         )
     }

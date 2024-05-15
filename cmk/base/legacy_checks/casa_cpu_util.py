@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.casa import DETECT_CASA
 
 
 def parse_casa_info_util(info):
@@ -50,7 +50,12 @@ def check_casa_cpu_util(item, params, info):
     )
 
 
+def parse_casa_cpu_util(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["casa_cpu_util"] = LegacyCheckDefinition(
+    parse_function=parse_casa_cpu_util,
     detect=DETECT_CASA,
     fetch=[
         SNMPTree(

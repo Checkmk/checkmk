@@ -5,8 +5,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_OSN
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
 
 # The typical OSN power unit delivers 750 W max
 
@@ -34,7 +35,12 @@ def check_huawei_osn_power(item, params, info):
                 yield state, f"(warn/crit at {warn}/{crit} W)"
 
 
+def parse_huawei_osn_power(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["huawei_osn_power"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_osn_power,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.4.70.20.20.10.1",

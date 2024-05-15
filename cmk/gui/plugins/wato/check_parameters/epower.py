@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 
 def _item_spec_epower():
@@ -30,19 +31,27 @@ def _parameter_valuespec_epower():
             [
                 (
                     "levels_lower",
-                    Tuple(
-                        help=_(
-                            "Levels for the electrical power consumption of a device "
-                            "like a UPS or a PDU. Several phases may be addressed independently."
-                        ),
-                        elements=[
-                            Integer(title=_("warning if below"), unit="Watt", default_value=20),
-                            Integer(title=_("critical if below"), unit="Watt", default_value=1),
-                        ],
+                    SimpleLevels(
+                        Integer,
+                        title=_("Configure lower levels"),
+                        default_levels=(20, 1),
+                        unit="Watt",
+                    ),
+                ),
+                (
+                    "levels_upper",
+                    SimpleLevels(
+                        Integer,
+                        title=_("Configure upper levels"),
+                        default_levels=(2000, 4000),
+                        unit="Watt",
                     ),
                 ),
             ],
-            optional_keys=False,
+            help=_(
+                "Levels for the electrical power consumption of a device "
+                "like a UPS or a PDU. Several phases may be addressed independently."
+            ),
         ),
         migrate=_migrate,
     )

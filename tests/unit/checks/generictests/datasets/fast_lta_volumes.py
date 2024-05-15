@@ -5,7 +5,7 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS
 
 checkname = "fast_lta_volumes"
 
@@ -21,7 +21,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 1.00% - 9.31 GiB of 931 GiB",
+                    "Used: 1.00% - 10.0 GB of 1.00 TB",
                     [
                         (
                             "fs_used",

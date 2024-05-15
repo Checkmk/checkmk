@@ -12,7 +12,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import CheckFunction, CheckPlugin, DiscoveryFunction
+from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 _PLUGIN = CheckPluginName("fireeye_mailq")
@@ -62,8 +62,8 @@ def test_check(check_fireeye_mailq: CheckFunction, section: object) -> None:
         Metric("mail_queue_hold_length", 0.0, levels=(1.0, 5.0)),
         Result(state=State.OK, summary="Mails in incoming queue: 0"),
         Metric("mail_queue_incoming_length", 0.0),
-        Result(state=State.WARN, summary="Mails in active queue: 3 (warn/crit at 1.0/5.0)"),
+        Result(state=State.WARN, summary="Mails in active queue: 3 (warn/crit at 1/5)"),
         Metric("mail_queue_active_length", 3.0, levels=(1.0, 5.0)),
-        Result(state=State.CRIT, summary="Mails in drop queue: 5 (warn/crit at 1.0/5.0)"),
+        Result(state=State.CRIT, summary="Mails in drop queue: 5 (warn/crit at 1/5)"),
         Metric("mail_queue_drop_length", 5.0, levels=(1.0, 5.0)),
     ]

@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.ra32e import DETECT_RA32E
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.ra32e import DETECT_RA32E
 
 
 def inventory_ra32e_switch(info):
@@ -29,7 +30,12 @@ def check_ra32e_switch(item, params, info):
     return state, infotext
 
 
+def parse_ra32e_switch(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["ra32e_switch"] = LegacyCheckDefinition(
+    parse_function=parse_ra32e_switch,
     detect=DETECT_RA32E,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20916.1.8.1.3",

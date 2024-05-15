@@ -29,20 +29,20 @@ from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from datetime import datetime, timedelta
 from json import JSONDecodeError
 from typing import Any
+from zoneinfo import ZoneInfo
 
-import pytz
 import requests
 
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils.agent_common import (
+from cmk.special_agents.v0_unstable.agent_common import (
     CannotRecover,
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.utils.misc import JsonCachedData, to_bytes
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.misc import JsonCachedData, to_bytes
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
 
@@ -199,7 +199,7 @@ class BackupTask:
                 ),
                 (
                     "transferred",
-                    r"^INFO: transferred (.*) in (\d+) seconds \(.*\)$",
+                    r"^INFO: transferred (.*) in <?(\d+) seconds(.*)$",
                 ),
                 (
                     "uploaded",
@@ -220,6 +220,7 @@ class BackupTask:
             {"started_time", "total_duration", "transfer_size", "transfer_time"},
             {"started_time", "total_duration", "upload_amount", "upload_time", "upload_total"},
             {"started_time", "total_duration", "backup_amount", "backup_time", "backup_total"},
+            {"started_time", "total_duration", "archive_name", "archive_size"},
         )
 
         result: dict[str, dict[str, Any]] = {}  # mutable Mapping[str, Mapping[str, Any]]
@@ -249,9 +250,7 @@ class BackupTask:
 
         for linenr, line in enumerate(logs):
             try:
-                # TODO: use assignment expressions together with elif and w/o continue
-                start_vmid = extract_single_value(line, "start_vm")
-                if start_vmid:
+                if start_vmid := extract_single_value(line, "start_vm"):
                     if current_vmid:
                         # this is a consistency problem - we have to abort parsing this log file
                         raise BackupTask.LogParseError(
@@ -260,10 +259,8 @@ class BackupTask:
                         )
                     current_vmid = start_vmid
                     current_dataset = {}
-                    continue
 
-                finish_vm = extract_tuple(line, "finish_vm", 2)
-                if finish_vm:
+                elif finish_vm := extract_tuple(line, "finish_vm", 2):
                     stop_vmid, duration_str = finish_vm
                     if stop_vmid != current_vmid:
                         # this is a consistency problem - we have to abort parsing this log file
@@ -281,10 +278,8 @@ class BackupTask:
                         )
                     result[current_vmid] = current_dataset
                     current_vmid = ""
-                    continue
 
-                error_vm = extract_tuple(line, "error_vm", 2)
-                if error_vm:
+                elif error_vm := extract_tuple(line, "error_vm", 2):
                     error_vmid, error_msg = error_vm
                     if current_vmid and error_vmid != current_vmid:
                         # this is a consistency problem - we have to abort parsing this log file
@@ -295,38 +290,30 @@ class BackupTask:
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
                     result[error_vmid] = {**current_dataset, **{"error": error_msg}}
                     current_vmid = ""
-                    continue
 
-                started_time = extract_single_value(line, "started_time")
-                if started_time:
+                elif started_time := extract_single_value(line, "started_time"):
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr,
                             "Found start date while no VM was active",
                         )
                     current_dataset["started_time"] = started_time
-                    continue
 
-                failed_at_time = extract_single_value(line, "failed_job")
-                if failed_at_time:
+                elif failed_at_time := extract_single_value(line, "failed_job"):
                     # in case a backup job fails we store the time it failed as
                     # 'started_time' in order to be able to sort backup jobs
                     for backup_data in result.values():
                         backup_data.setdefault("started_time", failed_at_time)
-                    continue
 
-                bytes_written = extract_tuple(line, "bytes_written", 2)
-                if bytes_written:
+                elif bytes_written := extract_tuple(line, "bytes_written", 2):
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr, "Found bandwidth information while no VM was active"
                         )
                     current_dataset["bytes_written_size"] = int(bytes_written[0])
                     current_dataset["bytes_written_bandwidth"] = to_bytes(bytes_written[1])
-                    continue
 
-                transferred = extract_tuple(line, "transferred", 2)
-                if transferred:
+                elif transferred := extract_tuple(line, "transferred", 2):
                     transfer_size, transfer_time = transferred
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
@@ -334,29 +321,23 @@ class BackupTask:
                         )
                     current_dataset["transfer_size"] = to_bytes(transfer_size)
                     current_dataset["transfer_time"] = int(transfer_time)
-                    continue
 
-                archive_name = extract_single_value(line, "create_archive")
-                if archive_name:
+                elif archive_name := extract_single_value(line, "create_archive"):
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr,
                             "Found archive name without active VM",
                         )
                     current_dataset["archive_name"] = archive_name
-                    continue
 
-                archive_size = extract_single_value(line, "archive_size")
-                if archive_size:
+                elif archive_size := extract_single_value(line, "archive_size"):
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr, "Found archive size information without active VM"
                         )
                     current_dataset["archive_size"] = to_bytes(archive_size)
-                    continue
 
-                uploaded = extract_tuple(line, "uploaded", 5)
-                if uploaded:
+                elif uploaded := extract_tuple(line, "uploaded", 5):
                     _, upload_amount, upload_total, upload_time, _ = uploaded
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
@@ -365,10 +346,8 @@ class BackupTask:
                     current_dataset["upload_amount"] = to_bytes(upload_amount)
                     current_dataset["upload_total"] = to_bytes(upload_total)
                     current_dataset["upload_time"] = float(upload_time)
-                    continue
 
-                backuped = extract_tuple(line, "backuped", 5)
-                if backuped:
+                elif backuped := extract_tuple(line, "backuped", 5):
                     _, backup_amount, backup_total, _, backup_time = backuped
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
@@ -377,7 +356,6 @@ class BackupTask:
                     current_dataset["backup_amount"] = to_bytes(backup_amount)
                     current_dataset["backup_total"] = to_bytes(backup_total)
                     current_dataset["backup_time"] = float(backup_time)
-                    continue
 
             except BackupTask.LogParseWarning as exc:
                 if strict:
@@ -537,9 +515,9 @@ def agent_proxmox_ve_main(args: Args) -> int:
         Adds timezone information to a date string.
         Returns a timezone-aware string
         """
-        local_tz = pytz.timezone(tz)
+        local_tz = ZoneInfo(tz)
         timezone_unaware = datetime.strptime(naive_string, "%Y-%m-%d %H:%M:%S")
-        timezone_aware = local_tz.localize(timezone_unaware)
+        timezone_aware = timezone_unaware.replace(tzinfo=local_tz)
         return timezone_aware.strftime("%Y-%m-%d %H:%M:%S%z")
 
     #  overwrite all the start time strings with timezone aware start strings
@@ -721,9 +699,11 @@ class ProxmoxVeSession:
             method="GET",
             url=self._base_url + sub_url,
             # todo: generic
-            params={"limit": "5000"}
-            if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
-            else {},
+            params=(
+                {"limit": "5000"}
+                if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
+                else {}
+            ),
             verify=self._verify_ssl,
             timeout=self._timeout,
         )
@@ -802,9 +782,7 @@ class ProxmoxVeAPI:
                 return (
                     request_tree
                     if isinstance(request_tree, Mapping)
-                    else next(iter(request_tree))
-                    if len(request_tree) > 0
-                    else {}
+                    else next(iter(request_tree)) if len(request_tree) > 0 else {}
                 )  #  #
 
             def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:

@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.storeonce_servicesets import (
@@ -15,8 +17,9 @@ from cmk.base.plugins.agent_based.storeonce_servicesets import (
     discover_storeonce_servicesets,
     parse_storeonce_servicesets,
 )
-from cmk.base.plugins.agent_based.utils import storeonce
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib import storeonce
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 Section = storeonce.SectionServiceSets
 
@@ -82,7 +85,7 @@ def test_check_1_capacity(monkeypatch: pytest.MonkeyPatch, section_1: Section) -
         "get_value_store",
         lambda: {"1.delta": (1577972460.0 - 60, 21108135.3046875 - 300)},
     )
-    with on_time("2020-01-02 13:41:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2020, 1, 2, 13, 41, tzinfo=ZoneInfo("UTC"))):
         assert list(
             check_storeonce_servicesets_capacity("1", FILESYSTEM_DEFAULT_PARAMS, section_1)
         ) == [
@@ -101,13 +104,13 @@ def test_check_1_capacity(monkeypatch: pytest.MonkeyPatch, section_1: Section) -
             ),
             Result(
                 state=State.OK,
-                summary="Used: 29.14% - 20.1 TiB of 69.1 TiB",
+                summary="Used: 29.14% - 22.1 TB of 76.0 TB",
             ),
             Metric("fs_size", 72434242.83375072, boundaries=(0, None)),
             Metric("growth", 432000.0),
-            Result(state=State.OK, summary="trend per 1 day 0 hours: +422 GiB"),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +453 GB"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +0.60%"),
-            Metric("trend", 432000.0, boundaries=(0.0, 3018093.4514062805)),
+            Metric("trend", 432000.0),
             Result(state=State.OK, summary="Time left until disk full: 118 days 19 hours"),
             Result(
                 state=State.OK,
@@ -188,7 +191,7 @@ def test_check_2_capacity(monkeypatch: pytest.MonkeyPatch, section_2: Section) -
         "get_value_store",
         lambda: {"1.delta": (1577972280.0 - 60, 51789957.953125 - 6000)},
     )
-    with on_time("2020-01-02 13:38:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2020, 1, 2, 13, 38, tzinfo=ZoneInfo("UTC"))):
         assert list(
             check_storeonce_servicesets_capacity("1", FILESYSTEM_DEFAULT_PARAMS, section_2)
         ) == [
@@ -207,13 +210,13 @@ def test_check_2_capacity(monkeypatch: pytest.MonkeyPatch, section_2: Section) -
             ),
             Result(
                 state=State.OK,
-                summary="Used: 71.50% - 49.4 TiB of 69.1 TiB",
+                summary="Used: 71.50% - 54.3 TB of 76.0 TB",
             ),
             Metric("fs_size", 72434242.83375072, boundaries=(0, None)),
             Metric("growth", 8640000.0),
-            Result(state=State.OK, summary="trend per 1 day 0 hours: +8.24 TiB"),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +9.06 TB"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +11.93%"),
-            Metric("trend", 8640000.0, boundaries=(0.0, 3018093.4514062805)),
+            Metric("trend", 8640000.0),
             Result(state=State.OK, summary="Time left until disk full: 2 days 9 hours"),
             Result(state=State.OK, summary="Total local: 69.1 TiB"),
             Result(state=State.OK, summary="Free local: 19.7 TiB"),

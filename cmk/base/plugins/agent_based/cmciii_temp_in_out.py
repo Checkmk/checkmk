@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import get_value_store, register, type_defs
-from .utils.cmciii import (
+from cmk.plugins.lib.cmciii import (
     discover_cmciii_sensors,
     discovery_default_parameters,
     DiscoveryParams,
     get_sensor,
     Section,
 )
-from .utils.temperature import check_temperature, TempParamDict
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+
+from .agent_based_api.v1 import get_value_store, register, type_defs
 
 
 def discover_cmciii_temp_in_out(

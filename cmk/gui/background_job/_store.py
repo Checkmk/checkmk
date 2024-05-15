@@ -5,9 +5,7 @@
 
 import time
 from pathlib import Path
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.utils import store
 
@@ -79,7 +77,7 @@ class JobStatusStore:
             return initialized
 
         try:
-            data: JobStatusSpec = JobStatusSpec.parse_obj(raw_status_spec)
+            data: JobStatusSpec = JobStatusSpec.model_validate(raw_status_spec)
         finally:
             store.release_lock(str(self._jobstatus_path))
 
@@ -106,7 +104,7 @@ class JobStatusStore:
         return self._jobstatus_path.exists()
 
     def write(self, status: JobStatusSpec) -> None:
-        store.save_object_to_file(self._jobstatus_path, status.dict())
+        store.save_object_to_file(self._jobstatus_path, status.model_dump())
 
     def update(self, params: JobStatusSpecUpdate) -> None:
         if not self._jobstatus_path.parent.exists():
@@ -114,6 +112,6 @@ class JobStatusStore:
 
         if params:
             try:
-                self.write(JobStatusSpec.parse_obj({**self.read_raw(), **params}))
+                self.write(JobStatusSpec.model_validate({**self.read_raw(), **params}))
             finally:
                 store.release_lock(str(self._jobstatus_path))

@@ -7,8 +7,8 @@
 #                                                                                       #
 #                                 !!   W A T C H   O U T   !!                           #
 #                                                                                       #
-#   The logwatch plugin is notorious for being an exception to just about every rule    #
-#   or best practice that applies to check plugin development.                          #
+#   The logwatch plug-in is notorious for being an exception to just about every rule   #
+#   or best practice that applies to check plug-in development.                         #
 #   It is highly discouraged to use this a an example!                                  #
 #                                                                                       #
 #########################################################################################

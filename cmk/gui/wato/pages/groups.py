@@ -7,21 +7,15 @@ import abc
 from collections.abc import Collection, Iterator, Sequence
 
 import cmk.utils.paths
+from cmk.utils.config_validation_layer.groups import GroupName, GroupSpec, GroupType
 from cmk.utils.user import UserId
+from cmk.utils.version import edition_supports_nagvis
 
 import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import (
-    GroupName,
-    GroupSpec,
-    GroupType,
-    load_contact_group_information,
-    load_host_group_information,
-    load_service_group_information,
-)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -48,6 +42,11 @@ from cmk.gui.valuespec import (
     ListChoiceChoice,
     ListOf,
     ListOfStrings,
+)
+from cmk.gui.watolib.groups_io import (
+    load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -276,31 +275,30 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         )
 
     def page(self) -> None:
-        html.begin_form("group", method="POST")
-        forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new, is_required=True)
-        html.help(
-            _(
-                "The name of the group is used as an internal key. It cannot be "
-                "changed later. It is also visible in the status GUI."
+        with html.form_context("group", method="POST"):
+            forms.header(_("Properties"))
+            forms.section(_("Name"), simple=not self._new, is_required=True)
+            html.help(
+                _(
+                    "The name of the group is used as an internal key. It cannot be "
+                    "changed later. It is also visible in the status GUI."
+                )
             )
-        )
-        if self._new:
-            html.text_input("name", size=50)
-            html.set_focus("name")
-        else:
-            html.write_text(self._name)
-            html.set_focus("alias")
+            if self._new:
+                html.text_input("name", size=50)
+                html.set_focus("name")
+            else:
+                html.write_text(self._name)
+                html.set_focus("alias")
 
-        forms.section(_("Alias"), is_required=True)
-        html.help(_("An alias or description of this group."))
-        html.text_input("alias", self.group["alias"], size=50)
+            forms.section(_("Alias"), is_required=True)
+            html.help(_("An alias or description of this group."))
+            html.text_input("alias", self.group["alias"], size=50)
 
-        self._show_extra_page_elements()
+            self._show_extra_page_elements()
 
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_fields()
 
 
 class ModeHostgroups(ModeGroups):
@@ -509,10 +507,11 @@ class ModeEditContactgroup(ABCModeEditGroup):
         if permitted_inventory_paths:
             self.group["inventory_paths"] = permitted_inventory_paths
 
-        permitted_maps = self._vs_nagvis_maps().from_html_vars("nagvis_maps")
-        self._vs_nagvis_maps().validate_value(permitted_maps, "nagvis_maps")
-        if permitted_maps:
-            self.group["nagvis_maps"] = permitted_maps
+        if edition_supports_nagvis():
+            permitted_maps = self._vs_nagvis_maps().from_html_vars("nagvis_maps")
+            self._vs_nagvis_maps().validate_value(permitted_maps, "nagvis_maps")
+            if permitted_maps:
+                self.group["nagvis_maps"] = permitted_maps
 
     def _show_extra_page_elements(self) -> None:
         super()._show_extra_page_elements()
@@ -523,7 +522,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
             "inventory_paths", self.group.get("inventory_paths")
         )
 
-        if self._get_nagvis_maps():
+        if edition_supports_nagvis() and self._get_nagvis_maps():
             forms.section(_("Access to NagVis Maps"))
             html.help(_("Configure access permissions to NagVis maps."))
             self._vs_nagvis_maps().render_input("nagvis_maps", self.group.get("nagvis_maps", []))

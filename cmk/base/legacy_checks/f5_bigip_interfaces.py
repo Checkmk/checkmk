@@ -4,17 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import dataclasses
 import time
+from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     any_of,
     equals,
     get_rate,
     get_value_store,
     render,
     SNMPTree,
+    StringTable,
 )
 
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1.  index for ifname
@@ -22,52 +26,73 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.3.  index for IN bytes
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.5.  index for OUT bytes
 
-f5_bigip_interface_states = {
-    1: "down (has no link and is initialized)",
-    2: "disabled (has been forced down)",
-    3: "uninitialized (has not been initialized)",
-    4: "loopback (in loopback mode)",
-    5: "unpopulated (interface not physically populated)",
-}
+
+@dataclasses.dataclass
+class Interface:
+    state: int
+    inbytes: int
+    outbytes: int
 
 
-def check_f5_bigip_interfaces(item, params, info):
-    for port, ifstate, inbytes, outbytes in info:
-        if item != port:
-            continue
+Section = Mapping[str, Interface]
 
-        if int(ifstate) != 0:
-            return (
-                2,
-                "State of {} is {}".format(
-                    f5_bigip_interface_states.get(ifstate, "unhandled (%d)" % ifstate), port
-                ),
+
+def parse_f5_bigip_interfaces(string_table: StringTable) -> Section:
+    section = {}
+    for port, ifstate, inbytes, outbytes in string_table:
+        try:
+            section[port] = Interface(
+                state=int(ifstate), inbytes=int(inbytes), outbytes=int(outbytes)
             )
+        except ValueError:
+            pass
+    return section
 
-        this_time = int(time.time())
-        in_per_sec = get_rate(
-            get_value_store(),
-            "in",
-            this_time,
-            saveint(inbytes),
-            raise_overflow=True,
-        )
-        out_per_sec = get_rate(
-            get_value_store(),
-            "out",
-            this_time,
-            saveint(outbytes),
-            raise_overflow=True,
-        )
 
-        inbytes_h = render.iobandwidth(in_per_sec)
-        outbytes_h = render.iobandwidth(out_per_sec)
-        perf = [
-            ("bytes_in", in_per_sec),
-            ("bytes_out", out_per_sec),
-        ]
-        return (0, f"in bytes: {inbytes_h}, out bytes: {outbytes_h}", perf)
-    return 3, "Interface not found in SNMP data"
+def discover_f5_bigip_interfaces(section: Section) -> Iterable[tuple[str, dict]]:
+    yield from ((port, {}) for port, interface in section.items() if interface.state == 0)
+
+
+def check_f5_bigip_interfaces(item, _no_params, section):
+    if (interface := section.get(item)) is None:
+        return
+
+    match interface.state:
+        case 0:
+            yield 0, "Up"
+        case 1:
+            yield 2, "Down (has no link and is initialized)"
+        case 2:
+            yield 2, "Disabled (has been forced down)"
+        case 3:
+            yield 2, "Uninitialized (has not been initialized)"
+        case 4:
+            yield 2, "Loopback (in loopback mode)"
+        case 5:
+            yield 2, "Unpopulated (interface not physically populated)"
+        case unknown_state:
+            yield 3, f"Unknown state ({unknown_state})"
+
+    if interface.state != 0:
+        return
+
+    this_time = int(time.time())
+    value_store = get_value_store()
+    yield check_levels(
+        get_rate(value_store, "in", this_time, interface.inbytes),
+        "bytes_in",
+        None,
+        human_readable_func=render.iobandwidth,
+        infoname="In bytes",
+    )
+
+    yield check_levels(
+        get_rate(value_store, "out", this_time, interface.outbytes),
+        "bytes_out",
+        None,
+        human_readable_func=render.iobandwidth,
+        infoname="Out bytes",
+    )
 
 
 check_info["f5_bigip_interfaces"] = LegacyCheckDefinition(
@@ -80,6 +105,7 @@ check_info["f5_bigip_interfaces"] = LegacyCheckDefinition(
         oids=["4.3.1.1", "1.2.1.17", "4.3.1.3", "4.3.1.5"],
     ),
     service_name="f5 Interface %s",
-    discovery_function=lambda info: [(x[0], {"state": 0}) for x in info if int(x[1]) == 0],
+    parse_function=parse_f5_bigip_interfaces,
+    discovery_function=discover_f5_bigip_interfaces,
     check_function=check_f5_bigip_interfaces,
 )

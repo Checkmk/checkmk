@@ -13,7 +13,7 @@ from cmk.gui.i18n import _l
 from cmk.gui.inventory.filters import (
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
-    FilterInvtableIDRange,
+    FilterInvtableIntegerRange,
     FilterInvtableInterfaceType,
     FilterInvtableOperStatus,
     FilterInvtableTimestampAsAge,
@@ -70,6 +70,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.cpu.cpus": {"title": _l("#Physical CPUs"), "paint": "count"},
         ".hardware.cpu.logical_cpus": {"title": _l("#Logical CPUs"), "paint": "count"},
         ".hardware.cpu.cores": {"title": _l("#Cores"), "paint": "count"},
+        ".hardware.cpu.nodes:": {
+            "title": _l("Node Processor"),
+            "keyorder": [
+                "node_name",
+                "cores",
+                "model"
+            ]
+        },
+        ".hardware.cpu.nodes:*.node_name": {"title": _l("Node Name")},
+        ".hardware.cpu.nodes:*.cores": {"title": _l("#Cores"), "paint": "count"},
+        ".hardware.cpu.nodes:*.model": {"title": _l("CPU Model")},
         ".hardware.memory.": {
             "title": _l("Memory (RAM)"),
             "keyorder": ["total_ram_usable", "total_swap", "total_vmalloc"],
@@ -138,8 +149,8 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.system.serial": {"title": _l("Serial Number")},
         ".hardware.system.expresscode": {"title": _l("Express Servicecode")},
         ".hardware.system.model": {"title": _l("Model Name")},
-        ".hardware.system.manufacturer": {"title": _l("Manufacturer")},
         ".hardware.system.node_name": {"title": _l("Node Name")},
+        ".hardware.system.manufacturer": {"title": _l("Manufacturer")},
         ".hardware.system.partition_name": {"title": _l("Partition Name")},
         ".hardware.system.pki_appliance_version": {"title": _l("Version of PKI Appliance")},
         ".hardware.system.device_number": {"title": _l("Device Number")},
@@ -148,6 +159,21 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
         ".hardware.system.serial_number": {"title": _l("Serial Number - LEGACY, don't use")},
         ".hardware.system.model_name": {"title": _l("Model Name - LEGACY, don't use")},
+        ".hardware.system.nodes:": {
+            "title": _l("Node System"),
+            "keyorder": [
+                "node_name",
+                "id",
+                "model",
+                "product",
+                "serial",
+            ],
+        },
+        ".hardware.system.nodes:*.node_name": {"title": _l("Node Name")},
+        ".hardware.system.nodes:*.id": {"title": _l("ID")},
+        ".hardware.system.nodes:*.model": {"title": _l("Model Name")},
+        ".hardware.system.nodes:*.product": {"title": _l("Product")},
+        ".hardware.system.nodes:*.serial": {"title": _l("Serial Number")},
         ".hardware.components.": {"title": _l("Physical Components")},
         ".hardware.components.others:": {
             "title": _l("Other entities"),
@@ -260,7 +286,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.components.containers:*.model": {"title": _l("Model Name")},
         ".hardware.components.containers:*.location": {"title": _l("Location")},
         ".hardware.components.psus:": {
-            "title": _l("Power Supplies"),
+            "title": _l("Power supplies"),
             "keyorder": [
                 "index",
                 "name",
@@ -485,7 +511,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.check_mk.versions:*.number": {"title": _l("Number")},
         ".software.applications.check_mk.versions:*.edition": {"title": _l("Edition")},
         ".software.applications.check_mk.versions:*.demo": {"title": _l("Demo"), "paint": "bool"},
-        ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites")},
+        ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites"), "filter": FilterInvtableIntegerRange},
         ".software.applications.check_mk.sites:": {
             "title": _l("Checkmk sites"),
             "keyorder": [
@@ -615,20 +641,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "keyorder": ["name"],
         },
         ".software.applications.check_mk.cluster.nodes:*.name": {"title": _l("Node name")},
-        ".software.applications.check_mk.host_labels:": {
-            "title": _l("Discovered host labels"),
-            "keyorder": [
-                "label",
-                "plugin_name",
-            ],
-        },
-        ".software.applications.check_mk.host_labels:*.label": {
-            "title": _l("Label"),
-            "paint": "cmk_label",
-        },
-        ".software.applications.check_mk.host_labels:*.plugin_name": {
-            "title": _l("Discovered by plugin"),
-        },
         ".software.applications.checkmk-agent.": {
             "title": _l("Checkmk Agent"),
             "keyorder": [
@@ -649,7 +661,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.checkmk-agent.localdirectory": {"title": _l("Local directory")},
         ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent Controller")},
         ".software.applications.checkmk-agent.plugins:": {
-            "title": _l("Agent plugins"),
+            "title": _l("Agent plug-ins"),
             "keyorder": ["name", "version", "cache_interval"],
         },
         ".software.applications.checkmk-agent.plugins:*.name": {"title": _l("Name")},
@@ -997,6 +1009,43 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.kube.pod.node": {"title": _l("Node")},
         ".software.applications.kube.pod.pod_ip": {"title": _l("Pod IP")},
         ".software.applications.kube.pod.qos_class": {"title": _l("QoS class")},
+        ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic Monitoring")},
+        ".software.applications.synthetic_monitoring.plans:": {
+            "title": _l("Plans"),
+            "keyorder": [
+                "application",
+                "suite_name",
+                "variant",
+                "plan_id",
+            ],
+            "view": "invsyntheticmonitoringplans",
+        },
+        ".software.applications.synthetic_monitoring.plans:*.application": {"title": _l("Application")},
+        ".software.applications.synthetic_monitoring.plans:*.suite_name": {"title": _l("Suite name")},
+        ".software.applications.synthetic_monitoring.plans:*.variant": {"title": _l("Variant")},
+        ".software.applications.synthetic_monitoring.plans:*.plan_id": {"title": _l("Plan ID")},
+        ".software.applications.synthetic_monitoring.tests:": {
+            "title": _l("Tests"),
+            "keyorder": [
+                "application",
+                "suite_name",
+                "variant",
+                "top_level_suite_name",
+                "bottom_level_suite_name",
+                "test_name",
+                "plan_id",
+                "test_item",
+            ],
+            "view": "invsyntheticmonitoringtests",
+        },
+        ".software.applications.synthetic_monitoring.tests:*.application": {"title": _l("Application")},
+        ".software.applications.synthetic_monitoring.tests:*.suite_name": {"title": _l("Suite name")},
+        ".software.applications.synthetic_monitoring.tests:*.variant": {"title": _l("Variant")},
+        ".software.applications.synthetic_monitoring.tests:*.top_level_suite_name": {"title": _l("Top level suite")},
+        ".software.applications.synthetic_monitoring.tests:*.bottom_level_suite_name": {"title": _l("Bottom level suite")},
+        ".software.applications.synthetic_monitoring.tests:*.test_name": {"title": _l("Test")},
+        ".software.applications.synthetic_monitoring.tests:*.plan_id": {"title": _l("Plan ID")},
+        ".software.applications.synthetic_monitoring.tests:*.test_item": {"title": _l("Item")},
         ".software.applications.mobileiron.": {
             "title": _l("Mobileiron"),
             "keyorder": [
@@ -1594,6 +1643,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "kernel_version",
                 "arch",
                 "service_pack",
+                "build",
             ],
         },
         ".software.os.name": {"title": _l("Operating system"), "is_show_more": False},
@@ -1604,6 +1654,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.os.kernel_version": {"title": _l("Kernel Version")},
         ".software.os.arch": {"title": _l("Kernel Architecture")},
         ".software.os.service_pack": {"title": _l("Latest Service Pack")},
+        ".software.os.build": {"title": _l("Build")},
         ".software.os.service_packs:": {"title": _l("Service Packs"), "keyorder": ["name"]},
         ".software.os.service_packs:*.name": {"title": _l("Name")},
         ".software.packages:": {
@@ -1654,7 +1705,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".networking.total_interfaces": {"title": _l("Total interfaces"), "paint": "count"},
         ".networking.total_ethernet_ports": {"title": _l("Ports"), "paint": "count"},
-        ".networking.hostname": {"title": _l("Hostname")},
+        ".networking.hostname": {"title": _l("Host name")},
         ".networking.available_ethernet_ports": {"title": _l("Ports available"), "paint": "count"},
         ".networking.addresses:": {
             "title": _l("IP Addresses"),
@@ -1685,7 +1736,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".networking.interfaces:*.index": {
             "title": _l("Index"),
             "paint": "number",
-            "filter": FilterInvtableIDRange,
+            "filter": FilterInvtableIntegerRange,
         },
         ".networking.interfaces:*.description": {"title": _l("Description")},
         ".networking.interfaces:*.alias": {"title": _l("Alias")},
@@ -1739,7 +1790,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".networking.wlan.controller.accesspoints:*.serial": {"title": _l("Serial Number")},
         ".networking.wlan.controller.accesspoints:*.sys_location": {"title": _l("System Location")},
         ".networking.tunnels:": {
-            "title": _l("Networking Tunnels"),
+            "title": _l("Networking tunnels"),
             "keyorder": [
                 "peername",
                 "index",

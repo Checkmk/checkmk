@@ -7,6 +7,9 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.prism import load_json
+
 from .agent_based_api.v1 import (
     get_value_store,
     GetRateError,
@@ -17,8 +20,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
-from .utils.prism import load_json
 
 Section = Mapping[str, Mapping[str, Any]]
 
@@ -69,13 +70,11 @@ def check_prism_storage_pools(
             params=params,
         )
     if das_cap > 0:
-        message = (
-            f"SAS/SATA capacity: {render.bytes(das_cap)}, SAS/SATA free: {render.bytes(das_free)}"
-        )
+        message = f"SAS/SATA capacity: {render.disksize(das_cap)}, SAS/SATA free: {render.disksize(das_free)}"
         yield Result(state=State(0), summary=message)
 
     if ssd_cap > 0:
-        message = f"SSD capacity: {render.bytes(ssd_cap)}, SSD free: {render.bytes(ssd_free)}"
+        message = f"SSD capacity: {render.disksize(ssd_cap)}, SSD free: {render.disksize(ssd_free)}"
         yield Result(state=State(0), summary=message)
 
 
@@ -83,7 +82,7 @@ register.check_plugin(
     name="prism_storage_pools",
     service_name="NTNX Storage %s",
     sections=["prism_storage_pools"],
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
     discovery_function=discovery_prism_storage_pools,
     check_function=check_prism_storage_pools,
     check_ruleset_name="filesystem",

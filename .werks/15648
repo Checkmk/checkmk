@@ -1,0 +1,17 @@
+Title: KUBE: Addition of support for Kubernetes version 1.28
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1697615780
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+With this release of Checkmk, we introduce support for version 1.28 of Kubernetes.  In Checkmk 2.3,
+support for Kubernetes version 1.23 is removed. The supported versions are listed below:
+
+Checkmk 2.2: 1.22, 1.23, 1.24, 1.25, 1.26, 1.27
+Checkmk 2.3: 1.24, 1.25, 1.26, 1.27, 1.28
+
+The list of supported versions may not apply to future patch versions. For such cases, a
+new werk will be released.

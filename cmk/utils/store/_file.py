@@ -37,11 +37,9 @@ TObject = TypeVar("TObject")
 
 
 class Serializer(Protocol[TObject]):
-    def serialize(self, data: TObject) -> bytes:
-        ...
+    def serialize(self, data: TObject) -> bytes: ...
 
-    def deserialize(self, raw: bytes) -> TObject:
-        ...
+    def deserialize(self, raw: bytes) -> TObject: ...
 
 
 class BytesSerializer:
@@ -98,16 +96,6 @@ def _raise_for_permissions(path: Path) -> None:
     owned_by_current_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
     world_writable = S_IMODE(stat.st_mode) & S_IWOTH != 0
 
-    if path.resolve() == Path("/etc/cma/backup.conf"):
-        # The file is group-owned by omd. To fix this in the appliance will
-        # take more time, considering the compatibility with older versions
-        # So we check for owner and world and don't care for group...
-        if not stat.st_uid in [0, getuid()] or world_writable:
-            raise MKGeneralException(
-                _("/etc/cma/backup.conf has wrong permissions. Refusing to read file")
-            )
-        return
-
     if not owned_by_current_user_or_root:
         raise MKGeneralException(_('Refusing to read file not owned by us: "%s"') % path)
     if world_writable:
@@ -115,17 +103,13 @@ def _raise_for_permissions(path: Path) -> None:
 
 
 class FileIo(Protocol):
-    def __init__(self, path: Path):
-        ...
+    def __init__(self, path: Path): ...
 
-    def write(self, data: bytes) -> None:
-        ...
+    def write(self, data: bytes) -> None: ...
 
-    def read(self) -> bytes:
-        ...
+    def read(self) -> bytes: ...
 
-    def locked(self) -> Iterator[None]:
-        ...
+    def locked(self) -> Iterator[None]: ...
 
 
 class RealIo:

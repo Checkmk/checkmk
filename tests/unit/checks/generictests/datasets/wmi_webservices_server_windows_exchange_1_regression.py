@@ -402,19 +402,19 @@ info = [
     ],
 ]
 
-discovery = {"": [("Default Web Site", None), ("Exchange Back End", None)]}
+discovery = {"": [("Default Web Site", {}), ("Exchange Back End", {})]}
 
 checks = {
     "": [
         (
             "Default Web Site",
             {},
-            [(0, "Connections: 0.00", [("connections", 0.00, None, None, None, None)])],
+            [(0, "Connections: 0", [("connections", 0, None, None, None, None)])],
         ),
         (
             "Exchange Back End",
             {},
-            [(0, "Connections: 1.74", [("connections", 1.7370736254249444, None, None, None, None)])],
+            [(0, "Connections: 11", [("connections", 11, None, None, None, None)])],
         ),
     ]
 }

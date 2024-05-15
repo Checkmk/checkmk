@@ -17,9 +17,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_timestamp_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, render, SNMPTree
 
 
 def parse_fortinet_controller_aps(string_table):
@@ -108,7 +109,7 @@ def check_fortinet_controller_aps(item, params, parsed):
 
     uptime = data["uptime"]
     if uptime:
-        yield 0, "Up since %s" % get_timestamp_human_readable(uptime), [("uptime", uptime)]
+        yield 0, "Up since %s" % render.datetime(uptime), [("uptime", uptime)]
 
     location = data.get("location")
     if location:

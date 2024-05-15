@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_DELL_COMPELLENT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.dell import DETECT_DELL_COMPELLENT
 
 
 def inventory_dell_compellent_folder(info):
@@ -26,7 +27,12 @@ def check_dell_compellent_folder(item, params, info):
             yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
+def parse_dell_compellent_folder(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_compellent_folder"] = LegacyCheckDefinition(
+    parse_function=parse_dell_compellent_folder,
     detect=DETECT_DELL_COMPELLENT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.11000.2000.500.1.2.32.1",

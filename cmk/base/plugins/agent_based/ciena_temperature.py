@@ -6,15 +6,16 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from .agent_based_api.v1 import get_value_store, OIDEnd, register, Service, SNMPTree
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.ciena_ces import (
+from cmk.plugins.lib.ciena_ces import (
     DETECT_CIENA_5142,
     DETECT_CIENA_5171,
     LeoTempSensorState,
     TceHealthStatus,
 )
-from .utils.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+
+from .agent_based_api.v1 import get_value_store, OIDEnd, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class TemperatureReading(NamedTuple):

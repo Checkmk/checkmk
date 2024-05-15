@@ -1,4 +1,4 @@
-Title: <tt>juniper_fru</tt>: Fix documentation for op. status "present"
+Title: juniper_fru: Fix documentation for op. status "present"
 Class: fix
 Compatible: compat
 Component: checks

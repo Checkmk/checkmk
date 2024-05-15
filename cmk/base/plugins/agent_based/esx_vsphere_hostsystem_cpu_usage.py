@@ -7,10 +7,11 @@ import time
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib import cpu_util
+from cmk.plugins.lib.esx_vsphere import Section
+
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import cpu_util
-from .utils.esx_vsphere import Section
 
 
 class EsxVsphereHostsystemCpuSection(NamedTuple):

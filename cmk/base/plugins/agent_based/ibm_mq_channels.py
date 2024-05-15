@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.ibm_mq import parse_ibm_mq
+
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.ibm_mq import parse_ibm_mq
 
 Section = Mapping[str, Any]
 

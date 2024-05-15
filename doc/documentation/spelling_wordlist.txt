@@ -8,6 +8,7 @@ cmk
 Crontab
 crontab
 cron
+Jira
 keepalive
 Liveproxyd
 Livestatus
@@ -50,3 +51,11 @@ cAdvisor
 unescaping
 configurability
 kube
+Werk
+Werks
+nowiki
+precompiled
+changelog
+robotmk
+md
+IdP

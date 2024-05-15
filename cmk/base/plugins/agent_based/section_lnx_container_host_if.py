@@ -7,13 +7,14 @@ from collections.abc import Mapping, Sequence
 from enum import Enum
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
-from cmk.base.plugins.agent_based.utils.interfaces import (
+
+from cmk.plugins.lib.interfaces import (
     Attributes,
     Counters,
     InterfaceWithCounters,
     mac_address_from_hexstring,
 )
-from cmk.base.plugins.agent_based.utils.lnx_if import Section
+from cmk.plugins.lib.lnx_if import Section
 
 # To understand why this section exists, please read the comments in the
 # correpsonding agent plugin.

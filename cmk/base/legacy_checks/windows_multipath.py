@@ -12,16 +12,17 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_windows_multipath(info):
     try:
         num_active = int(info[0][0])
     except (ValueError, IndexError):
-        return []
+        return
 
     if num_active > 0:
-        return [(None, num_active)]
-    return []
+        yield None, {"active_paths": num_active}
 
 
 def check_windows_multipath(item, params, info):
@@ -29,8 +30,9 @@ def check_windows_multipath(item, params, info):
 
     yield 0, "Paths active: %s" % (num_active)
 
-    if isinstance(params, tuple):
-        num_paths, warn, crit = params
+    levels = params["active_paths"]
+    if isinstance(levels, tuple):
+        num_paths, warn, crit = levels
         warn_num = (warn / 100.0) * num_paths
         crit_num = (crit / 100.0) * num_paths
         if num_active < crit_num:
@@ -43,21 +45,22 @@ def check_windows_multipath(item, params, info):
         if state > 0:
             yield state, "(warn/crit below %d/%d)" % (warn_num, crit_num)
     else:
-        if isinstance(params, int):
-            num_paths = params
-        else:
-            num_paths = 4
+        yield 0, "Expected paths: %s" % levels
+        if num_active < levels:
+            yield 2, "(crit below %d)" % levels
+        elif num_active > levels:
+            yield 1, "(warn at %d)" % levels
 
-        yield 0, "Expected paths: %s" % num_paths
-        if num_active < num_paths:
-            yield 2, "(crit below %d)" % num_paths
-        elif num_active > num_paths:
-            yield 1, "(warn at %d)" % num_paths
+
+def parse_windows_multipath(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 check_info["windows_multipath"] = LegacyCheckDefinition(
+    parse_function=parse_windows_multipath,
     service_name="Multipath",
     discovery_function=inventory_windows_multipath,
     check_function=check_windows_multipath,
     check_ruleset_name="windows_multipath",
+    check_default_parameters={"active_paths": 4},
 )

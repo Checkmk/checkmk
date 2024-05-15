@@ -3,19 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any
 
-from .agent_based_api.v1 import get_value_store, register, SNMPTree
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
+from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,
     EXCLUDED_MOUNTPOINTS,
     FILESYSTEM_DEFAULT_PARAMS,
     FSBlock,
 )
-from .utils.ucd_hr_detection import HR
+from cmk.plugins.lib.ucd_hr_detection import HR
+
+from .agent_based_api.v1 import get_value_store, register, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # .1.3.6.1.2.1.25.2.3.1.2.1 .1.3.6.1.2.1.25.2.1.2 --> HOST-RESOURCES-MIB::hrStorageType.1
 # .1.3.6.1.2.1.25.2.3.1.2.3 .1.3.6.1.2.1.25.2.1.3 --> HOST-RESOURCES-MIB::hrStorageType.3
@@ -105,8 +106,14 @@ def discover_hr_fs(params: Sequence[Mapping[str, Any]], section: Section) -> Dis
 
 
 def check_hr_fs(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_hr_fs_testable(item, params, section, value_store=get_value_store())
+
+
+def check_hr_fs_testable(
+    item: str, params: Mapping[str, Any], section: Section, value_store: MutableMapping[str, object]
+) -> CheckResult:
     yield from df_check_filesystem_list(
-        value_store=get_value_store(),
+        value_store=value_store,
         item=item,
         params=params,
         fslist_blocks=section,

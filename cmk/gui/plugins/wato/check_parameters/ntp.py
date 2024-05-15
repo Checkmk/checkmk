@@ -38,7 +38,7 @@ def _valuespec_ntp_rules() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
-        match_type="merged",
+        match_type="dict",
         name="ntp_discovery",
         valuespec=_valuespec_ntp_rules,
     )

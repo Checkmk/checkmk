@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 mbg_lantime_refclock_refmode_map = {
     "0": "notavailable",
@@ -24,13 +25,10 @@ mbg_lantime_refclock_gpsstate_map = {
     "2": "not synchronized",
 }
 
-# number of good satellites
-mbg_lantime_refclock_default_levels = (3, 3)
-
 
 def inventory_mbg_lantime_refclock(info):
     if len(info) > 0 and len(info[0]) == 6:
-        return [(None, mbg_lantime_refclock_default_levels)]
+        return [(None, {})]
     return []
 
 
@@ -71,22 +69,28 @@ def check_mbg_lantime_refclock(item, params, info):
 
         # Handle number of satellites
         thr_txt = ""
-        if params[0] is not None and int(gps_sat_good) < params[1]:
+        warn_lower, crit_lower = params["levels_lower"]
+        if int(gps_sat_good) < crit_lower:
             state = max(state, 2)
             thr_txt = " (!!)"
-        elif params[1] is not None and int(gps_sat_good) < params[0]:
+        elif int(gps_sat_good) < warn_lower:
             state = max(state, 1)
             thr_txt = " (!)"
         state_txt.append(f"Satellites: {gps_sat_good}/{gps_sat_total}{thr_txt}")
 
-        perfdata = [("sat_good", gps_sat_good, params[0], params[1]), ("sat_total", gps_sat_total)]
+        perfdata = [("sat_good", gps_sat_good), ("sat_total", gps_sat_total)]
 
         return (state, ", ".join(state_txt), perfdata)
 
     return (3, "Got no state information")
 
 
+def parse_mbg_lantime_refclock(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
+    parse_function=parse_mbg_lantime_refclock,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.3.2",
@@ -95,4 +99,7 @@ check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
     service_name="LANTIME Refclock",
     discovery_function=inventory_mbg_lantime_refclock,
     check_function=check_mbg_lantime_refclock,
+    check_default_parameters={
+        "levels_lower": (3, 3),
+    },
 )

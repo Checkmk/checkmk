@@ -2,8 +2,12 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 import collections
 import typing
+from collections.abc import Sequence
+from functools import cached_property
 
 from apispec.ext.marshmallow import common
 from marshmallow import (
@@ -189,6 +193,23 @@ class ValueTypedDictSchema(BaseSchema):
         return result
 
 
+class LazySequence(Sequence):
+    """Calculates the items of the list on first access"""
+
+    def __init__(self, compute_items: typing.Callable[[], list[Schema]]) -> None:
+        self._compute_items = compute_items
+
+    @cached_property
+    def _items(self) -> list[Schema]:
+        return self._compute_items()
+
+    def __getitem__(self, i):
+        return self._items[i]
+
+    def __len__(self) -> int:
+        return len(self._items)
+
+
 class MultiNested(base.OpenAPIAttributes, fields.Field):
     """Combine many distinct models under one overarching model
 
@@ -239,8 +260,8 @@ class MultiNested(base.OpenAPIAttributes, fields.Field):
     a Union type.
 
         >>> nested = Entries()
-        >>> nested.declared_fields['entries'].metadata
-        {'anyOf': [<Schema1(many=False)>, <Schema2(many=False)>]}
+        >>> list(nested.declared_fields['entries'].metadata["anyOf"])
+        [<Schema1(many=False)>, <Schema2(many=False)>]
 
     When serializing and deserializing, we can use either model in our collections.
 
@@ -356,7 +377,7 @@ required field.'], 'something': ['Unknown field.']}
 
         When merging, all keys can only occur once:
 
-            >>> MultiNested([Schema1(), Schema1()], merged=True)
+            >>> MultiNested([Schema1(), Schema1()], merged=True).deserialize({})
             Traceback (most recent call last):
             ...
             RuntimeError: Schemas [<Schema1(many=False)>, <Schema1(many=False)>] are not disjoint. \
@@ -420,7 +441,7 @@ Keys 'optional1', 'required1' occur more than once.
 
     def __init__(  # type: ignore[no-untyped-def]
         self,
-        nested: typing.Sequence[type[Schema] | Schema],
+        nested: typing.Sequence[type[Schema] | Schema | typing.Callable[[], type[Schema]]],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
         *,
         default: typing.Any = fields.missing_,  # type: ignore[attr-defined]
@@ -448,38 +469,15 @@ Keys 'optional1', 'required1' occur more than once.
             raise NotImplementedError("allOf is not yet implemented.")
 
         metadata = kwargs.pop("metadata", {})
-        context = getattr(self.parent, "context", {})
-        context.update(metadata.get("context", {}))
 
-        self._nested = []
-        schema_inst: Schema
-        for schema in nested:
-            schema_inst = common.resolve_schema_instance(schema)
-            schema_inst.context.update(context)
-            if not self._has_fields(schema_inst):
-                # NOTE
-                # We want all values to be included in the result, even if the schema hasn't
-                # defined any fields on it. This is, because these schemas are used to validate
-                # through the hooks @post_load, @pre_dump, etc.
-                schema_inst.unknown = INCLUDE
+        self._context = getattr(self.parent, "context", {})
+        self._context.update(metadata.get("context", {}))
 
-            self._nested.append(schema_inst)
+        self._nested_args = nested
 
-        metadata["anyOf"] = self._nested
-
-        # We need to check that the key names of all schemas are completely disjoint, because
-        # we can't represent multiple schemas with the same key in merge-mode.
-        if merged:
-            set1: set[str] = set()
-            for schema_inst in self._nested:
-                keys = set(schema_inst.declared_fields.keys())
-                if not set1.isdisjoint(keys):
-                    wrong_keys = ", ".join(repr(key) for key in sorted(set1.intersection(keys)))
-                    raise RuntimeError(
-                        f"Schemas {self._nested} are not disjoint. "
-                        f"Keys {wrong_keys} occur more than once."
-                    )
-                set1.update(keys)
+        # We must not evaluate self._nested now, but can only hand over a list like object to
+        # marshmallow. So we use a small helper to do the late evaluation for us.
+        metadata["anyOf"] = LazySequence(lambda: self._nested)
 
         self.mode = mode
         self.only = only
@@ -490,6 +488,40 @@ Keys 'optional1', 'required1' occur more than once.
         # When we operate in standard mode, we really want to know these errors.
         self.unknown = EXCLUDE if self.merged else RAISE
         super().__init__(default=default, metadata=metadata, **kwargs)
+
+    @cached_property
+    def _nested(self) -> list[Schema]:
+        nested = []
+        schema_inst: Schema
+        for schema in self._nested_args:
+            if callable(schema):
+                schema = schema()
+            schema_inst = common.resolve_schema_instance(schema)
+            schema_inst.context.update(self._context)
+            if not self._has_fields(schema_inst):
+                # NOTE
+                # We want all values to be included in the result, even if the schema hasn't
+                # defined any fields on it. This is, because these schemas are used to validate
+                # through the hooks @post_load, @pre_dump, etc.
+                schema_inst.unknown = INCLUDE
+
+            nested.append(schema_inst)
+
+        # We need to check that the key names of all schemas are completely disjoint, because
+        # we can't represent multiple schemas with the same key in merge-mode.
+        if self.merged:
+            set1: set[str] = set()
+            for schema_inst in nested:
+                keys = set(schema_inst.declared_fields.keys())
+                if not set1.isdisjoint(keys):
+                    wrong_keys = ", ".join(repr(key) for key in sorted(set1.intersection(keys)))
+                    raise RuntimeError(
+                        f"Schemas {nested} are not disjoint. "
+                        f"Keys {wrong_keys} occur more than once."
+                    )
+                set1.update(keys)
+
+        return nested
 
     def _nested_schemas(self) -> list[Schema]:
         return self._nested + [MultiNested.ValidateOnDump(unknown=RAISE)]

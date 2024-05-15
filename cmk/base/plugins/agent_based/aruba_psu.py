@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 
-from typing_extensions import TypedDict
+from cmk.plugins.lib.aruba import DETECT_2930M
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict, TempParamType
 
 from .agent_based_api.v1 import (
     all_of,
@@ -23,8 +24,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.aruba import DETECT_2930M
-from .utils.temperature import check_temperature, TempParamDict, TempParamType
 
 
 class PSUWattageParams(TypedDict, total=False):

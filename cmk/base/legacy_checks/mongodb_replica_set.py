@@ -13,15 +13,11 @@ import json
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
-from cmk.base.plugins.agent_based.utils.mongodb import parse_date
+
+from cmk.agent_based.v2 import get_value_store, render
+from cmk.plugins.lib.mongodb import parse_date
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
 
@@ -125,7 +121,7 @@ def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
             lag_duration,
             None,
             levels[1:],
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.timespan,
             infoname=f"{member_name} is behind {name} for",
         )
 
@@ -147,11 +143,7 @@ def _get_long_output(member_name, member_optime_date, replication_lag_sec, name)
     log.append("source: %s" % member_name)
     log.append(
         "syncedTo: %s (UTC)"
-        % (
-            datetime.datetime.fromtimestamp(member_optime_date / 1000.0).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-        )
+        % (datetime.datetime.fromtimestamp(member_optime_date).strftime("%Y-%m-%d %H:%M:%S"))
     )
     log.append(
         "member (%s) is %ds (%dh) behind %s"
@@ -199,7 +191,7 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
     :param secondary_operation_time:
     :return: replication lag in seconds
     """
-    return (start_operation_time - secondary_operation_time) / 1000.0
+    return start_operation_time - secondary_operation_time
 
 
 check_info["mongodb_replica_set"] = LegacyCheckDefinition(
@@ -270,13 +262,13 @@ def check_mongodb_primary_election(_item, _params, status_dict):
     if last_primary_dict and (primary_name_changed or election_date_changed):
         yield 1, "New primary '{}' elected {} {}".format(
             primary_name,
-            get_timestamp_human_readable(primary_election_time),
+            render.datetime(primary_election_time),
             "(%s)" % ("node changed" if primary_name_changed else "election date changed"),
         )
     else:
         yield 0, "Primary '{}' elected {}".format(
             primary_name,
-            get_timestamp_human_readable(primary_election_time),
+            render.datetime(primary_election_time),
         )
 
     # update primary information

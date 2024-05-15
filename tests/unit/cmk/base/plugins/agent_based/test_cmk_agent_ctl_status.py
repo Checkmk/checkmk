@@ -9,7 +9,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.cmk_agent_ctl_status import parse_cmk_agent_ctl_status
-from cmk.base.plugins.agent_based.utils.checkmk import (
+
+from cmk.plugins.lib.checkmk import (
     CertInfoController,
     Connection,
     ControllerSection,

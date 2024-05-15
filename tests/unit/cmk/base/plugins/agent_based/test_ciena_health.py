@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.ciena_health import (
     Section,
     SNMPData,
 )
-from cmk.base.plugins.agent_based.utils.ciena_ces import (
+
+from cmk.plugins.lib.ciena_ces import (
     FanStatus,
     LeoFanStatus,
     LeoPowerSupplyState,
@@ -32,7 +33,7 @@ from cmk.base.plugins.agent_based.utils.ciena_ces import (
 def test_ciena_health_does_not_provide_metrics():
     """
     You may wonder whether it is ok to change the type returned by check_ciena_health. The answer is
-    no. The ciena_health plugin accumulates a lot of different information (about fans, power
+    no. The ciena_health plug-in accumulates a lot of different information (about fans, power
     supplies, etc... and across different devices). The only reason I was able to merge it all, is
     because it can treat all the different OIDs with the same logic. This logic is given by
     _summarize_discrete_snmp_values.

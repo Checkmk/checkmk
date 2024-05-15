@@ -19,6 +19,8 @@ import time
 from collections.abc import Mapping
 from typing import Any, Final, NamedTuple
 
+from cmk.plugins.lib.timesync import store_sync_time, tolerance_check
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -29,7 +31,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.timesync import store_sync_time, tolerance_check
 
 
 class Peer(NamedTuple):

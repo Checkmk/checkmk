@@ -11,10 +11,11 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render, StringTable
 
 # <<<graylog_sources>>>
 # {"sources": {"172.18.0.1": {"messages": 457, "has_since": false}}}
@@ -73,8 +74,7 @@ def _handle_graylog_sources_messages(item_data: SourceInfo, params: Mapping[str,
         item_data.num_messages_in_timespan,
         "graylog_diff",
         params.get("msgs_diff_upper", (None, None)) + params.get("msgs_diff_lower", (None, None)),
-        infoname="Total number of messages in the last "
-        + get_age_human_readable(item_data.timespan),
+        infoname=f"Total number of messages in the last {render.timespan(item_data.timespan)}",
         human_readable_func=int,
     )
 

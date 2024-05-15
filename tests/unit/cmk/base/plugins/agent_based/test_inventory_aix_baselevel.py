@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based import inventory_aix_baselevel as abl
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+from cmk.agent_based.v2 import Attributes
+from cmk.plugins.collection.agent_based import inventory_aix_baselevel as abl
 
 
 @pytest.fixture(name="section")

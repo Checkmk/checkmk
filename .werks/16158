@@ -1,0 +1,13 @@
+Title: Bi: Creating a bi aggregation with an unknown pack_id now returns a proper 404 response
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1698410083
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+
+
+When creating a bi aggregation with an unknown pack_id would result in a 500 status
+code. We now return a proper 404 response.

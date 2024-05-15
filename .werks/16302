@@ -1,0 +1,10 @@
+Title: heartbeat_crm: Fix ValueError (unconverted data remains: ...)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701346863
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes the crash mentioned above.

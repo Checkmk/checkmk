@@ -112,14 +112,21 @@ def make_confirmed_form_submit_link(
     )
 
 
-def show_confirm_cancel_dialog(title: str, confirm_url: str, cancel_url: str | None = None) -> None:
+def show_confirm_cancel_dialog(
+    title: str,
+    confirm_url: str,
+    cancel_url: str | None = None,
+    message: str | HTML | None = None,
+    confirm_text: str | None = None,
+) -> None:
     html.javascript(
         "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;}, %s)"
         % (
             json.dumps(
                 {
                     "title": title,
-                    "confirmButtonText": _("Confirm"),
+                    "html": escaping.escape_text(message),
+                    "confirmButtonText": confirm_text if confirm_text else _("Confirm"),
                     "cancelButtonText": _("Cancel"),
                     "customClass": {
                         "confirmButton": "confirm_question",
@@ -136,17 +143,17 @@ def show_confirm_cancel_dialog(title: str, confirm_url: str, cancel_url: str | N
 def confirmed_form_submit_options(
     title: str | None = None,
     suffix: str | None = None,
-    message: str | None = None,
-    confirm_button: str | None = None,
-    cancel_button: str | None = None,
+    message: str | HTML | None = None,
+    confirm_text: str | None = None,
+    cancel_text: str | None = None,
     icon: str | None = None,
     warning: bool = False,
 ) -> dict[str, str | dict[str, str]]:
     return {
         "title": get_confirm_link_title(title, suffix),
         "html": escaping.escape_text(message),
-        "confirmButtonText": confirm_button if confirm_button else _("Delete"),
-        "cancelButtonText": cancel_button if cancel_button else _("Cancel"),
+        "confirmButtonText": confirm_text if confirm_text else _("Delete"),
+        "cancelButtonText": cancel_text if cancel_text else _("Cancel"),
         "icon": "warning" if warning else "question",
         "customClass": {
             "confirmButton": "confirm_warning" if warning else "confirm_question",
@@ -447,7 +454,9 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
                 name="checkbox_selection",
                 title=_("Select all checkboxes"),
                 icon_name="toggle_on" if is_selected else "toggle_off",
-                item=make_javascript_link("cmk.selection.toggle_all_rows(this.form);"),
+                item=make_javascript_link(
+                    "cmk.selection.toggle_all_rows(cmk.utils.querySelectorID('main_page_content'));"
+                ),
                 is_enabled=is_enabled,
             ),
         ],
@@ -649,7 +658,10 @@ class PageMenuRenderer:
         for entry in entries:
             classes = ["suggestion"]
             classes += self._get_entry_css_classes(entry)
-            html.open_div(class_=classes)
+            html.open_div(
+                class_=classes,
+                title=entry.disabled_tooltip if not entry.is_enabled else None,
+            )
             SuggestedEntryRenderer().show(entry)
             html.close_div()
         html.close_td()
@@ -806,17 +818,16 @@ class DropdownEntryRenderer:
 
 # TODO: Cleanup all calls using title and remove the argument
 def search_form(title: str | None = None, mode: str | None = None, default_value: str = "") -> None:
-    html.begin_form("search", add_transid=False)
-    if title:
-        html.write_text(title + " ")
-    html.text_input("search", size=32, default_value=default_value)
-    html.hidden_fields()
-    if mode:
-        html.hidden_field("mode", mode, add_var=True)
-    html.set_focus("search")
-    html.write_text(" ")
-    html.button("_do_seach", _("Search"))
-    html.end_form()
+    with html.form_context("search", add_transid=False):
+        if title:
+            html.write_text(title + " ")
+        html.text_input("search", size=32, default_value=default_value)
+        html.hidden_fields()
+        if mode:
+            html.hidden_field("mode", mode, add_var=True)
+        html.set_focus("search")
+        html.write_text(" ")
+        html.button("_do_seach", _("Search"))
 
 
 # TODO: Mesh this function into one with the above search_form()
@@ -824,23 +835,24 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
     form_name = "inpage_search_form"
     reset_button_id = "%s_reset" % form_name
     was_submitted = request.get_ascii_input("filled_in") == form_name
-    html.begin_form(form_name, add_transid=False)
-    html.text_input(
-        "search",
-        size=32,
-        default_value=default_value,
-        placeholder=_("Filter"),
-        required=True,
-        title="",
-    )
-    html.hidden_fields()
-    if mode:
-        html.hidden_field("mode", mode, add_var=True)
-    reset_url = request.get_ascii_input_mandatory("reset_url", requested_file_with_query(request))
-    html.hidden_field("reset_url", reset_url, add_var=True)
-    html.button("submit", "", cssclass="submit", help_=_("Apply"))
-    html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
-    html.end_form()
+    with html.form_context(form_name, add_transid=False):
+        html.text_input(
+            "search",
+            size=32,
+            default_value=default_value,
+            placeholder=_("Find on this page ..."),
+            required=True,
+            title="",
+        )
+        html.hidden_fields()
+        if mode:
+            html.hidden_field("mode", mode, add_var=True)
+        reset_url = request.get_ascii_input_mandatory(
+            "reset_url", requested_file_with_query(request)
+        )
+        html.hidden_field("reset_url", reset_url, add_var=True)
+        html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
+        html.button("submit", "", cssclass="submit", help_=_("Apply"))
     html.javascript(
         f"cmk.page_menu.inpage_search_init({json.dumps(reset_button_id)}, {json.dumps(was_submitted)})"
     )

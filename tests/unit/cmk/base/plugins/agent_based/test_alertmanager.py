@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest
 
 from cmk.base.plugins.agent_based import alertmanager
@@ -47,7 +49,7 @@ DATA = [
 
 alternative_discovery_params = alertmanager.DiscoveryParams(
     group_services=(
-        False,
+        "one_service",
         alertmanager.GroupServices(),
     )
 )
@@ -56,7 +58,7 @@ custom_remapping_check_params = alertmanager.CheckParams(
     alert_remapping=[
         alertmanager.AlertRemapping(
             rule_names=["foo"],
-            map={"inactive": 0, "pending": 2, "firing": 1, "none": 1, "n/a": 3},
+            map={"inactive": 0, "pending": 2, "firing": 1, "none": 1, "not_applicable": 3},
         ),
     ],
 )

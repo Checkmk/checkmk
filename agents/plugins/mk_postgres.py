@@ -17,9 +17,42 @@ PG_BINARY_PATH=/usr/bin/psql
 INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass:
 INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass:
 ----------------------------------------------------------
+
+Example of an environment file:
+
+-----/home/postgres/db1.env-----------------------------------------
+export PGDATABASE="data"
+export PGPORT="5432"
+export PGVERSION="14"
+----------------------------------------------------------
+
+Inside of the environment file, only `PGPORT` is mandatory.
+In case there is no `INSTANCE` specified by the postgres.cfg, then the plugin assumes defaults.
+For example, the configuration
+
+-----postgres.cfg-----------------------------------------
+DBUSER=postgres
+PG_BINARY_PATH=/usr/bin/psql
+----------------------------------------------------------
+
+is equivalent to
+
+-----postgres.cfg-----------------------------------------
+DBUSER=postgres
+PG_BINARY_PATH=/usr/bin/psql
+INSTANCE=/home/postgres/does-not-exist.env:postgres::postgres
+----------------------------------------------------------
+
+-----/home/postgres/does-not-exist.env--------------------
+export PGDATABASE="main"
+export PGPORT="5432"
+----------------------------------------------------------
+
+The only difference being `/home/postgres/does-not-exist.env` does not exist in the first setup.
+Different defaults are chosen for Windows.
 """
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 import abc
 import io
@@ -484,7 +517,9 @@ class PostgresWin(PostgresBase):
     @classmethod
     def _logical_drives(cls):
         # type: () -> Iterable[str]
-        for drive in cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk()):
+        for drive in cls._parse_wmic_logicaldisk(  # pylint: disable=use-yield-from # for python2.7
+            cls._call_wmic_logicaldisk()
+        ):
             yield drive
 
     def get_psql_binary_path(self):
@@ -1192,6 +1227,18 @@ def parse_env_file(env_file):
     return pg_database, pg_port, pg_version
 
 
+def _parse_INSTANCE_value(value, config_separator):
+    # type: (str, str) -> tuple[str, str, str, str]
+    keys = value.split(config_separator)
+    if len(keys) == 3:
+        # Old format (deprecated in Werk 16016), but we don't force updates unless there is
+        # a substantial benefit.
+        keys = keys + [""]
+    env_file, pg_user, pg_passfile, instance_name = keys
+    env_file = env_file.strip()
+    return env_file, pg_user, pg_passfile, instance_name or env_file.split(os.sep)[-1].split(".")[0]
+
+
 def parse_postgres_cfg(postgres_cfg, config_separator):
     # type: (list[str], str) -> tuple[str, str | None, list[dict[str, str | None]]]
     """
@@ -1211,17 +1258,13 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
         if key == "PG_BINARY_PATH":
             pg_binary_path = value.rstrip()
         if key == "INSTANCE":
-            env_file, pg_user, pg_passfile, instance_name = value.split(config_separator)
-            env_file = env_file.strip()
-            instance_name = instance_name or env_file.split(os.sep)[-1].split(".")[0]
-            if not instance_name:
-                raise ValueError(
-                    "Instance name can not be inferred from .env file, instance name should be specified explicitly"
-                )
+            env_file, pg_user, pg_passfile, instance_name = _parse_INSTANCE_value(
+                value, config_separator
+            )
             pg_database, pg_port, pg_version = parse_env_file(env_file)
             instances.append(
                 {
-                    "name": instance_name,
+                    "name": instance_name.strip(),
                     "pg_user": pg_user.strip(),
                     "pg_passfile": pg_passfile.strip(),
                     "pg_database": pg_database,
@@ -1270,6 +1313,7 @@ def main(argv=None):
         )
         with open(postgres_cfg_path) as opened_file:
             postgres_cfg = opened_file.readlines()
+        postgres_cfg = [ensure_str(el) for el in postgres_cfg]
         dbuser, pg_binary_path, instances = parse_postgres_cfg(postgres_cfg, helper.get_conf_sep())
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging

@@ -5,7 +5,7 @@
 
 import os
 
-import rrdtool  # type: ignore[import]
+import rrdtool  # type: ignore[import-not-found]
 
 omd_root = os.environ["OMD_ROOT"]
 rrd_path = os.path.join(omd_root, "test.rrd")

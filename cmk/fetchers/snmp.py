@@ -5,6 +5,7 @@
 
 import logging
 from collections.abc import Iterator, Mapping, Sequence
+from pathlib import Path
 from typing import Any, Final, NamedTuple
 
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -20,7 +21,7 @@ from cmk.snmplib import (
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 try:
-    from .cee.snmp_backend import inline  # type: ignore[import]
+    from .cee.snmp_backend import inline  # type: ignore[import,unused-ignore]
 except ImportError:
     inline = None  # type: ignore[assignment]
 
@@ -41,13 +42,19 @@ def get_force_stored_walks() -> bool:
 
 
 def make_backend(
-    snmp_config: SNMPHostConfig, logger: logging.Logger, *, use_cache: bool | None = None
+    snmp_config: SNMPHostConfig,
+    logger: logging.Logger,
+    *,
+    use_cache: bool | None = None,
+    stored_walk_path: Path,
 ) -> SNMPBackend:
     if use_cache is None:
         use_cache = get_force_stored_walks()
 
     if use_cache or snmp_config.snmp_backend is SNMPBackendEnum.STORED_WALK:
-        return StoredWalkSNMPBackend(snmp_config, logger)
+        return StoredWalkSNMPBackend(
+            snmp_config, logger, path=stored_walk_path / snmp_config.hostname
+        )
 
     if inline and snmp_config.snmp_backend is SNMPBackendEnum.INLINE:
         return inline.InlineSNMPBackend(snmp_config, logger)

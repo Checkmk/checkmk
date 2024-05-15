@@ -6,9 +6,10 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
+from cmk.plugins.lib.mssql_counters import get_int, get_item, get_rate_or_none, Section
+
 from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mssql_counters import get_int, get_item, get_rate_or_none, Section
 
 
 def discovery_mssql_counters_sqlstats(section: Section) -> DiscoveryResult:

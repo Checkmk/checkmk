@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+# This script builds a 'reference image' (formerly known as IMAGE_TESTING)
+# and returns its image ID
+# Build takes place in a separate docker context located in a temporary directory
+#
+# @REFERENCE_IMAGE_DISTRO: the base build images' base distro
+# @BUILD_IMAGE_TAG: the base build images' tag
+# @DOCKER_REGISTRY: the Docker registry to connect to
+# @BASE_BUILD_IMAGE: overrides the whole base image specifier
+
+set -e
+
+: "${REFERENCE_IMAGE_DISTRO:="ubuntu-20.04"}"
+: "${BUILD_IMAGE_TAG:="master-latest"}"
+: "${DOCKER_REGISTRY:="artifacts.lan.tribe29.com:4000"}"
+: "${DOCKER_REGISTRY_NO_HTTP:="$(echo ${DOCKER_REGISTRY} | sed -e "s/^https*:\/\///")"}"
+: "${BASE_BUILD_IMAGE:="${DOCKER_REGISTRY_NO_HTTP}/${REFERENCE_IMAGE_DISTRO}:${BUILD_IMAGE_TAG}"}"
+: "${CACHE_IMAGE:="${DOCKER_REGISTRY_NO_HTTP}/${REFERENCE_IMAGE_DISTRO}-reference:cache"}"
+
+CHECKOUT_ROOT="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" >/dev/null 2>&1 && pwd)"
+TEMP_CONTEXT_DIR=$(mktemp -d)
+trap 'rm -rf "${TEMP_CONTEXT_DIR}"' EXIT
+IIDFILE="${TEMP_CONTEXT_DIR}/iidfile.txt"
+
+if [ -n "${NO_CACHE}" ]; then
+    EXTRA_ARGS="${EXTRA_ARGS} --no-cache"
+fi
+
+if [ -n "${PULL_BASE_IMAGE}" ]; then
+    EXTRA_ARGS="${EXTRA_ARGS} --pull"
+fi
+
+# inline cache https://docs.docker.com/build/cache/backends/inline/
+# Cache storage backends: https://docs.docker.com/build/cache/backends/
+if [ -n "${POPULATE_BUILD_CACHE}" ]; then
+    EXTRA_ARGS="${EXTRA_ARGS} --cache-to type=inline --push -t ${CACHE_IMAGE}"
+    # cannot be used currently due to 'Docker driver' but might be better in the future
+    # EXTRA_ARGS="${EXTRA_ARGS} --cache-to type=registry,ref="${CACHE_IMAGE}""
+fi
+
+if [ -n "${VERBOSE}" ]; then
+    echo >&2 "Create reference image"
+    echo >&2 " - REFERENCE_IMAGE_DISTRO:.... '${REFERENCE_IMAGE_DISTRO}'"
+    echo >&2 " - BUILD_IMAGE_TAG:........... '${BUILD_IMAGE_TAG}'"
+    echo >&2 " - DOCKER_REGISTRY_NO_HTTP:... '${DOCKER_REGISTRY_NO_HTTP}'"
+    echo >&2 " - PULL_BASE_IMAGE:........... '${PULL_BASE_IMAGE}'"
+    echo >&2 " - POPULATE_BUILD_CACHE:...... '${POPULATE_BUILD_CACHE}'"
+    echo >&2 " - NO_CACHE:.................. '${NO_CACHE}'"
+    echo >&2 " - populate build context at:. ${TEMP_CONTEXT_DIR}"
+    echo >&2 " - build image based on image: '${BASE_BUILD_IMAGE}'"
+    echo >&2 " - EXTRA_ARGS:................ '${EXTRA_ARGS}'"
+    echo >&2 " - $(docker --version)"
+    DECENT_OUTPUT_TIMEOUT=0
+else
+    DECENT_OUTPUT_TIMEOUT=2
+fi
+
+# Pre-fetch caching image. This is not required but was reported to solve some
+# issues and keeps fetching and building more transparent
+"${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
+    docker pull \
+    "${CACHE_IMAGE}" \
+    1>&2 || true
+
+# Copy over stuff we need for the build process but is located in folders we
+# cannot use as build context
+"${CHECKOUT_ROOT}/defines/dev-images/populate-build-context.sh" "${TEMP_CONTEXT_DIR}"
+
+# shellcheck disable=SC2086
+"${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
+    docker buildx build \
+    ${EXTRA_ARGS} \
+    --iidfile "${IIDFILE}" \
+    --cache-from type=registry,ref="${CACHE_IMAGE}" \
+    --build-arg BASE_BUILD_IMAGE="${BASE_BUILD_IMAGE}" \
+    --build-context scripts="${CHECKOUT_ROOT}/buildscripts/infrastructure/build-nodes/scripts" \
+    --build-context dev_images="${CHECKOUT_ROOT}/defines/dev-images" \
+    -f "${CHECKOUT_ROOT}/defines/dev-images/reference/Dockerfile" \
+    "${TEMP_CONTEXT_DIR}" \
+    1>&2
+
+[ -n "${VERBOSE}" ] && echo >&2 " - built image:............... '$(cat "${IIDFILE}")'"
+
+cat "${IIDFILE}"

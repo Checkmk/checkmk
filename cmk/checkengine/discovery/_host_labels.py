@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import NamedTuple, Self, TypeVar
+from typing import TypeVar
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
@@ -23,40 +23,14 @@ from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.sectionparser import Provider, ResolvedResult
 
+from cmk.agent_based.v1 import HostLabel
+
 __all__ = [
     "analyse_cluster_labels",
     "discover_host_labels",
     "HostLabel",
     "HostLabelPlugin",
 ]
-
-
-class _KV(NamedTuple):
-    name: str
-    value: str
-
-
-class HostLabel(_KV):
-    """Representing a host label in Checkmk
-
-    This class creates a host label that can be yielded by a host_label_function as regisitered
-    with the section.
-
-        >>> my_label = HostLabel("my_key", "my_value")
-
-    """
-
-    __slots__ = ()
-
-    def __new__(cls, name: str, value: str) -> Self:
-        if not isinstance(name, str):
-            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
-        if not isinstance(value, str):
-            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
-        return super().__new__(cls, name, value)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.name!r}, {self.value!r})"
 
 
 @dataclass(frozen=True)
@@ -150,7 +124,7 @@ def _discover_host_labels_for_source_type(
     try:
         parsed_results = _all_parsing_results(host_key, providers)
 
-        console.vverbose(
+        console.debug(
             "Trying host label discovery with: %s\n"
             % ", ".join(str(r.section_name) for r in parsed_results)
         )
@@ -166,7 +140,7 @@ def _discover_host_labels_for_source_type(
 
             try:
                 for label in host_label_plugin.function(**kwargs):
-                    console.vverbose(f"  {label.name}: {label.value} ({section_name})\n")
+                    console.debug(f"  {label.name}: {label.value} ({section_name})\n")
                     host_labels[label.name] = _HostLabel(label.name, label.value, section_name)
             except (KeyboardInterrupt, MKTimeout):
                 raise

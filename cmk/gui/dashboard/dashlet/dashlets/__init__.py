@@ -6,9 +6,8 @@
 from ..registry import DashletRegistry
 from .custom_url import URLDashlet
 from .failed_notifications import FailedNotificationsDashlet
-from .graph import TemplateGraphDashlet
+from .graph import default_dashlet_graph_render_options, TemplateGraphDashlet
 from .logo import MKLogoDashlet
-from .snapin import SnapinDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
 from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, StatsDashletConfig
 from .user_messages import MessageUsersDashlet
@@ -28,6 +27,7 @@ __all__ = [
     "StatsDashletConfig",
     "LinkedViewDashletConfig",
     "copy_view_into_dashlet",
+    "default_dashlet_graph_render_options",
 ]
 
 
@@ -37,7 +37,6 @@ def register_dashlets(dashlet_registry: DashletRegistry) -> None:
     dashlet_registry.register(FailedNotificationsDashlet)
     dashlet_registry.register(TemplateGraphDashlet)
     dashlet_registry.register(MKLogoDashlet)
-    dashlet_registry.register(SnapinDashlet)
     dashlet_registry.register(HostStatsDashlet)
     dashlet_registry.register(ServiceStatsDashlet)
     dashlet_registry.register(EventStatsDashlet)

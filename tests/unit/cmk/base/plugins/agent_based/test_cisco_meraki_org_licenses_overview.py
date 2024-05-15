@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping, Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import cisco_meraki_org_licenses_overview
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
@@ -115,7 +116,7 @@ def test_check_licenses_overview(
     string_table: StringTable, item: str, expected_results: Sequence[Result]
 ) -> None:
     section = cisco_meraki_org_licenses_overview.parse_licenses_overview(string_table)
-    with on_time("2000-01-01 00:00:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2000, 1, 1, tzinfo=ZoneInfo("UTC"))):
         assert (
             list(cisco_meraki_org_licenses_overview.check_licenses_overview(item, {}, section))
             == expected_results
@@ -152,7 +153,7 @@ def test_check_licenses_overview_already_expired(
     string_table: StringTable, item: str, expected_results: Sequence[Result]
 ) -> None:
     section = cisco_meraki_org_licenses_overview.parse_licenses_overview(string_table)
-    with on_time("2000-02-02 00:00:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2000, 2, 2, tzinfo=ZoneInfo("UTC"))):
         assert (
             list(cisco_meraki_org_licenses_overview.check_licenses_overview(item, {}, section))
             == expected_results
@@ -224,7 +225,7 @@ def test_check_licenses_overview_remaining_expiration_time(
     string_table: StringTable, item: str, params: Mapping, expected_results: Sequence[Result]
 ) -> None:
     section = cisco_meraki_org_licenses_overview.parse_licenses_overview(string_table)
-    with on_time("2000-01-29 00:00:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2000, 1, 29, tzinfo=ZoneInfo("UTC"))):
         assert (
             list(cisco_meraki_org_licenses_overview.check_licenses_overview(item, params, section))
             == expected_results

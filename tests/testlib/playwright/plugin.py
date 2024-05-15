@@ -12,7 +12,6 @@ See: https://github.com/microsoft/playwright-pytest
 import logging
 import os
 import typing as t
-import urllib
 
 import pytest
 from _pytest.fixtures import SubRequest  # TODO: Do we really need an implementation detail?
@@ -44,11 +43,16 @@ def _browser_type_launch_args(pytestconfig: t.Any) -> dict:
     return launch_options
 
 
-def _build_artifact_test_folder(
-    pytestconfig: t.Any, request: pytest.FixtureRequest, folder_or_file_name: str
+def _build_artifact_path(
+    pytestconfig: t.Any, request: pytest.FixtureRequest, suffix: str = ""
 ) -> str:
     output_dir = pytestconfig.getoption("--output")
-    return os.path.join(output_dir, urllib.parse.quote(request.node.nodeid), folder_or_file_name)
+    node_safepath = os.path.splitext(os.path.split(request.node.path)[1])[0]
+    node_safename = request.node.name.replace("[", "__").replace("]", "__")
+    build_artifact_path = os.path.join(output_dir, f"{node_safepath}__{node_safename}{suffix}")
+    logger.debug("build_artifact_path=%s", build_artifact_path)
+
+    return build_artifact_path
 
 
 @pytest.fixture(scope="session", name="playwright")
@@ -121,18 +125,15 @@ def _may_create_screenshot(
     capture_screenshot = screenshot_option == "on" or (
         failed and screenshot_option == "only-on-failure"
     )
-    if capture_screenshot:
-        # At the moment we're only using one page.
-        # Extend this here as soon we have a use case for multiple pages
-        assert len(pages) == 1
-        page = pages[0]
-
+    if not capture_screenshot:
+        return
+    for page in pages:
         human_readable_status = "failed" if failed else "finished"
-        screenshot_path = _build_artifact_test_folder(
-            pytestconfig, request, f"test-{human_readable_status}.png"
+        screenshot_path = _build_artifact_path(
+            pytestconfig, request, f".{human_readable_status}.png"
         )
         try:
-            page.screenshot(timeout=5000, path=screenshot_path)
+            page.screenshot(timeout=5432, path=screenshot_path)
         except Error as e:
             logger.info("Failed to create screenshot of page %s due to: %s", page, e)
 
@@ -221,7 +222,7 @@ def pytest_addoption(parser: t.Any) -> None:
     )
     group.addoption(
         "--screenshot",
-        default="off",
+        default="only-on-failure",
         choices=["on", "off", "only-on-failure"],
         help="Whether to automatically capture a screenshot after each test. "
         "If you choose only-on-failure, a screenshot of the failing page only will be created.",

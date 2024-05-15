@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.oracle_tablespaces import inventory_oracle_tablespaces
-from cmk.base.plugins.agent_based.utils.oracle import OraErrors, SectionTableSpaces
+
+from cmk.plugins.lib.oracle import OraErrors, SectionTableSpaces
 
 from .utils_inventory import sort_inventory_result
 

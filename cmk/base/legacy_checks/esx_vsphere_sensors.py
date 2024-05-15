@@ -17,9 +17,11 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_esx_vsphere_sensors(info):
-    yield None, []
+    yield None, {}
 
 
 def check_esx_vsphere_sensors(_no_item, params, info):
@@ -40,7 +42,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
         sensor_state = {"green": 0, "yellow": 1, "red": 2, "unknown": 3}.get(health_key.lower(), 2)
         txt = f"{name}: {health_label} ({health_summary})"
 
-        for entry in params:
+        for entry in params["rules"]:
             if name.startswith(entry.get("name", "")):
                 new_state = entry.get("states", {}).get(str(sensor_state))
                 if new_state is not None:
@@ -55,9 +57,15 @@ def check_esx_vsphere_sensors(_no_item, params, info):
     yield 0, "\n".join(mulitline)
 
 
+def parse_esx_vsphere_sensors(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
+    parse_function=parse_esx_vsphere_sensors,
     service_name="Hardware Sensors",
     discovery_function=inventory_esx_vsphere_sensors,
     check_function=check_esx_vsphere_sensors,
     check_ruleset_name="hostsystem_sensors",
+    check_default_parameters={"rules": []},
 )

@@ -31,7 +31,7 @@ def parse_esx_vsphere_licenses(string_table):
 
 
 def inventory_esx_vsphere_licenses(parsed):
-    return [(key, None) for key in parsed]
+    return [(key, {}) for key in parsed]
 
 
 def check_esx_vsphere_licenses(item, params, parsed):
@@ -39,7 +39,9 @@ def check_esx_vsphere_licenses(item, params, parsed):
     if not license_:
         return 3, "License not found in agent output"
 
-    status, infotext, perfdata = license_check_levels(license_["total"], license_["used"], params)
+    status, infotext, perfdata = license_check_levels(
+        license_["total"], license_["used"], params["levels"][1]
+    )
     infotext = "%s Key(s), " % license_["keys"] + infotext
     return status, infotext, perfdata
 
@@ -50,4 +52,5 @@ check_info["esx_vsphere_licenses"] = LegacyCheckDefinition(
     discovery_function=inventory_esx_vsphere_licenses,
     check_function=check_esx_vsphere_licenses,
     check_ruleset_name="esx_licenses",
+    check_default_parameters={"levels": ("crit_on_all", None)},
 )

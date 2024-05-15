@@ -7,11 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.base.server_side_calls import SpecialAgentInfoFunctionResult
 
-from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
-    SpecialAgentInfoFunctionResult,
-)
+from .checktestlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 

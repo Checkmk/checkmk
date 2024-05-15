@@ -8,13 +8,10 @@ Knowledge: doc
 Level: 1
 Version: 2.3.0b1
 
-We recently made changes to make it possible to provide the following header
-in rest-api requests
 
-"If-Match": "*"
+Most PUT requests to the REST API require an If-Match header containing
+an ETag. With this Werk we make it possible to provide "*" instead of an
+ETag, like this: "If-Match": "*"
 
-instead of providing a resource's ETag.
-
-This werk adds a short explanation to the api-docs so that our users know
-that this is possible.
-
+This Werk also adds a short explanation to the REST API documentation.
+See the section "Updating values" for more information.

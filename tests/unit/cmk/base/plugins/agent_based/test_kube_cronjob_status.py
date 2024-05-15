@@ -3,58 +3,69 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.plugins.agent_based import kube_cronjob_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils import kube
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.kube.schemata.api import (
+    ConditionStatus,
     ContainerRunningState,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
+    JobCondition,
+    JobConditionType,
+    Phase,
     Timestamp,
+)
+from cmk.plugins.kube.schemata.section import (
+    CronJobLatestJob,
+    CronJobStatus,
+    JobPod,
+    JobStatus,
+    PodLifeCycle,
 )
 
 
 class JobPodFactory(ModelFactory):
-    __model__ = kube.JobPod
+    __model__ = JobPod
 
 
 class ContainerStatusFactory(ModelFactory):
-    __model__ = kube.ContainerStatus
+    __model__ = ContainerStatus
 
 
 class ContainerWaitingStateFactory(ModelFactory):
-    __model__ = kube.ContainerWaitingState
+    __model__ = ContainerWaitingState
 
 
 class ContainerRunningStateFactory(ModelFactory):
-    __model__ = kube.ContainerRunningState
+    __model__ = ContainerRunningState
 
 
 class JobConditionFactory(ModelFactory):
-    __model__ = kube.JobCondition
+    __model__ = JobCondition
 
 
 class JobStatusFactory(ModelFactory):
-    __model__ = kube.JobStatus
+    __model__ = JobStatus
 
-    conditions = [
-        kube.JobCondition(type_=kube.JobConditionType.COMPLETE, status=kube.ConditionStatus.TRUE)
-    ]
+    conditions = [JobCondition(type_=JobConditionType.COMPLETE, status=ConditionStatus.TRUE)]
     start_time = Timestamp(1.0)
 
 
 class CronJobLatestJobFactory(ModelFactory):
-    __model__ = kube.CronJobLatestJob
+    __model__ = CronJobLatestJob
 
     status = JobStatusFactory.build()
     pods = JobPodFactory.batch(size=1)
 
 
 class CronJobStatusFactory(ModelFactory):
-    __model__ = kube.CronJobStatus
+    __model__ = CronJobStatus
 
     last_successful_time = Timestamp(1.0)
     last_schedule_time = Timestamp(1.0)
@@ -108,7 +119,7 @@ def test_cron_job_status_with_running_job_and_previously_completed_job() -> None
         ),
         pods=[
             JobPodFactory.build(
-                lifecycle=kube.PodLifeCycle(phase=kube.Phase.RUNNING),
+                lifecycle=PodLifeCycle(phase=Phase.RUNNING),
                 containers={
                     "running": ContainerStatusFactory.build(
                         ready=True, state=ContainerRunningStateFactory.build()
@@ -164,7 +175,7 @@ def test_cron_job_status_with_failed_job() -> None:
     cron_job_status = CronJobStatusFactory.build()
     failure_reason = "reason"
     waiting_container = _mocked_container_info_from_state(
-        state=kube.ContainerWaitingState(reason=failure_reason, detail="detail")
+        state=ContainerWaitingState(reason=failure_reason, detail="detail")
     )
     latest_job = CronJobLatestJobFactory.build(
         pods=[
@@ -175,7 +186,7 @@ def test_cron_job_status_with_failed_job() -> None:
         status=JobStatusFactory.build(
             conditions=[
                 JobConditionFactory.build(
-                    type_=kube.JobConditionType.FAILED, status=kube.ConditionStatus.TRUE
+                    type_=JobConditionType.FAILED, status=ConditionStatus.TRUE
                 )
             ]
         ),

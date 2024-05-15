@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.storcli_vdrives import (
     discover_storcli_vdrives,
     parse_storcli_vdrives,
 )
-from cmk.base.plugins.agent_based.utils.megaraid import LDISKS_DEFAULTS
+
+from cmk.plugins.lib.megaraid import LDISKS_DEFAULTS
 
 STRING_TABLE = [
     ["------------------------------------------------------------------------"],

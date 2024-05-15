@@ -1,19 +1,22 @@
 [tool.ruff]
 src = ["cmk", "tests"]
-target-version = "py311"
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
 ignore = [
-    "E402", # module level import not on top of the file
-    "E501", # line too long, 100s of fails. Fixable.
-    "E731", # Do not assign a `lambda` expression, use a `def`
-    "E741", # amgiguous variable name (l, x, etc.)
-    "E713", # Test for membership should be `not in`
-    "E999", # SyntaxError, all due to missing "match" support in ruff. See: https://github.com/charliermarsh/ruff/issues/282
+  "E402", # module level import not on top of the file
+  "E501", # line too long, 100s of fails. Fixable.
+  "E731", # Do not assign a `lambda` expression, use a `def`
+  "E741", # amgiguous variable name (l, x, etc.)
+  "E713", # Test for membership should be `not in`
+  "E999", # SyntaxError, all due to missing "match" support in ruff. See: https://github.com/charliermarsh/ruff/issues/282
 
-    "S101", # assert detected
+  "S101", # assert detected
 
-    # Ignored in .flake8 but not here.
-    # F403 undefined imports, all are fixed now, but we shouldn't add new ones.
-    # F405 are * imports. We shouldn't do those.
+  # Ignored in .flake8 but not here.
+  # F403 undefined imports, all are fixed now, but we shouldn't add new ones.
+  # F405 are * imports. We shouldn't do those.
 ]
 select = ["E", "F", "YTT"]
 # Interesting to enable:
@@ -35,20 +38,23 @@ select = ["E", "F", "YTT"]
 #   "D" - enforces docstring writing style. Ignore "D10,D4" for now.
 #   "COM" - enforce trailing comma. Lots of matches.
 unfixable = [
-    "F401", # pylint: disable=unused-import. Clean up by hand.
+  "F401", # pylint: disable=unused-import. Clean up by hand.
 ]
-[per-file-ignores]
+
+[tool.ruff.lint.per-file-ignores]
 "cmk/gui/config.py" = ["F403", "F405"]
-[flake8-annotations]
+
+[tool.ruff.lint.flake8-annotations]
 suppress-dummy-args = true
-[mccabe]
+
+[tool.ruff.lint.mccabe]
 max-complexity = 15
 
 
 [tool.isort]
 known_testlib = "tests.testlib"
 known_compositiontests = "tests.composition"
-known_unittests = "tests.unit"
+known_unittests = "tests.unit,tests.plugins_integration,tests.update"
 known_livestatus = "livestatus"
 known_omd = "omdlib"
 known_cmk_utils = "cmk.utils"
@@ -62,10 +68,11 @@ known_cmk_notification_plugins = "cmk.notification_plugins"
 known_cmk_snmplib = "cmk.snmplib"
 known_cmk_fetchers = "cmk.fetchers"
 known_cmk_checkengine = "cmk.checkengine"
+known_werks = "werks"
 known_first_party = "cmk"
 
 # Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,CMC_PROTO,TESTLIB,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
+sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
 CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
 CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
 
@@ -77,12 +84,12 @@ use_parentheses = "True"
 ensure_newline_before_comments = "True"
 order_by_type = "False"
 line_length = 100
-py_version = "311"
+py_version = "312"
 
 
 [tool.black]
 line-length = 100
-target-version = ['py311']
+target-version = ['py312']
 
 
 # NOTE: Keep this is sync with mypy-raw.ini!
@@ -90,12 +97,23 @@ target-version = ['py311']
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...
 [tool.mypy]
+explicit_package_bases = true
+mypy_path = """\
+    $MYPY_CONFIG_FILE_DIR:\
+    $MYPY_CONFIG_FILE_DIR/non-free/cmc-protocols:\
+    $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
+    $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
+    $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
+    $MYPY_CONFIG_FILE_DIR/tests/typeshed\
+    """
 plugins = ["pydantic.mypy"]
+python_version = "3.12"
+scripts_are_modules = true
 # When all of these are true, we can enable --strict
 check_untyped_defs = true
 disallow_any_generics = false      # 1904 errors in 507 files
 disallow_incomplete_defs = true
-disallow_subclassing_any = false   # 11 errors in 10 files
+disallow_subclassing_any = true
 disallow_untyped_calls = false     # 6427 errors in 1077 files
 disallow_untyped_decorators = true
 disallow_untyped_defs = false      # 6738 errors in 1571
@@ -105,7 +123,7 @@ strict_equality = true
 warn_redundant_casts = true
 warn_return_any = false            # 622 errors in 267 files
 warn_unused_configs = true
-warn_unused_ignores = false        # 25 errors in 8 files
+warn_unused_ignores = true
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = false  # 3433 errors in 997 files
 disallow_any_explicit = false   # 2854 errors in 836 files
@@ -120,35 +138,40 @@ disable_memoryview_promotion = true
 
 [[tool.mypy.overrides]]
 module = [
-    "cmk.cee.bakery.*",
-    "cmk.gui.background_job",
-    "cmk.gui.backup.backup",
-    "cmk.gui.mobile.views",
-    "cmk.gui.plugins.wato.bi_config",
-    "cmk.gui.plugins.wato.utils.main_menu",
-    "cmk.gui.views.layout",
-    "cmk.gui.wato.pages.bulk_discovery",
-    "cmk.gui.wato.pages.bulk_edit",
-    "cmk.gui.wato.pages.folders",
-    "cmk.gui.wato.pages.parentscan",
-    "cmk.gui.watolib.bulk_discovery",
-    "cmk.gui.watolib.config_sync",
-    "cmk.gui.watolib.main_menu",
-    "cmk.gui.watolib.network_scan",
-    "cmk.notification_plugins.*",
-    "cmk.update_config.*",
-    "cmk.utils.crypto.*",
-    "cmk.utils.livestatus_helpers.*",
-    "tests.gui_e2e.*",
-    "tests.testlib.*",
-    "tests.unit.cmk.ec.*",
-    "tests.unit.cmk.update_config.*",
+  "cmk.active_checks.check_sftp",
+  "cmk.cee.bakery.*",
+  "cmk.gui.background_job.*",
+  "cmk.gui.mobile.views",
+  "cmk.gui.views.layout.*",
+  "cmk.gui.wato.pages.bulk_discovery",
+  "cmk.gui.wato.pages.bulk_edit",
+  "cmk.gui.wato.pages.folders",
+  "cmk.gui.wato.pages.parentscan",
+  "cmk.gui.watolib.auth_php",
+  "cmk.gui.watolib.bulk_discovery",
+  "cmk.gui.watolib.config_sync",
+  "cmk.gui.watolib.main_menu",
+  "cmk.gui.watolib.network_scan",
+  "cmk.gui.watolib.registration",
+  "cmk.notification_plugins.*",
+  "cmk.update_config.*",
+  "cmk.utils.crypto.*",
+  "cmk.utils.livestatus_helpers.*",
+  "tests.gui_e2e.*",
+  "tests.unit.cmk.ec.*",
+  "tests.unit.cmk.update_config.*",
 ]
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 warn_return_any = true
 warn_unused_ignores = true
 
+[[tool.mypy.overrides]]
+module = [ "cmk.ec.*" ]
+disallow_any_generics = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+warn_unreachable = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
@@ -166,23 +189,22 @@ testpaths = ["tests"]
 # successful, etc. etc. We might reconsinder lowering the live log level when we
 # have cleaned up things...
 addopts = "--log-cli-level=CRITICAL --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
-markers = ["checks: Run all existing test cases for checks."]
+markers = [
+  "checks: Run all existing test cases for checks.",
+  "slow: Run tests which take relatively larger time to execute.",
+]
 # See: https://docs.python.org/3/library/warnings.html#the-warnings-filter
 filterwarnings = [
-    # Breaking change, only in new major version, see https://github.com/marshmallow-code/apispec/pull/759
-    'ignore:^distutils Version classes are deprecated\. Use packaging.version instead\.$:DeprecationWarning:apispec.utils:0',
-    # Internal copy of distutils in setuptools :-P
-    'ignore:^distutils Version classes are deprecated\. Use packaging.version instead\.$:DeprecationWarning:distutils.version:0',
-    # pysnmp uses the dprecated asyncore module
-    'ignore:^The asyncore module is deprecated and will be removed in Python 3.12. The recommended replacement is asyncio$:DeprecationWarning',
-    # We have a doctest which intentionally checks for a failure
-    'ignore:^Invalid value for tag-group tag_agent. None$:UserWarning:cmk.gui.fields.definitions:0',
-    # The ReportLab package uses deprecated features, see: https://github.com/Distrotech/reportlab/blob/master/src/reportlab/__init__.py
-    'ignore:^the load_module\(\) method is deprecated and slated for removal in Python 3.12; use exec_module\(\) instead$:DeprecationWarning',
-    # Make marshmallow warnings errors, otherwise typos may go unnoticed.
-    'error::marshmallow.warnings.RemovedInMarshmallow4Warning',
-    # Fun fact: pkg_resources calls declare_namespace() itself when it processes namespace_packages.txt files.
-    'ignore:Deprecated call to `pkg_resources\.declare_namespace:DeprecationWarning:pkg_resources:0',
+  # Breaking change, only in new major version, see https://github.com/marshmallow-code/apispec/pull/759
+  'ignore:^distutils Version classes are deprecated\. Use packaging.version instead\.$:DeprecationWarning:apispec.utils:0',
+  # Internal copy of distutils in setuptools :-P
+  'ignore:^distutils Version classes are deprecated\. Use packaging.version instead\.$:DeprecationWarning:distutils.version:0',
+  # We have a doctest which intentionally checks for a failure
+  'ignore:^Invalid value for tag-group tag_agent. None$:UserWarning:cmk.gui.fields.definitions:0',
+  # Make marshmallow warnings errors, otherwise typos may go unnoticed.
+  'error::marshmallow.warnings.RemovedInMarshmallow4Warning',
+  # Fun fact: pkg_resources calls declare_namespace() itself when it processes namespace_packages.txt files.
+  'ignore:Deprecated call to `pkg_resources\.declare_namespace:DeprecationWarning:pkg_resources:0',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_CHASSIS
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.dell import DETECT_CHASSIS
 
 
 def inventory_dell_chassis_slots(info):
@@ -41,7 +42,12 @@ def check_dell_chassis_slots(item, _no_params, info):
     return 3, "unknown slot"
 
 
+def parse_dell_chassis_slots(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_chassis_slots"] = LegacyCheckDefinition(
+    parse_function=parse_dell_chassis_slots,
     detect=DETECT_CHASSIS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.5.1.1",

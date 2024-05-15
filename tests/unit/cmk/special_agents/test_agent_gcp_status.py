@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.special_agents import agent_gcp_status
+from cmk.plugins.gcp.special_agents import agent_gcp_status
 
 
 def test_health_serialization(capsys: pytest.CaptureFixture[str]) -> None:
@@ -14,7 +14,7 @@ def test_health_serialization(capsys: pytest.CaptureFixture[str]) -> None:
         return '{"fake": "test"}'
 
     args = agent_gcp_status.parse_arguments(["Regions"])
-    discovery_param = agent_gcp_status.DiscoveryParam.parse_obj(vars(args))
+    discovery_param = agent_gcp_status.DiscoveryParam.model_validate(vars(args))
     output = agent_gcp_status.AgentOutput(
         discovery_param=discovery_param,
         health_info=_health_info(),
@@ -25,5 +25,5 @@ def test_health_serialization(capsys: pytest.CaptureFixture[str]) -> None:
     lines = captured.out.rstrip().split("\n")
     # Assert
     assert lines[0] == "<<<gcp_status:sep(0)>>>"
-    assert lines[1] == output.json()
+    assert lines[1] == output.model_dump_json()
     assert len(lines) == 2

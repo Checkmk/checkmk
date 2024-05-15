@@ -9,28 +9,34 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Percentage, Tuple
+from cmk.gui.valuespec import Dictionary, Migrate, Percentage, Tuple
 
 
-def _parameter_valuespec_netscaler_mem():
-    return Tuple(
-        title=_("Specify levels in percentage of total memory usage"),
-        elements=[
-            Percentage(
-                title=_("Warning at a usage of"),
-                # xgettext: no-python-format
-                unit=_("% of RAM"),
-                default_value=80.0,
-                maxvalue=100.0,
-            ),
-            Percentage(
-                title=_("Critical at a usage of"),
-                # xgettext: no-python-format
-                unit=_("% of RAM"),
-                default_value=90.0,
-                maxvalue=100.0,
-            ),
-        ],
+def _parameter_valuespec_netscaler_mem() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Specify levels in percentage of total memory usage"),
+                        elements=[
+                            Percentage(
+                                title=_("Warning at"),
+                                default_value=80.0,
+                                maxvalue=100.0,
+                            ),
+                            Percentage(
+                                title=_("Critical at"),
+                                default_value=90.0,
+                                maxvalue=100.0,
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 
@@ -39,6 +45,6 @@ rulespec_registry.register(
         check_group_name="netscaler_mem",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_netscaler_mem,
-        title=lambda: _("Netscaler Memory Usage"),
+        title=lambda: _("Netscaler memory usage"),
     )
 )

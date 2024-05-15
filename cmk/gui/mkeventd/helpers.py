@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from pathlib import Path
-
-import cmk.utils.paths
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -33,6 +30,18 @@ def action_choices(omit_hidden: bool = False) -> list[tuple[str, str]]:
 
 @request_memoize()
 def eventd_configuration() -> ec.ConfigFromWATO:
-    return ec.load_config(
-        ec.settings("", cmk.utils.paths.omd_root, Path(cmk.utils.paths.default_config_dir), [""])
+    return ec.load_config()
+
+
+def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Sequence[ec.ECRulePackSpec]:
+    return [
+        rule_pack.get_rule_pack_spec() if isinstance(rule_pack, ec.MkpRulePackProxy) else rule_pack
+        for rule_pack in rule_packs
+    ]
+
+
+def save_active_config() -> None:
+    ec.save_active_config(
+        dissolve_mkp_proxies(ec.load_rule_packs()),
+        active_config.mkeventd_pprint_rules,
     )

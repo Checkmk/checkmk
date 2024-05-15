@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, equals, SNMPTree
+
+from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
 
 
 def inventory_cisco_srst_phones(info):
@@ -18,7 +19,12 @@ def check_cisco_srst_phones(_no_item, _no_params, info):
     yield 0, "%d phones registered" % phones, [("registered_phones", phones)]
 
 
+def parse_cisco_srst_phones(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["cisco_srst_phones"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_srst_phones,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), equals(".1.3.6.1.4.1.9.9.441.1.2.1.0", "1")
     ),

@@ -24,9 +24,10 @@ from collections.abc import Sequence
 from contextlib import suppress
 from datetime import datetime, timezone
 
+from cmk.plugins.lib.mssql_counters import Section
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.mssql_counters import Section
 
 
 def get_datetime_from_obsolete_format(values: Sequence[str]) -> datetime:

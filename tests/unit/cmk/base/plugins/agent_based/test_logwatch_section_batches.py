@@ -39,7 +39,7 @@ def test_logwatch_ec_inventory_single() -> None:
 
 
 def test_logwatch_unseen_lines_new() -> None:
-    assert logwatch.extract_unseen_lines({}, SECTION.logfiles["/tmp/my_test_log"]["lines"]) == [
+    assert logwatch.extract_unseen_lines(SECTION.logfiles["/tmp/my_test_log"]["lines"], ()) == [
         "C this is critical",
         "W you have been warned",
     ]
@@ -47,8 +47,8 @@ def test_logwatch_unseen_lines_new() -> None:
 
 def test_logwatch_unseen_lines() -> None:
     assert logwatch.extract_unseen_lines(
-        {"seen_batches": {"1656941057-446349206228817512034160204821044623126"}},
         SECTION.logfiles["/tmp/my_test_log"]["lines"],
+        {"1656941057-446349206228817512034160204821044623126"},
     ) == [
         "W you have been warned",
     ]

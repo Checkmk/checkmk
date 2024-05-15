@@ -9,19 +9,20 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.plugins.agent_based import openshift_queries as plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.utils import kube
+
+from cmk.plugins.kube.schemata.section import OpenShiftEndpoint, PrometheusResult, ResultType
 
 
 class OpenShiftEndpointFactory(ModelFactory):
-    __model__ = kube.OpenShiftEndpoint
+    __model__ = OpenShiftEndpoint
 
 
 class PrometheusResultFactory(ModelFactory):
-    __model__ = kube.PrometheusResult
+    __model__ = PrometheusResult
 
 
-def random_error_type() -> kube.ResultType:
-    return random.choice([type_ for type_ in kube.ResultType if type_ != kube.ResultType.success])
+def random_error_type() -> ResultType:
+    return random.choice([type_ for type_ in ResultType if type_ != ResultType.success])
 
 
 class PrometheusErrorFactory(PrometheusResultFactory):
@@ -29,7 +30,7 @@ class PrometheusErrorFactory(PrometheusResultFactory):
 
 
 class PrometheusSuccessFactory(PrometheusResultFactory):
-    type_ = kube.ResultType.success
+    type_ = ResultType.success
 
 
 def test_check_state_all_queries_succeed() -> None:
@@ -47,7 +48,7 @@ def test_check_state_all_queries_succeed() -> None:
     "section",
     [
         OpenShiftEndpointFactory.build(
-            results=PrometheusResultFactory.batch(size=3, type_=kube.ResultType.request_exception)
+            results=PrometheusResultFactory.batch(size=3, type_=ResultType.request_exception)
         ),
         OpenShiftEndpointFactory.build(
             results=PrometheusErrorFactory.batch(size=3),
@@ -57,7 +58,7 @@ def test_check_state_all_queries_succeed() -> None:
         ),
     ],
 )
-def test_check_state_some_query_failed(section: kube.OpenShiftEndpoint) -> None:
+def test_check_state_some_query_failed(section: OpenShiftEndpoint) -> None:
     # Act
     results = list(plugin.check(section))
 

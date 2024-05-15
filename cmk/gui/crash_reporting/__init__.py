@@ -8,8 +8,14 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.sorter import SorterRegistry
+from cmk.gui.watolib.config_domain_name import ConfigVariableGroupRegistry, ConfigVariableRegistry
 
-from .pages import PageCrash, PageDownloadCrashReport
+from . import pages as crash_reporting_pages
+from ._settings import (
+    ConfigVariableCrashReportTarget,
+    ConfigVariableCrashReportURL,
+    ConfigVariableGroupSupport,
+)
 from .views import (
     CommandDeleteCrashReports,
     DataSourceCrashReports,
@@ -29,10 +35,10 @@ def register(
     painter_registry: PainterRegistry,
     sorter_registry: SorterRegistry,
     command_registry: CommandRegistry,
+    config_variable_group_registry: ConfigVariableGroupRegistry,
+    config_variable_registry: ConfigVariableRegistry,
 ) -> None:
-    page_registry.register_page("crash")(PageCrash)
-    page_registry.register_page("download_crash_report")(PageDownloadCrashReport)
-
+    crash_reporting_pages.register(page_registry)
     data_source_registry.register(DataSourceCrashReports)
     sorter_registry.register(SorterCrashTime)
     command_registry.register(CommandDeleteCrashReports)
@@ -42,3 +48,6 @@ def register(
     painter_registry.register(PainterCrashType)
     painter_registry.register(PainterCrashSource)
     painter_registry.register(PainterCrashVersion)
+    config_variable_group_registry.register(ConfigVariableGroupSupport)
+    config_variable_registry.register(ConfigVariableCrashReportTarget)
+    config_variable_registry.register(ConfigVariableCrashReportURL)

@@ -24,6 +24,17 @@ class TestActiveCheckResult:
         )
 
     @staticmethod
+    def test_as_text_sane():
+        assert (
+            ActiveCheckResult(
+                2, "This | breaks things!", ("Detail: | is special.",), ("detail_count=2",)
+            )
+            .as_text()
+            .count("|")
+            == 1
+        )
+
+    @staticmethod
     def test_from_subresults() -> None:
         assert ActiveCheckResult.from_subresults(
             ActiveCheckResult(0, "Ok", ("We're good",), ("metric1",)),

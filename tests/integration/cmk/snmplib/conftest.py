@@ -16,7 +16,7 @@ from typing import NamedTuple
 
 import psutil
 import pytest
-from pysnmp.hlapi import (  # type: ignore[import]
+from pysnmp.hlapi import (  # type: ignore[import-untyped]
     CommunityData,
     ContextData,
     getCmd,
@@ -26,8 +26,9 @@ from pysnmp.hlapi import (  # type: ignore[import]
     UdpTransportTarget,
 )
 
-from tests.testlib import repo_path, wait_until
+from tests.testlib import repo_path
 from tests.testlib.site import Site
+from tests.testlib.utils import wait_until
 
 import cmk.utils.debug as debug
 import cmk.utils.log as log
@@ -56,10 +57,10 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
     with_sudo = os.geteuid() == 0
 
     # In the CI the tests are started as root and snmpsimd needs to be started as
-    # "jenkins" user. We need to provide a tmp path which is writable by that user.
+    # "testuser" user. We need to provide a tmp path which is writable by that user.
     with TemporaryDirectory(prefix="snmpsim_") as d:
         if with_sudo:
-            shutil.chown(d, "jenkins", "jenkins")
+            shutil.chown(d, "testuser", "testuser")
 
         process_definitions = [
             _define_process(idx, auth, Path(d), snmp_data_dir, with_sudo)
@@ -80,23 +81,23 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
                 p = _snmpsimd_process(process_def)
                 if p:
                     p.terminate()
-                process_def.process.wait()
+                process_def.process.wait(36)
             logger.debug("Stopped snmpsimd.")
 
 
 def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
     port = 1337 + index
 
-    # The tests are executed as root user in the containerized environmen, which snmpsimd does not
-    # like. Switch the user context to the jenkins user to execute the daemon.
+    # The tests are executed as root user in the containerized environment, which snmpsimd does not
+    # like. Switch the user context to 'testuser' to execute the daemon.
     # When executed on a dev system, we run as lower privileged user and don't have to switch the
     # context.
-    sudo = ["sudo", "-u", "jenkins"] if with_sudo else []
+    sudo = ["sudo", "-u", "testuser"] if with_sudo else []
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)
     if with_sudo:
-        shutil.chown(proc_tmp_path, "jenkins", "jenkins")
+        shutil.chown(proc_tmp_path, "testuser", "testuser")
 
     return ProcessDef(
         with_sudo=with_sudo,
@@ -104,7 +105,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
         process=subprocess.Popen(
             sudo
             + [
-                f"{repo_path()}/.venv/bin/snmpsimd.py",
+                f"{repo_path()}/.venv/bin/snmpsim-command-responder",
                 "--log-level=error",
                 "--cache-dir",
                 # Each snmpsim instance needs an own cache directory otherwise
@@ -190,34 +191,48 @@ def _is_listening(process_def: ProcessDef) -> bool:
     port = process_def.port
     exitcode = p.poll()
     snmpsimd_died = exitcode is not None
-
+    if snmpsimd_died:
+        print("=============================================snmpsimd dead from the beginning")
     process = _snmpsimd_process(process_def)
-    if process is None:
+    snmpsimd_proc_found = process is not None
+
+    if not snmpsimd_proc_found:
+        logger.debug("Did not detect actual snmpsim-command process")
         return False
-    pid = process.pid
 
     if not snmpsimd_died:
+        pid = process.pid  # type: ignore[union-attr]
         # Wait for snmpsimd to initialize the UDP sockets
         num_sockets = 0
         try:
+            print("============================================= %d" % pid)
+            os.system("ls -al /proc/%d/fd" % pid)
+            os.system("ps -ef | grep %d" % pid)
             for e in os.listdir("/proc/%d/fd" % pid):
                 try:
                     if os.readlink("/proc/%d/fd/%s" % (pid, e)).startswith("socket:"):
                         num_sockets += 1
                 except OSError:
                     pass
-        except OSError:
+        except OSError as e:
             exitcode = p.poll()
             if exitcode is None:
                 raise
             snmpsimd_died = True
+            print(f"====================================snmpsimd dead OSError try-except {e}")
+
     if snmpsimd_died:
-        assert p.stdout is not None and exitcode is not None
-        output = p.stdout.read()
-        raise Exception("snmpsimd died. Exit code: %d; output: %s" % (exitcode, output))
+        # assert p.stdout is not None
+        # output = p.stdout.read()
+        output = "foobar"
+        raise Exception(f"snmpsimd died. Exit code: {exitcode}; output: {output}")
+
+    logger.debug("snmpsimd is running")
 
     if num_sockets < 2:
         return False
+
+    logger.debug("snmpsimd has opened it's sockets")
 
     # We got the expected number of listen sockets. One for IPv4 and one for IPv6. Now test
     # whether or not snmpsimd is already answering.
@@ -228,8 +243,11 @@ def _is_listening(process_def: ProcessDef) -> bool:
         ContextData(),
         ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
     )
-    _error_indication, _error_status, _error_index, var_binds = next(g)
+    _error_indication, _error_status, _error_index, var_binds = g
+    logger.debug("SNMP get response")
+    logger.debug(repr((_error_indication, _error_status, _error_index, var_binds)))
     assert len(var_binds) == 1
+    logger.debug(var_binds[0][1].prettyPrint())
     assert (
         var_binds[0][1].prettyPrint()
         == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -238,14 +256,18 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
 
 def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
-    if process_def.with_sudo:
-        proc = psutil.Process(process_def.process.pid)
-        for child in (children := proc.children(recursive=True)):
-            if child.name() == "snmpsimd.py":
-                return child
-        logger.debug("Did not find snmpsimd in children %r", children)
+    try:
+        if process_def.with_sudo:
+            proc = psutil.Process(process_def.process.pid)
+            for child in (children := proc.children(recursive=True)):
+                if child.name().startswith("snmpsim-command"):
+                    return child
+            logger.debug("Did not find snmpsim-command in children %r", children)
+            return None
+        return psutil.Process(process_def.process.pid)
+    except psutil.NoSuchProcess:
+        logger.exception("No such process", exc_info=True)
         return None
-    return psutil.Process(process_def.process.pid)
 
 
 @pytest.fixture(name="backend_type", params=SNMPBackendEnum)

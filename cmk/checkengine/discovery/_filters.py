@@ -4,14 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Sequence
-from typing import Literal, NamedTuple
-
-from typing_extensions import TypedDict
+from typing import Literal, NamedTuple, TypedDict
 
 from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName
 
-from ._utils import DiscoveryMode
+from ._utils import DiscoveryVsSettings
 
 ServiceFilter = Callable[[ServiceName], bool]
 
@@ -25,6 +23,10 @@ class ServiceFiltersDedicated(TypedDict, total=False):
     service_blacklist: Sequence[str]  # combined + dedicated
     vanished_service_whitelist: Sequence[str]  # dedicated only
     vanished_service_blacklist: Sequence[str]  # dedicated only
+    changed_service_labels_whitelist: Sequence[str]
+    changed_service_labels_blacklist: Sequence[str]
+    changed_service_params_whitelist: Sequence[str]
+    changed_service_params_blacklist: Sequence[str]
 
 
 class RediscoveryParameters(TypedDict, total=False):
@@ -32,7 +34,7 @@ class RediscoveryParameters(TypedDict, total=False):
     excluded_time: Sequence[tuple[tuple[int, int], tuple[int, int]]]
     keep_clustered_vanished_services: bool
     group_time: int
-    mode: DiscoveryMode
+    mode: DiscoveryVsSettings
     service_whitelist: Sequence[str]
     service_blacklist: Sequence[str]
     service_filters: tuple[Literal["combined", "dedicated"], ServiceFiltersDedicated]
@@ -43,15 +45,23 @@ class _ServiceFilterLists(NamedTuple):
     new_blacklist: Sequence[str] | None
     vanished_whitelist: Sequence[str] | None
     vanished_blacklist: Sequence[str] | None
+    changed_labels_whitelist: Sequence[str] | None
+    changed_labels_blacklist: Sequence[str] | None
+    changed_params_whitelist: Sequence[str] | None
+    changed_params_blacklist: Sequence[str] | None
 
 
 class ServiceFilters(NamedTuple):
     new: ServiceFilter
     vanished: ServiceFilter
+    changed_labels: ServiceFilter
+    changed_params: ServiceFilter
 
     @classmethod
     def accept_all(cls) -> "ServiceFilters":
-        return cls(_accept_all_services, _accept_all_services)
+        return cls(
+            _accept_all_services, _accept_all_services, _accept_all_services, _accept_all_services
+        )
 
     @classmethod
     def from_settings(cls, rediscovery_parameters: RediscoveryParameters) -> "ServiceFilters":
@@ -67,7 +77,22 @@ class ServiceFilters(NamedTuple):
             service_filter_lists.vanished_blacklist,
         )
 
-        return cls(new_services_filter, vanished_services_filter)
+        changed_service_labels_filter = _get_service_filter_func(
+            service_filter_lists.changed_labels_whitelist,
+            service_filter_lists.changed_labels_blacklist,
+        )
+
+        changed_services_params_filter = _get_service_filter_func(
+            service_filter_lists.changed_params_whitelist,
+            service_filter_lists.changed_params_blacklist,
+        )
+
+        return cls(
+            new_services_filter,
+            vanished_services_filter,
+            changed_service_labels_filter,
+            changed_services_params_filter,
+        )
 
 
 def _get_service_filter_lists(rediscovery_parameters: RediscoveryParameters) -> _ServiceFilterLists:
@@ -81,6 +106,10 @@ def _get_service_filter_lists(rediscovery_parameters: RediscoveryParameters) -> 
         service_whitelist = rediscovery_parameters.get("service_whitelist")
         service_blacklist = rediscovery_parameters.get("service_blacklist")
         return _ServiceFilterLists(
+            service_whitelist,
+            service_blacklist,
+            service_whitelist,
+            service_blacklist,
             service_whitelist,
             service_blacklist,
             service_whitelist,
@@ -120,6 +149,10 @@ def _get_service_filter_lists(rediscovery_parameters: RediscoveryParameters) -> 
             new_service_blacklist,
             new_service_whitelist,
             new_service_blacklist,
+            new_service_whitelist,
+            new_service_blacklist,
+            new_service_whitelist,
+            new_service_blacklist,
         )
 
     if service_filter_ty == "dedicated":
@@ -128,6 +161,10 @@ def _get_service_filter_lists(rediscovery_parameters: RediscoveryParameters) -> 
             service_filter_lists.get("service_blacklist"),
             service_filter_lists.get("vanished_service_whitelist"),
             service_filter_lists.get("vanished_service_blacklist"),
+            service_filter_lists.get("changed_service_labels_whitelist"),
+            service_filter_lists.get("changed_service_labels_blacklist"),
+            service_filter_lists.get("changed_service_params_whitelist"),
+            service_filter_lists.get("changed_service_params_blacklist"),
         )
 
     raise NotImplementedError()

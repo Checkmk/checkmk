@@ -5,8 +5,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.blade import DETECT_BLADE
 
 # Example excerpt from SNMP data:
 # .1.3.6.1.4.1.2.3.51.2.2.7.1.0  255
@@ -37,7 +38,12 @@ def check_blade_health(_no_item, _no_params, info):
     return (3, f"Undefined state code {state}{descr}")
 
 
+def parse_blade_health(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["blade_health"] = LegacyCheckDefinition(
+    parse_function=parse_blade_health,
     detect=DETECT_BLADE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.2.7",

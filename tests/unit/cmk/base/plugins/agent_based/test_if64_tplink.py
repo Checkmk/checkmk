@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.if64_tplink import parse_if64_tplink
-from cmk.base.plugins.agent_based.utils import interfaces
+
+from cmk.plugins.lib import interfaces
 
 
 def test_parse_if64_tplink() -> None:

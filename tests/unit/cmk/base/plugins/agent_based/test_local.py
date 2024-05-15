@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest
 
 import cmk.base.plugins.agent_based.local as local
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.cache_helper import CacheInfo
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+
+from cmk.plugins.lib.cache_helper import CacheInfo
 
 
 def test_invalid_metric_name_does_not_crash() -> None:
@@ -231,7 +234,7 @@ def test_regex_parser(
                 errors={
                     "cached(1556005301,300)": local.LocalError(
                         output="node_1 cached(1556005301,300) foo",
-                        reason="Invalid plugin status node_1.",
+                        reason="Invalid plug-in status node_1.",
                     )
                 },
                 data={},
@@ -357,14 +360,74 @@ def test_compute_state() -> None:
     ]
 
 
+@pytest.mark.parametrize(
+    "string_table_row,is_discovered,expected_result",
+    [
+        pytest.param(
+            ["1", "ut_item_name", "metric=0", "Detail"],
+            True,
+            [
+                Result(state=State.WARN, summary="Detail"),
+                Result(state=State.OK, notice="Metric: 0.00"),
+                Metric("metric", 0.0),
+            ],
+            id="all four elements as documented",
+        ),
+        pytest.param(
+            ["1", "ut_item_name", "metric=0"],
+            True,
+            [
+                Result(state=State.OK, notice="Metric: 0.00"),
+                Metric("metric", 0.0),
+            ],
+            id="missing summary; should not be OK!",  # TODO: this documents a bug, see SUP-17314
+        ),
+        pytest.param(
+            ["1", "ut_item_name", "-"],
+            True,
+            [],
+            id="empty metric; should not be discovered!",  # TODO: this documents a bug, see SUP-17314
+        ),
+        pytest.param(
+            ["1", "ut_item_name"],
+            False,
+            [],
+            id="empty metric",
+        ),
+        pytest.param(
+            ["1"],
+            False,
+            [],
+            id="single element",
+        ),
+        pytest.param(
+            ["UT_RANDOM_STRING"],
+            False,
+            [],
+            id="single random string",
+        ),
+    ],
+)
+def test_check_sub_17314(
+    string_table_row: list[str], is_discovered: bool, expected_result: list[Result]
+) -> None:
+    assert (
+        list(local.check_local("ut_item_name", {}, local.parse_local([string_table_row])))
+        == expected_result
+    )
+    assert list(local.discover_local(local.parse_local([string_table_row]))) == (
+        [Service(item="ut_item_name")] if is_discovered else []
+    )
+
+
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     import os
 
-    from tests.testlib.utils import cmk_path
+    from tests.testlib.utils import repo_path
 
     assert not pytest.main(
-        ["--doctest-modules", os.path.join(cmk_path(), "cmk/base/plugins/agent_based/local.py")]
+        ["--doctest-modules", os.path.join(repo_path(), "cmk/base/plugins/agent_based/local.py")]
     )
     pytest.main(["-T=unit", "-vvsx", __file__])

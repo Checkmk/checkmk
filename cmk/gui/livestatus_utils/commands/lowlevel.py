@@ -5,20 +5,19 @@
 import time
 from typing import Any
 
-# TODO: typing of connection when livestatus.py is on pypi
-from livestatus import SiteId
+from livestatus import MultiSiteConnection, SiteId
 
 from cmk.utils.site import omd_site
 
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 
 
-def send_command(  # type: ignore[no-untyped-def]
-    connection,
+def send_command(
+    connection: MultiSiteConnection,
     command: LivestatusCommand,
     params: list[Any],
     site_id: SiteId | None = None,
-):
+) -> None:
     """Send a command to livestatus.
 
     Args:

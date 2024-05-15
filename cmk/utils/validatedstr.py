@@ -5,32 +5,21 @@
 
 from __future__ import annotations
 
-import abc
 import string
-from collections.abc import Container
 from typing import Final, Self
 
 __all__ = ["ValidatedString"]
 
 
-class ValidatedString(abc.ABC):
+class ValidatedString:
     """Base class for validated strings."""
 
-    # A plugin name must be a non-empty string consisting only
+    # A plug-in name must be a non-empty string consisting only
     # of letters A-z, digits and the underscore.
     VALID_CHARACTERS: Final = string.ascii_letters + "_" + string.digits
 
     @classmethod
-    @abc.abstractmethod
-    def exceptions(cls) -> Container[str]:
-        """List of exceptions to validation.  Empty by default."""
-        return frozenset()
-
-    @classmethod
     def _validate_args(cls, /, __str: str) -> str:
-        if __str in cls.exceptions():
-            return __str
-
         if not isinstance(__str, str):
             raise TypeError(f"{cls.__name__} must initialized from str")
         if not __str:

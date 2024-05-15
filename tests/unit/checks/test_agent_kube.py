@@ -7,18 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.base.server_side_calls import SpecialAgentInfoFunctionResult
 
-from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
-    SpecialAgentInfoFunctionResult,
-)
-
-from cmk.special_agents.agent_kube import (  # pylint: disable=cmk-module-layer-violation
-    parse_arguments,
-)
-from cmk.special_agents.utils_kubernetes.query import (  # pylint: disable=cmk-module-layer-violation
-    parse_api_session_config,
-)
+from .checktestlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
@@ -463,7 +454,7 @@ def test_parse_namespace_patterns() -> None:
 
 
 @pytest.mark.parametrize(
-    "params, host",
+    "params, expected_arguments",
     [
         (
             {
@@ -480,7 +471,23 @@ def test_parse_namespace_patterns() -> None:
                 },
                 "monitored-objects": ["pods"],
             },
-            "https://127.0.0.1",
+            [
+                "--cluster",
+                "test",
+                "--kubernetes-cluster-hostname",
+                "kubi",
+                "--token",
+                "token",
+                "--monitored-objects",
+                "pods",
+                "--cluster-aggregation-exclude-node-roles",
+                "control-plane",
+                "infra",
+                "--api-server-endpoint",
+                "https://127.0.0.1",
+                "--api-server-proxy",
+                "NO_PROXY",
+            ],
         ),
         (
             {
@@ -497,7 +504,23 @@ def test_parse_namespace_patterns() -> None:
                 },
                 "monitored-objects": ["pods"],
             },
-            "http://127.0.0.1:8080",
+            [
+                "--cluster",
+                "test",
+                "--kubernetes-cluster-hostname",
+                "kubi",
+                "--token",
+                "token",
+                "--monitored-objects",
+                "pods",
+                "--cluster-aggregation-exclude-node-roles",
+                "control-plane",
+                "infra",
+                "--api-server-endpoint",
+                "http://127.0.0.1:8080",
+                "--api-server-proxy",
+                "NO_PROXY",
+            ],
         ),
         (
             {
@@ -514,25 +537,35 @@ def test_parse_namespace_patterns() -> None:
                 },
                 "monitored-objects": ["pods"],
             },
-            "http://localhost:8080",
+            [
+                "--cluster",
+                "test",
+                "--kubernetes-cluster-hostname",
+                "kubi",
+                "--token",
+                "randomtoken",
+                "--monitored-objects",
+                "pods",
+                "--cluster-aggregation-exclude-node-roles",
+                "control-plane",
+                "infra",
+                "--api-server-endpoint",
+                "http://localhost:8080",
+                "--verify-cert-api",
+                "--api-server-proxy",
+                "NO_PROXY",
+            ],
         ),
     ],
 )
 @pytest.mark.usefixtures("fix_register")
 def test_client_configuration_host(
-    params: Mapping[str, object], host: str, caplog: pytest.LogCaptureFixture
+    params: Mapping[str, object], expected_arguments: Sequence[str]
 ) -> None:
     agent = SpecialAgent("agent_kube")
-    arguments: list[str] = []
-    argument_raw: SpecialAgentInfoFunctionResult = agent.argument_func(params, "kubi", "127.0.0.1")
-    # this does not feel right:
-    assert isinstance(argument_raw, list)
-    for element in argument_raw:
-        assert isinstance(element, str)
-        arguments.append(element)
+    arguments: SpecialAgentInfoFunctionResult = agent.argument_func(params, "kubi", "127.0.0.1")
 
-    config = parse_api_session_config(parse_arguments(arguments))
-    assert config.api_server_endpoint == host
+    assert arguments == expected_arguments
 
 
 @pytest.mark.parametrize(

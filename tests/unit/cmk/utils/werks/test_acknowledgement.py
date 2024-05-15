@@ -8,7 +8,8 @@ import json
 from pathlib import Path
 
 from cmk.utils.werks import load
-from cmk.utils.werks.werk import Class, Compatibility, Edition, Level, Werk
+
+from cmk.werks.models import Class, Compatibility, Edition, Level, Werk
 
 WERK_V1 = {
     "15374": {
@@ -49,7 +50,7 @@ def test_load(tmp_path: Path) -> None:
             class_=Class.FIX,
             component="rest-api",
             level=Level.LEVEL_1,
-            date=datetime.datetime(2023, 2, 21, 9, 55, 31, tzinfo=datetime.timezone.utc),
+            date=datetime.datetime(2023, 2, 21, 9, 55, 31, tzinfo=datetime.UTC),
             compatible=Compatibility.NOT_COMPATIBLE,
             edition=Edition.CRE,
             description="<p>In the event of a crash when calling the rest-api, having more\n"

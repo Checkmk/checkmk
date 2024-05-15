@@ -9,9 +9,26 @@
 import logging
 import os
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+import pytest_check  # type: ignore[import-untyped]
+from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
+
+
+@pytest.fixture(scope="function", autouse=True)
+def fail_on_log_exception(
+    caplog: pytest.LogCaptureFixture, pytestconfig: pytest.Config
+) -> Iterator[None]:
+    """Fail tests if exceptions are logged. Function scoped due to caplog fixture."""
+    yield
+    if not pytestconfig.getoption("--fail-on-log-exception"):
+        return
+    for record in caplog.get_records("call"):
+        if record.levelno >= logging.ERROR and record.exc_info:
+            pytest_check.fail(record.message)
+
 
 if os.getenv("_PYTEST_RAISE", "0") != "0":
     # This allows exceptions to be handled by IDEs (rather than just printing the results)
@@ -34,12 +51,9 @@ pytest.register_assert_rewrite(
 pytest_plugins = ("tests.testlib.playwright.plugin",)
 
 import tests.testlib as testlib
+from tests.testlib.utils import current_base_branch_name
 
-# Exclude schemathesis_openapi tests from global collection
-collect_ignore = ["schemathesis_openapi"]
-# TODO Hack: Exclude cee tests in cre repo
-if not Path(testlib.utils.cmc_path()).exists():
-    collect_ignore_glob = ["*/cee/*"]
+collect_ignore: list[str] = []
 
 # Faker creates a bunch of annoying DEBUG level log entries, which clutter the output of test
 # runs and prevent us from spot the important messages easily. Reduce the Reduce the log level
@@ -86,10 +100,43 @@ def pytest_addoption(parser):
         default="unit",
         help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types),
     )
+    parser.addoption(
+        "--fail-on-log-exception",
+        action="store_true",
+        default=False,
+        help="Fail test run if any exception was logged.",
+    )
+    parser.addoption(
+        "--no-skip",
+        action="store_true",
+        default=False,
+        help="Disable any skip or skipif markers.",
+    )
+    parser.addoption(
+        "--limit",
+        action="store",
+        default=None,
+        type=int,
+        help="Select only the first N tests from the collection list.",
+    )
 
 
 def pytest_configure(config):
-    """Registers custom markers to pytest"""
+    """Add important environment variables to the report and register custom pytest markers"""
+    env_vars = {
+        "BRANCH": current_base_branch_name(),
+        "EDITION": "cee",
+        "VERSION": "daily",
+        "DISTRO": "",
+        "TZ": "",
+        "REUSE": "0",
+        "CLEANUP": "1",
+    }
+    env_lines = [f"{key}={os.getenv(key, val)}" for key, val in env_vars.items() if val]
+    config.stash[metadata_key]["Variables"] = (
+        "<ul><li>\n" + ("</li><li>\n".join(env_lines)) + "</li></ul>"
+    )
+
     config.addinivalue_line(
         "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types)
     )
@@ -99,9 +146,15 @@ def pytest_configure(config):
         " Tests marked as non-resilient are allowed to fail when run in resilience test.",
     )
 
+    if not config.getoption("-T") == "schemathesis_openapi":
+        # Exclude schemathesis_openapi tests from global collection
+        global collect_ignore
+        collect_ignore = ["schemathesis_openapi"]
 
-def pytest_collection_modifyitems(items):
+
+def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Config) -> None:
     """Mark collected test types based on their location"""
+    items[:] = items[0 : config.getoption("--limit")]
     for item in items:
         type_marker = item.get_closest_marker("type")
         if type_marker and type_marker.args:
@@ -114,6 +167,9 @@ def pytest_collection_modifyitems(items):
                 raise Exception(f"Test in {repo_rel_path} not TYPE marked: {item!r} ({ty!r})")
 
         item.add_marker(pytest.mark.type.with_args(ty))
+
+        if config.getoption("--no-skip"):
+            item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]
 
 
 def pytest_runtest_setup(item):

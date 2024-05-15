@@ -31,18 +31,20 @@ set)
     PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT $2)
 
     # Tell the site apache on where to listen
-    cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
+    if [[ "$CONFIG_APACHE_TCP_ADDR" == \[* ]]; then
+        cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
+# This file is created by 'omd config set APACHE_TCP_PORT'.
+# Better do not edit manually
+Listen $CONFIG_APACHE_TCP_ADDR:$PORT
+EOF
+    else
+        cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
 # This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
 ServerName $CONFIG_APACHE_TCP_ADDR:$PORT
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
-    # Since werk #14281 these files are not used anymore. Better remove them to
-    # not confuse users. Can be removed with 2.3.
-    if [ -f "$OMD_ROOT/etc/apache/proxy-port.conf" ]; then
-        rm "$OMD_ROOT/etc/apache/proxy-port.conf"
     fi
-
     if [ "$PORT" != "$2" ]; then
         echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
         echo "$PORT"

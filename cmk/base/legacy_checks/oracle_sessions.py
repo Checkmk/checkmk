@@ -13,7 +13,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError
 
 
 def parse_oracle_sessions(string_table):
@@ -62,7 +63,7 @@ def check_oracle_sessions(item, params, parsed):
 
         state = 0
         warn, crit = None, None
-        if "sessions_abs" in params and not params["sessions_abs"] is None:
+        if "sessions_abs" in params and params["sessions_abs"] is not None:
             warn, crit = params["sessions_abs"]
             if sessions >= crit:
                 state = 2

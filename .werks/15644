@@ -1,0 +1,18 @@
+Title: postgres_processes: Restore Monitoring if Instance Name is Missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1695383436
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+As of version 2.1.0p30 and 2.2.0p4, it was no longer possible to use the plugin postgres_instances,
+if the instance name was empty. In previous versions, this plugin would show a service with
+the item <tt>PostgreSQL Instance </tt>. This service would be OK, if there was at least one process
+belonging to any postgres instance, and CRIT otherwise.
+
+With this Werk, the plugin postgres_instances no longer crashes, if there is an empty instance name.
+The old service <tt>PostgreSQL Instance </tt> is no longer discovered. Instead the new check plugin
+postgres_processes can be used.

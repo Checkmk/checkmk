@@ -5,11 +5,9 @@
 
 from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any
+from typing import Any, TypedDict
 
-from typing_extensions import TypedDict
-
-from cmk.base.plugins.agent_based.utils import multipath
+from cmk.plugins.lib import multipath
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -179,7 +177,7 @@ def check_multipath(  # pylint: disable=too-many-branches
     if (mmap := _get_item_data(item, section)) is None:
         return
 
-    # If the item is the alias, then show the UUID in the plugin output.
+    # If the item is the alias, then show the UUID in the plug-in output.
     # If the item is the UUID, then vice versa.
     if item == mmap.uuid and mmap.alias:
         aliasinfo = "(%s): " % mmap.alias

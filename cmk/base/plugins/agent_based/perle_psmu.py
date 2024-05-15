@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.perle import DETECT_PERLE
+
 from .agent_based_api.v1 import register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.perle import DETECT_PERLE
 
 # .1.3.6.1.4.1.1966.21.1.1.1.1.2.1.2.1.1 1 --> PERLE-MCR-MGT-MIB::mcrPsmuIndex.1.a
 # .1.3.6.1.4.1.1966.21.1.1.1.1.2.1.2.1.2 2 --> PERLE-MCR-MGT-MIB::mcrPsmuIndex.1.b

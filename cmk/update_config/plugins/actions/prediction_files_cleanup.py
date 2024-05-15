@@ -7,10 +7,10 @@ from logging import Logger
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.prediction import PredictionData, PredictionInfo
+from cmk.utils.prediction import PredictionData, PredictionStore
 
+from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class RemoveUnreadablePredictions(UpdateAction):
@@ -22,16 +22,16 @@ class RemoveUnreadablePredictions(UpdateAction):
     Deleting the unreadable ones allows us to change the format between releases.
     """
 
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        self.cleanup_unreadable_files(Path(cmk.utils.paths.var_dir, "prediction"))
+    def __call__(self, logger: Logger) -> None:
+        self.cleanup_unreadable_files(cmk.utils.paths.predictions_dir)
 
     @staticmethod
     def cleanup_unreadable_files(path: Path) -> None:
-        for info_file in path.rglob("*.info"):
-            data_file = info_file.with_suffix("")
+        for info_file in path.rglob(f"*{PredictionStore.INFO_FILE_SUFFIX}"):
+            data_file = info_file.with_suffix(PredictionStore.DATA_FILE_SUFFIX)
             try:
-                _ = PredictionInfo.parse_raw(info_file.read_text())
-                _ = PredictionData.parse_raw(data_file.read_text())
+                _ = PredictionInfo.model_validate_json(info_file.read_text())
+                _ = PredictionData.model_validate_json(data_file.read_text())
             except (ValueError, FileNotFoundError):
                 info_file.unlink(missing_ok=True)
                 data_file.unlink(missing_ok=True)

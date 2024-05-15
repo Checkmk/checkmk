@@ -11,13 +11,17 @@ be called manually.
 
 import argparse
 import logging
+import subprocess
 import sys
-from collections.abc import Sequence
+import traceback
+from collections.abc import Callable, Sequence
 from itertools import chain
 from pathlib import Path
+from typing import Literal
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
+from cmk.utils.paths import check_mk_config_dir
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.redis import disable_redis
 from cmk.utils.version import edition, Edition
@@ -42,10 +46,11 @@ from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 from .registry import pre_update_action_registry, update_action_registry
-from .update_state import UpdateState
 
 
-def main(args: Sequence[str]) -> int:
+def main(
+    args: Sequence[str], ensure_site_is_stopped_callback: Callable[[logging.Logger], None]
+) -> int:
     arguments = _parse_arguments(args)
 
     if arguments.debug:
@@ -53,40 +58,25 @@ def main(args: Sequence[str]) -> int:
 
     logger = _setup_logging(arguments)
 
+    ensure_site_is_stopped_callback(logger)
+
     logger.info(
         "%sATTENTION%s\n  Some steps may take a long time depending "
         "on your installation.\n  Please be patient.\n",
         tty.yellow,
         tty.normal,
     )
+    exit_code = main_check_config(logger, arguments.conflict)
+    if exit_code != 0 or arguments.dry_run:
+        return exit_code
+    return main_update_config(logger, arguments.conflict)
 
-    _load_pre_plugins()
-    try:
-        check_config(logger, arguments.conflict)
-    except MKUserError as e:
-        sys.stderr.write(
-            f"\nUpdate aborted: {e}.\n"
-            "The Checkmk configuration has not been modified.\n\n"
-            "You can downgrade to your previous version again using "
-            "'omd update' and start the site again.\n"
-        )
-        return 1
-    except Exception as e:
-        if debug.enabled():
-            raise
-        sys.stderr.write(
-            "Unknown error on pre update action.\n"
-            f"Error: {e}\n\n"
-            "Please repair this and run 'cmk-update-config'"
-            "BEFORE starting the site again."
-        )
-        return 1
 
-    update_state = UpdateState.load(Path(paths.var_dir))
+def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
     _load_plugins(logger)
 
     try:
-        return update_config(logger, update_state)
+        return update_config(logger)
     except Exception:
         if debug.enabled():
             raise
@@ -95,6 +85,31 @@ def main(args: Sequence[str]) -> int:
             "BEFORE starting the site again."
         )
         return 1
+
+
+def main_check_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
+    _load_pre_plugins()
+    try:
+        # This has to be done BEFORE initializing the GUI context on start of
+        # the pre update actions
+        _cleanup_precompiled_files(logger)
+
+        check_config(logger, conflict)
+    except Exception as e:
+        if not isinstance(e, MKUserError):
+            traceback.print_exc()
+        sys.stderr.write(
+            f"\nUpdate aborted with Error: {e}.\nYour site has not been modified.\n"
+            "The update can be retried after the error has been fixed.\n"
+        )
+        return 1
+    return 0
+
+
+def _cleanup_precompiled_files(logger: logging.Logger) -> None:
+    logger.info("Cleanup precompiled host and folder files")
+    for p in Path(check_mk_config_dir, "wato").glob("**/*.pkl"):
+        p.unlink(missing_ok=True)
 
 
 def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
@@ -118,6 +133,11 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
             f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
         ),
     )
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Executes `Verifying Checkmk configuration` only.",
+    )
     return p.parse_args(args)
 
 
@@ -140,9 +160,25 @@ def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
         del log.logger.handlers[:]
         logging.getLogger().addHandler(console_handler)
 
+        # Special case for PIL module producing messages like "STREAM b'IHDR'
+        # 16 13" in debug level
+        logging.getLogger("PIL").setLevel(logging.INFO)
+
     gui_logger.setLevel(_our_logging_level_to_gui_logging_level(logger.getEffectiveLevel()))
 
     return logger
+
+
+def ensure_site_is_stopped(logger: logging.Logger) -> None:
+    if (
+        subprocess.call(["omd", "status"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        != 1
+    ):
+        logger.error(
+            "ERROR: The Checkmk site is still running. Please stop the site "
+            "before updating the configuration. You can stop the site using 'omd stop'."
+        )
+        sys.exit(1)
 
 
 def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
@@ -155,18 +191,27 @@ def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
 def _load_plugins(logger: logging.Logger) -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
-        []
-        if edition() is Edition.CRE
-        else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions"),
+        (
+            []
+            if edition() is Edition.CRE
+            else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
+        ),
     ):
-        logger.error("Error in action plugin %s: %s\n", plugin, exc)
+        logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():
             raise exc
 
 
 def _load_pre_plugins() -> None:
-    for plugin, exc in load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"):
-        sys.stderr.write(f"Error in pre action plugin {plugin}: {exc}\n")
+    for plugin, exc in chain(
+        load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
+        (
+            []
+            if edition() is Edition.CRE
+            else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions")
+        ),
+    ):
+        sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")
         if debug.enabled():
             raise exc
 
@@ -179,14 +224,18 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
     total = len(pre_update_actions)
     logger.info("Verifying Checkmk configuration...")
-    for count, pre_action in enumerate(pre_update_actions, start=1):
-        logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
-        pre_action(conflict_mode)
+
+    # Note: Redis has to be disabled first, the other contexts depend on it
+    with disable_redis(), gui_context():
+        _initialize_base_environment()
+        for count, pre_action in enumerate(pre_update_actions, start=1):
+            logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
+            pre_action(logger, conflict_mode)
 
     logger.info(f"Done ({tty.green}success{tty.normal})\n")
 
 
-def update_config(logger: logging.Logger, update_state: UpdateState) -> int:
+def update_config(logger: logging.Logger) -> Literal[0, 1]:
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
@@ -208,7 +257,7 @@ def update_config(logger: logging.Logger, update_state: UpdateState) -> int:
             logger.info(f" {tty.yellow}{num:02d}/{total:02d}{tty.normal} {action.title}...")
             try:
                 with ActivateChangesWriter.disable():
-                    action(logger, update_state.setdefault(action.name))
+                    action(logger)
             except Exception:
                 has_errors = True
                 logger.error(f' + "{action.title}" failed', exc_info=True)
@@ -222,8 +271,6 @@ def update_config(logger: logging.Logger, update_state: UpdateState) -> int:
                 "Successfully updated Checkmk configuration",
                 need_sync=True,
             )
-
-    update_state.save()
 
     if has_errors:
         logger.error(f"Done ({tty.red}with errors{tty.normal})")

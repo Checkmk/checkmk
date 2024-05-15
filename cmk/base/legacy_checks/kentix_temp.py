@@ -9,10 +9,10 @@ from typing import Final, NamedTuple
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
-from cmk.base.plugins.agent_based.utils.temperature import TempParamType
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.kentix import DETECT_KENTIX
+from cmk.plugins.lib.temperature import TempParamType
 
 _TABLES: Final = {
     "2": "LAN",

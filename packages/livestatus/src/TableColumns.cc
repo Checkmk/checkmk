@@ -6,30 +6,60 @@
 #include "livestatus/TableColumns.h"
 
 #include <memory>
+#include <utility>
 
 #include "livestatus/Column.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
-TableColumns::TableColumns(ICore *mc) : Table(mc) {
+using row_type = Column;
+
+using namespace std::string_literals;
+
+TableColumns::TableColumns() {
     const ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<Column>>(
-        "table", "The name of the table", offsets, [this](const Column &col) {
-            return this->getValue(col, Type::table);
+    addColumn(std::make_unique<StringColumn<row_type>>(
+        "table", "The name of the table", offsets, [this](const row_type &row) {
+            for (const auto &[name, table] : tables_) {
+                if (table->any_column(
+                        [&](const auto &c) { return c.get() == &row; })) {
+                    return table->name();
+                }
+            }
+            return ""s;  // never reached if no bug
         }));
-    addColumn(std::make_unique<StringColumn<Column>>(
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "name", "The name of the column within the table", offsets,
-        [this](const Column &col) { return this->getValue(col, Type::name); }));
-    addColumn(std::make_unique<StringColumn<Column>>(
+        [](const row_type &row) { return row.name(); }));
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "description", "A description of the column", offsets,
-        [this](const Column &col) {
-            return this->getValue(col, Type::description);
-        }));
-    addColumn(std::make_unique<StringColumn<Column>>(
+        [](const row_type &row) { return row.description(); }));
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "type", "The data type of the column (int, float, string, list)",
-        offsets,
-        [this](const Column &col) { return this->getValue(col, Type::type); }));
+        offsets, [](const row_type &row) {
+            switch (row.type()) {
+                case ColumnType::int_:
+                    return "int";
+                case ColumnType::double_:
+                    return "float";
+                case ColumnType::string:
+                    return "string";
+                case ColumnType::list:
+                    return "list";
+                case ColumnType::time:
+                    return "time";
+                case ColumnType::dictstr:
+                    return "dict";
+                case ColumnType::dictdouble:
+                    return "dictdouble";
+                case ColumnType::blob:
+                    return "blob";
+                case ColumnType::null:
+                    return "null";
+            }
+            return "";  // unreachable
+        }));
 }
 
 std::string TableColumns::name() const { return "columns"; }
@@ -40,36 +70,10 @@ void TableColumns::addTable(const Table &table) {
     tables_[table.name()] = &table;
 }
 
-void TableColumns::answerQuery(Query &query, const User & /*user*/) {
+void TableColumns::answerQuery(Query &query, const User & /*user*/,
+                               const ICore & /*core*/) {
     for (const auto &[name, table] : tables_) {
         table->any_column(
             [&](const auto &c) { return !query.processDataset(Row{c.get()}); });
     }
-}
-
-std::string TableColumns::getValue(const Column &column, Type colcol) const {
-    static const char *typenames[8] = {"int",  "float", "string", "list",
-                                       "time", "dict",  "blob",   "null"};
-
-    switch (colcol) {
-        case Type::table:
-            return tableNameOf(column);
-        case Type::name:
-            return column.name();
-        case Type::description:
-            return column.description();
-        case Type::type:
-            return typenames[static_cast<int>(column.type())];
-    }
-    return "";
-}
-
-std::string TableColumns::tableNameOf(const Column &column) const {
-    for (const auto &[name, table] : tables_) {
-        if (table->any_column(
-                [&](const auto &c) { return c.get() == &column; })) {
-            return table->name();
-        }
-    }
-    return "";  // never reached if no bug
 }

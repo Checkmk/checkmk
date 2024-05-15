@@ -23,19 +23,17 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.kube.schemata.api import (
     ConditionStatus,
     ContainerStateType,
-    CronJobLatestJob,
-    CronJobStatus,
-    get_age_levels_for,
     JobCondition,
     JobConditionType,
-    JobPod,
     Phase,
-    pod_status_message,
     Timestamp,
 )
+from cmk.plugins.kube.schemata.section import CronJobLatestJob, CronJobStatus, JobPod
+from cmk.plugins.lib.kube import get_age_levels_for, pod_status_message
 
 CRONJOB_DEFAULT_PARAMS: Mapping[str, Any] = {
     "pending": ("levels", (300, 600)),

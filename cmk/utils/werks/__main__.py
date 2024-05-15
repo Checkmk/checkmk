@@ -8,11 +8,12 @@ from pathlib import Path
 
 from cmk.utils.version import __version__, Version
 
+from cmk.werks.models import Edition, Werk
+
 from . import load_precompiled_werks_file, load_raw_files, write_as_text, write_precompiled_werks
 from .announce import main as main_announce
 from .collect import main as collect
 from .mail import main as mail
-from .werk import Edition, Werk
 
 
 def main_changelog(args: argparse.Namespace) -> None:
@@ -46,7 +47,10 @@ def main_precompile(args: argparse.Namespace) -> None:
 
 
 def main_collect(args: argparse.Namespace) -> None:
-    collect(args.flavor, args.path)
+    branches = {}
+    if args.substitute_branches:
+        branches = dict(r.split(":", 1) for r in args.substitute_branches)
+    collect(args.flavor, args.path, branches)
 
 
 def main_mail(args: argparse.Namespace) -> None:
@@ -88,7 +92,6 @@ def parse_arguments() -> argparse.Namespace:
     parser_announce.add_argument("werk_dir", type=path_dir, help=".werk folder in the git root")
     parser_announce.add_argument("version")
     parser_announce.add_argument("--format", choices=("txt", "md"), default="txt")
-    parser_announce.add_argument("--feedback-mail", default="feedback@checkmk.com")
     parser_announce.set_defaults(func=main_announce)
 
     parser_collect = subparsers.add_parser(
@@ -98,6 +101,14 @@ def parse_arguments() -> argparse.Namespace:
     # through all branches and look at all .werks folders there.
     parser_collect.add_argument("flavor", choices=["cma", "cmk", "checkmk_kube_agent"])
     parser_collect.add_argument("path", help="path to git repo to read werks from", type=path_dir)
+    parser_collect.add_argument(
+        "--substitute-branches",
+        nargs="+",
+        help="without this option the script autodetects branches with the prefix "
+        "'refs/remotes/origin/'. During testing and developing, it might useful "
+        "to disable the autodiscovery and explicitly set the branches. So you could "
+        "use '2.3.0:HEAD' to only collect from HEAD and use 2.3.0 as branch name.",
+    )
     parser_collect.set_defaults(func=main_collect)
 
     parser_mail = subparsers.add_parser(
@@ -117,6 +128,11 @@ def parse_arguments() -> argparse.Namespace:
     parser_mail.add_argument(
         "ref",
         help="reference for git notes, should be werk_mail for production.",
+    )
+    parser_mail.add_argument(
+        "--ref-fixup",
+        default="werk_mail_fixup",
+        help="reference for git notes for fixing broken werk commits",
     )
     parser_mail.add_argument(
         "--do-fetch-git-notes",

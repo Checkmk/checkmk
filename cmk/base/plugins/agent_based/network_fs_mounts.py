@@ -7,15 +7,16 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import Any, Final, NamedTuple
 
-from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
+from cmk.plugins.lib.df import (
     df_check_filesystem_single,
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
     SHOW_LEVELS_DEFAULT,
     TREND_DEFAULT_PARAMS,
 )
+
+from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 DEFAULT_NETWORK_FS_MOUNT_PARAMETERS: Final = {
     **FILESYSTEM_DEFAULT_LEVELS,
@@ -73,14 +74,16 @@ def parse_nfsmounts_v2(string_table: StringTable) -> NetworkFSSection:
                 mountpoint=str(data["mountpoint"]),
                 state=str(data["state"]),
                 mount_seems_okay=bool(data.get("mount_seems_okay", False)),
-                usage=NetworkFSUsage(
-                    total_blocks=int(usage["total_blocks"]),
-                    free_blocks_su=int(usage["free_blocks_su"]),
-                    free_blocks=int(usage["free_blocks"]),
-                    blocksize=int(usage["blocksize"]),
-                )
-                if (usage := data.get("usage"))
-                else None,
+                usage=(
+                    NetworkFSUsage(
+                        total_blocks=int(usage["total_blocks"]),
+                        free_blocks_su=int(usage["free_blocks_su"]),
+                        free_blocks=int(usage["free_blocks"]),
+                        blocksize=int(usage["blocksize"]),
+                    )
+                    if (usage := data.get("usage"))
+                    else None
+                ),
                 source=None if (s := data.get("source")) is None else str(s),
             ),
         )
@@ -108,14 +111,16 @@ def parse_network_fs_mounts(string_table: StringTable) -> NetworkFSSection:
                 mountpoint=" ".join(entry[:-5]),
                 state=entry[-5],
                 mount_seems_okay=entry[-4:] == ["-", "-", "-", "-"],
-                usage=NetworkFSUsage(
-                    total_blocks=int(entry[-4]),
-                    free_blocks_su=int(entry[-3]),
-                    free_blocks=int(entry[-2]),
-                    blocksize=int(entry[-1]),
-                )
-                if entry[-4:] != ["-", "-", "-", "-"]
-                else None,
+                usage=(
+                    NetworkFSUsage(
+                        total_blocks=int(entry[-4]),
+                        free_blocks_su=int(entry[-3]),
+                        free_blocks=int(entry[-2]),
+                        blocksize=int(entry[-1]),
+                    )
+                    if entry[-4:] != ["-", "-", "-", "-"]
+                    else None
+                ),
                 source=None,
             ),
         )
@@ -132,17 +137,21 @@ def _scaled_metric(new_name: str, metric: Metric, factor: float) -> Metric:
         new_name,
         metric.value * factor,
         levels=(
-            metric.levels[0] * factor if metric.levels[0] is not None else None,
-            metric.levels[1] * factor if metric.levels[1] is not None else None,
-        )
-        if metric.levels
-        else None,
+            (
+                metric.levels[0] * factor if metric.levels[0] is not None else None,
+                metric.levels[1] * factor if metric.levels[1] is not None else None,
+            )
+            if metric.levels
+            else None
+        ),
         boundaries=(
-            metric.boundaries[0] * factor if metric.boundaries[0] is not None else None,
-            metric.boundaries[1] * factor if metric.boundaries[1] is not None else None,
-        )
-        if metric.boundaries
-        else None,
+            (
+                metric.boundaries[0] * factor if metric.boundaries[0] is not None else None,
+                metric.boundaries[1] * factor if metric.boundaries[1] is not None else None,
+            )
+            if metric.boundaries
+            else None
+        ),
     )
 
 

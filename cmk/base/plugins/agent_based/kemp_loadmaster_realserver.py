@@ -7,9 +7,10 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from typing import Final, NamedTuple
 
+from cmk.plugins.lib.kemp_loadmaster import DETECT_KEMP_LOADMASTER, VSSection
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kemp_loadmaster import DETECT_KEMP_LOADMASTER, VSSection
 
 
 class RealServer(NamedTuple):

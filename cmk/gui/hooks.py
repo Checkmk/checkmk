@@ -22,7 +22,7 @@ hooks: dict[str, list[Hook]] = {}
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
-    # Cleanup all plugin hooks. They need to be renewed by load_plugins()
+    # Cleanup all plug-in hooks. They need to be renewed by load_plugins()
     # of the other modules
     unregister_plugin_hooks()
 
@@ -50,7 +50,7 @@ def register_from_plugin(name: str, func: Callable) -> None:
     register(name, func, is_builtin=False)
 
 
-# Kept public for compatibility with pre 1.6 plugins (is_builtin needs to be optional for pre 1.6)
+# Kept public for compatibility with pre 1.6 plug-ins (is_builtin needs to be optional for pre 1.6)
 def register(name: str, func: Callable, is_builtin: bool = False) -> None:
     hooks.setdefault(name, []).append(Hook(handler=func, is_builtin=is_builtin))
 
@@ -102,38 +102,40 @@ ClearEvents = list[ClearEvent] | ClearEvent
 
 R = typing.TypeVar("R")
 P = typing.ParamSpec("P")
+F = typing.TypeVar("F")
+
+CacheWrapperArgs = typing.ParamSpec("CacheWrapperArgs")
 
 
-# NOTE
-# We can't make a type alias like Foo = Callable[P, R] right now, because of a bug in mypy. We
-# therefore need to duplicate the Callable[P, R] part in every site of use. It seems to work, but
-# the declaration itself raises an error.
-# For more detailed information see: https://github.com/python/mypy/issues/11855
-
-
-def _scoped_memoize(
+def scoped_memoize(
     clear_events: ClearEvents,
-    maxsize: int | None = 128,
-    typed: bool = False,
+    cache_impl: Callable[CacheWrapperArgs, Callable[P, R]],
+    cache_impl_args: CacheWrapperArgs.args,
+    cache_impl_kwargs: CacheWrapperArgs.kwargs,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A scoped memoization decorator.
 
-    This caches the decorated function with a `functools.lru_cache`, however the cache will be
-    explicitly cleared whenever a
+    This caches the decorated function with a supplied implementation. The cache will be
+    explicitly cleared whenever one of the supplied events in `clear_events` is triggered.
+
+    For this to work, the return-value of the cache implementation needs to have a `cache_clear`
+    method.
 
     Args:
         clear_events:
             A list of hook events, which shall trigger a clearing of the cache.
 
-        maxsize:
-            As documented in @functools.lru_cache
+        cache_impl:
+            The actual cache implementation. Is a function which returns a caching decorator.
 
-        typed:
-            As documented in @functools.lru_cache
+        cache_impl_args:
+            The var-args to be passed to the cache implementation.
+
+        cache_impl_kwargs:
+            The keyword arguments to be passed to the cache implementation.
 
     Returns:
-        A wrapped function which caches through `functools.lru_cache`, and clears the cache
-        according to `clear_events`.
+        A wrapped function which clears the cache according to `clear_events`.
 
     Raises:
         ValueError - When no or unknown clear events are supplied.
@@ -144,12 +146,15 @@ def _scoped_memoize(
     if not clear_events:
         raise ValueError(f"No clear-events specified. Use one of: {ClearEvent!r}")
 
-    def _decorator(func: Callable[P, R]) -> Callable[P, R]:
-        cached_func = functools.lru_cache(maxsize=maxsize, typed=typed)(func)
+    def _decorator(func: P.args) -> P.args:
+        cached_func = cache_impl(*cache_impl_args, **cache_impl_kwargs)(func)
         for clear_event in clear_events:
-            register_builtin(clear_event, cached_func.cache_clear)  # hooks.register_builtin
-        # TODO: mypy does more complex type overloads depending on arity
-        return typing.cast(Callable[P, R], cached_func)
+            # Tried to generically type this such that parameters and added methods are checked,
+            # but this is not easily possible right now. lru_cache also has an incompatible
+            # type then.
+            # See: https://github.com/python/mypy/issues/5107
+            register_builtin(clear_event, cached_func.cache_clear)  # type: ignore[attr-defined]
+        return cached_func
 
     return _decorator
 
@@ -159,6 +164,8 @@ def request_memoize(
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A cache decorator which only has a scope for one request.
 
+    This one uses `functools.lru_cache`, as the caching-scope can only be in one process anyway.
+
     Args:
         maxsize:
             See `functools.lru_cache`
@@ -167,9 +174,12 @@ def request_memoize(
             See `functools.lru_cache`
 
     Returns:
-        A `_scoped_memoize` decorator which clears on every request-start.
+        A `_scoped_memoize` decorator which clears on every request-end and request-context-exit.
 
     """
-    return _scoped_memoize(
-        clear_events=["request-end", "request-context-exit"], maxsize=maxsize, typed=typed
+    return scoped_memoize(
+        clear_events=["request-end", "request-context-exit"],
+        cache_impl=functools.lru_cache,  # type: ignore  # too specialized _lru_cache[_P, _R] ...
+        cache_impl_args=(),
+        cache_impl_kwargs={"maxsize": maxsize, "typed": typed},
     )

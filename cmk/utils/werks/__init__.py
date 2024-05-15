@@ -26,11 +26,11 @@ from pydantic import RootModel, TypeAdapter
 
 import cmk.utils.paths
 
-from .convert import werkv1_to_werkv2
-from .models import WerkV1
-from .werk import Class, Compatibility, sort_by_version_and_component, Werk, WerkTranslator
-from .werkv1 import parse_werk_v1
-from .werkv2 import load_werk_v2, parse_werk_v2, WerkV2ParseResult
+from cmk.werks import load_werk
+from cmk.werks.models import Class, Compatibility, Werk, WerkV1
+from cmk.werks.parse import parse_werk_v1
+
+from .werk import sort_by_version_and_component, WerkTranslator
 
 Werks = RootModel[dict[int, Werk]]
 
@@ -165,15 +165,3 @@ def write_werk_as_text(f: IO[str], werk: Werk) -> None:
 
     if werk.compatible == Compatibility.NOT_COMPATIBLE:
         f.write("            NOTE: Please refer to the migration notes!\n")
-
-
-def load_werk(*, file_content: str, file_name: str) -> Werk:
-    parsed = parse_werk(file_content, file_name)
-    return load_werk_v2(parsed)
-
-
-def parse_werk(file_content: str, file_name: str) -> WerkV2ParseResult:
-    if file_name.endswith(".md"):
-        return parse_werk_v2(file_content, file_name.removesuffix(".md"))
-    file_content, werk_id = werkv1_to_werkv2(file_content, int(file_name))
-    return parse_werk_v2(file_content, str(werk_id))  # TODO: str does not make sense!

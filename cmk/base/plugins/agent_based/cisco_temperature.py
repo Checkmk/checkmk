@@ -28,8 +28,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.cisco_sensor_item import cisco_sensor_item
-from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamDict
+
+from cmk.plugins.lib.cisco_sensor_item import cisco_sensor_item
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 Section = Mapping[str, Mapping[str, Mapping[str, Any]]]  # oh boy.
 
@@ -331,11 +332,6 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
         if sensor_id in descriptions and sensor_id in entity_parsed.get(temp_sensor_type, {}):
             # if this sensor is already in the dictionary, ensure we use the same name
             item = descriptions[sensor_id]
-            prev_description = cisco_sensor_item(statustext, sensor_id)
-            # also register the name we would have used up to 1.2.8b4, so we can give
-            # the user a proper info message.
-            # It's the little things that show you care
-            parsed[temp_sensor_type][prev_description] = {"obsolete": True}
         else:
             item = cisco_sensor_item(statustext, sensor_id)
 
@@ -359,7 +355,7 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
         except Exception:
             temp_sensor_attrs["dev_state"] = (3, "sensor defect")
 
-        parsed[temp_sensor_type].setdefault(item, temp_sensor_attrs)
+        parsed[temp_sensor_type][item] = temp_sensor_attrs
 
     for sensor_type, sensors in entity_parsed.items():
         for sensor_attrs in sensors.values():
@@ -447,8 +443,6 @@ register.snmp_section(
 def discover_cisco_temperature(section: Section) -> DiscoveryResult:
     discoverable_sensor_state = ["1", "2", "3", "4"]  # normal, warning, critical, shutdown
     for item, value in section.get("8", {}).items():
-        if value.get("obsolete", False):
-            continue
         if env_mon_state := value.get("raw_env_mon_state"):
             if env_mon_state not in discoverable_sensor_state:
                 continue
@@ -460,12 +454,10 @@ def discover_cisco_temperature(section: Section) -> DiscoveryResult:
 
 def check_cisco_temperature(item: str, params: TempParamDict, section: Section) -> CheckResult:
     temp_parsed = section.get("8", {})
-    if item not in temp_parsed:
-        return
 
-    data = temp_parsed[item]
-    if data.get("obsolete", False):
-        yield Result(state=State.UNKNOWN, summary="This sensor is obsolete, please rediscover")
+    try:
+        data = temp_parsed[item]
+    except KeyError:
         return
 
     state, state_readable = data["dev_state"]

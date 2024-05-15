@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.1 "PSU1"
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.2 "PSU2"
@@ -54,7 +55,12 @@ def check_fsc_sc2_psu(item, _no_params, info):
             yield 0, infotext, perfdata
 
 
+def parse_fsc_sc2_psu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fsc_sc2_psu"] = LegacyCheckDefinition(
+    parse_function=parse_fsc_sc2_psu,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.2.1",

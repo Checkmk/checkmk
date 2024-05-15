@@ -6,12 +6,10 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 
 linux_nic_check = "lnx_if"
-
-# levels for warning/critical on error rate - in percentage of total packets!
-netctr_default_params = (0.01, 0.1)
 
 netctr_counters = [
     "rx_bytes",
@@ -54,19 +52,11 @@ def inventory_netctr_combined(info):
         return []
     if len(info) == 0:
         return []
-    return [
-        (l[0], netctr_default_params)
-        for l in info[1:]
-        if l[0] != "lo" and not l[0].startswith("sit")
-    ]
+    return [(l[0], {}) for l in info[1:] if l[0] != "lo" and not l[0].startswith("sit")]
 
 
 def check_netctr_combined(nic, params, info):
-    try:
-        warn, crit = params
-    except ValueError:
-        warn, crit = (0.01, 0.1)
-
+    warn, crit = params["levels"]
     this_time = int(info[0][0])
     value_store = get_value_store()
 
@@ -108,9 +98,18 @@ def check_netctr_combined(nic, params, info):
     return (3, "NIC is not present")
 
 
+def parse_netctr(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["netctr"] = LegacyCheckDefinition(
+    parse_function=parse_netctr,
+)
+
 check_info["netctr.combined"] = LegacyCheckDefinition(
     service_name="NIC %s counters",
     sections=["netctr"],
     discovery_function=inventory_netctr_combined,
     check_function=check_netctr_combined,
+    check_default_parameters={"levels": (0.01, 0.1)},
 )

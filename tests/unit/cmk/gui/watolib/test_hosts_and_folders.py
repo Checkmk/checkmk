@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import datetime
 import os
 import pprint
@@ -15,12 +17,11 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import count
 from unittest.mock import MagicMock, patch
+from zoneinfo import ZoneInfo
 
-import freezegun
 import pytest
+import time_machine
 from pytest import MonkeyPatch
-
-from tests.testlib import on_time
 
 from livestatus import SiteId
 
@@ -36,7 +37,6 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
-from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
@@ -71,10 +71,10 @@ def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
 
 @pytest.fixture(autouse=True)
 def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
-    if not has_agent_bakery():
-        return
-
-    import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=no-name-in-module
+    try:
+        import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=no-name-in-module
+    except ImportError:
+        return  # Don't do anything in case the bakery is not available
 
     def _fake_start_bake_agents(host_names, signing_credentials):
         pass
@@ -1035,7 +1035,7 @@ def test_folder_access() -> None:
 def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("a8098c1a-f86e-11da-bd1a-00112444be1e"))
     tree = folder_tree()
-    with on_time("2018-01-10 02:00:00", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 1, 10, 2, tzinfo=ZoneInfo("UTC")), tick=False):
         folder = Folder.new(
             tree=tree,
             name="bla",
@@ -1059,7 +1059,7 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("c6bda767ae5c47038f73d8906fb91bb4"))
 
     tree = folder_tree()
-    with on_time("2018-01-10 02:00:00", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 1, 10, 2, tzinfo=ZoneInfo("UTC")), tick=False):
         folder1 = Folder.new(tree=tree, name="folder1", parent_folder=tree.root_folder())
         folder1.persist_instance()
         tree.invalidate_caches()
@@ -1080,14 +1080,14 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.parametrize(
     "allowed,last_end,next_time",
     [
-        (((0, 0), (24, 0)), None, 1515549600.0),
+        (((0, 0), (24, 0)), None, 1515546000.0),
         (
             ((0, 0), (24, 0)),
             1515549600.0,
             1515549900.0,
         ),
         (((20, 0), (24, 0)), None, 1515610800.0),
-        ([((0, 0), (2, 0)), ((20, 0), (22, 0))], None, 1515610800.0),
+        ([((0, 0), (2, 0)), ((20, 0), (22, 0))], None, 1515546000.0),
         ([((0, 0), (2, 0)), ((20, 0), (22, 0))], 1515621600.0, 1515625200.0),
     ],
 )
@@ -1123,7 +1123,7 @@ def test_next_network_scan_at(
         ),
     )
 
-    with on_time("2018-01-10 02:00:00", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 1, 10, 2, tzinfo=ZoneInfo("CET")), tick=False):
         assert folder.next_network_scan_at() == next_time
 
 
@@ -1132,7 +1132,7 @@ def test_folder_times() -> None:
     tree = folder_tree()
     root = tree.root_folder()
 
-    with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
+    with time_machine.travel(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
         Folder.new(tree=tree, name="test", parent_folder=root).save()
         folder = Folder.load(tree=tree, name="test", parent_folder=root)

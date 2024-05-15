@@ -596,9 +596,7 @@ private:
 };
 
 TEST_F(WmiProviderTestFixture, WmiMsExch) {
-    auto table = execWmiProvider(
-        kMsExch,
-        ::testing::UnitTest::GetInstance()->current_test_info()->name());
+    auto table = execWmiProvider(kMsExch, tst::GetUnitTestName());
     if (table.empty()) {
         return;
     }
@@ -613,9 +611,7 @@ TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentComponent) {
         GTEST_SKIP() << fmt::format(L"'{}' is presented", web_services_service);
     }
 
-    const auto table = execWmiProvider(
-        kWmiWebservices,
-        ::testing::UnitTest::GetInstance()->current_test_info()->name());
+    const auto table = execWmiProvider(kWmiWebservices, tst::GetUnitTestName());
     ASSERT_TRUE(table.empty());
 }
 
@@ -624,18 +620,14 @@ TEST_F(WmiProviderTestFixture, WmiWebServicesPresentedComponent) {
         GTEST_SKIP() << fmt::format(L"'{}' is absent", web_services_service);
     }
 
-    const auto table = execWmiProvider(
-        kWmiWebservices,
-        ::testing::UnitTest::GetInstance()->current_test_info()->name());
+    const auto table = execWmiProvider(kWmiWebservices, tst::GetUnitTestName());
     ASSERT_GT(table.size(), 3U);
     EXPECT_EQ(table[0] + "\n",
               section::MakeHeader(kWmiWebservices, wmi::kSepChar));
 }
 
 TEST_F(WmiProviderTestFixture, WmiCpu) {
-    auto table = execWmiProvider(
-        kWmiCpuLoad,
-        ::testing::UnitTest::GetInstance()->current_test_info()->name());
+    auto table = execWmiProvider(kWmiCpuLoad, tst::GetUnitTestName());
 
     ASSERT_TRUE(table.size() >= 5);  // header, two subheaders and two lines
     EXPECT_EQ(table[0] + "\n", section::MakeHeader(kWmiCpuLoad, wmi::kSepChar));

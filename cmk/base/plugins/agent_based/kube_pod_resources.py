@@ -9,9 +9,7 @@ import math
 import time
 from collections.abc import MutableMapping
 from itertools import islice
-from typing import Literal, NamedTuple
-
-from typing_extensions import TypedDict
+from typing import Literal, NamedTuple, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -28,12 +26,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
-    AllocatablePods,
-    PodResources,
-    PodSequence,
-    VSResultAge,
-)
+
+from cmk.plugins.kube.schemata.section import AllocatablePods, PodResources, PodSequence
+from cmk.plugins.lib.kube import VSResultAge
 
 
 def discovery_kube_pod_resources(

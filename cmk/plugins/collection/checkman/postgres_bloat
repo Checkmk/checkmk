@@ -1,0 +1,21 @@
+title: PostgreSQL: Bloat
+agents: linux
+catalog: app/postgresql
+license: GPLv2
+distribution: check_mk
+description:
+ This check allows tracking of how bloated the tables and indexes of a database are.
+ It requires that the ANALYZE function is running regularly and that stats collection
+ is turned on.
+
+ You can configure limits for the total amount of wasted bytes or the percentual
+ bloat size. The limits can be configured for the table bloat as well as the
+ index bloat.
+
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
+
+item:
+ Name of the category and the name of the database
+
+discovery:
+ One service is created for each database.

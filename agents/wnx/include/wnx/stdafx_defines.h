@@ -39,12 +39,14 @@
 #define NOPROFILER         // Profiler interface.
 #define NODEFERWINDOWPOS   // DeferWindowPos routines
 #define NOMCX              // Modem Configuration Extensions
+#define _CRT_USE_CONFORMING_ANNEX_K_TIME 1  // to have correct locatime_r
 
 #define _WIN32_WINNT 0x0600  // NOLINT
 
 #define _CRT_SECURE_NO_WARNINGS ﻿1  // NOLINT
 
-#define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING  // strstream in xlog
+#define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING   // strstream in xlog
+#define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING  // std format 9.0
 
 #define ASIO_STANDALONE                                    // no boost
 #define ASIO_HEADER_ONLY                                   // to lazy to add cpp
@@ -57,3 +59,4 @@
 #define NOMINMAX  // for Windows
 
 #define _SILENCE_CLANG_COROUTINE_MESSAGE  // clang coroutines
+#define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING

@@ -134,7 +134,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             title=_("IPv4 address"),
             help=_(
                 "Specify an explicit IP address or resolvable DNS name here, if "
-                "the hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. "
+                "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
                 "If you do not set this attribute, host name resolution will be "
                 "performed when the configuration is enabled. Checkmk's "
                 "built-in DNS cache is enabled by default in the global "
@@ -184,7 +184,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
             title=_("IPv6 Address"),
             help=_(
                 "Specify an explicit IPv6 address or resolvable DNS name here, if "
-                "the hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. "
+                "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
                 "If you do not set this attribute, host name resolution will be "
                 "performed when the configuration is enabled. Checkmk's "
                 "built-in DNS cache is enabled by default in the global "
@@ -232,6 +232,9 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
+    def depends_on_tags(self):
+        return ["ip-v4"]
+
     def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
@@ -278,6 +281,9 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
     def show_in_folder(self):
         return False
+
+    def depends_on_tags(self):
+        return ["ip-v6"]
 
     def valuespec(self) -> ValueSpec:
         return ListOf(
@@ -365,10 +371,10 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def is_show_more(self) -> bool:
         return True
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return True
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
     def valuespec(self) -> ValueSpec:
@@ -394,21 +400,21 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             description="A list of parents of this host.",
         )
 
-    def is_visible(self, for_what, new) -> bool:  # type: ignore[no-untyped-def]
+    def is_visible(self, for_what: str, new: bool) -> bool:
         return for_what != "cluster"
 
-    def to_nagios(self, value):
+    def to_nagios(self, value: str) -> str | None:
         if value:
             return ",".join(value)
         return None
 
-    def nagios_name(self):
+    def nagios_name(self) -> str:
         return "parents"
 
     def is_explicit(self) -> bool:
         return True
 
-    def paint(self, value, hostname):
+    def paint(self, value: str, hostname: HostName) -> tuple[str, HTML]:
         parts = [
             HTMLWriter.render_a(
                 hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)])
@@ -498,7 +504,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 "try to detect new hosts in the configured IP ranges by sending pings "
                 "to each IP address to check whether or not a host is using this ip "
                 "address. Each new found host will be added to the current folder by "
-                "it's hostname, when resolvable via DNS, or by it's IP address."
+                "it's host name, when resolvable via DNS, or by it's IP address."
             ),
             optional_keys=["max_parallel_pings", "translate_names"],
             default_text=_("Not configured."),
@@ -511,7 +517,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 "Configuration for automatic network scan. Pings will be"
                 "sent to each IP address in the configured ranges to check"
                 "if a host is up or down. Each found host will be added to"
-                "the folder by it's hostname (if possible) or IP address."
+                "the folder by it's host name (if possible) or IP address."
             ),
         )
 
@@ -607,7 +613,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             (
                 "translate_names",
                 HostnameTranslation(
-                    title=_("Translate Hostnames"),
+                    title=_("Translate host names"),
                 ),
             ),
         ]
@@ -616,11 +622,13 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     @staticmethod
     def _time_allowed_to_valuespec(
-        v: TimeofdayRangeValue
-        |
-        # we need list as input type here because Sequence[TimeofdayRangeValue] is hard to
-        # distinguish from TimeofdayRangeValue
-        list[TimeofdayRangeValue],
+        v: (
+            TimeofdayRangeValue
+            |
+            # we need list as input type here because Sequence[TimeofdayRangeValue] is hard to
+            # distinguish from TimeofdayRangeValue
+            list[TimeofdayRangeValue]
+        ),
     ) -> list[TimeofdayRangeValue]:
         return v if isinstance(v, list) else [v]
 
@@ -860,7 +868,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
-            description="Address (IPv4, IPv6 or hostname) under which the management board can be reached.",
+            description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
             validate=fields.ValidateAnyOfValidators(
                 [
                     fields.ValidateIPv4(),
@@ -996,6 +1004,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
             gui_fields.IPMIParameters,
             description="IPMI credentials",
             required=False,
+            allow_none=True,
         )
 
 
@@ -1035,7 +1044,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return gui_fields.SiteField(
-            description="The site that should monitor this host.", presence="might_not_exist"
+            description="The site that should monitor this host.",
+            presence="might_not_exist_on_view",
         )
 
     def get_tag_groups(self, value):

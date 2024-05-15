@@ -18,7 +18,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
+
+from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
 
 
 def inventory_entersekt(info):
@@ -38,7 +39,12 @@ def check_entersekt_status(item, params, info):
     yield int(status), infotext
 
 
+def parse_entersekt(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["entersekt"] = LegacyCheckDefinition(
+    parse_function=parse_entersekt,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.38235.2.3.1.0")),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.38235.2",

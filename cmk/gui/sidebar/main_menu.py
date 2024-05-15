@@ -137,6 +137,7 @@ class PageAjaxSidebarGetMessages(AjaxPage):
         return {
             "popup_messages": popup_msg,
             "hint_messages": {
+                "title": _("User message"),
                 "text": ungettext("message", "messages", hint_msg),
                 "count": hint_msg,
             },

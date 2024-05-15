@@ -129,11 +129,8 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
-drbd_net_default_levels = (None, None)
-drbd_disk_default_levels = (None, None)
-drbd_stats_default_levels = (None, None, None, None, None, None, None, None, None)
+from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 
 _drbd_block_start_match = re.compile("^[0-9]+:")
 
@@ -194,29 +191,25 @@ drbd_ds_map = {
 
 
 def inventory_drbd(info, checktype):
-    inventory = []
     for line in info[2:]:
-        if _drbd_block_start_match.search(line[0]):
-            parsed = drbd_parse_block(drbd_extract_block("drbd%s" % line[0][:-1], info), checktype)
-            # Skip unconfigured drbd devices
-            if parsed["cs"] == "Unconfigured":
-                continue
+        if not _drbd_block_start_match.search(line[0]):
+            continue
+        parsed = drbd_parse_block(drbd_extract_block("drbd%s" % line[0][:-1], info), checktype)
+        # Skip unconfigured drbd devices
+        if parsed["cs"] == "Unconfigured":
+            continue
 
-            if checktype == "drbd":
-                if "ro" not in parsed or "ds" not in parsed:
-                    continue
-                levels: dict | tuple = {
-                    "roles_inventory": parsed["ro"],
-                    "diskstates_inventory": parsed["ds"],
-                }
-            elif checktype == "drbd.net":
-                levels = drbd_net_default_levels
-            elif checktype == "drbd.disk":
-                levels = drbd_disk_default_levels
-            elif checktype == "drbd.stats":
-                levels = drbd_stats_default_levels
-            inventory.append(("drbd%s" % line[0][:-1], levels))
-    return inventory
+        if checktype == "drbd":
+            if "ro" not in parsed or "ds" not in parsed:
+                continue
+            levels = {
+                "roles_inventory": parsed["ro"],
+                "diskstates_inventory": parsed["ds"],
+            }
+        else:
+            levels = {}
+
+        yield "drbd%s" % line[0][:-1], levels
 
 
 def drbd_parse_block(block, to_parse):
@@ -273,15 +266,7 @@ def drbd_get_block(item, info, checktype):
 def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     parsed = drbd_get_block(item, info, "drbd")
 
-    if isinstance(params, tuple):
-        params_conv = {}
-        params_conv.update({"roles_inventory": params[0] and params[0] or None})
-        params_conv.update(
-            {"diskstates_inventory": (params[0] and params[1]) and params[1] or None}
-        )
-        params = params_conv
-
-    if not parsed is None:
+    if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
         if not parsed["cs"] in drbd_cs_map:
@@ -352,9 +337,18 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     return (3, "Undefined state")
 
 
+def parse_drbd(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_drbd(info):
+    return inventory_drbd(info, "drbd")
+
+
 check_info["drbd"] = LegacyCheckDefinition(
+    parse_function=parse_drbd,
     service_name="DRBD %s status",
-    discovery_function=lambda info: inventory_drbd(info, "drbd"),
+    discovery_function=discover_drbd,
     check_function=check_drbd_general,
     check_ruleset_name="drbd",
 )
@@ -373,9 +367,9 @@ def drbd_get_rates(list_):
     return (output, perfdata)
 
 
-def check_drbd_net(item, params, info):
+def check_drbd_net(item, _no_params, info):
     parsed = drbd_get_block(item, info, "drbd.net")
-    if not parsed is None:
+    if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
         output, perfdata = drbd_get_rates(
@@ -390,18 +384,21 @@ def check_drbd_net(item, params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_net(info):
+    return inventory_drbd(info, "drbd.net")
+
+
 check_info["drbd.net"] = LegacyCheckDefinition(
     service_name="DRBD %s net",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.net"),
+    discovery_function=discover_drbd_net,
     check_function=check_drbd_net,
-    check_ruleset_name="drbd.net",
 )
 
 
-def check_drbd_disk(item, params, info):
+def check_drbd_disk(item, _no_params, info):
     parsed = drbd_get_block(item, info, "drbd.disk")
-    if not parsed is None:
+    if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
         output, perfdata = drbd_get_rates(
@@ -416,18 +413,21 @@ def check_drbd_disk(item, params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_disk(info):
+    return inventory_drbd(info, "drbd.disk")
+
+
 check_info["drbd.disk"] = LegacyCheckDefinition(
     service_name="DRBD %s disk",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.disk"),
+    discovery_function=discover_drbd_disk,
     check_function=check_drbd_disk,
-    check_ruleset_name="drbd.disk",
 )
 
 
-def check_drbd_stats(item, params, info):
+def check_drbd_stats(item, _no_params, info):
     parsed = drbd_get_block(item, info, "drbd.stats")
-    if not parsed is None:
+    if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
         output = ""
@@ -454,10 +454,13 @@ def check_drbd_stats(item, params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_stats(info):
+    return inventory_drbd(info, "drbd.stats")
+
+
 check_info["drbd.stats"] = LegacyCheckDefinition(
     service_name="DRBD %s stats",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.stats"),
+    discovery_function=discover_drbd_stats,
     check_function=check_drbd_stats,
-    check_ruleset_name="drbd.stats",
 )

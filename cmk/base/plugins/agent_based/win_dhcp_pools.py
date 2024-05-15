@@ -7,6 +7,8 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib.dhcp_pools import check_dhcp_pools_levels
+
 from .agent_based_api.v1 import (
     check_levels,
     get_rate,
@@ -17,7 +19,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.dhcp_pools import check_dhcp_pools_levels
 
 # Example outputs from agent:
 #
@@ -68,7 +69,7 @@ Section = Sequence[tuple[str, ...]]
 
 # Attention:
 #
-# Tried to get the win-agent plugin to report always in utf-8, unfortunately without luck.
+# Tried to get the win-agent plug-in to report always in utf-8, unfortunately without luck.
 # ...that's the reason why french translations with special characters must get provided like here.
 
 _WIN_DHCP_POOLS_STATS_TRANSLATE = {
@@ -175,7 +176,7 @@ def check_win_dhcp_pools(item: str, params: Mapping[str, Any], section: Section)
         state=State.OK,
         summary="Values are averaged",
         details=(
-            "All values are averaged, as the Windows DHCP plugin collects statistics, "
+            "All values are averaged, as the Windows DHCP plug-in collects statistics, "
             "not real-time measurements"
         ),
     )
@@ -229,7 +230,7 @@ def check_win_dhcp_pools_stats(section: Section) -> CheckResult:
                 yield from check_levels(
                     get_rate(value_store, key, this_time, value),
                     metric_name=key,
-                    render_func=lambda f: "{int(f)}/s",
+                    render_func=lambda f: f"{f:.0f}/s",
                     label=key,
                 )
 

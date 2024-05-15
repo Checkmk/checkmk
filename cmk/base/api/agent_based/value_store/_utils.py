@@ -222,7 +222,7 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
     """Implements the mutable mapping that is exposed to the plugins
 
     This class ensures that every service has its own name space in the
-    persisted values, by adding the service ID (check plugin name and item) to
+    persisted values, by adding the service ID (check plug-in name and item) to
     the user supplied keys.
     """
 
@@ -283,7 +283,7 @@ class ValueStoreManager:
             serializer=repr,
             deserializer=literal_eval,
         )
-        self.active_service_interface: _ValueStore | None = None
+        self.active_service_interface: MutableMapping[str, Any] | None = None
         self._host_name = host_name
 
     @contextmanager

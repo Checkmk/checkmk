@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import abc
 import typing as t
-
-from tests.unit.cmk.conftest import import_plugins
+from pprint import pprint
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
@@ -86,32 +86,25 @@ class Base(t.Generic[T], abc.ABC):
 class BaseProtocol(t.Protocol):
     type: str
 
-    def get_name(self) -> str:
-        ...
+    def get_name(self) -> str: ...
 
-    def get_merge_name(self) -> str:
-        ...
+    def get_merge_name(self) -> str: ...
 
-    def get_description(self) -> str:
-        ...
+    def get_description(self) -> str: ...
 
-    def __eq__(self, other: object) -> bool:
-        ...
+    def __eq__(self, other: object) -> bool: ...
 
-    def __gt__(self, other: object) -> bool:
-        ...
+    def __gt__(self, other: object) -> bool: ...
 
 
 class WatoProtocol(BaseProtocol, t.Protocol):
     def validate_parameter(
         self, parameters: t.Optional[ParametersTypeAlias]
-    ) -> t.Optional[Exception]:
-        ...
+    ) -> t.Optional[Exception]: ...
 
 
 class PluginProtocol(BaseProtocol, t.Protocol):
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
-        ...
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]: ...
 
 
 class Plugin(Base[TC], abc.ABC):
@@ -122,8 +115,7 @@ class Plugin(Base[TC], abc.ABC):
         return str(self._element.name)
 
     @abc.abstractmethod
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
-        ...
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]: ...
 
 
 class PluginDiscovery(Plugin[CheckPlugin]):
@@ -232,7 +224,6 @@ def load_wato() -> t.Iterator[WatoProtocol]:
             yield WatoCheck(element)
 
 
-@import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_plugin_vs_wato(fix_register: FixRegister) -> None:
     error_reporter = ErrorReporter()
     for plugin, wato in merge(sorted(load_plugin(fix_register)), sorted(load_wato())):
@@ -254,16 +245,12 @@ class ErrorReporter:
         # type # name
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
-        ("check", RuleGroup.CheckgroupParameters("disk_temperature")),
         ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
-        ("check", RuleGroup.CheckgroupParameters("hw_single_temperature")),
-        ("check", RuleGroup.CheckgroupParameters("hw_temperature")),
+        ("check", RuleGroup.CheckgroupParameters("fileinfo-groups")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),
         ("check", RuleGroup.CheckgroupParameters("mssql_blocked_sessions")),
         ("check", RuleGroup.CheckgroupParameters("postgres_sessions")),
-        ("check", RuleGroup.CheckgroupParameters("room_temperature")),
         ("check", RuleGroup.CheckgroupParameters("ruckus_mac")),
-        ("check", RuleGroup.CheckgroupParameters("statgrab_mem")),
         ("check", RuleGroup.CheckgroupParameters("systemd_services")),
         ("check", RuleGroup.CheckgroupParameters("temperature_trends")),
         ("check", RuleGroup.CheckgroupParameters("prism_container")),
@@ -277,94 +264,14 @@ class ErrorReporter:
             RuleGroup.InvExports("software_csv"),
         ),  # deprecated since 2.2
     }
-    KNOWN_ITEM_REQUIREMENTS = {
-        # type # plugin # wato
-        ("check", "azure_ad_sync", RuleGroup.CheckgroupParameters("azure_ad")),
-        (
-            "check",
-            "azure_agent_info",
-            RuleGroup.CheckgroupParameters("azure_agent_info"),
-        ),
-        (
-            "check",
-            "checkpoint_memory",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "cisco_cpu_memory",
-            RuleGroup.CheckgroupParameters("cisco_cpu_memory"),
-        ),
-        (
-            "check",
-            "datapower_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "f5_bigip_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "f5_bigip_mem_tmm",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "haproxy_frontend",
-            RuleGroup.CheckgroupParameters("haproxy_frontend"),
-        ),
-        (
-            "check",
-            "haproxy_server",
-            RuleGroup.CheckgroupParameters("haproxy_server"),
-        ),
-        (
-            "check",
-            "hp_procurve_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "mongodb_replica_set",
-            RuleGroup.CheckgroupParameters("mongodb_replica_set"),
-        ),
-        (
-            "check",
-            "mongodb_replica_set_election",
-            RuleGroup.CheckgroupParameters("mongodb_replica_set"),
-        ),
-        (
-            "check",
-            "netapp_fcpio",
-            RuleGroup.CheckgroupParameters("netapp_fcportio"),
-        ),
-        (
-            "check",
-            "systemd_units_services_summary",
-            RuleGroup.CheckgroupParameters("systemd_services_summary"),
-        ),
-        ("check", "ucd_mem", RuleGroup.CheckgroupParameters("memory_simple")),
-    }
+
     KNOWN_WATO_MISSING = {
         # type # instance # wato
         ("check", "3ware_units", "raid"),
         ("check", "brocade_tm", "brocade_tm"),
         ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
         ("check", "domino_tasks", "domino_tasks"),
-        ("check", "drbd_disk", "drbd.disk"),
-        ("check", "drbd_net", "drbd.net"),
-        ("check", "drbd_stats", "drbd.stats"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
-        ("check", "innovaphone_channels", "hw_single_channelserature"),
-        ("check", "ironport_misc", "obsolete"),
-        ("check", "j4p_performance_app_sess", "j4p_performance.app_sess"),
-        ("check", "j4p_performance_app_state", "j4p_performance.app_state"),
-        ("check", "j4p_performance_mem", "j4p_performance.mem"),
-        ("check", "j4p_performance_serv_req", "j4p_performance.serv_req"),
-        ("check", "j4p_performance_threads", "j4p_performance.threads"),
-        ("check", "j4p_performance_uptime", "j4p_performance.uptime"),
         ("check", "lsi_array", "raid"),
         ("check", "md", "raid"),
         ("check", "mongodb_replication_info", "mongodb_replication_info"),
@@ -380,7 +287,6 @@ class ErrorReporter:
         ("check", "vbox_guest", "vm_state"),
         ("check", "win_netstat", "tcp_connections"),
         ("check", "wmic_process", "wmic_process"),
-        ("check", "zerto_vpg_rpo", "zerto_vpg_rpo"),
         ("check", "zertificon_mail_queues", "zertificon_mail_queues"),
         ("check", "zpool_status", "zpool_status"),
         ("discovery", "fileinfo", "fileinfo_groups"),
@@ -393,23 +299,7 @@ class ErrorReporter:
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
-        # type # plugin # wato
-        (
-            "check",
-            "ad_replication",
-            RuleGroup.CheckgroupParameters("ad_replication"),
-        ),
-        (
-            "check",
-            "apc_ats_output",
-            RuleGroup.CheckgroupParameters("apc_ats_output"),
-        ),
-        ("check", "apc_humidity", RuleGroup.CheckgroupParameters("humidity")),
-        (
-            "check",
-            "apc_symmetra",
-            RuleGroup.CheckgroupParameters("apc_symentra"),
-        ),
+        # type # plug-in # wato
         (
             "check",
             "apc_symmetra_temp",
@@ -417,49 +307,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "appdynamics_sessions",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "appdynamics_web_container",
-            RuleGroup.CheckgroupParameters("jvm_threads"),
-        ),
-        (
-            "check",
-            "aws_dynamodb_table_read_capacity",
-            RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
-        ),
-        (
-            "check",
-            "aws_dynamodb_table_write_capacity",
-            RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
-        ),
-        (
-            "check",
-            "barracuda_mail_latency",
-            RuleGroup.CheckgroupParameters("mail_latency"),
-        ),
-        (
-            "check",
-            "blade_bx_powerfan",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        ("check", "brocade_fan", RuleGroup.CheckgroupParameters("hw_fans")),
-        (
-            "check",
-            "brocade_mlx_module_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
             "brocade_optical",
             RuleGroup.CheckgroupParameters("brocade_optical"),
-        ),
-        (
-            "check",
-            "brocade_sys_mem",
-            RuleGroup.CheckgroupParameters("memory_relative"),
         ),
         ("check", "bvip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
         ("check", "bvip_poe", RuleGroup.CheckgroupParameters("epower_single")),
@@ -480,55 +329,18 @@ class ErrorReporter:
         ),
         (
             "check",
-            "cisco_prime_wifi_access_points",
-            RuleGroup.CheckgroupParameters("cisco_prime_wifi_access_points"),
-        ),
-        (
-            "check",
             "cisco_prime_wifi_connections",
             RuleGroup.CheckgroupParameters("cisco_prime_wifi_connections"),
-        ),
-        (
-            "check",
-            "cisco_sys_mem",
-            RuleGroup.CheckgroupParameters("cisco_supervisor_mem"),
-        ),
-        (
-            "check",
-            "citrix_licenses",
-            RuleGroup.CheckgroupParameters("citrix_licenses"),
-        ),
-        (
-            "check",
-            "citrix_serverload",
-            RuleGroup.CheckgroupParameters("citrix_load"),
         ),
         (
             "check",
             "couchbase_buckets_mem",
             RuleGroup.CheckgroupParameters("memory_multiitem"),
         ),
-        ("check", "db2_backup", RuleGroup.CheckgroupParameters("db2_backup")),
-        ("check", "db2_mem", RuleGroup.CheckgroupParameters("db2_mem")),
-        (
-            "check",
-            "ddn_s2a_faultsbasic_disks",
-            RuleGroup.CheckgroupParameters("disk_failures"),
-        ),
-        (
-            "check",
-            "ddn_s2a_faultsbasic_fans",
-            RuleGroup.CheckgroupParameters("fan_failures"),
-        ),
         (
             "check",
             "ddn_s2a_stats_io",
             RuleGroup.CheckgroupParameters("storage_iops"),
-        ),
-        (
-            "check",
-            "ddn_s2a_stats_readhits",
-            RuleGroup.CheckgroupParameters("read_hits"),
         ),
         (
             "check",
@@ -541,42 +353,11 @@ class ErrorReporter:
             "docsis_channels_upstream",
             RuleGroup.CheckgroupParameters("docsis_channels_upstream"),
         ),
-        (
-            "check",
-            "domino_transactions",
-            RuleGroup.CheckgroupParameters("domino_transactions"),
-        ),
-        (
-            "check",
-            "domino_users",
-            RuleGroup.CheckgroupParameters("domino_users"),
-        ),
-        (
-            "check",
-            "eltek_fans",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        ("check", "emcvnx_sp_util", RuleGroup.CheckgroupParameters("sp_util")),
         ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
-        (
-            "check",
-            "epson_beamer_lamp",
-            RuleGroup.CheckgroupParameters("lamp_operation_time"),
-        ),
-        (
-            "check",
-            "esx_vsphere_licenses",
-            RuleGroup.CheckgroupParameters("esx_licenses"),
-        ),
         (
             "check",
             "esx_vsphere_objects_count",
             RuleGroup.CheckgroupParameters("esx_vsphere_objects_count"),
-        ),
-        (
-            "check",
-            "esx_vsphere_sensors",
-            RuleGroup.CheckgroupParameters("hostsystem_sensors"),
         ),
         (
             "check",
@@ -588,8 +369,6 @@ class ErrorReporter:
             "esx_vsphere_vm_heartbeat",
             RuleGroup.CheckgroupParameters("vm_heartbeat"),
         ),
-        ("check", "f5_bigip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        ("check", "f5_bigip_pool", RuleGroup.CheckgroupParameters("f5_pools")),
         (
             "check",
             "fortigate_antivirus",
@@ -607,43 +386,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortigate_memory",
-            RuleGroup.CheckgroupParameters("memory"),
-        ),
-        (
-            "check",
-            "fortigate_node_sessions",
-            RuleGroup.CheckgroupParameters("fortigate_node_sessions"),
-        ),
-        (
-            "check",
-            "fortigate_sessions_base",
-            RuleGroup.CheckgroupParameters("fortigate_sessions"),
-        ),
-        (
-            "check",
-            "fortigate_sessions",
-            RuleGroup.CheckgroupParameters("fortigate_sessions"),
-        ),
-        (
-            "check",
             "fortimail_cpu_load",
             RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
-        ),
-        (
-            "check",
-            "fortimail_disk_usage",
-            RuleGroup.CheckgroupParameters("fortimail_disk_usage"),
-        ),
-        (
-            "check",
-            "genua_pfstate",
-            RuleGroup.CheckgroupParameters("pf_used_states"),
-        ),
-        (
-            "check",
-            "hitachi_hnas_bossock",
-            RuleGroup.CheckgroupParameters("bossock_fibers"),
         ),
         (
             "check",
@@ -652,145 +396,18 @@ class ErrorReporter:
         ),
         (
             "check",
-            "hpux_multipath",
-            RuleGroup.CheckgroupParameters("hpux_multipath"),
-        ),
-        (
-            "check",
             "huawei_osn_laser",
             RuleGroup.CheckgroupParameters("huawei_osn_laser"),
         ),
-        (
-            "check",
-            "ibm_imm_fan",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "ibm_svc_license",
-            RuleGroup.CheckgroupParameters("ibmsvc_licenses"),
-        ),
-        (
-            "check",
-            "icom_repeater_ps_volt",
-            RuleGroup.CheckgroupParameters("ps_voltage"),
-        ),
-        (
-            "check",
-            "innovaphone_mem",
-            RuleGroup.CheckgroupParameters("innovaphone_mem"),
-        ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
-        (
-            "check",
-            "jolokia_metrics_app_sess",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_queue",
-            RuleGroup.CheckgroupParameters("jvm_queue"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_requests",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_sess",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_threads",
-            RuleGroup.CheckgroupParameters("jvm_threads"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_requests",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_serv_req",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
-            "juniper_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem_modules"),
-        ),
-        (
-            "check",
-            "juniper_screenos_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
-        (
-            "check",
-            "juniper_trpz_flash",
-            RuleGroup.CheckgroupParameters("general_flash_usage"),
-        ),
-        (
-            "check",
-            "juniper_trpz_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
-        ("check", "kernel", RuleGroup.CheckgroupParameters("vm_counter")),
-        (
-            "check",
-            "knuerr_rms_humidity",
-            RuleGroup.CheckgroupParameters("single_humidity"),
-        ),
-        (
-            "check",
-            "liebert_cooling",
-            RuleGroup.CheckgroupParameters("liebert_cooling"),
-        ),
-        (
-            "check",
-            "liebert_cooling_position",
-            RuleGroup.CheckgroupParameters("liebert_cooling_position"),
-        ),
-        (
-            "check",
-            "liebert_fans",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "liebert_fans_condenser",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "liebert_humidity_air",
-            RuleGroup.CheckgroupParameters("humidity"),
-        ),
-        ("check", "logins", RuleGroup.CheckgroupParameters("logins")),
         ("check", "lvm_vgs", RuleGroup.CheckgroupParameters("volume_groups")),
-        (
-            "check",
-            "mikrotik_signal",
-            RuleGroup.CheckgroupParameters("signal_quality"),
-        ),
         (
             "check",
             "mongodb_collections",
             RuleGroup.CheckgroupParameters("mongodb_collections"),
         ),
-        (
-            "check",
-            "mounts",
-            RuleGroup.CheckgroupParameters("fs_mount_options"),
-        ),
         ("check", "mq_queues", RuleGroup.CheckgroupParameters("mq_queues")),
-        (
-            "check",
-            "msexch_dag_copyqueue",
-            RuleGroup.CheckgroupParameters("msexch_copyqueue"),
-        ),
         (
             "check",
             "msexch_isclienttype",
@@ -813,11 +430,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "netapp_api_connection",
-            RuleGroup.CheckgroupParameters("netapp_instance"),
-        ),
-        (
-            "check",
             "netapp_api_environment_fan_faults",
             RuleGroup.CheckgroupParameters("hw_fans"),
         ),
@@ -833,28 +445,13 @@ class ErrorReporter:
         ),
         (
             "check",
-            "netscaler_mem",
-            RuleGroup.CheckgroupParameters("netscaler_mem"),
-        ),
-        (
-            "check",
             "openhardwaremonitor_fan",
             RuleGroup.CheckgroupParameters("hw_fans"),
         ),
         (
             "check",
-            "openhardwaremonitor_smart",
-            RuleGroup.CheckgroupParameters("openhardwaremonitor_smart"),
-        ),
-        (
-            "check",
             "openhardwaremonitor_temperature",
             RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        (
-            "check",
-            "oracle_diva_csm_tapes",
-            RuleGroup.CheckgroupParameters("blank_tapes"),
         ),
         (
             "check",
@@ -891,43 +488,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "raritan_pdu_ocprot",
-            RuleGroup.CheckgroupParameters("ocprot_current"),
-        ),
-        (
-            "check",
-            "raritan_pdu_outletcount",
-            RuleGroup.CheckgroupParameters("plug_count"),
-        ),
-        (
-            "check",
-            "rds_licenses",
-            RuleGroup.CheckgroupParameters("rds_licenses"),
-        ),
-        (
-            "check",
             "redis_info_persistence",
             RuleGroup.CheckgroupParameters("redis_info_persistence"),
-        ),
-        (
-            "check",
-            "safenet_ntls_clients",
-            RuleGroup.CheckgroupParameters("safenet_ntls_clients"),
-        ),
-        (
-            "check",
-            "safenet_ntls_links",
-            RuleGroup.CheckgroupParameters("safenet_ntls_links"),
-        ),
-        (
-            "check",
-            "sansymphony_alerts",
-            RuleGroup.CheckgroupParameters("sansymphony_alerts"),
-        ),
-        (
-            "check",
-            "siemens_plc_flag",
-            RuleGroup.CheckgroupParameters("siemens_plc_flag"),
         ),
         (
             "check",
@@ -941,16 +503,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "symantec_av_updates",
-            RuleGroup.CheckgroupParameters("antivir_update_age"),
-        ),
-        (
-            "check",
-            "tinkerforge_ambient",
-            RuleGroup.CheckgroupParameters("brightness"),
-        ),
-        (
-            "check",
             "tplink_mem",
             RuleGroup.CheckgroupParameters("memory_percentage_used"),
         ),
@@ -958,36 +510,6 @@ class ErrorReporter:
             "check",
             "tplink_poe_summary",
             RuleGroup.CheckgroupParameters("epower_single"),
-        ),
-        (
-            "check",
-            "veeam_tapejobs",
-            RuleGroup.CheckgroupParameters("veeam_tapejobs"),
-        ),
-        (
-            "check",
-            "vms_system_procs",
-            RuleGroup.CheckgroupParameters("vms_procs"),
-        ),
-        (
-            "check",
-            "wagner_titanus_topsense_airflow_deviation",
-            RuleGroup.CheckgroupParameters("airflow_deviation"),
-        ),
-        (
-            "check",
-            "watchdog_sensors_humidity",
-            RuleGroup.CheckgroupParameters("humidity"),
-        ),
-        (
-            "check",
-            "websphere_mq_channels",
-            RuleGroup.CheckgroupParameters("websphere_mq_channels"),
-        ),
-        (
-            "check",
-            "windows_multipath",
-            RuleGroup.CheckgroupParameters("windows_multipath"),
         ),
         ("discovery", "domino_tasks", "inv_domino_tasks_rules"),
         ("discovery", "mssql_counters_cache_hits", "inventory_mssql_counters_rules"),
@@ -1003,7 +525,6 @@ class ErrorReporter:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
-        self._known_item_requirements = self.KNOWN_ITEM_REQUIREMENTS.copy()
         self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
         self._known_error_loading_defaults = self.KNOWN_ERROR_LOADING_DEFAULTS.copy()
 
@@ -1030,12 +551,12 @@ class ErrorReporter:
         self._failed |= True
 
     def run_tests(self, plugin: PluginProtocol, wato: WatoProtocol) -> None:
-        # try to load the plugin defaults into wato ruleset
+        # try to load the plug-in defaults into wato ruleset
         exception = wato.validate_parameter(plugin.get_default_parameters())
         if exception:
             self._report_error_loading_defaults(plugin, wato, exception)
 
-        # see if both plugin and wato have the same idea about items
+        # see if both plug-in and wato have the same idea about items
         if isinstance(plugin, PluginCheck) and isinstance(wato, WatoCheck):
             if wato.has_item() != plugin.has_item():
                 self._report_check_item_requirements(plugin, wato)
@@ -1045,15 +566,11 @@ class ErrorReporter:
         plugin: PluginCheck,
         wato: WatoCheck,
     ) -> None:
-        element = (plugin.type, plugin.get_name(), wato.get_name())
-        if element in self._known_item_requirements:
-            self._known_item_requirements.remove(element)
-            return
         print(
             f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
         )
         print("    wato   handles item:", wato.has_item())
-        print("    plugin handles items:", plugin.has_item())
+        print("    plug-in handles items:", plugin.has_item())
         self._failed |= True
 
     def _report_error_loading_defaults(
@@ -1080,7 +597,7 @@ class ErrorReporter:
 
     def test_for_vanished_known_problems(self) -> None:
         """
-        Generally test_plugin_vs_wato makes sure that the plugin default values
+        Generally test_plugin_vs_wato makes sure that the plug-in default values
         matches the structure of the wato ruleset.
 
         This particular test makes sure that the known defects defined in the
@@ -1092,12 +609,10 @@ class ErrorReporter:
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...
-        print(self._known_error_loading_defaults)
-        print(self._known_item_requirements)
-        print(self._known_wato_missing)
-        print(self._known_wato_unused)
+        pprint(self._known_error_loading_defaults)
+        pprint(self._known_wato_missing)
+        pprint(self._known_wato_unused)
         assert len(self._known_error_loading_defaults) == 0
-        assert len(self._known_item_requirements) == 0
         assert len(self._known_wato_missing) == 0
         assert len(self._known_wato_unused) == 0
 
@@ -1115,8 +630,7 @@ T_contra = t.TypeVar("T_contra", contravariant=True)
 
 
 class SupportsGreaterThan(t.Protocol, t.Generic[T_contra]):
-    def __gt__(self, other: T_contra) -> bool:
-        ...
+    def __gt__(self, other: T_contra) -> bool: ...
 
 
 A = t.TypeVar("A", bound=SupportsGreaterThan)

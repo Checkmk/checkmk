@@ -75,7 +75,18 @@ def parse(content):
         else:
             fail("Unknown state %d" % state)
 
-    return result
+    new_result = struct(
+        requirements = [(name, sort_hashes(rest)) for name, rest in result.requirements],
+        options = result.options,
+    )
+
+    return new_result
+
+def sort_hashes(req):
+    delim = req.find("--hash")
+    if delim < 0:
+        return req
+    return " ".join([req[:delim - 1]] + sorted(req[delim:].split(" ")))
 
 def _handleConsumeSpace(input):
     if input == EOF:

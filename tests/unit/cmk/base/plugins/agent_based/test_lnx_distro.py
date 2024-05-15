@@ -64,7 +64,8 @@ STRING_TABLE_NEW: Final = [
 
 
 def test_inventory_lnx_distro_rh_old() -> None:
-    assert list(inventory_lnx_distro(parse_lnx_distro(STRING_TABLE_RH_OLD))) == [
+    assert (section := parse_lnx_distro(STRING_TABLE_RH_OLD))
+    assert list(inventory_lnx_distro(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={
@@ -79,7 +80,8 @@ def test_inventory_lnx_distro_rh_old() -> None:
 
 
 def test_inventory_lnx_distro_oracle() -> None:
-    assert list(inventory_lnx_distro(parse_lnx_distro(STRING_TABLE_ORACLE_OLD))) == [
+    assert (section := parse_lnx_distro(STRING_TABLE_ORACLE_OLD))
+    assert list(inventory_lnx_distro(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={
@@ -93,7 +95,8 @@ def test_inventory_lnx_distro_oracle() -> None:
 
 
 def test_inventory_lnx_distro_suse() -> None:
-    assert list(inventory_lnx_distro(parse_lnx_distro(STRING_TABLE_SUSE))) == [
+    assert (section := parse_lnx_distro(STRING_TABLE_SUSE))
+    assert list(inventory_lnx_distro(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={
@@ -108,7 +111,8 @@ def test_inventory_lnx_distro_suse() -> None:
 
 
 def test_inventory_lnx_distro_new() -> None:
-    assert list(inventory_lnx_distro(parse_lnx_distro(STRING_TABLE_NEW))) == [
+    assert (section := parse_lnx_distro(STRING_TABLE_NEW))
+    assert list(inventory_lnx_distro(section)) == [
         Attributes(
             path=["software", "os"],
             inventory_attributes={

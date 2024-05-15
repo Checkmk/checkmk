@@ -19,6 +19,7 @@
 import os
 import re
 from pathlib import Path
+from typing import Any
 
 from six import ensure_str
 
@@ -28,8 +29,8 @@ from cmk.gui.i18n import _u
 from cmk.gui.permissions import declare_permission
 
 
-def load_user_scripts(what):
-    scripts = {}
+def load_user_scripts(what: str) -> dict[str, Any]:
+    scripts: dict[str, Any] = {}
     not_dir = cmk.utils.paths.share_dir + "/" + what
     try:
         if what == "notifications":
@@ -48,8 +49,8 @@ def load_user_scripts(what):
     return scripts
 
 
-def _load_user_scripts_from(adir):
-    scripts = {}
+def _load_user_scripts_from(adir: str) -> dict[str, Any]:
+    scripts: dict[str, Any] = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
             entry = ensure_str(entry)  # pylint: disable= six-ensure-str-bin-call
@@ -85,8 +86,8 @@ def load_notification_scripts():
     return load_user_scripts("notifications")
 
 
-# The permissions need to be loaded dynamically instead of only when the plugins are loaded because
-# the user may have placed new notification plugins in the local hierarchy.
+# The permissions need to be loaded dynamically instead of only when the plug-ins are loaded because
+# the user may have placed new notification plug-ins in the local hierarchy.
 def declare_notification_plugin_permissions() -> None:
     for name, attrs in load_notification_scripts().items():
         if name[0] == ".":
@@ -97,7 +98,7 @@ def declare_notification_plugin_permissions() -> None:
         )
 
 
-def user_script_choices(what):
+def user_script_choices(what: str) -> list[tuple[str, str]]:
     scripts = load_user_scripts(what)
     choices = [(name, info["title"]) for (name, info) in scripts.items()]
     choices = [(k, _u(v)) for k, v in sorted(choices, key=lambda x: x[1])]

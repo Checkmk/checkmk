@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_OPENMANAGE
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 
 
 def inventory_dell_om_processors(info):
@@ -67,7 +68,12 @@ def check_dell_om_processors(item, _no_params, info):
     return 2, "Processor not found"
 
 
+def parse_dell_om_processors(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_om_processors"] = LegacyCheckDefinition(
+    parse_function=parse_dell_om_processors,
     detect=DETECT_OPENMANAGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.1100",

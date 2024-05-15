@@ -7,9 +7,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib.f5_bigip import F5_BIGIP, VERSION_V11_2_PLUS
+
 from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.f5_bigip import F5_BIGIP, VERSION_V11_2_PLUS
 
 Section = Mapping[str, str]
 

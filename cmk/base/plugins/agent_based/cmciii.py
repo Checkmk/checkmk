@@ -4,17 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .agent_based_api.v1 import (
-    contains,
-    OIDEnd,
-    register,
-    Result,
-    Service,
-    SNMPTree,
-    State,
-    type_defs,
-)
-from .utils.cmciii import (
+from cmk.plugins.lib.cmciii import (
     CheckParams,
     Devices,
     discovery_default_parameters,
@@ -24,6 +14,17 @@ from .utils.cmciii import (
     Sensors,
     SensorType,
     Variable,
+)
+
+from .agent_based_api.v1 import (
+    contains,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+    type_defs,
 )
 
 MAP_STATES = {
@@ -106,7 +107,7 @@ def sensor_id(type_: SensorType, variable: Variable, device: str) -> str:
     return f"{device} {variable[0]}"
 
 
-def sensor_key(type_: SensorType, var_type: str, variable: Variable):  # type: ignore[no-untyped-def]
+def sensor_key(type_: SensorType, var_type: str, variable: Variable) -> str:
     if type_ != "phase":
         return variable[-1]
 

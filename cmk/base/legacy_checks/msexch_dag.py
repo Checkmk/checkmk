@@ -99,6 +99,20 @@
 # SeedingNetwork                   :
 # ActiveCopy                       : False
 
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
+from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import StringTable
+
+
+def parse_msexch_dag(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["msexch_dag"] = LegacyCheckDefinition(
+    parse_function=parse_msexch_dag,
+)
+
 #   .--dbcopy--------------------------------------------------------------.
 #   |                      _ _                                             |
 #   |                   __| | |__   ___ ___  _ __  _   _                   |
@@ -107,10 +121,6 @@
 #   |                  \__,_|_.__/ \___\___/| .__/ \__, |                  |
 #   |                                       |_|    |___/                   |
 #   +----------------------------------------------------------------------+
-
-
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
 
 
 def inventory_msexch_dag_dbcopy(info):
@@ -122,13 +132,14 @@ def inventory_msexch_dag_dbcopy(info):
                 dbname = line[1].strip()
                 getit = True
             elif getit and line[0].strip() == key:
-                yield dbname, (key, line[1].strip())
+                yield dbname, {"inv_key": key, "inv_val": line[1].strip()}
                 getit = False
 
 
 def check_msexch_dag_dbcopy(item, params, info):
     getit = False
-    inv_key, inv_val = params
+    inv_key = params["inv_key"]
+    inv_val = params["inv_val"]
     for line in info:
         if len(line) == 2:
             key, val = (i.strip() for i in line)
@@ -150,6 +161,7 @@ check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
     sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_dbcopy,
     check_function=check_msexch_dag_dbcopy,
+    check_default_parameters={},
 )
 
 # .
@@ -202,17 +214,14 @@ check_info["msexch_dag.contentindex"] = LegacyCheckDefinition(
 #   |                   |_|    |___/    |_|                                |
 #   +----------------------------------------------------------------------+
 
-msexch_dag_copyqueue_default_levels = (100, 200)
-
 
 def inventory_msexch_dag_copyqueue(info):
     for line in info:
         if line[0].strip() == "DatabaseName":
-            yield line[1].strip(), msexch_dag_copyqueue_default_levels
+            yield line[1].strip(), {}
 
 
 def check_msexch_dag_copyqueue(item, params, info):
-    warn, crit = params
     getit = False
     for line in info:
         if len(line) == 2:
@@ -220,18 +229,15 @@ def check_msexch_dag_copyqueue(item, params, info):
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == "CopyQueueLength":
-                infotxt = "Queue length is %d" % int(val)
-                if int(val) >= crit:
-                    state = 2
-                elif int(val) >= warn:
-                    state = 1
-                else:
-                    state = 0
-                if state > 0:
-                    infotxt += " (warn/crit at %d/%d)" % (warn, crit)
-                perfdata = [("length", int(val), warn, crit, 0)]
-                return state, infotxt, perfdata
-    return None
+                yield check_levels(
+                    int(val),
+                    "length",
+                    params["levels"],
+                    human_readable_func=str,
+                    boundaries=(0, None),
+                    infoname="Queue length",
+                )
+                return
 
 
 check_info["msexch_dag.copyqueue"] = LegacyCheckDefinition(
@@ -240,4 +246,5 @@ check_info["msexch_dag.copyqueue"] = LegacyCheckDefinition(
     discovery_function=inventory_msexch_dag_copyqueue,
     check_function=check_msexch_dag_copyqueue,
     check_ruleset_name="msexch_copyqueue",
+    check_default_parameters={"levels": (100, 200)},
 )

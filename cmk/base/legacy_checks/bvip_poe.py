@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.bvip import DETECT_BVIP
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.bvip import DETECT_BVIP
 
 
 def inventory_bvip_poe(info):
@@ -30,7 +31,12 @@ def check_bvip_poe(_no_item, params, info):
     return state, "%.3f W" % watt, [("power", watt)]
 
 
+def parse_bvip_poe(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bvip_poe"] = LegacyCheckDefinition(
+    parse_function=parse_bvip_poe,
     detect=DETECT_BVIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1",

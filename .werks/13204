@@ -1,4 +1,4 @@
-Title: <tt>emc_isilon_iops</tt>: Fix for 0 operations/s
+Title: emc_isilon_iops: Fix for 0 operations/s
 Class: fix
 Compatible: compat
 Component: checks

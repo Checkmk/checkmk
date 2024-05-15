@@ -9,18 +9,10 @@ import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
-from cmk.gui.pages import PageRegistry
-from cmk.gui.permissions import (
-    declare_dynamic_permissions,
-    declare_permission,
-    permission_registry,
-    PermissionSection,
-    PermissionSectionRegistry,
-)
-from cmk.gui.visuals.type import VisualTypeRegistry
+from cmk.gui.permissions import declare_dynamic_permissions, declare_permission, permission_registry
 
+from ._network_topology import get_topology_context_and_filters
 from .builtin_dashboards import builtin_dashboards, GROW, MAX
-from .cre_dashboards import register_builtin_dashboards
 from .dashlet import (
     ABCFigureDashlet,
     Dashlet,
@@ -34,31 +26,16 @@ from .dashlet import (
     StaticTextDashletConfig,
     ViewDashletConfig,
 )
-from .page_create_dashboard import page_create_dashboard
-from .page_create_view_dashlet import (
-    page_create_link_view_dashlet,
-    page_create_view_dashlet,
-    page_create_view_dashlet_infos,
-)
-from .page_edit_dashboard import page_edit_dashboard
-from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
-from .page_edit_dashboards import page_edit_dashboards
-from .page_edit_dashlet import EditDashletPage
-from .page_show_dashboard import (
-    ajax_dashlet,
-    AjaxInitialDashboardFilters,
-    get_topology_context_and_filters,
-    page_dashboard,
-)
 from .store import get_all_dashboards, get_dashlet, get_permitted_dashboards
 from .title_macros import render_title_with_macros_string
-from .type_defs import DashboardConfig
+from .type_defs import DashboardConfig, DashboardName
 from .visual_type import VisualTypeDashboards
 
 __all__ = [
-    "register",
     "load_plugins",
     "DashletConfig",
+    "DashletRegistry",
+    "DashboardName",
     "DashboardConfig",
     "builtin_dashboards",
     "MAX",
@@ -73,57 +50,16 @@ __all__ = [
     "get_permitted_dashboards",
     "render_title_with_macros_string",
     "ABCFigureDashlet",
+    "IFrameDashlet",
+    "VisualTypeDashboards",
 ]
-
-
-def register(
-    permission_section_registry: PermissionSectionRegistry,
-    page_registry: PageRegistry,
-    visual_type_registry: VisualTypeRegistry,
-    dashlet_registry_: DashletRegistry,
-) -> None:
-    visual_type_registry.register(VisualTypeDashboards)
-    permission_section_registry.register(PermissionSectionDashboard)
-
-    page_registry.register_page("ajax_figure_dashlet_data")(FigureDashletPage)
-    page_registry.register_page("ajax_initial_dashboard_filters")(AjaxInitialDashboardFilters)
-    page_registry.register_page("edit_dashlet")(EditDashletPage)
-    page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
-    page_registry.register_page_handler("dashboard", page_dashboard)
-    page_registry.register_page_handler("dashboard_dashlet", ajax_dashlet)
-    page_registry.register_page_handler("edit_dashboards", page_edit_dashboards)
-    page_registry.register_page_handler("create_dashboard", page_create_dashboard)
-    page_registry.register_page_handler("edit_dashboard", page_edit_dashboard)
-    page_registry.register_page_handler("create_link_view_dashlet", page_create_link_view_dashlet)
-    page_registry.register_page_handler("create_view_dashlet", page_create_view_dashlet)
-    page_registry.register_page_handler("create_view_dashlet_infos", page_create_view_dashlet_infos)
-    page_registry.register_page_handler("clone_dashlet", page_clone_dashlet)
-    page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
-    page_registry.register_page_handler("ajax_dashlet_pos", ajax_dashlet_pos)
-
-    register_dashlets(dashlet_registry_)
-    register_builtin_dashboards(builtin_dashboards)
-
-
-class PermissionSectionDashboard(PermissionSection):
-    @property
-    def name(self) -> str:
-        return "dashboard"
-
-    @property
-    def title(self) -> str:
-        return _("Dashboards")
-
-    @property
-    def do_sort(self):
-        return True
 
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
 
-    # Load plugins for dashboards. Currently these files
+    # Load plug-ins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     utils.load_web_plugins("dashboard", globals())
 
@@ -162,17 +98,17 @@ def _register_pre_21_plugin_api() -> None:
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
     """
-    # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.plugins.dashboard as api_module
-    import cmk.gui.plugins.dashboard.utils as plugin_utils
+    # Needs to be a local import to not influence the regular plug-in loading order
+    import cmk.gui.plugins.dashboard as api_module  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.dashboard.utils as plugin_utils  # pylint: disable=cmk-module-layer-violation
 
     for name, val in (
         ("ABCFigureDashlet", ABCFigureDashlet),

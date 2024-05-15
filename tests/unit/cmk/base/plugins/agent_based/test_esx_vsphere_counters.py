@@ -9,7 +9,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import esx_vsphere_counters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils import interfaces
+
+from cmk.plugins.lib import interfaces
 
 
 def test_parse_esx_vsphere_counters() -> None:

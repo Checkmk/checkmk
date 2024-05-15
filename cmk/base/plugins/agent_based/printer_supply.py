@@ -3,8 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 from collections.abc import Mapping
-from typing import Any, Final, NamedTuple
+from dataclasses import dataclass
+from typing import Any, Final
+
+from cmk.plugins.lib.constants import OID_SYS_OBJ
+from cmk.plugins.lib.printer import DETECT_PRINTER
 
 from .agent_based_api.v1 import (
     all_of,
@@ -20,8 +25,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.constants import OID_SYS_OBJ
-from .utils.printer import DETECT_PRINTER
 
 MAP_UNIT: Final = {
     "3": "ten thousandths of inches",
@@ -40,11 +43,17 @@ MAP_UNIT: Final = {
 }
 
 
-class PrinterSupply(NamedTuple):
+class SupplyClass(enum.Enum):
+    CONTAINER = enum.auto()
+    RECEPTACLE = enum.auto()
+
+
+@dataclass(frozen=True)
+class PrinterSupply:
     unit: str
     max_capacity: int
     level: int
-    supply_class: str
+    supply_class: SupplyClass
     color: str
 
 
@@ -70,9 +79,14 @@ def parse_printer_supply(string_table: list[StringTable]) -> Section:
 
     color_mapping = {_get_oid_end_last_index(oid_end): value for oid_end, value in string_table[0]}
 
-    for index, (name, unit_info, raw_max_capacity, raw_level, supply_class, color_id) in enumerate(
-        string_table[1]
-    ):
+    for index, (
+        name,
+        unit_info,
+        raw_max_capacity,
+        raw_level,
+        raw_supply_class,
+        color_id,
+    ) in enumerate(string_table[1]):
         try:
             max_capacity = int(raw_max_capacity)
             level = int(raw_level)
@@ -102,7 +116,21 @@ def parse_printer_supply(string_table: list[StringTable]) -> Section:
         color = color.rstrip("\0")
         unit = get_unit(unit_info)
 
-        parsed[description] = PrinterSupply(unit, max_capacity, level, supply_class, color)
+        parsed[description] = PrinterSupply(
+            unit,
+            max_capacity,
+            level,
+            # When unit type is
+            # 1 = other
+            # 3 = supplyThatIsConsumed
+            # 4 = supplyThatIsFilled
+            # the value is contains the current level if this supply is a container
+            # but when the remaining space if this supply is a receptacle
+            #
+            # This table can be missing on some devices. Assume type 3 in this case.
+            SupplyClass.RECEPTACLE if raw_supply_class == "4" else SupplyClass.CONTAINER,
+            color,
+        )
 
     return parsed
 
@@ -157,20 +185,15 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
                 state=State.OK, summary="%sThere are no restrictions on this supply" % color_info
             )
             return
+
         if supply.level == -3:
-            yield Result(
-                state=State(params["some_remaining"]), summary="%sSome remaining" % color_info
-            )
-            yield Metric(
-                "pages",
-                supply.level,
-                levels=(0.01 * warn * supply.max_capacity, 0.01 * crit * supply.max_capacity),
-                boundaries=(0, supply.max_capacity),
-            )
+            yield _check_some_remaining(supply, params, color_info)
             return
+
         if supply.level == -2:
             yield Result(state=State.UNKNOWN, summary="%s Unknown level" % color_info)
             return
+
         if supply.max_capacity == -2:
             # no percentage possible. We compare directly against levels
             yield Result(state=State.OK, summary="%sLevel: %d" % (color_info, supply.level))
@@ -178,15 +201,7 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
             return
 
     leftperc = 100.0 * supply.level / supply.max_capacity
-    # When unit type is
-    # 1 = other
-    # 3 = supplyThatIsConsumed
-    # 4 = supplyThatIsFilled
-    # the value is contains the current level if this supply is a container
-    # but when the remaining space if this supply is a receptacle
-    #
-    # This table can be missing on some devices. Assume type 3 in this case.
-    if supply.supply_class == "4":
+    if supply.supply_class is SupplyClass.RECEPTACLE:
         leftperc = 100 - leftperc
 
     # Some printers handle the used / remaining material differently
@@ -211,11 +226,35 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
     )
 
 
+def _check_some_remaining(
+    supply: PrinterSupply, params: Mapping[str, Any], color_info: str
+) -> Result:
+    match supply.supply_class:
+        case SupplyClass.CONTAINER:
+            return Result(
+                state=State(params["some_remaining_ink"]),
+                summary=f"{color_info}Some ink remaining",
+            )
+        case SupplyClass.RECEPTACLE:
+            return Result(
+                state=State(params["some_remaining_space"]),
+                summary=f"{color_info}Some space remaining",
+            )
+
+
+DEFAULT_PARAMETERS = {
+    "levels": (20.0, 10.0),
+    "upturn_toner": False,
+    "some_remaining_ink": 1,
+    "some_remaining_space": 1,
+}
+
+
 register.check_plugin(
     name="printer_supply",
     service_name="Supply %s",
     discovery_function=discovery_printer_supply,
     check_function=check_printer_supply,
     check_ruleset_name="printer_supply",
-    check_default_parameters={"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+    check_default_parameters=DEFAULT_PARAMETERS,
 )

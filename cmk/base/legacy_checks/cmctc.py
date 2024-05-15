@@ -7,12 +7,11 @@ from collections.abc import Iterable, Mapping
 from typing import NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.cmctc import cmctc_translate_status, cmctc_translate_status_text, DETECT_CMCTC
 
 # Table columns:
 # 0: index
@@ -56,7 +55,7 @@ def inventory_cmctc_temp(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((item, {}) for item in section)
 
 
-def check_cmctc_temp(item, params, section):
+def check_cmctc_temp(item: str, params: TempParamType, section: Section) -> Iterable:
     if (sensor := section.get(item)) is None:
         return
 
@@ -65,7 +64,7 @@ def check_cmctc_temp(item, params, section):
         params,
         "cmctc_temp_%s" % item,
         dev_levels=sensor.levels,
-        dev_levels_lower=sensor.level_lower,
+        dev_levels_lower=sensor.levels_lower,
         dev_status=cmctc_translate_status(sensor.status),
         dev_status_name="Unit: %s" % cmctc_translate_status_text(sensor.status),
     )
@@ -84,7 +83,6 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
                 "5.2.1.6",
                 "5.2.1.7",
                 "5.2.1.8",
-                "7.2.1.2",
             ],
         ),
         SNMPTree(
@@ -97,7 +95,6 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
                 "5.2.1.6",
                 "5.2.1.7",
                 "5.2.1.8",
-                "7.2.1.2",
             ],
         ),
         SNMPTree(
@@ -110,7 +107,6 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
                 "5.2.1.6",
                 "5.2.1.7",
                 "5.2.1.8",
-                "7.2.1.2",
             ],
         ),
         SNMPTree(
@@ -123,7 +119,6 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
                 "5.2.1.6",
                 "5.2.1.7",
                 "5.2.1.8",
-                "7.2.1.2",
             ],
         ),
     ],

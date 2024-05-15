@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import astroid  # type: ignore[import]
-from pylint.checkers import BaseChecker  # type: ignore[import]
-from pylint.lint import PyLinter  # type: ignore[import]
+import astroid  # type: ignore[import-untyped]
+from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter
 
 
 def register(linter: PyLinter) -> None:
@@ -14,7 +14,7 @@ def register(linter: PyLinter) -> None:
     linter.register_checker(TypingNamedTupleChecker(linter))
     linter.register_checker(SixEnsureStrBinChecker(linter))
     linter.register_checker(ABCMetaChecker(linter))
-    linter.register_checker(PasslibImportChecker(linter))
+    linter.register_checker(PillowImportChecker(linter))
 
 
 class ForbiddenObjectChecker(BaseChecker):
@@ -156,13 +156,13 @@ class ABCMetaChecker(ForbiddenMetaclassChecker):
     }
 
 
-class PasslibImportChecker(ForbiddenImportChecker):
-    name = "passlib-module-import"
-    target_lib = "passlib"
+class PillowImportChecker(ForbiddenImportChecker):
+    name = "pillow-module-import"
+    target_lib = "PIL"
     msgs = {
         "E9310": (
-            "Imports passlib",
-            "passlib-module-import",
-            "Passlib should not be used directly. Use cmk.utils.crypto.password_hashing instead.",
+            "Imports PIL",
+            "pillow-module-import",
+            "PIL should not be used directly. Use cmk.utils.images instead.",
         ),
     }

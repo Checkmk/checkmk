@@ -4,9 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib.wlc_clients import (
+    ClientsPerInterface,
+    ClientsTotal,
+    VsResult,
+    WlcClientsSection,
+)
+
 from .agent_based_api.v1 import check_levels, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.wlc_clients import ClientsPerInterface, ClientsTotal, VsResult, WlcClientsSection
 
 
 def discover_wlc_clients(

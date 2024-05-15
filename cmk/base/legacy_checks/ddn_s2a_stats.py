@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_ddn_s2a_stats(string_table):
@@ -27,14 +29,12 @@ def parse_ddn_s2a_stats(string_table):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-ddn_s2a_readhits_default_levels = (85.0, 70.0)
-
 
 def inventory_ddn_s2a_stats_readhits(parsed):
     if "All_ports_Read_Hits" in parsed:
-        yield "Total", ddn_s2a_readhits_default_levels
+        yield "Total", {}
     for nr, _ in enumerate(parsed.get("Read_Hits", [])):
-        yield "%d" % (nr + 1), ddn_s2a_readhits_default_levels
+        yield "%d" % (nr + 1), {}
 
 
 def check_ddn_s2a_stats_readhits(item, params, parsed):
@@ -43,24 +43,12 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
     else:
         read_hits = float(parsed["Read_Hits"][int(item) - 1])
 
-    infotext = "%.1f%%" % read_hits
-    if params is None:
-        perfdata = [("read_hits", read_hits)]  # TODO: Define metric
-        status = 0
-    else:
-        warn, crit = params
-        levelstext = " (warn/crit below %.1f/%.1f%%)" % params
-        perfdata = [("read_hits", read_hits, warn, crit)]
-        if read_hits < crit:
-            status = 2
-            infotext += levelstext
-        elif read_hits < warn:
-            status = 1
-            infotext += levelstext
-        else:
-            status = 0
-
-    return status, infotext, perfdata
+    return check_levels(
+        read_hits,
+        "read_hits",
+        (None, None) + params["levels_lower"],
+        human_readable_func=render.percent,
+    )
 
 
 check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
@@ -69,6 +57,9 @@ check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
     discovery_function=inventory_ddn_s2a_stats_readhits,
     check_function=check_ddn_s2a_stats_readhits,
     check_ruleset_name="read_hits",
+    check_default_parameters={
+        "levels_lower": (85.0, 70.0),
+    },
 )
 
 # .

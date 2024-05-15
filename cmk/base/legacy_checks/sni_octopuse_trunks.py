@@ -14,10 +14,13 @@
 # .1.3.6.1.4.1.231.7.2.9.3.8.1.4.13  1
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.sni_octopuse import DETECT_SNI_OCTOPUSE
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
 
 
 def inventory_octopus_trunks(info):
@@ -46,7 +49,12 @@ def check_octopus_trunks(item, _no_params, info):
     return (3, "UNKW - unknown data received from agent")
 
 
+def parse_sni_octopuse_trunks(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["sni_octopuse_trunks"] = LegacyCheckDefinition(
+    parse_function=parse_sni_octopuse_trunks,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=[
         SNMPTree(

@@ -6,17 +6,14 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
 
-hitachi_hnas_cpu_default_levels = {"levels": (80.0, 90.0)}
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.plugins.lib.hitachi_hnas import DETECT
 
 
-def inventory_hitachi_hnas_cpu(info):
-    inventory = []
-    for id_, _util in info:
-        inventory.append((id_, hitachi_hnas_cpu_default_levels))
-    return inventory
+def discover_hitachi_hnas_cpu(string_table: StringTable) -> DiscoveryResult:
+    for id_, _util in string_table:
+        yield Service(item=id_)
 
 
 def check_hitachi_hnas_cpu(item, params, info):
@@ -36,14 +33,20 @@ def check_hitachi_hnas_cpu(item, params, info):
     return 3, "No CPU utilization found"
 
 
+def parse_hitachi_hnas_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hitachi_hnas_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hnas_cpu,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.6.1.2.1",
         oids=["1", "3"],
     ),
     service_name="CPU utilization PNode %s",
-    discovery_function=inventory_hitachi_hnas_cpu,
+    discovery_function=discover_hitachi_hnas_cpu,
     check_function=check_hitachi_hnas_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )

@@ -35,12 +35,13 @@ logger = logging.getLogger()
 
 
 def main(raw_args):
-    args = _parse_arguments(raw_args)
+    """Run tests in docker"""
+    args, command = _parse_arguments(raw_args)
 
     distro_name = _os_environ_get("DISTRO", "ubuntu-20.04")
-    docker_tag = _os_environ_get("DOCKER_TAG", "%s-latest" % current_base_branch_name())
+    docker_tag = _os_environ_get("DOCKER_TAG", f"{current_base_branch_name()}-latest")
     version = version_from_env(
-        fallback_version_spec=CMKVersion.GIT,
+        fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,
         fallback_branch=current_base_branch_name,
     )
@@ -63,13 +64,18 @@ def main(raw_args):
     result_path.mkdir(parents=True, exist_ok=True)
     logger.info("Prepared result path: %s", result_path)
 
+    logger.info("make_target: %s", args.make_target)
+    if args.make_target != "debug" and not command:
+        command = ["make", "-C", "tests", args.make_target.removesuffix("-debug")]
+    logger.info("command: %s", command)
+
     return execute_tests_in_container(
         distro_name=distro_name,
         docker_tag=docker_tag,
-        command=["make", "-C", "tests", args.make_target],
+        command=command,
         version=version,
         result_path=result_path,
-        interactive=args.make_target == "debug",
+        interactive=args.make_target.rsplit("-", 1)[-1] == "debug",
     )
 
 
@@ -82,15 +88,15 @@ def _os_environ_get(key: str, default: str) -> str:
     return result
 
 
-def _parse_arguments(args: list[str]) -> argparse.Namespace:
+def _parse_arguments(args: list[str]) -> tuple[argparse.Namespace, list[str]]:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "make_target",
         metavar="MAKE_TARGET",
-        help="The make target to execute in test-py3 directory",
+        help="The make target to execute in the tests directory",
     )
 
-    return p.parse_args(args)
+    return p.parse_known_args(args)
 
 
 if __name__ == "__main__":

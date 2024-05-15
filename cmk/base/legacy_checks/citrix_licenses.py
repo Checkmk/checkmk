@@ -37,7 +37,7 @@ def parse_citrix_licenses(string_table):
 
 
 def inventory_citrix_licenses(parsed):
-    return [(license_type, None) for license_type in parsed]
+    return [(license_type, {}) for license_type in parsed]
 
 
 def check_citrix_licenses(item, params, parsed):
@@ -47,7 +47,7 @@ def check_citrix_licenses(item, params, parsed):
     if not have:
         yield 3, "No licenses of that type found"
     else:
-        yield license_check_levels(have, used, params)
+        yield license_check_levels(have, used, params["levels"][1])
 
 
 check_info["citrix_licenses"] = LegacyCheckDefinition(
@@ -56,4 +56,5 @@ check_info["citrix_licenses"] = LegacyCheckDefinition(
     discovery_function=inventory_citrix_licenses,
     check_function=check_citrix_licenses,
     check_ruleset_name="citrix_licenses",
+    check_default_parameters={"levels": ("crit_on_all", None)},
 )

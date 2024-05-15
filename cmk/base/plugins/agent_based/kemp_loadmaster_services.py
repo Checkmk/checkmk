@@ -14,12 +14,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils.kemp_loadmaster import (
-    DETECT_KEMP_LOADMASTER,
-    VirtualService,
-)
-from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VSSection as Section
+
+from cmk.plugins.lib.kemp_loadmaster import DETECT_KEMP_LOADMASTER, VirtualService
+from cmk.plugins.lib.kemp_loadmaster import VSSection as Section
+
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _VS_STATE_MAP: Final = {
     "1": (State.OK, "in service"),
@@ -32,7 +31,7 @@ _VS_STATE_MAP: Final = {
 }
 
 
-def parse_kemp_loadmaster_services(string_table: list[list[str]]) -> Section:
+def parse_kemp_loadmaster_services(string_table: StringTable) -> Section:
     return {
         name: VirtualService(
             name,

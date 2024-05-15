@@ -204,11 +204,11 @@ class MockLiveStatusConnection:
             ...     response = live.result_of_next_query(
             ...         'GET status\\n'
             ...         'Columns: livestatus_version program_version program_start '
-            ...         'num_hosts num_services core_pid edition'
+            ...         'num_hosts num_services max_long_output_size core_pid edition'
             ...     )[0]
-            ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 36, 'raw']]
+            ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 2, 2000, 36, 'raw']]
             ...     assert len(response) == 1
-            ...     assert len(response[0]) == 7
+            ...     assert len(response[0]) == 8
 
         Some Stats calls are supported as well:
 
@@ -230,9 +230,9 @@ class MockLiveStatusConnection:
             ...      pass
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Expected queries were not queried on site 'NO_SITE':
+            cmk.livestatus_client.LivestatusTestingError: Expected queries were not queried on site 'NO_SITE':
              * 'GET status\\nColumns: livestatus_version program_version \
-program_start num_hosts num_services core_pid edition'
+program_start num_hosts num_services max_long_output_size core_pid edition'
             <BLANKLINE>
             No queries were sent to site NO_SITE.
 
@@ -244,7 +244,7 @@ program_start num_hosts num_services core_pid edition'
             ...     live.result_of_next_query("Foo bar!")
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Expected query (strict) on site 'NO_SITE':
+            cmk.livestatus_client.LivestatusTestingError: Expected query (strict) on site 'NO_SITE':
              * 'Hello world!'
             Got query:
              * 'Foo bar!'
@@ -260,7 +260,7 @@ program_start num_hosts num_services core_pid edition'
             ...     live.result_of_next_query("Spanish inquisition!")
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Got unexpected query on site 'NO_SITE':
+            cmk.livestatus_client.LivestatusTestingError: Got unexpected query on site 'NO_SITE':
              * 'Spanish inquisition!'
             <BLANKLINE>
             The following queries were sent to site NO_SITE:
@@ -361,7 +361,7 @@ program_start num_hosts num_services core_pid edition'
             # We expect this query and give the expected result.
             query = [
                 "GET status",
-                "Columns: livestatus_version program_version program_start num_hosts num_services core_pid edition",
+                "Columns: livestatus_version program_version program_start num_hosts num_services max_long_output_size core_pid edition",
             ]
             self.expect_query(query, force_pos=0)  # first query to be expected
 
@@ -752,6 +752,7 @@ def _default_tables() -> dict[TableName, ResultList]:
                 "livestatus_version": _today,
                 "program_version": f"Check_MK {_today}",
                 "program_start": _program_start_timestamp,
+                "max_long_output_size": 2000,
                 "num_hosts": 1,
                 "num_services": 36,
                 "helper_usage_fetcher": 0.00151953,
@@ -893,7 +894,9 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
     elif match_type == "strict":
         result = expected == query
     elif match_type == "ellipsis":
-        final_pattern = expected.replace("[", "\\[").replace("...", ".*?")  # non-greedy match
+        final_pattern = (
+            expected.replace("[", "\\[").replace("+", "\\+").replace("...", ".*?")
+        )  # non-greedy match
         result = bool(re.match(f"^{final_pattern}$", query))
     else:
         raise LivestatusTestingError(f"Unsupported match behaviour: {match_type}")
@@ -945,7 +948,7 @@ def evaluate_stats(query: str, columns: list[ColumnName], result: ResultList) ->
             ...                [{'state': 1}, {'state': 2}, {'state': 1}])
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Stats combinators are not yet implemented!
+            cmk.livestatus_client.LivestatusTestingError: Stats combinators are not yet implemented!
 
         Non-contiguous results don't throw the grouper off-track.
 
@@ -1228,6 +1231,7 @@ OPERATORS: dict[str, OperatorFunc] = {
     ">=": cast_down(operator.ge),
     "<=": cast_down(operator.le),
     "~": match_regexp,
+    "~~": operator.contains,
 }
 """A dict of all implemented comparison operators."""
 
@@ -1279,7 +1283,8 @@ def make_filter_func(line: str) -> FilterKeyFunc:
             >>> f = make_filter_func("Filter: name !! heute")
             Traceback (most recent call last):
             ...
-            livestatus.LivestatusTestingError: Operator '!!' not implemented. Please check docs or implement.
+            cmk.livestatus_client.LivestatusTestingError: Operator '!!' not \
+implemented. Please check docs or implement.
 
 
     """
@@ -1425,9 +1430,12 @@ def _unpack_headers(query: str) -> dict[str, str]:
 @contextmanager
 def mock_livestatus_communication() -> Iterator[MockLiveStatusConnection]:
     live = MockLiveStatusConnection()
-    with mock.patch(
-        "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
-    ), mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket):
+    with (
+        mock.patch(
+            "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
+        ),
+        mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket),
+    ):
         yield live
 
 

@@ -8,72 +8,69 @@
 #include <rrd.h>
 
 #include <algorithm>
+#include <charconv>
 #include <cstdlib>
-#include <cstring>
 #include <ctime>
 #include <filesystem>
 #include <memory>
 #include <set>
 #include <stdexcept>
+#include <string_view>
+#include <system_error>
 
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/PnpUtils.h"
-#include "livestatus/strutil.h"
+
+using namespace std::string_view_literals;
 
 RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
                              const std::string &column_name) {
+    // We expect the following arguments: RPN:START_TIME:END_TIME:RESOLUTION
+    // Example: fs_used,1024,/:1426411073:1426416473:5
+    std::string_view args{arguments};
     auto invalid = [&column_name](const std::string &message) {
         throw std::runtime_error("invalid arguments for column '" +
                                  column_name + ": " + message);
     };
-    // We expect the following arguments: RPN:START_TIME:END_TIME:RESOLUTION
-    // Example: fs_used,1024,/:1426411073:1426416473:5
-    std::vector<char> args(arguments.begin(), arguments.end());
-    args.push_back('\0');
-    char *scan = args.data();
+    auto next = [&args]() {
+        auto field = args.substr(0, args.find(':'));
+        args.remove_prefix(std::min(args.size(), field.size() + 1));
+        return field;
+    };
+    auto next_non_empty = [&next, &invalid](const std::string &what) {
+        auto field = next();
+        if (field.empty()) {
+            invalid("missing " + what);
+        }
+        return field;
+    };
+    auto parse_number = [&invalid](std::string_view str,
+                                   const std::string &what) {
+        auto value = 0;
+        auto [ptr, ec] = std::from_chars(str.begin(), str.end(), value);
+        // TODO(sp) Error handling
+        if (ec != std::errc{} || ptr != str.end()) {
+            invalid("invalid number for " + what);
+        }
+        return value;
+    };
+    auto next_number = [&next_non_empty,
+                        &parse_number](const std::string &what) {
+        return parse_number(next_non_empty(what), what);
+    };
 
-    // Reverse Polish Notation Expression for extraction start RRD
-    char *rpn = next_token(&scan, ':');
-    if (rpn == nullptr || rpn[0] == 0) {
-        invalid("missing RPN expression for RRD");
-    }
-    this->rpn = rpn;
-
-    // Start time of queried range - UNIX time stamp
-    char *start_time = next_token(&scan, ':');
-    if (start_time == nullptr || start_time[0] == 0 || atol(start_time) <= 0) {
-        invalid("missing, negative or overflowed start time");
-    }
-    this->start_time = atol(start_time);
-
-    // End time - UNIX time stamp
-    char *end_time = next_token(&scan, ':');
-    if (end_time == nullptr || end_time[0] == 0 || atol(end_time) <= 0) {
-        invalid(" missing, negative or overflowed end time");
-    }
-    this->end_time = atol(end_time);
-
-    // Resolution in seconds - might output less
-    char *resolution = next_token(&scan, ':');
-    if (resolution == nullptr || resolution[0] == 0 || atoi(resolution) <= 0) {
-        invalid("missing or negative resolution");
-    }
-    this->resolution = atoi(resolution);
-
-    // Optional limit of data points
-    const char *max_entries = next_token(&scan, ':');
-    if (max_entries == nullptr) {
-        max_entries = "400";  // RRDTool default
-    }
-    if (max_entries[0] == 0 || atoi(max_entries) < 10) {
-        invalid("Wrong input for max rows");
-    }
-    this->max_entries = atoi(max_entries);
-
-    if (next_token(&scan, ':') != nullptr) {
+    this->rpn = next_non_empty("RPN expression");
+    this->start_time = next_number("start time");
+    this->end_time = next_number("end time");
+    this->resolution = next_number("resolution");
+    auto max_entries = next();
+    this->max_entries = max_entries.empty()
+                            ? 400
+                            : parse_number(max_entries, "maximum entries");
+    if (!args.empty()) {
         invalid("too many arguments");
     }
 }
@@ -89,10 +86,12 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
 }
 
 namespace {
-bool isVariableName(const std::string &token) {
-    auto is_operator = [](char c) { return strchr("+-/*", c) != nullptr; };
+bool isVariableName(std::string_view token) {
+    auto is_operator = [](char c) {
+        return "+-/*"sv.find_first_of(c) != std::string_view::npos;
+    };
     auto is_number_part = [](char c) {
-        return strchr("0123456789.", c) != nullptr;
+        return "0123456789."sv.find_first_of(c) != std::string_view::npos;
     };
 
     return !(is_operator(token[0]) ||
@@ -109,22 +108,22 @@ std::string replace_all(const std::string &str, const std::string &chars,
     return result;
 }
 
-std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
+std::pair<Metric::Name, std::string> getVarAndCF(std::string_view str) {
     const size_t dot_pos = str.find_last_of('.');
     if (dot_pos != std::string::npos) {
-        const Metric::Name head{str.substr(0, dot_pos)};
-        const std::string tail = str.substr(dot_pos);
-        if (tail == ".max") {
+        const Metric::Name head{std::string{str.substr(0, dot_pos)}};
+        auto tail = str.substr(dot_pos);
+        if (tail == ".max"sv) {
             return std::make_pair(head, "MAX");
         }
-        if (tail == ".min") {
+        if (tail == ".min"sv) {
             return std::make_pair(head, "MIN");
         }
-        if (tail == ".average") {
+        if (tail == ".average"sv) {
             return std::make_pair(head, "AVERAGE");
         }
     }
-    return std::make_pair(Metric::Name{str}, "MAX");
+    return std::make_pair(Metric::Name{std::string{str}}, "MAX");
 }
 
 struct Data {
@@ -161,15 +160,15 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     std::vector<std::string> argv_s{
         "rrdtool xport",  // name of program (ignored)
         "-s",
-        std::to_string(_args.start_time),
+        std::to_string(args_.start_time),
         "-e",
-        std::to_string(_args.end_time),
+        std::to_string(args_.end_time),
         "--step",
-        std::to_string(_args.resolution)};
+        std::to_string(args_.resolution)};
 
-    if (_args.max_entries > 0) {
+    if (args_.max_entries > 0) {
         argv_s.emplace_back("-m");
-        argv_s.emplace_back(std::to_string(_args.max_entries));
+        argv_s.emplace_back(std::to_string(args_.max_entries));
     }
 
     // We have an RPN like fs_used,1024,*. In order for that to work, we need to
@@ -181,9 +180,12 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     // faster) way is to look for the names of variables within our RPN
     // expressions and create DEFs just for them - if the according RRD exists.
     std::string converted_rpn;  // convert foo.max -> foo-max
-    std::vector<char> rpn_copy(_args.rpn.begin(), _args.rpn.end());
-    rpn_copy.push_back('\0');
-    char *scan = rpn_copy.data();
+    std::string_view rpn{args_.rpn};
+    auto next = [&rpn]() {
+        auto token = rpn.substr(0, rpn.find(','));
+        rpn.remove_prefix(std::min(rpn.size(), token.size() + 1));
+        return token;
+    };
 
     // map from RRD variable names to perf variable names. The latter ones
     // can contain several special characters (like @ and -) which the RRD
@@ -191,8 +193,8 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     unsigned next_variable_number = 0;
     std::set<std::string> touched_rrds;
 
-    while (const char *tok = next_token(&scan, ',')) {
-        const std::string token = tok;
+    while (!rpn.empty()) {
+        auto token = next();
         if (!converted_rpn.empty()) {
             converted_rpn += ",";
         }
@@ -210,7 +212,7 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
         // by '_' here.
         auto [var, cf] = getVarAndCF(token);
         auto location =
-            _mc->metricLocation(host_name, service_description, var);
+            core_->metricLocation(host_name, service_description, var);
         std::string rrd_varname;
         if (location.path_.empty() || location.data_source_name_.empty()) {
             rrd_varname = replace_all(var.string(), ".", '_');
@@ -246,9 +248,9 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     // RRDTool on the issue
     // https://github.com/oetiker/rrdtool-1.x/issues/1062
 
-    auto *logger = _mc->loggerRRD();
-    const auto rrdcached_socket = _mc->paths()->rrdcached_socket();
-    if (_mc->pnp4nagiosEnabled() && !rrdcached_socket.empty() &&
+    auto *logger = core_->loggerRRD();
+    const auto rrdcached_socket = core_->paths()->rrdcached_socket();
+    if (core_->pnp4nagiosEnabled() && !rrdcached_socket.empty() &&
         !touched_rrds.empty()) {
         std::vector<std::string> daemon_argv_s{
             "rrdtool flushcached",  // name of program (ignored)
@@ -274,8 +276,11 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
             }
         }
 
-        if (rrd_flushcached(static_cast<int>(daemon_argv_s.size()),
-                            const_cast<char **>(daemon_argv.data())) != 0) {
+        if (rrd_flushcached(
+                static_cast<int>(daemon_argv_s.size()),
+                // The RRD library is not const-correct.
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+                const_cast<char **>(daemon_argv.data())) != 0) {
             Warning(logger) << "Error flushing RRD: " << rrd_get_error();
         }
     }
@@ -313,6 +318,8 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
 
     Data data;
     if (rrd_xport(static_cast<int>(argv_s.size()),
+                  // The RRD library is not const-correct.
+                  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
                   const_cast<char **>(argv.data()), &xxsize, &start, &end,
                   &step, &col_cnt, &legend_v, &rrd_data) != 0) {
         const std::string rrd_error{rrd_get_error()};

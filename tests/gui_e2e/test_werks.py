@@ -8,22 +8,24 @@ import logging
 import pytest
 
 from tests.testlib import repo_path
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.pom.dashboard import LoginPage
 from tests.testlib.playwright.pom.werks import Werks
 
 import cmk.utils.werks
 
+from cmk.werks.models import Edition
+
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="skipping temporarily; werks integration is broken")
-def test_werks_available(logged_in_page: PPage) -> None:
+@pytest.mark.skip(reason="skip until CMK-17126.")
+def test_werks_available(logged_in_page: LoginPage) -> None:
     # get the expected editions for the werks
     # NOTE: We can not use cmk_version to detect the edition due to monkey-patching in the testlib!
     # since the tests are always running in a CEE environment, we do not consider other editions
     werk_editions = {
-        cmk.utils.werks.werk.Edition.CRE,
-        cmk.utils.werks.werk.Edition.CEE,
+        Edition.CRE,
+        Edition.CEE,
     }
     logger.info("Checking for editions: %s", ",".join(str(e.value) for e in werk_editions))
     # get all werks (list is required to retain the order)
@@ -38,7 +40,7 @@ def test_werks_available(logged_in_page: PPage) -> None:
     assert len(internal_werk_ids) > 0, "No werks found in the repo!"
 
     # get all werks on the werks page (list is required to retain the order)
-    werks_page = Werks(logged_in_page)
+    werks_page = Werks(logged_in_page.page)
     displayed_werks = werks_page.get_recent_werks()
     displayed_werk_ids = list(displayed_werks.keys())
     assert len(displayed_werk_ids) > 0, "Werk page does not return any werks!"

@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 from collections.abc import Iterator
@@ -27,6 +30,7 @@ from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
@@ -452,6 +456,9 @@ class Table:
             row_info = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
             html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
+        if request.var("search") is not None:
+            set_inpage_search_result_info(len(rows))
+
         table_id = self.id
 
         num_cols = self._get_num_cols(rows)
@@ -473,36 +480,40 @@ class Table:
         if actions_enabled and actions_visible:
             html.open_tr(class_=["data", "even0", "actions"])
             html.open_td(colspan=num_cols)
-            if not html.in_form():
-                html.begin_form("%s_actions" % table_id)
-
-            if request.has_var("_%s_sort" % table_id):
-                html.open_div(class_=["sort"])
-                html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
-                html.close_div()
-
-            if not html.in_form():
-                html.begin_form("%s_actions" % table_id)
-
-            html.hidden_fields()
-            html.end_form()
+            with (
+                html.form_context("%s_actions" % table_id)
+                if not html.in_form()
+                else contextlib.nullcontext()
+            ):
+                if request.has_var("_%s_sort" % table_id):
+                    html.open_div(class_=["sort"])
+                    html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
+                    html.close_div()
+                html.hidden_fields()
             html.close_tr()
 
+        oddeven_name = "even"
         for nr, row in enumerate(rows):
             # Intermediate header
             if isinstance(row, GroupHeader):
                 # Show the header only, if at least one (non-header) row follows
                 if nr < len(rows) - 1 and not isinstance(rows[nr + 1], GroupHeader):
                     html.open_tr(class_="groupheader")
-                    html.open_td(colspan=num_cols)
-                    html.h3(row.title)
+                    html.open_td(class_="groupheader", colspan=num_cols)
+                    html.open_table(
+                        class_="groupheader", cellspacing="0", cellpadding="0", border="0"
+                    )
+                    html.open_tr()
+                    html.td(row.title)
+                    html.close_tr()
+                    html.close_table()
                     html.close_td()
                     html.close_tr()
 
                     self._render_headers(actions_enabled, actions_visible, empty_columns)
+                    oddeven_name = "even"
                 continue
 
-            oddeven_name = "even" if nr % 2 == 0 else "odd"
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
 
             if isinstance(row.css, list):
@@ -519,6 +530,7 @@ class Table:
 
                 html.td(cell.content, class_=cell.css, colspan=cell.colspan)
             html.close_tr()
+            oddeven_name = "even" if oddeven_name == "odd" else "odd"
 
         if not rows and search_term:
             html.open_tr(class_=["data", "odd0", "no_match"])

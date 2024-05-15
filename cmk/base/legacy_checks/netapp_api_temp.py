@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
-from cmk.base.check_legacy_includes.temperature import check_temperature_list
+from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
 from cmk.base.config import check_info
 
 # <<<netapp_api_temp:sep(9)>>>
@@ -46,7 +46,7 @@ def check_netapp_api_temp(item, params, parsed):
         if values.get("temp-sensor-is-ambient") == is_ambient
     )
 
-    sensorlist = [
+    sensorlist: list[tuple[str, int, CheckTempKwargs]] = [
         (
             f"{item_no}/{sensor['temp-sensor-element-no']}",
             sensor["temp-sensor-current-temperature"],
@@ -65,9 +65,10 @@ def check_netapp_api_temp(item, params, parsed):
     ]
 
     if not sensorlist:
-        return 0, "No temperature sensors assigned to this filer"
+        yield 0, "No temperature sensors assigned to this filer"
+        return
 
-    return check_temperature_list(sensorlist, params, "netapp_api_temp_%s" % item)
+    yield from check_temperature_list(sensorlist, params)
 
 
 check_info["netapp_api_temp"] = LegacyCheckDefinition(

@@ -10,7 +10,8 @@ from cmk.base.check_legacy_includes.oracle import (
     oracle_handle_ora_errors_discovery,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 
 # <<<oracle_logswitches>>>
 # pengt  15
@@ -59,7 +60,12 @@ def check_oracle_logswitches(item, params, info):
     raise IgnoreResultsError("Login into database failed")
 
 
+def parse_oracle_logswitches(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["oracle_logswitches"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_logswitches,
     service_name="ORA %s Logswitches",
     discovery_function=inventory_oracle_logswitches,
     check_function=check_oracle_logswitches,

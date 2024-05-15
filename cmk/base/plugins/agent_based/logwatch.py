@@ -7,8 +7,8 @@
 #                                                                                       #
 #                                 !!   W A T C H   O U T   !!                           #
 #                                                                                       #
-#   The logwatch plugin is notorious for being an exception to just about every rule    #
-#   or best practice that applies to check plugin development.                          #
+#   The logwatch plug-in is notorious for being an exception to just about every rule    #
+#   or best practice that applies to check plug-in development.                          #
 #   It is highly discouraged to use this a an example!                                  #
 #                                                                                       #
 #########################################################################################
@@ -20,21 +20,19 @@ import time
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from re import Match
-from typing import Any, IO, Literal
+from typing import IO, Literal
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-)
+from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+
+from cmk.plugins.lib import eval_regex
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import eval_regex, logwatch
-
-AllParams = Sequence[Mapping[str, Any]]
+from .utils import logwatch
 
 ClusterSection = dict[str | None, logwatch.Section]
 
@@ -44,23 +42,10 @@ DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPatt
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 
 
-def _get_discovery_groups(params: AllParams) -> Sequence[list[tuple[str, GroupingPattern]]]:
+def _get_discovery_groups(
+    params: Sequence[logwatch.ParameterLogwatchGroups],
+) -> Sequence[list[tuple[str, GroupingPattern]]]:
     return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
-
-
-def _compile_params(item: str) -> dict[str, Any]:
-    compiled_params: dict[str, Any] = {"reclassify_patterns": []}
-
-    for rule in logwatch.service_extra_conf(item):
-        if isinstance(rule, dict):
-            compiled_params["reclassify_patterns"].extend(rule["reclassify_patterns"])
-            if "reclassify_states" in rule:
-                # (mo) wondering during migration: doesn't this mean the last one wins?
-                compiled_params["reclassify_states"] = rule["reclassify_states"]
-        else:
-            compiled_params["reclassify_patterns"].extend(rule)
-
-    return compiled_params
 
 
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
@@ -81,14 +66,13 @@ def _compile_params(item: str) -> dict[str, Any]:
 
 
 def discover_logwatch_single(
-    params: AllParams,
+    params: Sequence[logwatch.ParameterLogwatchGroups],
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    not_forwarded_logs = logwatch.select_forwarded(
-        logwatch.discoverable_items(section),
-        logwatch.get_ec_rule_params(),
-        invert=True,
-    )
+    log_filter = logwatch.LogFileFilter(logwatch.RulesetAccess.logwatch_ec_all())
+    not_forwarded_logs = {
+        item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
+    }
     inventory_groups = _get_discovery_groups(params)
 
     for logfile in not_forwarded_logs:
@@ -99,14 +83,13 @@ def discover_logwatch_single(
 
 
 def discover_logwatch_groups(
-    params: AllParams,
+    params: Sequence[logwatch.ParameterLogwatchGroups],
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    not_forwarded_logs = logwatch.select_forwarded(
-        logwatch.discoverable_items(section),
-        logwatch.get_ec_rule_params(),
-        invert=True,
-    )
+    log_filter = logwatch.LogFileFilter(logwatch.RulesetAccess.logwatch_ec_all())
+    not_forwarded_logs = {
+        item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
+    }
     inventory_groups = _get_discovery_groups(params)
     inventory: dict[str, set[GroupingPattern]] = {}
 
@@ -128,11 +111,13 @@ def check_logwatch_node(
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    yield from check_logwatch(item, {None: section})
+    params = logwatch.RulesetAccess.logwatch_rules_all(item)
+    yield from check_logwatch(item, params, {None: section})
 
 
 def check_logwatch(
     item: str,
+    params: Sequence[logwatch.ParameterLogwatchRules],
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
@@ -140,12 +125,12 @@ def check_logwatch(
         logwatch.get_unreadable_logfiles(item, section), State.CRIT
     )
 
-    value_store = get_value_store()
+    seen_batches = logwatch.update_seen_batches(get_value_store(), section, [item])
 
     loglines: list[str] = sum(
         (
-            logwatch.extract_unseen_lines(value_store, node_data.logfiles[item]["lines"])
-            for node, node_data in section.items()
+            logwatch.extract_unseen_lines(node_data.logfiles[item]["lines"], seen_batches)
+            for node_data in section.values()
             if item in node_data.logfiles
         ),
         [],
@@ -153,7 +138,7 @@ def check_logwatch(
 
     yield from check_logwatch_generic(
         item=item,
-        patterns=_compile_params(item),
+        reclassify_parameters=logwatch.compile_reclassify_params(params),
         loglines=loglines,
         found=item in logwatch.discoverable_items(*section.values()),
         max_filesize=_LOGWATCH_MAX_FILESIZE,
@@ -163,7 +148,8 @@ def check_logwatch(
 def cluster_check_logwatch(
     item: str, section: Mapping[str, logwatch.Section | None]
 ) -> CheckResult:
-    yield from check_logwatch(item, {k: v for k, v in section.items() if v is not None})
+    params = logwatch.RulesetAccess.logwatch_rules_all(item)
+    yield from check_logwatch(item, params, {k: v for k, v in section.items() if v is not None})
 
 
 register.check_plugin(
@@ -270,35 +256,52 @@ def check_logwatch_groups_node(
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    yield from check_logwatch_groups(item, params, {None: section})
+    params_rules = logwatch.RulesetAccess.logwatch_rules_all(item)
+    yield from check_logwatch_groups(item, params, params_rules, {None: section})
 
 
 def check_logwatch_groups(
     item: str,
     params: DiscoveredGroupParams,
+    params_rules: Sequence[logwatch.ParameterLogwatchRules],
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
 
-    group_patterns = set(params["group_patterns"])
-
     value_store = get_value_store()
-    loglines = []
-    # node name ignored (only used in regular logwatch check)
-    for node_data in section.values():
-        for logfile_name, item_data in node_data.logfiles.items():
-            for inclusion, exclusion in group_patterns:
-                if _match_group_patterns(logfile_name, inclusion, exclusion):
-                    loglines.extend(logwatch.extract_unseen_lines(value_store, item_data["lines"]))
-                break
+    matching_files = _get_matching_logfiles(set(params["group_patterns"]), section)
+    seen_batches = logwatch.update_seen_batches(value_store, section, matching_files)
+
+    loglines = [
+        line
+        # node name ignored (only used in regular logwatch check)
+        for node_data in section.values()
+        for logfile_name, item_data in node_data.logfiles.items()
+        if logfile_name in matching_files
+        for line in logwatch.extract_unseen_lines(item_data["lines"], seen_batches)
+    ]
 
     yield from check_logwatch_generic(
         item=item,
-        patterns=_compile_params(item),
+        reclassify_parameters=logwatch.compile_reclassify_params(params_rules),
         loglines=loglines,
         found=True,
         max_filesize=_LOGWATCH_MAX_FILESIZE,
     )
+
+
+def _get_matching_logfiles(
+    group_patterns: set[GroupingPattern], section: ClusterSection
+) -> list[str]:
+    return [
+        logfile_name
+        for node_data in section.values()
+        for logfile_name in node_data.logfiles
+        if any(
+            _match_group_patterns(logfile_name, inclusion, exclusion)
+            for inclusion, exclusion in group_patterns
+        )
+    ]
 
 
 def cluster_check_logwatch_groups(
@@ -306,8 +309,9 @@ def cluster_check_logwatch_groups(
     params: DiscoveredGroupParams,
     section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
+    params_rules = logwatch.RulesetAccess.logwatch_rules_all(item)
     yield from check_logwatch_groups(
-        item, params, {k: v for k, v in section.items() if v is not None}
+        item, params, params_rules, {k: v for k, v in section.items() if v is not None}
     )
 
 
@@ -337,15 +341,14 @@ class LogwatchBlock:
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-    def __init__(self, header, patterns) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, header: str, reclassify_parameters: logwatch.ReclassifyParameters) -> None:
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
         self.lines: list = []
         self.saw_lines = False
         self.last_worst_line = ""
-        self.counts: Counter[int] = Counter()  # matches of a certain pattern
         self.states_counter: Counter[str] = Counter()  # lines with a certain state
-        self._patterns = patterns or {}
+        self._reclassify_parameters = reclassify_parameters
 
     def finalize(self):
         state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
@@ -361,7 +364,7 @@ class LogwatchBlock:
             level, text = line.strip(), ""
 
         if reclassify:
-            level = logwatch.reclassify(self.counts, self._patterns, text, level)
+            level = logwatch.reclassify(self._reclassify_parameters, text, level)
 
         state_int = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
         self.worst = max(state_int, self.worst)
@@ -428,10 +431,10 @@ def _logmsg_file_path(item: str) -> pathlib.Path:
     return logmsg_dir / item.replace("/", "\\")
 
 
-def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+def check_logwatch_generic(
     *,
     item: str,
-    patterns,
+    reclassify_parameters: logwatch.ReclassifyParameters,
     loglines: Iterable[str],
     found: bool,
     max_filesize: int,
@@ -451,8 +454,7 @@ def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=to
         "r+" if logmsg_file_exists else "w", encoding="utf-8"
     )
 
-    # TODO: repr() of a dict may change.
-    pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
+    pattern_hash = hashlib.sha256(repr(reclassify_parameters).encode()).hexdigest()
     if not logmsg_file_exists:
         output_size = 0
         reclassify = True
@@ -463,7 +465,9 @@ def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=to
             yield _dropped_msg_result(max_filesize)
             return
 
-        block_collector.extend(_extract_blocks(logmsg_file_handle, patterns, reclassify))
+        block_collector.extend(
+            _extract_blocks(logmsg_file_handle, reclassify_parameters, reclassify)
+        )
 
         if reclassify:
             output_size = block_collector.size
@@ -477,7 +481,9 @@ def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=to
 
     # process new input lines - but only when there is some room left in the file
     block_collector.extend(
-        _extract_blocks([header, *loglines], patterns, True, limit=max_filesize - output_size)
+        _extract_blocks(
+            [header, *loglines], reclassify_parameters, True, limit=max_filesize - output_size
+        )
     )
 
     # when reclassifying, rewrite the whole file, otherwise append
@@ -546,12 +552,12 @@ def _truncate_way_too_large_result(
     return True
 
 
-def _extract_blocks(  # type: ignore[no-untyped-def]
+def _extract_blocks(
     lines: Iterable[str],
-    patterns,
+    reclassify_parameters: logwatch.ReclassifyParameters,
     reclassify: bool,
     *,
-    limit=float("inf"),
+    limit: float = float("inf"),
 ) -> Iterable[LogwatchBlock]:
     current_block = None
     for line in lines:
@@ -562,7 +568,7 @@ def _extract_blocks(  # type: ignore[no-untyped-def]
         if line.startswith("<<<") and line.endswith(">>>"):
             if current_block is not None:
                 yield current_block
-            current_block = LogwatchBlock(line, patterns)
+            current_block = LogwatchBlock(line, reclassify_parameters)
         elif current_block is not None:
             current_block.add_line(line, reclassify)
             limit -= len(line.encode("utf-8"))

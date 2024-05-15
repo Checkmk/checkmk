@@ -15,6 +15,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_sansymphony_ports(info):
     for portname, _porttype, portstatus in info:
@@ -31,7 +33,12 @@ def check_sansymphony_ports(item, _no_params, info):
     return None
 
 
+def parse_sansymphony_ports(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["sansymphony_ports"] = LegacyCheckDefinition(
+    parse_function=parse_sansymphony_ports,
     service_name="sansymphony Port %s",
     discovery_function=inventory_sansymphony_ports,
     check_function=check_sansymphony_ports,

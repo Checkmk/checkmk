@@ -4,36 +4,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-sansymphony_alerts_default_values = (1, 2)
+from cmk.agent_based.v2 import StringTable
 
 
 def inventory_sansymphony_alerts(info):
-    return [(None, sansymphony_alerts_default_values)]
+    yield None, {}
 
 
 def check_sansymphony_alerts(_no_item, params, info):
-    warn, crit = params
     nr_of_alerts = int(info[0][0])
-    perfdata = [("alerts", nr_of_alerts, warn, crit)]
-    infotxt = "Unacknowlegded alerts: %d" % nr_of_alerts
-    levels = " (warn/crit at %d/%d)" % (warn, crit)
+    yield check_levels(
+        nr_of_alerts,
+        "alerts",
+        params["levels"],
+        human_readable_func=str,
+        infoname="Unacknowlegded alerts",
+    )
 
-    state = 0
-    if nr_of_alerts >= crit:
-        state = 2
-        infotxt += levels
-    elif nr_of_alerts >= warn:
-        state = 1
-        infotxt += levels
-    return state, infotxt, perfdata
+
+def parse_sansymphony_alerts(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 check_info["sansymphony_alerts"] = LegacyCheckDefinition(
+    parse_function=parse_sansymphony_alerts,
     service_name="sansymphony Alerts",
     discovery_function=inventory_sansymphony_alerts,
     check_function=check_sansymphony_alerts,
     check_ruleset_name="sansymphony_alerts",
+    check_default_parameters={
+        "levels": (1, 2),
+    },
 )

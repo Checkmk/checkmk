@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib.cpu import Section
+
 from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.cpu import Section
 
 Params = Mapping[str, str | tuple[str, tuple[float, float]]]
 
@@ -42,13 +43,14 @@ def _get_levels(  # type: ignore[no-untyped-def]
 def check_cpu_threads(params: Params, section: Section) -> CheckResult:
     if not (threads := section.threads):
         return
-    yield from check_levels(
-        threads.count,
-        metric_name="threads",
-        levels_upper=_get_levels(params, "levels"),
-        render_func="{:}".format,
-    )
-    if threads.max is not None:
+    if threads.count is not None:
+        yield from check_levels(
+            threads.count,
+            metric_name="threads",
+            levels_upper=_get_levels(params, "levels"),
+            render_func="{:}".format,
+        )
+    if threads.max is not None and threads.count is not None:
         thread_usage = 100.0 * threads.count / threads.max
         yield from check_levels(
             thread_usage,

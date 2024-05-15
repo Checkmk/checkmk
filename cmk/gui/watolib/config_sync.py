@@ -14,9 +14,9 @@ import tarfile
 import time
 import traceback
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -31,17 +31,16 @@ from cmk.gui.watolib.config_domain_name import wato_fileheader
 Command = list[str]
 
 
-class ReplicationPath(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "ReplicationPath",
-        [
-            ("ty", str),
-            ("ident", str),
-            ("site_path", str),
-            ("excludes", list[str]),
-        ],
-    )
-):
+class _BaseReplicationPath(NamedTuple):
+    """Needed for the ReplicationPath class to call __new__ method."""
+
+    ty: str
+    ident: str
+    site_path: str
+    excludes: list[str]
+
+
+class ReplicationPath(_BaseReplicationPath):
     def __new__(cls, ty: str, ident: str, site_path: str, excludes: list[str]) -> "ReplicationPath":
         if site_path.startswith("/"):
             raise Exception("ReplicationPath.path must be a path relative to the site root")
@@ -453,12 +452,12 @@ class SnapshotCreator(SnapshotCreationBase):
         )
 
 
-def is_user_file(filepath) -> bool:  # type: ignore[no-untyped-def]
+def is_user_file(filepath: str) -> bool:
     entry = os.path.basename(filepath)
     return entry.startswith("user_") or entry in ["tableoptions.mk", "treestates.mk", "sidebar.mk"]
 
 
-def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:
+def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlobals:
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update(
         {
@@ -475,6 +474,7 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[st
 def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:
     _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
     _create_distributed_wato_file_for_dcd(base_dir, is_remote)
+    _create_distributed_wato_file_for_omd(base_dir, is_remote)
 
 
 def _create_distributed_wato_file_for_base(
@@ -500,3 +500,9 @@ def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> No
     output += "dcd_is_wato_remote_site = %r\n" % is_remote
 
     store.save_text_to_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
+
+
+def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> None:
+    output = wato_fileheader()
+    output += f"is_wato_remote_site = {is_remote}\n"
+    store.save_text_to_file(base_dir / "etc/omd/distributed.mk", output)

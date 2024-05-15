@@ -15,12 +15,13 @@ import cmk.utils.encoding
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
+from cmk.utils.piggyback import get_source_hostnames
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -62,7 +63,7 @@ def create_check_crash_dump(
     host_name: HostName,
     service_name: ServiceName,
     *,
-    plugin_name: CheckPluginNameStr | CheckPluginName,
+    plugin_name: str | CheckPluginName,
     plugin_kwargs: Mapping[str, Any],
     is_cluster: bool,
     is_enforced: bool,
@@ -90,9 +91,9 @@ def create_check_crash_dump(
             },
             type_specific_attributes={
                 "snmp_info": _read_snmp_info(host_name),
-                "agent_output": _read_agent_output(host_name)
-                if rtc_package is None
-                else rtc_package,
+                "agent_output": (
+                    _read_agent_output(host_name) if rtc_package is None else rtc_package
+                ),
             },
         )
         CrashReportStore().save(crash)
@@ -144,7 +145,7 @@ class CheckCrashReport(CrashReportWithAgentOutput):
 
 
 def _read_snmp_info(hostname: str) -> bytes | None:
-    cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", hostname)
+    cache_path = Path(cmk.utils.paths.snmpwalks_dir, hostname)
     try:
         with cache_path.open(mode="rb") as f:
             return f.read()
@@ -153,11 +154,20 @@ def _read_snmp_info(hostname: str) -> bytes | None:
     return None
 
 
-def _read_agent_output(hostname: str) -> AgentRawData | None:
+def _read_agent_output(hostname: HostName) -> AgentRawData | None:
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
-    try:
-        with cache_path.open(mode="rb") as f:
-            return AgentRawData(f.read())
-    except OSError:
-        pass
+    piggyback_cache_path = Path(cmk.utils.paths.piggyback_dir, hostname)
+    cache_paths = [cache_path] + [
+        piggyback_cache_path / source_hostname for source_hostname in get_source_hostnames(hostname)
+    ]
+    agent_outputs = []
+    for cache_path in cache_paths:
+        try:
+            with cache_path.open(mode="rb") as f:
+                agent_outputs.append(f.read())
+        except OSError:
+            pass
+
+    if agent_outputs:
+        return AgentRawData(b"\n".join(agent_outputs))
     return None

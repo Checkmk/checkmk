@@ -6,11 +6,12 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>, 2011-03-21
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
-strem1_temp_defaultlevels = (28, 32)
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def strem1_sensors_parse_info(info):
@@ -26,22 +27,19 @@ def strem1_sensors_parse_info(info):
 
 
 def inventory_strem1_sensors(info):
-    inventory = []
-    for index, typ, val, _intval in strem1_sensors_parse_info(info[1]):
-        lvls: tuple[int, int] | tuple[None, None] = strem1_temp_defaultlevels
-        if typ in {"Humidity", "Wetness"}:
-            lvls = (None, None)
-        if val != "-999.9":
-            inventory.append((index, lvls))
-    return inventory
+    return [
+        (index, {})
+        for index, _typ, val, _intval in strem1_sensors_parse_info(info[1])
+        if val != "-999.9"
+    ]
 
 
-def check_strem1_sensors(item, params, info):
+def check_strem1_sensors(item, _no_params, info):
     for index, typ, val, _intval in strem1_sensors_parse_info(info[1]):
         if index == item:
             uom = info[0][0][0] if typ == "Temperature" else "%"
             val = float(val)
-            warn, crit = params
+            (warn, crit) = (None, None) if typ in {"Humidity", "Wetness"} else (28, 32)
 
             infotext = "%.1f" % val + uom
             perfdata = [(typ.lower(), infotext, warn, crit)]
@@ -61,7 +59,12 @@ def check_strem1_sensors(item, params, info):
     return (3, "Sensor not found")
 
 
+def parse_strem1_sensors(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["strem1_sensors"] = LegacyCheckDefinition(
+    parse_function=parse_strem1_sensors,
     detect=contains(".1.3.6.1.2.1.1.1.0", "Sensatronics EM1"),
     fetch=[
         # 1,  # SENSATRONICS-EM1::group1Name

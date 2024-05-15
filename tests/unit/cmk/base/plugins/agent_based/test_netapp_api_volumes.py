@@ -3,15 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Iterable
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import netapp_api_volumes as nav
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils.df import (
+
+from cmk.plugins.lib.df import (
     FILESYSTEM_DEFAULT_LEVELS,
     INODES_DEFAULT_PARAMS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
@@ -592,7 +594,9 @@ def test_check_grouped(section: nav.Section, monkeypatch: pytest.MonkeyPatch) ->
         "get_value_store",
         lambda: {"group1.delta": (1591789747, 0)},
     )
-    with on_time("2020-06-10 13:50:21", "UTC"):
+    with time_machine.travel(
+        datetime.datetime(2020, 6, 10, 13, 50, 21, tzinfo=ZoneInfo("UTC")), tick=False
+    ):
         assert list(
             nav.check_netapp_api_volumes(
                 "group1",
@@ -613,12 +617,12 @@ def test_check_grouped(section: nav.Section, monkeypatch: pytest.MonkeyPatch) ->
             Metric(
                 "fs_used_percent", 8.151860854204964, levels=(80.0, 90.0), boundaries=(0.0, 100.0)
             ),
-            Result(state=State.OK, summary="Used: 8.15% - 17.3 GiB of 212 GiB"),
+            Result(state=State.OK, summary="Used: 8.15% - 18.6 GB of 228 GB"),
             Metric("fs_size", 217600.0, boundaries=(0.0, None)),
             Metric("growth", 210695.9049353863),
-            Result(state=State.OK, summary="trend per 1 day 0 hours: +206 GiB"),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +221 GB"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +96.83%"),
-            Metric("trend", 210695.9049353863, boundaries=(0.0, 9066.666666666666)),
+            Metric("trend", 210695.9049353863),
             Result(state=State.OK, summary="Time left until disk full: 22 hours 45 minutes"),
             Metric(
                 "inodes_used",
@@ -651,7 +655,9 @@ def test_check_with_perf_data(section: nav.Section, monkeypatch: pytest.MonkeyPa
             **{k: (1591789747, 0) for k in _create_keys()},
         },
     )
-    with on_time("2020-06-10 13:50:21", "UTC"):
+    with time_machine.travel(
+        datetime.datetime(2020, 6, 10, 13, 50, 21, tzinfo=ZoneInfo("UTC")), tick=False
+    ):
         assert list(
             nav.check_netapp_api_volumes(
                 "euedcnas1710.v_1710_aspera",
@@ -684,19 +690,19 @@ def test_check_with_perf_data(section: nav.Section, monkeypatch: pytest.MonkeyPa
             ),
             Result(
                 state=State.CRIT,
-                summary="Used: 60.04% - 180 GiB of 300 GiB (warn/crit at 50.00%/60.00% used)",
+                summary="Used: 60.04% - 193 GB of 322 GB (warn/crit at 50.00%/60.00% used)",
             ),
             Metric("fs_size", 307200.0, boundaries=(0.0, None)),
             Metric("growth", 2190950.615204839),
             Result(
                 state=State.CRIT,
-                summary="trend per 1 day 0 hours: +2.09 TiB (warn/crit at +100 MiB/+200 MiB)",
+                summary="trend per 1 day 0 hours: +2.30 TB (warn/crit at +105 MB/+210 MB)",
             ),
             Result(
                 state=State.CRIT,
                 summary="trend per 1 day 0 hours: +713.20% (warn/crit at +5.00%/+10.00%)",
             ),
-            Metric("trend", 2190950.615204839, levels=(100.0, 200.0), boundaries=(0.0, 12800.0)),
+            Metric("trend", 2190950.615204839, levels=(100.0, 200.0)),
             Result(
                 state=State.CRIT,
                 summary="Time left until disk full: 1 hour 20 minutes (warn/crit below 12 hours 0 minutes/6 hours 0 minutes)",

@@ -10,7 +10,6 @@ from typing import Any
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     Metric,
@@ -49,7 +48,9 @@ from cmk.base.plugins.agent_based.mssql_counters_transactions import (
 from cmk.base.plugins.agent_based.mssql_counters_transactions import (
     discovery_mssql_counters_transactions,
 )
-from cmk.base.plugins.agent_based.utils.mssql_counters import Section
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.mssql_counters import Section
 
 ValueStore = dict[str, Any]
 
@@ -202,10 +203,6 @@ big_parsed_data = {
     },
     ('MSSQL_VEEAMSQL2012:SQL_Errors', '_Total'): {
         'errors/sec': 228398
-    },
-    ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): {
-        'batch_requests/sec': 22476651,
-        'misguided_plan_executions/sec': 0
     },
     ('MSSQL_VEEAMSQL2012:Plan_Cache', 'Temporary_Tables_&_Table_Variables'): {
         'cache_hit_ratio': 588

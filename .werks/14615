@@ -1,0 +1,11 @@
+Title: check_epower: configurable parameter for upper levels
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1691425439
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Introduces configurable upper levels for `epower`. Does not set default values, though, for
+backwards compatibility.

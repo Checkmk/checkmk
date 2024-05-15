@@ -24,7 +24,7 @@ def _parameter_valuespec_inotify():
             "This rule allows you to set levels for specific Inotify changes. "
             "Keep in mind that you can only monitor operations which are actually "
             "enabled in the Inotify plugin. So it might be a good idea to cross check "
-            "these levels here with the configuration rule in the agent bakery. "
+            "these levels here with the configuration rule in the Agent Bakery. "
         ),
         elements=[
             (

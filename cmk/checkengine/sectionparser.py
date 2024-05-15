@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Container, Iterable, Mapping, Sequence, Set
+from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Any, Final, Generic, NamedTuple, TypeVar
 
@@ -25,9 +25,7 @@ _TSeq = TypeVar("_TSeq", bound=Sequence)
 
 
 class ParsedSectionName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
+    pass
 
 
 @dataclass(frozen=True)
@@ -88,11 +86,13 @@ class SectionsParser(Generic[_TSeq]):
 
         return self._memoized_results.setdefault(
             section_name,
-            None
-            if (parsed := self._parse_raw_data(section_name, parse_function)) is None
-            else _ParsingResult(
-                data=parsed,
-                cache_info=self._host_sections.cache_info.get(section_name),
+            (
+                None
+                if (parsed := self._parse_raw_data(section_name, parse_function)) is None
+                else _ParsingResult(
+                    data=parsed,
+                    cache_info=self._host_sections.cache_info.get(section_name),
+                )
             ),
         )
 

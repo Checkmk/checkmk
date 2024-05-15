@@ -99,7 +99,8 @@ bool IsExecutable(const std::filesystem::path &file_to_exec);
 std::wstring FindPowershellExe() noexcept;
 std::wstring LocatePs1Proxy();
 
-std::wstring MakePowershellWrapper() noexcept;
+std::wstring MakePowershellWrapper(
+    const std::filesystem::path &script) noexcept;
 
 // add to scripts interpreter
 inline std::wstring ConstructCommandToExec(
@@ -109,26 +110,19 @@ inline std::wstring ConstructCommandToExec(
 
         std::wstring wrapper;
         if (IsExecutable(path)) {
-            wrapper = L"\"{}\"";
+            return fmt::format(L"\"{}\"", path.wstring());
         } else if (extension == L".pl") {
-            wrapper = L"perl.exe \"{}\"";
+            return fmt::format(L"perl.exe \"{}\"", path.wstring());
         } else if (extension == L".py") {
-            wrapper = L"python.exe \"{}\"";
+            return fmt::format(L"python.exe \"{}\"", path.wstring());
         } else if (extension == L".vbs") {
-            wrapper = L"cscript.exe //Nologo \"{}\"";
+            return fmt::format(L"cscript.exe //Nologo \"{}\"", path.wstring());
         } else if (extension == L".ps1") {
-            wrapper = MakePowershellWrapper();
+            return MakePowershellWrapper(path);
         } else {
             XLOG::l("Not supported extension file {}", path);
             return {};
         }
-
-        if (wrapper.empty()) {
-            XLOG::l("impossible to find exe for file {}", path);
-            return {};
-        }
-
-        return fmt::format(wrapper, path.wstring());
     } catch (const std::exception &e) {
         XLOG::l("Format failed for file '{}' exception: '{}'", path, e);
     }
@@ -524,7 +518,7 @@ public:
         }
 
         correctRetry();
-        fillInternalUser(iu);
+        iu_ = getInternalUser(iu);
 
         exec_type_ = exec_type;
         defined_ = true;
@@ -561,7 +555,8 @@ public:
 
 protected:
     tools::UtfConversionMode getUtfConversionMode() const;
-    void fillInternalUser(wtools::InternalUsersDb *iu);
+    [[nodiscard]] wtools::InternalUser getInternalUser(
+        wtools::InternalUsersDb *user_database) const;
     std::optional<std::string> startProcessName();
     void restartAsyncThreadIfFinished(const std::wstring &id);
     void markAsForRestart() {
@@ -678,9 +673,11 @@ inline void UpdatePluginMap(wtools::InternalUsersDb *iu, PluginMap &plugin_map,
 void UpdatePluginMapCmdLine(PluginMap &plugin_map, srv::ServiceProcessor *sp);
 
 // API call to exec all plugins and get back data and count
-std::vector<char> RunSyncPlugins(PluginMap &plugins, int &total, int timeout);
-std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
-                                  bool start_immediately);
+std::pair<std::vector<char>, int> RunSyncPlugins(PluginMap &plugins,
+                                                 int timeout);
+std::pair<std::vector<char>, int> RunAsyncPlugins(PluginMap &plugins,
+
+                                                  bool start_immediately);
 
 constexpr std::chrono::seconds kRestartInterval{60};
 

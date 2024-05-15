@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.datapower import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.datapower import DETECT
 
 
 def inventory_datapower_pdrive(info):
@@ -66,7 +67,12 @@ def check_datapower_pdrive(item, _no_params, info):
                 yield datapower_pdrive_fail[fail]
 
 
+def parse_datapower_pdrive(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["datapower_pdrive"] = LegacyCheckDefinition(
+    parse_function=parse_datapower_pdrive,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.260.1",

@@ -6,6 +6,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from cmk.utils.labels import LabelGroups
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition, TagCondition
 from cmk.utils.tags import TagGroupID
@@ -52,7 +53,7 @@ class BISearcher(ABCBISearcher):
         )
         matched_hosts = self.filter_host_folder(hosts, conditions["host_folder"])
         matched_hosts = self.filter_host_tags(matched_hosts, conditions["host_tags"])
-        matched_hosts = self.filter_host_labels(matched_hosts, conditions["host_labels"])
+        matched_hosts = self.filter_host_labels(matched_hosts, conditions["host_label_groups"])
         return [BIHostSearchMatch(x, matched_re_groups[x.name]) for x in matched_hosts]
 
     def filter_host_choice(
@@ -160,7 +161,9 @@ class BISearcher(ABCBISearcher):
         service_matches = self.get_service_description_matches(
             host_matches, conditions["service_regex"]
         )
-        service_matches = self.filter_service_labels(service_matches, conditions["service_labels"])
+        service_matches = self.filter_service_labels(
+            service_matches, conditions["service_label_groups"]
+        )
         return service_matches
 
     def filter_host_folder(
@@ -193,21 +196,21 @@ class BISearcher(ABCBISearcher):
         )
 
     def filter_host_labels(
-        self, hosts: Iterable[BIHostData], required_labels: Any
+        self, hosts: Iterable[BIHostData], required_label_groups: LabelGroups
     ) -> Iterable[BIHostData]:
-        if not required_labels:
+        if not required_label_groups:
             return hosts
-        return (x for x in hosts if matches_labels(x.labels, required_labels))
+        return (x for x in hosts if matches_labels(x.labels, required_label_groups))
 
     def filter_service_labels(
-        self, services: list[BIServiceSearchMatch], required_labels: Any
+        self, services: list[BIServiceSearchMatch], required_label_groups: Any
     ) -> list:
-        if not required_labels:
+        if not required_label_groups:
             return services
 
         matched_services = []
         for service in services:
             service_data = service.host_match.host.services[service.service_description]
-            if matches_labels(service_data.labels, required_labels):
+            if matches_labels(service_data.labels, required_label_groups):
                 matched_services.append(service)
         return matched_services

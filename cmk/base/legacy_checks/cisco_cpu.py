@@ -10,7 +10,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     all_of,
     any_of,
     contains,
@@ -19,6 +20,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     not_exists,
     render,
     SNMPTree,
+    StringTable,
 )
 
 
@@ -49,7 +51,12 @@ def check_cisco_cpu(item, params, info):
     )
 
 
+def parse_cisco_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         any_of(

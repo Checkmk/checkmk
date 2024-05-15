@@ -6,9 +6,15 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.mssql_counters import (
+    discovery_mssql_counters_generic,
+    get_int,
+    get_item,
+    Section,
+)
+
 from .agent_based_api.v1 import check_levels, Metric, register, render
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mssql_counters import discovery_mssql_counters_generic, get_int, get_item, Section
 
 
 def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryResult:

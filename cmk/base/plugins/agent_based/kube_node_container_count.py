@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import ContainerCount
+
+from cmk.plugins.kube.schemata.section import ContainerCount
 
 OptionalLevels = Literal["no_levels"] | tuple[Literal["levels"], tuple[int, int]]
 KubeContainersLevelsUpperLower = Mapping[str, OptionalLevels]
@@ -32,7 +33,7 @@ def discovery(section: ContainerCount) -> DiscoveryResult:
 def check(params: KubeContainersLevelsUpperLower, section: ContainerCount) -> CheckResult:
     """Computes `total` and uses `check_levels` for each section element,
     setting levels from `params` individually"""
-    section_dict = section.dict()
+    section_dict = section.model_dump()
     section_dict["total"] = sum(section_dict.values())
     for name, value in section_dict.items():
         level_count_name = cast(CountName, name)

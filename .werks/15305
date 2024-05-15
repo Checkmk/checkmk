@@ -1,0 +1,10 @@
+Title: prism_vm_stats: don't go stale if no memory usage present
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698910604
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+State will be OK and "No memory usage data available" will be shown as summary.

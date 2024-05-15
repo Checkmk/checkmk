@@ -7,42 +7,29 @@
 import copy
 import json
 from collections.abc import Collection, Iterable
-from typing import Any, overload
-
-from typing_extensions import TypedDict
+from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
+from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.groups import GroupName
-from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.type_defs import RequireConfirmation
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.type_defs import HTTPVariables, Icon, PermissionName
-from cmk.gui.utils.urls import DocReference
-from cmk.gui.watolib.main_menu import MainModuleTopic
-
-try:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-except ImportError:
-    managed = None  # type: ignore[assignment, unused-ignore]
-
 import cmk.gui.forms as forms
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.nodevis_lib import BILayoutManagement
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
@@ -55,14 +42,16 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
+    DocReference,
     make_confirm_delete_link,
     makeactionuri,
     makeactionuri_contextless,
@@ -94,9 +83,11 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import ContactGroupSelection, PermissionSectionWATO, TileMenuRenderer
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
     MainModuleRegistry,
+    MainModuleTopic,
     MainModuleTopicRegistry,
     MenuItem,
 )
@@ -148,7 +139,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="bi_rules",
-            title=_l("Business Intelligence Rules and Aggregations"),
+            title=_l("Business Intelligence rules and aggregations"),
             description=_l(
                 "Use the Setup BI module, create, modify and delete BI rules and "
                 "aggregations in packs that you are a contact of."
@@ -161,7 +152,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="bi_admin",
-            title=_l("Business Intelligence Administration"),
+            title=_l("Business Intelligence administration"),
             description=_l(
                 "Edit all rules and aggregations for Business Intelligence, "
                 "create, modify and delete rule packs."
@@ -351,8 +342,8 @@ class ModeBIEditPack(ABCBIMode):
 
     def title(self) -> str:
         if self._bi_pack:
-            return super().title() + " - " + _("Edit BI Pack %s") % self.bi_pack.title
-        return super().title() + " - " + _("Add BI Pack")
+            return _("Edit BI Pack %s") % self.bi_pack.title
+        return _("Add BI Pack")
 
     def action(self) -> ActionResult:
         if transactions.check_transaction():
@@ -397,30 +388,30 @@ class ModeBIEditPack(ABCBIMode):
         )
 
     def page(self) -> None:
-        html.begin_form("bi_pack", method="POST")
-
-        if self._bi_pack is None:
-            vs_config = self._vs_pack().from_html_vars("bi_pack")
-        else:
-            vs_config = {
-                "id": self.bi_pack.id,
-                "title": self.bi_pack.title,
-                "comment": self.bi_pack.comment,
-                "contact_groups": self.bi_pack.contact_groups,
-                "public": self.bi_pack.public,
-            }
-        self._vs_pack().render_input("bi_pack", vs_config)
-        forms.end()
-        html.hidden_fields()
-        if self._bi_pack:
-            html.set_focus("bi_pack_p_title")
-        else:
-            html.set_focus("bi_pack_p_id")
-        html.end_form()
+        with html.form_context("bi_pack", method="POST"):
+            if self._bi_pack is None:
+                vs_config = self._vs_pack().from_html_vars("bi_pack")
+            else:
+                vs_config = {
+                    "id": self.bi_pack.id,
+                    "title": self.bi_pack.title,
+                    "comment": self.bi_pack.comment,
+                    "contact_groups": self.bi_pack.contact_groups,
+                    "public": self.bi_pack.public,
+                }
+            self._vs_pack().render_input("bi_pack", vs_config)
+            forms.end()
+            html.hidden_fields()
+            if self._bi_pack:
+                html.set_focus("bi_pack_p_title")
+            else:
+                html.set_focus("bi_pack_p_id")
 
     def _vs_pack(self) -> Dictionary:
         if self._bi_pack:
-            id_element = FixedValue(title=_("Pack ID"), value=self.bi_pack.id)
+            id_element: FixedValue | TextInput = FixedValue(
+                title=_("Pack ID"), value=self.bi_pack.id
+            )
         else:
             id_element = ID(
                 title=_("BI pack ID"),
@@ -684,8 +675,7 @@ class ModeBIRules(ABCBIMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -914,21 +904,20 @@ class ModeBIRules(ABCBIMode):
             menu.show()
             return
 
-        html.begin_form(
+        with html.form_context(
             "bulk_action_form",
             method="POST",
             require_confirmation=RequireConfirmation(
                 html=_("Do you really want to move the selected rules?")
             ),
-        )
-        if self._view_type == "list":
-            self.render_rules(_("Rules"), only_unused=False)
-        else:
-            self.render_rules(_("Unused BI Rules"), only_unused=True)
+        ):
+            if self._view_type == "list":
+                self.render_rules(_("Rules"), only_unused=False)
+            else:
+                self.render_rules(_("Unused BI Rules"), only_unused=True)
 
-        html.hidden_field("selection_id", weblib.selection_id())
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_fields()
         init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> HTML:
@@ -1189,17 +1178,15 @@ class ModeBIEditRule(ABCBIMode):
         vs_rule_config = vs_rule.from_html_vars("rule")
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), "rule")
         schema_validated_config = BIRuleSchema().dump(vs_rule_config)
+        self._validate_rule_id(schema_validated_config["id"])
         new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
-    def _action_modify_rule(self, new_bi_rule: BIRule) -> None:
-        if self._new:
-            self._rule_id = new_bi_rule.id
-
-        existing_bi_pack = self._bi_packs.get_pack_of_rule(self._rule_id) if self._rule_id else None
-        if self._new and self._rule_id and existing_bi_pack is not None:
-            existing_bi_rule = existing_bi_pack.get_rule(self._rule_id)
+    def _validate_rule_id(self, new_rule_id: str) -> None:
+        existing_bi_pack = self._bi_packs.get_pack_of_rule(new_rule_id)
+        if self._new and existing_bi_pack is not None:
+            existing_bi_rule = existing_bi_pack.get_rule(new_rule_id)
             assert existing_bi_rule is not None
             raise MKUserError(
                 "rule_p_id",
@@ -1207,8 +1194,12 @@ class ModeBIEditRule(ABCBIMode):
                     "There is already a rule with the ID <b>%s</b>. "
                     "It is in the pack <b>%s</b> and as the title <b>%s</b>"
                 )
-                % (self._rule_id, existing_bi_pack.title, existing_bi_rule.title),
+                % (new_rule_id, existing_bi_pack.title, existing_bi_rule.title),
             )
+
+    def _action_modify_rule(self, new_bi_rule: BIRule) -> None:
+        if self._new:
+            self._rule_id = new_bi_rule.id
 
         self.bi_pack.add_rule(new_bi_rule)
         try:
@@ -1252,8 +1243,9 @@ class ModeBIEditRule(ABCBIMode):
         if self._new:
             cloneid = request.var("clone")
             if cloneid is not None:
+                existing_rule_ids = [rule.id for rule in self._bi_packs.get_all_rules()]
                 try:
-                    bi_rule = self.bi_pack.get_rule_mandatory(cloneid).clone()
+                    bi_rule = self.bi_pack.get_rule_mandatory(cloneid).clone(existing_rule_ids)
                 except KeyError:
                     raise MKGeneralException(_("This BI rule does not exist"))
             else:
@@ -1264,16 +1256,15 @@ class ModeBIEditRule(ABCBIMode):
 
         self._may_use_rules_from_packs(bi_rule)
 
-        html.begin_form("birule", method="POST")
-        rule_vs_config = BIRuleSchema().dump(bi_rule)
-        self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
-        forms.end()
-        html.hidden_fields()
-        if self._new:
-            html.set_focus("rule_p_id")
-        else:
-            html.set_focus("rule_p_title")
-        html.end_form()
+        with html.form_context("birule", method="POST"):
+            rule_vs_config = BIRuleSchema().dump(bi_rule)
+            self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
+            forms.end()
+            html.hidden_fields()
+            if self._new:
+                html.set_focus("rule_p_id")
+            else:
+                html.set_focus("rule_p_title")
 
         self._add_rule_arguments_lookup()
 
@@ -1716,7 +1707,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     def title(self) -> str:
         if self._clone:
-            return _("Clone Aggregation %s") % request.get_str_input_mandatory("clone")
+            return _("Clone aggregation %s") % request.get_str_input_mandatory("clone")
         if self._new:
             return _("Add Aggregation")
         return _("Edit Aggregation")
@@ -1786,32 +1777,21 @@ class BIModeEditAggregation(ABCBIMode):
         return redirect(mode_url("bi_aggregations", **redirect_kwargs))
 
     def page(self) -> None:
-        html.begin_form("biaggr", method="POST")
-
-        aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
-        self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id).render_input(
-            "aggr", aggr_vs_config
-        )
-        forms.end()
-        html.hidden_fields()
-        html.set_focus("aggr_p_groups_0")
-        html.end_form()
+        with html.form_context("biaggr", method="POST"):
+            aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
+            self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id).render_input(
+                "aggr", aggr_vs_config
+            )
+            forms.end()
+            html.hidden_fields()
+            html.set_focus("aggr_p_groups_0")
 
         self._add_rule_arguments_lookup()
 
     @classmethod
     def get_vs_aggregation(cls, aggregation_id: str | None) -> BIAggregationForm:
-        if cmk_version.edition() is cmk_version.Edition.CME:
-            assert managed is not None
-            cme_elements = managed.customer_choice_element()
-        else:
-            cme_elements = []
-
         visualization_choices = []
         visualization_choices.append((None, _("Use default layout")))
-        templates = BILayoutManagement.get_all_bi_template_layouts()
-        for template_id in sorted(templates.keys()):
-            visualization_choices.append((template_id, template_id))
 
         if aggregation_id:
             id_valuespec: ValueSpec = FixedValue(
@@ -1832,7 +1812,7 @@ class BIModeEditAggregation(ABCBIMode):
             optional_keys=False,
             render="form",
             show_more_keys=["comment"],
-            elements=cme_elements
+            elements=customer_api().customer_choice_element()
             + [
                 ("id", id_valuespec),
                 ("comment", RuleComment()),
@@ -1926,7 +1906,7 @@ class BIModeEditAggregation(ABCBIMode):
                 (
                     "escalate_downtimes_as_warn",
                     Checkbox(
-                        title=_("Aggregation of Downtimes"),
+                        title=_("Aggregation of downtimes"),
                         label=_("Escalate downtimes based on aggregated WARN state"),
                         help=_(
                             "When computing the state 'in scheduled downtime' for an aggregate "
@@ -2025,8 +2005,7 @@ class BIModeAggregations(ABCBIMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -2190,17 +2169,16 @@ class BIModeAggregations(ABCBIMode):
             url = mode_url(self.name(), pack=self.bi_pack.id)
             html.reload_whole_page(url)
 
-        html.begin_form(
+        with html.form_context(
             "bulk_action_form",
             method="POST",
             require_confirmation=RequireConfirmation(
                 html=_("Do you really want to move the selected aggregations?")
             ),
-        )
-        self._render_aggregations()
-        html.hidden_field("selection_id", weblib.selection_id())
-        html.hidden_fields()
-        html.end_form()
+        ):
+            self._render_aggregations()
+            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_fields()
         init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> HTML:
@@ -2237,6 +2215,7 @@ class BIModeAggregations(ABCBIMode):
         ]
 
     def _render_aggregations(self) -> None:
+        customer = customer_api()
         with table_element("bi_aggr", _("Aggregations")) as table:
             for nr, (aggregation_id, bi_aggregation) in enumerate(
                 self.bi_pack.get_aggregations().items()
@@ -2284,10 +2263,9 @@ class BIModeAggregations(ABCBIMode):
                 table.cell(_("ID"), aggregation_id)
 
                 if cmk_version.edition() is cmk_version.Edition.CME:
-                    assert managed is not None
                     table.cell(_("Customer"))
                     if bi_aggregation.customer:
-                        html.write_text(managed.get_customer_name_by_id(bi_aggregation.customer))
+                        html.write_text(customer.get_customer_name_by_id(bi_aggregation.customer))
 
                 table.cell(_("Options"), css=["buttons"])
 

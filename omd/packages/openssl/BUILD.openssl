@@ -13,13 +13,20 @@ configure_make(
     configure_command="config",
     configure_in_place=True,
     configure_options=[
-         "--openssldir='skel/etc/ssl'",
-         "enable-md2",
-         "no-tests",
-         # default is lib64 since 3.x some other software might be surprised to find artifacts under lib
-         "--libdir=lib",
-         # Do not build shared legacy module
-         "no-module",
+        # In order to relocate OpenSSL after the Bazel build to a configurable
+        # directory (e.g. /omd/versions/2.3.0p23-cee/skel/etc/ssl/) we have to
+        # binary search/replace the compiled-in path.
+        # Note that openssldir can't be absolute since the provided directory would
+        # have to be writeable at build time. Left relative it will be prefixed
+        # to an also absolute path provided by foreign_cc's `configure_make`
+        "--openssldir='skel/etc/ssl'",
+        "enable-md2",
+        "no-tests",
+        # default is lib64 since 3.x some other software might be surprised to find artifacts under lib
+        "--libdir=lib",
+        # Do not build shared legacy module
+        "no-module",
+        "-O2",
     ],
     args=["-j6"],
 

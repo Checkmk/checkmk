@@ -10,9 +10,8 @@ import json
 import re
 import time
 from collections.abc import Sequence
-from typing import Any, NamedTuple
-
-from typing_extensions import TypedDict
+from pathlib import Path
+from typing import Any, NamedTuple, TypedDict
 
 from cmk.utils.user import UserId
 
@@ -48,8 +47,8 @@ class AuditLogFilterRaw(TypedDict, total=False):
 
 
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
-    def __init__(self) -> None:
-        super().__init__(wato_var_dir() / "log" / "wato_audit.log")
+    def __init__(self, filepath: Path = wato_var_dir() / "log" / "wato_audit.log") -> None:
+        super().__init__(path=filepath)
 
     class Entry(NamedTuple):
         time: int

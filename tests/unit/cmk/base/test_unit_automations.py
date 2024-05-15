@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
@@ -38,6 +40,7 @@ def test_registered_automations() -> None:
         "notification-analyse",
         "notification-get-bulks",
         "notification-replay",
+        "notification-test",
         "reload",
         "rename-hosts",
         "restart",
@@ -46,6 +49,7 @@ def test_registered_automations() -> None:
         "try-inventory",
         "update-dns-cache",
         "update-host-labels",
+        "update-passwords-merged-file",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
@@ -90,14 +94,17 @@ def test_service_labels(monkeypatch):
             [
                 {
                     "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "id": "01",
                     "value": {"label1": "val1"},
                 },
                 {
                     "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "id": "02",
                     "value": {"label2": "val2"},
                 },
                 {
                     "condition": {"service_description": [{"$regex": "CPU temp"}]},
+                    "id": "03",
                     "value": {"label1": "val1"},
                 },
             ]

@@ -27,15 +27,16 @@ from cmk.gui.background_job import (
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.paths import wato_var_dir
@@ -102,7 +103,7 @@ class DiscoveredHostLabelSyncResponse:
 
 def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
     """Contacts the given remote site to synchronize the labels of the given host"""
-    site_spec = get_site_config(site_id)
+    site_spec = get_site_config(active_config, site_id)
     result = _execute_site_sync(
         site_id,
         site_spec,
@@ -123,18 +124,24 @@ def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
     job = DiscoveredHostLabelSyncJob()
 
     try:
-        job.start(job.do_sync)
+        job.start(
+            job.do_sync,
+            InitialStatusArgs(
+                title=DiscoveredHostLabelSyncJob.gui_title(),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
     except BackgroundJobAlreadyRunning:
         logger.debug("Another synchronization job is already running: Skipping this sync")
 
     return job
 
 
-@job_registry.register
 class DiscoveredHostLabelSyncJob(BackgroundJob):
     """This job synchronizes the discovered host labels from remote sites to the central site
 
-    Currently they are only needed for the agent bakery, but may be used in other places in the
+    Currently they are only needed for the Agent Bakery, but may be used in other places in the
     future.
     """
 
@@ -145,13 +152,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
         return _("Discovered host label synchronization")
 
     def __init__(self) -> None:
-        super().__init__(
-            job_id=self.job_prefix,
-            initial_status_args=InitialStatusArgs(
-                title=self.gui_title(),
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def do_sync(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Synchronization started..."))
@@ -291,7 +292,6 @@ def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEnt
     return updated_host_labels
 
 
-@automation_command_registry.register
 class AutomationDiscoveredHostLabelSync(AutomationCommand):
     """Called by execute_site_sync to perform the sync with a remote site"""
 

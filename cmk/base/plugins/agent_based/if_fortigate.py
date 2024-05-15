@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.plugins.lib import if64
+
 from .agent_based_api.v1 import register, SNMPTree, startswith
-from .utils import if64
 
 # Use ifName under the guise of ifAlias in order to make technical interface names available.
 # ifAlias or ifDescr may only contain user defined names. DO NOT roll back to ifAlias again

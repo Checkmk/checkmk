@@ -9,7 +9,6 @@ Please try to find a better place for the things you want to put here."""
 
 import itertools
 import sys
-import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
@@ -81,16 +80,3 @@ def total_size(
         return s
 
     return sizeof(o)
-
-
-def cachefile_age(path: Path | str) -> float:
-    """Return the time difference between the last modification and now.
-
-    Raises:
-        FileNotFoundError if `path` does not exist.
-
-    """
-    if not isinstance(path, Path):
-        path = Path(path)
-
-    return time.time() - path.stat().st_mtime

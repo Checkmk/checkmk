@@ -12,7 +12,9 @@ import pytest_mock
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_node_info import check_kube_node_info
-from cmk.base.plugins.agent_based.utils.kube import NodeInfo, NodeName, Timestamp
+
+from cmk.plugins.kube.schemata.api import NodeName, Timestamp
+from cmk.plugins.kube.schemata.section import FilteredAnnotations, NodeInfo
 
 
 @pytest.mark.parametrize(
@@ -28,7 +30,7 @@ from cmk.base.plugins.agent_based.utils.kube import NodeInfo, NodeName, Timestam
                 name=NodeName("minikube"),
                 creation_timestamp=Timestamp(1600000000.0),
                 labels={},
-                annotations={},
+                annotations=FilteredAnnotations({}),
                 addresses=[],
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",

@@ -33,7 +33,7 @@ class TestVersion:
     def test_stable_daily(self) -> None:
         assert Version.from_str("1.2.3-2023.12.24")
 
-    def test_master_daily(self) -> None:
+    def test_master_daily_old_scheme(self) -> None:
         assert Version.from_str("2023.12.24")
 
     def test_invalid_vtype(self) -> None:

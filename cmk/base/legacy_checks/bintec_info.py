@@ -6,13 +6,13 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
+
+from cmk.agent_based.v2 import any_of, equals, SNMPTree, StringTable
 
 
 def inventory_bintec_info(info):
-    if len(info[0]) >= 1:
-        return [(None, None)]
-    return []
+    if info and info[0]:
+        yield None, {}
 
 
 def check_bintec_info(checktype, params, info):
@@ -27,7 +27,13 @@ def check_bintec_info(checktype, params, info):
 
 # This check works on all SNMP hosts
 
+
+def parse_bintec_info(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bintec_info"] = LegacyCheckDefinition(
+    parse_function=parse_bintec_info,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4.158.82.78.66.48.0.0"),

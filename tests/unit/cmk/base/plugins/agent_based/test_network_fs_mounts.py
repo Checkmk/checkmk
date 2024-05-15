@@ -2,12 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime
 from collections.abc import Sequence
 from typing import NamedTuple
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import network_fs_mounts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -16,9 +17,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
-NOW_SIMULATED = 581792400, "UTC"
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+
+NOW_SIMULATED = 581792400
 
 
 @pytest.fixture(name="value_store_patch")
@@ -49,12 +51,12 @@ size1 = SizeWithUsage(
     ["491520", "460182", "460182", "65536"],
     491520 * 65536,
     491520 * 65536 - 460182 * 65536,
-    "Used: 6.38% - 1.91 GiB of 30.0 GiB",
+    "Used: 6.38% - 2.05 GB of 32.2 GB",
 )
 
 size2 = SizeBasic(
     ["201326592", "170803720", "170803720", "32768"],
-    "Used: 15.16% - 931 GiB of 6.00 TiB",
+    "Used: 15.16% - 1.00 TB of 6.60 TB",
 )
 
 
@@ -112,7 +114,7 @@ def test_network_fs_mounts_discovery(
             "/ABCshare",
             [
                 Result(state=State.OK, summary=size1.text),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.37 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.69 GB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -14.55%"),
                 Metric(
                     "fs_used",
@@ -146,7 +148,7 @@ def test_network_fs_mounts_discovery(
             "/var/dbaexport",
             [
                 Result(state=State.OK, summary=size2.text),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.23 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.54 GB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.07%"),
                 Metric(
                     "fs_used",
@@ -165,7 +167,7 @@ def test_network_fs_mounts_discovery(
             "/PERFshare",
             [
                 Result(state=State.OK, summary=size1.text),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.37 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.69 GB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -14.55%"),
                 Metric(
                     "fs_used",
@@ -202,7 +204,7 @@ def test_network_fs_mounts_check(
     check_result: CheckResult,
 ) -> None:
     section = network_fs_mounts.parse_network_fs_mounts(string_table)
-    with on_time(*NOW_SIMULATED):
+    with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
         actual_check_results = list(
             network_fs_mounts.check_network_fs_mount(
                 item, {**FILESYSTEM_DEFAULT_PARAMS, **{"has_perfdata": True}}, section
@@ -237,8 +239,8 @@ def test_network_fs_mounts_check(
             "/mnt/test_client",
             [
                 Result(state=State.OK, summary="Source: 127.0.0.1:/mnt/test"),
-                Result(state=State.OK, summary="Used: 37.06% - 85.8 GiB of 232 GiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
+                Result(state=State.OK, summary="Used: 37.06% - 92.1 GB of 249 GB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -4.67 GB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -1.88%"),
             ],
         ),
@@ -250,7 +252,7 @@ def test_nfsmount_v2_check(
     check_result: CheckResult,
 ) -> None:
     section = network_fs_mounts.parse_nfsmounts_v2(string_table)
-    with on_time(*NOW_SIMULATED):
+    with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
         assert (
             list(network_fs_mounts.check_network_fs_mount(item, FILESYSTEM_DEFAULT_PARAMS, section))
             == check_result

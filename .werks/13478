@@ -22,11 +22,10 @@ Users "Disabled Services" rules were affected if they fullfilled <b>all</b> of t
 After this werk, only rules will be affected if they additionally
 <ul>
 <li> have exactly one <b>explicit</b> host condition (not a regular expression)</li>
-<li> contain <b>both</b> quoted and unquoted special characters</li> in their service name pattern
+<li> contain <b>both</b> quoted and unquoted special characters in their service name pattern</li>
 </ul>
 
 For instance: "<tt>Foo[12]$</tt>" and "<tt>Foo\[12\]$</tt>" will remain unchanged, whereas "<tt>Foo\[1\][2]$</tt>" will be changed to "<tt>Foo\[1\]\[2\]$</tt>".
 
 If this still affects you, you can avoid meeting the above criteria.
 For instance try to replace "<tt>my_hostname</tt>" by "<tt>~^my_hostname$</tt>" or to craft a service name pattern that does not require the trailing "<tt>$</tt>".
-

@@ -8,7 +8,8 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     any_of,
     get_rate,
     get_value_store,
@@ -16,6 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     render,
     SNMPTree,
     startswith,
+    StringTable,
 )
 
 # settings for inventory: which ports should be inventorized
@@ -248,7 +250,12 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
     return 3, "Port %s not found" % item
 
 
+def parse_qlogic_fcport(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["qlogic_fcport"] = LegacyCheckDefinition(
+    parse_function=parse_qlogic_fcport,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1663.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.8"),

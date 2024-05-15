@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.pandacom_temp import PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
 
-# .1.3.6.1.4.1.3652.3.1.1.6.0 27
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.pandacom import DETECT_PANDACOM
+
+
+def parse_pandacom_sys_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 def inventory_pandacom_sys_temp(info):
@@ -22,6 +24,7 @@ def check_pandacom_sys_temp(item, params, info):
 
 
 check_info["pandacom_sys_temp"] = LegacyCheckDefinition(
+    parse_function=parse_pandacom_sys_temp,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.1.1",
@@ -31,5 +34,5 @@ check_info["pandacom_sys_temp"] = LegacyCheckDefinition(
     discovery_function=inventory_pandacom_sys_temp,
     check_function=check_pandacom_sys_temp,
     check_ruleset_name="temperature",
-    check_default_parameters=PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters={"levels": (35.0, 40.0)},
 )

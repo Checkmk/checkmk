@@ -3,16 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 
-from tests.testlib import on_time
-
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import uptime
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils import uptime as uptime_utils
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib import uptime as uptime_utils
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -45,18 +47,18 @@ def test_uptime_discovery(section: uptime_utils.Section, do_discover: bool) -> N
 
 
 def test_uptime_check_basic() -> None:
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, 0, tzinfo=ZoneInfo("CET"))):
         assert list(uptime_utils.check({}, uptime_utils.Section(123, None))) == [
-            Result(state=State.OK, summary="Up since Apr 15 2018 18:47:57"),
+            Result(state=State.OK, summary="Up since 2018-04-15 16:47:57"),
             Result(state=State.OK, summary="Uptime: 2 minutes 3 seconds"),
             Metric("uptime", 123.0),
         ]
 
 
 def test_uptime_check_zero() -> None:
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, 0, tzinfo=ZoneInfo("CET"))):
         assert list(uptime_utils.check({}, uptime_utils.Section(0, None))) == [
-            Result(state=State.OK, summary="Up since Apr 15 2018 18:50:00"),
+            Result(state=State.OK, summary="Up since 2018-04-15 16:50:00"),
             Result(state=State.OK, summary="Uptime: 0 seconds"),
             Metric("uptime", 0.0),
         ]
@@ -87,7 +89,7 @@ def test_uptime_check_zero() -> None:
                 ["[uptime_solaris_end]"],
             ],
             [
-                Result(state=State.OK, summary="Up since Apr 15 2018 12:31:09"),
+                Result(state=State.OK, summary="Up since 2018-04-15 10:31:09"),
                 Result(state=State.OK, summary="Uptime: 6 hours 18 minutes"),
                 Metric("uptime", 22731),
             ],
@@ -115,7 +117,7 @@ def test_uptime_check_zero() -> None:
                 ["[uptime_solaris_end]"],
             ],
             [
-                Result(state=State.OK, summary="Up since Apr 15 2018 18:31:18"),
+                Result(state=State.OK, summary="Up since 2018-04-15 16:31:18"),
                 Result(state=State.OK, summary="Uptime: 18 minutes 42 seconds"),
                 Metric("uptime", 1122),
             ],
@@ -144,7 +146,7 @@ def test_uptime_check_zero() -> None:
                 ["[uptime_solaris_end]"],
             ],
             [
-                Result(state=State.OK, summary="Up since May 14 2017 19:33:11"),
+                Result(state=State.OK, summary="Up since 2017-05-14 17:33:11"),
                 Result(state=State.OK, summary="Uptime: 335 days 23 hours"),
                 Metric("uptime", 29027808.0471184),
             ],
@@ -217,6 +219,100 @@ def test_uptime_check_zero() -> None:
                 ),
             ],
         ),
+        (  # SUP-16709
+            [
+                [
+                    "22",
+                ],
+                [
+                    "[uptime_solaris_start]",
+                ],
+                [
+                    "SunOS",
+                    "ssssssss",
+                    "5.55",
+                    "11.1.11.111.1",
+                    "sssss",
+                    "sssss",
+                    "sssss",
+                    "nnnnnnnnnnnnnnn",
+                ],
+                [
+                    "ssssssss",
+                ],
+                [
+                    "3:19am",
+                    "up<",
+                    "1",
+                    "minute,",
+                    "0",
+                    "users,",
+                    "load",
+                    "average:",
+                    "1.79,",
+                    "0.44,",
+                    "0.15",
+                ],
+                ["unix:0:system_misc:snaptime", "5931.036430995"],
+                [
+                    "[uptime_solaris_end]",
+                ],
+            ],
+            [
+                Result(state=State.OK, summary="Up since 2018-04-15 16:49:38"),
+                Result(state=State.OK, summary="Uptime: 22 seconds"),
+                Metric("uptime", 22.0),
+            ],
+        ),
+        (
+            [
+                [
+                    "-45",
+                ],
+                [
+                    "[uptime_solaris_start]",
+                ],
+                [
+                    "SunOS",
+                    "ssssssss",
+                    "5.55",
+                    "11.1.11.111.1",
+                    "sssss",
+                    "sssss",
+                    "sssss",
+                    "nnnnnnnnnnnnnnn",
+                ],
+                [
+                    "ssssssss",
+                ],
+                [
+                    "1:57am",
+                    "up",
+                    "1",
+                    "min(s),",
+                    "0",
+                    "users,",
+                    "load",
+                    "average:",
+                    "2.88,",
+                    "1.09,",
+                    "0.45",
+                ],
+                [
+                    "unix:0:system_misc:snaptime",
+                    "817.282012635",
+                ],
+                [
+                    "[uptime_solaris_end]",
+                ],
+            ],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Your Solaris system reported to be booted in the future.",
+                )
+            ],
+        ),
     ],
 )
 def test_uptime_solaris_inputs(info: StringTable, reference: Sequence[Result]) -> None:
@@ -226,7 +322,7 @@ def test_uptime_solaris_inputs(info: StringTable, reference: Sequence[Result]) -
     # This time freeze has no correlation with the uptime of the test. It
     # is needed for the check output to always return the same infotext.
     # The true test happens on state and perfdata
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, 0, tzinfo=ZoneInfo("CET"))):
         result = list(uptime_utils.check({}, section))
 
     assert result == reference

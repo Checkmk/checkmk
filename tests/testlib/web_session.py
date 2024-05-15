@@ -8,6 +8,7 @@ import os
 import re
 import urllib.parse
 from collections.abc import Collection, Container
+from http.cookiejar import Cookie
 
 import requests
 from bs4 import BeautifulSoup
@@ -193,11 +194,24 @@ class CMKWebSession:
 
         return urls
 
-    def login(self, username: str = "cmkadmin", password: str = "cmk") -> None:
-        login_page = self.get("", allow_redirect_to_login=True).text
-        assert "_username" in login_page, "_username not found on login page - page broken?"
-        assert "_password" in login_page
-        assert "_login" in login_page
+    def login(
+        self,
+        username: str = "cmkadmin",
+        password: str = "cmk",
+    ) -> None:
+        r = self.get("", allow_redirect_to_login=True)
+
+        login_page_patterns = ("_username", "_password", "_login")
+        main_page_patterns = ("sidebar", "dashboard.py")
+        logged_in = all(_ in r.text for _ in main_page_patterns) and not any(
+            _ in r.text for _ in login_page_patterns
+        )
+
+        assert not logged_in, "Logged in unexpectedly!"
+
+        login_page = r.text
+        for pattern in login_page_patterns:
+            assert pattern in login_page, f"{pattern} not found in login page - page broken?"
 
         r = self.post(
             "login.py",
@@ -208,13 +222,30 @@ class CMKWebSession:
                 "_login": "Login",
             },
         )
-        auth_cookie = self.session.cookies.get("auth_%s" % self.site.id)  # type: ignore[no-untyped-call]
+        auth_cookie = self.session.cookies.get(f"auth_{self.site.id}")
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
 
-        assert "sidebar" in r.text
-        assert "dashboard.py" in r.text
+        main_page = r.text
+        for pattern in main_page_patterns:
+            assert pattern in main_page, f"{pattern} not found in main page - page broken?"
 
     def logout(self) -> None:
         r = self.get("logout.py", allow_redirect_to_login=True)
         assert 'action="login.py"' in r.text
+
+    def is_logged_in(self) -> bool:
+        r = self.get("info.py", allow_redirect_to_login=True)
+        return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+
+    def get_auth_cookie(self) -> Cookie | None:
+        """return the auth cookie
+
+        apparently the get on these cookies return a str with only some information, also this is
+        untyped and mypy would need some suppressions.
+        We usually get two cookies so this for loop should not hurt too much"""
+
+        for cookie in self.session.cookies:
+            if cookie.name == f"auth_{self.site.id}":
+                return cookie
+        return None

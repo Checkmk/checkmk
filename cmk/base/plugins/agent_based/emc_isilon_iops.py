@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from contextlib import suppress
 
+from cmk.plugins.lib.emc import DETECT_ISILON
+
 from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.emc import DETECT_ISILON
 
 Section = Mapping[str, int]
 

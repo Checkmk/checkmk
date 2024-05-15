@@ -16,11 +16,12 @@ from cmk.utils.site import omd_site
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
+    BackgroundJobRegistry,
     InitialStatusArgs,
-    job_registry,
     JobStatusSpec,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
@@ -34,15 +35,23 @@ from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
+) -> None:
     page_registry.register_page("fetch_agent_output")(PageFetchAgentOutput)
     page_registry.register_page("download_agent_output")(PageDownloadAgentOutput)
+    automation_command_registry.register(AutomationFetchAgentOutputStart)
+    automation_command_registry.register(AutomationFetchAgentOutputGetStatus)
+    automation_command_registry.register(AutomationFetchAgentOutputGetFile)
+    job_registry.register(FetchAgentOutputBackgroundJob)
 
 
 # .
@@ -111,7 +120,7 @@ class AgentOutputPage(Page, abc.ABC):
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
 
-        host = folder_from_request().host(HostName(host_name))
+        host = folder_from_request(request.var("folder"), host_name).host(HostName(host_name))
         if not host:
             raise MKGeneralException(
                 _('Host is not managed by Setup. Click <a href="%s">here</a> to go back.')
@@ -186,12 +195,12 @@ class PageFetchAgentOutput(AgentOutputPage):
 
     def _start_fetch(self) -> None:
         """Start the job on the site the host is monitored by"""
-        if site_is_local(self._request.host.site_id()):
+        if site_is_local(active_config, self._request.host.site_id()):
             start_fetch_agent_job(self._request)
             return
 
         do_remote_automation(
-            get_site_config(self._request.host.site_id()),
+            get_site_config(active_config, self._request.host.site_id()),
             "fetch-agent-output-start",
             [
                 ("request", repr(self._request.serialize())),
@@ -199,12 +208,12 @@ class PageFetchAgentOutput(AgentOutputPage):
         )
 
     def _get_job_status(self) -> JobStatusSpec:
-        if site_is_local(self._request.host.site_id()):
+        if site_is_local(active_config, self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
-        return JobStatusSpec.parse_obj(
+        return JobStatusSpec.model_validate(
             do_remote_automation(
-                get_site_config(self._request.host.site_id()),
+                get_site_config(active_config, self._request.host.site_id()),
                 "fetch-agent-output-get-status",
                 [
                     ("request", repr(self._request.serialize())),
@@ -223,7 +232,6 @@ class ABCAutomationFetchAgentOutput(AutomationCommand, abc.ABC):
         return FetchAgentOutputRequest.deserialize(ast.literal_eval(ascii_input))
 
 
-@automation_command_registry.register
 class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._start_fetch() to execute the background job on a remote site"""
 
@@ -234,15 +242,25 @@ class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
         start_fetch_agent_job(api_request)
 
 
-def start_fetch_agent_job(api_request):
+def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
     job = FetchAgentOutputBackgroundJob(api_request)
     try:
-        job.start(job.fetch_agent_output)
+        job.start(
+            job.fetch_agent_output,
+            InitialStatusArgs(
+                title=_("Fetching %s of %s / %s")
+                % (
+                    api_request.agent_type,
+                    api_request.host.site_id(),
+                    api_request.host.name(),
+                ),
+                user=str(user.id) if user.id else None,
+            ),
+        )
     except BackgroundJobAlreadyRunning:
         pass
 
 
-@automation_command_registry.register
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._get_job_status() to execute the background job on a remote site"""
 
@@ -258,7 +276,6 @@ def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatu
     return job.get_status_snapshot().status
 
 
-@job_registry.register
 class FetchAgentOutputBackgroundJob(BackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 
@@ -278,12 +295,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             host.name(),
             self._request.agent_type,
         )
-        title = _("Fetching %s of %s / %s") % (
-            self._request.agent_type,
-            host.site_id(),
-            host.name(),
-        )
-        super().__init__(job_id, InitialStatusArgs(title=title))
+        super().__init__(job_id)
 
     def fetch_agent_output(self, job_interface):
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
@@ -331,11 +343,11 @@ class PageDownloadAgentOutput(AgentOutputPage):
         response.set_data(file_content)
 
     def _get_agent_output_file(self) -> bytes:
-        if site_is_local(self._request.host.site_id()):
+        if site_is_local(active_config, self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
         raw_response = do_remote_automation(
-            get_site_config(self._request.host.site_id()),
+            get_site_config(active_config, self._request.host.site_id()),
             "fetch-agent-output-get-file",
             [
                 ("request", repr(self._request.serialize())),
@@ -345,7 +357,6 @@ class PageDownloadAgentOutput(AgentOutputPage):
         return raw_response
 
 
-@automation_command_registry.register
 class AutomationFetchAgentOutputGetFile(ABCAutomationFetchAgentOutput):
     def command_name(self) -> str:
         return "fetch-agent-output-get-file"

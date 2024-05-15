@@ -6,9 +6,7 @@
 
 import json
 from enum import Enum
-from typing import NamedTuple
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, TypedDict
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -59,7 +57,7 @@ class DiscoveryParams(TypedDict, total=False):
     # TODO: Remove total=False and mark summary_service as
     # not required when upgrading to Python 3.10:
     # https://www.python.org/dev/peps/pep-0655/
-    group_services: tuple[bool, GroupServices]
+    group_services: tuple[str, GroupServices]
     summary_service: bool
 
 
@@ -74,7 +72,7 @@ class CheckParams(TypedDict, total=False):
 
 default_discovery_parameters = DiscoveryParams(
     group_services=(
-        True,
+        "multiple_services",
         GroupServices(
             min_amount_rules=3,
             no_group_services=[],
@@ -87,7 +85,7 @@ default_check_parameters = CheckParams(
     alert_remapping=[
         AlertRemapping(
             rule_names=["Watchdog"],
-            map={"inactive": 2, "pending": 2, "firing": 0, "none": 2, "n/a": 2},
+            map={"inactive": 2, "pending": 2, "firing": 0, "none": 2, "not_applicable": 2},
         )
     ]
 )
@@ -115,7 +113,7 @@ def _get_mapping(rule: Rule, params: CheckParams) -> StateMapping | None:
 
 def _create_group_service(group_name: str, group: Group, params: DiscoveryParams) -> bool:
     use_groups, group_config = params["group_services"]
-    if not use_groups:
+    if use_groups == "one_service":
         return False
     return (
         group_name not in group_config["no_group_services"]
@@ -127,7 +125,7 @@ def _get_rule_state(rule: Rule, params: CheckParams) -> State:
     mapping = _get_mapping(rule, params)
     if mapping:
         # Needed because Dicts cannot handle "None" as Key but Enums can
-        return State(mapping[rule.status.value if rule.status.value else "n/a"])
+        return State(mapping[rule.status.value if rule.status.value else "not_applicable"])
     return default_state_mapping[rule.status]
 
 

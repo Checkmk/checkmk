@@ -1,0 +1,19 @@
+Title: Handle fast transferred proxmox backups
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696505627
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This werk is relevant for you if you're monitoring your proxmox backups and you noted some of them are missing.
+The reason for that is they were transferred in less than a second.
+A potential traceback could have been:
+C+:
+cmk.special_agents.agent_proxmox_ve.BackupTask.LogParseWarning: End of VM '123' while still information is missing (we have: {'archive_name', 'archive_size', 'started_time', 'total_duration'})
+C-:
+This pattern was not yet recognized by our special agent and will now be honored.
+

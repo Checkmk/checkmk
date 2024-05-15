@@ -46,7 +46,7 @@ def _parameter_valuespec_heartbeat_crm_resources():
                     "expected_node",
                     Alternative(
                         title=_("Expected node"),
-                        help=_("The hostname of the expected node to hold this resource."),
+                        help=_("The host name of the expected node to hold this resource."),
                         elements=[
                             FixedValue(value=None, totext="", title=_("Do not check the node")),
                             TextInput(allow_empty=False, title=_("Expected node")),

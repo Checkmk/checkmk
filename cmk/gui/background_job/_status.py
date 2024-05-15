@@ -5,9 +5,9 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import TypedDict
 
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 JobId = str
 
@@ -27,7 +27,7 @@ class InitialStatusArgs:
     deletable: bool = True
     user: str | None = None
     estimated_duration: float | None = None
-    logfile_path: str = ""
+    logfile_path: str = "~/var/log/web.log"
     lock_wato: bool = False
     # Only used by ServiceDiscoveryBackgroundJob
     host_name: str = ""

@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from datetime import datetime, timezone, tzinfo
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib import sap_hana
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -17,7 +19,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import sap_hana
 
 # Black magic alert: could return None in some cases, but the offset seems to be
 # magically calculated based on local systemtime...

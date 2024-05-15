@@ -17,6 +17,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_dmraid_ldisks(info):
     return [(line[2], None) for line in info if line[0] == "name"]
@@ -53,6 +55,15 @@ def check_dmraid_ldisks(item, _no_params, info):
             LDISK_FOUND = True
 
     return (3, "incomplete data from agent")
+
+
+def parse_dmraid(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["dmraid"] = LegacyCheckDefinition(
+    parse_function=parse_dmraid,
+)
 
 
 check_info["dmraid.ldisks"] = LegacyCheckDefinition(

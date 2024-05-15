@@ -10,7 +10,8 @@ from collections.abc import Iterable
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.aws import GenericAWSSection, parse_aws
+
+from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 
 def discover_aws_ec2_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:
@@ -19,7 +20,7 @@ def discover_aws_ec2_summary(section: GenericAWSSection) -> Iterable[tuple[None,
 
 
 def check_aws_ec2_summary(item, params, parsed):
-    instances_by_state = {}
+    instances_by_state: dict[str, list] = {}
     long_output = []
     for instance in parsed:
         instance_private_dns_name = instance["PrivateDnsName"]
@@ -28,9 +29,7 @@ def check_aws_ec2_summary(item, params, parsed):
         instances_by_state.setdefault(instance_state, []).append(instance_id)
         long_output.append(f"[{instance_id}] {instance_private_dns_name}: {instance_state}")
 
-    yield 0, "Instances: %s" % sum(
-        len(v) for v in instances_by_state.values()  # type: ignore[misc]  # expected bool?!
-    )
+    yield 0, "Instances: %s" % sum(len(v) for v in instances_by_state.values())
     for instance_state, instances in instances_by_state.items():
         yield 0, f"{instance_state}: {len(instances)}"
 

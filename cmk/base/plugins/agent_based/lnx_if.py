@@ -7,12 +7,13 @@ from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, 
 from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
+from cmk.plugins.lib import bonding, interfaces
+from cmk.plugins.lib.interfaces import InterfaceWithCounters
+from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
+from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
+
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
-from .utils import bonding, interfaces
-from .utils.interfaces import InterfaceWithCounters
-from .utils.inventory_interfaces import Interface as InterfaceInv
-from .utils.inventory_interfaces import inventorize_interfaces
 
 # Example output from agent:
 
@@ -67,7 +68,7 @@ class EthtoolInterface:
 
 @dataclass
 class IPLinkInterface:
-    state_infos: Sequence[str]
+    state_infos: Sequence[str] | None = None
     link_ether: str = ""
     inet: MutableSequence[str] = field(default_factory=list)
     inet6: MutableSequence[str] = field(default_factory=list)
@@ -165,7 +166,7 @@ def _get_speed(speed_text: str) -> int:
 
 
 def _get_oper_status(
-    link_detected: str | None, state_infos: Sequence[str], ifInOctets: int
+    link_detected: str | None, state_infos: Sequence[str] | None, ifInOctets: int
 ) -> Literal["1", "2", "4"]:
     # Link state from ethtool. If ethtool has no information about
     # this NIC, we set the state to unknown.
@@ -205,7 +206,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
     if_table = []
     for index, (nic, ethtool_interface) in enumerate(sorted(ethtool_stats.items())):
         ifInOctets = ethtool_interface.counters[0]
-        iplink_interface = ip_stats.get(nic, IPLinkInterface(state_infos=[]))
+        iplink_interface = ip_stats.get(nic, IPLinkInterface())
         if_table.append(
             interfaces.InterfaceWithCounters(
                 interfaces.Attributes(
@@ -334,7 +335,7 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_lnx_if,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_lnx_if,
     cluster_check_function=cluster_check_lnx_if,
@@ -364,9 +365,7 @@ def _make_inventory_interface(
         alias=interface.attributes.alias,
         type=interface.attributes.type,
         speed=int(interface.attributes.speed),
-        oper_status=int(interface.attributes.oper_status)
-        if isinstance(interface.attributes.oper_status, str)
-        else None,
+        oper_status=int(interface.attributes.oper_status),
         phys_address=mac,
         bond=bond_map.get(mac),
     )

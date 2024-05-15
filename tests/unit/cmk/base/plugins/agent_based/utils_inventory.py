@@ -14,13 +14,15 @@ def sort_inventory_result(
     return sorted(
         result,
         key=lambda r: (
-            sorted(r.key_columns.items()),
-            sorted(r.inventory_columns.items()),
-            sorted(r.status_columns.items()),
-        )
-        if isinstance(r, TableRow)
-        else (
-            sorted(r.inventory_attributes.items()),
-            sorted(r.status_attributes.items()),
+            (
+                sorted(r.key_columns.items()),
+                sorted(r.inventory_columns.items()),
+                sorted(r.status_columns.items()),
+            )
+            if isinstance(r, TableRow)
+            else (
+                sorted(r.inventory_attributes.items()),
+                sorted(r.status_attributes.items()),
+            )
         ),
     )

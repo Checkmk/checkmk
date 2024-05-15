@@ -7,9 +7,11 @@
 import time
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.systemtime import Section
+
+from cmk.agent_based.v2 import render
 
 
 def discover_systemtime(section: Section) -> Iterable[tuple[None, dict]]:
@@ -32,7 +34,7 @@ def check_systemtime(item, params, parsed):
         offset,
         "offset",
         (warn, crit, -warn, -crit),
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.time_offset,
         infoname="Offset",
     )
 

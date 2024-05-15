@@ -1,0 +1,11 @@
+Title: mk_oracle: broken section due to missing redirect
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1700058856
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+<a href="https://checkmk.com/werk/15293">Werk #15293</a> broke mk_oracle sections.
+The falsely generated output is now redirected to /dev/null

@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib import memory
+
 from .agent_based_api.v1 import Attributes, register, type_defs
-from .utils import memory
 
 
 def parse_proc_meminfo_bytes(string_table: type_defs.StringTable) -> memory.SectionMem | None:

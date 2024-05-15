@@ -3,12 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Container, Iterable, Iterator
 from itertools import chain
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
-from cmk.gui.type_defs import FilterName, InfoName, SingleInfos, Visual, VisualContext
+from cmk.gui.type_defs import (
+    FilterName,
+    HTTPVariables,
+    InfoName,
+    SingleInfos,
+    Visual,
+    VisualContext,
+)
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
 from .filter import Filter, filter_registry
@@ -102,7 +111,7 @@ def visible_filters_of_visual(visual: Visual, use_filters: list[Filter]) -> list
     return show_filters
 
 
-def context_to_uri_vars(context: VisualContext) -> list[tuple[str, str]]:
+def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
     return list(chain.from_iterable(filter_vars.items() for filter_vars in context.values()))
 
@@ -184,6 +193,40 @@ def missing_context_filters(
     )
 
     return require_filters.difference(set_filters)
+
+
+def get_missing_single_infos_group_aware(
+    single_infos: SingleInfos,
+    context: VisualContext,
+    datasource: object,
+) -> set[FilterName]:
+    """Return the missing single infos a view requires"""
+    missing_single_infos = get_missing_single_infos(single_infos, context)
+
+    # Special hack for the situation where host group views link to host views: The host view uses
+    # the datasource "hosts" which does not have the "hostgroup" info, but is configured to have a
+    # single_info "hostgroup". To make this possible there exists a feature in
+    # (ABCDataSource.link_filters, views._patch_view_context) which is a very specific hack. Have a
+    # look at the description there.  We workaround the issue here by allowing this specific
+    # situation but validating all others.
+    #
+    # The more correct approach would be to find a way which allows filters of different datasources
+    # to have equal names. But this would need a bigger refactoring of the filter mechanic. One
+    # day...
+    if (
+        datasource in ["hosts", "services"]
+        and missing_single_infos == {"hostgroup"}
+        and "opthostgroup" in context
+    ):
+        return set()
+    if (
+        datasource == "services"
+        and missing_single_infos == {"servicegroup"}
+        and "optservicegroup" in context
+    ):
+        return set()
+
+    return missing_single_infos
 
 
 # Determines the names of HTML variables to be set in order to

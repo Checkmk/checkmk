@@ -48,6 +48,8 @@ inline std::filesystem::path MakePathToCapTestFiles() {
     return MakePathToCapTestFiles(GetSolutionRoot());
 }
 
+std::string GetUnitTestName();
+
 ///  from the TestEnvironment
 [[nodiscard]] std::filesystem::path GetTempDir();
 

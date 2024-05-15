@@ -10,12 +10,12 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/Row.h"
 
 class Column;
-class Logger;
 class ICore;
 class Query;
 class User;
@@ -51,11 +51,11 @@ enum class LockDowntimes { no, yes };
 /// timeperiods         | name
 class Table {
 public:
-    explicit Table(ICore *mc);
     virtual ~Table();
 
     void addColumn(std::unique_ptr<Column> col);
     void addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol);
+    [[nodiscard]] std::vector<std::shared_ptr<Column>> allColumns() const;
 
     template <typename Predicate>
     bool any_column(Predicate pred) const {
@@ -106,24 +106,21 @@ public:
     // are non-const. Tables are shared between threads and the locking in the
     // problematic answerQuery() implementations is a "bit" chaotic, so this can
     // be a real correctness problem! This has to be fixed...
-    virtual void answerQuery(Query &query, const User &user) = 0;
+    virtual void answerQuery(Query &query, const User &user,
+                             const ICore &core) = 0;
 
-    [[nodiscard]] virtual Row get(const std::string &primary_key) const;
+    [[nodiscard]] virtual Row get(const std::string &primary_key,
+                                  const ICore &core) const;
 
     // We have funny single-row tables without a primary key!
-    [[nodiscard]] virtual Row getDefault() const;
+    [[nodiscard]] virtual Row getDefault(const ICore &core) const;
 
     template <typename T>
     [[nodiscard]] const T *rowData(Row row) const {
         return row.rawData<T>();
     }
 
-    [[nodiscard]] ICore *core() const { return _mc; }
-    [[nodiscard]] Logger *logger() const;
-
 private:
-    ICore *_mc;
-
     [[nodiscard]] std::unique_ptr<Column> dynamicColumn(
         const std::string &colname, const std::string &rest) const;
 

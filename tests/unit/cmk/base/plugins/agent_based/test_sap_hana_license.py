@@ -14,7 +14,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.sap_hana import ParsedSection
+
+from cmk.plugins.lib.sap_hana import ParsedSection
 
 SECTION = {
     "Y04 10": {

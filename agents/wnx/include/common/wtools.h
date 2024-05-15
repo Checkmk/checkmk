@@ -11,18 +11,16 @@
 
 #ifndef WTOOLS_H
 #define WTOOLS_H
-#if defined(_WIN32)
-#include <AclAPI.h>
-#include <comdef.h>
 
-#include "Windows.h"
-#include "winperf.h"
+#include <WinSock2.h>  // here to help iphlpapi.h
 
 #define _WIN32_DCOM  // NOLINT
 
+#include <AclAPI.h>
 #include <TlHelp32.h>
 #include <WbemIdl.h>
-#endif
+#include <comdef.h>
+#include <iphlpapi.h>
 
 #include <atomic>
 #include <cstdint>
@@ -33,11 +31,15 @@
 #include <string_view>
 #include <tuple>
 
+#include "Windows.h"
 #include "datablock.h"
 #include "tools/_win.h"
 #include "tools/_xlog.h"
+#include "winperf.h"
 
 namespace wtools {
+constexpr std::string_view safe_temp_sub_dir = "cmk_service";
+
 inline void *ProcessHeapAlloc(size_t size) noexcept {
     return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
@@ -118,6 +120,8 @@ std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
 void KillProcessesByFullPath(const std::filesystem::path &path) noexcept;
 void KillProcessesByPathEndAndPid(const std::filesystem::path &path_end,
                                   uint32_t need_pid) noexcept;
+bool FindProcessByPathEndAndPid(const std::filesystem::path &path_end,
+                                uint32_t need_pid) noexcept;
 
 uint32_t GetParentPid(uint32_t pid);
 
@@ -302,12 +306,15 @@ private:
     SECURITY_ATTRIBUTES sa_ = {};
 };
 
-// scans all processes in system and calls op
-// returns false only when something is really bad
+enum class ScanAction { terminate, advance };
+
+// scans all processes in system and calls action
+// returns false on error
 // based on ToolHelp api family
 // normally require elevation
-// if op returns false, scan will be stopped(this is only optimization)
-bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op);
+// if action returns false, scan will be stopped(this is only optimization)
+bool ScanProcessList(
+    const std::function<ScanAction(const PROCESSENTRY32 &)> &action);
 
 // standard process terminator
 bool KillProcess(uint32_t pid, int exit_code) noexcept;
@@ -1053,6 +1060,12 @@ std::filesystem::path ExecuteCommands(std::wstring_view name,
                                       const std::vector<std::wstring> &commands,
                                       ExecuteMode mode);
 
+/// Create folder in %Temp% and set only owner permissions
+///
+/// Returns path
+std::optional<std::filesystem::path> MakeSafeTempFolder(
+    std::string_view sub_dir);
+
 /// Changes Access Rights in Windows crazy manner
 ///
 ///
@@ -1098,6 +1111,32 @@ bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port);
 std::optional<uint32_t> GetConnectionPid(uint16_t port, uint16_t peer_port);
 
 uint32_t GetServiceStatus(const std::wstring &name) noexcept;
+
+struct AdapterInfo {
+    std::string guid;
+    std::wstring friendly_name;
+    std::wstring description;
+    IFTYPE if_type;
+    std::optional<uint64_t> receive_speed;
+    std::optional<uint64_t> transmit_speed;
+    IF_OPER_STATUS oper_status;
+    std::string mac_address;
+};
+using AdapterInfoStore = std::unordered_map<std::wstring, AdapterInfo>;
+
+AdapterInfoStore GetAdapterInfoStore();
+
+//// Mangles names for use as a counter names
+/// See: MSDN, PerformanceCounter.InstanceName Property
+/// https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecounter.instancename?view=dotnet-plat-ext-8.0
+std::wstring MangleNameForPerfCounter(std::wstring_view name) noexcept;
+
+struct OsInfo {
+    std::wstring name;
+    std::wstring version;
+};
+
+std::optional<OsInfo> GetOsInfo();
 }  // namespace wtools
 
 #endif  // WTOOLS_H

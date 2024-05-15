@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import json
@@ -13,12 +15,14 @@ from pydantic import ValidationError
 
 from tests.unit.conftest import FixRegister
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin, Result
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlugin
 from cmk.base.plugins.agent_based import kube_pod_conditions
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import PodCondition, PodConditions
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v1 import Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 
 MINUTE = 60
 TIMESTAMP = 359
@@ -127,19 +131,27 @@ def string_table_element(
     state_ready,
 ):
     return {
-        "initialized": ready(state_initialized)
-        if status_initialized
-        else (not_ready(state_initialized) if status_initialized is False else None),
+        "initialized": (
+            ready(state_initialized)
+            if status_initialized
+            else (not_ready(state_initialized) if status_initialized is False else None)
+        ),
         "hasnetwork": ready(True),
-        "scheduled": ready(state_scheduled)
-        if status_scheduled
-        else (not_ready(state_scheduled) if status_scheduled is False else None),
-        "containersready": ready(state_containersready)
-        if status_containersready
-        else (not_ready(state_containersready) if status_containersready is False else None),
-        "ready": ready(state_ready)
-        if status_ready
-        else (not_ready(state_ready) if status_ready is False else None),
+        "scheduled": (
+            ready(state_scheduled)
+            if status_scheduled
+            else (not_ready(state_scheduled) if status_scheduled is False else None)
+        ),
+        "containersready": (
+            ready(state_containersready)
+            if status_containersready
+            else (not_ready(state_containersready) if status_containersready is False else None)
+        ),
+        "ready": (
+            ready(state_ready)
+            if status_ready
+            else (not_ready(state_ready) if status_ready is False else None)
+        ),
     }
 
 
@@ -354,11 +366,11 @@ def test_register_agent_section_calls(agent_section: AgentSectionPlugin) -> None
     assert agent_section.parse_function == kube_pod_conditions.parse
 
 
-def test_register_check_plugin_calls(check_plugin) -> None:  # type: ignore[no-untyped-def]
+def test_register_check_plugin_calls(check_plugin: CheckPlugin) -> None:
     assert str(check_plugin.name) == "kube_pod_conditions"
     assert check_plugin.service_name == "Condition"
-    assert check_plugin.discovery_function.__wrapped__ == kube_pod_conditions.discovery
-    assert check_plugin.check_function.__wrapped__ == kube_pod_conditions.check
+    assert check_plugin.discovery_function.__wrapped__ == kube_pod_conditions.discovery  # type: ignore[attr-defined]
+    assert check_plugin.check_function.__wrapped__ == kube_pod_conditions.check  # type: ignore[attr-defined]
     assert check_plugin.check_default_parameters == {
         "scheduled": "no_levels",
         "hasnetwork": "no_levels",

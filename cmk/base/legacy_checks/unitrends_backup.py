@@ -14,6 +14,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_unitrends_backup(info):
     inventory = []
@@ -54,7 +56,12 @@ def check_unitrends_backup(item, _no_params, info):
     return 3, "Schedule not found in Agent Output"
 
 
+def parse_unitrends_backup(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["unitrends_backup"] = LegacyCheckDefinition(
+    parse_function=parse_unitrends_backup,
     service_name="Schedule %s",
     discovery_function=inventory_unitrends_backup,
     check_function=check_unitrends_backup,

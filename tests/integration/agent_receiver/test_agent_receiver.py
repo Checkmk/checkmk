@@ -8,14 +8,51 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import NamedTuple
 
+import cryptography.hazmat.primitives.asymmetric as asymmetric
 import pytest
 import requests
-from agent_receiver.certs import serialize_to_pem, sign_agent_csr
 from cryptography.hazmat.primitives import serialization
-from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.x509 import (
+    CertificateSigningRequest,
+    CertificateSigningRequestBuilder,
+    load_pem_x509_certificate,
+    Name,
+    NameAttribute,
+)
+from cryptography.x509.oid import NameOID
 
-from tests.testlib.certs import generate_csr_pair
 from tests.testlib.site import Site
+
+# TODO: Integration tests are not allowed to import application code. We need to get rid of this
+from cmk.agent_receiver.certs import (  # pylint: disable=cmk-module-layer-violation
+    current_time_naive,
+    serialize_to_pem,
+    sign_agent_csr,
+)
+
+
+# Copied from tests/unit/agent_receiver/certs.py to make cmk-agent-receiver/tests self contained
+def generate_csr_pair(cn: str) -> tuple[asymmetric.rsa.RSAPrivateKey, CertificateSigningRequest]:
+    private_key = asymmetric.rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+    return (
+        private_key,
+        CertificateSigningRequestBuilder()
+        .subject_name(
+            Name(
+                [
+                    NameAttribute(NameOID.COMMON_NAME, cn),
+                ]
+            )
+        )
+        .sign(
+            private_key,
+            SHA256(),
+        ),
+    )
 
 
 @pytest.fixture(scope="session", name="agent_receiver_port")
@@ -66,16 +103,26 @@ def paired_keypair_fixture(
     private_key, csr = generate_csr_pair(uuid_)
 
     pem_bytes = site.read_file("etc/ssl/agents/ca.pem").encode("utf-8")
-    root_ca = (
+    root_cert, root_key = (
         load_pem_x509_certificate(pem_bytes),
         serialization.load_pem_private_key(pem_bytes, None),
+    )
+    assert isinstance(
+        root_key,
+        # this is CertificateIssuerPrivateKeyTypes
+        (
+            asymmetric.ed25519.Ed25519PrivateKey,
+            asymmetric.ed448.Ed448PrivateKey,
+            asymmetric.rsa.RSAPrivateKey,
+            asymmetric.dsa.DSAPrivateKey,
+            asymmetric.ec.EllipticCurvePrivateKey,
+        ),
     )
 
     private_key_path = tmp_path_factory.mktemp("certs") / "private_key.key"
     with private_key_path.open("wb") as private_key_file:
         private_key_file.write(
-            # mypy claims private_bytes is not a thing, docs and reality say otherwise...
-            private_key.private_bytes(  # type: ignore[attr-defined]
+            private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
                 encryption_algorithm=serialization.NoEncryption(),
@@ -83,7 +130,9 @@ def paired_keypair_fixture(
         )
     public_key_path = tmp_path_factory.mktemp("certs") / "public.pem"
     with public_key_path.open("w") as public_key_file:
-        public_key_file.write(serialize_to_pem(sign_agent_csr(csr, 12, root_ca)))
+        public_key_file.write(
+            serialize_to_pem(sign_agent_csr(csr, 12, (root_cert, root_key), current_time_naive()))
+        )
 
     return KeyPairInfo(
         uuid_=uuid_,

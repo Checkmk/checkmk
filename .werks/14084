@@ -15,7 +15,7 @@ The old API for the plugins residing in <tt>{local/,}share/check_mk/inventory</t
 Plugins in that folder will be ignored starting with 2.2.
 However, they keep working with the 2.1 for the transition period.
 
-As of Checkmk version 2.1 plugins in that folder will generate a warning on the commandline and result in an <i>"Analyze Configuration"</i> test going to {{WARN}}.
+As of Checkmk version 2.1 plugins in that folder will generate a warning on the commandline and result in an <i>"Analyze Configuration"</i> test going to "WARN".
 
 If you maintian such plugins, please migrate them to the new API before upgrading to Checkmk 2.2.
 New plugins live in <tt>lib/check_mk/base/plugins/agent_based/</tt>.

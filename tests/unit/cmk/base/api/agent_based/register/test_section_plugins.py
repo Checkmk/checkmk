@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Callable
 
 import pytest
@@ -12,10 +14,15 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPDetectSpecification, SNMPTree
-from cmk.base.api.agent_based.type_defs import (
-    AgentSectionPlugin,
-    SNMPSectionPlugin,
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    matches,
+    OIDEnd,
+    SimpleSNMPSection,
+    SNMPSection,
+    SNMPTree,
     StringByteTable,
     StringTable,
 )
@@ -42,8 +49,8 @@ def parse_dummy(string_table):  # pylint: disable=unused-argument
 )
 def test_validate_parse_function_type(parse_function: object) -> None:
     with pytest.raises(TypeError):
-        section_plugins._validate_parse_function(
-            parse_function,  # type:ignore[arg-type]
+        section_plugins.validate_parse_function(
+            parse_function,  # type: ignore[arg-type]
             expected_annotations={(str, "str")},  # irrelevant for test
         )
 
@@ -59,7 +66,7 @@ def test_validate_parse_function_type(parse_function: object) -> None:
 )
 def test_validate_parse_function_value(parse_function: Callable[..., None]) -> None:
     with pytest.raises(ValueError):
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             parse_function,
             expected_annotations={(str, "str")},  # ignored
         )
@@ -70,12 +77,12 @@ def test_validate_parse_function_annotation_string_table() -> None:
         return string_table
 
     with pytest.raises(TypeError):
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             _parse_function,
             expected_annotations={(StringByteTable, "StringByteTable")},
         )
 
-    section_plugins._validate_parse_function(
+    section_plugins.validate_parse_function(
         _parse_function,
         expected_annotations={(list[StringTable], "List[StringTable]")},
     )
@@ -99,10 +106,14 @@ def test_validate_supersedings_raise_self_superseding() -> None:
 
 def test_create_agent_section_plugin() -> None:
     plugin = section_plugins.create_agent_section_plugin(
-        name="norris",
-        parsed_section_name="chuck",
-        parse_function=parse_dummy,
-        supersedes=["foo", "bar"],
+        AgentSection(
+            name="norris",
+            parsed_section_name="chuck",
+            parse_function=parse_dummy,
+            supersedes=["foo", "bar"],
+        ),
+        location=None,
+        validate=True,
     )
 
     assert isinstance(plugin, AgentSectionPlugin)
@@ -125,19 +136,19 @@ def test_create_snmp_section_plugin() -> None:
         ),
     ]
 
-    detect = SNMPDetectSpecification(
-        [
-            [(".1.2.3.4.5", "Foo.*", True)],
-        ]
-    )
+    detect = matches(".1.2.3.4.5", "Foo.*")
 
     plugin = section_plugins.create_snmp_section_plugin(
-        name="norris",
-        parsed_section_name="chuck",
-        parse_function=parse_dummy,
-        fetch=trees,
-        detect_spec=detect,
-        supersedes=["foo", "bar"],
+        SNMPSection(
+            name="norris",
+            parsed_section_name="chuck",
+            parse_function=parse_dummy,
+            fetch=trees,
+            detect=detect,
+            supersedes=["foo", "bar"],
+        ),
+        location=None,
+        validate=True,
     )
 
     assert isinstance(plugin, SNMPSectionPlugin)
@@ -158,15 +169,19 @@ def test_create_snmp_section_plugin_single_tree() -> None:
     single_tree = SNMPTree(base=".1.2.3", oids=[OIDEnd(), "2.3"])
 
     plugin = section_plugins.create_snmp_section_plugin(
-        name="norris",
-        parse_function=lambda string_table: string_table,
-        # just one, no list:
-        fetch=single_tree,
-        detect_spec=SNMPDetectSpecification([[(".1.2.3.4.5", "Foo.*", True)]]),
+        SimpleSNMPSection(
+            name="norris",
+            parse_function=lambda string_table: string_table,
+            # just one, no list:
+            fetch=single_tree,
+            detect=matches(".1.2.3.4.5", "Foo.*"),
+        ),
+        location=None,
+        validate=True,
     )
 
     assert plugin.trees == [single_tree]
-    # the plugin only specified a single tree (not a list),
+    # the plug-in only specified a single tree (not a list),
     # so a wrapper should unpack the argument:
     assert plugin.parse_function([[["A", "B"]]]) == [["A", "B"]]
 

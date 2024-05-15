@@ -1,26 +1,8 @@
 #!/usr/bin/env python3
-#
-#       U  ___ u  __  __   ____
-#        \/"_ \/U|' \/ '|u|  _"\
-#        | | | |\| |\/| |/| | | |
-#    .-,_| |_| | | |  | |U| |_| |\
-#     \_)-\___/  |_|  |_| |____/ u
-#          \\   <<,-,,-.   |||_
-#         (__)   (./  \.) (__)_)
-#
-# This file is part of OMD - The Open Monitoring Distribution.
-# The official homepage is at <http://omdistro.org>.
-#
-# OMD  is  free software;  you  can  redistribute it  and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the  Free Software  Foundation  in  version 2.  OMD  is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 
 import abc
 import os
@@ -31,12 +13,16 @@ from typing import cast
 import omdlib
 import omdlib.utils
 from omdlib.init_scripts import check_status
-from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
+from omdlib.skel_permissions import (
+    load_skel_permissions_from,
+    Permissions,
+    skel_permissions_file_path,
+)
 from omdlib.type_defs import Config, Replacements
 from omdlib.utils import is_containerized
 
 from cmk.utils.exceptions import MKTerminate
-from cmk.utils.version import edition
+from cmk.utils.version import Edition
 
 
 class AbstractSiteContext(abc.ABC):
@@ -143,13 +129,15 @@ class SiteContext(AbstractSiteContext):
             return None
         return "/omd/versions/%s/lib/omd/hooks/" % self.version
 
-    @property
     def replacements(self) -> Replacements:
         """Dictionary of key/value for replacing macros in skel files"""
+        version = self.version
+        if version is None:
+            raise RuntimeError("Failed to determine site version")
         return {
             "###SITE###": self.name,
             "###ROOT###": self.dir,
-            "###EDITION###": edition().long,
+            "###EDITION###": Edition[version.split(".")[-1].upper()].long,
         }
 
     def load_config(self, defaults: dict[str, str]) -> None:
@@ -225,7 +213,7 @@ class SiteContext(AbstractSiteContext):
         if not self._has_version_meta_data():
             if self.version is None:
                 raise MKTerminate("Failed to determine site version")
-            return load_skel_permissions(self.version)
+            return load_skel_permissions_from(skel_permissions_file_path(self.version))
 
         return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")
 
@@ -263,7 +251,7 @@ class RootContext(AbstractSiteContext):
 
     @property
     def tmp_dir(self) -> str:
-        return "/tmp"
+        return "/tmp"  # nosec B108 # BNS:13b2c8
 
     @property
     def real_dir(self) -> str:

@@ -6,9 +6,10 @@
 from collections.abc import Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, fields
 
+from cmk.plugins.lib.livestatus_status import LivestatusSection
+
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
-from .utils.livestatus_status import LivestatusSection
 
 
 @dataclass

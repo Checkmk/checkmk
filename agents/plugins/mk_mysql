@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 # gets optional socket as argument
 do_query() {
@@ -43,6 +43,7 @@ do_query() {
 
 }
 
+# The following logic exists as well in the windows vbs script mk_mysql
 if [ ! -f "${MK_CONFDIR}/mysql.local.cfg" ]; then
     cat <<EOF >"${MK_CONFDIR}/mysql.local.cfg"
 # This file is created because some versions of mysqladmin

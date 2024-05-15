@@ -9,24 +9,35 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
 
 
 def _parameter_valuespec_sansymphony_alerts():
-    return Tuple(
-        help=_("This rule sets the warn and crit levels for the number of unacknowlegded alerts"),
-        elements=[
-            Integer(
-                title=_("Warning at"),
-                unit=_("alerts"),
-                default_value=1,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("alerts"),
-                default_value=2,
-            ),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Number of unacknowlegded alerts"),
+                        elements=[
+                            Integer(
+                                title=_("Warning at"),
+                                unit=_("alerts"),
+                                default_value=1,
+                            ),
+                            Integer(
+                                title=_("Critical at"),
+                                unit=_("alerts"),
+                                default_value=2,
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

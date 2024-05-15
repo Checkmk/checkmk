@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE_BX
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.blade import DETECT_BLADE_BX
 
 
 def check_blade_bx_temp(item, params, info):
@@ -49,7 +50,12 @@ def inventory_blade_bx_temp(info):
             yield line[2], None
 
 
+def parse_blade_bx_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["blade_bx_temp"] = LegacyCheckDefinition(
+    parse_function=parse_blade_bx_temp,
     detect=DETECT_BLADE_BX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.4.1.1",

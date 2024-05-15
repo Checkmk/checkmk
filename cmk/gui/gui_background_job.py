@@ -12,8 +12,8 @@ import cmk.utils.plugin_registry
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.background_job as background_job
 import cmk.gui.log as log
+from cmk.gui import background_job as background_job
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -23,16 +23,27 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (
     Permission,
-    permission_registry,
-    permission_section_registry,
+    PermissionRegistry,
     PermissionSection,
+    PermissionSectionRegistry,
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 
 
-@permission_section_registry.register
+def register(
+    permission_section_registry: PermissionSectionRegistry, permission_registry: PermissionRegistry
+) -> None:
+    permission_section_registry.register(PermissionSectionBackgroundJobs)
+    permission_registry.register(PermissionManageJobs)
+    permission_registry.register(PermissionStopJobs)
+    permission_registry.register(PermissionDeleteJobs)
+    permission_registry.register(PermissionSeeForeignJobs)
+    permission_registry.register(PermissionStopForeignJobs)
+    permission_registry.register(PermissionDeleteForeignJobs)
+
+
 class PermissionSectionBackgroundJobs(PermissionSection):
     @property
     def name(self) -> str:
@@ -43,72 +54,56 @@ class PermissionSectionBackgroundJobs(PermissionSection):
         return _("Background jobs")
 
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionBackgroundJobs,
-        name="manage_jobs",
-        title=_l("Manage background jobs"),
-        description=_l("Allows you to see the job overview page."),
-        defaults=["admin"],
-    )
+PermissionManageJobs = Permission(
+    section=PermissionSectionBackgroundJobs,
+    name="manage_jobs",
+    title=_l("Manage background jobs"),
+    description=_l("Allows you to see the job overview page."),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionBackgroundJobs,
-        name="stop_jobs",
-        title=_l("Stop background jobs"),
-        description=_l(
-            "Configures the permission to stop background jobs. Note: some jobs cannot be stopped."
-        ),
-        defaults=["user", "admin"],
-    )
+PermissionStopJobs = Permission(
+    section=PermissionSectionBackgroundJobs,
+    name="stop_jobs",
+    title=_l("Stop background jobs"),
+    description=_l(
+        "Configures the permission to stop background jobs. Note: some jobs cannot be stopped."
+    ),
+    defaults=["user", "admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionBackgroundJobs,
-        name="delete_jobs",
-        title=_l("Delete background jobs"),
-        description=_l(
-            "Configures the permission to delete background jobs. Note: some jobs cannot be deleted."
-        ),
-        defaults=["user", "admin"],
-    )
+PermissionDeleteJobs = Permission(
+    section=PermissionSectionBackgroundJobs,
+    name="delete_jobs",
+    title=_l("Delete background jobs"),
+    description=_l(
+        "Configures the permission to delete background jobs. Note: some jobs cannot be deleted."
+    ),
+    defaults=["user", "admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionBackgroundJobs,
-        name="see_foreign_jobs",
-        title=_l("See foreign background jobs"),
-        description=_l("Allows you to see jobs of other users."),
-        defaults=["admin"],
-    )
+PermissionSeeForeignJobs = Permission(
+    section=PermissionSectionBackgroundJobs,
+    name="see_foreign_jobs",
+    title=_l("See foreign background jobs"),
+    description=_l("Allows you to see jobs of other users."),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionBackgroundJobs,
-        name="stop_foreign_jobs",
-        title=_l("Stop foreign background jobs"),
-        description=_l(
-            "Allows you to stop jobs of other users. Note: some jobs cannot be stopped."
-        ),
-        defaults=["admin"],
-    )
+PermissionStopForeignJobs = Permission(
+    section=PermissionSectionBackgroundJobs,
+    name="stop_foreign_jobs",
+    title=_l("Stop foreign background jobs"),
+    description=_l("Allows you to stop jobs of other users. Note: some jobs cannot be stopped."),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionBackgroundJobs,
-        name="delete_foreign_jobs",
-        title=_l("Delete foreign background jobs"),
-        description=_l(
-            "Allows you to delete jobs of other users. Note: some jobs cannot be deleted"
-        ),
-        defaults=["admin"],
-    )
+PermissionDeleteForeignJobs = Permission(
+    section=PermissionSectionBackgroundJobs,
+    name="delete_foreign_jobs",
+    title=_l("Delete foreign background jobs"),
+    description=_l("Allows you to delete jobs of other users. Note: some jobs cannot be deleted"),
+    defaults=["admin"],
 )
 
 
@@ -502,7 +497,7 @@ class ActionHandler:
         self._did_stop_job = False
         self._did_delete_job = False
 
-    def confirm_dialog_opened(self):
+    def confirm_dialog_opened(self) -> bool:
         for action_var in [self.stop_job_var, self.delete_job_var]:
             if request.has_var(action_var):
                 return True
@@ -520,16 +515,16 @@ class ActionHandler:
             return True
         return False
 
-    def did_acknowledge_job(self):
+    def did_acknowledge_job(self) -> bool:
         return self._did_acknowledge_job
 
-    def did_stop_job(self):
+    def did_stop_job(self) -> bool:
         return self._did_stop_job
 
-    def did_delete_job(self):
+    def did_delete_job(self) -> bool:
         return self._did_delete_job
 
-    def acknowledge_job(self):
+    def acknowledge_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.acknowledge_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():
@@ -538,7 +533,7 @@ class ActionHandler:
         self._did_acknowledge_job = True
         job.acknowledge(user.id)
 
-    def stop_job(self):
+    def stop_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.stop_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():
@@ -553,7 +548,7 @@ class ActionHandler:
             self._did_stop_job = True
             html.show_message(_("Background job has been stopped"))
 
-    def delete_job(self):
+    def delete_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.delete_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():

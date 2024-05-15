@@ -10,9 +10,6 @@ from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
 from typing import Any, NamedTuple
 
-from flask import current_app
-from flask.ctx import RequestContext
-
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.utils.exceptions import MKGeneralException
@@ -21,14 +18,14 @@ from cmk.utils.user import UserId
 import cmk.gui.hooks as hooks
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
-from cmk.gui.config import active_config, load_config
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
-from cmk.gui.utils.script_helpers import make_request_context
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import urlencode_vars
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, get_url, MKAutomationException
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.utils import mk_eval, mk_repr
@@ -45,12 +42,16 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 # Hopefully we have no large bulks of users changing their passwords at the same
 # time. In this case the implementation does not scale well. We would need to
 # change this to some kind of profile bulk sync per site.
-# TODO: Should we move this to watolib?
 
 
 class SynchronizationResult:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, site_id, error_text=None, disabled=False, succeeded=False, failed=False
+    def __init__(
+        self,
+        site_id: SiteId,
+        error_text: str | None = None,
+        disabled: bool = False,
+        succeeded: bool = False,
+        failed: bool = False,
     ) -> None:
         self.site_id = site_id
         self.error_text = error_text
@@ -63,7 +64,9 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     if not profiles_to_synchronize:
         return
 
-    remote_sites = [(site_id, get_site_config(site_id)) for site_id in get_login_slave_sites()]
+    remote_sites = [
+        (site_id, get_site_config(active_config, site_id)) for site_id in get_login_slave_sites()
+    ]
 
     logger.info(
         "Credentials changed for %s. Trying to sync to %d sites"
@@ -72,18 +75,13 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
     states = sites.states()
 
-    with (
-        request_context := make_request_context(current_app)
-    ):  # pylint: disable=superfluous-parens
-        load_config()
-
     pool = ThreadPool()
     jobs = []
     for site_id, site in remote_sites:
         jobs.append(
             pool.apply_async(
-                _sychronize_profile_worker,
-                (request_context, states, site_id, site, profiles_to_synchronize),
+                copy_request_context(_sychronize_profile_worker),
+                (states, site_id, site, profiles_to_synchronize),
             )
         )
 
@@ -132,7 +130,6 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
 
 def _sychronize_profile_worker(
-    request_context: RequestContext,
     states: sites.SiteStates,
     site_id: SiteId,
     site: SiteConfiguration,
@@ -151,8 +148,7 @@ def _sychronize_profile_worker(
         )
 
     try:
-        with request_context:
-            result = push_user_profiles_to_site_transitional_wrapper(site, profiles_to_synchronize)
+        result = push_user_profiles_to_site_transitional_wrapper(site, profiles_to_synchronize)
         if result is not True:
             return SynchronizationResult(site_id, error_text=result, failed=True)
         return SynchronizationResult(site_id, succeeded=True)
@@ -244,7 +240,6 @@ class PushUserProfilesRequest(NamedTuple):
     user_profiles: dict
 
 
-@automation_command_registry.register
 class PushUserProfilesToSite(AutomationCommand):
     def command_name(self):
         return "push-profiles"

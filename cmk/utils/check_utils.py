@@ -55,7 +55,7 @@ def section_name_of(check_plugin_name: str) -> str:
 
 
 def maincheckify(subcheck_name: str) -> str:
-    """Get new plugin name
+    """Get new plug-in name
 
     The new API does not know about "subchecks", so drop the dot notation.
     The validation step will prevent us from having colliding plugins.
@@ -92,6 +92,6 @@ def unwrap_parameters(parameters: ParametersTypeAlias) -> Any:
         return parameters[_PARAMS_WRAPPER_KEY]
     # Note: having *both* the wrapper key and other keys can only happen, if we
     # merge wrapped (non dict) legacy parameters with newer configured (dict) parameters.
-    # In this case the the plugin can deal with dicts, and will ignore the wrapper key anyway.
+    # In this case the the plug-in can deal with dicts, and will ignore the wrapper key anyway.
     # Still: cleaning it up here is less confusing.
     return {k: v for k, v in parameters.items() if k != _PARAMS_WRAPPER_KEY}

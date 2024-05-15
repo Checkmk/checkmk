@@ -6,10 +6,11 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.cpu_util import check_cpu_util
+from cmk.plugins.lib.cpu_utilization_os import SectionCpuUtilizationOs
+
 from .agent_based_api.v1 import get_rate, get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.cpu_util import check_cpu_util
-from .utils.cpu_utilization_os import SectionCpuUtilizationOs
 
 
 def discover_cpu_utilization_os(section: SectionCpuUtilizationOs) -> DiscoveryResult:

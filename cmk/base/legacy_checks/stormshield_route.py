@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
 
 route_type_mapping = {
     "DefaultRoute": "default route",
@@ -42,7 +43,12 @@ def check_stormshield_route(item, params, info):
             yield 0, infotext
 
 
+def parse_stormshield_route(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["stormshield_route"] = LegacyCheckDefinition(
+    parse_function=parse_stormshield_route,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.14.1.1",

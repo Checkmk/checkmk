@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.gui.i18n import _
+from cmk.gui.pages import PageRegistry
+from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
+from cmk.gui.visuals.type import VisualTypeRegistry
+from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+
+from ._find_group_usage import find_usages_of_contact_group_in_dashboards
+from .builtin_dashboards import builtin_dashboards
+from .cre_dashboards import register_builtin_dashboards
+from .dashlet import DashletRegistry, FigureDashletPage, register_dashlets
+from .page_create_dashboard import page_create_dashboard
+from .page_create_view_dashlet import (
+    page_create_link_view_dashlet,
+    page_create_view_dashlet,
+    page_create_view_dashlet_infos,
+)
+from .page_edit_dashboard import page_edit_dashboard
+from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
+from .page_edit_dashboards import page_edit_dashboards
+from .page_edit_dashlet import EditDashletPage
+from .page_show_dashboard import ajax_dashlet, AjaxInitialDashboardFilters, page_dashboard
+from .visual_type import VisualTypeDashboards
+
+
+def register(
+    permission_section_registry: PermissionSectionRegistry,
+    page_registry: PageRegistry,
+    visual_type_registry: VisualTypeRegistry,
+    dashlet_registry_: DashletRegistry,
+    contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
+) -> None:
+    visual_type_registry.register(VisualTypeDashboards)
+    permission_section_registry.register(PermissionSectionDashboard)
+
+    page_registry.register_page("ajax_figure_dashlet_data")(FigureDashletPage)
+    page_registry.register_page("ajax_initial_dashboard_filters")(AjaxInitialDashboardFilters)
+    page_registry.register_page("edit_dashlet")(EditDashletPage)
+    page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
+    page_registry.register_page_handler("dashboard", page_dashboard)
+    page_registry.register_page_handler("dashboard_dashlet", ajax_dashlet)
+    page_registry.register_page_handler("edit_dashboards", page_edit_dashboards)
+    page_registry.register_page_handler("create_dashboard", page_create_dashboard)
+    page_registry.register_page_handler("edit_dashboard", page_edit_dashboard)
+    page_registry.register_page_handler("create_link_view_dashlet", page_create_link_view_dashlet)
+    page_registry.register_page_handler("create_view_dashlet", page_create_view_dashlet)
+    page_registry.register_page_handler("create_view_dashlet_infos", page_create_view_dashlet_infos)
+    page_registry.register_page_handler("clone_dashlet", page_clone_dashlet)
+    page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
+    page_registry.register_page_handler("ajax_dashlet_pos", ajax_dashlet_pos)
+
+    register_dashlets(dashlet_registry_)
+    register_builtin_dashboards(builtin_dashboards)
+    contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_dashboards)
+
+
+class PermissionSectionDashboard(PermissionSection):
+    @property
+    def name(self) -> str:
+        return "dashboard"
+
+    @property
+    def title(self) -> str:
+        return _("Dashboards")
+
+    @property
+    def do_sort(self):
+        return True

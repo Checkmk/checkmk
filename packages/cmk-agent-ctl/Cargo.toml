@@ -30,14 +30,14 @@ rand = { version = "0.8" }
 # however, in SUP-10832, native-tls was ok with the custom CA of the customer, while rustls complained
 # unfortunately, we couldn't find out why, so for now, we have to keep native-tls
 reqwest = { version = "0.11", features = [
-    "blocking",
-    "json",
-    "multipart",
-    "native-tls",
-    "rustls-tls-manual-roots",
+  "blocking",
+  "json",
+  "multipart",
+  "native-tls",
+  "rustls-tls-manual-roots",
 ] }
 rpassword = { version = "6.0" }
-rustls = { version = "0.21", features = ["dangerous_configuration"] }
+rustls = { version = ">=0.21.7", features = ["dangerous_configuration"] }
 rustls-pemfile = { version = "1.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }

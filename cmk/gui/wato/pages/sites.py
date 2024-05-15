@@ -145,8 +145,7 @@ class ModeEditSite(WatoMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -269,13 +268,11 @@ class ModeEditSite(WatoMode):
         return redirect(mode_url("sites"))
 
     def page(self) -> None:
-        html.begin_form("site")
+        with html.form_context("site"):
+            self._valuespec().render_input("site", dict(self._site))
 
-        self._valuespec().render_input("site", dict(self._site))
-
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_fields()
 
     def _valuespec(self) -> Dictionary:
         basic_elements = self._basic_elements()
@@ -296,7 +293,7 @@ class ModeEditSite(WatoMode):
 
     def _basic_elements(self):
         if self._new:
-            vs_site_id = ID(
+            vs_site_id: TextInput | FixedValue = ID(
                 title=_("Site ID"),
                 size=60,
                 allow_empty=False,
@@ -507,12 +504,13 @@ class ModeEditSite(WatoMode):
             (
                 "user_login",
                 Checkbox(
-                    title=_("Direct login to Web GUI allowed"),
-                    label=_("Users are allowed to directly login into the Web GUI of this site"),
+                    title=_("Direct login to web GUI allowed"),
+                    label=_("Users are allowed to directly login into the web GUI of this site"),
                     help=_(
-                        "When enabled, this site is marked for synchronisation every time a Web GUI "
+                        "When enabled, this site is marked for synchronisation every time a web GUI "
                         "related option is changed and users are allowed to login "
-                        "to the Web GUI of this site."
+                        "to the web GUI of this site."
+                        "The access to the Rest API is unaffected by this option though."
                     ),
                 ),
             ),
@@ -603,7 +601,7 @@ class ModeDistributedMonitoring(WatoMode):
     def action(self) -> ActionResult:
         delete_id = request.get_ascii_input("_delete")
         if delete_id and transactions.check_transaction():
-            self._action_delete(delete_id)
+            return self._action_delete(SiteId(delete_id))
 
         logout_id = request.get_ascii_input("_logout")
         if logout_id:
@@ -614,10 +612,7 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_login(SiteId(login_id))
         return None
 
-    # Mypy wants the explicit return, pylint does not like it.
-    def _action_delete(  # type: ignore[no-untyped-def] # pylint: disable=useless-return
-        self, delete_id
-    ) -> ActionResult:
+    def _action_delete(self, delete_id: SiteId) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
@@ -742,23 +737,22 @@ class ModeDistributedMonitoring(WatoMode):
             % HTMLWriter.render_tt(site["alias"])
         )
 
-        html.begin_form("login", method="POST")
-        forms.header(_("Login credentials"))
-        forms.section(_("Administrator name"))
-        html.text_input("_name")
-        html.set_focus("_name")
-        forms.section(_("Administrator password"))
-        html.password_input("_passwd")
-        forms.section(_("Confirm overwrite"))
-        html.checkbox(
-            "_confirm", False, label=_("Confirm overwrite of the remote site configuration")
-        )
-        forms.end()
-        html.button("_do_login", _("Login"))
-        html.button("_cancel", _("Cancel"))
-        html.hidden_field("_login", login_id)
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("login", method="POST"):
+            forms.header(_("Login credentials"))
+            forms.section(_("Administrator name"))
+            html.text_input("_name")
+            html.set_focus("_name")
+            forms.section(_("Administrator password"))
+            html.password_input("_passwd")
+            forms.section(_("Confirm overwrite"))
+            html.checkbox(
+                "_confirm", False, label=_("Confirm overwrite of the remote site configuration")
+            )
+            forms.end()
+            html.button("_do_login", _("Login"))
+            html.button("_cancel", _("Cancel"))
+            html.hidden_field("_login", login_id)
+            html.hidden_fields()
         html.footer()
         return FinalizeRequest(code=200)
 
@@ -1107,8 +1101,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -1141,13 +1134,16 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         return self.mode_url(site=self._site_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        menu = PageMenu(
             dropdowns=[
                 _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+
+        self._extend_display_dropdown(menu)
+        return menu
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self) -> ActionResult:
@@ -1216,7 +1212,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 )
                 return
 
-            if not self._site["replication"] and not site_is_local(self._site_id):
+            if not self._site["replication"] and not site_is_local(active_config, self._site_id):
                 html.show_error(
                     _(
                         "This site is not the central site nor a replication "
@@ -1485,7 +1481,7 @@ def _page_menu_dropdown_site_details(
 def _page_menu_entries_site_details(
     site_id: str, site: SiteConfiguration, current_mode: str
 ) -> Iterator[PageMenuEntry]:
-    if current_mode != "edit_site_globals" and site_globals_editable(site_id, site):
+    if current_mode != "edit_site_globals" and site_globals_editable(SiteId(site_id), site):
         yield PageMenuEntry(
             title=_("Global settings"),
             icon_name="configuration",

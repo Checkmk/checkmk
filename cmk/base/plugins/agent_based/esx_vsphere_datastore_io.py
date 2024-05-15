@@ -7,16 +7,8 @@ import time
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.base.plugins.agent_based.utils.diskstat import (
-    check_diskstat_dict,
-    combine_disks,
-    discovery_diskstat_generic,
-)
-from cmk.base.plugins.agent_based.utils.esx_vsphere import (
-    average_parsed_data,
-    CounterValues,
-    SectionCounter,
-)
+from cmk.plugins.lib.diskstat import check_diskstat_dict, combine_disks, discovery_diskstat_generic
+from cmk.plugins.lib.esx_vsphere import average_parsed_data, CounterValues, SectionCounter
 
 from .agent_based_api.v1 import get_value_store, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

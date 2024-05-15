@@ -6,14 +6,8 @@
 import collections
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
-
-from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.hostaddress import (  # pylint: disable=cmk-module-layer-violation
-    HostAddress,
-    HostName,
-)
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
@@ -21,43 +15,47 @@ from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
     parse_check_mk_version,
 )
 
-# We need config and host_name() because the "only_from" configuration is not a check parameter.
-# It is configured as an agent bakery rule, and controls the *deployment* of the only_from setting.
-# We wan't to use that very setting to check whether it is deployed correctly.
-# I currently see no better soluton than this API violation.
-from cmk.base.check_api import host_name  # pylint: disable=cmk-module-layer-violation
-from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
-
-from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.checkmk import (
+from cmk.plugins.lib.checkmk import (
     CachedPlugin,
     CachedPluginsSection,
-    CachedPluginType,
     CheckmkSection,
     CMKAgentUpdateSection,
     ControllerSection,
     Plugin,
     PluginSection,
+    render_plugin_type,
 )
 
+from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
-def _normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:
-    """Expand 10.0.0.{1,2,3}."""
+
+def _expand_curly_address_notation(ip_addresses: str | Sequence[str]) -> list[str]:
+    """Expand 10.0.0.{1,2,3}.
+
+    >>> _expand_curly_address_notation("1.1.1.1")
+    ['1.1.1.1']
+
+    >>> _expand_curly_address_notation("1.1.1.{1,3}")
+    ['1.1.1.1', '1.1.1.3']
+
+    We ignore certain stuff, this is just showing that this does not really validate anything
+    This behavior is IMHO not important
+
+    >>> _expand_curly_address_notation("1.1.1.1/1337")
+    ['1.1.1.1/1337']
+    """
     if isinstance(ip_addresses, str):
         ip_addresses = ip_addresses.split()
 
-    expanded = [HostAddress(word) for word in ip_addresses if "{" not in word]
+    expanded = [word for word in ip_addresses if "{" not in word]
     for word in ip_addresses:
         if word in expanded:
             continue
 
-        try:
-            prefix, tmp = word.split("{")
-            curly, suffix = tmp.split("}")
-        except ValueError:
-            raise MKGeneralException(f"could not expand {word!r}")
-        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
+        prefix, tmp = word.split("{")
+        curly, suffix = tmp.split("}")
+        expanded.extend(f"{prefix}{i}{suffix}" for i in curly.split(","))
 
     return expanded
 
@@ -65,10 +63,6 @@ def _normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddre
 # Works with Checkmk version (without tailing .cee and/or .demo)
 def _is_daily_build_version(v: str) -> bool:
     return len(v) == 10 or "-" in v
-
-
-def _get_configured_only_from() -> None | str | list[str]:
-    return get_config_cache().only_from(HostName(host_name()))
 
 
 def discover_checkmk_agent(
@@ -103,7 +97,7 @@ def _check_cmk_agent_installation(
     )
     yield from _check_only_from(
         agent_info.get("onlyfrom") if controller_info is None else controller_info.ip_allowlist,
-        _get_configured_only_from(),
+        params["only_from"],
         State(params["restricted_address_mismatch"]),
     )
     yield from _check_agent_update(
@@ -170,9 +164,8 @@ def _check_only_from(
     if agent_only_from is None or config_only_from is None:
         return
 
-    # do we really need '_normalize_ip_addresses'? It deals with '{' expansion.
-    allowed_nets = set(_normalize_ip_addresses(agent_only_from))
-    expected_nets = set(_normalize_ip_addresses(config_only_from))
+    allowed_nets = set(_expand_curly_address_notation(agent_only_from))
+    expected_nets = set(_expand_curly_address_notation(config_only_from))
     if allowed_nets == expected_nets:
         yield Result(
             state=State.OK,
@@ -312,8 +305,9 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
 
         assert cert_info.not_after is not None  # It is only None if cert is corrupt
 
-        # We get tz aware datetimes and we must not compare them to naive datetimes
-        duration_valid = cert_info.not_after - datetime.now().astimezone()
+        # comparing naive to aware datetimes raises anyway, but the assertion is less obscure
+        assert cert_info.not_after.tzinfo is not None, "cert_info.not_after must be tz aware"
+        duration_valid = cert_info.not_after - datetime.now(timezone.utc)
 
         if duration_valid.total_seconds() < 0:
             yield Result(
@@ -395,10 +389,10 @@ def _check_cmk_agent_update(
         yield Result(state=State.OK, notice=f"Update URL: {update_url}")
 
     if aghash := section.aghash:
-        yield Result(state=State.OK, notice=f"Agent configuration: {aghash[:8]}")
+        yield Result(state=State.OK, notice=f"Agent configuration: {aghash}")
 
     if pending := section.pending_hash:
-        yield Result(state=State.OK, notice=f"Pending installation: {pending[:8]}")
+        yield Result(state=State.OK, notice=f"Pending installation: {pending}")
 
     yield from _check_cmk_agent_update_certificates(section)
 
@@ -409,7 +403,7 @@ def _check_plugins(
 ) -> CheckResult:
     yield Result(
         state=State.OK,
-        summary=f"Agent plugins: {len(section.plugins)}",
+        summary=f"Agent plug-ins: {len(section.plugins)}",
     )
     yield Result(
         state=State.OK,
@@ -419,7 +413,7 @@ def _check_plugins(
         section.plugins,
         params.get("versions_plugins"),
         params.get("exclude_pattern_plugins"),
-        "Agent plugin",
+        "Agent plug-in",
     )
     yield from _check_versions_and_duplicates(
         section.local_checks,
@@ -510,13 +504,15 @@ def _check_controller_cert_validity(section: ControllerSection, now: float) -> C
             levels_lower=(30 * 24 * 3600, 15 * 24 * 3600),  # (30 days, 15 days)
             render_func=render.timespan,
             label=(
-                f"Time until controller certificate for `{site_id}`, "
-                f"issued by `{connection.local.cert_info.issuer}`, expires"
-            )
-            if (site_id := connection.get_site_id())
-            else (
-                "Time until controller certificate issued by "
-                f"`{connection.local.cert_info.issuer}` (imported connection) expires"
+                (
+                    f"Time until controller certificate for `{site_id}`, "
+                    f"issued by `{connection.local.cert_info.issuer}`, expires"
+                )
+                if (site_id := connection.get_site_id())
+                else (
+                    "Time until controller certificate issued by "
+                    f"`{connection.local.cert_info.issuer}` (imported connection) expires"
+                )
             ),
             notice_only=True,
         )
@@ -528,13 +524,7 @@ def _format_cached_plugin(plugin: CachedPlugin) -> str:
     if plugin.plugin_type is None:
         return f"{plugin.plugin_name} ({plugin_info})"
 
-    name_mapping = {
-        CachedPluginType.PLUGIN: "Agent plugin",
-        CachedPluginType.LOCAL: "Local check",
-        CachedPluginType.ORACLE: "mk_oracle plugin",
-    }
-
-    return f"{plugin.plugin_name} ({name_mapping[plugin.plugin_type]}, {plugin_info})"
+    return f"{plugin.plugin_name} ({render_plugin_type(plugin.plugin_type)}, {plugin_info})"
 
 
 def _plugin_strings(plugins: Sequence[CachedPlugin]) -> tuple[str, str]:
@@ -612,5 +602,11 @@ register.check_plugin(
         "agent_version_missmatch": 1,
         "restricted_address_mismatch": 1,
         "legacy_pull_mode": 1,
+        # This next entry will be postprocessed by the backend.
+        # The "only_from" configuration is not a check parameter but it is configured as an Agent Bakery rule,
+        # and controls the *deployment* of the only_from setting.
+        # We want to use that very setting to check whether it is deployed correctly.
+        # Don't try this hack at home, we are trained professionals.
+        "only_from": ("cmk_postprocessed", "only_from", None),
     },
 )

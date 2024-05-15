@@ -21,7 +21,8 @@ jobs:
           stale-pr-label: "Stale"
           # We only set the label manually for now.
           days-before-pr-stale: -1
-          stale-pr-message: "This issue is stale because it has been open for 30 days with no activity."
+          stale-pr-message: "This issue has been marked stale."
+          #stale-pr-message: "This issue is stale because it has been open for 30 days with no activity."
           # Autoclose stale PRs after 3 weeks.
           days-before-pr-close: 21
           close-pr-message: "This issue was closed because it has been inactive for 3 weeks since being marked as stale."

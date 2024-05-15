@@ -6,24 +6,24 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     all_of,
     any_of,
+    DiscoveryResult,
     exists,
+    Service,
     SNMPTree,
     startswith,
+    StringTable,
 )
 
 
-def inventory_fsc_subsystems(info):
-    yield from (
-        (line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8))
-        for line in info
-        if int(line[1]) > 0
-    )
+def discover_fsc_subsystems(string_table: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in string_table if int(line[1]) > 0)
 
 
-def check_fsc_subsystems(item, params, info):
+def check_fsc_subsystems(item, _no_params, info):
     for line in info:  # , value1, value2 in info:
         name = line[0]
         if name != item:
@@ -41,7 +41,12 @@ def check_fsc_subsystems(item, params, info):
         return (3, "unknown status %d" % status)
 
 
+def parse_fsc_subsystems(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fsc_subsystems"] = LegacyCheckDefinition(
+    parse_function=parse_fsc_subsystems,
     detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.231"),
@@ -55,6 +60,6 @@ check_info["fsc_subsystems"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="FSC %s",
-    discovery_function=inventory_fsc_subsystems,
+    discovery_function=discover_fsc_subsystems,
     check_function=check_fsc_subsystems,
 )

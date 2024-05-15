@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import df, storeonce, uptime
+
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import df, storeonce, uptime
 
 Section = Mapping[str, str]
 

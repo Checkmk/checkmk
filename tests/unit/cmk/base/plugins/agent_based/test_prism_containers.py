@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.prism_containers import (
     check_prism_container,
     discovery_prism_container,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 SECTION = {
     "NutanixManagementShare": {
@@ -513,7 +514,7 @@ def test_discovery_prism_container(
                     levels=(79.99999999999507, 89.99999999999446),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 0.09% - 13.7 GiB of 14.8 TiB"),
+                Result(state=State.OK, summary="Used: 0.09% - 14.8 GB of 16.2 TB"),
                 Metric("fs_size", 15478093.926487923, boundaries=(0.0, None)),
             ],
             id="If ..., the check result is OK.",
@@ -536,7 +537,7 @@ def test_discovery_prism_container(
                     levels=(79.99999999999903, 89.99999999999952),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 22.18% - 4.20 TiB of 19.0 TiB"),
+                Result(state=State.OK, summary="Used: 22.18% - 4.62 TB of 20.8 TB"),
                 Metric("fs_size", 19870917.922581673, boundaries=(0.0, None)),
             ],
             id="If ..., the check result is WARN.",

@@ -1,0 +1,14 @@
+Title: reports: pdf headings no longer run off the page when they are too long
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1695213138
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue when creating pdf reports from host when the host
+name is too long to fit on the page. We now wrap the text over more than one
+line when required.
+

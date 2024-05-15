@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import hp_proliant
+
+from cmk.plugins.lib import hp_proliant
 
 
 class Params(typing.TypedDict, total=True):
@@ -70,7 +71,7 @@ def check_hp_proliant_power(params: Params, section: Section) -> CheckResult:
 
     yield from v1.check_levels(
         value=reading,
-        metric_name="watt",
+        metric_name="power",
         levels_upper=params.get("levels"),
         label="Current reading",
         render_func=lambda x: f"{x} Watts",

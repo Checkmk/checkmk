@@ -19,9 +19,10 @@
 
 # mypy: disable-error-code="var-annotated,arg-type"
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+from cmk.agent_based.v2 import render
 
 nodes_info = {
     "open_file_descriptors": "Open file descriptors",
@@ -56,7 +57,7 @@ def check_elasticsearch_nodes(item, params, parsed):
     for data_key, params_key, hr_func in [
         ("cpu_percent", "cpu_levels", render.percent),
         ("cpu_total_in_millis", "cpu_total_in_millis", int),
-        ("mem_total_virtual_in_bytes", "mem_total_virtual_in_bytes", get_bytes_human_readable),
+        ("mem_total_virtual_in_bytes", "mem_total_virtual_in_bytes", render.bytes),
         ("open_file_descriptors", "open_file_descriptors", int),
         ("max_file_descriptors", "max_file_descriptors", int),
     ]:

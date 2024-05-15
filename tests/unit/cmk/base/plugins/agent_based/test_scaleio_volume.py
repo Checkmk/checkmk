@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -11,8 +11,10 @@ from cmk.base.plugins.agent_based.scaleio_volume import (
     check_scaleio_volume,
     discover_scaleio_volume,
     ScaleioVolume,
+    ScaleioVolumeSection,
 )
-from cmk.base.plugins.agent_based.utils.scaleio import DiskReadWrite, StorageConversionError
+
+from cmk.plugins.lib.scaleio import DiskReadWrite, StorageConversionError
 
 SECTION = {
     "c07a5f6c00000001": ScaleioVolume(
@@ -59,7 +61,7 @@ ITEM = "c07a5f6c00000001"
     ],
 )
 def test_inventory_scaleio_volume(
-    parsed_section: Mapping[str, ScaleioVolume],
+    parsed_section: ScaleioVolumeSection,
     discovered_services: Sequence[Service],
 ) -> None:
     assert list(discover_scaleio_volume(parsed_section)) == discovered_services

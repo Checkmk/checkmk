@@ -2,11 +2,12 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime
 import json
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
@@ -16,7 +17,8 @@ from cmk.base.plugins.agent_based.mobileiron_versions import (
     check_mobileiron_versions,
     Params,
 )
-from cmk.base.plugins.agent_based.utils.mobileiron import Section
+
+from cmk.plugins.lib.mobileiron import Section
 
 DEVICE_DATA_ANDROID = parse_mobileiron(
     [
@@ -79,7 +81,9 @@ DEVICE_DATA_OTHER = parse_mobileiron(
     ],
 )
 def test_try_calculation_age(string: str, expected_results: int) -> None:
-    with on_time(1643360266, "UTC"):
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(1643360266, tz=ZoneInfo("UTC")), tick=False
+    ):
         assert _try_calculation_age(string) == expected_results
 
 
@@ -206,6 +210,6 @@ def test_try_calculation_age_raises() -> None:
 def test_check_mobileiron_versions(
     params: Params, section: Section, expected_results: CheckResult
 ) -> None:
-    with on_time(1643360266, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1643360266, tz=ZoneInfo("UTC"))):
         results = tuple(check_mobileiron_versions(params, section))
         assert results == expected_results

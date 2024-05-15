@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
+
+from cmk.agent_based.v2 import any_of, equals, SNMPTree, StringTable
 
 
 def inventory_ups_eaton_enviroment(info):
@@ -51,7 +52,12 @@ def check_ups_eaton_enviroment(item, params, info):
     return (state, ", ".join(messages), perfdata)
 
 
+def parse_ups_eaton_enviroment(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
+    parse_function=parse_ups_eaton_enviroment,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1.2"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.1"),

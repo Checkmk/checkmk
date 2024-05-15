@@ -5,40 +5,47 @@
 
 import re
 import shlex
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Literal
+
+from cmk.utils.tags import TagID
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.site_config import get_site_config
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.views.icon import Icon
 
 
 class MkeventdIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "mkeventd"
 
     @classmethod
     def title(cls) -> str:
         return _("Events")
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return False
 
-    def default_sort_index(self):
+    def default_sort_index(self) -> int:
         return 30
 
     def columns(self) -> Sequence[ColumnName]:
         return ["check_command"]
 
-    def host_columns(self):
+    def host_columns(self) -> list[str]:
         return ["address", "name"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | tuple[str, str, str]:
         if not active_config.mkeventd_enabled:
             return None
@@ -64,12 +71,15 @@ class MkeventdIcon(Icon):
         if not args:
             return None
 
-        # Handle -a, -H and -L options. Sorry for the hack. We currently
-        # have no better idea
-        if len(args) >= 2 and args[0] == "-H":
-            args = args[2:]  # skip two arguments
-        if len(args) >= 1 and args[0] in ["-a", "-L", "-l"]:
-            args = args[1:]
+        # First, we remove options without arguments
+        for element in ["-a", "-L", "-l"]:
+            if element in args:
+                args.remove(element)
+
+        # Then, we remove options with 1 argument
+        for i, element in enumerate(args):
+            if element in ["-H", "-s"]:
+                args = args[:i] + args[i + 2 :]
 
         if len(args) >= 1:
             host = _get_hostname(args, row)
@@ -85,7 +95,7 @@ class MkeventdIcon(Icon):
         # constructed here
         url_prefix = ""
         if getattr(active_config, "mkeventd_distributed", False):
-            site = get_site_config(row["site"])
+            site = get_site_config(active_config, row["site"])
             url_prefix = site["url_prefix"] + "check_mk/"
 
         url_vars = [
@@ -106,7 +116,7 @@ class MkeventdIcon(Icon):
         return "mkeventd", title, url_prefix + url
 
 
-def _get_hostname(args, row) -> str:  # type: ignore[no-untyped-def]
+def _get_hostname(args: Sequence[str], row: Row) -> str:
     args_splitted = args[0].split("/")
     if args_splitted[0] == "$HOSTNAME$":
         return row["host_name"]

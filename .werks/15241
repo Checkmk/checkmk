@@ -1,4 +1,4 @@
-Title: Drop configuration variable `ignored_checktypes`
+Title: Drop configuration variable 'ignored_checktypes'
 Class: feature
 Compatible: incomp
 Component: checks
@@ -11,4 +11,3 @@ Version: 2.3.0b1
 This Werk only affects users that use handcrafted .mk files to configure disabled check plugins.
 The configuration variable used to do this, <tt>ignored_checktypes</tt>, has no effect anymore.
 Please use the host ruleset <i>"Disabled checks"</i> in the <i>Setup</i> menu.
-

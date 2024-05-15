@@ -2,9 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from typing import Any
+
+from cmk.plugins.lib import df, sap_hana
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -15,7 +17,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import df, sap_hana
 
 
 def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSection:
@@ -28,14 +29,13 @@ def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSect
             if len(line) < 8:
                 continue
 
-            for key_name, custom_dict, indexes in (
+            line_parsing_schema: Sequence[tuple[str, dict[str, str], tuple[int, int]]] = [
                 ("%s - %s %s", {"service": line[1], "path": line[3]}, (7, 6)),
                 ("%s - %s %s Disk", {}, (5, 4)),
                 ("%s - %s %s Disk Net Data", {}, (5, 6)),
-            ):
-                inst = section.setdefault(
-                    key_name % (sid_instance, line[0], line[2]), custom_dict  # type: ignore[arg-type]
-                )
+            ]
+            for key_name, custom_dict, indexes in line_parsing_schema:
+                inst = section.setdefault(key_name % (sid_instance, line[0], line[2]), custom_dict)
                 for key, index in [
                     ("size", indexes[0]),
                     ("used", indexes[1]),

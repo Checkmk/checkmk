@@ -28,7 +28,7 @@ def _create_python_requirements_impl(rctx):
     packages = {
         name: requirement
         for name, requirement in parsed_requirements_txt.requirements
-        if name not in ["protobuf", "rrdtool", "agent-receiver", "pymssql"]
+        if name not in rctx.attr.ignored_modules
     }
 
     bzl_packages = sorted(packages.keys())
@@ -44,7 +44,7 @@ def _create_python_requirements_impl(rctx):
     )
 
 create_python_requirements = repository_rule(
-    attrs = {"requirements": attr.string(mandatory = True)},
+    attrs = {"requirements": attr.string(mandatory = True), "ignored_modules": attr.string_list()},
     doc = """A rule for importing `Pipfile` dependencies into Bazel.""",
     implementation = _create_python_requirements_impl,
 )

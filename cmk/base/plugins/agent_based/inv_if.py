@@ -6,11 +6,12 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
+from cmk.plugins.lib import uptime
+from cmk.plugins.lib.interfaces import render_mac_address
+from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams
+
 from .agent_based_api.v1 import exists, OIDBytes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringByteTable
-from .utils import uptime
-from .utils.interfaces import render_mac_address
-from .utils.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams
 
 
 @dataclass
@@ -84,7 +85,7 @@ def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Int
         alias=alias,
         type=type_,
         speed=int(high_speed) * 1000 * 1000 if high_speed else int(speed),
-        oper_status=int(oper_status),
+        oper_status=int(oper_status) if oper_status.isdigit() else None,
         phys_address=render_mac_address(sub_table[-2]),
         admin_status=int(admin_status) if admin_status else None,
         last_change=_process_last_change(last_change),

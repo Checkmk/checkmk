@@ -759,6 +759,13 @@ class Hosts(Table):
     )
     """Optional performance data of the last check"""
 
+    performance_data = Column(
+        'performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     plugin_output = Column(
         'plugin_output',
         col_type='string',

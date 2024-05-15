@@ -1,0 +1,13 @@
+Title: ical imports: valid iCalendar files not being accepted on import
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1700150397
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+iCalendar files with new lines at the end file were failing to import.
+This werk addresses the issue by allowing iCalendar files that endwith
+a newline character or not.
+

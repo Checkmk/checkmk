@@ -1,0 +1,12 @@
+Title: primekey_data: Fix parsing crash when HSM Status isn't available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1700490360
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Sometimes the information about the HSM Status was not available in the walk.
+This caused the parsing of the primekay_data section to fail.
+This has been fixed and if the value is not available, it will be ignored.

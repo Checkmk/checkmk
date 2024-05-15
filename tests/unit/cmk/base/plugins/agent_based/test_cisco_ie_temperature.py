@@ -10,7 +10,8 @@ from cmk.base.plugins.agent_based import cisco_ie_temp
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.cisco_ie_temp import Section, SensorId
-from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
+
+from cmk.plugins.lib.temperature import TempParamDict
 
 OK = 25
 WARN = 30

@@ -3,25 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import json
 import logging
 
 from cmk.fetchers import Mode
-from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.filecache import MaxAge
 
-
-class MockStore:
-    def __init__(self, data) -> None:  # type: ignore[no-untyped-def]
-        super().__init__()
-        self._data = data
-
-    def store(self, data):
-        self._data = copy.copy(data)
-
-    def load(self):
-        return copy.copy(self._data)
+from cmk.checkengine.parser import SectionStore
 
 
 class TestSectionStore:

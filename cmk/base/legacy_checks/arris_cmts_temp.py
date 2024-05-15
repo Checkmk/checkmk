@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 
 def inventory_arris_cmts_temp(info):
@@ -25,7 +26,12 @@ def check_arris_cmts_temp(item, params, info):
     return 3, "Sensor not found in SNMP data"
 
 
+def parse_arris_cmts_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["arris_cmts_temp"] = LegacyCheckDefinition(
+    parse_function=parse_arris_cmts_temp,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4998.1.1.10.1.4.2.1",

@@ -1,0 +1,39 @@
+Title: Local privilege escalation in agent plugin 'mk_tsm'
+Class: security
+Compatible: incomp
+Component: checks
+Date: 1702411459
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+By crafting a malicious command that then shows up in the output of `ps` users of monitored hosts could gain root privileges.
+This was achieved by exploiting the insufficient quoting when using ksh's `eval` to create the required environment.
+
+This issue was found during internal review.
+
+
+### Affected Versions
+
+ * 2.2.0
+ * 2.1.0
+ * 2.0.0 (EOL) and older
+
+
+### Mitigations
+
+If updating is not possible, disable the Tivoli Storage Manager plugin.
+
+
+### Vulnerability Management
+
+We have rated the issue with a CVSS score of 8.8 (High) with the following CVSS vector:
+`CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H`
+
+We have assigned `CVE-2023-6735`.
+
+
+### Changes
+
+With this change we no longer use `eval` and fixe the quoting.
+This prevents variable exports being missinterpreted as commands to execute.

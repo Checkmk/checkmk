@@ -1,0 +1,12 @@
+{
+  "slice": 86400,
+  "dsname": "load15",
+  "valid_interval": [
+    1543186800,
+    1543273200
+  ],
+  "params": {
+    "period": "day",
+    "horizon": 90
+  }
+}

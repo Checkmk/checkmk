@@ -9,7 +9,8 @@ import cmk.base.plugins.agent_based.kemp_loadmaster_realserver as klr
 import cmk.base.plugins.agent_based.kemp_loadmaster_services as kls
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VSSection
+
+from cmk.plugins.lib.kemp_loadmaster import VSSection
 
 
 @pytest.fixture(name="rs_section")

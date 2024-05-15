@@ -7,11 +7,14 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.ups_modulys import DETECT_UPS_MODULYS
+
+from cmk.agent_based.v2 import SNMPTree
+from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
 def parse_ups_modulys_inphase(string_table):
+    if not string_table:
+        return None
     parsed = {}
     parsed["Phase 1"] = {
         "frequency": int(string_table[0][1]) / 10.0,

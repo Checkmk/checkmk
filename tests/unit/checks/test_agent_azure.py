@@ -2,13 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from .checktestlib import SpecialAgent
 
 
 @pytest.mark.parametrize(
@@ -64,6 +63,42 @@ from tests.testlib import SpecialAgent
                 "my_tag",
             ],
             id="password_from_store",
+        ),
+        pytest.param(
+            {
+                "subscription": "banana",
+                "tenant": "strawberry",
+                "client": "blueberry",
+                "secret": ("store", "azure"),
+                "config": {
+                    "explicit": [{"group_name": "my_res_group", "resources": ["res1", "res2"]}],
+                    "tag_based": [("my_tag_1", "exists"), ("my_tag_2", ("value", "t1"))],
+                },
+                "sequential": True,
+                "proxy": ("environment", "environment"),
+            },
+            [
+                "--tenant",
+                "strawberry",
+                "--client",
+                "blueberry",
+                "--secret",
+                ("store", "azure", "%s"),
+                "--subscription",
+                "banana",
+                "--sequential",
+                "--proxy",
+                "FROM_ENVIRONMENT",
+                "--explicit-config",
+                "group=my_res_group",
+                "resources=res1,res2",
+                "--require-tag",
+                "my_tag_1",
+                "--require-tag-value",
+                "my_tag_2",
+                "t1",
+            ],
+            id="all_arguments",
         ),
     ],
 )

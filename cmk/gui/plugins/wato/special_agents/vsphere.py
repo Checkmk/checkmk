@@ -7,7 +7,6 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_options
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
@@ -19,7 +18,7 @@ from cmk.gui.valuespec import (
     NetworkPort,
     TextInput,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupVMCloudContainer
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
@@ -167,7 +166,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                         ("alias", _("Use the name specified in the ESX system")),
                         (
                             "hostname",
-                            _("Use the VMs hostname if set, otherwise fall back to ESX name"),
+                            _("Use the VMs host name if set, otherwise fall back to ESX name"),
                         ),
                     ],
                     default_value="alias",
@@ -176,7 +175,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
             (
                 "spaces",
                 DropdownChoice(
-                    title=_("Spaces in hostnames"),
+                    title=_("Spaces in host names"),
                     choices=[
                         ("cut", _("Cut everything after first space")),
                         ("underscore", _("Replace with underscores")),

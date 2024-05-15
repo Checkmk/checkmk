@@ -22,6 +22,8 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.availability import (
     AVData,
     AVEntry,
+    AVGroups,
+    AVLayoutTimeline,
     AVMode,
     AVObjectCells,
     AVObjectSpec,
@@ -30,6 +32,7 @@ from cmk.gui.availability import (
     AVOptionValueSpecs,
     AVRawData,
     AVRowCells,
+    AVTimelineStyle,
     AVTimeRange,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -71,9 +74,10 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
     TextInput,
+    ValueSpec,
 )
 from cmk.gui.view import View
-from cmk.gui.visuals import page_menu_dropdown_add_to_visual, view_title
+from cmk.gui.visuals import page_menu_topic_add_to, view_title
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
@@ -110,26 +114,27 @@ def _show_availability_options(
     option_type: str, what: AVObjectType, avoptions: AVOptions, valuespecs: AVOptionValueSpecs
 ) -> None:
     form_name = "avoptions_%s" % option_type
-    html.begin_form(form_name)
-    html.hidden_field("avoptions", "set")
+    with html.form_context(form_name):
+        html.hidden_field("avoptions", "set")
 
-    _show_availability_options_controls()
+        _show_availability_options_controls()
 
-    container_id = "av_options_%s" % option_type
-    html.open_div(id_=container_id, class_="side_popup_content")
-    if user_errors and html.form_submitted(form_name):
-        html.show_user_errors()
+        container_id = "av_options_%s" % option_type
+        html.open_div(id_=container_id, class_="side_popup_content")
+        if user_errors and html.form_submitted(form_name):
+            html.show_user_errors()
 
-    for name, height, _show_in_reporting, vs in valuespecs:
+        for name, height, _show_in_reporting, vs in valuespecs:
 
-        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type: ignore[no-untyped-def]
-            vs.render_input("avo_" + name, avoptions.get(name))
+            def renderer(
+                name: str = name, vs: ValueSpec = vs, avoptions: AVOptions = avoptions
+            ) -> None:
+                vs.render_input("avo_" + name, avoptions.get(name))
 
-        html.render_floating_option(name, height, vs.title(), renderer)
-    html.close_div()
+            html.render_floating_option(name, height, vs.title(), renderer)
+        html.close_div()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
 
 
 def _show_availability_options_controls() -> None:
@@ -217,7 +222,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
     if request.var("av_host"):
         av_object = (
             SiteId(request.get_str_input_mandatory("av_site")),
-            HostName(request.get_str_input_mandatory("av_host")),
+            request.get_validated_type_input_mandatory(HostName, "av_host"),
             ServiceName(request.get_str_input_mandatory("av_service")),
         )
         title += av_object[1]
@@ -288,11 +293,13 @@ def show_availability_page(  # pylint: disable=too-many-branches
             request,
             title,
             breadcrumb,
-            page_menu=_page_menu_availability(
-                breadcrumb, view, what, av_mode, av_object, time_range, avoptions
-            )
-            if display_options.enabled(display_options.B)
-            else None,
+            page_menu=(
+                _page_menu_availability(
+                    breadcrumb, view, what, av_mode, av_object, time_range, avoptions
+                )
+                if display_options.enabled(display_options.B)
+                else None
+            ),
             browser_reload=html.browser_reload,
         )
         html.begin_page_content()
@@ -344,9 +351,9 @@ def show_availability_page(  # pylint: disable=too-many-branches
         html.body_end()
 
 
-def _page_menu_availability(  # type: ignore[no-untyped-def]
+def _page_menu_availability(
     breadcrumb: Breadcrumb,
-    view,
+    view: View,
     what: AVObjectType,
     av_mode: AVMode,
     av_object: AVObjectSpec,
@@ -399,12 +406,14 @@ def _page_menu_availability(  # type: ignore[no-untyped-def]
                 ],
             )
         ]
-        + page_menu_dropdown_add_to_visual(add_type="availability", name=view.name)
         + [
             PageMenuDropdown(
                 name="export",
                 title=_("Export"),
-                topics=[
+                topics=page_menu_topic_add_to(
+                    visual_type="availability", name=view.name, source_type="availability"
+                )
+                + [
                     PageMenuTopic(
                         title=_("Data"),
                         entries=list(_page_menu_entries_export_data()),
@@ -445,7 +454,7 @@ def _page_menu_entries_av_mode(
         )
         return
 
-    if what != "bi" and not av_object:
+    if what != "bi":
         yield PageMenuEntry(
             title=_("Timeline"),
             icon_name="timeline",
@@ -454,16 +463,6 @@ def _page_menu_entries_av_mode(
             shortcut_title=_("View timeline"),
         )
         return
-
-    if av_mode == "timeline" and what != "bi":
-        history_url = availability.history_url_of(av_object, time_range)
-        yield PageMenuEntry(
-            title=_("History"),
-            icon_name="history",
-            item=make_simple_link(history_url),
-            is_shortcut=True,
-            shortcut_title=_("View history"),
-        )
 
 
 def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
@@ -509,8 +508,8 @@ def do_render_availability(
     show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object is not None)
 
 
-def render_availability_tables(  # type: ignore[no-untyped-def]
-    availability_tables, what, avoptions
+def render_availability_tables(
+    availability_tables: AVGroups, what: AVObjectType, avoptions: AVOptions
 ) -> None:
     if not availability_tables:
         html.show_message(_("No matching hosts/services."))
@@ -615,13 +614,13 @@ def _render_availability_timeline(
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
                 table.cell(
                     _("Summary at last status change"),
-                    format_plugin_output(row.get("log_output", ""), row),
+                    format_plugin_output(row.get("log_output", ""), request=request, row=row),
                 )
 
             if "timeline_long_output" in avoptions["labelling"]:
                 table.cell(
                     _("Last known details"),
-                    format_plugin_output(row.get("long_log_output", ""), row),
+                    format_plugin_output(row.get("long_log_output", ""), request=request, row=row),
                 )
 
     # Legend for timeline
@@ -658,8 +657,8 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.close_div()
 
 
-def render_availability_table(  # type: ignore[no-untyped-def]
-    group_title, availability_table, what, avoptions
+def render_availability_table(
+    group_title: str | None, availability_table: AVData, what: AVObjectType, avoptions: AVOptions
 ) -> None:
     av_table = availability.layout_availability_table(
         what, group_title, availability_table, avoptions
@@ -721,8 +720,8 @@ def render_availability_table(  # type: ignore[no-untyped-def]
                 )
 
 
-def render_timeline_bar(  # type: ignore[no-untyped-def]
-    timeline_layout, style, timeline_nr=0
+def render_timeline_bar(
+    timeline_layout: AVLayoutTimeline, style: AVTimelineStyle, timeline_nr: int = 0
 ) -> None:
     render_date = timeline_layout["render_date"]
     time_range: AVTimeRange = timeline_layout["range"]
@@ -1193,10 +1192,9 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
         browser_reload=html.browser_reload,
     )
 
-    html.begin_form("editanno", method="GET")
-    _vs_annotation().render_input_as_form("_editanno", value)
-    html.hidden_fields()
-    html.end_form()
+    with html.form_context("editanno", method="GET"):
+        _vs_annotation().render_input_as_form("_editanno", value)
+        html.hidden_fields()
 
     html.body_end()
     return True
@@ -1223,7 +1221,7 @@ def _validate_reclassify_of_states(value, varprefix):
     if host_state is not None:
         if not value.get("host"):
             raise MKUserError(
-                "_editanno_p_host", _("Please set a hostname for host state reclassification")
+                "_editanno_p_host", _("Please set a host name for host state reclassification")
             )
 
     service_state = value.get("service_state")
@@ -1238,7 +1236,7 @@ def _validate_reclassify_of_states(value, varprefix):
 def _vs_annotation():
     elements: list[DictionaryEntry] = [
         ("site", TextInput(title=_("Site"))),
-        ("host", TextInput(title=_("Hostname"))),
+        ("host", TextInput(title=_("Host name"))),
         (
             "host_state",
             Optional(
@@ -1375,12 +1373,18 @@ def _output_availability_timelines_csv(
     what: AVObjectType, av_data: AVData, avoptions: AVOptions
 ) -> None:
     _av_output_set_content_disposition("Checkmk-Availability-Timeline")
-    for timeline_nr, av_entry in enumerate(av_data):
-        _output_availability_timeline_csv(what, av_entry, avoptions, timeline_nr)
+
+    with table_element(
+        "av_timeline",
+        "",
+        output_format="csv",
+    ) as table:
+        for av_entry in av_data:
+            _output_availability_timeline_csv(table, what, av_entry, avoptions)
 
 
 def _output_availability_timeline_csv(
-    what: AVObjectType, av_entry: AVEntry, avoptions: AVOptions, timeline_nr: int
+    table: Table, what: AVObjectType, av_entry: AVEntry, avoptions: AVOptions
 ) -> None:
     timeline_layout = availability.layout_timeline(
         what,
@@ -1391,31 +1395,27 @@ def _output_availability_timeline_csv(
     )
 
     object_cells = availability.get_object_cells(what, av_entry, avoptions["labelling"])
+    for row in timeline_layout["table"]:
+        table.row()
 
-    with table_element(
-        "av_timeline", "", output_format="csv", omit_headers=timeline_nr != 0
-    ) as table:
-        for row in timeline_layout["table"]:
-            table.row()
+        table.cell("object_type", what)
+        for cell_index, objectcell in enumerate(object_cells):
+            table.cell("object_name_%d" % cell_index, objectcell[0])
 
-            table.cell("object_type", what)
-            for cell_index, objectcell in enumerate(object_cells):
-                table.cell("object_name_%d" % cell_index, objectcell[0])
+        table.cell("object_title", availability.object_title(what, av_entry))
+        table.cell("from", row["from"])
+        table.cell("from_text", row["from_text"])
+        table.cell("until", row["until"])
+        table.cell("until_text", row["until_text"])
+        table.cell("state", row["state"])
+        table.cell("state_name", row["state_name"])
+        table.cell("duration_text", row["duration_text"])
 
-            table.cell("object_title", availability.object_title(what, av_entry))
-            table.cell("from", row["from"])
-            table.cell("from_text", row["from_text"])
-            table.cell("until", row["until"])
-            table.cell("until_text", row["until_text"])
-            table.cell("state", row["state"])
-            table.cell("state_name", row["state_name"])
-            table.cell("duration_text", row["duration_text"])
+        if "omit_timeline_plugin_output" not in avoptions["labelling"]:
+            table.cell("log_output", row.get("log_output", ""))
 
-            if "omit_timeline_plugin_output" not in avoptions["labelling"]:
-                table.cell("log_output", row.get("log_output", ""))
-
-            if "timeline_long_output" in avoptions["labelling"]:
-                table.cell("long_log_output", row.get("long_log_output", ""))
+        if "timeline_long_output" in avoptions["labelling"]:
+            table.cell("long_log_output", row.get("long_log_output", ""))
 
 
 def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVOptions) -> None:

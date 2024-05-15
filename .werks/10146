@@ -8,15 +8,15 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0i1
 
-The AIX agent plugin {{mk_logwatch.aix}} has been renamed to {{mk_errpt.aix}}.
-The plugins name wrongly suggested that it was a version of {{mk_logwatch}}
+The AIX agent plugin "mk_logwatch.aix" has been renamed to "mk_errpt.aix".
+The plugins name wrongly suggested that it was a version of "mk_logwatch"
 designed to run on AIX machines.
 
 In fact, mk_errpt.aix (formerly known as mk_logwatch.aix) is a Korn-shell
-plugin that will forward all errors reported by the command line tool {{errpt}}
+plugin that will forward all errors reported by the command line tool "errpt"
 in a way that will create a logwatch service on the monitoring server.
 
-{{mk_logwatch}}, on the other hand, is a python plugin. It should run on any
+"mk_logwatch", on the other hand, is a python plugin. It should run on any
 machine as long as python is installed, in particular it is known to run on
 AIX machines.
 

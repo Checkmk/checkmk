@@ -7,25 +7,29 @@ set -e -o pipefail
 
 case "$DISTRO" in
     ubuntu-*)
+        # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
-        # Install docker software
         apt-get update
         # Needed for building the agent deb/rpm packages
+        # buildscripts/scripts/sign-packages.sh
+        # Not needed for "make dist", but for the post-build steps of
+        # buildscripts/scripts/build-cmk-packages.groovy and
+        # buildscripts/scripts/build-linux-agent-updater.groovy
         apt-get install -y \
             rpm \
-            alien
-        # Not needed for "make dist", but for the post-build steps of
-        # buildscripts/scripts/build-cmk-version.jenkins
-        apt-get install -y \
+            alien \
             dpkg-sig
 
-        rm -rf /var/lib/apt/lists/*
-
-        exit 0
+        # Test the installations
+        EXIT_STATUS=0
+        rpm --version || EXIT_STATUS=$?
+        alien --version || EXIT_STATUS=$?
+        dpkg-sig --help || EXIT_STATUS=$?
+        exit $EXIT_STATUS
         ;;
     *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - rpm, alien, dpkg-sig should only be available for Ubuntu!"
         exit 1
         ;;
 esac

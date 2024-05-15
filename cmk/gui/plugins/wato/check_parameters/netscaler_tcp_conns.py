@@ -57,6 +57,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netscaler_tcp_conns,
-        title=lambda: _("Citrix Netscaler Loadbalancer TCP Connections"),
+        title=lambda: _("Citrix Netscaler Load Balancer TCP Connections"),
     )
 )

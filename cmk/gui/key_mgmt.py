@@ -13,13 +13,12 @@ from livestatus import SiteId
 
 import cmk.utils.render
 import cmk.utils.store as store
-from cmk.utils.crypto import HashAlgorithm
-from cmk.utils.crypto.certificate import (
-    CertificateWithPrivateKey,
-    InvalidPEMError,
-    WrongPasswordError,
-)
+from cmk.utils.certs import CertManagementEvent
+from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey
+from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
+from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
@@ -134,7 +133,7 @@ class PageKeyManagement:
                             title=_("Add key"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Add key"),
+                                    title=_("Generate key"),
                                     icon_name="new",
                                     item=make_simple_link(
                                         makeuri_contextless(request, [("mode", self.edit_mode)])
@@ -182,8 +181,19 @@ class PageKeyManagement:
             self.key_store.save(keys)
         return None
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        raise NotImplementedError()
+
     def _log_delete_action(self, key_id: int, key: Key) -> None:
-        pass
+        log_security_event(
+            CertManagementEvent(
+                event="certificate removed",
+                component=self.component_name,
+                actor=user.id,
+                cert=key.to_certificate(),
+            )
+        )
 
     def _delete_confirm_msg(self) -> str:
         raise NotImplementedError()
@@ -266,17 +276,32 @@ class PageEditKey:
             new_id = max(new_id, key_id + 1)
 
         assert user.id is not None
-        keys[new_id] = generate_key(alias, passphrase, user.id, omd_site())
+        key = generate_key(alias, passphrase, user.id, omd_site())
+        self._log_create_key(key.to_certificate())
+        keys[new_id] = key
         self.key_store.save(keys)
+
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        raise NotImplementedError()
+
+    def _log_create_key(self, cert: Certificate) -> None:
+        log_security_event(
+            CertManagementEvent(
+                event="certificate created",
+                component=self.component_name,
+                actor=user.id,
+                cert=cert,
+            )
+        )
 
     def page(self) -> None:
         # Currently only "new" is supported
-        html.begin_form("key", method="POST")
-        html.prevent_password_auto_completion()
-        self._vs_key().render_input("key", {})
-        self._vs_key().set_focus("key")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("key", method="POST"):
+            html.prevent_password_auto_completion()
+            self._vs_key().render_input("key", {})
+            self._vs_key().set_focus("key")
+            html.hidden_fields()
 
     def _vs_key(self) -> Dictionary:
         return Dictionary(
@@ -344,7 +369,7 @@ class PageUploadKey:
 
     def _get_uploaded(
         self,
-        cert_spec: (tuple[Literal["upload"], tuple[str, str, bytes]] | tuple[Literal["text"], str]),
+        cert_spec: tuple[Literal["upload"], tuple[str, str, bytes]] | tuple[Literal["text"], str],
     ) -> str:
         if cert_spec[0] == "upload":
             try:
@@ -360,8 +385,15 @@ class PageUploadKey:
         except WrongPasswordError:
             raise MKUserError("key_p_passphrase", "Invalid pass phrase")
 
+        try:
+            # check if the key is an RSA key, which is assumed by backup encryption at the moment
+            _rsa_key = key_pair.private_key.get_raw_rsa_key()
+        except ValueError:
+            raise MKUserError("key_p_key_file_0", "Only RSA keys are supported at this time")
+        cert = key_pair.certificate
+        self._log_upload_key(cert)
         key = Key(
-            certificate=key_pair.certificate.dump_pem().str,
+            certificate=cert.dump_pem().str,
             private_key=key_pair.private_key.dump_pem(passphrase).str,
             alias=alias,
             owner=user.ident,
@@ -370,13 +402,42 @@ class PageUploadKey:
         )
         self.key_store.add(key)
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        raise NotImplementedError()
+
+    def _log_upload_key(self, cert: Certificate) -> None:
+        log_security_event(
+            CertManagementEvent(
+                event="certificate uploaded",
+                component=self.component_name,
+                actor=user.id,
+                cert=cert,
+            )
+        )
+
     def page(self) -> None:
-        html.begin_form("key", method="POST")
-        html.prevent_password_auto_completion()
-        self._vs_key().render_input("key", {})
-        self._vs_key().set_focus("key")
-        html.hidden_fields()
-        html.end_form()
+        # Note about the cert/key requirements:
+        # * The private key has to be an RSA key because both backup encryption and agent signing
+        #   currently assume that. The algorithms are still hardcoded.
+        # * For historical reasons we expect a "combined PEM" file, with the key and cert
+        #   concatenated. In fact we don't really use the certificate, so a public/private key pair
+        #   would be sufficient.
+        # * Since we provide the passphrase to load_combined_file_content, the private key must be
+        #   encrypted (using that passphrase) and have the '-----BEGIN ENCRYPTED PRIVATE KEY-----'
+        #   form. The positive side effect is that the user proves that they know the passphrase
+        #   now, rather than later whenever the key is used.
+        html.write_text(
+            _(
+                "Here you can upload an existing certificate and private key. "
+                "The key must be an RSA key and it must be password protected."
+            )
+        )
+        with html.form_context("key", method="POST"):
+            html.prevent_password_auto_completion()
+            self._vs_key().render_input("key", {})
+            self._vs_key().set_focus("key")
+            html.hidden_fields()
 
     def _vs_key(self) -> Dictionary:
         return Dictionary(
@@ -397,13 +458,17 @@ class PageUploadKey:
                         help=self._passphrase_help(),
                         allow_empty=False,
                         is_stored_plain=False,
-                        password_meter=True,
+                        password_meter=False,
                     ),
                 ),
                 (
                     "key_file",
                     CascadingDropdown(
-                        title=_("Key"),
+                        title=_("Certificate and key file"),
+                        help=_(
+                            'Upload either the file or the file content. A "combined PEM" format,'
+                            " containing both the encrypted key and the certificate, is expected."
+                        ),
                         choices=[
                             (
                                 "upload",
@@ -488,12 +553,11 @@ class PageDownloadKey:
                 "The key will be downloaded in encrypted form."
             )
         )
-        html.begin_form("key", method="POST")
-        html.prevent_password_auto_completion()
-        self._vs_key().render_input("key", {})
-        self._vs_key().set_focus("key")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("key", method="POST"):
+            html.prevent_password_auto_completion()
+            self._vs_key().render_input("key", {})
+            self._vs_key().set_focus("key")
+            html.hidden_fields()
 
     def _vs_key(self) -> Dictionary:
         return Dictionary(
@@ -514,9 +578,12 @@ class PageDownloadKey:
 
 
 def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id: SiteId) -> Key:
+    # Note: Verification of the signatures makes assumptions about the key (RSA) and the padding
+    # scheme (PKCS1v15). Make sure this is adjusted before changing it here.
     key_pair = CertificateWithPrivateKey.generate_self_signed(
         common_name=alias,
-        organizational_unit_name=user_id,
+        organization=f"Checkmk Site {site_id}",
+        organizational_unit=user_id,
     )
     return Key(
         certificate=key_pair.certificate.dump_pem().str,

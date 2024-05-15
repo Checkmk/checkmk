@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.datapower import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.datapower import DETECT
 
 #
 
@@ -41,7 +42,12 @@ def check_datapower_temp(item, params, info):
     return None
 
 
+def parse_datapower_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["datapower_temp"] = LegacyCheckDefinition(
+    parse_function=parse_datapower_temp,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.141.1",

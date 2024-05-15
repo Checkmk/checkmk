@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.mssql_counters_page_life_expectancy import (
     check_mssql_counters_page_life_expectancy,
     discover_mssql_counters_page_life_expectancy,
 )
-from cmk.base.plugins.agent_based.utils.mssql_counters import Section
+
+from cmk.plugins.lib.mssql_counters import Section
 
 
 @pytest.mark.parametrize(

@@ -8,10 +8,10 @@ Knowledge: doc
 Level: 1
 Version: 2.2.0b1
 
-Via the command {{netsh dhcp server show mibinfo}} in the agent plugin
-{{win_dhcp_pools.bat}} the collected statistics about free or used leases are
+Via the command "netsh dhcp server show mibinfo" in the agent plugin
+"win_dhcp_pools.bat" the collected statistics about free or used leases are
 average and not absolute values. These average values refer to the last
-execution interval, see also the official docs in {{DHCP Service POG.docx}}:
+execution interval, see also the official docs in "DHCP Service POG.docx":
 <br>
 Task: Capture DHCP services scope usage statistics
 <br>

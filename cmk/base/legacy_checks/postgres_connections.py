@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-from cmk.base.plugins.agent_based.utils import postgres
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
+from cmk.plugins.lib import postgres
 
 # OLD FORMAT - with idle filter
 # <<<postgres_connections:sep(59)>>>
@@ -87,9 +88,11 @@ def check_postgres_connections(item, params, parsed):
     maximum = float(database_connections["mc"])
 
     connections = {
-        "active": database_connections["active"]
-        if has_active_and_idle
-        else database_connections["current"],
+        "active": (
+            database_connections["active"]
+            if has_active_and_idle
+            else database_connections["current"]
+        ),
         "idle": database_connections["idle"] if has_active_and_idle else None,
     }
 

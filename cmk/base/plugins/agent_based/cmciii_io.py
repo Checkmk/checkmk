@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import register, Result, State, type_defs
-from .utils.cmciii import (
+from cmk.plugins.lib.cmciii import (
     CheckParams,
     discover_cmciii_sensors,
     discovery_default_parameters,
@@ -13,6 +12,8 @@ from .utils.cmciii import (
     Section,
     Sensor,
 )
+
+from .agent_based_api.v1 import register, Result, State, type_defs
 
 
 def discover_cmciii_io(params: DiscoveryParams, section: Section) -> type_defs.DiscoveryResult:

@@ -5,9 +5,10 @@
 
 from collections.abc import Iterable
 
+from cmk.plugins.lib import diskstat
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import diskstat
 
 
 class ParagraphParser:
@@ -91,6 +92,9 @@ def parse_docker_container_diskstat_cgroupv2(
     section: dict[str, dict[str, float]] = {}
 
     for device_number, stats in parser.stat.stat.items():
+        if not {"rios", "wios", "rbytes", "wbytes"}.issubset(stats):
+            continue
+
         device_name = parser.names.names[device_number]
         section[device_name] = {
             "timestamp": parser.time.time,

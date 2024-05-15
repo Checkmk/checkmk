@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib.aruba import DETECT_WLC
+from cmk.plugins.lib.wlc_clients import ClientsTotal, WlcClientsSection
+
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.aruba import DETECT_WLC
-from .utils.wlc_clients import ClientsTotal, WlcClientsSection
 
 
 def parse_aruba_wlc_clients(string_table: list[StringTable]) -> WlcClientsSection[ClientsTotal]:

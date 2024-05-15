@@ -9,8 +9,8 @@ from collections.abc import Mapping, Sequence
 import pydantic
 import requests
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
 def agent_elasticsearch_main(args: Args) -> int:
@@ -24,7 +24,7 @@ def agent_elasticsearch_main(args: Args) -> int:
         section_urls_and_handlers = {
             "cluster_health": ("/_cluster/health", handle_cluster_health),
             "nodes": ("/_nodes/_all/stats", handle_nodes),
-            "stats": ("/*-*/_stats/store,docs", handle_stats),
+            "stats": ("/*-*/_stats/store,docs?ignore_unavailable=true", handle_stats),
         }
 
         try:
@@ -119,7 +119,7 @@ class _NodesReponse(pydantic.BaseModel, frozen=True):
 
 def handle_nodes(response: Mapping[str, object]) -> None:
     with SectionWriter("elasticsearch_nodes", separator=" ") as writer:
-        for node_response in _NodesReponse.parse_obj(response).nodes.values():
+        for node_response in _NodesReponse.model_validate(response).nodes.values():
             writer.append(
                 f"{node_response.name} open_file_descriptors {node_response.process.open_file_descriptors}"
             )

@@ -17,7 +17,8 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.oracle_processes import OracleProcess, SectionOracleProcesses
-from cmk.base.plugins.agent_based.utils.oracle import OraErrors
+
+from cmk.plugins.lib.oracle import OraErrors
 
 pytestmark = pytest.mark.checks
 
@@ -188,7 +189,7 @@ def test_discover_oracle_processes(
                     summary='Found error in agent output "Message:"',
                 )
             ],
-            id="UNKNOWN on error from 1.6 solaris agent plugin output",
+            id="UNKNOWN on error from 1.6 solaris agent plug-in output",
         ),
     ],
 )

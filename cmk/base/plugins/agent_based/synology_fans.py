@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import synology
+
+from cmk.plugins.lib import synology
 
 
 class FanStatus(enum.Enum):
@@ -65,12 +66,16 @@ def discovery(section: Section) -> DiscoveryResult:
 def check(item: str, section: Section) -> CheckResult:
     if not (fan_status := section.get(item)):
         return
-    yield Result(
-        state=State.OK,
-        summary="Operating normally",
-    ) if fan_status is FanStatus.NORMAL else Result(
-        state=State.CRIT,
-        summary="Fan failed",
+    yield (
+        Result(
+            state=State.OK,
+            summary="Operating normally",
+        )
+        if fan_status is FanStatus.NORMAL
+        else Result(
+            state=State.CRIT,
+            summary="Fan failed",
+        )
     )
 
 

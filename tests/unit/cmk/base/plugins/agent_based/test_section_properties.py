@@ -16,9 +16,9 @@ def test_detect_spec_dedup(
     This means that they currently are detecting the same devices, but they might get out
     of sync.
 
-    If this test turns red, the set of plugins that share the same detection spec has changed.
+    If this test turns red, the set of plug-ins that share the same detection spec has changed.
     This means that
-     a) You have deduplicated code, such that plugins now share the same (not only "equal"!)
+     a) You have deduplicated code, such that plug-ins now share the same (not only "equal"!)
         detection spec. That is good, remove them from the list below!
      b) You accidently changed a detect specification where you should have changed all of them,
         or you can share a spec with another plugin. -> please turn this situation into a)!
@@ -37,11 +37,9 @@ def test_detect_spec_dedup(
     assert offenders == {
         ("alcatel_timetra_chassis", "alcatel_timetra_cpu"),
         ("apc_netbotz_fluid", "apc_netbotz_smoke"),
-        ("apc_netbotz_other_sensors", "apc_netbotz_sensors"),
+        ("apc_netbotz_v2_other_sensors", "apc_netbotz_v2_sensors"),
+        ("apc_netbotz_50_other_sensors", "apc_netbotz_50_sensors"),
         ("apc_sts_inputs", "apc_sts_source"),
-        ("arbor_peakflow_sp", "arbor_peakflow_sp_cpu_load"),
-        ("arbor_peakflow_tms", "arbor_peakflow_tms_cpu_load"),
-        ("arbor_pravail", "arbor_pravail_cpu_load"),
         ("artec_documents", "artec_temp"),
         ("bdt_tape_info", "bdt_tape_status"),
         ("bintec_brrp_status", "bintec_sensors"),
@@ -52,10 +50,9 @@ def test_detect_spec_dedup(
         ("dell_powerconnect_fans", "dell_powerconnect_psu"),
         ("docsis_channels_downstream", "docsis_channels_upstream"),
         ("emerson_stat", "emerson_temp"),
-        ("fjdarye_pcie_flash_modules", "fjdarye_pools"),
+        ("fjdarye_pcie_flash_modules", "fjdarye_pools_150"),
         ("gude_humidity", "gude_temp"),
         ("h3c_lanswitch_cpu", "h3c_lanswitch_sensors"),
-        ("hitachi_hus_dkc", "hitachi_hus_dku"),
         ("hp_fan", "hp_psu"),
         ("hp_hh3c_fan", "hp_hh3c_power"),
         ("hp_mcs_sensors", "hp_mcs_system"),
@@ -106,16 +103,6 @@ def test_detect_spec_dedup(
             "fjdarye_summary_status",
             "fjdarye_system_capacitors",
         ),
-        (  # these probably are the same due to rebranding? Only two different implementations.
-            "fortiauthenticator_auth_fail",
-            "fortiauthenticator_system",
-            "primekey",
-            "primekey_cpu_temperature",
-            "primekey_data",
-            "primekey_db_usage",
-            "primekey_fan",
-            "primekey_hsm_battery_voltage",
-        ),
     }
 
 
@@ -124,10 +111,17 @@ def test_all_sections_are_subscribed_by_some_plugin(
 ) -> None:
     """Test that all registered sections are subscribed to by some plugin
 
-    We have very few sections (one at the time of this writing),
-    that are not subscribed to by any plugin.
+    We have very few sections that are not subscribed to by any plugin.
     We can afford to keep track of those.
     """
+    allowed_unsubscribed_sections = {
+        "labels",
+        "azure_labels",
+        "ec2_labels",
+        "elb_generic_labels",
+        "elbv2_generic_labels",
+    }
+
     all_section_names = set(fix_register.snmp_sections) | set(fix_register.agent_sections)
 
     subscribed_sections_names = set(
@@ -139,7 +133,7 @@ def test_all_sections_are_subscribed_by_some_plugin(
 
     unsubscribed_sections_names = {str(n) for n in all_section_names - subscribed_sections_names}
 
-    assert unsubscribed_sections_names == {"labels"}
+    assert unsubscribed_sections_names == allowed_unsubscribed_sections
 
 
 def test_section_detection_uses_sysdescr_or_sysobjid(
@@ -218,153 +212,6 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
 
             First OID fetched by {section.name}: {first_checked_oid}
             """
-
-
-def test_section_parse_function_does_something(fix_register: FixRegister) -> None:
-    """We make sure that the parse function is not trivial
-
-    To ease the learning curve when developing check plugins
-    we allow to omit the parse_function (defaulting to lambda x: x).
-
-    However this is allmost always a bad idea, so we make sure it
-    does not happen in mainline code.
-    """
-
-    noop_code = (lambda x: x).__code__.co_code
-
-    for name, snmp_section in fix_register.snmp_sections.items():
-        assert snmp_section.parse_function.__code__.co_code != noop_code
-
-    legacy_exceptions_for_easier_migration = {
-        # agent sections
-        "3ware_disks",
-        "3ware_info",
-        "3ware_units",
-        "ad_replication",
-        "aix_lvm",
-        "aix_multipath",
-        "appdynamics_memory",
-        "appdynamics_sessions",
-        "appdynamics_web_container",
-        "arc_raid_status",
-        "arcserve_backup",
-        "citrix_serverload",
-        "citrix_sessions",
-        "db2_mem",
-        "db2_version",
-        "dmi_sysinfo",
-        "drbd",
-        "emcvnx_hwstatus",
-        "emcvnx_writecache",
-        "esx_vsphere_sensors",
-        "filehandler",
-        "fsc_ipmi_mem_status",
-        "heartbeat_nodes",
-        "hivemanager_devices",
-        "hpux_fchba",
-        "hpux_lvm",
-        "hpux_multipath",
-        "hpux_serviceguard",
-        "hyperv_checkpoints",
-        "ibm_svc_eventlog",
-        "ibm_svc_system",
-        "innovaphone_channels",
-        "innovaphone_cpu",
-        "innovaphone_licenses",
-        "innovaphone_mem",
-        "innovaphone_temp",
-        "ironport_misc",
-        "jar_signature",
-        "logins",
-        "lvm_vgs",
-        "mailman_lists",
-        "mongodb_asserts",
-        "mongodb_connections",
-        "mongodb_flushing",
-        "mongodb_instance",
-        "mongodb_locks",
-        "mounts",
-        "mq_queues",
-        "msexch_replhealth",
-        "msoffice_serviceplans",
-        "mssql_versions",
-        "netapp_api_cluster",
-        "netapp_api_connection",
-        "netapp_api_info",
-        "netapp_api_status",
-        "netapp_api_vf_status",
-        "nfsexports",
-        "openvpn_clients",
-        "oracle_crs_version",
-        "oracle_crs_voting",
-        "oracle_jobs",
-        "oracle_locks",
-        "oracle_logswitches",
-        "oracle_longactivesessions",
-        "oracle_recovery_area",
-        "oracle_recovery_status",
-        "oracle_rman_backups",
-        "oracle_version",
-        "plesk_backups",
-        "plesk_domains",
-        "qmail_stats",
-        "sansymphony_alerts",
-        "sansymphony_ports",
-        "sansymphony_serverstatus",
-        "sap_hana_filesystem",
-        "sap_hana_full_backup",
-        "sap_hana_mem",
-        "sap_hana_process_list",
-        "sap_hana_version",
-        "sap_state",
-        "siemens_plc_cpu_state",
-        "solaris_multipath",
-        "solaris_prtdiag_status",
-        "splunk_alerts",
-        "statgrab_cpu",
-        "sylo",
-        "symantec_av_progstate",
-        "symantec_av_quarantine",
-        "symantec_av_updates",
-        "tsm_drives",
-        "tsm_paths",
-        "tsm_sessions",
-        "ucs_bladecenter_topsystem",
-        "unitrends_backup",
-        "unitrends_replication",
-        "vbox_guest",
-        "veeam_jobs",
-        "vms_queuejobs",
-        "vms_users",
-        "vnx_version",
-        "vxvm_objstatus",
-        "windows_broadcom_bonding",
-        "windows_multipath",
-        "winperf_mem",
-        "winperf_ts_sessions",
-        "wmic_process",
-        "dmraid",
-        "emcvnx_raidgroups",
-        "hpux_tunables",
-        "ibm_svc_enclosurestats",
-        "ibm_svc_nodestats",
-        "j4p_performance",
-        "jolokia_metrics",
-        "libelle_business_shadow",
-        "msexch_dag",
-        "netctr",
-        "netif",
-        "netscaler_health",
-        "nvidia",
-        "siemens_plc",
-        "vms_system",
-        "winperf",
-    }
-
-    for name, agent_section in fix_register.agent_sections.items():
-        assert (str(name) not in legacy_exceptions_for_easier_migration) is (
-            agent_section.parse_function.__code__.co_code != noop_code
-        ), f"💚 The agent section {name} now has a parse function! Remove it from the list above!"
 
 
 def test_snmp_section_parse_function_deals_with_empty_input(

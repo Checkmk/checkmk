@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from collections.abc import Container, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
 import cmk.utils.debug
-import cmk.utils.misc
-import cmk.utils.paths
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
@@ -38,7 +36,7 @@ def find_plugins(
     discover something.
 
     We have to consider both the host, and the management board as source
-    type. Note that the determination of the plugin names is not quite
+    type. Note that the determination of the plug-in names is not quite
     symmetric: For the host, we filter out all management plugins,
     for the management board we create management variants from all
     plugins that are not already designed for management boards.
@@ -120,7 +118,7 @@ def discover_services(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
 ) -> Iterable[AutocheckEntry]:
-    service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
+    service_table: dict[ServiceID, AutocheckEntry] = {}
     for check_plugin_name in plugin_names:
         try:
             service_table.update(
@@ -165,7 +163,9 @@ def _discover_plugins_services(
     try:
         plugin = plugins[check_plugin_name]
     except KeyError:
-        console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
+        console.warning(
+            console.format_warning(f"  Missing check plugin: '{check_plugin_name}'\n\n")
+        )
         return
 
     try:
@@ -174,7 +174,9 @@ def _discover_plugins_services(
         if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
-            console.warning("  Exception while parsing agent section: %s\n" % exc)
+            console.warning(
+                console.format_warning(f"  Exception while parsing agent section: {exc}\n\n")
+            )
         return
 
     if not kwargs:
@@ -191,7 +193,9 @@ def _discover_plugins_services(
             raise
         if on_error is OnError.WARN:
             console.warning(
-                f"  Exception in discovery function of check plugin '{check_plugin_name}': {e}"
+                console.format_warning(
+                    f"  Exception in discovery function of check plug-in '{check_plugin_name}': {e}\n"
+                )
             )
 
 

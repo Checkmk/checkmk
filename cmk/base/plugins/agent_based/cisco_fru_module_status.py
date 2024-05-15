@@ -6,6 +6,8 @@
 import dataclasses
 from collections.abc import Mapping
 
+from cmk.plugins.lib.entity_mib import PhysicalClasses
+
 from .agent_based_api.v1 import (
     all_of,
     contains,
@@ -17,7 +19,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.entity_mib import PhysicalClasses
 
 # .1.3.6.1.2.1.47.1.1.1.1.2.1   "CISCO1921/K9 chassis" --> ENTITY-MIB::entPhysicalDescr.1
 # .1.3.6.1.2.1.47.1.1.1.1.2.2   "C1921 Chassis Slot" --> ENTITY-MIB::entPhysicalDescr.2

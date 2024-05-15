@@ -1,0 +1,20 @@
+Title: NagVis: Updated to 1.9.38
+Class: security
+Compatible: compat
+Component: packages
+Date: 1697312456
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+NagVis 1.9.38 fixes a XSS issue
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 8.4 (High) with the following CVSS vector:
+<tt>CVSS: CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:H/I:H/A:H 8.4</tt>.
+
+CVE-2023-46287 was assigned to this issue.
+
+<b>Changes</b>:
+This Werk introduces escaping for the vulnerable parameter.

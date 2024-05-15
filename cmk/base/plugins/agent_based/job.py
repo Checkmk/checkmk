@@ -5,9 +5,7 @@
 
 import time
 from collections.abc import Callable, Mapping
-from typing import Any, Final
-
-from typing_extensions import TypedDict
+from typing import Any, Final, TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
 
@@ -184,9 +182,7 @@ _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
 }
 
 
-def _check_job_levels(  # type: ignore[no-untyped-def]
-    job: Job, metric: str, notice_only: bool = True
-):
+def _check_job_levels(job: Job, metric: str, notice_only: bool = True) -> type_defs.CheckResult:
     label, render_func = _METRIC_SPECS[metric]
     yield from check_levels(
         job["metrics"][metric],

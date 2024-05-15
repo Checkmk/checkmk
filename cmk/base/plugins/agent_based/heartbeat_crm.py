@@ -6,7 +6,8 @@
 import calendar
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, NamedTuple
+from dataclasses import dataclass
+from typing import Any
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -38,22 +39,25 @@ KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {
 }
 
 
-class _Cluster(NamedTuple):
-    last_updated: str
+@dataclass(frozen=True, kw_only=True)
+class Cluster:
+    last_updated: float | None
     dc: str | None
     num_nodes: int | None
     num_resources: int | None
     error: str | None
 
 
-class _Resources(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class Resources:
     resources: Mapping[str, Sequence[Sequence[str]]]
     failed_actions: Sequence[str]
 
 
-class Section(NamedTuple):
-    cluster: _Cluster
-    resources: _Resources
+@dataclass(frozen=True, kw_only=True)
+class Section:
+    cluster: Cluster
+    resources: Resources
 
 
 def _parse_for_error(first_line: str) -> str | None:
@@ -79,11 +83,17 @@ def _title(title: str) -> str:
     return title.split(":", 1)[0]
 
 
-def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> _Cluster:
+def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> Cluster:
     if (error := _parse_for_error(" ".join(general_section[0]))) is not None:
-        return _Cluster("", None, None, None, error)
+        return Cluster(
+            last_updated=None,
+            dc=None,
+            num_nodes=None,
+            num_resources=None,
+            error=error,
+        )
 
-    last_updated = ""
+    last_updated = None
     dc = None
     num_nodes = None
     num_resources = None
@@ -92,11 +102,7 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> _Cl
         title = _title(line_txt)
 
         if title == "Last updated":
-            if "Last change:" in line_txt:
-                # Some versions seem to combine both lines
-                last_updated = line_txt[: line_txt.index("Last change:")].split(": ")[1].strip()
-            else:
-                last_updated = " ".join(line[2:])
+            last_updated = _parse_last_updated(line)
             continue
 
         if title == "Current DC":
@@ -122,12 +128,32 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> _Cl
             # pacemaker version = 2.0.3:  3 resource instances configured
             num_resources = int(line[0])
 
-    return _Cluster(
+    return Cluster(
         last_updated=last_updated,
         dc=dc,
         num_nodes=num_nodes,
         num_resources=num_resources,
         error=None,
+    )
+
+
+def _parse_last_updated(line: Sequence[str]) -> int:
+    """
+    >>> _parse_last_updated(["Last", "updated:", "Tue", "Sep", "8", "10:36:12", "2020"])
+    1599561372
+    >>> _parse_last_updated(['Last', 'updated:', 'Tue', 'Sep', '22', '11:20:53', '2015', 'Last', 'change:', 'Thu', 'Sep', '17', '14:52:42', '2015', 'by', 'root', 'via', 'crm_resource', 'on', 'bl64lnx-priv'])
+    1442920853
+    >>> _parse_last_updated(['Last', 'updated:', 'Wed', 'Nov', '29', '08:29:27', '2023', 'on', 'hdenagapp269'])
+    1701246567
+    """
+    if line.count("Last") > 1:
+        # Sometimes, `Last updated` and `Last changed` are combined into a single line
+        line = line[: line.index("Last", 1)]
+    return calendar.timegm(
+        time.strptime(
+            " ".join(line[2:7]),
+            "%a %b %d %H:%M:%S %Y",
+        )
     )
 
 
@@ -288,7 +314,7 @@ def parse_heartbeat_crm(string_table: StringTable) -> Section | None:
 
     return Section(
         cluster=heartbeat_crm_parse_general(list(general_section)),
-        resources=_Resources(
+        resources=Resources(
             resources=heartbeat_crm_parse_resources(resources_section),
             failed_actions=heartbeat_crm_parse_failed_resource_actions(
                 failed_resource_actions_section
@@ -326,48 +352,54 @@ def discover_heartbeat_crm(
 
 
 def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckResult:
-    last_updated, dc, num_nodes, num_resources, error = section.cluster
+    yield from _check_heartbeat_crm(params, section, time.time())
 
-    if error is not None:
-        yield Result(state=State.CRIT, summary=error)
+
+def _check_heartbeat_crm(
+    params: Mapping[str, Any],
+    section: Section,
+    now: float,
+) -> CheckResult:
+    if section.cluster.error is not None:
+        yield Result(state=State.CRIT, summary=section.cluster.error)
         return
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found
-    dt = calendar.timegm(time.strptime(last_updated, "%a %b %d %H:%M:%S %Y"))
-    now = time.time()
-    delta = now - dt
-    if delta > params["max_age"]:
-        yield Result(
-            state=State.CRIT,
-            summary=f"Ignoring reported data (Status output too old: {render.timespan(delta)})",
-        )
+    if too_old_result := _check_last_cluster_update(
+        last_update=section.cluster.last_updated,
+        now=now,
+        max_age=params["max_age"],
+    ):
+        yield too_old_result
         return
 
     # Check for correct DC when enabled
-    if (p_dc := params.get("dc")) is None or dc == p_dc:
-        yield Result(state=State.OK, summary=f"DC: {dc}")
+    if (p_dc := params.get("dc")) is None or section.cluster.dc == p_dc:
+        yield Result(state=State.OK, summary=f"DC: {section.cluster.dc}")
     else:
-        yield Result(state=State.CRIT, summary=f"DC: {dc} (Expected {p_dc})")
+        yield Result(state=State.CRIT, summary=f"DC: {section.cluster.dc} (Expected {p_dc})")
 
     # Check for number of nodes when enabled
-    if params["num_nodes"] is not None and num_nodes is not None:
-        if num_nodes == params["num_nodes"]:
-            yield Result(state=State.OK, summary="Nodes: %d" % (num_nodes,))
+    if params["num_nodes"] is not None and section.cluster.num_nodes is not None:
+        if section.cluster.num_nodes == params["num_nodes"]:
+            yield Result(state=State.OK, summary="Nodes: %d" % (section.cluster.num_nodes,))
         else:
             yield Result(
                 state=State.CRIT,
-                summary="Nodes: %d (Expected %d)" % (num_nodes, params["num_nodes"]),
+                summary="Nodes: %d (Expected %d)"
+                % (section.cluster.num_nodes, params["num_nodes"]),
             )
 
     # Check for number of resources when enabled
-    if params["num_resources"] is not None and num_resources is not None:
-        if num_resources == params["num_resources"]:
-            yield Result(state=State.OK, summary="Resources: %d" % (num_resources,))
+    if params["num_resources"] is not None and section.cluster.num_resources is not None:
+        if section.cluster.num_resources == params["num_resources"]:
+            yield Result(state=State.OK, summary="Resources: %d" % (section.cluster.num_resources,))
         else:
             yield Result(
                 state=State.CRIT,
-                summary="Resources: %d (Expected %d)" % (num_resources, params["num_resources"]),
+                summary="Resources: %d (Expected %d)"
+                % (section.cluster.num_resources, params["num_resources"]),
             )
 
     if not params.get("show_failed_actions"):
@@ -375,6 +407,22 @@ def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckRes
 
     for action in section.resources.failed_actions:
         yield Result(state=State.WARN, summary=f"Failed: {action}")
+
+
+def _check_last_cluster_update(
+    *,
+    last_update: float | None,
+    now: float,
+    max_age: float,
+) -> Result | None:
+    if last_update is None:
+        return None
+    if (delta := now - last_update) > max_age:
+        return Result(
+            state=State.CRIT,
+            summary=f"Ignoring reported data (Status output too old: {render.timespan(delta)})",
+        )
+    return None
 
 
 register.check_plugin(
@@ -432,13 +480,20 @@ def check_heartbeat_crm_resources(
     if (resources := section.resources.resources.get(item)) is None:
         return
 
+    yield from _check_heartbeat_crm_resources(resources, params)
+
+
+def _check_heartbeat_crm_resources(
+    resources: Sequence[Sequence[str]],
+    params: Mapping[str, str | None],
+) -> CheckResult:
     if not resources:
         yield Result(state=State.OK, summary="No resources found")
 
     for resource in resources:
         yield Result(state=State.OK, summary=" ".join(resource))
 
-        if len(resource) == 3 and resource[2] != "Started":
+        if len(resource) in {3, 4} and resource[2] != "Started":
             yield Result(state=State.CRIT, summary=f'Resource is in state "{resource[2]}"')
         elif (
             (target_node := params["expected_node"])

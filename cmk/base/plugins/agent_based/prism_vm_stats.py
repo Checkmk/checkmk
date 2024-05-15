@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
-# (c) Andreas Doehler <andreas.doehler@bechtle.com/andreas.doehler@gmail.com>
-# This is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.memory import check_element
+
 from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.memory import check_element
 
 Section = Mapping[str, Any]
 
@@ -123,21 +117,24 @@ def check_prism_vm_stats_mem(params: Mapping[str, Any], section: Section) -> Che
         return
 
     mem_usage_bytes = int(data.get("guest.memory_usage_bytes", 0))
-    if mem_usage_bytes != 0:
-        mem_usage = int(data.get("guest.memory_usage_ppm", 0)) / 10000.0
-        mem_total = int(mem_usage_bytes / mem_usage * 100)
-        if mem_total < 500000000:
-            mem_total = mem_total * 1024
-            mem_usage_bytes = mem_usage_bytes * 1024
+    if mem_usage_bytes == 0:
+        yield Result(state=State.OK, summary="No memory usage data available")
+        return
 
-        yield from check_element(
-            "Usage",
-            mem_usage_bytes,
-            mem_total,
-            ("perc_used", params["levels_upper"]),
-            metric_name="mem_used",
-        )
-        yield Metric("mem_total", mem_total)
+    mem_usage = int(data.get("guest.memory_usage_ppm", 0)) / 10000.0
+    mem_total = int(mem_usage_bytes / mem_usage * 100)
+    if mem_total < 500000000:
+        mem_total = mem_total * 1024
+        mem_usage_bytes = mem_usage_bytes * 1024
+
+    yield from check_element(
+        "Usage",
+        mem_usage_bytes,
+        mem_total,
+        ("perc_used", params["levels_upper"]),
+        metric_name="mem_used",
+    )
+    yield Metric("mem_total", mem_total)
 
 
 register.check_plugin(

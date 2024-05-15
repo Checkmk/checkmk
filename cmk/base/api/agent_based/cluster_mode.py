@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Compute the cluster check function from the plugin and parameters."""
+"""Compute the cluster check function from the plug-in and parameters."""
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -14,16 +14,11 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.checking import ServiceID
 from cmk.checkengine.checkresults import state_markers
 
-from cmk.base.api.agent_based.checking_classes import (
-    CheckPlugin,
-    CheckResult,
-    IgnoreResults,
-    IgnoreResultsError,
-    Metric,
-    Result,
-    State,
-)
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
+
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 _Kwargs = Mapping[str, Any]
 
@@ -35,8 +30,7 @@ ClusterMode = Literal["native", "failover", "worst", "best"]
 
 
 class Selector(Protocol):
-    def __call__(self, *a: State) -> State:
-        ...
+    def __call__(self, *a: State) -> State: ...
 
 
 def _unfit_for_clustering(**_kw: object) -> CheckResult:

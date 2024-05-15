@@ -5,10 +5,11 @@
 
 from typing import NamedTuple
 
+from cmk.plugins.lib.detection import HAS_SYSDESC
+from cmk.plugins.lib.device_types import get_device_type_label
+
 from .agent_based_api.v1 import Attributes, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils.detection import HAS_SYSDESC
-from .utils.device_types import get_device_type_label
 
 
 class SNMPInfo(NamedTuple):

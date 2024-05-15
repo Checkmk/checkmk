@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .agent_based_api.v1 import register, SNMPTree
-from .utils.akcp import DETECT_AKCP_EXP
-from .utils.akcp_sensor import (
+from cmk.plugins.lib.akcp import DETECT_AKCP_EXP
+from cmk.plugins.lib.akcp_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
     inventory_akcp_sensor_temp,
     parse_akcp_sensor,
 )
+
+from .agent_based_api.v1 import register, SNMPTree
 
 # Example for contents of info
 #           description         degree unit status low_crit low_warn high_warn high_crit degreeraw online

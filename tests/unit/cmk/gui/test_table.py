@@ -10,7 +10,7 @@ import pytest
 from bs4 import BeautifulSoup as bs
 from pytest import MonkeyPatch
 
-from tests.testlib import compare_html
+from tests.unit.cmk.gui.compare_html import compare_html
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -211,7 +211,7 @@ def test_nesting_context() -> None:
     ), written_text
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 @pytest.mark.parametrize("sortable", [True, False])
 @pytest.mark.parametrize("searchable", [True, False])
 @pytest.mark.parametrize("limit", [None, 2])

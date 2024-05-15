@@ -15,35 +15,29 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 """
 
-import socket
-import time
-from collections.abc import Callable
-from typing import Any, Literal
-
-import cmk.utils.debug as _debug
+from collections.abc import Callable, Generator
+from typing import Any
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
+
+# pylint: disable=unused-import
+from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import get_predictive_levels as _get_predictive_levels
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
+# pylint: disable=unused-import
 from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
-import cmk.base.config as _config
-from cmk.base.api.agent_based import render as _render
-from cmk.base.api.agent_based.plugin_contexts import host_name as _internal_host_name
-from cmk.base.api.agent_based.plugin_contexts import service_description
+from cmk.base.config import CheckContext as _CheckContext
+from cmk.base.config import get_http_proxy as _get_http_proxy
+from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
+from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
 
-# pylint: disable=unused-import
-from cmk.base.api.agent_based.register.utils_legacy import (
-    LegacyCheckDefinition as LegacyCheckDefinition,
-)
+from cmk.agent_based import v1 as _v1
 
 # pylint: enable=unused-import
 
@@ -52,25 +46,20 @@ Crit = None | int | float
 _Bound = None | int | float
 Levels = tuple  # Has length 2 or 4
 
-_MetricTuple = tuple[
-    MetricName,
-    float,
-    Warn,
-    Crit,
-    _Bound,
-    _Bound,
-]
+_MetricTuple = (
+    tuple[str, float]
+    | tuple[str, float, Warn, Crit]
+    | tuple[str, float, Warn, Crit, _Bound, _Bound]
+)
 
 ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
 
 
-def host_name() -> str:
-    """compatibility for making HostName a own class
-    if somebody make type comparision to str or some other weird stuff we want to be compatible"""
-    return str(_internal_host_name())
+# to ease migration:
+CheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
 
 
-def get_check_api_context() -> _config.CheckContext:
+def get_check_api_context() -> _CheckContext:
     """This is called from cmk.base code to get the Check API things. Don't
     use this from checks."""
     return {k: v for k, v in globals().items() if not k.startswith("_")}
@@ -115,40 +104,6 @@ def savefloat(f: Any) -> float:
         return 0.0
 
 
-# These functions were used in some specific checks until 1.6. Don't add it to
-# the future check API. It's kept here for compatibility reasons for now.
-def is_ipv6_primary(hostname: HostName) -> bool:
-    return _config.get_config_cache().default_address_family(hostname) is socket.AF_INET6
-
-
-def get_age_human_readable(seconds: float) -> str:
-    return _render.timespan(seconds) if seconds >= 0 else f"-{_render.timespan(-seconds)}"
-
-
-def get_bytes_human_readable(
-    bytes_: int,
-    base: Literal[1000, 1024] = 1024,
-    precision: object = None,  # for legacy compatibility
-    unit: str = "B",
-) -> str:
-    if not (
-        renderer := {
-            1000: _render.disksize,
-            1024: _render.bytes,
-        }.get(int(base))
-    ):
-        raise ValueError(f"Unsupported value for 'base' in get_bytes_human_readable: {base=}")
-    return renderer(bytes_)[:-1] + unit
-
-
-def get_timestamp_human_readable(timestamp: float) -> str:
-    """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
-    In case None is given or timestamp is 0, it returns "never"."""
-    if timestamp:
-        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
-    return "never"
-
-
 def _normalize_levels(levels: Levels) -> Levels:
     if len(levels) == 2:  # upper warn and crit
         warn_upper, crit_upper = levels[0], levels[1]
@@ -162,49 +117,39 @@ def _normalize_levels(levels: Levels) -> Levels:
 
 
 def _do_check_levels(
-    value: int | float, levels: Levels, human_readable_func: Callable, unit_info: str
+    value: int | float, levels: Levels, human_readable_func: Callable
 ) -> tuple[ServiceState, ServiceDetails]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
-        return 2, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func, unit_info)
+        return 2, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
     if crit_lower is not None and value < crit_lower:
-        return 2, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func, unit_info)
+        return 2, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
 
     # Warning cases
     if warn_upper is not None and value >= warn_upper:
-        return 1, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func, unit_info)
+        return 1, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
     if warn_lower is not None and value < warn_lower:
-        return 1, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func, unit_info)
+        return 1, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
     return 0, ""
 
 
-def _levelsinfo_ty(
-    ty: str, warn: Warn, crit: Crit, human_readable_func: Callable, unit_info: str
-) -> str:
-    warn_str = "never" if warn is None else f"{human_readable_func(warn)}{unit_info}"
-    crit_str = "never" if crit is None else f"{human_readable_func(crit)}{unit_info}"
+def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callable) -> str:
+    warn_str = "never" if warn is None else f"{human_readable_func(warn)}"
+    crit_str = "never" if crit is None else f"{human_readable_func(crit)}"
     return f" (warn/crit {ty} {warn_str}/{crit_str})"
 
 
 def _build_perfdata(
     dsname: None | MetricName,
     value: int | float,
-    scale_value: Callable,
     levels: Levels,
     boundaries: tuple | None,
-    ref_value: None | int | float = None,
 ) -> list:
     if not dsname:
         return []
-
-    perf_list = [dsname, value, levels[0], levels[1]]
-    if isinstance(boundaries, tuple) and len(boundaries) == 2:
-        perf_list.extend([scale_value(v) for v in boundaries])
-    perfdata = [tuple(perf_list)]
-    if ref_value:
-        perfdata.append(("predict_" + dsname, ref_value))
-    return perfdata
+    used_boundaries = boundaries if isinstance(boundaries, tuple) and len(boundaries) == 2 else ()
+    return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 
 def check_levels(  # pylint: disable=too-many-branches
@@ -212,12 +157,9 @@ def check_levels(  # pylint: disable=too-many-branches
     dsname: None | MetricName,
     params: Any,
     unit: str = "",
-    factor: int | float = 1.0,
-    scale: int | float = 1.0,
-    statemarkers: bool = False,
     human_readable_func: Callable | None = None,
     infoname: str | None = None,
-    boundaries: tuple | None = None,
+    boundaries: tuple[float | None, float | None] | None = None,
 ) -> ServiceCheckResult:
     """Generic function for checking a value against levels
 
@@ -237,20 +179,13 @@ def check_levels(  # pylint: disable=too-many-branches
              Dict containing "upper" or "levels_upper_min" as key -> upper level checking.
              Dict containing "lower" and "upper"/"levels_upper_min" as key ->
              lower and upper level checking.
-    unit:    unit to be displayed in the plugin output.
+    unit:    unit to be displayed in the plug-in output.
              Be aware: if a (builtin) human_readable_func is stated which already
              provides a unit info, then this unit is not necessary. An additional
              unit info is useful if a rate is calculated, eg.
                 unit="/s",
                 human_readable_func=get_bytes_human_readable,
              results in 'X B/s'.
-    factor:  the levels are multiplied with this factor before applying
-             them to the value. This is being used for the CPU load check
-             currently. The levels here are "per CPU", so the number of
-             CPUs is used as factor.
-    scale:   Scale of the levels in relation to "value" and the value in the RRDs.
-             For example if the levels are specified in GB and the RRD store KB, then
-             the scale is 1024*1024.
     human_readable_func: Single argument function to present in a human readable fashion
                          the value. Builtin human_readable-functions already provide a unit:
                          - get_percent_human_readable
@@ -270,73 +205,50 @@ def check_levels(  # pylint: disable=too-many-branches
     else:
         unit_info = ""
 
-    def default_human_readable_func(x: float) -> str:
-        return "%.2f" % (x / scale)
-
     if human_readable_func is None:
-        human_readable_func = default_human_readable_func
 
-    def scale_value(v: None | int | float) -> None | int | float:
-        if v is None:
-            return None
-        return v * factor * scale
+        def render_func(x: float) -> str:
+            return f"{x:.2f}{unit_info}"
 
-    infotext = f"{human_readable_func(value)}{unit_info}"
+    else:
+
+        def render_func(x: float) -> str:
+            return f"{human_readable_func(x)}{unit_info}"
+
+    if params and isinstance(params, dict):
+        if not dsname:
+            raise TypeError("Metric name is empty/None")
+        result, *metrics = _v1.check_levels_predictive(
+            value,
+            levels=params,
+            metric_name=dsname,
+            render_func=render_func,
+            label=infoname,
+            boundaries=boundaries,
+        )
+        assert isinstance(result, _v1.Result)
+        return (
+            int(result.state),
+            result.summary,
+            [
+                (m.name, m.value, *m.levels, *m.boundaries)
+                for m in metrics
+                if isinstance(m, _v1.Metric)
+            ],
+        )
+
+    infotext = f"{render_func(value)}"
     if infoname:
         infotext = f"{infoname}: {infotext}"
 
-    # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
+    # normalize {}, (), None, (None, None), (None, None, None, None)
     if not params or set(params) <= {None}:
-        # always add warn/crit, because the call-site may not know it passed None,
-        # and therefore expect a quadruple.
-        perf = _build_perfdata(dsname, value, scale_value, (None, None), boundaries)
-        return 0, infotext, perf
-
-    # Pair of numbers -> static levels
-    if isinstance(params, tuple):
-        levels = tuple(scale_value(v) for v in _normalize_levels(params))
-        ref_value = None
-
-    # Dictionary -> predictive levels
+        levels: Levels = (None, None, None, None)
     else:
-        if not dsname:
-            raise TypeError("Metric name is empty/None")
+        levels = _normalize_levels(params)
 
-        try:
-            ref_value, levels = _get_predictive_levels(
-                _internal_host_name(),
-                service_description(),
-                dsname,
-                params,
-                "MAX",
-                levels_factor=factor * scale,
-            )
-            if ref_value:
-                predictive_levels_msg = "predicted reference: %s" % human_readable_func(ref_value)
-            else:
-                predictive_levels_msg = "no reference for prediction yet"
-
-        except MKGeneralException as e:
-            ref_value = None
-            levels = (None, None, None, None)
-            predictive_levels_msg = "no reference for prediction (%s)" % e
-
-        except Exception as e:
-            if _debug.enabled():
-                raise
-            return 3, "%s" % e, []
-
-        if predictive_levels_msg:
-            infotext += " (%s)" % predictive_levels_msg
-
-    state, levelstext = _do_check_levels(value, levels, human_readable_func, unit_info)
-    infotext += levelstext
-    if statemarkers:
-        infotext += state_markers[state]
-
-    perfdata = _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value)
-
-    return state, infotext, perfdata
+    state, levelstext = _do_check_levels(value, levels, render_func)
+    return state, infotext + levelstext, _build_perfdata(dsname, value, levels, boundaries)
 
 
 def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:
@@ -356,7 +268,7 @@ def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
 
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
-    return _config.get_http_proxy(http_proxy)
+    return _get_http_proxy(http_proxy)
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

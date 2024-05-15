@@ -40,11 +40,10 @@ checks = {
             "Ambient Chassis 2 FAN",
             {"levels": (40, 50)},
             [
-                (
-                    0,
-                    "1 Sensors; Highest: 29.0 \xb0C, Average: 29.0 \xb0C, Lowest: 29.0 \xb0C",
-                    [("temp", 29.0, None, None, None, None)],
-                )
+                (0, "Sensors: 1", []),
+                (0, "Highest: 29.0 \xb0C", [("temp", 29.0, None, None, None, None)]),
+                (0, "Average: 29.0 \xb0C", []),
+                (0, "Lowest: 29.0 \xb0C", []),
             ],
         )
     ],

@@ -1,0 +1,27 @@
+Title: Improve Symmetric Agent Encryption on Linux
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1702055121
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This Werk improves the agent's built-in symmetric encryption for Linux hosts.
+
+The new encryption scheme adds authentication of the encrypted data and improves the method used to derive cryptographic key material from the shared secret configured in the rule.
+To use the new encryption scheme, OpenSSL >= 1.0.0, better OpenSSL >= 1.1.1, must be available on the host.
+
+For testing and debugging purposes, a bash script to decrypt the agent's output can be found in the Checkmk repository under `doc/treasures/agent_legacy_encryption/decrypt.sh`.
+
+Older encryption schemes can still be decrypted by the Checkmk site.
+
+**Important disclaimers:**
+
+If the Agent Controller with TLS encryption is available, use that instead.
+The build-in symmetric encryption should only be used if TLS is not available.
+Moreover, there is no advantage in using both.
+Disable the symmetric encryption if you can use TLS.
+
+The security of this encryption scheme strongly depends on the security of the shared secret configured in the rule.
+Use a long, random secret.

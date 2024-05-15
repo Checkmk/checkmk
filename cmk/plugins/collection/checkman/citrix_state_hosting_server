@@ -1,0 +1,15 @@
+title: Citrix: VM Hosting Server
+agents: windows
+catalog: app/citrix
+license: GPLv2
+distribution: check_mk
+description:
+ This checks displays the hosting server on which a VM is currently running.
+ It is purely informative and always OK.
+ The citrix_farm.ps1 plug-in must be installed on the controller, and
+ the Checkmk agent must be executed with Citrix Admin permissions
+ for this to work. Data for the hosts is collected on the controller and
+ given to the monitoring server as piggyback data.
+
+discovery:
+ One service is created for each controller.

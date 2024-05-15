@@ -173,16 +173,15 @@ def requested_file_name(
 
     Examples:
 
-        >>> from unittest.mock import Mock
-        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py"))
+        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py"}))
         'foo_bar'
 
-        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/"), on_error="raise")
+        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py/"}), on_error="raise")
         Traceback (most recent call last):
         ...
         cmk.gui.exceptions.MKNotFound: Not found
 
-        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/foo"), on_error="raise")
+        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py/foo"}), on_error="raise")
         Traceback (most recent call last):
         ...
         cmk.gui.exceptions.MKNotFound: Not found
@@ -194,7 +193,7 @@ def requested_file_name(
 def requested_file_with_query(request: Request) -> str:
     """Returns a string containing the requested file name and query to be used in hyperlinks"""
     file_name = requested_file_name(request)
-    query = request.query_string.decode(request.charset)
+    query = request.query_string.decode("utf-8")
     return f"{file_name}.py?{query}"
 
 
@@ -411,7 +410,7 @@ class DocReference(Enum):
     DASHBOARD_HOST_PROBLEMS = "dashboards#host_problems"
     DASHBOARDS = "dashboards"
     DCD = "dcd"  # dynamic host configuration
-    DEVEL_CHECK_PLUGINS = "devel_check_plugins"
+    DEVEL_CHECK_PLUGINS = "devel_intro"
     DIAGNOSTICS = "support_diagnostics"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     EVENTCONSOLE = "ec"
@@ -444,8 +443,9 @@ class DocReference(Enum):
     WATO_HOSTS = "wato_hosts"
     WATO_RULES = "wato_rules"
     WATO_RULES_DEPCRECATED = "wato_rules#obsolete_rule_sets"
-    WATO_RULES_INEFFECTIVE = "wato_rules#ineffective_rules"
     WATO_RULES_IN_USE = "wato_rules#_rule_sets_in_use"
+    WATO_RULES_INEFFECTIVE = "wato_rules#ineffective_rules"
+    WATO_RULES_LABELS = "wato_rules#_labels"
     WATO_SERVICES = "wato_services"
     WATO_SERVICES_ENFORCED_SERVICES = "wato_services#enforced_services"
     WATO_USER = "wato_user"

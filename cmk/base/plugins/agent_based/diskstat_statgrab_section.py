@@ -14,8 +14,9 @@
 # 1/md1.write_bytes 39462400
 
 
+from cmk.plugins.lib import diskstat
+
 from .agent_based_api.v1 import register, type_defs
-from .utils import diskstat
 
 
 def parse_statgrab_disk(string_table: type_defs.StringTable) -> diskstat.Section:

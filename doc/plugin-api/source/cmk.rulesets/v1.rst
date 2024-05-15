@@ -1,0 +1,9 @@
+===========
+rulesets.v1
+===========
+
+.. autoclass:: cmk.rulesets.v1._localize._Localizable
+
+.. automodule:: cmk.rulesets.v1
+   :members:
+   :show-inheritance:

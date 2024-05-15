@@ -1,0 +1,13 @@
+Title: Detect all volumes with rstcli
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696949798
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, only one volume has been detected.
+This is fixed now.
+Thanks to thl-cmk for the contribution!

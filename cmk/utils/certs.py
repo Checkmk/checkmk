@@ -7,37 +7,27 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, NamedTuple
+from typing import Final, Literal
 
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
-from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    load_pem_private_key,
-    NoEncryption,
-    PrivateFormat,
-)
-from cryptography.x509 import (
-    BasicConstraints,
-    Certificate,
-    CertificateBuilder,
-    CertificateSigningRequest,
-    CertificateSigningRequestBuilder,
-    DNSName,
-    load_pem_x509_certificate,
-    Name,
-    NameAttribute,
-    random_serial_number,
-    SubjectAlternativeName,
-)
-from cryptography.x509.oid import NameOID
+import cryptography.x509 as x509
+from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from dateutil.relativedelta import relativedelta
 
 from livestatus import SiteId
 
-from cmk.utils.crypto.certificate import CertificateWithPrivateKey, RsaPrivateKey
+from cmk.utils.crypto.certificate import (
+    Certificate,
+    CertificateSigningRequest,
+    CertificateWithPrivateKey,
+    X509Name,
+)
+from cmk.utils.crypto.keys import is_supported_private_key_type, PrivateKey
+from cmk.utils.crypto.types import HashAlgorithm
+from cmk.utils.log.security_event import SecurityEvent
+from cmk.utils.site import omd_site
+from cmk.utils.user import UserId
 
 
 class _CNTemplate:
@@ -60,54 +50,59 @@ _DEFAULT_VALIDITY = relativedelta(years=10)
 _DEFAULT_KEY_SIZE = 4096
 
 
-class RootCA(NamedTuple):
-    cert: Certificate
-    rsa: RSAPrivateKey
-
+class RootCA(CertificateWithPrivateKey):
     @classmethod
     def load(cls, path: Path) -> RootCA:
-        return cls(*load_cert_and_private_key(path))
+        cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())
+        key = load_pem_private_key(pem_bytes, None)
+        if not is_supported_private_key_type(key):
+            raise ValueError(f"Unsupported private key type {type(key)}")
+        return cls(certificate=Certificate(cert), private_key=PrivateKey(key))
 
     @classmethod
     def load_or_create(
-        cls, path: Path, name: str, validity: relativedelta = _DEFAULT_VALIDITY
+        cls,
+        path: Path,
+        name: str,
+        validity: relativedelta = _DEFAULT_VALIDITY,
+        key_size: int = _DEFAULT_KEY_SIZE,
     ) -> RootCA:
         try:
             return cls.load(path)
         except FileNotFoundError:
-            cert, rsa = _generate_root_cert(name, validity, _DEFAULT_KEY_SIZE)
-            _save_cert_chain(path, [cert], rsa)
-        return cls(cert, rsa)
+            ca = CertificateWithPrivateKey.generate_self_signed(
+                common_name=name,
+                organization=f"Checkmk Site {omd_site()}",
+                expiry=validity,
+                key_size=key_size,
+                is_ca=True,
+            )
+            _save_cert_chain(path, [ca.certificate], ca.private_key)
+            return cls(ca.certificate, ca.private_key)
 
-    def sign_csr(
+    def issue_new_certificate(
         self,
-        csr: CertificateSigningRequest,
+        common_name: str,
         validity: relativedelta = _DEFAULT_VALIDITY,
-    ) -> Certificate:
-        return _sign_csr(csr, validity, self.cert, self.rsa)
-
-    def new_signed_cert(
-        self,
-        name: str,
-        validity: relativedelta = _DEFAULT_VALIDITY,
-    ) -> tuple[Certificate, RSAPrivateKey]:
-        private_key = RsaPrivateKey.generate(_DEFAULT_KEY_SIZE)._key
-        cert = _sign_csr(
-            _make_csr(
-                _make_subject_name(name),
-                private_key,
-            ),
-            validity,
-            self.cert,
-            self.rsa,
+        key_size: int = _DEFAULT_KEY_SIZE,
+    ) -> tuple[Certificate, PrivateKey]:
+        new_cert_key = PrivateKey.generate_rsa(key_size)
+        new_cert_csr = CertificateSigningRequest.create(
+            subject_name=X509Name.create(common_name=common_name),
+            subject_private_key=new_cert_key,
         )
-        return cert, private_key
+        return self.sign_csr(new_cert_csr, validity), new_cert_key
 
-    def save_new_signed_cert(
-        self, path: Path, name: str, validity: relativedelta = _DEFAULT_VALIDITY
+    def issue_and_store_certificate(
+        self,
+        path: Path,
+        common_name: str,
+        validity: relativedelta = _DEFAULT_VALIDITY,
+        key_size: int = _DEFAULT_KEY_SIZE,
     ) -> None:
-        cert, private_key = self.new_signed_cert(name, validity)
-        _save_cert_chain(path, [cert, self.cert], private_key)
+        """Create and sign a new certificate, store the chain to 'path'"""
+        new_cert, new_key = self.issue_new_certificate(common_name, validity, key_size)
+        _save_cert_chain(path, [new_cert, self.certificate], new_key)
 
 
 def cert_dir(site_root_dir: Path) -> Path:
@@ -122,149 +117,70 @@ def write_cert_store(source_dir: Path, store_path: Path) -> None:
     """Extract certificate part out of PEM files and concat
     to single cert store file."""
     pem_certs = (
-        load_pem_x509_certificate(pem_path.read_bytes()).public_bytes(Encoding.PEM)
+        x509.load_pem_x509_certificate(pem_path.read_bytes()).public_bytes(Encoding.PEM)
         for pem_path in source_dir.glob("*.pem")
     )
     store_path.write_bytes(b"".join(pem_certs))
 
 
-def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, RSAPrivateKey]:
-    return (
-        load_pem_x509_certificate(
-            pem_bytes := path_pem.read_bytes(),
-        ),
-        load_pem_private_key(
-            pem_bytes,
-            None,
-        ),
-    )
-
-
 def _save_cert_chain(
     path_pem: Path,
     certificate_chain: Iterable[Certificate],
-    key: RSAPrivateKey,
+    key: PrivateKey,
 ) -> None:
     path_pem.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
     with path_pem.open(mode="wb") as f:
-        # RSAPrivateKeyWithSerialization confuses mypy, RSAPrivateKey has private_bytes
-        private_bytes = key.private_bytes(  # type:ignore[attr-defined]
-            Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()
-        )
-        f.write(private_bytes)
+        f.write(key.dump_pem(password=None).bytes)
         for cert in certificate_chain:
-            f.write(cert.public_bytes(Encoding.PEM))
+            f.write(cert.dump_pem().bytes)
     path_pem.chmod(mode=0o660)
 
 
-def _make_cert_builder(
-    subject_name: Name,
-    validity: relativedelta,
-    public_key: RSAPublicKey,
-) -> CertificateBuilder:
-    return (
-        CertificateBuilder()
-        .subject_name(subject_name)
-        .public_key(public_key)
-        .serial_number(random_serial_number())
-        # use naive datetimes -- see cmk.utils.crypto.certificate.Certificate._naive_utcnow
-        .not_valid_before(datetime.now(tz=timezone.utc).replace(tzinfo=None))
-        .not_valid_after(datetime.now(tz=timezone.utc).replace(tzinfo=None) + validity)
-    )
-
-
-def _generate_root_cert(
-    common_name: str,
-    validity: relativedelta,
-    key_size: int,
-) -> tuple[Certificate, RSAPrivateKey]:
-    ca = CertificateWithPrivateKey.generate_self_signed(
-        common_name=common_name,
-        expiry=validity,
-        key_size=key_size,
-        is_ca=True,
-    )
-    return (ca.certificate._cert, ca.private_key._key)
-
-
-def _make_csr(
-    subject_name: Name,
-    private_key: RSAPrivateKey,
-) -> CertificateSigningRequest:
-    return (
-        CertificateSigningRequestBuilder()
-        .subject_name(subject_name)
-        .sign(
-            private_key,
-            SHA256(),
-        )
-    )
-
-
-def _sign_csr(
-    csr: CertificateSigningRequest,
-    validity: relativedelta,
-    signing_cert: Certificate,
-    signing_private_key: RSAPrivateKey,
-) -> Certificate:
-    common_name = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-    return (
-        _make_cert_builder(
-            csr.subject,
-            validity,
-            _rsa_public_key_from_cert_or_csr(csr),
-        )
-        .issuer_name(signing_cert.issuer)
-        .add_extension(
-            SubjectAlternativeName([DNSName(common_name)]),
-            critical=False,
-        )
-        .add_extension(
-            BasicConstraints(
-                ca=False,
-                path_length=None,
-            ),
-            critical=True,
-        )
-        .sign(
-            signing_private_key,
-            SHA256(),
-        )
-    )
-
-
-def _make_subject_name(cn: str) -> Name:
-    return Name(
-        [
-            NameAttribute(
-                NameOID.COMMON_NAME,
-                cn,
-            ),
-        ]
-    )
-
-
-def _rsa_public_key_from_cert_or_csr(
-    c: Certificate | CertificateSigningRequest,
-    /,
-) -> RSAPublicKey:
-    assert isinstance(
-        public_key := c.public_key(),
-        RSAPublicKey,
-    )
-    return public_key
-
-
 class RemoteSiteCertsStore:
+    # TODO: don't expose cryptography x509.Certificate in interface
+
     def __init__(self, path: Path) -> None:
         self.path: Final = path
 
-    def save(self, site_id: SiteId, cert: Certificate) -> None:
+    def save(self, site_id: SiteId, cert: x509.Certificate) -> None:
         self.path.mkdir(parents=True, exist_ok=True)
-        self._make_file_name(site_id).write_bytes(cert.public_bytes(Encoding.PEM))
+        self._make_file_name(site_id).write_bytes(Certificate(cert).dump_pem().bytes)
 
-    def load(self, site_id: SiteId) -> Certificate:
-        return load_pem_x509_certificate(self._make_file_name(site_id).read_bytes())
+    def load(self, site_id: SiteId) -> x509.Certificate:
+        return x509.load_pem_x509_certificate(self._make_file_name(site_id).read_bytes())
 
     def _make_file_name(self, site_id: SiteId) -> Path:
         return self.path / f"{site_id}.pem"
+
+
+@dataclass
+class CertManagementEvent(SecurityEvent):
+    """Indicates a certificate has been added or removed"""
+
+    ComponentType = Literal["saml", "agent controller", "backup encryption keys", "agent bakery"]
+
+    def __init__(
+        self,
+        *,
+        event: Literal["certificate created", "certificate removed", "certificate uploaded"],
+        component: CertManagementEvent.ComponentType,
+        actor: UserId | str | None,
+        cert: Certificate | None,
+    ) -> None:
+        details = {
+            "component": component,
+            "actor": str(actor or "unknown user"),
+        }
+        if cert is not None:
+            details |= {
+                "issuer": str(cert.issuer.common_name or "none"),
+                "subject": str(cert.subject.common_name or "none"),
+                "not_valid_before": str(cert.not_valid_before.isoformat()),
+                "not_valid_after": str(cert.not_valid_after.isoformat()),
+                "fingerprint": cert.fingerprint(HashAlgorithm.Sha256).hex(sep=":").upper(),
+            }
+        super().__init__(
+            event,
+            details,
+            SecurityEvent.Domain.cert_management,
+        )

@@ -5,6 +5,7 @@
 
 #include "livestatus/TableContactGroups.h"
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -15,30 +16,34 @@
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 
-TableContactGroups::TableContactGroups(ICore *mc) : Table(mc) {
+using row_type = IContactGroup;
+
+TableContactGroups::TableContactGroups() {
     const ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<IContactGroup>>(
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "name", "Name of the contact group", offsets,
-        [](const IContactGroup &r) { return r.name(); }));
-    addColumn(std::make_unique<StringColumn<IContactGroup>>(
+        [](const row_type &row) { return row.name(); }));
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "alias", "An alias of the contact group", offsets,
-        [](const IContactGroup &r) { return r.alias(); }));
-    addColumn(std::make_unique<ListColumn<IContactGroup>>(
+        [](const row_type &row) { return row.alias(); }));
+    addColumn(std::make_unique<ListColumn<row_type>>(
         "members", "A list of all members of this contactgroup", offsets,
-        [](const IContactGroup &r) { return r.contactNames(); }));
+        [](const row_type &row) { return row.contactNames(); }));
 }
 
 std::string TableContactGroups::name() const { return "contactgroups"; }
 
 std::string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
-void TableContactGroups::answerQuery(Query &query, const User & /*user*/) {
-    core()->all_of_contact_groups([&query](const IContactGroup &r) {
-        return query.processDataset(Row{&r});
+void TableContactGroups::answerQuery(Query &query, const User & /*user*/,
+                                     const ICore &core) {
+    core.all_of_contact_groups([&query](const row_type &row) {
+        return query.processDataset(Row{&row});
     });
 }
 
-Row TableContactGroups::get(const std::string &primary_key) const {
+Row TableContactGroups::get(const std::string &primary_key,
+                            const ICore &core) const {
     // "name" is the primary key
-    return Row{core()->find_contactgroup(primary_key)};
+    return Row{core.find_contactgroup(primary_key)};
 }

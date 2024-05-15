@@ -9,7 +9,7 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -60,8 +60,8 @@ def test_discover_apc_mod_pdu_modules_no_items(check: CheckPlugin) -> None:
 
 def test_check_apc_mod_pdu_modules(check: CheckPlugin, string_table: StringTable) -> None:
     assert list(check.check_function(item="Circuit 1a", params={}, section=string_table)) == [
-        Result(state=State.OK, summary="Status normal, current: 1.20kw"),
-        Metric("current_power", 1.2),
+        Result(state=State.OK, summary="Status normal, current: 1.20 kW"),
+        Metric("power", 1200.0),
     ]
 
 

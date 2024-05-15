@@ -16,6 +16,7 @@ import hashlib
 import itertools
 import json
 import logging
+import re
 import sys
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -23,17 +24,28 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 from time import sleep
-from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypeVar
+from typing import (
+    Any,
+    assert_never,
+    Literal,
+    NamedTuple,
+    NotRequired,
+    TYPE_CHECKING,
+    TypedDict,
+    TypeVar,
+)
 
 import boto3
 import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
-from typing_extensions import TypedDict
 
 import cmk.utils.password_store
 import cmk.utils.store as store
-from cmk.utils.aws_constants import (
+from cmk.utils.exceptions import MKException
+from cmk.utils.paths import tmp_dir
+
+from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
@@ -42,17 +54,17 @@ from cmk.utils.aws_constants import (
     AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
-from cmk.utils.exceptions import MKException
-from cmk.utils.paths import tmp_dir
-
-from cmk.special_agents.utils import (
+from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.argument_parsing import Args
+from cmk.special_agents.v0_unstable.misc import (
     DataCache,
     datetime_serializer,
     get_seconds_since_midnight,
     vcrtrace,
 )
-from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
-from cmk.special_agents.utils.argument_parsing import Args
+
+if TYPE_CHECKING:
+    from mypy_boto3_logs.client import CloudWatchLogsClient
 
 NOW = datetime.now()
 
@@ -122,6 +134,14 @@ class Instance(BaseModel):
     instance_id: str = Field(..., alias="InstanceId")
 
 
+class TagsImportPatternOption(Enum):
+    ignore_all = "IGNORE_ALL"
+    import_all = "IMPORT_ALL"
+
+
+TagsOption = str | Literal[TagsImportPatternOption.ignore_all, TagsImportPatternOption.import_all]
+
+
 # TODO
 # Rewrite API calls from low-level client to high-level resource:
 # Boto3 has two distinct levels of APIs. Client (or "low-level") APIs provide
@@ -154,6 +174,8 @@ class Instance(BaseModel):
 
 # CostsAndUsage
 
+# ReservationUtilization
+
 # EC2Limits
 # |
 # '-- EC2Summary
@@ -164,6 +186,12 @@ class Instance(BaseModel):
 #     |
 #     '-- EC2
 
+# EBSLimits,EC2Summary
+# |
+# '-- EBSSummary
+#     |
+#     '-- EBS
+
 # S3Limits
 # |
 # '-- S3Summary
@@ -171,6 +199,10 @@ class Instance(BaseModel):
 #     |-- S3
 #     |
 #     '-- S3Requests
+
+# GlacierLimits
+# |
+# '-- Glacier
 
 # ELBLimits
 # |
@@ -192,17 +224,15 @@ class Instance(BaseModel):
 #     |
 #     '-- ELBv2Application, ELBv2ApplicationTargetGroupsHTTP, ELBv2ApplicationTargetGroupsLambda, ELBv2Network
 
-# EBSLimits,EC2Summary
-# |
-# '-- EBSSummary
-#     |
-#     '-- EBS
-
 # RDSLimits
 
 # RDSSummary
 # |
 # '-- RDS
+
+# CloudFrontSummary
+# |
+# '-- CloudFront
 
 # CloudwatchAlarmsLimits
 # |
@@ -233,6 +263,12 @@ class Instance(BaseModel):
 # '-- Route53Cloudwatch
 
 # SNSLimits
+# |
+# |-- SNSSMS
+# |
+# '-- SNSSummary
+#     |
+#     '-- SNS
 
 # ECSLimits
 # |
@@ -254,6 +290,7 @@ class AWSConfig:
         sys_argv: Sequence[str],
         overall_tags: OverallTags,
         piggyback_naming_convention: NamingConvention,
+        tags_option: TagsOption = TagsImportPatternOption.import_all,
     ) -> None:
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
@@ -261,6 +298,7 @@ class AWSConfig:
         self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
         self._current_config_hash = self._compute_config_hash(sys_argv)
         self.piggyback_naming_convention = piggyback_naming_convention
+        self.tags_option = tags_option
 
     def add_service_tags(self, tags_key: str, tags: OverallTags) -> None:
         """Convert commandline input
@@ -509,37 +547,19 @@ def _get_wafv2_web_acls(
                     _byte_convert_statement(s)
 
     for acl in web_acls:
-        for rule in acl["Rules"]:  # type: ignore[index]
+        for rule in acl["Rules"]:
             _byte_convert_statement(rule["Statement"])
 
     return web_acls
 
 
-def _fetch_tagged_resources_with_types(
+ResourceTags = Mapping[str, Tags]
+
+
+def fetch_resource_tags_from_types(
     tagging_client: BaseClient, resource_type_filters: Sequence[str]
-) -> Sequence:
-    tagged_resources = []
-    # The get_resource API call has a matching rule (AND) different than the one that we use in
-    # checkmk (OR) so we need to fetch all the resources containing tags first and then apply our
-    # matching rule.
-    # We are calling it with empty `TagFilter` param so get every resource that ever had a tag.
-    # For the tags matching rules or other info, look at the documentation of the API call:
-    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/resourcegroupstaggingapi.html#ResourceGroupsTaggingAPI.Client.get_resources
-    for page in tagging_client.get_paginator("get_resources").paginate(
-        TagFilters=[],
-        ResourceTypeFilters=resource_type_filters,
-    ):
-        tagged_resources.extend(page.get("ResourceTagMappingList", []))
-
-    return tagged_resources
-
-
-def fetch_resources_matching_tags(
-    tagging_client: BaseClient,
-    tags_to_match: Tags,
-    resource_type_filters: list[str],
-) -> set[str]:
-    """Returns the ARN of all the resources in the region that match **ANY** of the provided tags.
+) -> ResourceTags:
+    """Returns all the resources in the region that have tags.
 
     This is useful when the service-specific API is not returning tags for every resource as this
     allows you to get all the tags with a single API call rather than calling get_tags for every
@@ -555,6 +575,33 @@ def fetch_resources_matching_tags(
     https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/resourcegroupstaggingapi.html#ResourceGroupsTaggingAPI.Client.get_resources
     """
 
+    tagged_resources = []
+    # The get_resource API call has a matching rule (AND) different than the one that we use in
+    # checkmk (OR) so we need to fetch all the resources containing tags first and then apply our
+    # matching rule.
+    # We are calling it with empty `TagFilter` param so get every resource that ever had a tag.
+    # For the tags matching rules or other info, look at the documentation of the API call:
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/resourcegroupstaggingapi.html#ResourceGroupsTaggingAPI.Client.get_resources
+    for page in tagging_client.get_paginator("get_resources").paginate(
+        TagFilters=[],
+        ResourceTypeFilters=resource_type_filters,
+    ):
+        tagged_resources.extend(page.get("ResourceTagMappingList", []))
+
+    return {r["ResourceARN"]: r["Tags"] for r in tagged_resources}
+
+
+def filter_resources_matching_tags(
+    tagged_resources: ResourceTags,
+    tags_to_match: Tags,
+) -> set[str]:
+    """Returns the ARN of all the resources in the region that match **ANY** of the provided tags.
+
+    This is useful when the service-specific API is not returning tags for every resource as this
+    allows you to get all the tags with a single API call (e.g., fetch_resource_tags_from_types)
+    and filter them with this function.
+    """
+
     if not tags_to_match:
         return set()
 
@@ -562,19 +609,26 @@ def fetch_resources_matching_tags(
     for curr_tag in tags_to_match:
         tags_to_match_by_id[curr_tag["Key"]].add(curr_tag["Value"])
 
-    tagged_resources = _fetch_tagged_resources_with_types(tagging_client, resource_type_filters)
-
     matching_resources_arn = set()
-    for resource in tagged_resources:
-        resource_tags = resource["Tags"]
+    for resource_arn, resource_tags in tagged_resources.items():
         is_any_tag_matching = any(
             curr_tag["Key"] in tags_to_match_by_id
             and curr_tag["Value"] in tags_to_match_by_id[curr_tag["Key"]]
             for curr_tag in resource_tags
         )
         if is_any_tag_matching:
-            matching_resources_arn.add(resource["ResourceARN"])
+            matching_resources_arn.add(resource_arn)
     return matching_resources_arn
+
+
+def _describe_alarms(
+    client: BaseClient, get_response_content: Callable, names: Sequence[str] | None = None
+) -> Iterator[Mapping[str, object]]:
+    paginator = client.get_paginator("describe_alarms")
+    kwargs = {"AlarmNames": names} if names else {}
+
+    for page in paginator.paginate(**kwargs):
+        yield from get_response_content(page, "MetricAlarms")
 
 
 # .
@@ -790,7 +844,7 @@ class AWSSection(DataCache):
                 logging.info("%s: Result is empty or None", self.name)
                 continue
 
-            # In the related check plugin aws.include we parse these results and
+            # In the related check plug-in aws.include we parse these results and
             # extend list of json-loaded results, except for labels sections.
             self._validate_result_content(result.content)
 
@@ -876,6 +930,28 @@ class AWSSection(DataCache):
             prepared_tags.extend([{"Key": tag_key, "Value": v} for v in tag["Values"]])
         return prepared_tags
 
+    def process_tags_for_cmk_labels(self, tags: Tags) -> Mapping[str, str]:
+        """Filter tags that are imported as host/service labels in Checkmk.
+
+        This should not be mixed up with the filtering of services by tags to limit
+        the services being created from the agent output.
+
+        By default, all AWS tags are written to the agent output. This function filters
+        and transforms the agent output depending on the CLI args given to the agent.
+        Inside Checkmk the tags are validated to meet the Checkmk label requirements
+        and added as host labels to their respective piggyback host and/or as service
+        labels to the respective service using the syntax 'cmk/aws/tag/{key}:{value}'.
+        """
+        if self._config.tags_option == TagsImportPatternOption.import_all:
+            return {tag["Key"]: tag["Value"] for tag in tags}
+        if self._config.tags_option == TagsImportPatternOption.ignore_all:
+            return {}
+        return {
+            tag["Key"]: tag["Value"]
+            for tag in tags
+            if re.search(self._config.tags_option, tag["Key"])
+        }
+
 
 class AWSSectionLimits(AWSSection):
     def __init__(
@@ -928,7 +1004,7 @@ class AWSSectionLabels(AWSSection):
             "%s: Computed result of Labels section must be of type 'dict'" % self.name
         )
         for pb in computed_content.content:
-            assert pb, "%s: Piggyback hostname is not allowed to be empty" % self.name
+            assert pb, "%s: Piggyback host name is not allowed to be empty" % self.name
         return [
             AWSSectionResult(piggyback_hostname, rows)
             for piggyback_hostname, rows in computed_content.content.items()
@@ -1014,7 +1090,8 @@ class AWSSectionCloudwatch(AWSSection):
 # Example:
 # 2017-01-01 - 2017-05-01; cost and usage data is retrieved from 2017-01-01 up
 # to and including 2017-04-30 but not including 2017-05-01.
-# The GetCostAndUsageRequest operation supports only DAILY and MONTHLY granularities.
+# The GetCostAndUsage operation supports DAILY | MONTHLY | HOURLY granularities.
+# The GetReservationUtilization operation supports only DAILY and MONTHLY granularities.
 
 
 class CostsAndUsage(AWSSection):
@@ -1055,6 +1132,62 @@ class CostsAndUsage(AWSSection):
             ],
         )
         return self._get_response_content(response, "ResultsByTime")
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+
+class ReservationUtilization(AWSSection):
+    @property
+    def name(self) -> str:
+        return "reservation_utilization"
+
+    @property
+    def cache_interval(self) -> int:
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = int(get_seconds_since_midnight(NOW))
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self) -> int:
+        return 86400  # one day
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(self, *args):
+        """Query the AWS GetReservationUtilization API.
+
+        This API lags a day behind and we have to query the data starting the day
+        before yesterday. So we query the last 2 data points and let the check
+        report the most recent data point.
+        In the AWS dashboard, we also only have data for from two days ago.
+        """
+        granularity_name, granularity_interval = "DAILY", self.granularity
+        fmt = "%Y-%m-%d"
+
+        params = {
+            "TimePeriod": {
+                "Start": datetime.strftime(NOW - 2 * timedelta(seconds=granularity_interval), fmt),
+                "End": datetime.strftime(NOW, fmt),
+            },
+            "Granularity": granularity_name,
+        }
+        try:
+            response = self._client.get_reservation_utilization(**params)  # type: ignore[attr-defined]
+        except self._client.exceptions.DataUnavailableException:
+            logging.warning("ReservationUtilization: No data available")
+            return []
+        return self._get_response_content(response, "UtilizationsByTime")
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -1206,7 +1339,10 @@ class EC2Limits(AWSSectionLimits):
             )
             if inst_type.endswith("_vcpu"):
                 # Maybe should raise instead of unknown family
-                inst_fam_name = AWSEC2InstFamilies.get(inst_type[0], "Unknown Instance Family")
+                try:
+                    inst_fam_name = AWSEC2InstFamilies[inst_type[0]].localize(lambda x: x)
+                except KeyError:
+                    inst_fam_name = "Unknown Instance Family"
                 ondemand_limit = instance_quotas.get(inst_fam_name, ondemand_limit)
                 self._add_limit(
                     "",
@@ -1502,6 +1638,7 @@ class EC2Summary(AWSSection):
                 self._config.piggyback_naming_convention, inst, self._region
             )
             if inst_id:
+                inst["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(inst.get("Tags", []))
                 formatted_instances[inst_id] = inst
         return formatted_instances
 
@@ -1528,40 +1665,21 @@ class EC2Labels(AWSSectionLabels):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, str]]:
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, str]] | None:
         (colleague_contents,) = args
-        tags_to_filter = [
-            {
-                "Name": "resource-id",
-                "Values": [inst["InstanceId"] for inst in colleague_contents.content.values()],
-            }
-        ]
-        tags = []
-        for chunk in _chunks(tags_to_filter, length=200):
-            # EC2 FilterLimitExceeded: The maximum number of filter values
-            # specified on a single call is 200
-            response = self._client.describe_tags(Filters=chunk)  # type: ignore[attr-defined]
-            tags.extend(self._get_response_content(response, "Tags"))
-        return tags
+        return colleague_contents.content
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        inst_id_to_ec2_piggyback_hostname_map = {
-            inst["InstanceId"]: ec2_instance_id
-            for ec2_instance_id, inst in colleague_contents.content.items()
-        }
-
-        computed_content: dict[str, dict[str, str]] = {}
-        for tag in raw_content.content:
-            ec2_piggyback_hostname = inst_id_to_ec2_piggyback_hostname_map.get(tag["ResourceId"])
-            if not ec2_piggyback_hostname:
-                continue
-            computed_content.setdefault(ec2_piggyback_hostname, {}).setdefault(
-                tag["Key"], tag["Value"]
-            )
-
-        return AWSComputedContent(computed_content, raw_content.cache_timestamp)
+        return AWSComputedContent(
+            {
+                ec2_instance_id: inst.get("TagsForCmkLabels", [])
+                for ec2_instance_id, inst in raw_content.content.items()
+                if inst.get("TagsForCmkLabels")
+            },
+            raw_content.cache_timestamp,
+        )
 
 
 class EC2SecurityGroups(AWSSection):
@@ -1974,6 +2092,8 @@ class EBSSummary(AWSSection):
 
         content_by_piggyback_hosts: dict[str, list[str]] = {}
         for vol in raw_content.content.values():
+            vol["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(vol.get("Tags", []))
+
             instance_names = []
             for attachment in vol["Attachments"]:
                 # Just for security
@@ -2216,7 +2336,8 @@ class S3Summary(AWSSection):
 
             tagging = self._get_response_content(response, "TagSet")
             if self._matches_tag_conditions(tagging):
-                bucket["Tagging"] = tagging
+                bucket["Tagging"] = tagging  # Legacy tags, to be removed when check is adapted
+                bucket["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tagging)
                 found_buckets.append(bucket)
         return found_buckets
 
@@ -2261,7 +2382,7 @@ class S3Summary(AWSSection):
         )
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", None)]
+        return [AWSSectionResult("", list(computed_content.content.values()))]
 
 
 class S3(AWSSectionCloudwatch):
@@ -2481,7 +2602,7 @@ class GlacierLimits(AWSSectionLimits):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
-class GlacierSummary(AWSSection):
+class Glacier(AWSSection):
     def __init__(
         self,
         client: BaseClient,
@@ -2495,7 +2616,7 @@ class GlacierSummary(AWSSection):
 
     @property
     def name(self) -> str:
-        return "glacier_summary"
+        return "glacier"
 
     @property
     def cache_interval(self) -> int:
@@ -2537,9 +2658,11 @@ class GlacierSummary(AWSSection):
                 logging.warning("%s/%s: Exception, %s", self.name, vault_name, e)
                 response = {}
 
-            tagging = self._get_response_content(response, "Tags")
-            if self._matches_tag_conditions(tagging):
-                vault["Tagging"] = tagging
+            tags = self._get_response_content(response, "Tags")
+            tag_list: Tags = [{"Key": key, "Value": value} for key, value in tags.items()]
+            if self._matches_tag_conditions(tag_list):
+                vault["Tagging"] = tags  # Legacy tags, to be removed when check is adapted
+                vault["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tag_list)
                 found_vaults.append(vault)
 
         return found_vaults
@@ -2565,14 +2688,13 @@ class GlacierSummary(AWSSection):
             return colleague_contents.content
         return self._get_response_content(self._client.list_vaults(), "VaultList")  # type: ignore[attr-defined]
 
-    def _matches_tag_conditions(self, tagging: Mapping[str, str]) -> bool:
+    def _matches_tag_conditions(self, tagging: Tags) -> bool:
         if self._names is not None:
             return True
         if self._tags is None:
             return True
 
-        vault_tags = [{"Key": key, "Value": value} for key, value in tagging.items()]
-        for tag in vault_tags:
+        for tag in tagging:
             if tag in self._tags:
                 return True
         return False
@@ -2581,43 +2703,6 @@ class GlacierSummary(AWSSection):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
-
-    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", None)]
-
-
-class Glacier(AWSSection):
-    @property
-    def name(self) -> str:
-        return "glacier"
-
-    @property
-    def cache_interval(self) -> int:
-        """Return the upper limit for allowed cache age.
-
-        Data is updated at midnight, so the cache should not be older than the day.
-        """
-        cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
-        return cache_interval
-
-    @property
-    def granularity(self) -> int:
-        return 86400
-
-    def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("glacier_summary")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0.0)
-
-    def get_live_data(self, *args: AWSColleagueContents) -> None:
-        pass
-
-    def _compute_content(
-        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
-    ) -> AWSComputedContent:
-        return AWSComputedContent(colleague_contents.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
@@ -2762,7 +2847,7 @@ class ELBSummaryGeneric(AWSSection):
                 for tag in tag_descr["Tags"]
             ]
             if self._matches_tag_conditions(tagging):
-                load_balancer["TagDescriptions"] = tagging
+                load_balancer["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tagging)
                 found_load_balancers.append(load_balancer)
         return found_load_balancers
 
@@ -2861,8 +2946,9 @@ class ELBLabelsGeneric(AWSSectionLabels):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         computed_content = {
-            elb_instance_id: {tag["Key"]: tag["Value"] for tag in data.get("TagDescriptions", [])}
+            elb_instance_id: data.get("TagsForCmkLabels")
             for elb_instance_id, data in raw_content.content.items()
+            if data.get("TagsForCmkLabels")
         }
         return AWSComputedContent(computed_content, raw_content.cache_timestamp)
 
@@ -3659,6 +3745,7 @@ class RDSSummary(AWSSection):
             tags = self._get_instance_tags(instance["DBInstanceArn"])
             if self._matches_tag_conditions(tags):
                 instance["Region"] = self._region
+                instance["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tags)
                 db_instances.append(instance)
 
         return db_instances
@@ -3855,18 +3942,28 @@ class CloudFrontSummary(AWSSection):
     def get_live_data(self, *args):
         distributions = []
 
+        resource_tags = fetch_resource_tags_from_types(
+            self._tagging_client, ["cloudfront:distribution"]
+        )
+
         for page in self._client.get_paginator("list_distributions").paginate():
             fetched_distributions = self._get_response_content(
                 page, "DistributionList", dflt={}
             ).get("Items", [])
             distributions.extend(fetched_distributions)
 
+        for distribution in distributions:
+            distribution["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(
+                resource_tags.get(distribution["ARN"], [])
+            )
+
         if self._names:
             return [d for d in distributions if d["Id"] in self._names]
 
         if self._tags:
-            distributions_arn_matching_tags = fetch_resources_matching_tags(
-                self._tagging_client, self._tags, ["cloudfront:distribution"]
+            distributions_arn_matching_tags = filter_resources_matching_tags(
+                resource_tags,
+                self._tags,
             )
             return [d for d in distributions if d["ARN"] in distributions_arn_matching_tags]
 
@@ -4014,9 +4111,8 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args):
-        response = self._client.describe_alarms()  # type: ignore[attr-defined]
-        return self._get_response_content(response, "MetricAlarms")
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        return list(_describe_alarms(self._client, self._get_response_content))
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -4071,10 +4167,10 @@ class CloudwatchAlarms(AWSSection):
                     for alarm in colleague_contents.content
                     if alarm["AlarmName"] in self._names
                 ]
-            response = self._client.describe_alarms(AlarmNames=self._names)  # type: ignore[attr-defined]
-        else:
-            response = self._client.describe_alarms()  # type: ignore[attr-defined]
-        return self._get_response_content(response, "MetricAlarms")
+            return list(
+                _describe_alarms(self._client, self._get_response_content, names=self._names)
+            )
+        return list(_describe_alarms(self._client, self._get_response_content))
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -4248,6 +4344,7 @@ class DynamoDBSummary(AWSSection):
 
             if self._matches_tag_conditions(tags):
                 table["Region"] = self._region
+                table["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tags)
                 found_tables.append(table)
 
         return found_tables
@@ -4555,6 +4652,7 @@ class WAFV2Summary(AWSSection):
 
             if self._matches_tag_conditions(tags):
                 web_acl["Region"] = self._region_report
+                web_acl["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tags)
                 found_web_acls.append(web_acl)
 
         return found_web_acls
@@ -4780,16 +4878,12 @@ class LambdaSummary(AWSSection):
         functions = []
         for page in self._client.get_paginator("list_functions").paginate():
             for function in self._get_response_content(page, "Functions"):
+                tags = self._get_tagging_for(function.get("FunctionArn"))
                 if (
                     self._names is None
                     or (self._names and function.get("FunctionName") in self._names)
-                ) and (
-                    self._tags is None
-                    or self._tags
-                    and self._matches_tag_conditions(
-                        self._get_tagging_for(function.get("FunctionArn"))
-                    )
-                ):
+                ) and (self._tags is None or self._tags and self._matches_tag_conditions(tags)):
+                    function["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(tags)
                     functions.append(function)
         return functions
 
@@ -5027,7 +5121,7 @@ class LambdaCloudwatchInsights(AWSSection):
     @staticmethod
     def query_results(
         *,
-        client: BaseClient,
+        client: "CloudWatchLogsClient",
         query_id: str,
         timeout_seconds: float,
         sleep_duration: float = 0.5,
@@ -5036,9 +5130,9 @@ class LambdaCloudwatchInsights(AWSSection):
         response_results: dict = {"status": "Scheduled"}
         query_start = datetime.now().timestamp()
         while response_results["status"] != "Complete":
-            response_results = client.get_query_results(queryId=query_id)  # type: ignore[attr-defined]
+            response_results = client.get_query_results(queryId=query_id)  # type: ignore[assignment]
             if datetime.now().timestamp() - query_start >= timeout_seconds:
-                client.stop_query(queryId=query_id)  # type: ignore[attr-defined]
+                client.stop_query(queryId=query_id)
                 logging.error(
                     "LambdaCloudwatchInsights: query_results failed"
                     " or timed out with the following results: %s ",
@@ -5143,7 +5237,7 @@ class LambdaCloudwatchInsights(AWSSection):
         cloudwatch_data: dict[str, LambdaMetricStats] = {}
         for query_id in queries:
             query_results = self.query_results(
-                client=self._client,
+                client=self._client,  # type: ignore[arg-type]
                 query_id=query_id,
                 timeout_seconds=60,
             )
@@ -5209,8 +5303,6 @@ class Route53HealthChecks(AWSSection):
         distributor: ResultDistributor | None = None,
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config["route53_names"]
-        self._tags = self.prepare_tags_for_api_response(self._config.service_config["route53_tags"])
 
     @property
     def name(self) -> str:
@@ -5389,21 +5481,18 @@ class SNSTopicsFetcher:
             for topic in page["Topics"]
         ]
 
-    def fetch_filtered_topics(self, all_topics_arns: list[str]) -> list[SNSTopic]:
-        unfiltered_topics = [SNSTopic.from_arn(arn) for arn in all_topics_arns]
-        filtered_topics = unfiltered_topics.copy()
+    def fetch_all_topic_tags(self) -> ResourceTags:
+        return fetch_resource_tags_from_types(self._tagging_client, ["sns:topic"])
+
+    def filter_topics(self, all_topics_arns: list[str], resource_tags: ResourceTags) -> list[str]:
+        if self._tags:
+            topics_arn_matching_tags = filter_resources_matching_tags(resource_tags, self._tags)
+            return [t for t in all_topics_arns if t in topics_arn_matching_tags]
 
         if self._names:
-            filtered_topics = [t for t in unfiltered_topics if t.topic_name in self._names]
+            return [t for t in all_topics_arns if SNSTopic.from_arn(t).topic_name in self._names]
 
-        if self._tags:
-            topics_arn_matching_tags = fetch_resources_matching_tags(
-                self._tagging_client, self._tags, ["sns:topic"]
-            )
-            filtered_topics = [
-                t for t in unfiltered_topics if t.to_arn() in topics_arn_matching_tags
-            ]
-        return filtered_topics
+        return all_topics_arns
 
 
 class SNSLimits(AWSSectionLimits):
@@ -5493,6 +5582,75 @@ class SNSLimits(AWSSectionLimits):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
+class SNSSummary(AWSSection):
+    def __init__(
+        self,
+        client: BaseClient,
+        region: str,
+        config: AWSConfig,
+        sns_topics_fetcher: SNSTopicsFetcher,
+        distributor: ResultDistributor | None = None,
+    ) -> None:
+        super().__init__(client, region, config, distributor=distributor)
+        self._sns_topics_fetcher = sns_topics_fetcher
+
+    @property
+    def name(self) -> str:
+        return "sns_summary"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("sns_limits")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
+        (colleague_contents,) = args
+
+        if colleague_contents.content:
+            topics_arn = [topic["arn"] for topic in colleague_contents.content]
+        else:
+            topics_arn = [topic.to_arn() for topic in self._sns_topics_fetcher.fetch_all_topics()]
+
+        tags = self._sns_topics_fetcher.fetch_all_topic_tags()
+        filtered_topics = self._sns_topics_fetcher.filter_topics(topics_arn, tags)
+
+        found_topics = []
+        for topic_arn in topics_arn:
+            if topic_arn in filtered_topics:
+                topic = SNSTopic.from_arn(topic_arn)
+                found_topics.append(
+                    {
+                        "Name": topic.topic_name,
+                        "ARN": topic_arn,
+                        "ItemId": topic.to_item_id(),
+                        "Region": topic.region,
+                        "AccountId": topic.account_id,
+                        "TagsForCmkLabels": self.process_tags_for_cmk_labels(
+                            tags.get(topic_arn, [])
+                        ),
+                    }
+                )
+
+        return found_topics
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+
 class SNSSMS(AWSSectionCloudwatch):
     @property
     def name(self) -> str:
@@ -5544,16 +5702,8 @@ class SNSSMS(AWSSectionCloudwatch):
 
 
 class SNS(AWSSectionCloudwatch):
-    def __init__(
-        self,
-        client: BaseClient,
-        region: str,
-        config: AWSConfig,
-        topics_fetcher: SNSTopicsFetcher,
-        distributor: ResultDistributor | None = None,
-    ):
-        super().__init__(client, region, config, distributor=distributor)
-        self.topics_fetcher = topics_fetcher
+    def __init__(self, client: BaseClient, region: str, config: AWSConfig):
+        super().__init__(client, region, config)
 
     @property
     def name(self) -> str:
@@ -5568,23 +5718,15 @@ class SNS(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("sns_limits")
+        colleague = self._received_results.get("sns_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def _get_filtered_topics(self, colleague_contents: AWSColleagueContents) -> list[SNSTopic]:
-        if colleague_contents.content:
-            unfiltered_topics = [topic["arn"] for topic in colleague_contents.content]
-        else:
-            unfiltered_topics = [topic.to_arn() for topic in self.topics_fetcher.fetch_all_topics()]
-        return self.topics_fetcher.fetch_filtered_topics(unfiltered_topics)
-
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         # The metrics of this class are grouped by SNS topic
         metrics = []
-        topics = self._get_filtered_topics(colleague_contents)
-        for idx, topic in enumerate(topics):
+        for idx, topic in enumerate(colleague_contents.content):
             for metric_name, stat, unit in [
                 ("NumberOfMessagesPublished", "Sum", "Count"),
                 ("NumberOfNotificationsDelivered", "Sum", "Count"),
@@ -5592,7 +5734,7 @@ class SNS(AWSSectionCloudwatch):
             ]:
                 metric: Metric = {
                     "Id": self._create_id_for_metric_data_query(idx, metric_name),
-                    "Label": topic.to_item_id(),
+                    "Label": topic["ItemId"],
                     "MetricStat": {
                         "Metric": {
                             "Namespace": "AWS/SNS",
@@ -5600,7 +5742,7 @@ class SNS(AWSSectionCloudwatch):
                             "Dimensions": [
                                 {
                                     "Name": "TopicName",
-                                    "Value": topic.topic_name,
+                                    "Value": topic["Name"],
                                 }
                             ],
                         },
@@ -5830,7 +5972,12 @@ class ECSSummary(AWSSection):
         return AWSComputedContent(clusters, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", [c.dict() for c in computed_content.content])]
+        clusters = []
+        for cluster in computed_content.content:
+            data = cluster.model_dump()
+            data["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(data.get("tags", []))
+            clusters.append(data)
+        return [AWSSectionResult("", clusters)]
 
 
 class ECS(AWSSectionCloudwatch):
@@ -5964,9 +6111,7 @@ class ElastiCacheLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(
-        self, *args: AWSColleagueContents
-    ) -> tuple[
+    def get_live_data(self, *args: AWSColleagueContents) -> tuple[
         Sequence[Mapping[str, object]],
         Sequence[Mapping[str, object]],
         Sequence[Mapping[str, object]],
@@ -6131,7 +6276,7 @@ class ElastiCacheSummary(AWSSection):
         return clusters, nodes
 
     def _filter_clusters(
-        self, clusters: Iterable[ElastiCacheCluster]
+        self, clusters: Iterable[ElastiCacheCluster], resource_tags: ResourceTags
     ) -> Iterable[ElastiCacheCluster]:
         if self._names is not None:
             for cluster in clusters:
@@ -6140,9 +6285,7 @@ class ElastiCacheSummary(AWSSection):
             return
 
         if self._tags is not None:
-            matching_arns = fetch_resources_matching_tags(
-                self._tagging_client, self._tags, ["elasticache:replicationgroup"]
-            )
+            matching_arns = filter_resources_matching_tags(resource_tags, self._tags)
 
             for cluster in clusters:
                 if cluster.ARN in matching_arns:
@@ -6166,20 +6309,29 @@ class ElastiCacheSummary(AWSSection):
         (colleague_contents,) = args
         clusters, nodes = self._fetch_data(colleague_contents.content)
 
-        filtered_clusters = list(self._filter_clusters(clusters))
+        resource_tags = fetch_resource_tags_from_types(
+            self._tagging_client, ["elasticache:replicationgroup"]
+        )
+        filtered_clusters = list(self._filter_clusters(clusters, resource_tags))
         filtered_node_dicts = list(self._filter_nodes(nodes, filtered_clusters))
 
-        return [c.model_dump() for c in filtered_clusters], filtered_node_dicts
+        filtered_cluster_dicts = []
+        for cluster in filtered_clusters:
+            cluster_dict = cluster.model_dump()
+            cluster_dict["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(
+                resource_tags.get(cluster.ARN, [])
+            )
+            filtered_cluster_dicts.append(cluster_dict)
+
+        return filtered_cluster_dicts, filtered_node_dicts
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        clusters = [ElastiCacheCluster(**c) for c in raw_content.content[0]]
-        nodes = [ElastiCacheNode(**n) for n in raw_content.content[1]]
-        return AWSComputedContent((clusters, nodes), raw_content.cache_timestamp)
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", [c.dict() for c in computed_content.content[0]])]
+        return [AWSSectionResult("", computed_content.content[0])]
 
 
 class ElastiCache(AWSSectionCloudwatch):
@@ -6199,7 +6351,7 @@ class ElastiCache(AWSSectionCloudwatch):
         colleague = self._received_results.get("elasticache_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(
-                [node.NodeId for node in colleague.content[1]],
+                [node["NodeId"] for node in colleague.content[1]],
                 colleague.cache_timestamp,
             )
         return AWSColleagueContents([], 0.0)
@@ -6444,7 +6596,9 @@ class AWSSectionsUSEast(AWSSections):
         distributor = ResultDistributor()
 
         if "ce" in services:
-            self._sections.append(CostsAndUsage(self._init_client("ce"), region, config))
+            ce_client = self._init_client("ce")
+            self._sections.append(CostsAndUsage(ce_client, region, config))
+            self._sections.append(ReservationUtilization(ce_client, region, config))
 
         cloudwatch_client = self._init_client("cloudwatch")
         tagging_client = self._init_client("resourcegroupstaggingapi")
@@ -6677,16 +6831,13 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(s3_requests)
 
         if "glacier" in services:
-            glacier = Glacier(cloudwatch_client, region, config)
             glacier_client = self._init_client("glacier")
             glacier_limits = GlacierLimits(glacier_client, region, config, distributor)
-            glacier_summary = GlacierSummary(glacier_client, region, config, distributor)
+            glacier_summary = Glacier(glacier_client, region, config)
             distributor.add(glacier_limits.name, glacier_summary)
-            distributor.add(glacier_summary.name, glacier)
             if config.service_config.get("glacier_limits"):
                 self._sections.append(glacier_limits)
             self._sections.append(glacier_summary)
-            self._sections.append(glacier)
 
         if "rds" in services:
             rds_client = self._init_client("rds")
@@ -6763,18 +6914,22 @@ class AWSSectionsGeneric(AWSSections):
         if "sns" in services:
             sns_client = self._init_client("sns")
             sns_topics_fetcher = SNSTopicsFetcher(sns_client, tagging_client, region, config)
-            sns_cloudwatch = SNS(
-                cloudwatch_client, region, config, sns_topics_fetcher, distributor=distributor
+            sns_summary = SNSSummary(
+                sns_client, region, config, sns_topics_fetcher, distributor=distributor
             )
+            sns_cloudwatch = SNS(cloudwatch_client, region, config)
+            distributor.add(sns_summary.name, sns_cloudwatch)
             sns_sms_cloudwatch = SNSSMS(cloudwatch_client, region, config)
             if config.service_config.get("sns_limits"):
                 sns_limits = SNSLimits(
                     sns_client, region, config, sns_topics_fetcher, distributor=distributor
                 )
-                distributor.add("sns_limits", sns_cloudwatch)
+                distributor.add(sns_limits.name, sns_summary)
+                distributor.add(sns_limits.name, sns_cloudwatch)
                 self._sections.append(sns_limits)
             # sns_cloudwatch section should always be after sns_limits because it gets the data from
             # there through the distributor
+            self._sections.append(sns_summary)
             self._sections.append(sns_cloudwatch)
             self._sections.append(sns_sms_cloudwatch)
 
@@ -7081,6 +7236,26 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         "address, the region and the instance ID: {Private IPv4 address}-{region}-{Instance ID}. ",
     )
 
+    group_import_tags = parser.add_mutually_exclusive_group()
+    group_import_tags.add_argument(
+        "--ignore-all-tags",
+        action="store_const",
+        const=TagsImportPatternOption.ignore_all,
+        dest="tag_key_pattern",
+        help="By default, all AWS tags are written to the agent output, validated to meet the "
+        "Checkmk label requirements and added as host labels to their respective piggyback host "
+        "and/or as service labels to the respective service using the syntax "
+        "'cmk/aws/tag/{key}:{value}'. With this option you can disable the import of AWS "
+        "tags.",
+    )
+    group_import_tags.add_argument(
+        "--import-matching-tags-as-labels",
+        dest="tag_key_pattern",
+        help="You can restrict the imported tags by specifying a pattern which the agent searches "
+        "for in the key of the tag.",
+    )
+    group_import_tags.set_defaults(tag_key_pattern=TagsImportPatternOption.import_all)
+
     for service in AWSServices:
         if service.filter_by_names:
             parser.add_argument(
@@ -7136,7 +7311,12 @@ def _create_session(
 
 
 def _sts_assume_role(
-    access_key_id: str, secret_access_key: str, role_arn: str, external_id: str, region: str
+    access_key_id: str,
+    secret_access_key: str,
+    role_arn: str,
+    external_id: str,
+    region: str,
+    config: botocore.config.Config | None,
 ) -> boto3.session.Session:
     """
     Returns a session using a set of temporary security credentials that
@@ -7150,7 +7330,7 @@ def _sts_assume_role(
     """
     try:
         session = _create_session(access_key_id, secret_access_key, region)
-        sts_client = session.client("sts")
+        sts_client = session.client("sts", config=config)
         if external_id:
             assumed_role_object = sts_client.assume_role(
                 RoleArn=role_arn, RoleSessionName="AssumeRoleSession", ExternalId=external_id
@@ -7253,6 +7433,7 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
         sys_argv,
         (args.overall_tag_key, args.overall_tag_values),
         args.piggyback_naming_convention,
+        args.tag_key_pattern,
     )
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
@@ -7312,17 +7493,24 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
     return aws_config
 
 
-def _create_session_from_args(args: Args, region: str) -> boto3.session.Session:
+def _create_session_from_args(
+    args: Args, region: str, config: botocore.config.Config | None
+) -> boto3.session.Session:
     if args.assume_role:
         return _sts_assume_role(
-            args.access_key_id, args.secret_access_key, args.role_arn, args.external_id, region
+            args.access_key_id,
+            args.secret_access_key,
+            args.role_arn,
+            args.external_id,
+            region,
+            config,
         )
     return _create_session(args.access_key_id, args.secret_access_key, region)
 
 
-def _get_account_id(args: Args) -> str:
-    session = _create_session_from_args(args, args.global_service_region)
-    account_id = session.client("sts").get_caller_identity()["Account"]
+def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
+    session = _create_session_from_args(args, args.global_service_region, config)
+    account_id = session.client("sts", config=config).get_caller_identity()["Account"]
     return account_id
 
 
@@ -7358,7 +7546,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
         )
 
     try:
-        account_id = _get_account_id(args)
+        account_id = _get_account_id(args, proxy_config)
     except AwsAccessError as ae:
         # can not access AWS, retreat
         sys.stdout.write("<<<aws_exceptions>>>\n")
@@ -7379,7 +7567,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
 
         for region in aws_regions:
             try:
-                session = _create_session_from_args(args, region)
+                session = _create_session_from_args(args, region, proxy_config)
                 sections = aws_sections(
                     hostname, session, account_id, debug=args.debug, config=proxy_config
                 )

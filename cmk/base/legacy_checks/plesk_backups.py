@@ -8,8 +8,10 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render, StringTable
 
 
 def inventory_plesk_backups(info):
@@ -52,7 +54,7 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
         if size == 0:
             status = 2
             status_txt = " (!!)"
-        output.append(f"Last Backup - Size: {get_bytes_human_readable(size)}{status_txt}")
+        output.append(f"Last Backup - Size: {render.disksize(size)}{status_txt}")
         perfdata.append(("last_backup_size", size))
 
         age_seconds = int(time.time()) - timestamp
@@ -92,7 +94,7 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
             elif total_size > params["total_size"][0]:
                 status = max(status, 1)
                 status_txt = " (!)"
-        output.append(f"Total Size: {get_bytes_human_readable(total_size)}{status_txt}")
+        output.append(f"Total Size: {render.disksize(total_size)}{status_txt}")
         perfdata.append(("total_size", total_size))
 
         return (status, ", ".join(output), perfdata)
@@ -100,7 +102,12 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
     return (3, "Domain not found")
 
 
+def parse_plesk_backups(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["plesk_backups"] = LegacyCheckDefinition(
+    parse_function=parse_plesk_backups,
     service_name="Plesk Backup %s",
     discovery_function=inventory_plesk_backups,
     check_function=check_plesk_backups,

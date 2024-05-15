@@ -3,13 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 import random
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import register_controller, wait_until_host_receives_data
+from tests.testlib.agent import (
+    register_controller,
+    wait_for_agent_cache_omd_status,
+    wait_until_host_receives_data,
+)
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name, get_services_with_status
 from tests.testlib.version import CMKVersion, version_from_env
@@ -17,22 +20,18 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
-from .conftest import get_site_status, update_config, update_site
+from .conftest import get_site_status, update_site
 
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
-    reason="Test currently failing for missing `php7`. "
-    "This will be fixed  starting from  base-version 2.2.0p8",
-)
+@pytest.mark.cse
+@pytest.mark.cee
 def test_update(  # pylint: disable=too-many-branches
-    test_site: Site,
+    test_setup: tuple[Site, bool],
     agent_ctl: Path,
-    request: pytest.FixtureRequest,
 ) -> None:
-    # get version data
+    test_site, disable_interactive_mode = test_setup
     base_version = test_site.version
 
     hostnames = [HostName(f"test-host-{i}") for i in range(5)]
@@ -69,8 +68,8 @@ def test_update(  # pylint: disable=too-many-branches
         wait_until_host_receives_data(test_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    test_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     test_site.openapi.activate_changes_and_wait_for_completion()
 
@@ -78,24 +77,21 @@ def test_update(  # pylint: disable=too-many-branches
     base_ok_services = {}
 
     for hostname in hostnames:
-        test_site.reschedule_services(hostname)
+        test_site.reschedule_services(hostname, max_count=20)
 
         # get baseline monitoring data for each host
         base_data[hostname] = test_site.get_host_services(hostname)
+        ignore_data = [
+            # Check_MK service turning into CRIT after the update.
+            # See CMK-17002. TODO: restore service after ticket is done.
+            "Check_MK",
+        ]
 
-        # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 and Almalinux-9 distros
-        #  after the update. See CMK-13774.
-        if os.environ.get("DISTRO") in ["centos-8", "almalinux-9"]:
-            postfix_services = ["Postfix Queue", "Postfix status"]
-            for postfix_service in postfix_services:
-                if postfix_service in base_data[hostname]:
-                    base_data[hostname].pop(postfix_service)
+        for data in ignore_data:
+            if data in base_data[hostname]:
+                base_data[hostname].pop(data)
 
         base_ok_services[hostname] = get_services_with_status(base_data[hostname], 0)
-        # used in debugging mode
-        _ = get_services_with_status(base_data[hostname], 1)  # Warn
-        _ = get_services_with_status(base_data[hostname], 2)  # Crit
-        _ = get_services_with_status(base_data[hostname], 3)  # Unknown
 
         assert len(base_ok_services[hostname]) > 0
 
@@ -105,14 +101,7 @@ def test_update(  # pylint: disable=too-many-branches
         fallback_branch=current_base_branch_name(),
     )
 
-    target_site = update_site(
-        test_site, target_version, request.config.getoption(name="--disable-interactive-mode")
-    )
-
-    # Triggering cmk config update
-    update_config_result = update_config(target_site)
-
-    assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
+    target_site = update_site(test_site, target_version, not disable_interactive_mode)
 
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
@@ -120,37 +109,27 @@ def test_update(  # pylint: disable=too-many-branches
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
     logger.info("Discovering services and waiting for completion...")
-    target_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    target_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     target_site.openapi.activate_changes_and_wait_for_completion()
 
     target_data = {}
     target_ok_services = {}
 
+    # services such as 'omd status' rely on cache data:
+    # wait for the cache to be up-to-date and reschedule services
+    wait_for_agent_cache_omd_status(target_site)
     for hostname in hostnames:
-        target_site.reschedule_services(hostname)
+        target_site.schedule_check(hostname, "Check_MK", 0)
+
+    for hostname in hostnames:
+        target_site.reschedule_services(hostname, max_count=20)
 
         # get update monitoring data
         target_data[hostname] = target_site.get_host_services(hostname)
 
         target_ok_services[hostname] = get_services_with_status(target_data[hostname], 0)
-        # used in debugging mode
-        _ = get_services_with_status(target_data[hostname], 1)  # Warn
-        _ = get_services_with_status(target_data[hostname], 2)  # Crit
-        _ = get_services_with_status(target_data[hostname], 3)  # Unknown
-
-        # TODO: 'Nullmailer Queue' service is not found after the update. See CMK-14150.
-        nullmailer_service = "Nullmailer Queue"
-        if nullmailer_service in base_data[hostname]:
-            base_data[hostname].pop(nullmailer_service)
-            base_ok_services[hostname].remove(nullmailer_service)
-
-        # TODO: 'OMD <sitename> apache' service is not found after the update. See CMK-14120.
-        apache_service = f"OMD {test_site.id} apache"
-        if apache_service in base_data[hostname]:
-            base_data[hostname].pop(apache_service)
-            base_ok_services[hostname].remove(apache_service)
 
         not_found_services = [
             service for service in base_data[hostname] if service not in target_data[hostname]
@@ -167,9 +146,14 @@ def test_update(  # pylint: disable=too-many-branches
             for service in base_ok_services[hostname]
             if service not in target_ok_services[hostname]
         ]
+        err_details = [
+            (s, "state: " + str(target_data[hostname][s].state), target_data[hostname][s].summary)
+            for s in not_ok_services
+        ]
         err_msg = (
             f"In the {hostname} host the following services were `OK` in base-version but not in "
             f"target-version: "
             f"{not_ok_services}"
+            f"\nDetails: {err_details})"
         )
-        assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
+        assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg

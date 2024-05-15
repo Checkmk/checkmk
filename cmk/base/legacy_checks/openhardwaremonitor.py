@@ -6,15 +6,14 @@
 
 import collections
 from collections.abc import Mapping
-from typing import NotRequired
-
-from typing_extensions import TypedDict
+from typing import NotRequired, TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError
 
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
@@ -158,6 +157,14 @@ def _check_openhardwaremonitor_wmistatus(data):
         raise IgnoreResultsError("WMI query timed out")
 
 
+def discover_openhardwaremonitor(parsed):
+    return inventory_openhardwaremonitor("Clock", parsed)
+
+
+def check_openhardwaremonitor_clock(item, params, parsed):
+    return check_openhardwaremonitor("Clock", item, params, parsed)
+
+
 #   .--clock---------------------------------------------------------------.
 #   |                            _            _                            |
 #   |                        ___| | ___   ___| | __                        |
@@ -170,10 +177,8 @@ def _check_openhardwaremonitor_wmistatus(data):
 check_info["openhardwaremonitor"] = LegacyCheckDefinition(
     parse_function=parse_openhardwaremonitor,
     service_name="Clock %s",
-    discovery_function=lambda parsed: inventory_openhardwaremonitor("Clock", parsed),
-    check_function=lambda item, params, parsed: check_openhardwaremonitor(
-        "Clock", item, params, parsed
-    ),
+    discovery_function=discover_openhardwaremonitor,
+    check_function=check_openhardwaremonitor_clock,
 )
 
 # .
@@ -205,10 +210,14 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
     return None
 
 
+def discover_openhardwaremonitor_temperature(parsed):
+    return inventory_openhardwaremonitor("Temperature", parsed)
+
+
 check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     sections=["openhardwaremonitor"],
-    discovery_function=lambda parsed: inventory_openhardwaremonitor("Temperature", parsed),
+    discovery_function=discover_openhardwaremonitor_temperature,
     check_function=check_openhardwaremonitor_temperature,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -217,6 +226,15 @@ check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
         "_default": {"levels": (70, 80)},
     },
 )
+
+
+def discover_openhardwaremonitor_power(parsed):
+    return inventory_openhardwaremonitor("Power", parsed)
+
+
+def check_openhardwaremonitor_power(item, params, parsed):
+    return check_openhardwaremonitor("Power", item, params, parsed)
+
 
 # .
 #   .--power---------------------------------------------------------------.
@@ -231,10 +249,8 @@ check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
 check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
     service_name="Power %s",
     sections=["openhardwaremonitor"],
-    discovery_function=lambda parsed: inventory_openhardwaremonitor("Power", parsed),
-    check_function=lambda item, params, parsed: check_openhardwaremonitor(
-        "Power", item, params, parsed
-    ),
+    discovery_function=discover_openhardwaremonitor_power,
+    check_function=check_openhardwaremonitor_power,
 )
 
 # .
@@ -256,10 +272,14 @@ def check_openhardwaremonitor_fan(item, params, parsed):
     return None
 
 
+def discover_openhardwaremonitor_fan(parsed):
+    return inventory_openhardwaremonitor("Fan", parsed)
+
+
 check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
     sections=["openhardwaremonitor"],
-    discovery_function=lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
+    discovery_function=discover_openhardwaremonitor_fan,
     check_function=check_openhardwaremonitor_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={
@@ -328,6 +348,6 @@ check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
     check_function=check_openhardwaremonitor_smart,
     check_ruleset_name="openhardwaremonitor_smart",
     check_default_parameters={
-        "remaining_life": (30, 10),  # wild guess
+        "remaining_life": (30.0, 10.0),  # wild guess
     },
 )

@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib import postgres
+
 from .agent_based_api.v1 import IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import postgres
 
 # <<<postgres_query_duration>>>
 # [databases_start]

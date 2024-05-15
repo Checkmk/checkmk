@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 import enum
 import errno
 import os
@@ -17,7 +19,8 @@ import pytest
 from pydantic import BaseModel
 from pytest import MonkeyPatch
 
-from tests.testlib import import_module_hack, wait_until
+from tests.testlib import import_module_hack
+from tests.testlib.utils import wait_until
 
 import cmk.utils.debug
 import cmk.utils.store as store

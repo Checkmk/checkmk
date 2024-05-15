@@ -3,197 +3,53 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 import json
 import time
-from collections.abc import Sequence
-from dataclasses import dataclass, field
+from collections.abc import Hashable, Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import Literal
 
-from livestatus import lqencode, SiteId
+from livestatus import (
+    get_rrd_data,
+    lqencode,
+    MKLivestatusNotFoundError,
+    SingleSiteConnection,
+    SiteId,
+)
 
+import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import (
-    estimate_levels,
-    get_rrd_data,
-    PredictionData,
-    PredictionParameters,
-    PredictionQuerier,
-    timezone_at,
-)
+from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request
 from cmk.gui.http import request as request_
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageRegistry
 from cmk.gui.sites import live
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
-graph_size = 2000, 700
+from cmk.agent_based.prediction_backend import PredictionInfo
+
+_GRAPH_SIZE = 2000, 700
+
+_FIVE_MINUTES = 300
 
 
-@dataclass(frozen=True)
-class SwappedStats:
-    average: list[float | None] = field(default_factory=list)
-    min_: list[float | None] = field(default_factory=list)
-    max_: list[float | None] = field(default_factory=list)
-    stdev: list[float | None] = field(default_factory=list)
-    upper_warn: list[float] = field(default_factory=list)
-    upper_crit: list[float] = field(default_factory=list)
-    lower_warn: list[float] = field(default_factory=list)
-    lower_crit: list[float] = field(default_factory=list)
+class Color(enum.StrEnum):
+    PREDICTION = "#000000"
+    OK_AREA = "#ffffff"
+    WARN_AREA = "#ffff00"
+    CRIT_AREA = "#ff0000"
+    OBSERVED = "#0000ff"
 
 
-def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page_handler("prediction_graph", page_graph)
-
-
-def page_graph() -> None:
-    prediction_data_querier = _prediction_querier_from_request(request_)
-    breadcrumb = make_service_breadcrumb(
-        prediction_data_querier.host_name,
-        prediction_data_querier.service_name,
-    )
-    make_header(
-        html,
-        _("Prediction for %s - %s - %s")
-        % (
-            prediction_data_querier.host_name,
-            prediction_data_querier.service_name,
-            prediction_data_querier.metric_name,
-        ),
-        breadcrumb,
-    )
-
-    # Get current value from perf_data via Livestatus
-    current_value = get_current_perfdata(
-        prediction_data_querier.host_name,
-        prediction_data_querier.service_name,
-        prediction_data_querier.metric_name,
-    )
-
-    if not (
-        available_predictions_sorted_by_start_time := sorted(
-            prediction_data_querier.query_available_predictions(),
-            key=lambda pred_info: pred_info.range[0],
-        )
-    ):
-        raise MKGeneralException(
-            _("There is currently no prediction information available for this service.")
-        )
-
-    selected_prediction_info = next(
-        (
-            prediction_info
-            for prediction_info in available_predictions_sorted_by_start_time
-            if prediction_info.name == request_.var("timegroup")
-        ),
-        available_predictions_sorted_by_start_time[0],
-    )
-    selected_prediction_data = prediction_data_querier.query_prediction_data(
-        selected_prediction_info.name
-    )
-
-    html.begin_form("prediction")
-    html.write_text(_("Show prediction for "))
-    html.dropdown(
-        "timegroup",
-        (
-            (prediction_info.name, prediction_info.name.title())
-            for prediction_info in available_predictions_sorted_by_start_time
-        ),
-        deflt=selected_prediction_info.name,
-        onchange="document.prediction.submit();",
-    )
-    html.hidden_fields()
-    html.end_form()
-
-    swapped = swap_and_compute_levels(selected_prediction_data, selected_prediction_info.params)
-    vertical_range = compute_vertical_range(swapped)
-    legend = [
-        ("#000000", _("Reference")),
-        ("#ffffff", _("OK area")),
-        ("#ffff00", _("Warning area")),
-        ("#ff0000", _("Critical area")),
-    ]
-    if current_value is not None:
-        legend.append(("#0000ff", _("Current value: %.2f") % current_value))
-
-    create_graph(
-        selected_prediction_info.name,
-        graph_size,
-        selected_prediction_info.range,
-        vertical_range,
-        legend,
-    )
-
-    if selected_prediction_info.params.levels_upper is not None:
-        render_dual_area(swapped.upper_warn, swapped.upper_crit, "#fff000", 0.4)
-        render_area_reverse(swapped.upper_crit, "#ff0000", 0.1)
-
-    if selected_prediction_info.params.levels_lower is not None:
-        render_dual_area(swapped.lower_crit, swapped.lower_warn, "#fff000", 0.4)
-        render_area(swapped.lower_crit, "#ff0000", 0.1)
-
-    vscala_low = vertical_range[0]
-    vscala_high = vertical_range[1]
-    vert_scala = _compute_vertical_scala(vscala_low, vscala_high)
-    time_scala = [
-        [selected_prediction_info.range[0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)
-    ]
-    render_coordinates(vert_scala, time_scala)
-
-    if selected_prediction_info.params.levels_lower is not None:
-        render_dual_area(swapped.average, swapped.lower_warn, "#ffffff", 0.5)
-        render_curve(swapped.lower_warn, "#e0e000", square=True)
-        render_curve(swapped.lower_crit, "#f0b0a0", square=True)
-
-    if selected_prediction_info.params.levels_upper is not None:
-        render_dual_area(swapped.upper_warn, swapped.average, "#ffffff", 0.5)
-        render_curve(swapped.upper_warn, "#e0e000", square=True)
-        render_curve(swapped.upper_crit, "#f0b0b0", square=True)
-    render_curve(swapped.average, "#000000")
-    render_curve(swapped.average, "#000000")  # repetition makes line bolder
-
-    # Try to get current RRD data and render it also
-    from_time, until_time = selected_prediction_info.range
-    now = time.time()
-    if from_time <= now <= until_time:
-        timeseries = get_rrd_data(
-            prediction_data_querier.livestatus_connection,
-            prediction_data_querier.host_name,
-            prediction_data_querier.service_name,
-            prediction_data_querier.metric_name,
-            "MAX",
-            from_time,
-            until_time,
-        )
-        rrd_data = timeseries.values
-
-        render_curve(rrd_data, "#0000ff", 2)
-        if current_value is not None:
-            rel_time = (now - timezone_at(now)) % selected_prediction_info.slice
-            render_point(selected_prediction_info.range[0] + rel_time, current_value, "#0000ff")
-
-    html.footer()
-
-
-def _prediction_querier_from_request(request: Request) -> PredictionQuerier:
-    return PredictionQuerier(
-        livestatus_connection=live().get_connection(
-            SiteId(request.get_str_input_mandatory("site"))
-        ),
-        host_name=HostName(request.get_str_input_mandatory("host")),
-        service_name=ServiceName(request.get_str_input_mandatory("service")),
-        metric_name=MetricName(request.get_str_input_mandatory("dsname")),
-    )
-
-
-vranges = [
+_VRANGES = (
     ("n", 1024.0**-3),
     ("u", 1024.0**-2),
     ("m", 1024.0**-1),
@@ -202,21 +58,274 @@ vranges = [
     ("M", 1024.0**2),
     ("G", 1024.0**3),
     ("T", 1024.0**4),
-]
+)
+
+
+@dataclass(frozen=True)
+class PredictionCurves:
+    prediction: Sequence[float | None]
+    warn: Sequence[float | None]
+    crit: Sequence[float | None]
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("prediction_graph", page_graph)
+
+
+@dataclass
+class _Predictions:
+    title: str
+    upper: tuple[PredictionInfo, PredictionData] | None = None
+    lower: tuple[PredictionInfo, PredictionData] | None = None
+
+    def get_x_range(self) -> tuple[int, int]:
+        """Both predictions should have the same range.
+
+        If for some reason they had not, we could only draw the smaller range.
+        """
+        if self.upper is None:
+            if self.lower is None:
+                raise ValueError("need either of upper or lower prediction")
+            return self.lower[0].valid_interval
+        if self.lower is None:
+            return self.upper[0].valid_interval
+
+        return (
+            max(self.lower[0].valid_interval[0], self.upper[0].valid_interval[0]),
+            min(self.lower[0].valid_interval[1], self.upper[0].valid_interval[1]),
+        )
+
+
+def _select_prediction(
+    livestatus_connection: SingleSiteConnection,
+    host_name: HostName,
+    service_name: ServiceName,
+    metric_name: MetricName,
+) -> _Predictions:
+    querier = PredictionQuerier(
+        livestatus_connection=livestatus_connection,
+        host_name=host_name,
+        service_name=service_name,
+    )
+
+    available_predictions_sorted = _available_predictions(querier, metric_name)
+    try:
+        selected_title = request_.var("prediction_selection") or next(
+            iter(available_predictions_sorted)
+        )
+        selected_prediction_infos = available_predictions_sorted[selected_title]
+    except (StopIteration, KeyError):
+        raise MKGeneralException(
+            _("There is currently no prediction information available for this service.")
+        )
+
+    with html.form_context("prediction"):
+        html.write_text(_("Show prediction for "))
+        html.dropdown(
+            "prediction_selection",
+            ((title, title) for title in available_predictions_sorted),
+            deflt=selected_title,
+            onchange="document.prediction.submit();",
+        )
+        html.hidden_fields()
+
+    return _Predictions(
+        title=selected_title,
+        upper=(
+            None
+            if (meta := selected_prediction_infos.get("upper")) is None
+            else (meta, querier.query_prediction_data(meta))
+        ),
+        lower=(
+            None
+            if (meta := selected_prediction_infos.get("lower")) is None
+            else (meta, querier.query_prediction_data(meta))
+        ),
+    )
+
+
+def _available_predictions(
+    querier: PredictionQuerier, metric: str
+) -> Mapping[str, Mapping[Literal["upper", "lower"], PredictionInfo]]:
+    available: dict[str, dict[Literal["upper", "lower"], PredictionInfo]] = {}
+    for meta in sorted(
+        querier.query_available_predictions(metric),
+        key=lambda m: m.valid_interval[0],
+    ):
+        title = _make_prediction_title(meta)
+        available.setdefault(title, {})[meta.direction] = meta
+
+    return available
+
+
+def page_graph() -> None:
+    host_name = request_.get_validated_type_input_mandatory(HostName, "host")
+    service_name = ServiceName(request_.get_str_input_mandatory("service"))
+    metric_name = MetricName(request_.get_str_input_mandatory("dsname"))
+    livestatus_connection = live().get_connection(SiteId(request_.get_str_input_mandatory("site")))
+
+    breadcrumb = make_service_breadcrumb(host_name, service_name)
+    make_header(
+        html,
+        _("Prediction for %s - %s - %s") % (host_name, service_name, metric_name),
+        breadcrumb,
+    )
+
+    selected_predictions = _select_prediction(
+        livestatus_connection, host_name, service_name, metric_name
+    )
+    x_range = selected_predictions.get_x_range()
+
+    measurement_point = _get_current_perfdata_via_livestatus(host_name, service_name, metric_name)
+    measurement_rrd = _get_observed_data(
+        livestatus_connection,
+        host_name,
+        service_name,
+        metric_name,
+        x_range,
+        time.time(),
+    )
+
+    curves_upper = (
+        None
+        if selected_predictions.upper is None
+        else _make_prediction_curves(x_range, *selected_predictions.upper)
+    )
+    curves_lower = (
+        None
+        if selected_predictions.lower is None
+        else _make_prediction_curves(x_range, *selected_predictions.lower)
+    )
+
+    y_range = _compute_vertical_range(
+        curves_upper, curves_lower, measurement_point, measurement_rrd
+    )
+
+    _create_graph(
+        selected_predictions.title,
+        _GRAPH_SIZE,
+        x_range,
+        y_range,
+        _make_legend(measurement_point),
+    )
+
+    _render_grid(x_range, y_range)
+
+    _render_level_areas(curves_upper, curves_lower)
+
+    _render_prediction(curves_upper, curves_lower)
+
+    if measurement_rrd is not None:
+        _render_curve(measurement_rrd, Color.OBSERVED, 2)
+    if measurement_point is not None:
+        _render_point(*measurement_point, Color.OBSERVED)
+
+    html.footer()
+
+
+def _make_prediction_title(meta: PredictionInfo) -> str:
+    date_str = time.strftime("%Y-%m-%d", time.localtime(meta.valid_interval[0]))
+    match meta.params.period:
+        case "wday":
+            return "{} ({})".format(date_str, _("day of the week"))
+        case "day":
+            return "{} ({})".format(date_str, _("day of the month"))
+        case "hour":
+            return "{} ({})".format(date_str, _("hour of the day"))
+        case "minute":
+            return "{} ({})".format(date_str, _("minute of the hour"))
+
+
+def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tuple[Color, str]]:
+    return [
+        (Color.PREDICTION, _("Prediction")),
+        (Color.OK_AREA, _("OK area")),
+        (Color.WARN_AREA, _("Warning area")),
+        (Color.CRIT_AREA, _("Critical area")),
+        (
+            Color.OBSERVED,
+            _("Measurement: %s")
+            % ("N/A" if current_measurement is None else "%.2f" % current_measurement[1]),
+        ),
+    ]
+
+
+def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None:
+    x_scala = [
+        (i + x_range[0], f"{i//3600:02}:{i%3600:02}")
+        for i in range(0, x_range[1] - x_range[0] + 1, 7200)
+    ]
+    y_scala = _compute_vertical_scala(*y_range)
+    _render_coordinates(y_scala, x_scala)
+
+
+def _render_level_areas(
+    curves_upper: PredictionCurves | None, curves_lower: PredictionCurves | None
+) -> None:
+    if curves_upper:
+        # we have upper levels -> render the OK / WARN / CRIT areas above the prediction
+        _render_filled_area_between(curves_upper.prediction, curves_upper.warn, Color.OK_AREA, 0.5)
+        _render_filled_area_between(curves_upper.warn, curves_upper.crit, Color.WARN_AREA, 0.4)
+        _render_filled_area_above(curves_upper.crit, Color.CRIT_AREA, 0.1)
+    elif curves_lower:
+        _render_filled_area_above(curves_lower.prediction, Color.OK_AREA, 0.1)
+
+    if curves_lower:
+        # we have lower levels -> render the Ok / WARN / CRIT areas below the prediction
+        _render_filled_area_below(curves_lower.crit, Color.CRIT_AREA, 0.1)
+        _render_filled_area_between(curves_lower.crit, curves_lower.warn, Color.WARN_AREA, 0.4)
+        _render_filled_area_between(curves_lower.prediction, curves_lower.warn, Color.OK_AREA, 0.5)
+    elif curves_upper:
+        _render_filled_area_below(curves_upper.prediction, Color.OK_AREA, 0.5)
+
+
+def _render_prediction(
+    curves_upper: PredictionCurves | None, curves_lower: PredictionCurves | None
+) -> None:
+    # repetition makes line bolder (in case both predictions are present and coincide)
+    for curves in (curves_lower or curves_upper, curves_upper or curves_lower):
+        if curves is not None:
+            _render_curve(curves.prediction, Color.PREDICTION)
+
+
+def _get_observed_data(
+    livestatus_connection: SingleSiteConnection,
+    host_name: HostName,
+    service_name: ServiceName,
+    metric: MetricName,
+    valid_interval: tuple[int, int],
+    now: float,
+) -> Sequence[float | None] | None:
+    # Try to get current RRD data and render it as well
+    from_time, until_time = valid_interval
+    if not from_time <= now <= until_time:
+        return None
+
+    try:
+        response = get_rrd_data(
+            livestatus_connection,
+            host_name,
+            service_name,
+            f"{metric}.max",
+            from_time,
+            until_time,
+        )
+    except MKLivestatusNotFoundError as e:
+        if cmk.utils.debug.enabled():
+            raise
+        raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
+    if response is None:
+        # TODO: not sure this is the true reason for `None`.
+        raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
+
+    return response.values
 
 
 def _compute_vertical_scala(  # pylint: disable=too-many-branches
     low: float, high: float
 ) -> Sequence[tuple[float, str]]:
-    m = max(abs(low), abs(high))
-    for letter, factor in vranges:
-        if m <= 99 * factor:
-            break
-    else:
-        letter = "P"
-        factor = 1024.0**5
+    letter, factor = _get_oom(low, high)
 
-    v = 0.0
     steps = (max(0, high) - min(0, low)) / factor
     if steps < 3:
         step = 0.2 * factor
@@ -229,148 +338,168 @@ def _compute_vertical_scala(  # pylint: disable=too-many-branches
     else:
         step = factor
 
-    vert_scala = []
-    while v <= max(0, high):
-        vert_scala.append((v, f"{v / factor:.1f}{letter}"))
-        v += step
-
-    v = -factor
-    while v >= min(0, low):
-        vert_scala = [(v, f"{v / factor:.1f}{letter}")] + vert_scala
-        v -= step
+    v_scala_values = [
+        i * step for i in range(min(0, int(low / step)), max(0, int(high / step)) + 1)
+    ]
+    v_scale_labels = [f"{v / factor:.1f}{letter}" for v in v_scala_values]
 
     # Remove trailing ".0", if that is present for *all* entries
-    for entry in vert_scala:
-        if not entry[1].endswith(".0"):
-            break
-    else:
-        vert_scala = [(e[0], e[1][:-2]) for e in vert_scala]
+    if all(e.endswith(".0") for e in v_scale_labels):
+        v_scale_labels = [e[:-2] for e in v_scale_labels]
 
-    return vert_scala
+    return list(zip(v_scala_values, v_scale_labels))
 
 
-def get_current_perfdata(host: HostName, service: str, dsname: str) -> float | None:
-    perf_data = sites.live().query_value(
-        "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
-        "Columns: perf_data" % (lqencode(str(host)), lqencode(service))
+def _get_oom(low: float, high: float) -> tuple[str, float]:
+    m = max(abs(low), abs(high))
+    for letter, factor in _VRANGES:
+        if m <= 99 * factor:
+            return letter, factor
+    return "P", 1024.0**5
+
+
+def _get_current_perfdata_via_livestatus(
+    host: HostName, service: str, dsname: str
+) -> tuple[float, float] | None:
+    time_int, metrics = sites.live().query_row(
+        "GET services\n"
+        f"Filter: host_name = {lqencode(str(host))}\n"
+        f"Filter: description = {lqencode(service)}\n"
+        "Columns: last_check performance_data"
     )
 
-    for part in perf_data.split():
-        name, rest = part.split("=")
-        if name == dsname:
-            return float(rest.split(";")[0])
-    return None
+    try:
+        return float(time_int), metrics[dsname]
+    except KeyError:
+        return None
 
 
-# Compute check levels from prediction data and check parameters
-def swap_and_compute_levels(tg_data: PredictionData, params: PredictionParameters) -> SwappedStats:
-    swapped = SwappedStats()
-    for step in tg_data.points:
-        if step is not None:
-            swapped.average.append(step.average)
-            swapped.min_.append(step.min_)
-            swapped.max_.append(step.max_)
-            swapped.stdev.append(step.stdev)
-            upper_0, upper_1, lower_0, lower_1 = estimate_levels(
-                reference_value=step.average,
-                stdev=step.stdev,
-                levels_lower=params.levels_lower,
-                levels_upper=params.levels_upper,
-                levels_upper_lower_bound=params.levels_upper_min,
-                levels_factor=1.0,
+def _make_prediction_curves(
+    x_range: tuple[float, float], meta: PredictionInfo, tg_data: PredictionData
+) -> PredictionCurves:
+    # we're rendereing the whole day, one point every 5 minutes should be plenty.
+    predictions = [
+        tg_data.predict(t) for t in range(int(x_range[0]), int(x_range[1]), _FIVE_MINUTES)
+    ]
+
+    warn, crit = [], []
+    for levels in (
+        (
+            estimate_levels(
+                p.average, p.stdev, meta.direction, meta.params.levels, meta.params.bound
             )
-            swapped.upper_warn.append(upper_0 or 0)
-            swapped.upper_crit.append(upper_1 or 0)
-            swapped.lower_warn.append(lower_0 or 0)
-            swapped.lower_crit.append(lower_1 or 0)
-        else:
-            swapped.average.append(None)
-            swapped.min_.append(None)
-            swapped.max_.append(None)
-            swapped.stdev.append(None)
-            swapped.upper_warn.append(0)
-            swapped.upper_crit.append(0)
-            swapped.lower_warn.append(0)
-            swapped.lower_crit.append(0)
+            if p
+            else None
+        )
+        for p in predictions
+    ):
+        warn.append(levels[0] if levels else None)
+        crit.append(levels[1] if levels else None)
 
-    return swapped
+    return PredictionCurves(
+        prediction=[None if p is None else p.average for p in predictions],
+        warn=warn,
+        crit=crit,
+    )
 
 
-def compute_vertical_range(swapped: SwappedStats) -> tuple[float, float]:
+def _compute_vertical_range(
+    curves_upper: PredictionCurves | None,
+    curves_lower: PredictionCurves | None,
+    measured_point: tuple[float, float] | None,
+    measured_rrd: Sequence[float | None] | None,
+) -> tuple[float, float]:
     points = (
-        swapped.average
-        + swapped.min_
-        + swapped.max_
-        + swapped.min_
-        + swapped.stdev
-        + swapped.upper_warn
-        + swapped.upper_crit
-        + swapped.lower_warn
-        + swapped.lower_crit
+        *(() if curves_upper is None else curves_upper.prediction),
+        *(() if curves_upper is None else curves_upper.warn),
+        *(() if curves_upper is None else curves_upper.crit),
+        *(() if curves_lower is None else curves_lower.prediction),
+        *(() if curves_lower is None else curves_lower.warn),
+        *(() if curves_lower is None else curves_lower.crit),
+        *((measured_point[1],) if measured_point else ()),
+        *(measured_rrd if measured_rrd else ()),
     )
     return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)
 
 
-def create_graph(name, size, bounds, v_range, legend):
+def _create_graph(
+    id_: Hashable,
+    size: tuple[int, int],
+    x_range: tuple[float, float],
+    y_range: tuple[float, float],
+    legend: Iterable[tuple[str, str]],
+) -> None:
+    canvas_id = f"content_{hash(id_)}"
     html.open_table(class_="prediction")
     html.open_tr()
     html.open_td()
     html.canvas(
         "",
         class_="prediction",
-        id_="content_%s" % name,
-        style="width: %dpx; height: %dpx;" % (int(size[0] / 2.0), int(size[1] / 2.0)),
-        width=size[0],
-        height=size[1],
+        id_=canvas_id,
+        style=f"width: {size[0]//2}px; height: {size[1]//2}px;",
+        width=str(size[0]),
+        height=str(size[1]),
     )
     html.close_td()
     html.close_tr()
     html.open_tr()
     html.open_td(class_="legend")
     for color, title in legend:
-        html.div("", class_="color", style="background-color: %s" % color)
+        html.div("", class_="color", style=f"background-color: {color}")
         html.div(title, class_="entry")
     html.close_td()
     html.close_tr()
     html.close_table()
     html.javascript(
-        f'cmk.prediction.create_graph("content_{name}", {bounds[0]:.4f}, {bounds[1]:.4f}, {v_range[0]:.4f}, {v_range[1]:.4f});'
+        f'cmk.prediction.create_graph("{canvas_id}", {x_range[0]:.4f}, {x_range[1]:.4f}, {y_range[0]:.4f}, {y_range[1]:.4f});'
     )
 
 
-def render_coordinates(v_scala, t_scala) -> None:  # type: ignore[no-untyped-def]
+def _render_coordinates(
+    v_scala: Sequence[tuple[float, str]], t_scala: Sequence[tuple[int, str]]
+) -> None:
     html.javascript(
         f"cmk.prediction.render_coordinates({json.dumps(v_scala)}, {json.dumps(t_scala)});"
     )
 
 
-def render_curve(points, color, width=1, square=False) -> None:  # type: ignore[no-untyped-def]
+def _render_curve(
+    points: Sequence[float | None], color: str, width: int = 1, square: bool = False
+) -> None:
     html.javascript(
         "cmk.prediction.render_curve(%s, %s, %d, %d);"
         % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
     )
 
 
-def render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
+def _render_point(t: float, v: float, color: str) -> None:
     html.javascript(
         f"cmk.prediction.render_point({json.dumps(t)}, {json.dumps(v)}, {json.dumps(color)});"
     )
 
 
-def render_area(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
+def _render_filled_area_below(
+    points: Sequence[float | None], color: str, alpha: float = 1.0
+) -> None:
     html.javascript(
         f"cmk.prediction.render_area({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
-def render_area_reverse(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
+def _render_filled_area_above(
+    points: Sequence[float | None], color: str, alpha: float = 1.0
+) -> None:
     html.javascript(
         f"cmk.prediction.render_area_reverse({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
-def render_dual_area(  # type: ignore[no-untyped-def]
-    lower_points, upper_points, color, alpha=1.0
+def _render_filled_area_between(
+    lower_points: Sequence[float | None],
+    upper_points: Sequence[float | None],
+    color: str,
+    alpha: float = 1.0,
 ) -> None:
     html.javascript(
         f"cmk.prediction.render_dual_area({json.dumps(lower_points)}, {json.dumps(upper_points)}, {json.dumps(color)}, {alpha:f});"

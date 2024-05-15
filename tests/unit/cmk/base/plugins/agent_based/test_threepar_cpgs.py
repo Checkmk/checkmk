@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
 
-import freezegun
 import pytest
+import time_machine
 
 from tests.unit.checks.checktestlib import mock_item_state
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.threepar_cpgs import (
     check_threepar_cpgs,
@@ -19,7 +19,9 @@ from cmk.base.plugins.agent_based.threepar_cpgs import (
     discover_threepar_cpgs_usage,
     parse_threepar_cpgs,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     [
@@ -162,12 +164,12 @@ def test_discover_threepar_cpgs_usage(
                     levels=(79.99999999963478, 89.99999999981739),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 0% - 0 B of 102 GiB"),
+                Result(state=State.OK, summary="Used: 0% - 0 B of 110 GB"),
                 Metric("fs_size", 104448.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-                Metric("trend", 0.0, boundaries=(0.0, 4352.0)),
+                Metric("trend", 0.0),
             ],
             id="If the used space is below the WARN/CRIT levels, the result is OK.",
         ),
@@ -189,13 +191,13 @@ def test_discover_threepar_cpgs_usage(
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Used: 84.58% - 37.0 GiB of 43.8 GiB (warn/crit at 80.00%/90.00% used)",
+                    summary="Used: 84.58% - 39.7 GB of 47.0 GB (warn/crit at 80.00%/90.00% used)",
                 ),
                 Metric("fs_size", 44800.0, boundaries=(0.0, None)),
                 Metric("growth", 2.1894549603407376),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +2.19 MiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +2.30 MB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
-                Metric("trend", 2.1894549603407376, boundaries=(0.0, 1866.6666666666665)),
+                Metric("trend", 2.1894549603407376),
                 Result(state=State.OK, summary="Time left until disk full: 8 years 236 days"),
             ],
             id="If the used space is above the WARN levels, the result is WARN.",
@@ -223,13 +225,13 @@ def test_discover_threepar_cpgs_usage(
                 ),
                 Result(
                     state=State.CRIT,
-                    summary="Used: 99.51% - 19.2 TiB of 19.3 TiB (warn/crit at 80.00%/90.00% used)",
+                    summary="Used: 99.51% - 21.1 TB of 21.2 TB (warn/crit at 80.00%/90.00% used)",
                 ),
                 Metric("fs_size", 20261120.0, boundaries=(0.0, None)),
                 Metric("growth", 1165.0003745058023),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +1.14 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +1.22 GB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
-                Metric("trend", 1165.0003745058023, boundaries=(0.0, 844213.3333333334)),
+                Metric("trend", 1165.0003745058023),
                 Result(state=State.OK, summary="Time left until disk full: 85 days 20 hours"),
             ],
             id="If the used space is above the CRIT levels, the result is CRIT.",
@@ -241,7 +243,10 @@ def test_check_3par_cpgs_usage(
     item: str,
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-    with freezegun.freeze_time("2022-07-11 07:00:00"), mock_item_state((162312321.0, 0.0)):
+    with (
+        time_machine.travel(datetime.datetime.fromisoformat("2022-07-11 07:00:00Z")),
+        mock_item_state((162312321.0, 0.0)),
+    ):
         assert (
             list(
                 check_threepar_cpgs_usage(

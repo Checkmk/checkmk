@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple, TypeVar
 
@@ -12,6 +13,7 @@ from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
+from cmk.utils.notify_types import EventContext
 from cmk.utils.servicename import ServiceName
 
 from cmk.automations import results
@@ -19,6 +21,7 @@ from cmk.automations.results import SetAutochecksTable
 
 from cmk.checkengine.checking import CheckPluginName
 
+from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.site_config import site_is_local
@@ -52,7 +55,7 @@ def _automation_serialized(
     if args is None:
         args = []
 
-    if not siteid or site_is_local(siteid):
+    if not siteid or site_is_local(active_config, siteid):
         cmdline, serialized_result = check_mk_local_automation_serialized(
             command=command,
             args=args,
@@ -433,6 +436,16 @@ def notification_analyse(notification_number: int) -> results.NotificationAnalys
             args=[str(notification_number)],
         ),
         results.NotificationAnalyseResult,
+    )
+
+
+def notification_test(raw_context: EventContext, dispatch: bool) -> results.NotificationTestResult:
+    return _deserialize(
+        _automation_serialized(
+            "notification-test",
+            args=[json.dumps(raw_context), str(dispatch)],
+        ),
+        results.NotificationTestResult,
     )
 
 

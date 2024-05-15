@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# check_mk plugin to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
+# check_mk plug-in to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
 # Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
 # Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de
 
@@ -14,14 +14,15 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from .agent_based_api.v1 import register, SNMPTree
-from .utils.fjdarye import (
+from cmk.plugins.lib.fjdarye import (
     check_fjdarye_item,
     DETECT_FJDARYE,
     discover_fjdarye_item,
     FJDARYE_SUPPORTED_DEVICES,
     parse_fjdarye_item,
 )
+
+from .agent_based_api.v1 import register, SNMPTree
 
 register.snmp_section(
     name="fjdarye_expanders",

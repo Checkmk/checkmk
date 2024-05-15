@@ -1,0 +1,27 @@
+Title: align quoting of synchronous and asynchronous MRPE
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1700489068
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+You are affected by this change if you use asynchronous MRPE and used double
+quotes (<tt>"</tt>) in the MRPE command.
+
+Quoting of mrpe commands differed between cached and non cached mrpe checks.
+
+With this Werk the quoting rules for the normal/synchronous execution of MRPE
+are applied to asynchronous MRPE commands.
+
+The following can now be applied to both asynchronous and normal/synchronous
+execution of MRPE commands: Use single quotes on the first level of quoting.
+
+This command will correctly show <tt>output with spaces</tt> in the Service
+output:
+
+<tt>bash -c 'echo "output with spaces"'</tt>
+
+If you execute asynchronous MRPE and the command uses double quotes on the
+first level of quoting, adapt it accordingly.

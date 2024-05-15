@@ -19,7 +19,7 @@
 
 from collections.abc import Mapping, Sequence
 from re import Match
-from typing import Any, Literal, NamedTuple
+from typing import Any, assert_never, Literal, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -156,8 +156,8 @@ def discover_sap_value(params: Sequence[Mapping[str, Any]], section: Section) ->
     patterns = [(value["match"], value.get("limit_item_levels")) for value in params]
 
     for entry in section:
-        for pattern, limit_item_levels in patterns:
-            if sap_value_path_matches(entry.path, pattern):
+        for pattern_choice, limit_item_levels in patterns:
+            if sap_value_path_matches(entry.path, pattern_choice):
                 discovered_params = {}
                 if limit_item_levels:
                     path = "/".join(entry.path.split("/")[-limit_item_levels:])
@@ -167,15 +167,20 @@ def discover_sap_value(params: Sequence[Mapping[str, Any]], section: Section) ->
                 yield Service(item=entry.sid + " " + path, parameters=discovered_params)
 
 
-def sap_value_path_matches(path: str, pattern: str | None) -> bool:
-    if pattern is None:
-        return True
-
-    if pattern.startswith("~"):  # regex matching
-        reg = regex(pattern[1:])
-        return bool(reg.match(path))
-
-    return path == pattern
+def sap_value_path_matches(
+    path: str, pattern_choice: tuple[Literal["all", "exact", "pattern"], str]
+) -> bool:
+    choice, pattern = pattern_choice
+    match choice:
+        case "all":
+            return True
+        case "pattern":
+            reg = regex(pattern)
+            return bool(reg.match(path))
+        case "exact":
+            return path == pattern
+        case other:
+            assert_never(other)
 
 
 def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

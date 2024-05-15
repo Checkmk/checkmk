@@ -1,0 +1,11 @@
+Title: esx_systeminfo: Fix missing 'Software > OS > Build' for view configuration
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1697464705
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+
+

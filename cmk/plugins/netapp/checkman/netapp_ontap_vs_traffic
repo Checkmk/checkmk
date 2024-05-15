@@ -1,0 +1,17 @@
+title: NetApp Filer: SVM Traffic Summary
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the protocol traffic of SVMs.
+ The monitored protocols depend on the activated protocols for the SVMs.
+ Supported protocols are {ethernet}, {fibrechannel}, {cifs}, {iscsi}, {nfsv3},
+ {nfsv4} and {nfsv4.1}. This check is always {OK}.
+
+ SVM was reffered as vServer in the old NetApp API.
+item:
+ Name of the virtual server
+
+discovery:
+ One service is created for each SVM.

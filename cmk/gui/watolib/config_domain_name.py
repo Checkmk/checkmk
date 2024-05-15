@@ -24,6 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.site_changes import ChangeSpec
 
 ConfigDomainName = str
 
@@ -68,8 +69,7 @@ class ABCConfigDomain(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def ident(cls) -> ConfigDomainName:
-        ...
+    def ident(cls) -> ConfigDomainName: ...
 
     @classmethod
     def enabled_domains(cls) -> Sequence[type[ABCConfigDomain]]:
@@ -158,7 +158,7 @@ class ABCConfigDomain(abc.ABC):
         ]
 
     @classmethod
-    def get_domain_settings(cls, change) -> SerializedSettings:  # type: ignore[no-untyped-def]
+    def get_domain_settings(cls, change: ChangeSpec) -> SerializedSettings:
         return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod
@@ -262,6 +262,10 @@ class ConfigVariableGroup:
     def config_variables(self) -> list[type[ConfigVariable]]:
         """Returns a list of configuration variable classes that belong to this group"""
         return [v for v in config_variable_registry.values() if v().group() == self.__class__]
+
+    def warning(self) -> str | None:
+        """Return a string if you want to show a warning at the top of this group"""
+        return None
 
 
 class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariableGroup]]):

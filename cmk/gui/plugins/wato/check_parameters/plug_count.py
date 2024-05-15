@@ -9,18 +9,44 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
+
+
+def _migrate_plug_count(params: tuple[int, int, int, int] | dict[str, object]) -> dict[str, object]:
+    if isinstance(params, dict):
+        return params
+    cl, wl, wu, cu = params
+    return {"levels_lower": (wl, cl), "levels_upper": (wu, cu)}
 
 
 def _parameter_valuespec_plug_count():
-    return Tuple(
-        help=_("Levels for the number of active plugs in a device."),
-        elements=[
-            Integer(title=_("critical if below or equal"), default_value=30),
-            Integer(title=_("warning if below or equal"), default_value=32),
-            Integer(title=_("warning if above or equal"), default_value=38),
-            Integer(title=_("critical if above or equal"), default_value=40),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            help=_("Levels for the number of active plugs in a device."),
+            elements=[
+                (
+                    "levels_lower",
+                    Tuple(
+                        title=_("Lower levels"),
+                        elements=[
+                            Integer(title=_("Warning if below or equal"), default_value=32),
+                            Integer(title=_("Critical if below or equal"), default_value=30),
+                        ],
+                    ),
+                ),
+                (
+                    "levels_upper",
+                    Tuple(
+                        title=_("Upper levels"),
+                        elements=[
+                            Integer(title=_("Warning at"), default_value=38),
+                            Integer(title=_("Critical at"), default_value=40),
+                        ],
+                    ),
+                ),
+            ],
+        ),
+        migrate=_migrate_plug_count,
     )
 
 

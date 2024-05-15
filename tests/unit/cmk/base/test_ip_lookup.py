@@ -250,13 +250,6 @@ def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
     assert persisted_cache[(HostName("test_host"), socket.AF_INET)]
 
 
-# TODO: Can be removed when this is not executed through a symlink anymore.
-# tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
-@pytest.fixture(autouse=True, scope="function")
-def clear_config_caches_ip_lookup(monkeypatch: MonkeyPatch) -> None:
-    cache_manager.clear()
-
-
 class TestIPLookupCacheSerialzer:
     def test_simple_cache(self) -> None:
         s = ip_lookup.IPLookupCacheSerializer()
@@ -392,13 +385,16 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName("blub"), tags={TagGroupID("criticality"): TagID("offline")})
     ts.add_host(HostName("bla"))
     ts.add_host(HostName("dual"), tags={TagGroupID("address_family"): TagID("ip-v4v6")})
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
+    hosts_config = config_cache.hosts_config
 
     assert not ip_lookup_cache()
 
     result = ip_lookup.update_dns_cache(
         ip_lookup_configs=(
-            ts.config_cache.ip_lookup_config(hn) for hn in ts.config_cache.all_active_hosts()
+            ts.config_cache.ip_lookup_config(hn)
+            for hn in hosts_config.hosts
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
         configured_ipv4_addresses={},
         configured_ipv6_addresses={},

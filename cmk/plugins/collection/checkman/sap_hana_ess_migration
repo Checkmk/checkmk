@@ -1,0 +1,19 @@
+title: SAP HANA: Migration of Statistics Server
+agents: linux
+catalog: app/sap_hana
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the migration state of SAP HANA statistics server.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ State is OK if the migration was succesful.
+ State is WARNING if an installation is in progress.
+ State is UNKNOWN if the agent plug-in returns a non-mappable output.
+
+item:
+ The sid instance name
+
+discovery:
+ One service is created for each instance.

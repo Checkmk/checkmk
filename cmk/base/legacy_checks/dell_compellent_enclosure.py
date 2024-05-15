@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes import dell_compellent
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_DELL_COMPELLENT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.dell import DETECT_DELL_COMPELLENT
 
 # example output
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.2.1 1
@@ -30,7 +31,12 @@ def check_dell_compellent_enclosure(item, _no_params, info):
                 yield state, "State Message: %s" % status_message
 
 
+def parse_dell_compellent_enclosure(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_compellent_enclosure"] = LegacyCheckDefinition(
+    parse_function=parse_dell_compellent_enclosure,
     detect=DETECT_DELL_COMPELLENT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.11000.2000.500.1.2.15.1",

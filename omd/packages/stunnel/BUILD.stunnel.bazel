@@ -8,23 +8,13 @@ filegroup(
     ),
 )
 
-#
-# This should be put somewhere toplevel, also avoiding the deprecated
-# --define syntax, see
-# https://bazel.build/docs/configurable-attributes
-#
-config_setting(
-    name = "no_own_openssl",
-    values = {"define": "no-own-openssl=true"},
-)
-
 configure_make(
     name = "stunnel",
     args = ["-j4"],
-    configure_options = select({
-        ":no_own_openssl": [],
-        "//conditions:default": ["--with-ssl=$EXT_BUILD_DEPS/openssl"],
-    }) + ["--with-bashcompdir=$INSTALLDIR/share"],
+    configure_options = [
+        "--with-ssl=$EXT_BUILD_DEPS/openssl",
+        "--with-bashcompdir=$INSTALLDIR/share",
+    ],
     copts = [
         "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
@@ -41,12 +31,7 @@ configure_make(
     out_shared_libs = [
         "libstunnel.so",
     ],
-    deps = select(
-        {
-            ":no_own_openssl": [],
-            "//conditions:default": ["@openssl"],
-        },
-    ),
+    deps = ["@openssl"],
 )
 
 genrule(
@@ -59,7 +44,10 @@ genrule(
         "skel/etc/logrotate.d/stunnel",
         "skel/etc/rc.d/85-stunnel",
         "skel/etc/stunnel/server.conf",
-        "skel/etc/stunnel/conf.d",
+        # Either .gitignore are deleted in the packaging step
+        # or empty folders are created later
+        # as Bazel genrules don't allow output directories.
+        "skel/etc/stunnel/conf.d/.gitignore",
     ],
     cmd = """
         cp -r --dereference $(execpath @omd_packages//omd/packages/stunnel:skel) $$(realpath $(RULEDIR))

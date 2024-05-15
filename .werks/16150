@@ -1,0 +1,33 @@
+Title: Forecasting: Stricter checks for missing data
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1695745202
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When computing forecasts for forecast graphs or views, Checkmk now strictly validates the input RRD
+data and produces an error in case there are missing data points. The produced error message reads:
+C+:
+Historic metric data is incomplete. You can try to mitigate this by shortening the considered
+history. Latest missing data point:
+2023-09-26T00:00:00+00:00
+C-:
+
+Before this werk, missing data was handled inconsistently and partially incorrectly. Note that this
+change also solves crashes such as
+C+:
+Traceback (most recent call last):
+    ...
+    y_hat = y_hat[display_time]
+IndexError: boolean index did not match indexed array along dimension 0; dimension is 176 but corresponding boolean dimension is 177
+C-:
+These crashes were caused by handling missing data incorrectly. Instead, we now display the error
+message mentioned above.
+
+Note that depending on the exact configuration, certain forecasts will now show the error message
+mentioned above, whereas before this change, a forecast was computed. We explicitly prefer this over
+showing potentially incorrect forecasts. Also note that we explicitly chose to not fill in missing
+data points eg. by interpolating, since this can lead to unreliable forecasts.

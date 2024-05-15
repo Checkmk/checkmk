@@ -4,18 +4,200 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
+from dataclasses import dataclass
 from enum import IntEnum, StrEnum, unique
-from typing import Any, Final
+from typing import Any, cast, Final, NamedTuple
+
+from cmk.plugins.lib import diskstat
 
 from .agent_based_api.v1 import (
-    get_rate,
     get_value_store,
     GetRateError,
     IgnoreResultsError,
     register,
     type_defs,
 )
-from .utils import diskstat
+
+
+class GetRateErrorEmpty(GetRateError):
+    """The exception raised by :func:`.get_rate`.
+    Indicates empty store.
+        You may use this exception to improve logging.
+    """
+
+
+class GetRateErrorTime(GetRateError):
+    """The exception raised by :func:`.get_rate`.
+    Indicates negative time
+        You may use this exception to improve logging.
+    """
+
+
+class GetRateErrorCounter(GetRateError):
+    """The exception raised by :func:`.get_rate`.
+    Indicates negative counter
+        You may use this exception to improve logging.
+    """
+
+
+def update_value_and_calc_rate(
+    value_store: MutableMapping[str, Any],
+    key: str,
+    *,
+    timestamp: float,
+    value: float,
+    raise_overflow: bool = False,
+) -> float:
+    """
+    1. Update value store.
+    2. Calculate rate based on current value and time and last value and time
+
+    Basically its replicates behavior of the get_rate function but uses more precise Exceptions to
+    handle abnormal situation.
+
+    Args:
+
+        value_store:     The mapping that holds the last value.
+                         Usually this will be the value store provided by the APIs
+                         :func:`get_value_store`.
+        key:             Unique ID for storing the time/value pair until the next check
+        timestamp:       Timestamp of new value
+        value:           The new value
+        raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+
+    This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
+    provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
+    previous function call (xₙ₋₁, tₙ₋₁):
+
+        rₙ = (xₙ - xₙ₋₁) / (tₙ - tₙ₋₁)
+
+    Note that the function simply computes the quotient of the values and times given,
+    regardless of any unit. You might as well pass something different than the time.
+    However, this function is written with the use case of passing timestamps in mind.
+
+    A :class:`GetRateError` will be raised if one of the following happens:
+
+        * the function is called for the first time
+        * the time has not changed
+        * the rate is negative and `raise_overflow` is set to True (useful
+          for instance when dealing with counters)
+
+    In general there is no need to catch a :class:`.GetRateError`, as it
+    inherits :class:`.IgnoreResultsError`.
+
+    Returns:
+
+        The computed rate
+
+    """
+    try:
+        data_point = DataPoint(timestamp, value)
+        prev = update_store(value_store, key, data_point)
+        return calc_rate(prev, new=data_point, raise_overflow=raise_overflow)
+    except GetRateError as e:
+        raise type(e)(f"At {key!r}: {str(e)}")
+
+
+class DataPoint(NamedTuple):
+    """represents a timestamp/value pair"""
+
+    timestamp: float
+    value: float
+
+
+# TODO(sk): typing must be improved i.e. value_store must be statically typed
+def update_store(
+    value_store: MutableMapping[str, Any],
+    key: str,
+    data_point: DataPoint,
+) -> DataPoint:
+    """
+    Update value store.
+
+    Args:
+
+        value_store:     The mapping that holds the last value.
+                         Usually this will be the value store provided by the APIs
+                         :func:`get_value_store`.
+        key:             Unique ID for storing the time/value pair until the next check
+        data_point:      Timestamp + value
+
+    A `GetRateErrorEmpty` will be raised if the function is called for the first time
+
+    Returns:
+
+        The last pair (time, val) from the store
+
+    """
+    # Cast to avoid lots of mypy suppressions. It better reflects the truth anyway.
+    value_store = cast(MutableMapping[str, object], value_store)
+
+    last_state = value_store.get(key)
+    value_store[key] = (data_point.timestamp, data_point.value)
+    match last_state:
+        case (
+            float() | int() as last_time,
+            float() | int() as last_value,
+        ):
+            return DataPoint(float(last_time), float(last_value))
+        case _other:
+            raise GetRateErrorEmpty("Initialized")
+
+
+def calc_rate(
+    prev: DataPoint,
+    *,
+    new: DataPoint,
+    raise_overflow: bool = False,
+) -> float:
+    """
+    Calculate rate based on two data points, last one and new one.
+
+    Args:
+
+        prev:      timestamp + value from update_store
+        new:       current timestamp + value
+        raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+
+    This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
+    provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
+    previous function call (xₙ₋₁, tₙ₋₁):
+
+        rₙ = (xₙ - xₙ₋₁) / (tₙ - tₙ₋₁)
+
+    Note that the function simply computes the quotient of the values and times given,
+    regardless of any unit. You might as well pass something different than the time.
+    However, this function is written with the use case of passing timestamps in mind.
+
+    A :class:`GetRateError` will be raised if one of the following happens:
+
+        * the time has not changed -> raise GetRateErrorTime
+        * the rate is negative and `raise_overflow` is set to True (useful
+          for instance when dealing with counters) -> raise GetRateErrorCounter
+
+    In general there is no need to catch a :class:`.GetRateError`, as it
+    inherits :class:`.IgnoreResultsError`.
+
+    Returns:
+
+        The computed rate
+
+    """
+    prev_time, prev_value = prev
+    new_time, new_value = new
+    if new_time <= prev_time:
+        raise GetRateErrorTime(f"No time difference: {new_time} <= {prev_time}")
+
+    rate = (new_value - prev_value) / (new_time - prev_time)
+    if raise_overflow and rate < 0:
+        # Do not try to handle wrapped counters. We do not know
+        # whether they are 32 or 64 bit. It also could happen counter
+        # reset (reboot, etc.). Better is to leave this value undefined
+        # and wait for the next check interval.
+        raise GetRateErrorCounter(f"Value overflow: {new_value} <= {prev_value}")
+
+    return rate
+
 
 # Example output from agent
 # <<<winperf_phydisk>>>
@@ -249,47 +431,61 @@ def discover_winperf_phydisk(
     )
 
 
+@dataclass(frozen=True)
+class _ComputeSpec:
+    value_store: MutableMapping[str, Any]
+    value_store_suffix: str
+    timestamp: float
+    frequency: float | None
+
+
+class _Denom(NamedTuple):
+    value: float | None
+    exception: bool
+
+    def calc_smart(self, nom: float) -> float:
+        """
+        Throws exception if exception registered or denom is not defined
+        Returns nom/denom if denom is defined and not 0
+        Returns 0 if nom and denom both are 0: this is quite special case related to Windows.
+        Windows can send the same data again and again. With normal counter we get 0, but for
+        """
+        if self.exception or self.value is None:
+            raise IgnoreResultsError
+        if self.value != 0:
+            return nom / self.value
+        if nom == 0:
+            return 0
+        raise IgnoreResultsError
+
+
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
     value_store: MutableMapping[str, Any],
     value_store_suffix: str = "",
 ) -> diskstat.Disk:
-    rates_and_errors = {
-        metric: _compute_rate_for_metric(metric, value, disk, value_store, value_store_suffix)
-        for metric, value in disk.items()
-        if _is_work_metric(metric)
-    }
+    disk_with_rates = {}
+    compute_specs: Final = _ComputeSpec(
+        value_store=value_store,
+        value_store_suffix=value_store_suffix,
+        timestamp=disk["timestamp"],
+        frequency=disk.get("frequency"),
+    )
+    bad_results = False
+    metric_values = [(metric, value) for metric, value in disk.items() if _is_work_metric(metric)]
+    for metric, value in metric_values:
+        denom = _calc_denom(metric, disk, compute_specs)
+        try:
+            # we must update value_store here
+            nom = _update_value_and_calc_rate(metric, compute_specs, value)
+            disk_with_rates[metric] = denom.calc_smart(nom)
+        except IgnoreResultsError:
+            bad_results = True
 
-    if any(raised for _rate, raised in rates_and_errors.values()):
-        raise IgnoreResultsError("Initializing counters")
+    if bad_results:
+        raise IgnoreResultsError("Initializing counters!")
 
-    return {
-        metric: rate for metric, (rate, _raised) in rates_and_errors.items() if rate is not None
-    }
-
-
-def _compute_rate_for_metric(
-    metric: str,
-    value: float,
-    disk: diskstat.Disk,
-    value_store: MutableMapping[str, Any],
-    value_store_suffix: str,
-) -> tuple[float | None, bool]:
-    scaling = _scaling(metric, disk.get("frequency"))
-    metric_key, value_x = _get_x_metric(metric, disk)
-    if scaling is None or value_x is None:
-        return None, False
-
-    try:
-        return (
-            scaling
-            * get_rate(
-                value_store, metric_key + value_store_suffix, value_x, value, raise_overflow=True
-            ),
-            False,
-        )
-    except GetRateError:
-        return None, True
+    return disk_with_rates
 
 
 def _is_work_metric(metric: str) -> bool:
@@ -305,20 +501,42 @@ def _as_denom_metric(metric: str) -> str:
     return metric + _METRIC_DENOM_SUFFIX
 
 
-def _scaling(metric: str, frequency: float | None) -> float | None:
+def _calc_denom(metric: str, disk: diskstat.Disk, compute_specs: _ComputeSpec) -> _Denom:
     if metric.endswith(MetricSuffix.QUEUE_LENGTH):
-        return 1e-7
+        return _Denom(10_000_000.0, False)
     if not metric.endswith(MetricSuffix.WAIT):
-        return 1.0
-    return None if frequency is None else 1.0 / frequency
+        return _Denom(1.0, False)
+
+    return _calc_denom_for_wait(metric, disk, compute_specs)
 
 
-def _get_x_metric(metric: str, disk: diskstat.Disk) -> tuple[str, float | None]:
-    if metric.endswith(MetricSuffix.WAIT):
-        y_metric = _as_denom_metric(metric)
-        return f"{metric}_by_{y_metric}", disk.get(y_metric)
+def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, compute_specs: _ComputeSpec) -> _Denom:
+    if compute_specs.frequency is None:
+        return _Denom(None, False)
+    denom_value = disk.get(_as_denom_metric(metric))
+    if denom_value is None:
+        return _Denom(None, False)
 
-    return metric, disk["timestamp"]
+    try:
+        # we may get `None` from the counter only when Windows agent output is broken
+        # get_rate must throw an exception
+        denom_rate = _update_value_and_calc_rate(
+            _as_denom_metric(metric), compute_specs, denom_value
+        )
+    except IgnoreResultsError:
+        return _Denom(None, True)
+
+    return _Denom(denom_rate * compute_specs.frequency, False)
+
+
+def _update_value_and_calc_rate(metric: str, compute_specs: _ComputeSpec, value: float) -> float:
+    return update_value_and_calc_rate(
+        compute_specs.value_store,
+        metric + compute_specs.value_store_suffix,
+        timestamp=compute_specs.timestamp,
+        value=value,
+        raise_overflow=True,
+    )
 
 
 def _with_average_in_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:

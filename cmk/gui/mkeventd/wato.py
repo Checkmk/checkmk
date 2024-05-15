@@ -18,21 +18,20 @@ from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast, overload, TypeVar
 
-from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import]
-from pysmi.compiler import MibCompiler  # type: ignore[import]
-from pysmi.error import PySmiError  # type: ignore[import]
-from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import]
-from pysmi.reader.callback import CallbackReader  # type: ignore[import]
-from pysmi.reader.localfile import FileReader  # type: ignore[import]
-from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore[import]
-from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import]
-from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
-from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import]
+from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import-untyped]
+from pysmi.compiler import MibCompiler  # type: ignore[import-untyped]
+from pysmi.error import PySmiError  # type: ignore[import-untyped]
+from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import-untyped]
+from pysmi.reader.callback import CallbackReader  # type: ignore[import-untyped]
+from pysmi.reader.localfile import FileReader  # type: ignore[import-untyped]
+from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore[import-untyped]
+from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import-untyped]
+from pysmi.searcher.stub import StubSearcher  # type: ignore[import-untyped]
+from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import-untyped]
 
 from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 
 import cmk.utils.log
-import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.store as store
@@ -46,35 +45,19 @@ from cmk.utils.version import edition, Edition
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.config import active_config
-from cmk.gui.htmllib.type_defs import RequireConfirmation
-from cmk.gui.type_defs import Icon, PermissionName
-from cmk.gui.utils.urls import DocReference
-from cmk.gui.wato import NotificationParameter, NotificationParameterRegistry
-from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain
-from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.main_menu import MainModuleTopic
-from cmk.gui.watolib.mkeventd import (
-    export_mkp_rule_pack,
-    get_rule_stats_from_ec,
-    save_mkeventd_rules,
-)
-
-if edition() is Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore[assignment]
-
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log
+import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -92,13 +75,14 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, Icon, PermissionName
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
+    DocReference,
     make_confirm_delete_link,
     makeuri_contextless,
     makeuri_contextless_rulespec_group,
@@ -111,8 +95,10 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DictionaryEntry,
+    DictionaryModel,
     DropdownChoice,
     DualListChoice,
+    Filesize,
     FixedValue,
     Foldable,
     ID,
@@ -135,14 +121,21 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import ContactGroupSelection, MainModuleTopicEvents
+from cmk.gui.wato import (
+    ContactGroupSelection,
+    MainModuleTopicEvents,
+    NotificationParameter,
+    NotificationParameterRegistry,
+)
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
 from cmk.gui.watolib.attributes import SNMPCredentials
+from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
     config_variable_group_registry,
     config_variable_registry,
     ConfigVariable,
@@ -152,7 +145,7 @@ from cmk.gui.watolib.config_domain_name import (
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupNotifications,
     ConfigVariableGroupSiteManagement,
@@ -161,7 +154,7 @@ from cmk.gui.watolib.config_variable_groups import (
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import CollectedHostAttributes, make_action_link
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupHostsMonitoringRulesVarious,
@@ -182,6 +175,8 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
+
+import cmk.mkp_tool
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
@@ -248,6 +243,8 @@ def register(
     config_var_registry.register(ConfigVariableEventConsoleNotifyRemoteHost)
     config_var_registry.register(ConfigVariableEventConsoleNotifyFacility)
     config_var_registry.register(ConfigVariableEventConsoleServiceLevels)
+    config_var_registry.register(ConfigVariableEventConsoleSqliteHousekeepingInterval)
+    config_var_registry.register(ConfigVariableEventConsoleSqliteFreelistSize)
 
     rulespec_group_registry.register(RulespecGroupEventConsole)
     rulespec_registry.register(ECEventLimitRulespec)
@@ -290,14 +287,12 @@ def mib_dirs() -> list[tuple[Path, str]]:
 
 
 def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -> ec.MatchResult:
-    if managed:
+    if edition() is Edition.CME:
         rule_customer_id = (
-            rule_pack["customer"]
-            if "customer" in rule_pack
-            else rule.get("customer", managed.SCOPE_GLOBAL)
+            rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
         )
-        site_customer_id = managed.get_customer_id(active_config.sites[event["site"]])
-        if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
+        site_customer_id = customer_api().get_customer_id(active_config.sites[event["site"]])
+        if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
 
     time_period = ec.TimePeriods(log.logger)
@@ -374,7 +369,7 @@ def _vars_help() -> HTML:
     _help_list = [(f"CMK_{macro_name}", description) for macro_name, description in MACROS_AND_VARS]
 
     _help_rows = [
-        html.render_tr(html.render_td(key) + html.render_td(str(value)))
+        HTMLWriter.render_tr(HTMLWriter.render_td(key) + HTMLWriter.render_td(str(value)))
         for key, value in _help_list
     ]
 
@@ -383,7 +378,7 @@ def _vars_help() -> HTML:
         + _("This information is available as environment variables")
         + HTMLWriter.render_br()
         + HTMLWriter.render_br()
-        + html.render_table(HTML().join(_help_rows), class_="help")
+        + HTMLWriter.render_table(HTML().join(_help_rows), class_="help")
     )
 
 
@@ -540,7 +535,7 @@ def vs_mkeventd_rule_pack(
     )
 
     if edition() is Edition.CME:
-        elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
+        elements += customer_api().customer_choice_element(deflt=SCOPE_GLOBAL)
 
     return Dictionary(
         title=_("Rule pack properties"),
@@ -576,13 +571,14 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                         value=customer,
                         title=_("Customer"),
                         totext="{} ({})".format(
-                            managed.get_customer_name_by_id(customer), _("Set by rule pack")
+                            customer_api().get_customer_name_by_id(customer),
+                            _("Set by rule pack"),
                         ),
                     ),
                 ),
             ]
         else:
-            elements += managed.customer_choice_element()
+            elements += customer_api().customer_choice_element()
 
     elements += [
         (
@@ -1305,7 +1301,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         (
             "set_host",
             TextInput(
-                title=_("Rewrite hostname"),
+                title=_("Rewrite host name"),
                 help=_(
                     "Replace the host name with this text. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -1315,7 +1311,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text "
                     "to match. Note that as an alternative, you may also use the rule "
-                    "Hostname translation for Incoming Messages in the Global Settings "
+                    "Host name translation for Incoming Messages in the Global Settings "
                     "of the EC to accomplish your task."
                 )
                 + _(
@@ -1354,7 +1350,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "Attach a comment to the event. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
                     "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                    "etc matching group."
+                    "etc. matching group."
                 )
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text. "
@@ -1372,7 +1368,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "Attach information about a contact person. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
                     "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                    "etc matching group."
+                    "etc. matching group."
                 )
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text. "
@@ -1473,6 +1469,18 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
 #   '----------------------------------------------------------------------'
 
 
+def _save_mkeventd_rules(rule_packs: Iterable[ec.ECRulePack]) -> None:
+    ec.save_rule_packs(
+        rule_packs, pretty_print=active_config.mkeventd_pprint_rules, path=ec.rule_pack_dir()
+    )
+
+
+def _export_mkp_rule_pack(rule_pack: ec.ECRulePack) -> None:
+    ec.export_rule_pack(
+        rule_pack, pretty_print=active_config.mkeventd_pprint_rules, path=ec.mkp_rule_pack_dir()
+    )
+
+
 class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
     @classmethod
     def ident(cls) -> str:
@@ -1483,7 +1491,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
         return 50
 
     def generate(self) -> None:
-        save_mkeventd_rules([ec.default_rule_pack([])])
+        _save_mkeventd_rules([ec.default_rule_pack([])])
 
 
 # .
@@ -1526,13 +1534,12 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
 
     def _show_event_simulator(self) -> ec.Event | None:
         event = user.load_file("simulated_event", {})
-        html.begin_form("simulator")
-        self._vs_mkeventd_event().render_input("event", event)
-        forms.end()
-        html.hidden_fields()
-        html.button("_simulate", _("Try out"))
-        html.button("_generate", _("Generate event"))
-        html.end_form()
+        with html.form_context("simulator"):
+            self._vs_mkeventd_event().render_input("event", event)
+            forms.end()
+            html.hidden_fields()
+            html.button("_simulate", _("Try out"))
+            html.button("_generate", _("Generate event"))
         html.br()
 
         return (
@@ -1572,10 +1579,10 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         return (
             {}
             if edition() is Edition.CRE
-            else cmk.utils.packaging.id_to_mkp(
-                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
-                cmk.utils.packaging.all_rule_pack_files(ec.mkp_rule_pack_dir()),
-                cmk.utils.packaging.PackagePart.EC_RULE_PACKS,
+            else cmk.mkp_tool.id_to_mkp(
+                cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
+                cmk.mkp_tool.all_rule_pack_files(ec.mkp_rule_pack_dir()),
+                cmk.mkp_tool.PackagePart.EC_RULE_PACKS,
             )
         )
 
@@ -1612,7 +1619,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                     "host",
                     TextInput(
                         title=_("Host lookup element"),
-                        help=_("Hostname, IP address or host alias the event is relevant for"),
+                        help=_("Host name, IP address or host alias the event is relevant for"),
                         size=40,
                         default_value=_("myhost089"),
                         allow_empty=True,
@@ -1662,6 +1669,17 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                 ),
             ],
         )
+
+
+def _get_rule_stats_from_ec() -> Mapping[str, int]:
+    # Add information about rule hits: If we are running on OMD then we know
+    # the path to the state retention file of mkeventd and can read the rule
+    # statistics directly from that file.
+    rule_stats: dict[str, int] = {}
+    for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
+        rule_stats.setdefault(rule_id, 0)
+        rule_stats[rule_id] += count
+    return rule_stats
 
 
 class ModeEventConsoleRulePacks(ABCEventConsoleMode):
@@ -1768,7 +1786,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             rule_pack = self._rule_packs[nr]
             self._add_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
             del self._rule_packs[nr]
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
 
         # Reset all rule hit counters
         elif request.has_var("_reset_counters"):
@@ -1793,7 +1811,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             rule_pack = self._rule_packs[from_pos]
             del self._rule_packs[from_pos]  # make to_pos now match!
             self._rule_packs[to_pos:to_pos] = [rule_pack]
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"]
             )
@@ -1806,9 +1824,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             except KeyError:
                 raise MKUserError("_export", _("The requested rule pack does not exist"))
 
-            export_mkp_rule_pack(rule_pack)
+            _export_mkp_rule_pack(rule_pack)
             self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack["id"])
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "export-rule-pack",
                 _("Made rule pack %s available for MKP export") % rule_pack["id"],
@@ -1824,8 +1842,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             if not isinstance(rp, ec.MkpRulePackProxy):
                 raise MKUserError("_dissolve", _("rule pack was not exported"))
             self._rule_packs[nr] = rp.get_rule_pack_spec()
-            save_mkeventd_rules(self._rule_packs)
-            ec.remove_exported_rule_pack(self._rule_packs[nr]["id"])
+            _save_mkeventd_rules(self._rule_packs)
+            ec.remove_exported_rule_pack(self._rule_packs[nr], ec.mkp_rule_pack_dir())
             self._add_change(
                 "dissolve-rule-pack",
                 _("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"],
@@ -1839,7 +1857,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 self._rule_packs[nr] = rp
             except KeyError:
                 raise MKUserError("_reset", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "reset-rule-pack",
                 _("Reset the rules of rule pack %s to the ones provided via MKP") % rp.id_,
@@ -1848,13 +1866,13 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         # Synchronize modified rule pack with MKP
         elif request.has_var("_synchronize"):
             nr = request.get_integer_input_mandatory("_synchronize")
-            export_mkp_rule_pack(self._rule_packs[nr])
+            _export_mkp_rule_pack(self._rule_packs[nr])
             try:
                 rp = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
                 self._rule_packs[nr] = rp
             except KeyError:
                 raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "synchronize-rule-pack",
                 _("Synchronized MKP with the modified rule pack %s") % rp.id_,
@@ -1869,7 +1887,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         if "rules" not in answer:
             raise MKGeneralException(_("Cannot get rules from local event daemon."))
         rule_packs = answer["rules"]
-        save_mkeventd_rules(rule_packs)
+        _save_mkeventd_rules(rule_packs)
 
     def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
@@ -1925,7 +1943,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         have_match = False
 
-        rule_stats = get_rule_stats_from_ec()
+        rule_stats = _get_rule_stats_from_ec()
         rule_pack_hits: dict[str, int] = {}
         for rp in ec.load_rule_packs():
             pack_hits = 0
@@ -2107,7 +2125,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 if edition() is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
-                        html.write_text(managed.get_customer_name(rule_pack))
+                        html.write_text(customer_api().get_customer_name(rule_pack))
 
                 table.cell(
                     _("Rules"),
@@ -2169,8 +2187,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -2274,10 +2291,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     del self._rule_packs[self._rule_pack_nr]["rules"][move_nr]
 
                     if other_type_ == ec.RulePackType.exported:
-                        export_mkp_rule_pack(other_pack)
+                        _export_mkp_rule_pack(other_pack)
                     if type_ == ec.RulePackType.exported:
-                        export_mkp_rule_pack(self._rule_pack)
-                    save_mkeventd_rules(self._rule_packs)
+                        _export_mkp_rule_pack(self._rule_pack)
+                    _save_mkeventd_rules(self._rule_packs)
 
                     self._add_change(
                         "move-rule-to-pack",
@@ -2301,8 +2318,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             del rules[nr]
 
             if type_ == ec.RulePackType.exported:
-                export_mkp_rule_pack(self._rule_pack)
-            save_mkeventd_rules(self._rule_packs)
+                _export_mkp_rule_pack(self._rule_pack)
+            _save_mkeventd_rules(self._rule_packs)
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
         if request.has_var("_move"):
@@ -2319,15 +2336,17 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             rules[to_pos:to_pos] = [rule]
 
             if type_ == ec.RulePackType.exported:
-                export_mkp_rule_pack(self._rule_pack)
-            save_mkeventd_rules(self._rule_packs)
+                _export_mkp_rule_pack(self._rule_pack)
+            _save_mkeventd_rules(self._rule_packs)
 
             self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         self._verify_ec_enabled()
         search_expression = self._search_expression()
+
+        found_rules: list[ec.Rule]
         if search_expression:
             found_rules = self._filter_mkeventd_rules(search_expression, self._rule_pack)
         else:
@@ -2343,8 +2362,16 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             return
 
         if len(self._rule_packs) > 1:
-            html.begin_form("move_to", method="POST")
+            with html.form_context("move_to", method="POST"):
+                self._show_table(event, found_rules)
+                html.hidden_field("_move_to", "yes")
+                html.hidden_fields()
+        else:
+            self._show_table(event, found_rules)
 
+    def _show_table(  # pylint: disable=too-many-branches
+        self, event: ec.Event | None, found_rules: list[ec.Rule]
+    ) -> None:
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
         priorities = _deref(syslog_priorities)
         facilities = dict(_deref(syslog_facilities))
@@ -2352,7 +2379,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
-            hits = get_rule_stats_from_ec()
+            hits = _get_rule_stats_from_ec()
             for nr, rule in enumerate(self._rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
@@ -2401,7 +2428,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     if not isinstance(result, ec.MatchSuccess):
                         html.icon("hyphen", _("Rule does not match: %s") % result.reason)
                     else:
-                        cancelling, groups = result.match_groups, result.match_groups
+                        cancelling, groups = result.cancelling, result.match_groups
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
                             icon = "checkmark_plus"
@@ -2435,11 +2462,12 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     if "customer" in self._rule_pack:
                         html.write_text(
                             "{} ({})".format(
-                                managed.get_customer_name(self._rule_pack), _("Set by rule pack")
+                                customer_api().get_customer_name(self._rule_pack),
+                                _("Set by rule pack"),
                             )
                         )
                     else:
-                        html.write_text(managed.get_customer_name(rule))
+                        html.write_text(customer_api().get_customer_name(rule))
 
                 if rule.get("drop"):
                     table.cell(_("State"), css=["state statep nowrap"])
@@ -2515,11 +2543,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ]
                     html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
-            if len(self._rule_packs) > 1:
-                html.hidden_field("_move_to", "yes")
-                html.hidden_fields()
-                html.end_form()
-
     def _filter_mkeventd_rules(
         self, search_expression: str, rule_pack: ec.ECRulePackSpec
     ) -> list[ec.Rule]:
@@ -2540,6 +2563,24 @@ def _get_match(rule: ec.Rule) -> str:
     if not isinstance(value, str):  # TODO: Remove when we have CompiledRule
         raise ValueError(f"attribute match of rule {rule['id']} already compiled")
     return value
+
+
+def _add_change_for_sites(
+    *, what: str, message: str, rule_or_rulepack: DictionaryModel | ec.ECRulePackSpec
+) -> None:
+    """If CME, add the changes only for the customer's sites if customer is configured"""
+    customer_id: str | None = rule_or_rulepack.get("customer")
+    if edition() is Edition.CME and customer_id is not None:
+        sites_ = list(customer_api().get_sites_of_customer(customer_id).keys())
+    else:
+        sites_ = _get_event_console_sync_sites()
+
+    _changes.add_change(
+        what,
+        message,
+        domains=[ConfigDomainEventConsole],
+        sites=sites_,
+    )
 
 
 class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
@@ -2603,12 +2644,21 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         vs = self._valuespec()
         rule_pack_dict = vs.from_html_vars("rule_pack")
         vs.validate_value(rule_pack_dict, "rule_pack")
-        self._rule_pack = ec.ECRulePackSpec(
-            id=rule_pack_dict["id"],
-            title=rule_pack_dict["title"],
-            disabled=rule_pack_dict["disabled"],
-            rules=existing_rules,
-        )
+        if edition() is Edition.CME and "customer" in rule_pack_dict:
+            self._rule_pack = ec.ECRulePackSpec(
+                id=rule_pack_dict["id"],
+                title=rule_pack_dict["title"],
+                disabled=rule_pack_dict["disabled"],
+                rules=existing_rules,
+                customer=rule_pack_dict["customer"],
+            )
+        else:
+            self._rule_pack = ec.ECRulePackSpec(
+                id=rule_pack_dict["id"],
+                title=rule_pack_dict["title"],
+                disabled=rule_pack_dict["disabled"],
+                rules=existing_rules,
+            )
 
         new_id = self._rule_pack["id"]
 
@@ -2624,31 +2674,36 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             self._rule_packs.insert(0, self._rule_pack)
         elif isinstance(rp := self._rule_packs[self._edit_nr], ec.MkpRulePackProxy):
             rp.rule_pack = self._rule_pack
-            export_mkp_rule_pack(self._rule_pack)
+            _export_mkp_rule_pack(self._rule_pack)
         else:
             if self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
                 self._rule_packs[self._edit_nr] = self._rule_pack
             else:
                 self._rule_packs[self._edit_nr] = self._rule_pack
 
-        save_mkeventd_rules(self._rule_packs)
+        _save_mkeventd_rules(self._rule_packs)
 
         if self._new:
-            self._add_change(
-                "new-rule-pack", _("Created new rule pack with id %s") % self._rule_pack["id"]
+            _add_change_for_sites(
+                what="new-rule-pack",
+                message=_("Created new rule pack with id %s") % self._rule_pack["id"],
+                rule_or_rulepack=self._rule_pack,
             )
         else:
-            self._add_change("edit-rule-pack", _("Modified rule pack %s") % self._rule_pack["id"])
+            _add_change_for_sites(
+                what="edit-rule-pack",
+                message=_("Modified rule pack %s") % self._rule_pack["id"],
+                rule_or_rulepack=self._rule_pack,
+            )
         return redirect(mode_url("mkeventd_rule_packs"))
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        html.begin_form("rule_pack")
-        vs = self._valuespec()
-        vs.render_input("rule_pack", dict(self._rule_pack))
-        vs.set_focus("rule_pack")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("rule_pack"):
+            vs = self._valuespec()
+            vs.render_input("rule_pack", dict(self._rule_pack))
+            vs.set_focus("rule_pack")
+            html.hidden_fields()
 
     def _valuespec(self) -> Dictionary:
         if self._type == ec.RulePackType.internal:
@@ -2823,16 +2878,20 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             self._rules[self._edit_nr] = self._rule
 
         if type_ == ec.RulePackType.exported:
-            export_mkp_rule_pack(self._rule_pack)
-        save_mkeventd_rules(self._rule_packs)
+            _export_mkp_rule_pack(self._rule_pack)
+        _save_mkeventd_rules(self._rule_packs)
 
         if self._new:
-            self._add_change(
-                "new-rule", _("Created new event correlation rule with id %s") % self._rule["id"]
+            _add_change_for_sites(
+                what="new-rule",
+                message=("Created new event correlation rule with id %s") % self._rule["id"],
+                rule_or_rulepack=self._rule,
             )
         else:
-            self._add_change(
-                "edit-rule", _("Modified event correlation rule %s") % self._rule["id"]
+            _add_change_for_sites(
+                what="edit-rule",
+                message=("Modified event correlation rule %s") % self._rule["id"],
+                rule_or_rulepack=self._rule,
             )
             # Reset hit counters of this rule
             execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())
@@ -2840,12 +2899,11 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        html.begin_form("rule")
-        vs = self._valuespec()
-        vs.render_input("rule", self._rule)
-        vs.set_focus("rule")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("rule"):
+            vs = self._valuespec()
+            vs.render_input("rule", self._rule)
+            vs.set_focus("rule")
+            html.hidden_fields()
 
     def _valuespec(self) -> Dictionary:
         return vs_mkeventd_rule(self._rule_pack.get("customer"))
@@ -2946,18 +3004,17 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         html.close_ul()
 
         if user.may("mkeventd.switchmode"):
-            html.begin_form(
+            with html.form_context(
                 "switch",
                 require_confirmation=RequireConfirmation(
                     html=_("Do you really want to switch the event daemon mode?")
                 ),
-            )
-            if repl_mode == "sync":
-                html.button("_switch_takeover", _("Switch to Takeover mode!"))
-            elif repl_mode == "takeover":
-                html.button("_switch_sync", _("Switch back to sync mode!"))
-            html.hidden_fields()
-            html.end_form()
+            ):
+                if repl_mode == "sync":
+                    html.button("_switch_takeover", _("Switch to Takeover mode!"))
+                elif repl_mode == "takeover":
+                    html.button("_switch_sync", _("Switch back to sync mode!"))
+                html.hidden_fields()
 
 
 class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
@@ -3240,14 +3297,18 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        for path, title in mib_dirs():
-            self._show_mib_table(path, title)
+        for mib_path, title in mib_dirs():
+            is_custom_dir = mib_path == mib_upload_dir()
+            if is_custom_dir:
+                with html.form_context("bulk_delete_form", method="POST"):
+                    self._show_mib_table(mib_path, title)
+                    html.hidden_fields()
+                    html.end_form()
+            else:
+                self._show_mib_table(mib_path, title)
 
     def _show_mib_table(self, path: Path, title: str) -> None:
         is_custom_dir = path == mib_upload_dir()
-
-        if is_custom_dir:
-            html.begin_form("bulk_delete_form", method="POST")
 
         with table_element("mibs_%s" % path, title, searchable=False) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
@@ -3279,10 +3340,6 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 table.cell(_("MIB"), mib.name)
                 table.cell(_("Organization"), mib.organization)
                 table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.size), css=["number"])
-
-        if is_custom_dir:
-            html.hidden_fields()
-            html.end_form()
 
     def _load_snmp_mibs(self, directory: Path) -> Mapping[str, MIBInfo]:
         return {
@@ -3475,7 +3532,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         compiler.addSearchers(StubSearcher(*baseMibs))
 
         try:
-            if not content.strip():
+            if not content or content.isspace():
                 raise Exception(_("The file is empty"))
 
             results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
@@ -3514,15 +3571,14 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             )
         )
 
-        html.begin_form("upload_form", method="POST")
-        forms.header(_("Upload MIB file"))
+        with html.form_context("upload_form", method="POST"):
+            forms.header(_("Upload MIB file"))
 
-        forms.section(_("Select file"), is_required=True)
-        html.upload_file("_upload_mib")
-        forms.end()
+            forms.section(_("Select file"), is_required=True)
+            html.upload_file("_upload_mib")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
@@ -3736,7 +3792,7 @@ class ConfigVariableEventConsole(ConfigVariable):
                 "classification daemon of Checkmk. You can also configure whether "
                 "or not the Event Console shal listen for incoming SNMP traps or "
                 "syslog messages. Please note that only a single Checkmk site per "
-                "Check_MK server can listen for such messages."
+                "Checkmk server can listen for such messages."
             ),
             label=_("Event Console enabled"),
             none_label=_("Event Console disabled"),
@@ -3836,7 +3892,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                             ),
                             elements=[
                                 TextInput(
-                                    title=_("Hostname/IP address of Master Event Console:"),
+                                    title=_("Host name/IP address of Master Event Console:"),
                                     allow_empty=False,
                                 ),
                                 Integer(
@@ -3973,6 +4029,50 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
                 "count periods that elapse. Here you can specify the regular interval "
                 "for that job."
             ),
+        )
+
+
+class ConfigVariableEventConsoleSqliteHousekeepingInterval(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupEventConsoleGeneric
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainEventConsole
+
+    def ident(self) -> str:
+        return "sqlite_housekeeping_interval"
+
+    def valuespec(self) -> ValueSpec:
+        return Age(
+            title=_("Event Console Housekeeping Interval"),
+            help=_(
+                "From time to time the Event Console history requires maintenance. "
+                "For example, it needs to clean up old data, optimize the storage and "
+                "defragment the data. Here you can specify the regular interval "
+                "for that job."
+            ),
+        )
+
+
+class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupEventConsoleGeneric
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainEventConsole
+
+    def ident(self) -> str:
+        return "sqlite_freelist_size"
+
+    def valuespec(self) -> ValueSpec:
+        return Filesize(
+            title=_("Event Console History Fragmentation Limit Size"),
+            help=_(
+                "Event Console History can become fragmented over time. So if the total"
+                "size of deleted entries reaches this number the Event Console History will be cleaned up. "
+            ),
+            minvalue=1 * 1024 * 1024,
+            maxvalue=100 * 1024 * 1024,
         )
 
 
@@ -4213,7 +4313,7 @@ class ConfigVariableHostnameTranslation(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return HostnameTranslation(
-            title=_("Hostname translation for incoming messages"),
+            title=_("Host name translation for incoming messages"),
             help=_(
                 "When the Event Console receives a message than the host name "
                 "that is contained in that message will be translated using "
@@ -4739,7 +4839,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
                 "event console. <b>Note</b>: you still need to create a rule "
                 "matching those messages in order to have events created. <b>Note (2)</b>: "
                 "If you are using the Checkmk Micro Core then this setting is deprecated. "
-                "Please use the notification plugin <i>Forward Notification to Event Console</i> instead."
+                "Please use the notification plug-in <i>Forward Notification to Event Console</i> instead."
             ),
         )
 
@@ -4830,7 +4930,7 @@ class ConfigVariableEventConsoleServiceLevels(ConfigVariable):
                 ],
                 orientation="horizontal",
             ),
-            title=_("Service Levels"),
+            title=_("Service levels"),
             help=_(
                 "Here you can configure the list of possible service levels for hosts, services and "
                 "events. A service level can be assigned to a host or service by configuration. "
@@ -4945,7 +5045,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                         ListChoice(
                             title=_("Match the hosts with..."),
                             choices=[
-                                ("$HOSTNAME$", _("Hostname")),
+                                ("$HOSTNAME$", _("Host name")),
                                 ("$HOSTADDRESS$", _("IP address")),
                                 ("$HOSTALIAS$", _("Alias")),
                             ],
@@ -4955,7 +5055,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                     default_value=["$HOSTNAME$", "$HOSTADDRESS$"],
                     help=_(
                         "When querying the event status, you can match events to a particular host "
-                        "using the hostname, the IP address, or the host alias. This is due to the "
+                        "using the host name, the IP address, or the host alias. This is due to the "
                         "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
                         "same host using different specification methods. Alternatively, you can "
                         "specify an explicit host for which to show events."
@@ -5019,7 +5119,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                         Tuple(
                             elements=[
                                 TextInput(
-                                    title=_("Hostname/IP address of Event Console:"),
+                                    title=_("Host name/IP address of Event Console:"),
                                     allow_empty=False,
                                 ),
                                 Integer(

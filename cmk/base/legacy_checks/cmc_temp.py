@@ -4,17 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 # [[[u'26', u'26']], [[u'45', u'15', u'45', u'15']]]
 
 
 def inventory_cmc_temp(info):
     # There are always two sensors
-    return [("1", {}), ("2", {})]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_cmc_temp(item, params, info):
@@ -30,7 +34,12 @@ def check_cmc_temp(item, params, info):
     )
 
 
+def parse_cmc_temp(string_table: Sequence[StringTable]) -> Sequence[StringTable] | None:
+    return string_table if any(string_table) else None
+
+
 check_info["cmc_temp"] = LegacyCheckDefinition(
+    parse_function=parse_cmc_temp,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2606.1"),
     fetch=[
         SNMPTree(

@@ -7,6 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def vbox_guest_make_dict(info):
     # output differs in version 6.x so we need to deal with empty values for
@@ -44,7 +46,12 @@ def inventory_vbox_guest(info):
     return []
 
 
+def parse_vbox_guest(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["vbox_guest"] = LegacyCheckDefinition(
+    parse_function=parse_vbox_guest,
     service_name="VBox Guest Additions",
     discovery_function=inventory_vbox_guest,
     check_function=check_vbox_guest,

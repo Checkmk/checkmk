@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import register, SNMPTree
-from .utils.enviromux import (
+from cmk.plugins.lib.enviromux import (
     check_enviromux_humidity,
     check_enviromux_temperature,
     DETECT_ENVIROMUX_MICRO,
@@ -12,6 +11,8 @@ from .utils.enviromux import (
     discover_enviromux_temperature,
     parse_enviromux_micro,
 )
+
+from .agent_based_api.v1 import register, SNMPTree
 
 register.snmp_section(
     name="enviromux_micro_external",

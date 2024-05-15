@@ -16,9 +16,12 @@ from cmk.base.check_legacy_includes.azure import (
 )
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import Service
+from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 
-@get_data_or_go_stale
-def check_azure_storageaccounts(_item, params, resource):
+
+def check_azure_storageaccounts(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     iter_attrs = iter_resource_attributes(resource, include_keys=("kind", "location"))
     # kind first
     try:
@@ -38,7 +41,10 @@ def check_azure_storageaccounts(_item, params, resource):
 
 
 def discover_azure_storageaccounts(section):
-    yield from ((item, {}) for item in section)
+    yield from (
+        Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
+        for item, resource in section.items()
+    )
 
 
 check_info["azure_storageaccounts"] = LegacyCheckDefinition(
@@ -47,7 +53,7 @@ check_info["azure_storageaccounts"] = LegacyCheckDefinition(
     discovery_function=discover_azure_storageaccounts,
     check_function=check_azure_storageaccounts,
     check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={}
+    check_default_parameters={},
     # metrics description:
     # https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
     # 'ingress_levels': tuple [B]
@@ -65,8 +71,8 @@ check_info["azure_storageaccounts"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_storageaccounts_flow(_item, params, resource):
+def check_azure_storageaccounts_flow(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     for metric_key in ("total_Ingress", "total_Egress", "total_Transactions"):
         cmk_key = metric_key[6:].lower()
         displ = cmk_key.title()
@@ -84,7 +90,7 @@ check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
     ),
     check_function=check_azure_storageaccounts_flow,
     check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={}
+    check_default_parameters={},
     # metrics description:
     # https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
     # 'ingress_levels': tuple [B]
@@ -102,8 +108,8 @@ check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_storageaccounts_performance(_item, params, resource):
+def check_azure_storageaccounts_performance(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     for key, cmk_key, displ in (
         ("average_SuccessServerLatency", "server_latency", "Success server latency"),
         ("average_SuccessE2ELatency", "e2e_latency", "End-to-end server latency"),
@@ -123,7 +129,7 @@ check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
     ),
     check_function=check_azure_storageaccounts_performance,
     check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={}
+    check_default_parameters={},
     # metrics description:
     # https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
     # 'ingress_levels': tuple [B]

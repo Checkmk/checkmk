@@ -1,0 +1,13 @@
+Title: Crash: Reports with service specific SLA column
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1698060200
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+When generating a report containing the `Hosts/Services: SLA - Service specific` column
+the generation of the report would crash.
+
+Now the report is rendered correctly again.

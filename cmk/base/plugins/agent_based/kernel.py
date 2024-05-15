@@ -7,9 +7,10 @@ import time
 from collections.abc import Mapping
 from typing import Any, Final
 
+from cmk.plugins.lib.cpu_util import check_cpu_util_unix, CPUInfo
+
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cpu_util import check_cpu_util_unix, CPUInfo
 
 SectionDict = dict[
     str,

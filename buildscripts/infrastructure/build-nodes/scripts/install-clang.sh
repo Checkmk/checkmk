@@ -8,30 +8,17 @@
 # This script will install the llvm toolchain on the different
 # Debian and Ubuntu versions
 
-set -eux
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-
-failure() {
-    echo "$(basename "$0"):" "$@" >&2
-    exit 1
-}
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
+. "${SCRIPT_DIR}/build_lib.sh"
 
 # read optional command line argument
 if [ "$#" -eq 1 ]; then
     CLANG_VERSION=$1
 else
-    cd "${SCRIPT_DIR}"
-    while true; do
-        if [ -e defines.make ]; then
-            CLANG_VERSION=$(make --no-print-directory --file=defines.make print-CLANG_VERSION)
-            break
-        elif [ "$PWD" = / ]; then
-            failure "could not determine Clang version"
-        else
-            cd ..
-        fi
-    done
+    CLANG_VERSION=$(get_version "$SCRIPT_DIR" CLANG_VERSION)
 fi
 
 DISTRO=$(lsb_release -is)
@@ -52,6 +39,7 @@ CLANG_VERSION_PATTERNS[14]="-14"
 CLANG_VERSION_PATTERNS[15]="-15"
 CLANG_VERSION_PATTERNS[16]="-16"
 CLANG_VERSION_PATTERNS[17]="-17"
+CLANG_VERSION_PATTERNS[18]="-18"
 
 if [ ! ${CLANG_VERSION_PATTERNS[$CLANG_VERSION]+_} ]; then
     failure "This script does not support LLVM version $CLANG_VERSION"
@@ -75,13 +63,22 @@ case "$DIST_VERSION" in
     Ubuntu_21.04) REPO_NAME="deb http://apt.llvm.org/hirsute/ llvm-toolchain-hirsute$CLANG_VERSION_STRING main" ;;
     Ubuntu_21.10) REPO_NAME="deb http://apt.llvm.org/impish/ llvm-toolchain-impish$CLANG_VERSION_STRING main" ;;
     Ubuntu_22.04) REPO_NAME="deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy$CLANG_VERSION_STRING main" ;;
+    Ubuntu_22.10) REPO_NAME="deb http://apt.llvm.org/kinetic/ llvm-toolchain-kinectic$CLANG_VERSION_STRING main" ;;
     Ubuntu_23.04) REPO_NAME="deb http://apt.llvm.org/lunar/ llvm-toolchain-lunar$CLANG_VERSION_STRING main" ;;
+    Ubuntu_23.10) REPO_NAME="deb http://apt.llvm.org/mantic/ llvm-toolchain-mantic$CLANG_VERSION_STRING main" ;;
+    Ubuntu_24.04) REPO_NAME="deb http://apt.llvm.org/noble/ llvm-toolchain-mantic$CLANG_VERSION_STRING main" ;;
     *) failure "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})." >&2 ;;
 esac
 
 # install everything
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-add-apt-repository "${REPO_NAME}"
+if [[ -e "/etc/apt/sources.list.d/clang.list" ]]; then
+    if ! grep -Fxq "${REPO_NAME}" /etc/apt/sources.list.d/clang.list; then
+        echo "${REPO_NAME}" >/etc/apt/sources.list.d/clang.list
+    fi
+else
+    echo "${REPO_NAME}" >>/etc/apt/sources.list.d/clang.list
+fi
 apt-get update
 apt-get install -y \
     "clang-$CLANG_VERSION" \

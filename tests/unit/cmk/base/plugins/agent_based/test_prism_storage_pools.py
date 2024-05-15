@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.prism_storage_pools import (
     check_prism_storage_pools,
     discovery_prism_storage_pools,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 SECTION = {
     "StoragePool": {
@@ -92,9 +93,9 @@ def test_discovery_prism_storage_pools(
                     levels=(79.99999999999856, 89.99999999999808),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 22.42% - 8.51 TiB of 37.9 TiB"),
+                Result(state=State.OK, summary="Used: 22.42% - 9.35 TB of 41.7 TB"),
                 Metric("fs_size", 39781026.446725845, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="SSD capacity: 37.9 TiB, SSD free: 29.4 TiB"),
+                Result(state=State.OK, summary="SSD capacity: 41.7 TB, SSD free: 32.3 TB"),
             ],
             id="If the disk is in expected mount state and healthy, the check result is OK.",
         ),

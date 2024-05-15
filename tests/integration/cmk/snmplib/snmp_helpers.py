@@ -18,6 +18,7 @@ from cmk.snmplib import (
     SNMPDecodedString,
     SNMPHostConfig,
     SNMPTable,
+    SNMPVersion,
 )
 
 
@@ -29,8 +30,8 @@ def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
         credentials="public",
         port=1337,
         # TODO: Use SNMPv2 over v1 for the moment
-        is_bulkwalk_host=False,
-        is_snmpv2or3_without_bulkwalk_host=True,
+        bulkwalk_enabled=False,
+        snmp_version=SNMPVersion.V2C,
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits={},
@@ -42,7 +43,7 @@ def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
 
 def get_snmp_table(
     site: Site, tree: BackendSNMPTree, backend_type: SNMPBackendEnum, config: SNMPHostConfig
-) -> tuple[Sequence[SNMPTable], MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]]]:
+) -> tuple[Sequence[SNMPTable], MutableMapping[tuple[str, str, bool], list[tuple[str, bytes]]]]:
     return ast.literal_eval(
         site.python_helper("helper_get_snmp_table.py").check_output(
             input=repr(
@@ -60,15 +61,19 @@ def get_snmp_table(
 def get_single_oid(
     site: Site, oid: OID, backend_type: SNMPBackendEnum, config: SNMPHostConfig
 ) -> tuple[SNMPDecodedString | None, MutableMapping[OID, SNMPDecodedString | None]]:
-    return ast.literal_eval(
-        site.python_helper("helper_get_single_oid.py").check_output(
-            input=repr(
-                (
-                    oid,
-                    backend_type.serialize(),
-                    config.serialize(),
-                    str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk"),
+    with site.copy_file(
+        str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk" / "localhost"),
+        site.path("cmk-walk/localhost"),
+    ):
+        return ast.literal_eval(
+            site.python_helper("helper_get_single_oid.py").check_output(
+                input=repr(
+                    (
+                        oid,
+                        backend_type.serialize(),
+                        config.serialize(),
+                        site.path("cmk-walk"),
+                    )
                 )
             )
         )
-    )

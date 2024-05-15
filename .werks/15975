@@ -1,0 +1,13 @@
+Title: Pure Storage FlashArray: Internal Alerts: Only show open alerts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696842132
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The "Internal Alerts" service for Pure Storage FlashArray should only monitor alerts with the state "open". However, the relevant filter was not working correctly and all alerts were monitored until now.
+This has been fixed with this werk.
+

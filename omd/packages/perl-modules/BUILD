@@ -1,5 +1,5 @@
-load(":rename_perl_packages.bzl", "rename_perl_package")
 load("perl-modules_http.bzl", "PERL_MODULES_LIST_1", "PERL_MODULES_LIST_2")
+load(":rename_perl_packages.bzl", "rename_perl_package")
 
 [rename_perl_package(
     name = module.removesuffix("tar.gz").removesuffix("tgz"),
@@ -51,7 +51,7 @@ genrule(
         "@Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz",
     ],
     outs = [
-        "perl-modules",
+        "perl-modules.tar",
     ],
     cmd = """
         mkdir perl-modules
@@ -63,7 +63,7 @@ genrule(
         FORCE=1 $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_1.txt));
         $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_2.txt));
         $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $(locations @Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz);
-        mkdir -p $@
-        cp -r perl-modules/{bin,lib,man} $@
+        tar cf $@ perl-modules
     """,
+    visibility = ["//visibility:public"],
 )

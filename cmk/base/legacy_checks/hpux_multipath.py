@@ -68,13 +68,10 @@ def parse_hpux_multipath(info):
     return disks
 
 
-def inventory_hpux_multipath(info):
-    inventory = []
-    disks = parse_hpux_multipath(info)
-    for wwid, (_disk, (active, standby, failed, unopen)) in disks.items():
+def inventory_hpux_multipath(parsed):
+    for wwid, (_disk, (active, standby, failed, unopen)) in parsed.items():
         if active + standby + failed >= 2:
-            inventory.append((wwid, (active, standby, failed, unopen)))
-    return inventory
+            yield wwid, {"expected": (active, standby, failed, unopen)}
 
 
 def hpux_multipath_format_pathstatus(pathcounts):
@@ -86,34 +83,38 @@ def hpux_multipath_format_pathstatus(pathcounts):
     return ", ".join(infos)
 
 
-def check_hpux_multipath(item, params, info):
-    disks = parse_hpux_multipath(info)
-    if item not in disks:
-        return (3, "no LUN with this WWID found")
-    disk, pathcounts = disks[item]
+def check_hpux_multipath(item, params, parsed):
+    try:
+        disk, pathcounts = parsed[item]
+    except KeyError:
+        return
 
     if pathcounts[2] > 0:
-        return (
+        yield (
             2,
             "%s: %d failed paths! (%s)"
             % (disk, pathcounts[2], hpux_multipath_format_pathstatus(pathcounts)),
         )
+        return
 
-    if list(pathcounts) != list(params):
-        return (
+    expected = params["expected"]
+    if list(pathcounts) != list(expected):
+        yield (
             1,
             "%s: Invalid path status %s (should be %s)"
             % (
                 disk,
                 hpux_multipath_format_pathstatus(pathcounts),
-                hpux_multipath_format_pathstatus(params),
+                hpux_multipath_format_pathstatus(expected),
             ),
         )
-    return (0, f"{disk}: {hpux_multipath_format_pathstatus(pathcounts)}")
+    else:
+        yield 0, f"{disk}: {hpux_multipath_format_pathstatus(pathcounts)}"
 
 
 check_info["hpux_multipath"] = LegacyCheckDefinition(
     service_name="Multipath %s",
+    parse_function=parse_hpux_multipath,
     discovery_function=inventory_hpux_multipath,
     check_function=check_hpux_multipath,
     check_ruleset_name="hpux_multipath",

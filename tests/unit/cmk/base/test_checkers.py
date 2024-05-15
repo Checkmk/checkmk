@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+# pylint: disable=protected-access
+
+import time
+from collections.abc import Iterable, Mapping
+from typing import Literal
 
 import pytest
 from pytest import MonkeyPatch
@@ -12,220 +16,73 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.checkers as checkers
 import cmk.base.config as config
-from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    PredictionInfo,
+    PredictionParameters,
+)
+from cmk.agent_based.v1 import Metric, Result, State
 
 
 def make_timespecific_params_list(
-    entries: Iterable[LegacyCheckParameters],
+    entries: Iterable[Mapping[str, object]],
 ) -> TimespecificParameters:
     return TimespecificParameters([TimespecificParameterSet.from_parameters(e) for e in entries])
 
 
 @pytest.mark.parametrize(
-    "rules,active_timeperiods,expected_result",
-    [
-        (make_timespecific_params_list([(1, 1), (2, 2)]), ["tp1", "tp2"], (1, 1)),
-        (
-            make_timespecific_params_list([(1, 1), {"tp_default_value": (2, 2), "tp_values": []}]),
-            ["tp1", "tp2"],
-            (1, 1),
-        ),
-        (
-            make_timespecific_params_list([{"tp_default_value": (2, 2), "tp_values": []}, (1, 1)]),
-            ["tp1", "tp2"],
-            (2, 2),
-        ),
-        (
-            make_timespecific_params_list(
-                [{"tp_default_value": (2, 2), "tp_values": [("tp1", (3, 3))]}, (1, 1)]
-            ),
-            ["tp1", "tp2"],
-            (3, 3),
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": (2, 2), "tp_values": [("tp2", (4, 4)), ("tp1", (3, 3))]},
-                    (1, 1),
-                ]
-            ),
-            ["tp1", "tp2"],
-            (4, 4),
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": (2, 2), "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]},
-                    (1, 1),
-                ]
-            ),
-            ["tp2"],
-            (2, 2),
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    (1, 1),
-                    {"tp_default_value": (2, 2), "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]},
-                ]
-            ),
-            [],
-            (1, 1),
-        ),
-        (make_timespecific_params_list([{1: 1}]), ["tp1", "tp2"], {1: 1}),
-        (
-            make_timespecific_params_list([{1: 1}, {"tp_default_value": {2: 2}, "tp_values": []}]),
-            ["tp1", "tp2"],
-            {1: 1, 2: 2},
-        ),
-        (
-            make_timespecific_params_list(
-                [{"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]}, {1: 1}]
-            ),
-            ["tp1", "tp2"],
-            {1: 1, 2: 2, 3: 3},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": {2: 4}, "tp_values": [("tp1", {1: 5}), ("tp2", {3: 6})]},
-                    {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
-                    {1: 1},
-                ]
-            ),
-            ["tp1", "tp2"],
-            {1: 5, 2: 4, 3: 6},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": {2: 4}, "tp_values": [("tp3", {1: 5}), ("tp2", {3: 6})]},
-                    {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
-                    {1: 1},
-                ]
-            ),
-            ["tp1", "tp2"],
-            {1: 1, 2: 4, 3: 6},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": {2: 4}, "tp_values": [("tp3", {1: 5}), ("tp2", {3: 6})]},
-                    {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
-                    {1: 1},
-                ]
-            ),
-            ["tp1"],
-            {1: 1, 2: 4, 3: 3},
-        ),
-        # (Old) tuple based default params
-        (
-            make_timespecific_params_list(
-                [
-                    {
-                        "tp_default_value": {"key": (1, 1)},
-                        "tp_values": [
-                            (
-                                "tp",
-                                {
-                                    "key": (2, 2),
-                                },
-                            )
-                        ],
-                    },
-                    (3, 3),
-                ]
-            ),
-            ["tp"],
-            {"key": (2, 2)},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {
-                        "tp_default_value": {"key": (1, 1)},
-                        "tp_values": [
-                            (
-                                "tp",
-                                {
-                                    "key": (2, 2),
-                                },
-                            )
-                        ],
-                    },
-                    (3, 3),
-                ]
-            ),
-            [],
-            {"key": (1, 1)},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {
-                        "tp_default_value": {},
-                        "tp_values": [
-                            (
-                                "tp",
-                                {
-                                    "key": (2, 2),
-                                },
-                            )
-                        ],
-                    },
-                    (3, 3),
-                ]
-            ),
-            [],
-            {},
-        ),
-    ],
-)
-def test_time_resolved_check_parameters(
-    monkeypatch: MonkeyPatch,
-    rules: TimespecificParameters,
-    active_timeperiods: Sequence[str],
-    expected_result: LegacyCheckParameters,
-) -> None:
-    assert expected_result == rules.evaluate(lambda tp: tp in active_timeperiods)
-
-
-@pytest.mark.parametrize(
     "subresults, aggregated_results",
     [
-        ([], ServiceCheckResult.item_not_found()),
+        ([], SubmittableServiceCheckResult.item_not_found()),
         (
             [
                 Result(state=State.OK, notice="details"),
             ],
-            ServiceCheckResult(0, "Everything looks OK - 1 detail available\ndetails", []),
+            SubmittableServiceCheckResult(
+                0, "Everything looks OK - 1 detail available\ndetails", []
+            ),
         ),
         (
             [
                 Result(state=State.OK, summary="summary1", details="detailed info1"),
                 Result(state=State.WARN, summary="summary2", details="detailed info2"),
             ],
-            ServiceCheckResult(1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []),
+            SubmittableServiceCheckResult(
+                1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []
+            ),
         ),
         (
             [
                 Result(state=State.OK, summary="summary"),
                 Metric(name="name", value=42),
             ],
-            ServiceCheckResult(0, "summary\nsummary", [("name", 42.0, None, None, None, None)]),
+            SubmittableServiceCheckResult(
+                0, "summary\nsummary", [("name", 42.0, None, None, None, None)]
+            ),
         ),
     ],
 )
 def test_aggregate_result(subresults: CheckResult, aggregated_results: ServiceCheckResult) -> None:
-    assert checkers._aggregate_results(consume_check_results(subresults)) == aggregated_results
+    assert (
+        checkers._aggregate_results(checkers.consume_check_results(subresults))
+        == aggregated_results
+    )
+
+
+def test_consume_result_invalid() -> None:
+    def offending_check_function() -> Iterable[object]:
+        yield None
+
+    with pytest.raises(TypeError):
+        assert checkers.consume_check_results(offending_check_function())
 
 
 def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:
@@ -328,3 +185,78 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         cluster_nodes=[node1, node2],
         get_effective_host=lambda hn, *args, **kw: hn,
     )
+
+
+def test_only_from_injection() -> None:
+    inject = InjectedParameters(meta_file_path_template="", predictions={})
+    p: dict[str, object] = {
+        "outer": {
+            "inner": ("cmk_postprocessed", "only_from", None),
+        },
+    }
+    assert checkers.postprocess_configuration(p, inject, ["1.2.3.4"], 42) == {
+        "outer": {
+            "inner": ["1.2.3.4"],
+        },
+    }
+
+
+def test_prediction_injection_legacy() -> None:
+    inject = InjectedParameters(meta_file_path_template="", predictions={})
+    p: dict[str, object] = {
+        "pagefile": (
+            "predictive",
+            {
+                "__injected__": None,
+                "period": "day",
+                "horizon": 60,
+                "levels_upper": ("absolute", (0.5, 1.0)),
+            },
+        )
+    }
+    assert checkers.postprocess_configuration(p, inject, [], 42) == {
+        "pagefile": (
+            "predictive",
+            {
+                "__injected__": inject.model_dump(),
+                "period": "day",
+                "horizon": 60,
+                "levels_upper": ("absolute", (0.5, 1.0)),
+            },
+        )
+    }
+
+
+def _make_hash(params: PredictionParameters, direction: Literal["upper"], metric: str) -> int:
+    # particular values of prediction parameters are irrelevant for this test.
+    return hash(PredictionInfo.make(metric, direction, params, time.time()))
+
+
+def test_prediction_injection() -> None:
+    # particular values of prediction parameters are irrelevant for this test.
+    params = PredictionParameters(period="day", horizon=90, levels=("stdev", (2.0, 4.0)))
+    metric = "my_reference_metric"
+    prediction = (42.0, (50.0, 60.0))
+
+    inject = InjectedParameters(
+        meta_file_path_template="", predictions={_make_hash(params, "upper", metric): prediction}
+    )
+    p: dict[str, object] = {
+        "levels_upper": (
+            "cmk_postprocessed",
+            "predictive_levels",
+            {
+                "__reference_metric__": "my_reference_metric",
+                "__direction__": "upper",
+                "period": params.period,
+                "horizon": params.horizon,
+                "levels": params.levels,
+            },
+        ),
+    }
+    assert checkers.postprocess_configuration(p, inject, [], 42) == {
+        "levels_upper": (
+            "predictive",
+            ("my_reference_metric", *prediction),
+        )
+    }

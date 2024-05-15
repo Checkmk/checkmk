@@ -1008,7 +1008,7 @@ TEST(AgentConfig, MergeSeqCombineValue) {
                              details::Combine::merge_value);
     YAML::Emitter emit;
     emit << target["logfile"];
-    const auto result = emit.c_str();
+    const std::string result = emit.c_str();
     const auto table = cma::tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 3);
     EXPECT_EQ(table[0], LW_USER_APP);
@@ -1023,7 +1023,7 @@ TEST(AgentConfig, MergeSeqCombine) {
                              details::Combine::merge);
     YAML::Emitter emit;
     emit << target["logfile"];
-    const auto result = emit.c_str();
+    const std::string result = emit.c_str();
     const auto table = tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 3);
     EXPECT_EQ(table[0], LW_ROOT_APP);
@@ -1038,7 +1038,7 @@ TEST(AgentConfig, MergeSeqOverride) {
                              details::Combine::overwrite);
     YAML::Emitter emit;
     emit << target["logfile"];
-    const auto result = emit.c_str();
+    const std::string result = emit.c_str();
     const auto table = tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 2);
     EXPECT_EQ(table[0], LW_USER_APP);
@@ -1155,8 +1155,7 @@ TEST(AgentConfig, PluginsExecutionParams) {
 
     auto units = GetArray<YAML::Node>(node_plugins[vars::kPluginsExecution]);
 
-    std::vector<Plugins::ExeUnit> exe_units;
-    LoadExeUnitsFromYaml(exe_units, units);
+    const auto exe_units = LoadExeUnitsFromYaml(units);
     EXPECT_EQ(exe_units.size(), 5);
 
     EXPECT_EQ(exe_units[0].pattern(), "a_1");
@@ -1286,8 +1285,7 @@ TEST(AgentConfig, ExeUnitTest) {
 }
 
 TEST(AgentConfig, ExeUnitTestYaml) {
-    std::vector<Plugins::ExeUnit> exe_units;
-    auto execution_yaml = YAML::Load(
+    const auto execution_yaml = YAML::Load(
         "execution:\n"
         "- pattern     : '1'\n"
         "  timeout     : 1\n"
@@ -1317,9 +1315,9 @@ TEST(AgentConfig, ExeUnitTestYaml) {
 
     );
     XLOG::l.t() << execution_yaml;
-    auto yaml_units =
+    const auto yaml_units =
         GetArray<YAML::Node>(execution_yaml, vars::kPluginsExecution);
-    LoadExeUnitsFromYaml(exe_units, yaml_units);
+    const auto exe_units = LoadExeUnitsFromYaml(yaml_units);
     ASSERT_EQ(exe_units.size(), 5);
 
     struct Data {

@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.multipath import (
     discover_multipath,
     parse_multipath,
 )
-from cmk.base.plugins.agent_based.utils.multipath import Section
+
+from cmk.plugins.lib.multipath import Section
 
 STRING_TABLE: Final = [
     ["ORA_ZAPPL2T_DATA_3", "(3600601604d40310047cf93ce66f7e111)", "dm-67", "DGC,RAID", "5"],

@@ -14,8 +14,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
-    COLLECTOR_SERVICE_NAME,
+
+from cmk.plugins.kube.schemata.section import (
     CollectorComponentsMetadata,
     CollectorDaemons,
     CollectorHandlerLog,
@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
     CollectorState,
     NodeComponent,
 )
+from cmk.plugins.lib.kube import COLLECTOR_SERVICE_NAME
 
 
 # TODO: change section from info to components
@@ -97,7 +98,7 @@ def _component_check(
 def _collector_component_versions(components: Sequence[NodeComponent]) -> str:
     """
     Examples:
-        >>> from cmk.base.plugins.agent_based.utils.kube import CollectorType, CheckmkKubeAgentMetadata
+        >>> from cmk.plugins.kube.schemata.section import CollectorType, CheckmkKubeAgentMetadata
         >>> _collector_component_versions([NodeComponent(name="component", version="1",
         ... checkmk_kube_agent=CheckmkKubeAgentMetadata(project_version="1"),
         ... collector_type=CollectorType.CONTAINER_METRICS)])

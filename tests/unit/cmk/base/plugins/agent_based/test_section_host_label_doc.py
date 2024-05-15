@@ -2,9 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Test the documentation of the host label functions
+"""Test the documentation of the host label functions.
 
-Cutrrently the helper below is just used to facilitate the testing.
+Currently the helper below is just used to facilitate the testing.
 Someday it may be used to automatically extract the doc for all
 builtin host labels.
 """
@@ -15,9 +15,14 @@ from typing import DefaultDict, Final
 
 from tests.unit.conftest import FixRegister
 
+import cmk.utils.version as cmk_version
 from cmk.utils.sectionname import SectionName
 
-ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+    "cmk/azure/resource_group",
+    "cmk/azure/tag/{key}:{value}",
+    "cmk/azure/vm:instance",
+    "cmk/aws/tag/{key}:{value}",
     "cmk/check_mk_server",
     "cmk/device_type",
     "cmk/docker_image",
@@ -36,10 +41,30 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/kubernetes/statefulset",
     "cmk/kubernetes/cluster",
     "cmk/kubernetes/cluster-host",
+    "cmk/meraki",
+    "cmk/meraki/device_type",
+    "cmk/meraki/net_id",
+    "cmk/meraki/org_id",
+    "cmk/meraki/org_name",
+    "cmk/nutanix/object",
     "cmk/os_family",
+    "cmk/os_type",
+    "cmk/os_platform",
+    "cmk/os_name",
+    "cmk/os_version",
     "cmk/vsphere_object",
     "cmk/vsphere_vcenter",
 }
+
+CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+    "cmk/rmk/node_type",
+}
+
+
+def all_documented_builtin_host_labels() -> set[str]:
+    if cmk_version.edition() is cmk_version.Edition.CRE:
+        return CRE_DOCUMENTED_BUILTIN_HOST_LABELS
+    return CEE_DOCUMENTED_BUILTIN_HOST_LABELS | CRE_DOCUMENTED_BUILTIN_HOST_LABELS
 
 
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
@@ -88,7 +113,7 @@ def test_all_sections_have_host_labels_documented(
             assert doc.header is not None, f"header in {section.name} not set"
             encountered_labels[doc.header][section.name] = doc.lines
 
-    assert ALL_DOCUMENTED_BUILTIN_HOST_LABELS == set(encountered_labels.keys())
+    assert all_documented_builtin_host_labels() == set(encountered_labels.keys())
 
     for label_name, section_to_lines in encountered_labels.items():
         if len({" ".join(lines) for lines in section_to_lines.values()}) != 1:
@@ -100,7 +125,7 @@ def test_all_sections_have_host_labels_documented(
 
 
 def test_builtin_labels_start_with_cmk() -> None:
-    assert all(l.startswith("cmk/") for l in ALL_DOCUMENTED_BUILTIN_HOST_LABELS)
+    assert all(l.startswith("cmk/") for l in all_documented_builtin_host_labels())
 
 
 class _TextSection:
@@ -142,7 +167,7 @@ class _TextSection:
         header = None
         lines: list[str] = []
         for line in self.lines:
-            if not line.strip():
+            if not line or line.isspace():
                 if lines:
                     lines.append(line)
                 continue

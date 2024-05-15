@@ -1,0 +1,19 @@
+Title: Notification spooler: Fix ignored timing settings for specific methods
+Class: fix
+Compatible: incomp
+Component: notifications
+Date: 1699356565
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+If you used notification spooling and configured "Timing settings for specific
+methods" in the global settings option "Notification Spooler Configuration",
+the settings "Maximum number of delivery attempts" and "Timeout" had no effect.
+
+The notification methods were executed until they succeded.
+
+Please note:
+This change can cause changes in the notification spooling, please check if the
+behaviour still matches your needs. Otherwise you would have to adjust the
+mentioned settings again.

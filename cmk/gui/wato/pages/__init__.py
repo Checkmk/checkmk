@@ -5,7 +5,9 @@
 
 from cmk.utils.version import edition, Edition
 
+from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.pages import PageRegistry
+from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
 from . import (
@@ -24,6 +26,7 @@ from . import (
     folders,
     global_settings,
     groups,
+    gui_timings,
     host_diagnose,
     host_rename,
     hosts,
@@ -48,10 +51,22 @@ from . import (
     user_profile,
     users,
 )
+from ._password_store_valuespecs import IndividualOrStoredPassword as IndividualOrStoredPassword
+from ._password_store_valuespecs import (
+    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
+)
+from ._password_store_valuespecs import (
+    MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword,
+)
 
 
-def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    activate_changes.register(page_registry, mode_registry)
+def register(
+    page_registry: PageRegistry,
+    mode_registry: ModeRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
+) -> None:
+    activate_changes.register(page_registry, mode_registry, automation_command_registry)
     analyze_configuration.register(mode_registry)
     audit_log.register(mode_registry)
     automation.register(page_registry)
@@ -60,12 +75,13 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     bulk_import.register(mode_registry)
     check_catalog.register(mode_registry)
     custom_attributes.register(mode_registry)
-    diagnostics.register(page_registry, mode_registry)
+    diagnostics.register(page_registry, mode_registry, automation_command_registry, job_registry)
     download_agents.register(mode_registry)
-    fetch_agent_output.register(page_registry)
+    fetch_agent_output.register(page_registry, automation_command_registry, job_registry)
     folders.register(page_registry, mode_registry)
     global_settings.register(mode_registry)
     groups.register(mode_registry)
+    gui_timings.register(page_registry)
     host_diagnose.register(page_registry, mode_registry)
     host_rename.register(mode_registry)
     hosts.register(mode_registry)
@@ -80,7 +96,7 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     read_only.register(mode_registry)
     rulesets.register(mode_registry)
     search.register(mode_registry)
-    services.register(page_registry, mode_registry)
+    services.register(page_registry, mode_registry, automation_command_registry)
     sites.register(page_registry, mode_registry)
     tags.register(mode_registry)
     timeperiods.register(mode_registry)

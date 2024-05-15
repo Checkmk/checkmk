@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -8,13 +9,14 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
+from cmk.plugins.lib.df import (
     check_filesystem_levels,
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
 )
+
+from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Volume(BaseModel, frozen=True):
@@ -30,7 +32,7 @@ def parse_volume(string_table: StringTable) -> Mapping[str, Volume] | None:
     if not (volumes := json_data.get("items")):
         return None
 
-    return {item["name"]: Volume.parse_obj(item["space"]) for item in volumes}
+    return {item["name"]: Volume.model_validate(item["space"]) for item in volumes}
 
 
 register.agent_section(
@@ -69,22 +71,22 @@ def check_volume_capacity(
         label="Data reduction",
     )
 
-    yield Result(state=State.OK, notice=f"Size: {render.bytes(volume.total_provisioned)}")
+    yield Result(state=State.OK, notice=f"Size: {render.disksize(volume.total_provisioned)}")
     yield Metric("fs_size", volume.total_provisioned, boundaries=(0, None))
 
     yield Result(
-        state=State.OK, notice=f"Physical capacity used - volume: {render.bytes(volume.unique)}"
+        state=State.OK, notice=f"Physical capacity used - volume: {render.disksize(volume.unique)}"
     )
     yield Metric("unique_size", volume.unique)
 
     yield Result(
         state=State.OK,
-        notice=f"Physical capacity used - snapshots: {render.bytes(volume.snapshots)}",
+        notice=f"Physical capacity used - snapshots: {render.disksize(volume.snapshots)}",
     )
     yield Metric("snapshots_size", volume.snapshots)
 
     yield Result(
-        state=State.OK, notice=f"Virtual capacity used - volume: {render.bytes(volume.virtual)}"
+        state=State.OK, notice=f"Virtual capacity used - volume: {render.disksize(volume.virtual)}"
     )
     yield Metric("virtual_size", volume.virtual)
 

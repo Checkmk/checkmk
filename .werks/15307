@@ -1,0 +1,36 @@
+Title: logwatch_ec: tcp remote forwarding: create one spool file per service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1699863833
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This Werk affects you if you have a logwatch_ec check which forwards events to
+a remote syslog hosts and if you activated the option "Create a separate check
+for each logfile".
+
+In this case all separate services shared one spoolfile. This lead to the
+problem, that one event in the spoolfile was displayed as one event for each
+separate service (but it was only sent out once, when the remote was reachable
+again).
+
+In some conditions events might been unnoticeable dropped, because the
+spoolfile was overwritten by another logwatch service.
+
+Now each logwatch service will have their own spoolfile.
+
+The spoolfiles will be automatically assigned to their logwatch service.
+
+After all your logwatch_ec services sent all their spoolfiles out, you may
+manually consult the following folder for <tt>spoolfile.*</tt> files:
+
+<tt>./var/check_mk/logwatch_spool/&lt;hostname&gt;</tt>
+
+If there are any spoolfiles in this folder, they could not be assigned to a
+logwatch service. If you still want them to be forwarded, move them to one of
+the folders, otherwise they can be deleted.
+
+<tt>./var/check_mk/logwatch_spool/&lt;hostname&gt;/item_&lt;url_encode(item)&gt;</tt>

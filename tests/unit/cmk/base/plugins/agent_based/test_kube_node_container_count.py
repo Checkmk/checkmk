@@ -13,12 +13,12 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlugin
 from cmk.base.plugins.agent_based import kube_node_container_count
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import ContainerCount
+
+from cmk.plugins.kube.schemata.section import ContainerCount
 
 
 @pytest.fixture
@@ -109,11 +109,11 @@ def check_result(section, params):
 
 
 def test_check_yields_check_results(check_result: CheckResult, section: ContainerCount) -> None:
-    assert len(list(check_result)) == 2 * len(section.dict()) + 2
+    assert len(list(check_result)) == 2 * len(section.model_dump()) + 2
 
 
 def test_check_yields_results(check_result: CheckResult, section: ContainerCount) -> None:
-    expected = len(section.dict()) + 1
+    expected = len(section.model_dump()) + 1
     assert len([r for r in check_result if isinstance(r, Result)]) == expected
 
 
@@ -122,12 +122,12 @@ def test_check_all_states_ok(check_result: CheckResult) -> None:
 
 
 def test_check_yields_metrics(check_result: CheckResult, section: ContainerCount) -> None:
-    expected = len(section.dict()) + 1
+    expected = len(section.model_dump()) + 1
     assert len([m for m in check_result if isinstance(m, Metric)]) == expected
 
 
 def test_check_all_metrics_values(check_result: CheckResult, section: ContainerCount) -> None:
-    expected = [*section.dict().values(), sum(section.dict().values())]
+    expected = [*section.model_dump().values(), sum(section.model_dump().values())]
     assert [m.value for m in check_result if isinstance(m, Metric)] == expected
 
 
@@ -140,13 +140,13 @@ def test_check_issues_expected_check_levels_calls(
     check_levels: MagicMock, check_result: CheckResult, section: ContainerCount
 ) -> None:
     list(check_result)
-    assert check_levels.call_count == len(section.dict()) + 1
+    assert check_levels.call_count == len(section.model_dump()) + 1
 
 
 def test_check_calls_check_levels_with_values(
     check_levels: MagicMock, check_result: CheckResult, section: ContainerCount
 ) -> None:
-    expected_values = [*section.dict().values(), sum(section.dict().values())]
+    expected_values = [*section.model_dump().values(), sum(section.model_dump().values())]
     list(check_result)
     actual_values = [call.args[0] for call in check_levels.call_args_list]
     assert actual_values == expected_values
@@ -175,7 +175,9 @@ def test_check_calls_check_levels_with_levels_default(
 def test_check_calls_check_levels_with_metric_name(
     check_levels: MagicMock, check_result: CheckResult, section: ContainerCount
 ) -> None:
-    expected_metrics = [f"kube_node_container_count_{name}" for name in [*section.dict(), "total"]]
+    expected_metrics = [
+        f"kube_node_container_count_{name}" for name in [*section.model_dump(), "total"]
+    ]
     list(check_result)
     actual_metrics = [call.kwargs["metric_name"] for call in check_levels.call_args_list]
     assert actual_metrics == expected_metrics
@@ -184,7 +186,7 @@ def test_check_calls_check_levels_with_metric_name(
 def test_check_calls_check_levels_with_labels(
     check_levels: MagicMock, check_result: CheckResult, section: ContainerCount
 ) -> None:
-    expected_labels = [f"{name.title()}" for name in [*section.dict(), "total"]]
+    expected_labels = [f"{name.title()}" for name in [*section.model_dump(), "total"]]
     list(check_result)
     actual_labels = [call.kwargs["label"] for call in check_levels.call_args_list]
     assert actual_labels == expected_labels

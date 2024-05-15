@@ -10,6 +10,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.gui.watolib.read_only as read_only
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -18,18 +19,13 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 
 from .pages._html_elements import initialize_wato_html_head, wato_html_footer, wato_html_head
-
-if cmk_version.edition() is cmk_version.Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore[assignment]
+from .pages.not_implemented import ModeNotImplemented
 
 # .
 #   .--Main----------------------------------------------------------------.
@@ -73,7 +69,7 @@ def page_handler() -> None:
     # config.current_customer can not be checked with CRE repos
     if (
         cmk_version.edition() is cmk_version.Edition.CME
-        and not managed.is_provider(active_config.current_customer)
+        and not customer_api().is_provider(active_config.current_customer)
         and not current_mode.startswith(("backup", "edit_backup"))
     ):
         raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))

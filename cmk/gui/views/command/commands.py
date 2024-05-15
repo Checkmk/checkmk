@@ -5,60 +5,81 @@
 
 import time
 from collections.abc import Sequence
-from typing import Any, Literal, Protocol
+from typing import Literal, Protocol
 
 import livestatus
 
+import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
-from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.forms import open_submit_button_container_div
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (
     Permission,
-    permission_registry,
-    permission_section_registry,
+    PermissionRegistry,
     PermissionSection,
+    PermissionSectionRegistry,
 )
-from cmk.gui.type_defs import Row, Rows
+from cmk.gui.type_defs import Choices, Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import AbsoluteDate, Age
+from cmk.gui.utils.time import timezone_utc_offset_str
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
+from cmk.gui.view_utils import render_cre_upgrade_button
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
+
+from cmk.bi.trees import CompiledAggrLeaf, CompiledAggrRule, CompiledAggrTree
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec
 from .group import CommandGroup, CommandGroupRegistry
 from .registry import CommandRegistry
 
 
-def register_command_groups(registry: CommandGroupRegistry) -> None:
-    registry.register(CommandGroupVarious)
-    registry.register(CommandGroupFakeCheck)
-    registry.register(CommandGroupAcknowledge)
-    registry.register(CommandGroupDowntimes)
-
-
-def register_commands(registry: CommandRegistry) -> None:
-    registry.register(CommandReschedule)
-    registry.register(CommandNotifications)
-    registry.register(CommandToggleActiveChecks)
-    registry.register(CommandTogglePassiveChecks)
-    registry.register(CommandClearModifiedAttributes)
-    registry.register(CommandFakeCheckResult)
-    registry.register(CommandCustomNotification)
-    registry.register(CommandAcknowledge)
-    registry.register(CommandAddComment)
-    registry.register(CommandScheduleDowntimes)
-    registry.register(CommandRemoveDowntime)
-    registry.register(CommandRemoveComments)
+def register(
+    command_group_registry: CommandGroupRegistry,
+    command_registry: CommandRegistry,
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
+) -> None:
+    command_group_registry.register(CommandGroupVarious)
+    command_group_registry.register(CommandGroupFakeCheck)
+    command_group_registry.register(CommandGroupAcknowledge)
+    command_group_registry.register(CommandGroupDowntimes)
+    command_registry.register(CommandReschedule)
+    command_registry.register(CommandNotifications)
+    command_registry.register(CommandToggleActiveChecks)
+    command_registry.register(CommandTogglePassiveChecks)
+    command_registry.register(CommandClearModifiedAttributes)
+    command_registry.register(CommandFakeCheckResult)
+    command_registry.register(CommandCustomNotification)
+    command_registry.register(CommandAcknowledge)
+    command_registry.register(CommandRemoveAcknowledgments)
+    command_registry.register(CommandAddComment)
+    command_registry.register(CommandScheduleDowntimes)
+    command_registry.register(CommandRemoveDowntime)
+    command_registry.register(CommandRemoveComments)
+    permission_section_registry.register(PermissionSectionAction)
+    permission_registry.register(PermissionActionReschedule)
+    permission_registry.register(PermissionActionNotifications)
+    permission_registry.register(PermissionActionEnableChecks)
+    permission_registry.register(PermissionActionClearModifiedAttributes)
+    permission_registry.register(PermissionActionFakeChecks)
+    permission_registry.register(PermissionActionCustomNotification)
+    permission_registry.register(PermissionActionAcknowledge)
+    permission_registry.register(PermissionActionAddComment)
+    permission_registry.register(PermissionActionDowntimes)
+    permission_registry.register(PermissionRemoveAllDowntimes)
 
 
 class CommandGroupVarious(CommandGroup):
@@ -75,7 +96,6 @@ class CommandGroupVarious(CommandGroup):
         return 20
 
 
-@permission_section_registry.register
 class PermissionSectionAction(PermissionSection):
     @property
     def name(self) -> str:
@@ -99,14 +119,12 @@ class PermissionSectionAction(PermissionSection):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionReschedule = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="reschedule",
-        title=_l("Reschedule checks"),
-        description=_l("Reschedule host and service checks"),
-        defaults=["user", "admin"],
-    )
+PermissionActionReschedule = Permission(
+    section=PermissionSectionAction,
+    name="reschedule",
+    title=_l("Reschedule checks"),
+    description=_l("Reschedule host and service checks"),
+    defaults=["user", "admin"],
 )
 
 
@@ -136,19 +154,31 @@ class CommandReschedule(Command):
         return PermissionActionReschedule
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
-        return HTML("<br><br>" + _("Spreading: %s minutes") % request.var("_resched_spread"))
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
+        return HTML("<br><br>") + "Spreading: %s minutes" % request.var("_resched_spread")
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
         html.text_input(
             "_resched_spread", default_value="5", size=3, cssclass="number", required=True
         )
         html.write_text(" " + _("minutes"))
+        html.help(
+            _(
+                "Spreading distributes checks evenly over the specified period. "
+                "This helps to avoid short-term peaks in CPU usage and "
+                "therefore, performance problems."
+            )
+        )
         html.close_div()
 
         html.open_div(class_="group")
@@ -160,7 +190,11 @@ class CommandReschedule(Command):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_resched_checks"):
-            spread = utils.saveint(request.var("_resched_spread"))
+            spread = request.get_validated_type_input_mandatory(int, "_resched_spread")
+            if spread < 0:
+                raise MKUserError(
+                    "_resched_spread", _("Spread should be a positive number: %s") % spread
+                )
 
             t = time.time()
             if spread:
@@ -191,14 +225,12 @@ class CommandReschedule(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionNotifications = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="notifications",
-        title=_l("Enable/disable notifications"),
-        description=_l("Enable and disable notifications on hosts and services"),
-        defaults=[],
-    )
+PermissionActionNotifications = Permission(
+    section=PermissionSectionAction,
+    name="notifications",
+    title=_l("Enable/disable notifications"),
+    description=_l("Enable and disable notifications on hosts and services"),
+    defaults=[],
 )
 
 
@@ -228,10 +260,15 @@ class CommandNotifications(Command):
         return PermissionActionNotifications
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
         return HTML(
             "<br><br>"
             + (
@@ -246,7 +283,7 @@ class CommandNotifications(Command):
             return "question"
         return "warning"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_notifications", _("Enable"), cssclass="border_hot")
         html.button("_disable_notifications", _("Disable"), cssclass="border_hot")
@@ -293,14 +330,12 @@ class CommandNotifications(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionEnableChecks = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="enablechecks",
-        title=_l("Enable/disable checks"),
-        description=_l("Enable and disable active or passive checks on hosts and services"),
-        defaults=[],
-    )
+PermissionActionEnableChecks = Permission(
+    section=PermissionSectionAction,
+    name="enablechecks",
+    title=_l("Enable/disable checks"),
+    description=_l("Enable and disable active or passive checks on hosts and services"),
+    defaults=[],
 )
 
 
@@ -330,17 +365,13 @@ class CommandToggleActiveChecks(Command):
         return PermissionActionEnableChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
         return "warning"
 
-    @property
-    def show_command_form(self):
-        return False
-
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_checks", _("Enable"), cssclass="border_hot")
         html.button("_disable_checks", _("Disable"), cssclass="border_hot")
@@ -414,13 +445,13 @@ class CommandTogglePassiveChecks(Command):
         return PermissionActionEnableChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
         return "warning"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_passive_checks", _("Enable"), cssclass="border_hot")
         html.button("_disable_passive_checks", _("Disable"), cssclass="border_hot")
@@ -467,17 +498,15 @@ class CommandTogglePassiveChecks(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionClearModifiedAttributes = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="clearmodattr",
-        title=_l("Reset modified attributes"),
-        description=_l(
-            "Reset all manually modified attributes of a host "
-            "or service (like disabled notifications)"
-        ),
-        defaults=[],
-    )
+PermissionActionClearModifiedAttributes = Permission(
+    section=PermissionSectionAction,
+    name="clearmodattr",
+    title=_l("Reset modified attributes"),
+    description=_l(
+        "Reset all manually modified attributes of a host "
+        "or service (like disabled notifications)"
+    ),
+    defaults=[],
 )
 
 
@@ -499,16 +528,21 @@ class CommandClearModifiedAttributes(Command):
         return PermissionActionClearModifiedAttributes
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_clear_modattr", _("Reset attributes"), cssclass="hot")
         html.button("_cancel", _("Cancel"))
         html.close_div()
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
         return HTML(
             "<br><br>"
             + _("Resets the commands '%s', '%s' and '%s' to the default state")
@@ -544,14 +578,12 @@ class CommandClearModifiedAttributes(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionFakeChecks = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="fakechecks",
-        title=_l("Fake check results"),
-        description=_l("Manually submit check results for host and service checks"),
-        defaults=["admin"],
-    )
+PermissionActionFakeChecks = Permission(
+    section=PermissionSectionAction,
+    name="fakechecks",
+    title=_l("Fake check results"),
+    description=_l("Manually submit check results for host and service checks"),
+    defaults=["admin"],
 )
 
 
@@ -580,18 +612,17 @@ class CommandFakeCheckResult(Command):
 
     @property
     def confirm_title(self) -> str:
-        return _("Manually set check results to %s?") % self._get_target_state()
+        return _("Set fake check result to ‘%s’?") % self._get_target_state()
 
     def _get_target_state(self) -> str:
-        for var, value in list(request.itervars(prefix="_fake_")):
-            if not var[-1].isdigit():
-                continue
-            return value
-        return ""
+        state = request.var("_state")
+        statename = request.var(f"_state_{state}")
+
+        return "" if statename is None else statename
 
     @property
     def confirm_button(self) -> LazyString:
-        return _l("Set")
+        return _l("Set to '%s'") % self._get_target_state()
 
     @property
     def icon_name(self):
@@ -602,7 +633,7 @@ class CommandFakeCheckResult(Command):
         return PermissionActionFakeChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     @property
@@ -613,71 +644,111 @@ class CommandFakeCheckResult(Command):
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.open_table()
+    def _link_to_test_notifications(self):
+        return html.render_a(
+            _("Test notification"),
+            makeuri_contextless(request, [("mode", "notifications")], filename="wato.py"),
+        )
 
-        html.open_tr()
-        html.open_td()
-        html.write_text(_("Plugin output"))
-        html.close_td()
-        html.open_td()
-        html.text_input("_fake_output", "", size=60)
-        html.close_td()
-        html.close_tr()
+    def _render_test_notification_tip(self):
+        html.open_div(class_="info")
+        html.icon("toggle_details")
+        html.write_text(
+            " &nbsp; "
+            + _(
+                "If you are looking for a way to test your notification settings, try '%s' in Setup > Notifications"
+            )
+            % self._link_to_test_notifications()
+        )
+        html.close_div()
 
-        html.open_tr()
-        html.open_td()
-        html.write_text(_("Performance data"))
-        html.close_td()
-        html.open_td()
-        html.text_input("_fake_perfdata", "", size=60)
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.open_td()
-        html.write_text(_("Result"))
-        html.close_td()
-        html.open_td()
+    def _get_states(self, what):
         if what == "host":
-            html.button("_fake_0", _("Up"))
-            html.button("_fake_1", _("Down"))
-        else:
-            html.button("_fake_0", _("OK"))
-            html.button("_fake_1", _("Warning"))
-            html.button("_fake_2", _("Critical"))
-            html.button("_fake_3", _("Unknown"))
+            return [(0, _("Up")), (1, _("Down"))]
+
+        return [(0, _("OK")), (1, _("Warning")), (2, _("Critical")), (3, _("Unknown"))]
+
+    def render(self, what: str) -> None:
+        self._render_test_notification_tip()
+
+        html.open_div(class_="group")
+        html.open_table(class_=["fake_check_result"])
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Result") + " &nbsp; ")
+        html.close_td()
+        html.open_td()
+        html.open_span(class_="inline_radio_group")
+        for value, description in self._get_states(what):
+            html.radiobutton("_state", value, value == 0, description)
+            html.hidden_field(f"_state_{value}", description)
+        html.close_span()
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Plugin output") + " &nbsp; ")
+        html.close_td()
+        html.open_td()
+        html.text_input("_fake_output", "", size=60, placeholder=_("What is the purpose?"))
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Performance data") + " &nbsp; ")
+        html.close_td()
+        html.open_td()
+        html.text_input(
+            "_fake_perfdata",
+            "",
+            size=60,
+            placeholder=_("Enter performance data to show in notifications etc. ..."),
+        )
         html.close_td()
         html.close_tr()
 
         html.close_table()
+        html.close_div()
+
+        html.open_div(class_="group")
+        html.button("_fake_check_result", _("Fake check result"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        for s in [0, 1, 2, 3]:
-            statename = request.var("_fake_%d" % s)
-            if statename:
-                pluginoutput = request.get_str_input_mandatory("_fake_output").strip()
-                if not pluginoutput:
-                    pluginoutput = _("Manually set to %s by %s") % (
-                        escaping.escape_attribute(statename),
-                        user.id,
-                    )
-                perfdata = request.var("_fake_perfdata")
-                if perfdata:
-                    pluginoutput += "|" + perfdata
-                command = "PROCESS_{}_CHECK_RESULT;{};{};{}".format(
-                    "SERVICE" if cmdtag == "SVC" else cmdtag,
-                    spec,
-                    s,
-                    livestatus.lqencode(pluginoutput),
+        if request.var("_fake_check_result"):
+            state = request.var("_state")
+            statename = request.var(f"_state_{state}")
+            pluginoutput = request.get_str_input_mandatory("_fake_output").strip()
+
+            if not pluginoutput:
+                pluginoutput = _("Manually set to %s by %s") % (
+                    escaping.escape_attribute(statename),
+                    user.id,
                 )
-                return command, self.confirm_dialog_options(
-                    cmdtag,
-                    row,
-                    len(action_rows),
-                )
+
+            perfdata = request.var("_fake_perfdata")
+            if perfdata:
+                pluginoutput += "|" + perfdata
+
+            command = "PROCESS_{}_CHECK_RESULT;{};{};{}".format(
+                "SERVICE" if cmdtag == "SVC" else cmdtag,
+                spec,
+                state,
+                livestatus.lqencode(pluginoutput),
+            )
+
+            return command, self.confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+            )
+
         return None
 
 
@@ -697,17 +768,15 @@ class CommandFakeCheckResult(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionCustomNotification = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="customnotification",
-        title=_l("Send custom notification"),
-        description=_l(
-            "Manually let the core send a notification to a host or service in order "
-            "to test if notifications are setup correctly"
-        ),
-        defaults=["user", "admin"],
-    )
+PermissionActionCustomNotification = Permission(
+    section=PermissionSectionAction,
+    name="customnotification",
+    title=_l("Send custom notification"),
+    description=_l(
+        "Manually let the core send a notification to a host or service in order "
+        "to test if notifications are setup correctly"
+    ),
+    defaults=["user", "admin"],
 )
 
 
@@ -737,14 +806,14 @@ class CommandCustomNotification(Command):
         return PermissionActionCustomNotification
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     @property
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_cusnot_comment",
@@ -810,14 +879,12 @@ class CommandCustomNotification(Command):
 #   |                                                      |___/           |
 #   '----------------------------------------------------------------------'
 
-PermissionActionAcknowledge = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="acknowledge",
-        title=_l("Acknowledge"),
-        description=_l("Acknowledge host and service problems and remove acknowledgements"),
-        defaults=["user", "admin"],
-    )
+PermissionActionAcknowledge = Permission(
+    section=PermissionSectionAction,
+    name="acknowledge",
+    title=_l("Acknowledge"),
+    description=_l("Acknowledge host and service problems and remove acknowledgements"),
+    defaults=["user", "admin"],
 )
 
 
@@ -846,19 +913,27 @@ class CommandAcknowledge(Command):
 
     @property
     def confirm_title(self) -> str:
-        return (
-            _("Acknowledge problems?")
-            if request.var("_acknowledge")
-            else _("Remove acknowledgement?")
-        )
+        return _("Acknowledge problems?")
 
     @property
     def confirm_button(self) -> LazyString:
-        return _l("Acknowledge") if request.var("_acknowledge") else _l("Remove")
+        return _l("Yes, acknowledge")
+
+    @property
+    def cancel_button(self) -> LazyString:
+        return _l("No, discard")
+
+    @property
+    def deny_button(self) -> LazyString | None:
+        return _l("No, adjust settings")
+
+    @property
+    def deny_js_function(self) -> str | None:
+        return '() => cmk.page_menu.toggle_popup("popup_command_acknowledge")'
 
     @property
     def icon_name(self):
-        return "host_svc_problems"
+        return "ack"
 
     @property
     def is_shortcut(self) -> bool:
@@ -877,50 +952,169 @@ class CommandAcknowledge(Command):
         return CommandGroupAcknowledge
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "aggr"]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
+        if request.var("_ack_expire"):
+            date = request.get_str_input("_ack_expire_date")
+            time_ = request.get_str_input("_ack_expire_time")
+            timestamp = time.mktime(time.strptime(f"{date} {time_}", "%Y-%m-%d %H:%M"))
+            formatted_datetime_str = self.confirm_dialog_date_and_time_format(timestamp)
+
+        expire_conditions_li = html.render_li(
+            _("On recovery (OK/UP)")
+            if request.var("_ack_sticky")
+            else _("If state changes OR on recovery (OK/UP)")
+        )
+        expire_time_li = html.render_li(
+            _("On %s (server time).") % formatted_datetime_str
+            if request.var("_ack_expire")
+            else _("No expiration date")
+        )
+        persistent_comment_div = html.render_div(
+            (
+                _("Comment will be kept after acknowledgment expires.")
+                if request.var("_ack_persistent")
+                else _("Comment will be removed after acknowledgment expires.")
+            ),
+            class_="confirm_block",
+        )
+
+        return html.render_div(
+            content=html.render_div(_("Acknowledgment expires:"), class_="confirm_block")
+            + expire_conditions_li
+            + expire_time_li
+            + persistent_comment_div,
+            class_="confirm_block",
+        )
+
+    def render(self, what: str) -> None:
+        submit_id = "_acknowledge"
         html.open_div(class_="group")
         html.text_input(
             "_ack_comment",
             id_="ack_comment",
             size=60,
-            submit="_acknowledge",
+            submit=submit_id,
             label=_("Comment"),
             required=True,
+            placeholder=_("e.g. ticket ID"),
+            oninput=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
         )
+        if request.get_str_input("_ack_comment"):
+            html.final_javascript(
+                f"cmk.forms.enable_submit_buttons_on_nonempty_input(document.getElementById('ack_comment'), ['{submit_id}']);"
+            )
+
         html.close_div()
 
-        html.open_div(class_="group")
-        html.checkbox(
-            "_ack_sticky", active_config.view_action_defaults["ack_sticky"], label=_("sticky")
+        html.open_div(class_="group ack_command_options")
+        html.heading(_("Options"))
+        if user.may("wato.global"):
+            html.open_span()
+            html.write_text("(")
+            html.a(_("Edit defaults"), self._action_defaults_url())
+            html.write_text(")")
+            html.close_span()
+
+        date, time_ = self._expiration_date_and_time(
+            active_config.acknowledge_problems.get("ack_expire", 3600)
         )
+        is_raw_edition: bool = cmk_version.edition() is cmk_version.Edition.CRE
+        html.open_div(class_="disabled" if is_raw_edition else "")
         html.checkbox(
-            "_ack_notify",
-            active_config.view_action_defaults["ack_notify"],
-            label=_("send notification"),
+            "_ack_expire",
+            False,
+            label=_("Expire on"),
+            onclick="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
-        html.checkbox(
-            "_ack_persistent",
-            active_config.view_action_defaults["ack_persistent"],
-            label=_("persistent comment"),
-        )
+        html.open_div(class_="date_time_picker")
+        self._vs_date().render_input("_ack_expire_date", date)
+        self._vs_time().render_input("_ack_expire_time", time_)
         html.close_div()
 
-        html.open_div(class_="group")
-        self._vs_expire().render_input(
-            "_ack_expire", active_config.view_action_defaults.get("ack_expire", 0)
+        html.span(
+            timezone_utc_offset_str()
+            + " "
+            + _("Server time (currently: %s)")
+            % time.strftime("%m/%d/%Y %H:%M", time.localtime(time.time())),
+            class_="server_time",
         )
+        if is_raw_edition:
+            render_cre_upgrade_button()
         html.help(
             _("Note: Expiration of acknowledgements only works when using the Checkmk Micro Core.")
         )
         html.close_div()
 
-        html.open_div(class_="group")
-        html.button("_acknowledge", _("Acknowledge"), cssclass="hot")
-        html.button("_remove_ack", _("Remove acknowledgement"), formnovalidate=True)
+        html.open_div()
+        html.checkbox(
+            "_ack_sticky",
+            active_config.acknowledge_problems["ack_sticky"],
+            label=_("Ignore status changes until services/hosts are OK/UP again (sticky)"),
+        )
+        html.div(
+            "<b>"
+            + _("Example:")
+            + "</b> "
+            + _("Service was WARN and goes CRIT - acknowledgment doesn't expire."),
+            class_="example",
+        )
         html.close_div()
+
+        html.div(
+            html.render_checkbox(
+                "_ack_persistent",
+                active_config.acknowledge_problems["ack_persistent"],
+                label=_("Keep comment after acknowledgment expires (persistent comment)"),
+            )
+        )
+
+        html.div(
+            html.render_checkbox(
+                "_ack_notify",
+                active_config.acknowledge_problems["ack_notify"],
+                label=_("Notify affected users if %s are in place (send notifications)")
+                % self._link_to_notification_rules(),
+            )
+        )
+        html.close_div()
+
+        html.open_div(class_="group buttons")
+        tooltip_submission_disabled = _("Enter a comment to acknowledge problems")
+        open_submit_button_container_div(tooltip_submission_disabled)
+        html.button(
+            submit_id,
+            _("Acknowledge problems"),
+            cssclass="hot disabled",
+        )
+        html.close_div()
+
+        html.buttonlink(makeuri(request, [], delvars=["filled_in"]), _("Cancel"))
+        html.close_div()
+
+    def _action_defaults_url(self) -> str:
+        return makeuri_contextless(
+            request,
+            [("mode", "edit_configvar"), ("varname", "acknowledge_problems")],
+            filename="wato.py",
+        )
+
+    def _link_to_notification_rules(self) -> HTML:
+        return html.render_a(
+            _("notification rules"),
+            makeuri_contextless(request, [("mode", "notifications")], filename="wato.py"),
+        )
+
+    def _expiration_date_and_time(self, time_until_exp: int) -> tuple[str, str]:
+        exp_time = time.localtime(time.time() + time_until_exp)
+        return time.strftime("%Y-%m-%d", exp_time), time.strftime("%H:%M", exp_time)
 
     def _action(  # pylint: disable=too-many-branches
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
@@ -948,10 +1142,22 @@ class CommandAcknowledge(Command):
             sendnot = 1 if request.var("_ack_notify") else 0
             perscomm = 1 if request.var("_ack_persistent") else 0
 
-            expire_secs = self._vs_expire().from_html_vars("_ack_expire")
-            if expire_secs:
-                expire = int(time.time()) + expire_secs
-                expire_text = ";%d" % expire
+            if request.var("_ack_expire"):
+                expire_date = self._vs_date().from_html_vars("_ack_expire_date")
+                expire_time = self._vs_time().from_html_vars("_ack_expire_time")
+                expire_timestamp = int(
+                    time.mktime(
+                        time.strptime(f"{expire_date} {expire_time}", "%Y-%m-%d %H:%M"),
+                    )
+                )
+
+                if expire_timestamp < time.time():
+                    raise MKUserError(
+                        "_ack_expire",
+                        _("You cannot set an expiration date and time that is in the past:")
+                        + f' "{expire_date} {expire_time}"',
+                    )
+                expire_text = ";%d" % expire_timestamp
             else:
                 expire_text = ""
 
@@ -977,26 +1183,109 @@ class CommandAcknowledge(Command):
                 len(action_rows),
             )
 
-        if request.var("_remove_ack"):
-
-            def make_command_rem(spec, cmdtag):
-                return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
-
-            if "aggr_tree" in row:  # BI mode
-                commands = [
-                    (site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs
-                ]
-            else:
-                commands = [make_command_rem(spec, cmdtag)]
-            return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
-
         return None
 
-    def _vs_expire(self):
-        return Age(
-            display=["days", "hours", "minutes"],
-            label=_("Expire acknowledgement after"),
+    def _vs_date(self) -> DatePicker:
+        return DatePicker(
+            title=_("Acknowledge problems date picker"),
+            onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
+
+    def _vs_time(self) -> TimePicker:
+        return TimePicker(
+            title=_("Acknowledge problems time picker"),
+            onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
+        )
+
+
+class CommandRemoveAcknowledgments(Command):
+    @property
+    def ident(self) -> str:
+        return "remove_acknowledgments"
+
+    @property
+    def title(self) -> str:
+        return _("Remove acknowledgments")
+
+    @property
+    def confirm_title(self) -> str:
+        return _("Remove all acknowledgments?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Remove all")
+
+    @property
+    def icon_name(self):
+        return "ack"
+
+    @property
+    def permission(self) -> Permission:
+        return PermissionActionAcknowledge
+
+    @property
+    def group(self) -> type[CommandGroup]:
+        return CommandGroupAcknowledge
+
+    @property
+    def tables(self) -> list[str]:
+        return ["host", "service", "aggr"]
+
+    @property
+    def show_command_form(self) -> bool:
+        return False
+
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
+        return (
+            html.render_div(_("Acknowledgments: ") + str(self._number_of_acknowledgments))
+            if self._number_of_acknowledgments
+            else HTML()
+        )
+
+    def _action(
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+    ) -> CommandActionResult:
+        if not request.var("_remove_acknowledgments"):
+            return None
+
+        def make_command_rem(spec, cmdtag):
+            return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
+
+        # TODO: Can we also find out the number of acknowledgments for BI aggregation rows?
+        self._number_of_acknowledgments: int | None = None
+        if "aggr_tree" in row:  # BI mode
+            specs = []
+            for site, host, service in _find_all_leaves(row["aggr_tree"]):
+                if service:
+                    spec = f"{host};{service}"
+                    cmdtag = "SVC"
+                else:
+                    spec = host
+                    cmdtag = "HOST"
+                specs.append((site, spec, cmdtag))
+            commands = [(site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs]
+        else:
+            commands = [make_command_rem(spec, cmdtag)]
+
+            what = "host" if cmdtag == "HOST" else "service"
+            unique_acknowledgments: set[tuple[str, str]] = set()
+            for row_ in action_rows:
+                unique_acknowledgments.update(
+                    {
+                        # take author and timestamp as unique acknowledgment key
+                        # comment_spec = [id, author, comment, type, timestamp]
+                        (comment_spec[1], comment_spec[4])
+                        for comment_spec in row_.get(f"{what}_comments_with_extra_info", [])
+                    }
+                )
+            self._number_of_acknowledgments = len(unique_acknowledgments)
+
+        return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
 
 
 # .
@@ -1009,14 +1298,12 @@ class CommandAcknowledge(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionAddComment = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="addcomment",
-        title=_l("Add comments"),
-        description=_l("Add comments to hosts or services, and remove comments"),
-        defaults=["user", "admin"],
-    )
+PermissionActionAddComment = Permission(
+    section=PermissionSectionAction,
+    name="addcomment",
+    title=_l("Add comments"),
+    description=_l("Add comments to hosts or services, and remove comments"),
+    defaults=["user", "admin"],
 )
 
 
@@ -1046,10 +1333,10 @@ class CommandAddComment(Command):
         return PermissionActionAddComment
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_comment",
@@ -1093,24 +1380,20 @@ class CommandAddComment(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionDowntimes = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="downtimes",
-        title=_l("Set/Remove downtimes"),
-        description=_l("Schedule and remove downtimes on hosts and services"),
-        defaults=["user", "admin"],
-    )
+PermissionActionDowntimes = Permission(
+    section=PermissionSectionAction,
+    name="downtimes",
+    title=_l("Set/remove downtimes"),
+    description=_l("Schedule and remove downtimes on hosts and services"),
+    defaults=["user", "admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="remove_all_downtimes",
-        title=_l("Remove all downtimes"),
-        description=_l('Allow the user to use the action "Remove all" downtimes'),
-        defaults=["user", "admin"],
-    )
+PermissionRemoveAllDowntimes = Permission(
+    section=PermissionSectionAction,
+    name="remove_all_downtimes",
+    title=_l("Remove all downtimes"),
+    description=_l('Allow the user to use the action "Remove all" downtimes'),
+    defaults=["user", "admin"],
 )
 
 
@@ -1129,19 +1412,29 @@ class CommandGroupDowntimes(CommandGroup):
 
 
 class RecurringDowntimes(Protocol):
-    def show_input_elements(self) -> None:
-        ...
+    def choices(self) -> Choices: ...
 
-    def number(self) -> int:
-        ...
+    def show_input_elements(self, default: str) -> None: ...
 
-    def title_prefix(self, recurring_number: int) -> str:
-        ...
+    def number(self) -> int: ...
+
+    def title_prefix(self, recurring_number: int) -> str: ...
 
 
 class NoRecurringDowntimes:
-    def show_input_elements(self) -> None:
-        pass
+    def choices(self) -> Choices:
+        return [("0", "never")]
+
+    def show_input_elements(self, default: str) -> None:
+        html.open_div(class_="group")
+        html.dropdown(
+            "_down_recurring",
+            self.choices(),
+            deflt=default,
+            read_only=True,
+        )
+        render_cre_upgrade_button()
+        html.close_div()
 
     def number(self) -> int:
         return 0
@@ -1167,7 +1460,19 @@ class CommandScheduleDowntimes(Command):
 
     @property
     def confirm_button(self) -> LazyString:
-        return _l("Schedule")
+        return _l("Yes, schedule")
+
+    @property
+    def cancel_button(self) -> LazyString:
+        return _l("No, discard")
+
+    @property
+    def deny_button(self) -> LazyString | None:
+        return _l("No, adjust settings")
+
+    @property
+    def deny_js_function(self) -> str | None:
+        return '() => cmk.page_menu.toggle_popup("popup_command_schedule_downtimes")'
 
     @property
     def icon_name(self):
@@ -1190,21 +1495,8 @@ class CommandScheduleDowntimes(Command):
         return CommandGroupDowntimes
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "aggr"]
-
-    # TODO Logic is possibly needed for using the new confirm dialog, keep this
-    # until implementation, remove it afterwards
-    # def user_dialog_suffix(
-    #    self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    # ) -> str:
-    #    if cmdtag == "SVC" and not request.var("_down_remove"):
-    #        return title + "?"
-    #    return super().user_dialog_suffix(
-    #        title if request.var("_down_remove") else title + " on",
-    #        len_action_rows,
-    #        cmdtag,
-    #    )
 
     def user_confirm_options(
         self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
@@ -1220,7 +1512,25 @@ class CommandScheduleDowntimes(Command):
             ]
         return super().user_confirm_options(len_rows, cmdtag)
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
+        if self._adhoc_downtime_configured():
+            self._render_adhoc_comment(what)
+        self._render_comment()
+        self._render_date_and_time()
+        self._render_advanced_options(what)
+        self._render_confirm_buttons(what)
+
+    def _render_adhoc_comment(self, what: str) -> None:
+        adhoc_duration = active_config.adhoc_downtime.get("duration")
+        adhoc_comment = active_config.adhoc_downtime.get("comment", "")
+        html.open_div(class_="group")
+        html.button("_down_adhoc", _("Ad hoc for %d minutes") % adhoc_duration)
+        html.nbsp()
+        html.write_text(_("Comment") + ": " + adhoc_comment)
+        html.hr()
+        html.close_div()
+
+    def _render_comment(self) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_down_comment",
@@ -1228,129 +1538,270 @@ class CommandScheduleDowntimes(Command):
             size=60,
             label=_("Comment"),
             required=not self._adhoc_downtime_configured(),
+            placeholder=_("What is the occasion?"),
+            submit="_down_custom",
+            oninput="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
         )
+        if request.get_str_input("_down_comment"):
+            html.final_javascript(
+                "cmk.forms.enable_submit_buttons_on_nonempty_input(document.getElementById('down_comment'), ['_down_host', '_down_service']);"
+            )
         html.close_div()
 
+    def _render_date_and_time(self) -> None:  # pylint: disable=too-many-statements
         html.open_div(class_="group")
-        html.button("_down_from_now", _("From now for"), cssclass="hot")
-        html.nbsp()
-        html.text_input(
-            "_down_minutes", default_value="60", size=4, submit="_down_from_now", cssclass="number"
+        html.heading(_("Date and time"))
+
+        html.open_table(class_=["down_date_and_time"])
+
+        # Duration section
+        html.open_tr()
+        html.td(_("Duration"))
+        html.open_td(class_="down_duration")
+        html.write_html(self._get_duration_options())
+        html.a(_("(Edit presets)"), href=self._get_presets_url(), class_="down_presets")
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Start"))
+        html.close_td()
+        html.open_td()
+        self._vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
+        self._vs_time().render_input("_down_from_time", time.strftime("%H:%M"))
+        html.span(
+            timezone_utc_offset_str()
+            + " "
+            + _("Server time (currently: %s)") % time.strftime("%m/%d/%Y %H:%M", time.localtime()),
+            class_="server_time",
         )
-        html.write_text("&nbsp; " + _("minutes"))
+        html.close_td()
+        html.close_tr()
+
+        # End section
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("End"))
+        html.close_td()
+        html.open_td()
+        self._vs_date().render_input("_down_to_date", time.strftime("%Y-%m-%d"))
+        default_endtime: float = time.time() + 7200
+        self._vs_time().render_input(
+            "_down_to_time", time.strftime("%H:%M", time.localtime(default_endtime))
+        )
+        html.span(
+            timezone_utc_offset_str(default_endtime) + " " + _("Server time"),
+            class_="server_time",
+        )
+        html.close_td()
+
+        # Repeat section
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Repeat"))
+        html.close_td()
+        html.open_td()
+        self.recurring_downtimes.show_input_elements(default="0")
+
+        html.close_td()
+
+        html.close_table()
         html.close_div()
 
+    def _get_duration_options(self) -> HTML:
+        duration_options = HTML("")
+        for nr, time_range in enumerate(active_config.user_downtime_timeranges):
+            css_class = ["button", "duration"]
+            time_range_end = time_range["end"]
+            if nr == 0:
+                end_time = time_interval_end(time_range_end, self._current_local_time())
+                html.final_javascript(
+                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'
+                )
+                html.final_javascript(
+                    f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
+                )
+                css_class += ["active"]
+
+            duration_options += html.render_input(
+                name=(varname := f'_downrange__{time_range["end"]}'),
+                type_="button",
+                id_=varname,
+                class_=css_class,
+                value=_u(time_range["title"]),
+                onclick=self._get_onclick(time_range_end, varname),
+                submit="_set_date_and_time",
+            )
+        return duration_options
+
+    def _get_presets_url(self) -> str:
+        return makeuri_contextless(
+            request,
+            [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
+            filename="wato.py",
+        )
+
+    def _vs_date(self) -> DatePicker:
+        return DatePicker(
+            title=_("Downtime date picker"),
+            onchange="cmk.page_menu.update_down_duration_button();",
+        )
+
+    def _vs_time(self) -> TimePicker:
+        return TimePicker(
+            title=_("Downtime time picker"),
+            onchange="cmk.page_menu.update_down_duration_button();",
+        )
+
+    def _get_onclick(
+        self,
+        time_range_end: int | Literal["next_day", "next_week", "next_month", "next_year"],
+        id_: str,
+    ) -> str:
+        start_time = self._current_local_time()
+        end_time = time_interval_end(time_range_end, start_time)
+
+        return (
+            f'cmk.page_menu.update_down_duration_button("{id_}");'
+            f'cmk.utils.update_time("date__down_from_date","{time.strftime("%Y-%m-%d",time.localtime(start_time))}");'
+            f'cmk.utils.update_time("time__down_from_time","{time.strftime("%H:%M",time.localtime(start_time))}");'
+            f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'
+            f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
+        )
+
+    def _render_advanced_options(self, what: str) -> None:
         html.open_div(class_="group")
-        for time_range in active_config.user_downtime_timeranges:
-            html.button("_downrange__%s" % time_range["end"], _u(time_range["title"]))
-        if what != "aggr" and user.may("action.remove_all_downtimes"):
-            html.write_text(" &nbsp; - &nbsp;")
-            html.button("_down_remove", _("Remove all"), formnovalidate=True)
-        html.close_div()
+        html.open_div(class_="down_advanced")
+        with foldable_container(
+            treename="advanced_down_options",
+            id_="adv_down_opts",
+            isopen=False,
+            title=_("Advanced options"),
+            indent=False,
+        ):
+            html.open_div(class_="down_advanced_option")
+            if what == "host":
+                self._vs_host_downtime().render_input("_include_children", None)
 
-        if self._adhoc_downtime_configured():
-            adhoc_duration = active_config.adhoc_downtime.get("duration")
-            adhoc_comment = active_config.adhoc_downtime.get("comment", "")
-            html.open_div(class_="group")
-            html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
-            html.nbsp()
-            html.write_text(_("with comment") + ": ")
-            html.write_text(adhoc_comment)
+            self._vs_flexible_options().render_input("_down_duration", None)
             html.close_div()
 
-        html.open_div(class_="group")
-        html.button("_down_custom", _("Custom time range"))
-        self._vs_down_from().render_input("_down_from", time.time())
-        html.write_text("&nbsp; " + _("to") + " &nbsp;")
-        self._vs_down_to().render_input("_down_to", time.time() + 7200)
+        html.close_div()
         html.close_div()
 
+    def _render_confirm_buttons(self, what: str) -> None:
         html.open_div(class_="group")
-        html.checkbox("_down_flexible", False, label="%s " % _("flexible with max. duration"))
-        self._vs_duration().render_input("_down_duration", 7200)
+        tooltip_submission_disabled = _("Enter a comment to schedule downtime")
+        open_submit_button_container_div(tooltip=tooltip_submission_disabled)
+        html.button("_down_host", _("Schedule downtime on host"), cssclass="hot disabled")
         html.close_div()
-
-        if what == "host":
-            html.open_div(class_="group")
-            html.checkbox("_include_childs", False, label=_("Also set downtime on child hosts"))
-            html.write_text("  ")
-            html.checkbox("_include_childs_recurse", False, label=_("Do this recursively"))
+        if what == "service":
+            open_submit_button_container_div(tooltip=tooltip_submission_disabled)
+            html.button("_down_service", _("Schedule downtime on service"), cssclass="disabled")
             html.close_div()
 
-        self.recurring_downtimes.show_input_elements()
+        html.buttonlink(makeuri(request, [], delvars=["filled_in"]), _("Cancel"))
+        html.close_div()
 
-    def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+    def _vs_host_downtime(self) -> Dictionary:
+        return Dictionary(
+            title="Host downtime options",
+            elements=[
+                (
+                    "_include_children",
+                    Checkbox(
+                        title=_("Only for hosts: Set child hosts in downtime"),
+                        label=_("Include indirectly connected hosts (recursively)"),
+                        help=_(
+                            "Either verify the server certificate using the "
+                            "site local CA or accept any certificate offered by "
+                            "the server. It is highly recommended to leave this "
+                            "enabled."
+                        ),
+                    ),
+                ),
+            ],
+        )
+
+    def _vs_flexible_options(self) -> Dictionary:
+        return Dictionary(
+            title=_("Flexible downtime options"),
+            elements=[
+                (
+                    "_down_duration",
+                    Age(
+                        display=["hours", "minutes"],
+                        title=_(
+                            "Only start downtime if host/service goes "
+                            "DOWN/UNREACH during the defined start and end time "
+                            "(flexible)"
+                        ),
+                        cssclass="inline",
+                        label=_("Max. duration after downtime starts: "),
+                        footer="<b>"
+                        + _("Warning: ")
+                        + "</b>"
+                        + _("Downtime can extend beyond the previously defined end date and time"),
+                        default_value=7200,
+                    ),
+                ),
+            ],
+        )
+
+    def _action(  # pylint: disable=too-many-arguments
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
-        if request.var("_down_remove"):
-            return self._remove_downtime_details(cmdtag, row, action_rows)
-
         recurring_number = self.recurring_downtimes.number()
-        title_prefix = self.recurring_downtimes.title_prefix(recurring_number)
-        varprefix: str
+        if request.var("_down_host", request.var("_down_service", request.var("_down_adhoc"))):
+            if request.var("_down_adhoc"):
+                start_time = self._current_local_time()
+                end_time = self._get_adhoc_end_time(start_time)
+            else:
+                start_time = self._custom_start_time()
+                end_time = self._custom_end_time(start_time)
 
-        if request.var("_down_from_now"):
-            varprefix = "_down_from_now"
-            start_time = self._current_local_time()
-            duration_minutes = self._from_now_minutes()
-            end_time = self._time_after_minutes(start_time, duration_minutes)
-            title = self._title_for_next_minutes(duration_minutes, title_prefix)
-        elif request.var("_down_adhoc"):
-            varprefix = "_down_adhoc"
-            start_time = self._current_local_time()
-            duration_minutes = active_config.adhoc_downtime.get("duration", 0)
-            end_time = self._time_after_minutes(start_time, duration_minutes)
-            title = self._title_for_next_minutes(duration_minutes, title_prefix)
-        elif request.var("_down_custom"):
-            varprefix = "_down_custom"
-            start_time = self._custom_start_time()
-            end_time = self._custom_end_time(start_time)
-            title = self._title_range(start_time, end_time)
-        else:  # one of the default time buttons
-            button_value = self.button_interval_value()
-            if button_value is None:
-                # the remove button in the Show Downtimes Setup view returns None here
-                # TODO: separate the remove mechanism from the create downtime procedure in the views call
-                return None
-            varprefix = "_downrange__%s" % button_value
-            next_time_interval = button_value
-            start_time = self._current_local_time()
-            end_time = time_interval_end(next_time_interval, start_time)
-            if end_time is None:
-                end_time = start_time + int(next_time_interval)
-            title = time_interval_to_human_readable(next_time_interval, title_prefix)
+            if recurring_number == 8 and not 1 <= time.localtime(start_time).tm_mday <= 28:
+                raise MKUserError(
+                    None,
+                    _(
+                        "The start of a recurring downtime can only be set for "
+                        "days 1-28 of a month."
+                    ),
+                )
 
-        if recurring_number == 8 and not 1 <= time.localtime(start_time).tm_mday <= 28:
-            raise MKUserError(
-                varprefix,
-                _("The start of a recurring downtime can only be set for days 1-28 of a month."),
-            )
-
-        comment = self._comment()
-        delayed_duration = self._flexible_option()
-        mode = determine_downtime_mode(recurring_number, delayed_duration)
-        downtime = DowntimeSchedule(start_time, end_time, mode, delayed_duration, comment)
-        cmdtag, specs, title = self._downtime_specs(cmdtag, row, spec, title)
-        if "aggr_tree" in row:  # BI mode
-            node = row["aggr_tree"]
+            comment = self._comment()
+            delayed_duration = self._flexible_option()
+            mode = determine_downtime_mode(recurring_number, delayed_duration)
+            downtime = DowntimeSchedule(start_time, end_time, mode, delayed_duration, comment)
+            cmdtag, specs, len_action_rows = self._downtime_specs(cmdtag, row, action_rows, spec)
+            if "aggr_tree" in row:  # BI mode
+                node: CompiledAggrTree = row["aggr_tree"]
+                return (
+                    _bi_commands(downtime, node),
+                    self.confirm_dialog_options(
+                        cmdtag,
+                        row,
+                        len(action_rows),
+                    ),
+                )
             return (
-                _bi_commands(downtime, node),
-                self.confirm_dialog_options(
+                [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs],
+                self._confirm_dialog_options(
                     cmdtag,
                     row,
-                    len(action_rows),
+                    len_action_rows,
+                    _("Schedule a downtime?"),
                 ),
             )
-        return (
-            [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs],
-            self._confirm_dialog_options(
-                cmdtag,
-                row,
-                len(action_rows),
-                title,
-            ),
-        )
+
+        return None
 
     def _confirm_dialog_options(
         self,
@@ -1362,49 +1813,109 @@ class CommandScheduleDowntimes(Command):
         return CommandConfirmDialogOptions(
             title,
             self.affected(len_action_rows, cmdtag),
-            self.confirm_dialog_additions(row, len_action_rows),
+            self.confirm_dialog_additions(cmdtag, row, len_action_rows),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
+            self.cancel_button,
+            self.deny_button,
+            self.deny_js_function,
         )
 
-    def _remove_downtime_details(
-        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
-    ) -> tuple[list[str], CommandConfirmDialogOptions] | None:
-        if not user.may("action.remove_all_downtimes"):
-            return None
-        if request.var("_on_hosts"):
-            raise MKUserError(
-                "_on_hosts",
-                _("The checkbox for setting host downtimes does not work when removing downtimes."),
+    def _get_adhoc_end_time(self, start_time: float) -> float:
+        return start_time + active_config.adhoc_downtime.get("duration", 0) * 60
+
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
+        start_at = self._custom_start_time()
+        additions = HTMLWriter.render_table(
+            HTMLWriter.render_tr(
+                HTMLWriter.render_td(_("Start:"))
+                + HTMLWriter.render_td(self.confirm_dialog_date_and_time_format(start_at))
             )
-        downtime_ids = []
-        if cmdtag == "HOST":
-            prefix = "host_"
-        else:
-            prefix = "service_"
-        for id_ in row[prefix + "downtimes"]:
-            if id_ != "":
-                downtime_ids.append(int(id_))
-        commands = []
-        for dtid in downtime_ids:
-            commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
-        title = _("Remove all scheduled downtimes?")
-        return commands, self._confirm_dialog_options(
-            cmdtag,
-            row,
-            len(action_rows),
-            title,
+            + HTMLWriter.render_tr(
+                HTMLWriter.render_td(_("End:"))
+                + HTMLWriter.render_td(
+                    self.confirm_dialog_date_and_time_format(
+                        self._get_adhoc_end_time(start_at)
+                        if request.var("_down_adhoc")
+                        else self._custom_end_time(start_at)
+                    )
+                )
+            )
+        )
+
+        attributes = HTML("")
+        if recurring_number_from_html := self.recurring_downtimes.number():
+            attributes += HTMLWriter.render_li(
+                _("Repeats every %s")
+                % self.recurring_downtimes.choices()[recurring_number_from_html][1]
+            )
+
+        vs_host_downtime = self._vs_host_downtime()
+        included_from_html = vs_host_downtime.from_html_vars("_include_children")
+        vs_host_downtime.validate_value(included_from_html, "_include_children")
+        if "_include_children" in included_from_html:
+            if included_from_html.get("_include_children") is True:
+                attributes += HTMLWriter.render_li(
+                    _("Child hosts also go in downtime (recursively).")
+                )
+            else:
+                attributes += HTMLWriter.render_li(_("Child hosts also go in downtime."))
+
+        if duration := self._flexible_option():
+            hours, remaining_seconds = divmod(duration, 3600)
+            minutes, _seconds = divmod(remaining_seconds, 60)
+            attributes += HTMLWriter.render_li(
+                _(
+                    "Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours and %d %s."
+                )
+                % (
+                    hours,
+                    minutes,
+                    ungettext(
+                        "minute",
+                        "minutes",
+                        minutes,
+                    ),
+                )
+            )
+
+        if attributes:
+            additions = (
+                additions
+                + HTMLWriter.render_p(_("Downtime attributes:"))
+                + HTMLWriter.render_ul(attributes)
+            )
+
+        return additions + HTMLWriter.render_p(
+            _("<u>Info</u>: Downtime also applies to all services of the %s.")
+            % ungettext(
+                "host",
+                "hosts",
+                len_action_rows,
+            )
+            if cmdtag == "HOST"
+            else _("<u>Info</u>: Downtime does not apply to host.")
         )
 
     def _flexible_option(self) -> int:
-        if request.var("_down_flexible"):
-            delayed_duration: int = self._vs_duration().from_html_vars("_down_duration")
-            self._vs_duration().validate_value(delayed_duration, "_down_duration")
+        vs_flexible_options = self._vs_flexible_options()
+        duration_from_html = vs_flexible_options.from_html_vars("_down_duration")
+        vs_flexible_options.validate_value(duration_from_html, "_down_duration")
+        if duration_from_html:
+            self._vs_duration().validate_value(
+                duration := duration_from_html.get("_down_duration", 0), "_down_duration"
+            )
+            delayed_duration = duration
         else:
             delayed_duration = 0
         return delayed_duration
 
-    def _comment(self):
+    def _comment(self) -> str:
         comment = (
             active_config.adhoc_downtime.get("comment", "")
             if request.var("_down_adhoc")
@@ -1414,35 +1925,34 @@ class CommandScheduleDowntimes(Command):
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         return comment
 
-    def _current_local_time(self):
+    def _current_local_time(self) -> float:
         return time.time()
 
-    def _time_after_minutes(self, start_time, minutes):
-        return start_time + minutes * 60
+    def _custom_start_time(self) -> float:
+        vs_date = self._vs_date()
+        raw_start_date = vs_date.from_html_vars("_down_from_date")
+        vs_date.validate_value(raw_start_date, "_down_from_date")
 
-    def _from_now_minutes(self):
-        try:
-            minutes = request.get_integer_input_mandatory("_down_minutes", 0)
-        except MKUserError:
-            minutes = 0
+        vs_time = self._vs_time()
+        raw_start_time = vs_time.from_html_vars("_down_from_time")
+        vs_time.validate_value(raw_start_time, "_down_from_time")
 
-        if minutes <= 0:
-            raise MKUserError("_down_minutes", _("Please enter a positive number of minutes."))
-        return minutes
-
-    def _custom_start_time(self):
-        maybe_down_from = self._vs_down_from().from_html_vars("_down_from")
-        if maybe_down_from is None:
-            raise Exception("impossible: _down_from is None")
-        down_from = int(maybe_down_from)
+        down_from = time.mktime(
+            time.strptime(f"{raw_start_date} {raw_start_time}", "%Y-%m-%d %H:%M")
+        )
         self._vs_down_from().validate_value(down_from, "_down_from")
-        return maybe_down_from
+        return down_from
 
-    def _custom_end_time(self, start_time):
-        maybe_down_to = self._vs_down_to().from_html_vars("_down_to")
-        if maybe_down_to is None:
-            raise Exception("impossible: _down_to is None")
-        end_time = maybe_down_to
+    def _custom_end_time(self, start_time: float) -> float:
+        vs_date = self._vs_date()
+        raw_end_date = vs_date.from_html_vars("_down_to_date")
+        vs_date.validate_value(raw_end_date, "_down_to_date")
+
+        vs_time = self._vs_time()
+        raw_end_time = vs_time.from_html_vars("_down_to_time")
+        vs_time.validate_value(raw_end_time, "_down_to_time")
+
+        end_time = time.mktime(time.strptime(f"{raw_end_date} {raw_end_time}", "%Y-%m-%d %H:%M"))
         self._vs_down_to().validate_value(end_time, "_down_to")
 
         if end_time < time.time():
@@ -1459,40 +1969,28 @@ class CommandScheduleDowntimes(Command):
 
         return end_time
 
-    def _title_for_next_minutes(self, minutes, prefix):
-        return _("<b>%s for the next %d minutes</b>?") % (prefix, minutes)
-
-    def _title_range(self, start_time, end_time):
-        return _("Schedule a downtime from %s to %s?") % (
-            time.asctime(time.localtime(start_time)),
-            time.asctime(time.localtime(end_time)),
-        )
-
-    def button_interval_value(self):
-        rangebtns = (varname for varname, _value in request.itervars(prefix="_downrange"))
-        try:
-            rangebtn: str | None = next(rangebtns)
-        except StopIteration:
-            rangebtn = None
-        if rangebtn is None:
-            return None
-        _btnname, period = rangebtn.split("__", 1)
-        return period
-
     def _downtime_specs(
-        self, cmdtag: Literal["HOST", "SVC"], row: Row, spec: str, title: str
-    ) -> tuple[Literal["HOST", "SVC"], list[str], str]:
-        if request.var("_include_childs"):  # only for hosts
-            specs = [spec] + self._get_child_hosts(
-                row["site"], [spec], recurse=bool(request.var("_include_childs_recurse"))
-            )
-        elif request.var("_on_hosts"):  # set on hosts instead of services
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        action_rows: Rows,
+        spec: str,
+    ) -> tuple[Literal["HOST", "SVC"], list[str], int]:
+        len_action_rows = len(action_rows)
+
+        vs_host_downtime = self._vs_host_downtime()
+        included_from_html = vs_host_downtime.from_html_vars("_include_children")
+        vs_host_downtime.validate_value(included_from_html, "_include_children")
+        if "_include_children" in included_from_html:  # only for hosts
+            if (recurse := included_from_html.get("_include_children")) is not None:
+                specs = [spec] + self._get_child_hosts(row["site"], [spec], recurse=recurse)
+        elif request.var("_down_host"):  # set on hosts instead of services
             specs = [spec.split(";")[0]]
-            title += " the hosts of"
             cmdtag = "HOST"
+            len_action_rows = len({row["host_name"] for row in action_rows})
         else:
             specs = [spec]
-        return cmdtag, specs, title
+        return cmdtag, specs, len_action_rows
 
     def _vs_down_from(self) -> AbsoluteDate:
         return AbsoluteDate(
@@ -1520,9 +2018,8 @@ class CommandScheduleDowntimes(Command):
 
         sites.live().set_only_sites([site])
         query = "GET hosts\nColumns: name\n"
-        for h in hosts:
-            query += "Filter: parents >= %s\n" % h
-        query += "Or: %d\n" % len(hosts)
+        query += "".join([f"Filter: parents >= {host}\n" for host in hosts])
+        query += f"Or: {len(hosts)}\n"
         children = sites.live().query_column(query)
         sites.live().set_only_sites(None)
 
@@ -1537,7 +2034,7 @@ class CommandScheduleDowntimes(Command):
         return bool(active_config.adhoc_downtime and active_config.adhoc_downtime.get("duration"))
 
 
-def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:
+def _bi_commands(downtime: DowntimeSchedule, node: CompiledAggrTree) -> Sequence[CommandSpec]:
     """Generate the list of downtime command strings for the BI module"""
     commands_aggr = []
     for site, host, service in _find_all_leaves(node):
@@ -1551,17 +2048,17 @@ def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]
     return commands_aggr
 
 
-def _find_all_leaves(  # type: ignore[no-untyped-def]
-    node,
+def _find_all_leaves(
+    node: CompiledAggrRule | CompiledAggrLeaf,
 ) -> list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]]:
-    # leaf node
+    # From BICompiledLeaf (see also eval_result_node)
     if node["type"] == 1:
         site, host = node["host"]
         return [(livestatus.SiteId(site), host, node.get("service"))]
 
-    # rule node
+    # From BICompiledRule (see also eval_result_node)
     if node["type"] == 2:
-        entries: list[Any] = []
+        entries: list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]] = []
         for n in node["nodes"]:
             entries += _find_all_leaves(n)
         return entries
@@ -1571,9 +2068,11 @@ def _find_all_leaves(  # type: ignore[no-untyped-def]
 
 
 def time_interval_end(
-    time_value: Literal["next_day", "next_week", "next_month", "next_year"], start_time: float
+    time_value: int | Literal["next_day", "next_week", "next_month", "next_year"], start_time: float
 ) -> float | None:
     now = time.localtime(start_time)
+    if isinstance(time_value, int):
+        return start_time + time_value
     if time_value == "next_day":
         return (
             time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
@@ -1599,39 +2098,6 @@ def time_interval_end(
     return None
 
 
-def time_interval_to_human_readable(next_time_interval, prefix):
-    """Generate schedule downtime text from next time interval information
-
-    Args:
-        next_time_interval:
-            string representing the next time interval. Can either be a periodic interval or the
-            duration value
-        prefix:
-            prefix for the downtime title
-
-    Examples:
-        >>> time_interval_to_human_readable("next_day", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until 24:00:00</b>?'
-        >>> time_interval_to_human_readable("next_year", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until end of year</b>?'
-
-    Returns:
-        string representing the schedule downtime title
-    """
-    downtime_titles = {
-        "next_day": _("<b>%s until 24:00:00</b>?"),
-        "next_week": _("<b>%s until sunday night</b>?"),
-        "next_month": _("<b>%s until end of month</b>?"),
-        "next_year": _("<b>%s until end of year</b>?"),
-    }
-    try:
-        title = downtime_titles[next_time_interval]
-    except KeyError:
-        duration = int(next_time_interval)
-        title = _("<b>%%s of %s length</b>?") % SecondsRenderer.detailed_str(duration)
-    return title % prefix
-
-
 class CommandRemoveDowntime(Command):
     @property
     def ident(self) -> str:
@@ -1654,33 +2120,93 @@ class CommandRemoveDowntime(Command):
         return PermissionActionDowntimes
 
     @property
-    def tables(self):
-        return ["downtime"]
+    def group(self) -> type[CommandGroup]:
+        return CommandGroupDowntimes
 
     @property
+    def tables(self) -> list[str]:
+        return ["host", "service", "downtime"]
+
+    # we only want to show the button and shortcut in the explicit downtime
+    # view
+    @property
     def is_shortcut(self) -> bool:
-        return True
+        return self.is_suggested
 
     @property
     def is_suggested(self) -> bool:
-        return True
+        return request.var("view_name") == "downtimes"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def _confirm_dialog_options(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+        title: str,
+    ) -> CommandConfirmDialogOptions:
+        return CommandConfirmDialogOptions(
+            title,
+            self.affected(len_action_rows, cmdtag),
+            self.confirm_dialog_additions(cmdtag, row, len_action_rows),
+            self.confirm_dialog_icon_class(),
+            self.confirm_button,
+            self.cancel_button,
+            self.deny_button,
+            self.deny_js_function,
+        )
+
+    def render(self, what: str) -> None:
         html.button("_remove_downtimes", _("Remove"))
 
-    def _action(
+    def _action(  # pylint: disable=too-many-arguments
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.has_var("_remove_downtimes"):
-            return (
-                f"DEL_{cmdtag}_DOWNTIME;{spec}",
-                self.confirm_dialog_options(
-                    cmdtag,
-                    row,
-                    len(action_rows),
-                ),
-            )
+            if "downtime_id" in row:
+                return self._rm_downtime_from_downtime_datasource(cmdtag, spec, row, action_rows)
+            return self._rm_downtime_from_hst_or_svc_datasource(cmdtag, row, action_rows)
         return None
+
+    def _rm_downtime_from_downtime_datasource(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        action_rows: Rows,
+    ) -> CommandActionResult:
+        return (
+            f"DEL_{cmdtag}_DOWNTIME;{spec}",
+            self.confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+            ),
+        )
+
+    def _rm_downtime_from_hst_or_svc_datasource(
+        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
+    ) -> tuple[list[str], CommandConfirmDialogOptions] | None:
+        if not user.may("action.remove_all_downtimes"):
+            return None
+
+        downtime_ids = []
+        if cmdtag == "HOST":
+            prefix = "host_"
+        else:
+            prefix = "service_"
+        for id_ in row[prefix + "downtimes"]:
+            if id_ != "":
+                downtime_ids.append(int(id_))
+        commands = []
+        for dtid in downtime_ids:
+            commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
+        title = _("Remove scheduled downtimes?")
+        return commands, self._confirm_dialog_options(
+            cmdtag,
+            row,
+            len(action_rows),
+            title,
+        )
 
 
 class CommandRemoveComments(Command):
@@ -1713,18 +2239,23 @@ class CommandRemoveComments(Command):
         return PermissionActionAddComment
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["comment"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML("")
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
         if len_action_rows > 1:
             return HTML(_("Total comments: %d") % len_action_rows)
         return HTML(_("Author: %s") % row["comment_author"])
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_delete_comments", _("Delete"), cssclass="hot")
         html.button("_cancel", _("Cancel"))

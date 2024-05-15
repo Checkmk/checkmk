@@ -11,7 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron_statistics
 from cmk.base.plugins.agent_based.mobileiron_statistics import check_mobileiron_sourcehost
-from cmk.base.plugins.agent_based.utils.mobileiron import SourceHostSection
+
+from cmk.plugins.lib.mobileiron import SourceHostSection
 
 DEVICE_DATA = parse_mobileiron_statistics([['{"non_compliant": 12, "total_count": 22}']])
 

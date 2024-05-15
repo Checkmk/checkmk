@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import register, type_defs
-from .utils.cmciii import (
+from cmk.plugins.lib.cmciii import (
     CheckParams,
     discover_cmciii_sensors,
     discovery_default_parameters,
@@ -12,7 +11,9 @@ from .utils.cmciii import (
     get_sensor,
     Section,
 )
-from .utils.elphase import check_elphase
+from cmk.plugins.lib.elphase import check_elphase
+
+from .agent_based_api.v1 import register, type_defs
 
 
 def discover_cmciii_phase(params: DiscoveryParams, section: Section) -> type_defs.DiscoveryResult:

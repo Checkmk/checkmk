@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 import json
 import logging
 from json.decoder import JSONDecodeError
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def fix_response(  # pylint: disable=too-many-branches
     case: schemathesis.models.Case,
-    response: schemathesis.utils.GenericResponse,
+    response: schemathesis.GenericResponse,
     method: str | None = None,
     path: str | None = None,
     body: dict[str, Any] | None = None,
@@ -177,19 +179,3 @@ def fix_response(  # pylint: disable=too-many-branches
                 response.reason,
                 ticket_id,
             )
-
-
-def problem_response(status: str, description: str) -> dict[str, Any]:
-    if status in ("204", "302"):
-        content = {}
-    else:
-        content = {
-            "application/problem+json": {"schema": {"$ref": "#/components/schemas/ApiError"}}
-        }
-
-    return {
-        status: {
-            "description": description,
-            "content": content,
-        }
-    }

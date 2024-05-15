@@ -5,9 +5,24 @@
 import json
 import time
 from collections.abc import Iterator, Mapping, MutableMapping
-from typing import Any
+from typing import Any, TypedDict
 
-from typing_extensions import TypedDict
+from cmk.plugins.kube.schemata.api import PersistentVolumeClaimPhase
+from cmk.plugins.kube.schemata.section import (
+    AttachedPersistentVolumes,
+    AttachedVolume,
+    PersistentVolume,
+    PersistentVolumeClaim,
+    PersistentVolumeClaimAttachedVolumes,
+    PersistentVolumeClaims,
+)
+from cmk.plugins.lib.df import (
+    df_check_filesystem_single,
+    FILESYSTEM_DEFAULT_LEVELS,
+    MAGIC_FACTOR_DEFAULT_PARAMS,
+    TREND_DEFAULT_PARAMS,
+)
+from cmk.plugins.lib.kube import get_age_levels_for, VSResultAge
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -19,23 +34,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
-    df_check_filesystem_single,
-    FILESYSTEM_DEFAULT_LEVELS,
-    MAGIC_FACTOR_DEFAULT_PARAMS,
-    TREND_DEFAULT_PARAMS,
-)
-from .utils.kube import (
-    AttachedPersistentVolumes,
-    AttachedVolume,
-    get_age_levels_for,
-    PersistentVolume,
-    PersistentVolumeClaim,
-    PersistentVolumeClaimAttachedVolumes,
-    PersistentVolumeClaimPhase,
-    PersistentVolumeClaims,
-    VSResultAge,
-)
 
 VOLUME_DEFAULT_PARAMS: Mapping[str, Any] = {
     "pending": ("levels", (300, 600)),

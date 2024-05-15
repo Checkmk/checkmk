@@ -25,8 +25,12 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 
 @contextlib.contextmanager
 def mock_livestatus() -> Iterator[MockLiveStatusConnection]:
-    with mock_livestatus_communication() as mock_live, mock.patch(
-        "cmk.gui.sites._get_enabled_and_disabled_sites", new=mock_live.enabled_and_disabled_sites
+    with (
+        mock_livestatus_communication() as mock_live,
+        mock.patch(
+            "cmk.gui.sites._get_enabled_and_disabled_sites",
+            new=mock_live.enabled_and_disabled_sites,
+        ),
     ):
         yield mock_live
 

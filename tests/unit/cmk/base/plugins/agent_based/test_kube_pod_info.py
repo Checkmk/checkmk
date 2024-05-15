@@ -10,13 +10,9 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_pod_info import check_kube_pod_info
-from cmk.base.plugins.agent_based.utils.kube import (
-    IpAddress,
-    NamespaceName,
-    PodInfo,
-    PodUID,
-    Timestamp,
-)
+
+from cmk.plugins.kube.schemata.api import IpAddress, NamespaceName, PodUID, Timestamp
+from cmk.plugins.kube.schemata.section import FilteredAnnotations, PodInfo
 
 
 @pytest.mark.parametrize(
@@ -28,7 +24,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                 name="mypod",
                 creation_timestamp=Timestamp(1600000000.0),
                 labels={},
-                annotations={},
+                annotations=FilteredAnnotations({}),
                 node=None,
                 host_network=None,
                 dns_policy="Default",

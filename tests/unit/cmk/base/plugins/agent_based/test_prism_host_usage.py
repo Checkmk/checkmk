@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.prism_host_usage import (
     check_prism_host_usage,
     discovery_prism_host_usage,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 SECTION = {
     "state": "NORMAL",
@@ -77,10 +78,10 @@ def test_discovery_prism_host_usage(
                     levels=(79.99999999999856, 89.99999999999568),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 21.50% - 2.72 TiB of 12.6 TiB"),
+                Result(state=State.OK, summary="Used: 21.50% - 2.99 TB of 13.9 TB"),
                 Metric("fs_size", 13260342.148908615, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Total SAS: 0 B, Free SAS: 0 B"),
-                Result(state=State.OK, summary="Total SSD: 12.6 TiB, Free SSD: 9.93 TiB"),
+                Result(state=State.OK, summary="Total SSD: 13.9 TB, Free SSD: 10.9 TB"),
             ],
             id="If the disk capacity are inside the filesystem levels, the check result is OK.",
         ),

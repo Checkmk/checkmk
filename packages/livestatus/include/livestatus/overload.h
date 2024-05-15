@@ -13,12 +13,12 @@
 
 namespace mk {
 
-template <class... Ts>
+template <typename... Ts>
 struct overload : Ts... {
     using Ts::operator()...;
 };
 
-template <class... Ts>
+template <typename... Ts>
 overload(Ts...) -> overload<Ts...>;
 
 }  // namespace mk

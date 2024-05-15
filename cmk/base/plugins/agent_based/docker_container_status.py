@@ -7,6 +7,10 @@ import datetime
 from collections.abc import Mapping
 from typing import Any
 
+from dateutil import parser as date_parser
+
+from cmk.plugins.lib import docker, uptime
+
 from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import (
     CheckResult,
@@ -14,7 +18,6 @@ from .agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
 )
-from .utils import docker, uptime
 
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 
@@ -28,8 +31,7 @@ HEALTH_STATUS_MAP = {
 SectionStandard = Mapping[str, Any]
 
 
-class _MultipleNodesMarker:
-    ...
+class _MultipleNodesMarker: ...
 
 
 Section = SectionStandard | _MultipleNodesMarker
@@ -48,7 +50,7 @@ def parse_docker_container_status(string_table: StringTable) -> Section:
     specific JSON data. However, since docker containers are often piggyback hosts, it can happen
     that we get the concatenated agent output from multiple parent hosts in Checkmk (SUP-10582).
     This happens if a container with the same name runs on multiple docker hosts and if the docker
-    agent plugin is configured to use the container name as piggyback host name. Even though this is
+    agent plug-in is configured to use the container name as piggyback host name. Even though this is
     of course unwanted, we 'parse' this data here, s.t. in the check functions, we can inform the user
     about this issue.
     """
@@ -241,8 +243,8 @@ def check_docker_container_status(section: Section) -> CheckResult:
             details="This docker container apparently exists on multiple parent hosts. This should be "
             "reflected in the fact that this host has multiple piggyback sources, see the output of the "
             "Check_MK service. Hence, no definitive information on the container can be displayed. To "
-            "resolve this situation, you have two options: 1. configure the docker agent plugin to use "
-            "the container IDs as host names, 2. use the ruleset 'Hostname translation for piggybacked "
+            "resolve this situation, you have two options: 1. configure the docker agent plug-in to use "
+            "the container IDs as host names, 2. use the ruleset 'Host name translation for piggybacked "
             "hosts' to create unique host names for the affected containers.",
         )
         return
@@ -317,22 +319,16 @@ def check_docker_container_status_uptime(
     ):
         return
 
-    started_str = section_docker_container_status.get("StartedAt")
-    if not started_str:
+    if not (started_str := section_docker_container_status.get("StartedAt")):
         return
-
-    # assumed format: 2019-06-05T08:58:06.893459004Z
-    utc_start = datetime.datetime.strptime(
-        started_str[:-4] + "UTC", "%Y-%m-%dT%H:%M:%S.%f%Z"
-    ).astimezone(tz=datetime.UTC)
 
     op_status = section_docker_container_status["Status"]
     if op_status == "running":
+        utc_start = date_parser.parse(started_str)
         uptime_sec = (datetime.datetime.now(tz=datetime.UTC) - utc_start).total_seconds()
         yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
     else:
-        yield from uptime.check(params, uptime.Section(0, None))
-        yield Result(state=State.OK, summary="Operation State: %s" % op_status)
+        yield Result(state=State.OK, summary="Operational state: %s" % op_status)
 
 
 register.check_plugin(

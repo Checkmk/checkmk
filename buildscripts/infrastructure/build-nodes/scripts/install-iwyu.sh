@@ -3,18 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-set -e
+set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
+. "${SCRIPT_DIR}/build_lib.sh"
 
 INSTALL_PREFIX=""
 CLANG_VERSION=""
-TARGET_DIR="/opt"
-
-failure() {
-    echo "$(basename "$0"):" "$@" >&2
-    exit 1
-}
+TARGET_DIR="${TARGET_DIR:-/opt}"
 
 # option parsing ###############################################################
 
@@ -51,18 +48,7 @@ if [[ $# -ne 0 ]]; then
 fi
 
 if [ -z "$CLANG_VERSION" ]; then
-    cd "${SCRIPT_DIR}"
-    while true; do
-        if [ -e defines.make ]; then
-            CLANG_VERSION=$(make --no-print-directory --file=defines.make print-CLANG_VERSION)
-            break
-        elif [ "$PWD" = / ]; then
-            echo "could not determine Clang version" >&2
-            exit 1
-        else
-            cd ..
-        fi
-    done
+    CLANG_VERSION=$(get_version "$SCRIPT_DIR" CLANG_VERSION)
 fi
 
 # The tag/version numbering scheme is a big mess...

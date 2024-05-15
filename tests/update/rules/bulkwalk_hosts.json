@@ -1,0 +1,26 @@
+[
+  {
+    "ruleset": "bulkwalk_hosts",
+    "folder": "/",
+    "properties": {
+      "description": "Hosts with the tag \"snmp-v1\" must not use bulkwalk"
+    },
+    "value_raw": "True",
+    "conditions": {
+      "host_tags": [
+        {
+          "key": "snmp",
+          "operator": "is",
+          "value": "snmp"
+        },
+        {
+          "key": "snmp_ds",
+          "operator": "is_not",
+          "value": "snmp-v1"
+        }
+      ],
+      "host_label_groups": [],
+      "service_label_groups": []
+    }
+  }
+]

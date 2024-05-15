@@ -21,6 +21,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_mq_queues(info):
     inventory = []
@@ -69,7 +71,12 @@ def check_mq_queues(item, params, info):
     return 2, "Queue not found"
 
 
+def parse_mq_queues(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mq_queues"] = LegacyCheckDefinition(
+    parse_function=parse_mq_queues,
     service_name="Queue %s",
     discovery_function=inventory_mq_queues,
     check_function=check_mq_queues,

@@ -25,8 +25,8 @@ from cmk.bi.aggregation_functions import (
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_default(  # type: ignore[no-untyped-def]
-    states, expected_best_state, expected_worst_state
+def test_aggr_default(
+    states: list[int], expected_best_state: int, expected_worst_state: int
 ) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
@@ -49,8 +49,8 @@ def test_aggr_default(  # type: ignore[no-untyped-def]
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_exceed_count(  # type: ignore[no-untyped-def]
-    states, expected_best_state, expected_worst_state
+def test_aggr_exceed_count(
+    states: list[int], expected_best_state: int, expected_worst_state: int
 ) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({"count": 5})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
@@ -74,8 +74,8 @@ def test_aggr_exceed_count(  # type: ignore[no-untyped-def]
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_restrict_state_warn(  # type: ignore[no-untyped-def]
-    states, expected_best_state, expected_worst_state
+def test_aggr_restrict_state_warn(
+    states: list[int], expected_best_state: int, expected_worst_state: int
 ) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({"restrict_state": 1})
     best_aggr_function = BIAggregationFunctionBest(best_aggr_config)
@@ -102,8 +102,13 @@ def test_aggr_restrict_state_warn(  # type: ignore[no-untyped-def]
         ([1, 1, 1, 1], "percentage", 50, "percentage", 1, 2),
     ],
 )
-def test_aggr_count_ok(  # type: ignore[no-untyped-def]
-    states, ok_type, ok_value, warn_type, warn_value, expected_state
+def test_aggr_count_ok(
+    states: list[int],
+    ok_type: str,
+    ok_value: int,
+    warn_type: str,
+    warn_value: int,
+    expected_state: int,
 ) -> None:
     schema_config = {
         "levels_ok": {"type": ok_type, "value": ok_value},

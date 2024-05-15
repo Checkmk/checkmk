@@ -10,4 +10,4 @@ Version: 2.0.0i1
 
 The precompile function is an outdated feature that has been removed.
 Please rediscover the services on the affected hosts.
-Present services will go to {{UNKNOWN}}, telling users to rediscover the service on the affected host.
+Present services will go to "UNKNOWN", telling users to rediscover the service on the affected host.

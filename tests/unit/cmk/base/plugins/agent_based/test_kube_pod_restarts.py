@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import json
@@ -13,7 +15,8 @@ import pytest
 from cmk.base.plugins.agent_based import kube_pod_restarts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.utils.kube import PodContainers
+
+from cmk.plugins.kube.schemata.section import PodContainers
 
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE

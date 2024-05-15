@@ -9,6 +9,6 @@ Level: 1
 State: unknown
 Version: 2.0.0i1
 
-The active check {{check_dns}} returned the error message
-{{DNS CRITICAL - expected 'A; B; ...' but got 'A,B,...'}}
+The active check "check_dns" returned the error message
+`DNS CRITICAL - expected 'A; B; ...' but got 'A,B,...'`
 if multiple expected addresses are configured. Fixed that.

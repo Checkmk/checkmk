@@ -3,21 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping, Sequence
 
-import freezegun
 import pytest
+import time_machine
 
 from tests.unit.checks.checktestlib import mock_item_state
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.threepar_capacity import (
     check_threepar_capacity,
     discover_threepar_capacity,
     parse_threepar_capacity,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     [
@@ -97,12 +99,12 @@ def test_discover_threepar_capacity(
                     levels=(79.99999999999953, 89.99999999999976),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 25.11% - 38.6 TiB of 154 TiB"),
+                Result(state=State.OK, summary="Used: 25.11% - 42.4 TB of 169 TB"),
                 Metric("fs_size", 161120256.0, boundaries=(0.0, None)),
                 Metric("growth", 2337.2427533197924),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +2.28 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +2.45 GB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
-                Metric("trend", 2337.2427533197924, boundaries=(0.0, 6713344.0)),
+                Metric("trend", 2337.2427533197924),
                 Result(state=State.OK, summary="Time left until disk full: 141 years 160 days"),
             ],
             id="If the free capacity is above the WARN/CRIT level, the check result is OK.",
@@ -117,13 +119,13 @@ def test_discover_threepar_capacity(
                 Metric("fs_used_percent", 81.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(
                     state=State.WARN,
-                    summary="Used: 81.00% - 81.0 MiB of 100 MiB (warn/crit at 80.00%/90.00% used)",
+                    summary="Used: 81.00% - 84.9 MB of 105 MB (warn/crit at 80.00%/90.00% used)",
                 ),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
                 Metric("growth", 0.004101514958375289),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +4.20 KiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +4.30 kB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
-                Metric("trend", 0.004101514958375289, boundaries=(0.0, 4.166666666666666)),
+                Metric("trend", 0.004101514958375289),
                 Result(state=State.OK, summary="Time left until disk full: 12 years 252 days"),
             ],
             id="If the free capacity is below the WARN level, the check result is WARN.",
@@ -138,13 +140,13 @@ def test_discover_threepar_capacity(
                 Metric("fs_used_percent", 91.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(
                     state=State.CRIT,
-                    summary="Used: 91.00% - 91.0 MiB of 100 MiB (warn/crit at 80.00%/90.00% used)",
+                    summary="Used: 91.00% - 95.4 MB of 105 MB (warn/crit at 80.00%/90.00% used)",
                 ),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
                 Metric("growth", 0.004679193121526739),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +4.79 KiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +4.91 kB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
-                Metric("trend", 0.004679193121526739, boundaries=(0.0, 4.166666666666666)),
+                Metric("trend", 0.004679193121526739),
                 Result(state=State.OK, summary="Time left until disk full: 5 years 98 days"),
             ],
             id="If the free capacity is below the CRIT level, the check result is CRIT.",
@@ -152,17 +154,17 @@ def test_discover_threepar_capacity(
         pytest.param(
             [['{"allCapacity": {"totalMiB": 100,"freeMiB": 80,"failedCapacityMiB": 3}}']],
             "all",
-            FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
+            dict(FILESYSTEM_DEFAULT_PARAMS) | {"failed_capacity_levels": (2.0, 5.0)},
             [
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
+                Result(state=State.OK, summary="Used: 20.00% - 21.0 MB of 105 MB"),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0005776781631514493),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +606 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
-                Metric("trend", 0.0005776781631514493, boundaries=(0.0, 4.166666666666666)),
+                Metric("trend", 0.0005776781631514493),
                 Result(state=State.OK, summary="Time left until disk full: 379 years 150 days"),
                 Result(state=State.WARN, summary="3.0 MB failed: 3.00% (warn/crit at 2.00%/5.00%)"),
             ],
@@ -171,17 +173,17 @@ def test_discover_threepar_capacity(
         pytest.param(
             [['{"allCapacity": {"totalMiB": 100,"freeMiB": 80,"failedCapacityMiB": 6}}']],
             "all",
-            FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
+            dict(FILESYSTEM_DEFAULT_PARAMS) | {"failed_capacity_levels": (2.0, 5.0)},
             [
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
+                Result(state=State.OK, summary="Used: 20.00% - 21.0 MB of 105 MB"),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0005776781631514493),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +606 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
-                Metric("trend", 0.0005776781631514493, boundaries=(0.0, 4.166666666666666)),
+                Metric("trend", 0.0005776781631514493),
                 Result(state=State.OK, summary="Time left until disk full: 379 years 150 days"),
                 Result(state=State.CRIT, summary="6.0 MB failed: 6.00% (warn/crit at 2.00%/5.00%)"),
             ],
@@ -195,7 +197,10 @@ def test_check_threepar_capacity(
     parameters: Mapping[str, tuple[float, float]],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-    with freezegun.freeze_time("2022-07-16 07:00:00"), mock_item_state((162312321.0, 10.0)):
+    with (
+        time_machine.travel(datetime.datetime.fromisoformat("2022-07-16 07:00:00Z")),
+        mock_item_state((162312321.0, 10.0)),
+    ):
         assert (
             list(
                 check_threepar_capacity(

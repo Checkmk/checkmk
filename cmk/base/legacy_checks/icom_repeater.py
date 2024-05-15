@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree
 
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
@@ -90,39 +91,19 @@ def parse_icom_repeater(string_table):  # pylint: disable=too-many-branches
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-icom_ps_volt_default_levels = (13.5, 13.2, 14.1, 14.4)
-
 
 def inventory_icom_repeater_ps_volt(parsed):
     if "ps_voltage" in parsed:
-        return [(None, icom_ps_volt_default_levels)]
-    return []
+        yield None, {}
 
 
 def check_icom_repeater_ps_volt(_no_item, params, parsed):
-    volt = parsed["ps_voltage"]
-    warn_lower, crit_lower, warn, crit = params
-
-    perfdata = [("voltage", volt, warn, crit, warn_lower, crit_lower)]
-    levelstext = " (warn/crit below {:.1f}/{:.1f} V and at or above {:.1f}/{:.1f} V)".format(
-        warn_lower,
-        crit_lower,
-        warn,
-        crit,
+    return check_levels(
+        parsed["ps_voltage"],
+        "voltage",
+        params["levels_upper"] + params["levels_lower"],
+        human_readable_func=lambda x: f"{x:.1f} V",
     )
-    infotext = "%.1f V" % volt
-
-    if volt < crit_lower or volt >= crit:
-        status = 2
-    elif volt < warn_lower or volt >= warn:
-        status = 1
-    else:
-        status = 0
-
-    if status:
-        infotext += levelstext
-
-    return status, infotext, perfdata
 
 
 check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
@@ -131,6 +112,10 @@ check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
     discovery_function=inventory_icom_repeater_ps_volt,
     check_function=check_icom_repeater_ps_volt,
     check_ruleset_name="ps_voltage",
+    check_default_parameters={
+        "levels_lower": (13.5, 13.2),
+        "levels_upper": (14.1, 14.4),
+    },
 )
 
 # .

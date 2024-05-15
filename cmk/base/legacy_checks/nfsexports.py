@@ -13,6 +13,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_nfsexports(info):
     # reminder to self: inventorize the exported fs, and maybe even the fs id.
@@ -45,7 +47,12 @@ def check_nfsexports(item, _no_params, info):
     return 2, "export not found in export list"
 
 
+def parse_nfsexports(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["nfsexports"] = LegacyCheckDefinition(
+    parse_function=parse_nfsexports,
     service_name="NFS export %s",
     discovery_function=inventory_nfsexports,
     check_function=check_nfsexports,

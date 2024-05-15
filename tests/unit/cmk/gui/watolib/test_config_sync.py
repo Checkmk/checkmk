@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import time
 from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
@@ -16,16 +18,15 @@ from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
-import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
 
+import cmk.gui.mkeventd.wato
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
-import cmk.gui.watolib.mkeventd
 from cmk.gui.config import active_config
-from cmk.gui.nodevis_lib import topology_dir
+from cmk.gui.nodevis.utils import topology_dir
 
 from cmk.bi.type_defs import frozen_aggregations_dir
 
@@ -62,7 +63,7 @@ def fixture_disable_ec_rule_stats_loading(monkeypatch: pytest.MonkeyPatch) -> No
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
     # and causes timeouts. Disable this for these tests.
-    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(cmk.gui.mkeventd.wato, "_get_rule_stats_from_ec", lambda: {})
 
 
 @pytest.fixture(autouse=True)
@@ -313,6 +314,7 @@ def _get_expected_paths(
         "etc/check_mk/rrdcached.d/wato",
         "etc/check_mk/rrdcached.d/wato/sitespecific.mk",
         "etc/omd",
+        "etc/omd/distributed.mk",
         "etc/omd/sitespecific.mk",
     ]
 
@@ -354,6 +356,7 @@ def _get_expected_paths(
             "etc/check_mk/multisite.d/wato/customers.mk",
             "etc/check_mk/multisite.d/wato/groups.mk",
             "etc/check_mk/multisite.d/wato/user_connections.mk",
+            "etc/password_store.secret",
         ]
 
         if with_local:
@@ -380,7 +383,7 @@ def _get_expected_paths(
     # precondition is a more cleanly separated structure.
 
     if is_enterprise_repo() and edition is cmk_version.Edition.CRE:
-        # CEE paths are added when the CEE plugins for WATO are available, i.e.
+        # CEE paths are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected_paths += [
             "etc/check_mk/dcd.d",
@@ -395,7 +398,7 @@ def _get_expected_paths(
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:
-        # CME paths are added when the CME plugins for WATO are available, i.e.
+        # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected_paths += [
             "local/share",
@@ -513,7 +516,7 @@ def _synchronize_site(
 ) -> None:
     assert activation_manager._activation_id is not None
     site_activation_state = activate_changes._initialize_site_activation_state(
-        site_id, activation_manager._activation_id, activation_manager, time.time()
+        site_id, activation_manager._activation_id, activation_manager, time.time(), "GUI"
     )
 
     fetch_state_result = activate_changes.fetch_sync_state(

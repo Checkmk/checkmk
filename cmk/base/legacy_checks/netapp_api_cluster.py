@@ -17,6 +17,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_netapp_api_cluster(info):
     data = {line[0]: line[1] for line in info if len(line) == 2}
@@ -82,8 +84,14 @@ def check_netapp_api_cluster(item, params, info):
         yield 0, "Cluster Status OK"
 
 
+def parse_netapp_api_cluster(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netapp_api_cluster"] = LegacyCheckDefinition(
+    parse_function=parse_netapp_api_cluster,
     service_name="Cluster with %s",
     discovery_function=inventory_netapp_api_cluster,
     check_function=check_netapp_api_cluster,
+    check_default_parameters={},
 )

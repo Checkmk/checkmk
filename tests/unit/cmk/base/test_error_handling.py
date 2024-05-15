@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -73,7 +72,7 @@ def test_MKGeneralException_returns_3() -> None:
     assert handler.result.as_text() == "kaputt!"
 
 
-@pytest.mark.usefixtures("disable_debug")
+@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
 def test_unhandled_exception_returns_3() -> None:
     with _handler() as handler:
         raise ValueError("unexpected :/")

@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.storeonce4x_appliances import (
@@ -17,8 +19,9 @@ from cmk.base.plugins.agent_based.storeonce4x_appliances import (
     parse_storeonce4x_appliances,
     Section,
 )
-from cmk.base.plugins.agent_based.utils import storeonce
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib import storeonce
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     [
@@ -57,7 +60,7 @@ def test_check_storage(monkeypatch: pytest.MonkeyPatch, section: Section) -> Non
         "get_value_store",
         lambda: {"myhostname.delta": (1356034260.0, 96122807.59765625)},
     )
-    with on_time("20.12.2012 20:12:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2012, 12, 20, 20, 12, tzinfo=ZoneInfo("UTC"))):
         assert list(
             check_storeonce4x_appliances_storage("myhostname", FILESYSTEM_DEFAULT_PARAMS, section)
         ) == [
@@ -73,13 +76,13 @@ def test_check_storage(monkeypatch: pytest.MonkeyPatch, section: Section) -> Non
             ),
             Result(
                 state=State.OK,
-                summary="Used: 28.03% - 91.7 TiB of 327 TiB",
+                summary="Used: 28.03% - 101 TB of 360 TB",
             ),
             Metric("fs_size", 342871050.0, boundaries=(0, None)),
             Metric("growth", 0.0),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-            Metric("trend", 0.0, boundaries=(0.0, 14286293.75)),
+            Metric("trend", 0.0),
             Result(state=State.OK, summary="Total local: 327 TiB"),
             Result(state=State.OK, summary="Free local: 235 TiB"),
             Result(state=State.OK, summary="Dedup ratio: 10.06"),

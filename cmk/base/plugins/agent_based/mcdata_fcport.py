@@ -5,8 +5,9 @@
 
 from collections.abc import Iterable, Sequence
 
+from cmk.plugins.lib import if64, interfaces
+
 from .agent_based_api.v1 import OIDBytes, register, SNMPTree, startswith, type_defs
-from .utils import if64, interfaces
 
 mcdata_fcport_speedbits = {"2": 1000000000, "3": 2000000000}
 mcdata_fcport_opstatus = {"1": "1", "2": "2", "3": "testing", "4": "faulty"}
@@ -79,7 +80,7 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=if64.generic_check_if64,
     cluster_check_function=interfaces.cluster_check,

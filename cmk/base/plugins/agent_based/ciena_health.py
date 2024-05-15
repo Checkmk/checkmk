@@ -8,9 +8,7 @@ from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Generic, TypeVar
 
-from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
-from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
-from .utils.ciena_ces import (
+from cmk.plugins.lib.ciena_ces import (
     DETECT_CIENA_5142,
     DETECT_CIENA_5171,
     FanStatus,
@@ -21,6 +19,9 @@ from .utils.ciena_ces import (
     SNMPEnum,
     TceHealthStatus,
 )
+
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 
 SNMPDataTypeVar = TypeVar("SNMPDataTypeVar", bound=SNMPEnum)
 

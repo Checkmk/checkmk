@@ -1,35 +1,45 @@
 #!/usr/bin/env python3
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 from collections.abc import Mapping
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-InstancesSection = Mapping[str, int | None]
 VersionSection = Mapping[str, str]
 
 
-def parse_postgres_instances(string_table: StringTable) -> InstancesSection:
-    parsed: dict[str, int | None] = {}
+@dataclasses.dataclass
+class Section:
+    instance_to_pid: Mapping[str, int | None]
+    all_pids: frozenset[int]
+
+
+def parse_postgres_instances(string_table: StringTable) -> Section:
+    instance_to_pid: dict[str, int | None] = {}
+    all_pids = []
     is_single = False
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             is_single = True
-            parsed.setdefault(instance_name, None)
+            instance_to_pid.setdefault(instance_name, None)
         elif len(line) >= 4:
             if not is_single:
                 instance_name = line[3].split("/")[-1].upper()
+                instance_to_pid.setdefault(instance_name, None)
             try:
-                parsed.setdefault(instance_name, None)
-                parsed.update({instance_name: int(line[0])})
+                pid = int(line[0])
+                all_pids.append(pid)
+                instance_to_pid[instance_name] = pid
             except ValueError:
                 pass
+    instance_to_pid.pop("", None)
 
-    return parsed
+    return Section(instance_to_pid=instance_to_pid, all_pids=frozenset(all_pids))
 
 
 register.agent_section(
@@ -56,21 +66,25 @@ register.agent_section(
 
 
 def discover_postgres_instances(
-    section_postgres_instances: InstancesSection | None,
+    section_postgres_instances: Section | None,
     section_postgres_version: VersionSection | None,
 ) -> DiscoveryResult:
     if section_postgres_instances is None:
         return
 
-    yield from (Service(item=name) for name in section_postgres_instances)
+    yield from (Service(item=name) for name in section_postgres_instances.instance_to_pid)
 
 
 def check_postgres_instances(
     item: str,
-    section_postgres_instances: InstancesSection | None,
+    section_postgres_instances: Section | None,
     section_postgres_version: VersionSection | None,
 ) -> CheckResult:
-    pid = section_postgres_instances.get(item) if section_postgres_instances is not None else None
+    pid = (
+        None
+        if section_postgres_instances is None
+        else section_postgres_instances.instance_to_pid.get(item)
+    )
     version_info = (
         section_postgres_version.get(item) if section_postgres_version is not None else None
     )
@@ -97,4 +111,27 @@ register.check_plugin(
     service_name="PostgreSQL Instance %s",
     discovery_function=discover_postgres_instances,
     check_function=check_postgres_instances,
+)
+
+
+def discover_postgres_processes(section: Section) -> DiscoveryResult:
+    yield Service()
+
+
+def check_postgres_processes(section: Section) -> CheckResult:
+    count = len(section.all_pids)
+    if count == 0:
+        yield Result(state=State.CRIT, summary=str(count), details="No process matched")
+        return
+    yield Result(state=State.OK, summary=str(count), details="PIDs")
+    for pid in section.all_pids:
+        yield Result(state=State.OK, notice=str(pid))
+
+
+register.check_plugin(
+    name="postgres_processes",
+    sections=["postgres_instances"],
+    service_name="PostgreSQL Process Count",
+    discovery_function=discover_postgres_processes,
+    check_function=check_postgres_processes,
 )

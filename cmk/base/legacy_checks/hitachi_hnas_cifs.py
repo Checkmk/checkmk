@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.hitachi_hnas import DETECT
 
 
 def inventory_hitachi_hnas_cifs(info):
@@ -25,7 +26,12 @@ def check_hitachi_hnas_cifs(item, _no_params, info):
     return 3, "Share not found"
 
 
+def parse_hitachi_hnas_cifs(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hitachi_hnas_cifs"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hnas_cifs,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.3.2.1.3.1",

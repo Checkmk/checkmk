@@ -9,7 +9,7 @@ from pathlib import Path
 from tests.testlib.agent import wait_until_host_has_services, wait_until_host_receives_data
 from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
-from tests.testlib.utils import execute
+from tests.testlib.utils import run
 
 from cmk.utils.hostaddress import HostName
 
@@ -26,7 +26,7 @@ def test_proxy_register_import_workflow(
     central_site.openapi.create_host(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})
     central_site.openapi.activate_changes_and_wait_for_completion()
 
-    proxy_registration_proc = execute(
+    proxy_registration_proc = run(
         [
             "sudo",
             agent_ctl.as_posix(),

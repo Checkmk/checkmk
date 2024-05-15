@@ -6,6 +6,8 @@
 import dataclasses
 from collections.abc import Mapping
 
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+
 from .agent_based_api.v1 import (
     contains,
     get_value_store,
@@ -17,7 +19,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.temperature import check_temperature, TempParamType
 
 # OID branch 3 means the sensor unit type (from SENSOR-MIB):
 # other(1)
@@ -35,8 +36,7 @@ class Sensor:
 
 
 @dataclasses.dataclass(frozen=True)
-class VoltageSensor(Sensor):
-    ...
+class VoltageSensor(Sensor): ...
 
 
 @dataclasses.dataclass(frozen=True)

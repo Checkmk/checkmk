@@ -12,8 +12,14 @@ from cmk.base.check_legacy_includes.raritan import (
     parse_raritan_sensors,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.raritan import DETECT_RARITAN
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.plugins.lib.raritan import DETECT_RARITAN
+
+
+def discover_raritan_px2_sensors(parsed):
+    return inventory_raritan_sensors_temp(parsed, "temp")
+
 
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
@@ -48,10 +54,15 @@ check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
     ),
     parse_function=parse_raritan_sensors,
     service_name="Temperature %s",
-    discovery_function=lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
+    discovery_function=discover_raritan_px2_sensors,
     check_function=check_raritan_sensors_temp,
     check_ruleset_name="temperature",
 )
+
+
+def discover_raritan_px2_sensors_airflow(parsed):
+    return inventory_raritan_sensors(parsed, "airflow")
+
 
 # .
 #   .--airflow-------------------------------------------------------------.
@@ -66,9 +77,14 @@ check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
 check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
     service_name="Air flow %s",
     sections=["raritan_px2_sensors"],
-    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "airflow"),
+    discovery_function=discover_raritan_px2_sensors_airflow,
     check_function=check_raritan_sensors,
 )
+
+
+def discover_raritan_px2_sensors_humidity(parsed):
+    return inventory_raritan_sensors(parsed, "humidity")
+
 
 # .
 #   .--humidity------------------------------------------------------------.
@@ -83,9 +99,14 @@ check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
 check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     sections=["raritan_px2_sensors"],
-    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
+    discovery_function=discover_raritan_px2_sensors_humidity,
     check_function=check_raritan_sensors,
 )
+
+
+def discover_raritan_px2_sensors_pressure(parsed):
+    return inventory_raritan_sensors(parsed, "pressure")
+
 
 # .
 #   .--pressure------------------------------------------------------------.
@@ -100,6 +121,6 @@ check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
 check_info["raritan_px2_sensors.pressure"] = LegacyCheckDefinition(
     service_name="Pressure %s",
     sections=["raritan_px2_sensors"],
-    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "pressure"),
+    discovery_function=discover_raritan_px2_sensors_pressure,
     check_function=check_raritan_sensors,
 )

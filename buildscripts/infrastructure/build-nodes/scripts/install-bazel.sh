@@ -9,13 +9,11 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-
-# provide common functions
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 DIR_NAME="bazel"
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 BAZEL_VERSION="$(<"${SCRIPT_DIR}"/.bazelversion)"
 BAZEL_EXE_FILE="bazel-${BAZEL_VERSION}-linux-x86_64"
 
@@ -28,4 +26,6 @@ if [ "$1" != "link-only" ]; then
     chmod +x "${BAZEL_EXE_FILE}"
 fi
 
-ln -s "${TARGET_DIR}/${DIR_NAME}/${BAZEL_EXE_FILE}" "/usr/bin/bazel"
+ln -sf "${TARGET_DIR}/${DIR_NAME}/${BAZEL_EXE_FILE}" "/usr/bin/bazel"
+
+test_package "bazel --version" "^bazel $BAZEL_VERSION$"

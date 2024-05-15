@@ -4,9 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import cast
 
+from cmk.utils.config_validation_layer.users.contacts import validate_contacts
+from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.crypto.password import Password, PasswordPolicy
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
 
@@ -14,6 +18,7 @@ from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
+from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
@@ -21,11 +26,13 @@ from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import (
     declare_notification_plugin_permissions,
     user_script_choices,
     user_script_title,
 )
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
@@ -50,6 +57,13 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
                 "edit-user",
                 "Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
+            )
+            log_security_event(
+                UserManagementEvent(
+                    event="user deleted",
+                    affected_user=user_id,
+                    acting_user=user.id,
+                )
             )
         add_change("edit-users", _l("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users, datetime.now())
@@ -83,6 +97,14 @@ def edit_users(changed_users: UserObject) -> None:
             ),
             diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
             object_ref=make_user_object_ref(user_id),
+        )
+
+        log_security_event(
+            UserManagementEvent(
+                event="user created" if is_new_user else "user modified",
+                affected_user=user_id,
+                acting_user=user.id,
+            )
         )
 
         all_users[user_id] = user_attrs
@@ -166,7 +188,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
         )
 
     # Locking
-    locked = user_attrs.get("locked")
+    locked = user_attrs["locked"]
     if user_id == user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
@@ -249,34 +271,75 @@ def notification_script_title(name):
     return user_script_title("notifications", name)
 
 
-def notification_script_choices():
+def notification_script_choices() -> list[tuple[str, str]]:
     # Ensure the required dynamic permissions are registered
     declare_notification_plugin_permissions()
 
-    choices = []
-    for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)"))]:
+    choices: list[tuple[str, str]] = []
+    for choice in user_script_choices("notifications"):
         notificaton_plugin_name, _notification_plugin_title = choice
         if user.may("notification_plugin.%s" % notificaton_plugin_name):
             choices.append(choice)
     return choices
 
 
-def verify_password_policy(password: Password) -> None:
+def verify_password_policy(password: Password, varname: str = "password") -> None:
     min_len = active_config.password_policy.get("min_length")
     num_groups = active_config.password_policy.get("num_groups")
 
     result = password.verify_policy(PasswordPolicy(min_len, num_groups))
     if result == PasswordPolicy.Result.TooShort:
         raise MKUserError(
-            "password",
+            varname,
             _("The given password is too short. It must have at least %d characters.") % min_len,
         )
     if result == PasswordPolicy.Result.TooSimple:
         raise MKUserError(
-            "password",
+            varname,
             _(
                 "The password does not use enough character groups. You need to "
                 "set a password which uses at least %d of them."
             )
             % num_groups,
         )
+
+
+class UsersConfigFile(WatoSingleConfigFile[dict]):
+    """Handles reading and writing users.mk file"""
+
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(multisite_dir()) / "users.mk", config_variable="multisite_users"
+        )
+
+    def _load_file(self, lock: bool) -> dict:
+        users = super()._load_file(lock)
+        validate_users(users)
+        return users
+
+    def save(self, cfg: dict) -> None:
+        validate_users(cfg)
+        super().save(cfg)
+
+
+class ContactsConfigFile(WatoSingleConfigFile[dict]):
+    """Handles reading and writing contacts.mk file"""
+
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(wato_root_dir()) / "contacts.mk", config_variable="contacts"
+        )
+
+    def _load_file(self, lock: bool) -> dict:
+        users = super()._load_file(lock)
+        validate_contacts(users)
+        return users
+
+    def save(self, cfg: dict) -> None:
+        validate_contacts(cfg)
+        super().save(cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(UsersConfigFile())
+    config_file_registry.register(ContactsConfigFile())

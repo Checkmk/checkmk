@@ -12,11 +12,12 @@ from typing import Literal
 from livestatus import SiteId
 
 from cmk.gui import sites
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.time import timezone_utc_offset_str
 
 from .group import command_group_registry, CommandGroup
 
@@ -32,6 +33,9 @@ class CommandConfirmDialogOptions:
     additions: HTML
     icon_class: Literal["question", "warning"]
     confirm_button: LazyString
+    cancel_button: LazyString
+    deny_button: LazyString | None = None
+    deny_js_function: str | None = None
 
 
 CommandActionResult = (
@@ -62,6 +66,18 @@ class Command(abc.ABC):
         raise NotImplementedError()
 
     @property
+    def cancel_button(self) -> LazyString:
+        return _l("Cancel")
+
+    @property
+    def deny_button(self) -> LazyString | None:
+        return None
+
+    @property
+    def deny_js_function(self) -> str | None:
+        return None
+
+    @property
     @abc.abstractmethod
     def permission(self) -> Permission:
         raise NotImplementedError()
@@ -72,7 +88,12 @@ class Command(abc.ABC):
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
         return HTML("")
 
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
@@ -84,25 +105,43 @@ class Command(abc.ABC):
         return CommandConfirmDialogOptions(
             self.confirm_title,
             self.affected(len_action_rows, cmdtag),
-            self.confirm_dialog_additions(row, len_action_rows),
+            self.confirm_dialog_additions(cmdtag, row, len_action_rows),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
+            self.cancel_button,
+            self.deny_button,
+            self.deny_js_function,
+        )
+
+    def confirm_dialog_date_and_time_format(
+        self, timestamp: float, show_timezone: bool = True
+    ) -> str:
+        """Return date, time and if show_timezone is True the local timezone in the format of e.g.
+        'Mon, 01. January 2042 at 01:23 [UTC+01:00]'"""
+        local_time = time.localtime(timestamp)
+        return (
+            time.strftime(_("%a, %d. %B %Y at %H:%M"), local_time)
+            + (" " + timezone_utc_offset_str(timestamp))
+            if show_timezone
+            else ""
         )
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML(
             _("Affected %s: %s")
             % (
-                ungettext(
-                    "host",
-                    "hosts",
-                    len_action_rows,
-                )
-                if cmdtag == "HOST"
-                else ungettext(
-                    "service",
-                    "services",
-                    len_action_rows,
+                (
+                    ungettext(
+                        "host",
+                        "hosts",
+                        len_action_rows,
+                    )
+                    if cmdtag == "HOST"
+                    else ungettext(
+                        "service",
+                        "services",
+                        len_action_rows,
+                    )
                 ),
                 len_action_rows,
             )

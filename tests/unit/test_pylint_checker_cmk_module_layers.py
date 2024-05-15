@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest
-from pylint.lint import PyLinter  # type: ignore[import]
+from pylint.lint import PyLinter
 
 from tests.testlib.pylint_checker_cmk_module_layers import (
     _COMPONENTS,
-    _get_absolute_importee,
-    _in_component,
     CMKModuleLayerChecker,
-    Component,
+    get_absolute_importee,
     ModuleName,
     ModulePath,
 )
@@ -29,11 +29,11 @@ COMPONENT_LIST = [c for c, _ in _COMPONENTS]
         ("cmk.checkengine", "agent", 1, True, "cmk.checkengine.agent"),
     ],
 )
-def test__get_absolute_importee(
+def test_get_absolute_importee(
     root_name: str, modname: str, level: int, is_package: bool, abs_module: str
 ) -> None:
     assert (
-        _get_absolute_importee(
+        get_absolute_importee(
             root_name=root_name,
             modname=modname,
             level=level,
@@ -41,23 +41,6 @@ def test__get_absolute_importee(
         )
         == abs_module
     )
-
-
-@pytest.mark.parametrize("component", COMPONENT_LIST)
-def test_allowed_import_ok(component: Component) -> None:
-    for importee in (
-        "cmk",
-        "cmk.utils",
-        "cmk.utils.anything",
-        "cmk.automations",
-        "cmk.automations.whatever",
-    ):
-        is_ok = not _in_component(ModuleName(component), Component("cmk.base.plugins.agent_based"))
-        assert is_ok is CHECKER._is_import_allowed(
-            ModulePath("_not/relevant_"),
-            ModuleName(f"{component}.foo"),
-            ModuleName(importee),
-        )
 
 
 @pytest.mark.parametrize(
@@ -75,7 +58,7 @@ def test_allowed_import_ok(component: Component) -> None:
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),
-        # disallow import of one plugin in another
+        # disallow import of one plug-in in another
         (
             "cmk/base/plugins/agent_based",
             "cmk.base.plugins.agent_based.foo",

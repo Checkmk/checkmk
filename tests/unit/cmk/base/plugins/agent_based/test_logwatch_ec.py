@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+import datetime
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Literal
 
 import pytest
+import time_machine
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -22,7 +26,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
 from cmk.base.plugins.agent_based.utils import logwatch as logwatch_
 
-from cmk.ec.export import SyslogMessage
+import cmk.ec.export as ec
 
 _STRING_TABLE_NO_MESSAGES = [
     ["[[[log1]]]"],
@@ -78,6 +82,10 @@ SECTION1 = logwatch_.Section(
             },
         },
     },
+)
+
+DEFAULT_TEST_PARAMETERS = logwatch_.ParameterLogwatchEc(
+    {**logwatch_ec.CHECK_DEFAULT_PARAMETERS, "service_level": 10}
 )
 
 
@@ -168,7 +176,9 @@ def test_logwatch_ec_inventory_single(
 ) -> None:
     parsed = parse_logwatch(info)
 
-    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: fwd_rule)
+    monkeypatch.setattr(
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: fwd_rule
+    )
     actual_result = sorted(logwatch_ec.discover_single(parsed), key=lambda s: s.item or "")
     assert actual_result == expected_result
 
@@ -202,7 +212,9 @@ def test_logwatch_ec_inventory_groups(
 ) -> None:
     parsed = parse_logwatch(info)
 
-    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: fwd_rule)
+    monkeypatch.setattr(
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: fwd_rule
+    )
     actual_result = list(logwatch_ec.discover_group(parsed))
     assert actual_result == expected_result
 
@@ -211,9 +223,9 @@ class _FakeForwarder:
     def __call__(
         self,
         method: str | tuple,
-        messages: Sequence[SyslogMessage],
-    ) -> logwatch_ec.LogwatchFordwardResult:
-        return logwatch_ec.LogwatchFordwardResult(num_forwarded=len(messages))
+        messages: Sequence[ec.SyslogMessage],
+    ) -> logwatch_ec.LogwatchForwardedResult:
+        return logwatch_ec.LogwatchForwardedResult(num_forwarded=len(messages))
 
 
 @pytest.mark.parametrize(
@@ -221,7 +233,7 @@ class _FakeForwarder:
     [
         (
             "log1",
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {"node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES)},
             [
                 Result(state=State.OK, summary="Forwarded 0 messages"),
@@ -236,6 +248,7 @@ class _FakeForwarder:
                 "monitor_logfilelist": False,
                 "monitor_logfile_access_state": 2,
                 "expected_logfiles": ["log4"],
+                "service_level": 10,
             },
             {"node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES)},
             [
@@ -248,8 +261,8 @@ class _FakeForwarder:
 )
 def test_check_logwatch_ec_common_single_node(
     item: str | None,
-    params: Mapping[str, Any],
-    parsed: logwatch_ec.ClusterSection,
+    params: logwatch_.ParameterLogwatchEc,
+    parsed: logwatch_.ClusterSection,
     expected_result: CheckResult,
 ) -> None:
     assert (
@@ -258,7 +271,6 @@ def test_check_logwatch_ec_common_single_node(
                 item,
                 params,
                 parsed,
-                service_level=10,
                 value_store={},
                 hostname=HostName("test-host"),
                 message_forwarder=_FakeForwarder(),
@@ -272,11 +284,10 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -294,11 +305,11 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
                 "monitor_logfilelist": True,
                 "monitor_logfile_access_state": 2,
                 "expected_logfiles": ["log3"],
+                "service_level": 10,
             },
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -351,16 +362,15 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
     ],
 )
 def test_check_logwatch_ec_common_multiple_nodes_grouped(
-    cluster_section: logwatch_ec.ClusterSection,
+    cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
             logwatch_ec.check_logwatch_ec_common(
                 "log1",
-                logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+                DEFAULT_TEST_PARAMETERS,
                 cluster_section,
-                service_level=10,
                 value_store={},
                 hostname=HostName("test-host"),
                 message_forwarder=_FakeForwarder(),
@@ -374,7 +384,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
     ["params", "cluster_section", "expected_result"],
     [
         pytest.param(
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
                 "node2": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
@@ -388,7 +398,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
             id="no messages",
         ),
         pytest.param(
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
@@ -408,6 +418,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
                 "monitor_logfilelist": False,
                 "monitor_logfile_access_state": 2,
                 "expected_logfiles": ["log4"],
+                "service_level": 10,
             },
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
@@ -422,7 +433,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
             id="no access to logfile on both nodes",
         ),
         pytest.param(
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1_2),
@@ -435,7 +446,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
             id="messages on both nodes, same logfile",
         ),
         pytest.param(
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
@@ -450,9 +461,10 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
         ),
     ],
 )
+@pytest.mark.skip("Flaky test - will be re-enabled with CMK-17338")
 def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
-    params: Mapping[str, Any],
-    cluster_section: logwatch_ec.ClusterSection,
+    params: logwatch_.ParameterLogwatchEc,
+    cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,
 ) -> None:
     assert (
@@ -461,7 +473,6 @@ def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
                 None,
                 params,
                 cluster_section,
-                service_level=10,
                 value_store={},
                 hostname=HostName("test-host"),
                 message_forwarder=_FakeForwarder(),
@@ -475,12 +486,11 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -492,12 +502,11 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -518,12 +527,12 @@ def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
                 "monitor_logfilelist": True,
                 "monitor_logfile_access_state": 2,
                 "expected_logfiles": ["log3"],
+                "service_level": 10,
             },
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -541,13 +550,12 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
         logwatch_ec.check_logwatch_ec_common(
             "log1",
             {
-                **logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+                **DEFAULT_TEST_PARAMETERS,
                 "method": "spool:",
             },
             {
                 "node1": SECTION1,
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
@@ -557,3 +565,272 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
         Metric("messages", 3.0),
     ]
     assert len(list(Path(cmk.utils.paths.omd_root, "var/mkeventd/spool").iterdir())) == 3
+
+
+class FakeTcpError(Exception):
+    pass
+
+
+class FakeTcpErrorRaised(Exception):
+    pass
+
+
+def _forward_message(
+    tcp_result: Literal["ok", "raise exception", "set exception"],
+    method: tuple[str, dict[str, object]] = ("tcp", {"address": "127.0.0.1", "port": 127001}),
+    text: str = "some_text",
+    item: str | None = None,
+    application: str = "-",
+) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[float, int, list[str]]]]:
+    messages_forwarded: list[tuple[float, int, list[str]]] = []
+
+    class TestForwardTcpMessageForwarder(logwatch_ec.MessageForwarder):
+        @staticmethod
+        def _forward_send_tcp(method, message_chunks, result):
+            nonlocal messages_forwarded
+            if tcp_result == "ok":
+                for message in message_chunks:
+                    messages_forwarded.append(message)
+                    result.num_forwarded += 1
+            elif tcp_result == "set exception":
+                result.exception = FakeTcpError("could not send messages")
+            elif tcp_result == "raise exception":
+                raise FakeTcpErrorRaised("rise and shine")
+            else:
+                raise NotImplementedError()
+
+    result = TestForwardTcpMessageForwarder(item=item, hostname=HostName("some_host_name"))(
+        method=method,
+        messages=[
+            ec.SyslogMessage(
+                facility=1, severity=1, timestamp=0.0, text=text, application=application
+            )
+        ],
+    )
+
+    return result, messages_forwarded
+
+
+def test_forward_tcp_message_forwarded_ok() -> None:
+    result, messages_forwarded = _forward_message(tcp_result="ok")
+    assert result == logwatch_ec.LogwatchForwardedResult(
+        num_forwarded=1,
+        num_spooled=0,
+        num_dropped=0,
+        exception=None,
+    )
+
+    assert len(messages_forwarded) == 1
+    # first element of message is a timestamp!
+    assert messages_forwarded[0][1:] == (
+        0,
+        ["<9>1 1970-01-01T00:00:00+00:00 - - - - [Checkmk@18662] some_text"],
+    )
+
+
+def test_forward_tcp_message_forwarded_nok_1() -> None:
+    result, messages_forwarded = _forward_message(tcp_result="set exception")
+
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 0
+    assert result.num_dropped == 1
+    assert isinstance(result.exception, FakeTcpError)
+
+    assert len(messages_forwarded) == 0
+
+
+def test_forward_tcp_message_forwarded_nok_2() -> None:
+    result, messages_forwarded = _forward_message(tcp_result="raise exception")
+
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 0
+    assert result.num_dropped == 1
+    assert isinstance(result.exception, FakeTcpErrorRaised)
+
+    assert len(messages_forwarded) == 0
+
+
+SPOOL_METHOD = (
+    "tcp",
+    {
+        "address": "127.0.0.1",
+        "port": 127001,
+        "spool": {"max_age": 60 * 60, "max_size": 1024 * 1024},
+    },
+)
+
+
+def test_forward_tcp_message_forwarded_spool() -> None:
+    # could not send message, so spool it
+    result, messages_forwarded = _forward_message(
+        tcp_result="set exception", method=SPOOL_METHOD, text="spooled"
+    )
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 1
+    assert result.num_dropped == 0
+    assert isinstance(result.exception, FakeTcpError)
+    assert len(messages_forwarded) == 0
+
+    # sending works again, so send both of them
+    result, messages_forwarded = _forward_message(
+        tcp_result="ok", method=SPOOL_METHOD, text="directly_sent_1"
+    )
+    assert result.num_forwarded == 2
+    assert result.num_spooled == 0
+    assert result.num_dropped == 0
+    assert len(messages_forwarded) == 2
+
+    assert messages_forwarded[0][2][0].rsplit(" ", 1)[-1] == "spooled"
+    assert messages_forwarded[1][2][0].rsplit(" ", 1)[-1] == "directly_sent_1"
+
+    # sending is still working, so send only one
+    result, messages_forwarded = _forward_message(
+        tcp_result="ok", method=SPOOL_METHOD, text="directly_sent_2"
+    )
+    assert result.num_forwarded == 1
+    assert result.num_spooled == 0
+    assert result.num_dropped == 0
+    assert len(messages_forwarded) == 1
+
+    assert messages_forwarded[0][2][0].rsplit(" ", 1)[-1] == "directly_sent_2"
+
+
+def test_forward_tcp_message_forwarded_spool_twice() -> None:
+    # we delete the original spool file after reading it.
+    # here we want to make sure, that the spool file is recreated. otherwise messages from different
+    # time would land into the same spool file and may not be correctly cleaned up.
+    spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
+
+    # create a spooled message:
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z")):
+        result, messages_forwarded = _forward_message(
+            tcp_result="set exception", method=SPOOL_METHOD
+        )
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 1
+    assert result.num_dropped == 0
+    assert isinstance(result.exception, FakeTcpError)
+    assert len(messages_forwarded) == 0
+
+    # we expect one spool file to be created:
+    assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
+
+    # create another spooled message:
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z")):
+        result, messages_forwarded = _forward_message(
+            tcp_result="set exception", method=SPOOL_METHOD
+        )
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 2
+    assert result.num_dropped == 0
+    assert isinstance(result.exception, FakeTcpError)
+    assert len(messages_forwarded) == 0
+
+    # now let's see if we have two spool files
+    assert {f.name for f in spool_dir.iterdir()} == {
+        "spool.1698768120.00",
+        "spool.1698768180.00",
+    }
+
+
+def test_forward_tcp_message_update_old_spoolfiles() -> None:
+    # can be removed with checkmk 2.4.0
+    spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
+    # logwatch_ec with separate_checks = True creates one service per syslog application, but they
+    # shared one folder for their spool files. this led to problems when writing spool-files
+    # (overwriting each other) and reading spool-files (all items read all spool-files).
+    # with werk 15307 it was introduced that each service get its own subfolder for spool-files.
+    # here we want to check the update process: spool-files from the host-folder should be
+    # read and moved to the correct subfolder.
+
+    # first we create a spooled message for a logwatch_ec service with "separate_checks" = False
+    # this is the same as the old behaviour, before werk 15397 with "seperate_checks" = True
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z")):
+        _result, messages_forwarded = _forward_message(
+            tcp_result="set exception",
+            method=SPOOL_METHOD,
+            application="item_name_1",
+        )
+    # we expect one spool file to be created:
+    assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
+
+    # now we do the same, but for a different item:
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z")):
+        _result, messages_forwarded = _forward_message(
+            tcp_result="set exception",
+            method=SPOOL_METHOD,
+            application="another_item",
+        )
+    # we expect two spool files in the host folder:
+    assert {f.name for f in spool_dir.iterdir()} == {
+        "spool.1698768120.00",
+        "spool.1698768180.00",
+    }
+
+    # this was the old behaviour. now we image the customer installed the new version of checkmk.
+    # their logwatch_ec services had separate_checks = True from the beginning.
+
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:04:00Z")):
+        _result, messages_forwarded = _forward_message(
+            tcp_result="ok",
+            method=SPOOL_METHOD,
+            item="item_name_1",
+            application="item_name_1",
+        )
+
+    # we now expect, that the item_name_1 message was found (although in the old directory) and the
+    # new message was also sent:
+    assert len(messages_forwarded) == 2
+
+    # and we also expect, the spool-file of another_item to be left alone:
+    assert list(f.name for f in spool_dir.iterdir() if f.is_file()) == [
+        "spool.1698768180.00",
+    ]
+    # and a folder which held the spooled message for a short time
+    assert list(f.name for f in spool_dir.iterdir() if f.is_dir()) == [
+        "item_item_name_1",
+    ]
+    # but is should now be empty as we sent both messages successfully:
+    assert not list(f.name for f in (spool_dir / "item_item_name_1").iterdir())
+
+
+def test_logwatch_spool_path_is_escaped():
+    # item may contain slashes or other stuff, we want to make sure
+    # that this is transformed to a single folder name:
+    get_spool_path = logwatch_ec.MessageForwarder._get_spool_path
+    result = get_spool_path(HostName("some_host_name"), "some/log/path")
+    assert result.name == "item_some%2Flog%2Fpath"
+    assert result.parent.name == "some_host_name"
+
+    assert get_spool_path(HostName("short"), ".").name == "item_."
+    assert get_spool_path(HostName("short"), "..").name == "item_.."
+
+
+def test_check_logwatch_ec_common_batch_stored() -> None:
+    """Multiple logfiles with different batches. All must be remembered as "seen_batches".
+
+    Failing to do so leads to messages being processed multiple times.
+    """
+    value_store: dict = {}
+
+    _result = list(
+        logwatch_ec.check_logwatch_ec_common(
+            None,
+            DEFAULT_TEST_PARAMETERS,
+            {
+                None: logwatch_.Section(
+                    errors=(),
+                    logfiles={
+                        "foo": logwatch_.ItemData(attr="", lines={"batch_id_occuring_in_foo": []}),
+                        "bar": logwatch_.ItemData(attr="", lines={"batch_id_occuring_in_bar": []}),
+                    },
+                ),
+            },
+            value_store=value_store,
+            hostname=HostName("test-host"),
+            message_forwarder=_FakeForwarder(),
+        )
+    )
+
+    # the value store now needs to report both batches as seen:
+    assert value_store["seen_batches"] == ("batch_id_occuring_in_bar", "batch_id_occuring_in_foo")

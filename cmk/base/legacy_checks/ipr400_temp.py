@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 
 def inventory_ipr400_temp(info):
@@ -19,7 +20,12 @@ def check_ipr400_temp(item, params, info):
     return check_temperature(int(info[0][0]), params, "ipr400_temp_%s" % item)
 
 
+def parse_ipr400_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ipr400_temp"] = LegacyCheckDefinition(
+    parse_function=parse_ipr400_temp,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.27053.1.4.5",

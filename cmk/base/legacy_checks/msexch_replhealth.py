@@ -28,6 +28,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_msexch_replhealth(info):
     for line in info:
@@ -53,7 +55,12 @@ def check_msexch_replhealth(item, _no_params, info):
     return None
 
 
+def parse_msexch_replhealth(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["msexch_replhealth"] = LegacyCheckDefinition(
+    parse_function=parse_msexch_replhealth,
     service_name="Exchange Replication Health %s",
     discovery_function=inventory_msexch_replhealth,
     check_function=check_msexch_replhealth,

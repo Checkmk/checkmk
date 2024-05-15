@@ -1,0 +1,17 @@
+Title: Refer to a time period by its name instead of its alias in the REST API
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1696245234
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Before this Werk, a time period to be excluded was referred to by its alias and not its name. This Werk changes that behaviour and now time periods to exclude must be referred to by their name.
+Also, the retrieval of a time period now returns time periods names in the exclude field. To integrate this change, the user must fill in the exclude field with the name of the time periods instead of their alias.
+
+Affected endpoints
+* creation
+* update
+* retrieval

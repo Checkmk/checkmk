@@ -7,7 +7,9 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.kube_node_kubelet import check_kube_node_kubelet
-from cmk.base.plugins.agent_based.utils.kube import HealthZ, KubeletInfo
+
+from cmk.plugins.kube.schemata.api import HealthZ
+from cmk.plugins.kube.schemata.section import KubeletInfo
 
 
 @pytest.mark.parametrize(

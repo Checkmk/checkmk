@@ -1,4 +1,4 @@
-Title: <tt>ipmi_sensors</tt>: Add Temperature Performance Data
+Title: ipmi_sensors: Add Temperature Performance Data
 Class: fix
 Compatible: compat
 Component: checks

@@ -5,11 +5,12 @@
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, NotRequired
+from typing import Any, NotRequired, TypedDict
 
 from dateutil import parser as date_parser
 from dateutil import tz
-from typing_extensions import TypedDict
+
+from cmk.plugins.lib.timesync import tolerance_check
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -21,7 +22,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.timesync import tolerance_check
 
 
 class CheckParams(TypedDict):

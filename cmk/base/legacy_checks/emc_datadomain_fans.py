@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.emc import DETECT_DATADOMAIN
 
 
 def inventory_emc_datadomain_fans(info):
@@ -38,7 +39,12 @@ def check_emc_datadomain_fans(item, _no_params, info):
     return None
 
 
+def parse_emc_datadomain_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["emc_datadomain_fans"] = LegacyCheckDefinition(
+    parse_function=parse_emc_datadomain_fans,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.1.3.1.1.1",

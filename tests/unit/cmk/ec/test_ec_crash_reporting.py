@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.utils.crash_reporting import crash_report_registry
 
 from cmk.ec.crash_reporting import CrashReportStore, ECCrashReport
@@ -12,6 +14,7 @@ def test_ec_crash_report_registry() -> None:
     assert crash_report_registry["ec"] == ECCrashReport
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_ec_crash_report_from_exception() -> None:
     try:
         raise ValueError("DING")

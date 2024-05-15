@@ -34,16 +34,8 @@ choices)
     ;;
 set)
     # cleanup the former selection
-    if [ -h $OMD_ROOT/etc/apache/conf.d/shinken.conf ]; then
-        rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
-    fi
     if [ -h $OMD_ROOT/etc/apache/conf.d/nagios.conf ]; then
         rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
-    fi
-    # NOTE: Although we don't ship Icinga anymore, we leave this to make
-    # sure there is no dangling symlink and keep Apache happy.
-    if [ -h $OMD_ROOT/etc/apache/conf.d/icinga.conf ]; then
-        rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
     fi
     if [ "$2" != "cmc" ]; then
         rm -f $OMD_ROOT/etc/check_mk/conf.d/microcore.mk

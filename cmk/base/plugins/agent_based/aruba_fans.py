@@ -7,9 +7,10 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import NamedTuple
 
+from cmk.plugins.lib.aruba import DETECT_2930M
+
 from .agent_based_api.v1 import all_of, exists, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.aruba import DETECT_2930M
 
 
 class FanType(Enum):

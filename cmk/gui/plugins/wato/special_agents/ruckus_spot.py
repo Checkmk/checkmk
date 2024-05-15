@@ -7,9 +7,8 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, NetworkPort, TextInput
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
@@ -62,7 +61,7 @@ def _valuespec_special_agents_ruckus_spot():
                     title=_("Also contact Checkmk agent"),
                     help=_(
                         "With this setting, the special agent will also contact the "
-                        "Check_MK agent on the same system at the specified port."
+                        "Checkmk agent on the same system at the specified port."
                     ),
                     elements=[
                         (

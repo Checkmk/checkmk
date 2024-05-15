@@ -11,7 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle
+
+from cmk.plugins.kube.schemata.section import PodLifeCycle
 
 
 def parse_kube_pod_lifecycle(string_table: StringTable) -> PodLifeCycle:

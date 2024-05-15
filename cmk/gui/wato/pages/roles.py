@@ -26,6 +26,7 @@ import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -256,10 +257,11 @@ class ModeEditRole(WatoMode):
         return redirect(mode_url("roles"))
 
     def page(self) -> None:
+        with html.form_context("role", method="POST"):
+            self._page_form()
+
+    def _page_form(self) -> None:
         search = get_search_expression()
-
-        html.begin_form("role", method="POST")
-
         # ID
         forms.header(_("Basic properties"), css="wide")
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
@@ -283,7 +285,7 @@ class ModeEditRole(WatoMode):
                 _(
                     "Each user defined role is based on one of the built-in roles. "
                     "When created it will start with all permissions of that role. When due to a software "
-                    "update or installation of an addons new permissions appear, the user role will get or "
+                    "update or installation of an add-on new permissions appear, the user role will get or "
                     "not get those new permissions based on the default settings of the built-in role it's "
                     "based on."
                 )
@@ -345,7 +347,6 @@ class ModeEditRole(WatoMode):
 
         forms.end()
         html.hidden_fields()
-        html.end_form()
 
 
 class ModeRoleMatrix(WatoMode):
@@ -364,12 +365,16 @@ class ModeRoleMatrix(WatoMode):
     def title(self) -> str:
         return _("Permission matrix")
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(breadcrumb=breadcrumb, inpage_search=PageMenuSearch())
+
     def page(self) -> None:
         for section in permission_section_registry.get_sorted_sections():
             with table_element(
                 section.name,
                 section.title,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
+                limit=max(200, active_config.table_row_limit),
             ) as table:
                 permission_list = permission_registry.get_sorted_permissions(section)
 

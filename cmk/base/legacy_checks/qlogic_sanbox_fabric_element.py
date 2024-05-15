@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, OIDEnd, SNMPTree, startswith
+
+from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith, StringTable
 
 
 def inventory_qlogic_sanbox_fabric_element(info):
@@ -32,7 +33,12 @@ def check_qlogic_sanbox_fabric_element(item, _no_params, info):
     return 3, "No Fabric Element %s found" % item
 
 
+def parse_qlogic_sanbox_fabric_element(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["qlogic_sanbox_fabric_element"] = LegacyCheckDefinition(
+    parse_function=parse_qlogic_sanbox_fabric_element,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.8"),

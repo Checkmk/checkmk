@@ -9,15 +9,21 @@ from collections.abc import Iterable
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ups_out_voltage import check_ups_out_voltage
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 
 def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, dict]]:
     yield from ((item, {}) for item, value, *_rest in info if int(value) > 0)
 
 
+def parse_ups_out_voltage(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ups_out_voltage"] = LegacyCheckDefinition(
+    parse_function=parse_ups_out_voltage,
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1.4.4.1",

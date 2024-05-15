@@ -5,104 +5,63 @@
 
 
 from cmk.base.check_api import host_name, passwordstore_get_cmdline
+from cmk.base.check_legacy_includes.check_mail import general_check_mail_args_from_params
 from cmk.base.config import active_check_info
+
+CHECK_IDENT = "check_mail_loop"
 
 
 def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
-    """
-    >>> from cmk.base.api.agent_based.plugin_contexts import current_host
-    >>> with current_host("hurz"):
-    ...     for a in check_mail_loop_arguments(
-    ...         {
-    ...             "item": "MailLoop_imap",
-    ...             "subject": "Some subject",
-    ...             "smtp_server": "smtp.gmx.de",
-    ...             "smtp_tls": True,
-    ...             "smtp_port": 42,
-    ...             "smtp_auth": ("me@gmx.de", ("password", "p4ssw0rd")),
-    ...             "fetch": (
-    ...                 "IMAP",
-    ...                 {
-    ...                     "server": "imap.gmx.de",
-    ...                     "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
-    ...                     "connection": {"disable_tls": False, "tcp_port": 123},
-    ...                 },
-    ...             ),
-    ...             "mail_from": "me_from@gmx.de",
-    ...             "mail_to": "me_to@gmx.de",
-    ...             "connect_timeout": 23,
-    ...             "duration": (93780, 183840),
-    ...         }
-    ...     ):
-    ...         print(a)
-    --fetch-protocol=IMAP
-    --fetch-server=imap.gmx.de
-    --fetch-tls
-    --fetch-port=123
-    --fetch-username=me@gmx.de
-    --fetch-password=p4ssw0rd
-    --connect-timeout=23
-    --smtp-server=smtp.gmx.de
-    --smtp-tls
-    --smtp-port=42
-    --smtp-username=me@gmx.de
-    --smtp-password=p4ssw0rd
-    --mail-from=me_from@gmx.de
-    --mail-to=me_to@gmx.de
-    --status-suffix=hurz-MailLoop_imap
-    --warning=93780
-    --critical=183840
-    --subject=Some subject
-    """
+    args: list[str | tuple[str, str, str]] = general_check_mail_args_from_params(
+        CHECK_IDENT, params
+    )
+
     try:
-        fetch_protocol, fetch_params = params["fetch"]
-        connection_params = fetch_params["connection"]
-        auth_type, auth_data = fetch_params["auth"]
+        send_protocol, send_params = params["send"]
+        connection_params = send_params["connection"]
     except KeyError as exc:
         raise ValueError(
-            f"Params for check_mail_loop are faulty (missing {exc}), did you update the config?"
+            f"{params['item']} --- Params for check_mail_loop are faulty (missing {exc}), did you update the config?"
         )
 
-    args: list[str | tuple[str, str, str]] = [
-        f"--fetch-protocol={fetch_protocol}",
-        f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
-    ]
+    args.append(f"--send-protocol={send_protocol}")
+    args.append(f"--send-server={send_params.get('server', '$HOSTADDRESS$')}")
+    if (port := connection_params.get("port")) is not None:
+        args.append(f"--send-port={port}")
 
-    # NOTE: this argument will be turned into `--fetch-disable-tls` when
-    # refactoring all mailbox based active checks
-    if not connection_params.get("disable_tls"):
-        args.append("--fetch-tls")
+    if send_protocol == "SMTP":
+        if connection_params.get("tls"):
+            args.append("--send-tls")
 
-    if connection_params.get("disable_cert_validation"):
-        args.append("--fetch-disable-cert-validation")
+        if auth_params := send_params.get("auth"):
+            username, password = auth_params
+            args.append(f"--send-username={username}")
+            args.append(passwordstore_get_cmdline("--send-password=%s", password))
+    elif send_protocol == "EWS":
+        if not connection_params.get("disable_tls"):
+            args.append("--send-tls")
 
-    if (fetch_port := connection_params.get("tcp_port")) is not None:
-        args.append(f"--fetch-port={fetch_port}")
+        if connection_params.get("disable_cert_validation"):
+            args.append("--send-disable-cert-validation")
 
-    if auth_type == "basic":
-        username, password = auth_data
-        args += [
-            f"--fetch-username={username}",
-            passwordstore_get_cmdline("--fetch-password=%s", password),
-        ]
+        auth_type, auth_data = send_params.get("auth")
+        if auth_type == "basic":
+            username, password = auth_data
+            args += [
+                f"--send-username={username}",
+                passwordstore_get_cmdline("--send-password=%s", password),
+            ]
+        else:
+            client_id, client_secret, tenant_id = auth_data
+            args += [
+                f"--send-client-id={client_id}",
+                passwordstore_get_cmdline("--send-client-secret=%s", client_secret),
+                f"--send-tenant-id={tenant_id}",
+            ]
+
+        args.append(f"--send-email-address={send_params.get('email_address')}")
     else:
-        raise ValueError(f"{auth_type} authentication not (yet) supported for check_mail_loop")
-
-    if "connect_timeout" in params:
-        args.append(f"--connect-timeout={params['connect_timeout']}")
-
-    args.append(f"--smtp-server={params.get('smtp_server', '$HOSTADDRESS$')}")
-
-    if "smtp_tls" in params:
-        args.append("--smtp-tls")
-
-    if "smtp_port" in params:
-        args.append(f"--smtp-port={params['smtp_port']}")
-
-    if "smtp_auth" in params:
-        username, password = params["smtp_auth"]
-        args.append(f"--smtp-username={username}")
-        args.append(passwordstore_get_cmdline("--smtp-password=%s", password))
+        raise NotImplementedError(f"Sending mails is not implemented for {send_protocol}")
 
     args.append(f"--mail-from={params['mail_from']}")
     args.append(f"--mail-to={params['mail_to']}")
@@ -124,7 +83,7 @@ def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
 
 
 active_check_info["mail_loop"] = {
-    "command_line": "check_mail_loop $ARG1$",
+    "command_line": f"{CHECK_IDENT} $ARG1$",
     "argument_function": check_mail_loop_arguments,
     "service_description": lambda params: f"Mail Loop {params['item']}",
 }

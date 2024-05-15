@@ -1,0 +1,20 @@
+Title: setup form page rendering stuck when page has lots of select boxes
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1696921699
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+Previously, when a HTML form page was rendered with a lot (>hundreds) of
+select boxes, the augmentation process to make them searchable was taking
+a very long time.
+
+Until a proper fix for this performance problem can be found, we now prevent
+the augmentation process whenever it would take more than 3 seconds.
+
+The user-interface is almost not affected, only the select boxes are no longer
+searchable. No manual action of the user is necessary to make this work.

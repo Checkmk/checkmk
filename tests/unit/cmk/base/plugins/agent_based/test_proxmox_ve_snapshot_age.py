@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping, Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_snapshot_age import (
@@ -45,7 +46,7 @@ def test_check_proxmox_ve_snapshot_age_no_snapshot(
     section: Section,
     expected: Sequence[IgnoreResults | Metric | Result],
 ) -> None:
-    with on_time(now, "CET"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(now, tz=ZoneInfo("CET"))):
         assert list(check_proxmox_ve_snapshot_age(params, section)) == expected
 
 
@@ -87,7 +88,7 @@ def test_check_proxmox_ve_snapshot_age_no_snapshot(
 def test_check_proxmox_ve_snapshot_age_with_snapshot(
     params, section_data, expected_state, expected_metric
 ):
-    with on_time(100_000, "CET"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(100_000, tz=ZoneInfo("CET"))):
         result, metric = check_proxmox_ve_snapshot_age(params, section_data)
         assert isinstance(result, Result) and isinstance(metric, Metric)
         assert result.state == expected_state

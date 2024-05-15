@@ -14,7 +14,8 @@ from cmk.base.plugins.agent_based.kube_node_count import (
     NodeType,
     ReadyCount,
 )
-from cmk.base.plugins.agent_based.utils.kube import CountableNode, NodeCount
+
+from cmk.plugins.kube.schemata.section import CountableNode, NodeCount
 
 
 class CountableNodeFactory(polyfactory.factories.pydantic_factory.ModelFactory):

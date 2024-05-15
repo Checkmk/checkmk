@@ -1,4 +1,4 @@
-Title: <tt>bluecoat_sensors_temp</tt>: Handle state reported by sensor correctly
+Title: bluecoat_sensors_temp: Handle state reported by sensor correctly
 Class: fix
 Compatible: compat
 Component: checks

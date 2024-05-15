@@ -13,14 +13,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.kube.schemata.section import PodInfo
+from cmk.plugins.lib.kube import (
     check_with_time,
     kube_annotations_to_cmk_labels,
     kube_labels_to_cmk_labels,
     KubernetesError,
-    PodInfo,
 )
-from cmk.base.plugins.agent_based.utils.kube_info import check_info
+from cmk.plugins.lib.kube_info import check_info
 
 
 def parse_kube_pod_info(string_table: StringTable) -> PodInfo:

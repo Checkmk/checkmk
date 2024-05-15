@@ -251,7 +251,7 @@ TEST(PluginTest, JobStartStopComponent) {
 }
 
 TEST(PluginTest, Extensions) {
-    auto pshell = MakePowershellWrapper();
+    auto pshell = MakePowershellWrapper("a");
     EXPECT_TRUE(pshell.find(L"powershell.exe") != std::wstring::npos);
 
     auto p = ConstructCommandToExec(L"a.exe");
@@ -357,8 +357,10 @@ TEST(PluginTest, ApplyGroupUser_Component) {
     auto group_name =
         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
     PluginEntry pe("c:\\a\\x.cmd");
-    auto get_usr = [ptr_pe = &pe]() -> auto{ return ptr_pe->getUser().first; };
-    auto get_pwd = [ptr_pe = &pe]() -> auto{ return ptr_pe->getUser().second; };
+    auto get_usr = [ptr_pe = &pe]() -> auto { return ptr_pe->getUser().first; };
+    auto get_pwd = [ptr_pe = &pe]() -> auto {
+        return ptr_pe->getUser().second;
+    };
     ASSERT_TRUE(get_usr().empty());
     ASSERT_TRUE(get_pwd().empty());
 
@@ -625,8 +627,7 @@ TEST(PluginTest, FilesAndFoldersComponent) {
 
         auto yaml_units = cfg::GetArray<YAML::Node>(
             cfg::groups::kPlugins, cfg::vars::kPluginsExecution);
-        std::vector<cfg::Plugins::ExeUnit> exe_units;
-        cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
+        const auto exe_units = cfg::LoadExeUnitsFromYaml(yaml_units);
         ASSERT_EQ(exe_units.size(), 4);
 
         EXPECT_EQ(exe_units[2].async(), false);
@@ -648,8 +649,7 @@ TEST(PluginTest, FilesAndFoldersComponent) {
         auto files = cma::GatherAllFiles(pv);
         auto yaml_units = cfg::GetArray<YAML::Node>(
             cfg::groups::kLocal, cfg::vars::kPluginsExecution);
-        std::vector<cfg::Plugins::ExeUnit> exe_units;
-        cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
+        const auto exe_units = cfg::LoadExeUnitsFromYaml(yaml_units);
         // no local files
         PluginMap pm;
         UpdatePluginMap(nullptr, pm, ExecType::local, files, exe_units, true);
@@ -1425,9 +1425,7 @@ public:
 private:
     [[nodiscard]] PathVector prepareFilesAndStructures(
         const PluginDescVector &plugin_desc_arr, std::string_view code) const {
-        const fs::path temp_folder =
-            tst::GetTempDir() /
-            ::testing::UnitTest::GetInstance()->current_test_info()->name();
+        const fs::path temp_folder = tst::GetTempDir() / tst::GetUnitTestName();
         fs::create_directories(temp_folder);
         PathVector pv;
         for (auto &pd : plugin_desc_arr) {

@@ -11,7 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
+
+from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 

@@ -7,6 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_mailman_lists(info):
     return [(i[0], None) for i in info]
@@ -20,7 +22,12 @@ def check_mailman_lists(item, params, info):
     return (3, "List could not be found in agent output")
 
 
+def parse_mailman_lists(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mailman_lists"] = LegacyCheckDefinition(
+    parse_function=parse_mailman_lists,
     service_name="Mailinglist %s",
     discovery_function=inventory_mailman_lists,
     check_function=check_mailman_lists,

@@ -66,6 +66,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         item_spec=lambda: TextInput(title=_("Memory Pool Name"), allow_empty=False),
         parameter_valuespec=_parameter_valuespec_cisco_mem,
-        title=lambda: _("Cisco Memory Usage"),
+        title=lambda: _("Cisco memory usage"),
     )
 )

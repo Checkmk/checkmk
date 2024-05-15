@@ -57,6 +57,7 @@ set(livestatus_headers
     ${header_location}/overload.h
     ${header_location}/ParsedQuery.h
     ${header_location}/PerfdataAggregator.h
+    ${header_location}/PerformanceData.h
     ${header_location}/PnpUtils.h
     ${header_location}/Poller.h
     ${header_location}/POSIXUtils.h
@@ -78,7 +79,6 @@ set(livestatus_headers
     ${header_location}/StringColumn.h
     ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
-    ${header_location}/strutil.h
     ${header_location}/Table.h
     ${header_location}/TableColumns.h
     ${header_location}/TableCommands.h
@@ -150,6 +150,7 @@ set(livestatus_sources
     OutputBuffer.cc
     ParsedQuery.cc
     PerfdataAggregator.cc
+    PerformanceData.cc
     PnpUtils.cc
     POSIXUtils.cc
     Query.cc
@@ -167,7 +168,6 @@ set(livestatus_sources
     Store.cc
     StringFilter.cc
     StringUtils.cc
-    strutil.cc
     Table.cc
     TableColumns.cc
     TableCommands.cc
@@ -285,7 +285,6 @@ target_link_libraries(
   PRIVATE pango-1.0 # rrdtool stuff
   PRIVATE pangocairo-1.0) # rrdtool stuff too
 
-target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
                                             SOVERSION ${PROJECT_VERSION_MAJOR})
 

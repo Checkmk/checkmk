@@ -4,37 +4,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.domino import DETECT
 
-domino_transactions_default_levels = (30000, 35000)
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.domino import DETECT
 
 
 def inventory_domino_transactions(info):
     if info:
-        yield None, domino_transactions_default_levels
+        yield None, {}
 
 
 def check_domino_transactions(_no_item, params, info):
     if info:
-        reading = int(info[0][0])
-        warn, crit = params
-        infotext = "Transactions per minute (avg): %s" % reading
-        levels = f" (Warn/Crit at {warn}/{crit})"
-        perfdata = [("transactions", reading, warn, crit)]
-        state = 0
-        if reading >= crit:
-            state = 2
-            infotext += levels
-        elif reading >= warn:
-            state = 1
-            infotext += levels
-        yield state, infotext, perfdata
+        yield check_levels(
+            int(info[0][0]),
+            "transactions",
+            params["levels"],
+            human_readable_func=str,
+            infoname="Transactions per minute (avg)",
+        )
+
+
+def parse_domino_transactions(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 check_info["domino_transactions"] = LegacyCheckDefinition(
+    parse_function=parse_domino_transactions,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.6.3",
@@ -44,4 +42,5 @@ check_info["domino_transactions"] = LegacyCheckDefinition(
     discovery_function=inventory_domino_transactions,
     check_function=check_domino_transactions,
     check_ruleset_name="domino_transactions",
+    check_default_parameters={"levels": (30000, 35000)},
 )

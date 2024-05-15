@@ -7,16 +7,17 @@ set -e -o pipefail
 
 case "$DISTRO" in
     ubuntu-*)
+        # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
         apt-get update
         apt-get install -y shellcheck
-        rm -rf /var/lib/apt/lists/*
 
-        exit 0
+        # Test the installation
+        shellcheck --version || exit $?
         ;;
     *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - shellcheck should only be available in Ubuntu!"
         exit 1
         ;;
 esac

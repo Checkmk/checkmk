@@ -107,29 +107,28 @@ class UserProfile(ABCUserProfilePage):
             html.footer()
             return
 
-        html.begin_form("profile", method="POST")
-        html.prevent_password_auto_completion()
-        html.open_div(class_="wato")
-        forms.header(_("Personal settings"))
+        with html.form_context("profile", method="POST"):
+            html.prevent_password_auto_completion()
+            html.open_div(class_="wato")
+            forms.header(_("Personal settings"))
 
-        forms.section(_("Username"), simple=True)
-        html.write_text(user_spec.get("user_id", user.id))
+            forms.section(_("Username"), simple=True)
+            html.write_text(user_spec.get("user_id", user.id))
 
-        forms.section(_("Full name"), simple=True)
-        html.write_text(user_spec.get("alias", ""))
+            forms.section(_("Full name"), simple=True)
+            html.write_text(user_spec.get("alias", ""))
 
-        select_language(user_spec)
+            select_language(user_spec)
 
-        if user.may("general.edit_user_attributes"):
-            custom_user_attr_topics = get_user_attributes_by_topic()
-            _show_custom_user_attr(user_spec, custom_user_attr_topics.get("personal", []))
-            forms.header(_("User interface settings"))
-            _show_custom_user_attr(user_spec, custom_user_attr_topics.get("interface", []))
+            if user.may("general.edit_user_attributes"):
+                custom_user_attr_topics = get_user_attributes_by_topic()
+                _show_custom_user_attr(user_spec, custom_user_attr_topics.get("personal", []))
+                forms.header(_("User interface settings"))
+                _show_custom_user_attr(user_spec, custom_user_attr_topics.get("interface", []))
 
-        forms.end()
-        html.close_div()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.close_div()
+            html.hidden_fields()
         html.footer()
 
 

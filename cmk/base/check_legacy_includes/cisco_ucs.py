@@ -6,20 +6,7 @@
 
 from typing import Final
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains
-
-DETECT = any_of(
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1682"),
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1683"),
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1684"),
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1685"),
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2178"),
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2179"),
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2424"),
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2492"),
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2493"),
-)
-
+from cmk.plugins.lib.cisco_ucs import DETECT
 
 map_operability: Final = {
     "0": (2, "unknown"),
@@ -76,3 +63,5 @@ map_presence: Final = {
     "104": (2, "equippedDiscError"),
     "105": (1, "equippedDiscUnknown"),
 }
+
+__all__ = ["DETECT", "map_operability", "map_presence"]

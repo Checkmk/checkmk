@@ -38,9 +38,9 @@ def _parameter_valuespec_evolt():
             ],
             optional_keys=(),
         ),
-        migrate=lambda p: p
-        if isinstance(p, dict)
-        else {"levels_lower": (float(p[0]), float(p[1]))},
+        migrate=lambda p: (
+            p if isinstance(p, dict) else {"levels_lower": (float(p[0]), float(p[1]))}
+        ),
     )
 
 

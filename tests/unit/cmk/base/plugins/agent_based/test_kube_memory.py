@@ -7,13 +7,14 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.kube_memory import check_kube_memory, discovery_kube_memory
-from cmk.base.plugins.agent_based.utils.kube import Memory, PerformanceUsage
-from cmk.base.plugins.agent_based.utils.kube_resources import (
+
+from cmk.plugins.kube.schemata.section import (
     AllocatableResource,
-    DEFAULT_PARAMS,
-    Params,
+    Memory,
+    PerformanceUsage,
     Resources,
 )
+from cmk.plugins.lib.kube_resources import DEFAULT_PARAMS, Params
 
 
 def test_discovery() -> None:

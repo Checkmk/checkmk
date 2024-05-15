@@ -18,9 +18,10 @@
 from collections.abc import Mapping
 from typing import Final
 
+from cmk.plugins.lib import megaraid
+
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import megaraid
 
 # This makes service descriptions backward compatible to match
 # inventory made by older versions that didn't support multiple

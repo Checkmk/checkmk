@@ -1,0 +1,10 @@
+Title: raritan_pdu_outletcount: dysfunctional ruleset
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698520072
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The parameters configurable in the ruleset <i>"Raritan PX-2000 Family: PDU Outlet Count"</i> have been applied in the wrong order.

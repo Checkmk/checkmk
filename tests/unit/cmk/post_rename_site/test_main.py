@@ -82,4 +82,6 @@ def test_run_executes_plugins(
     assert "1/1 Test Title..." in output.out
     assert output.out.endswith("Done\n")
 
-    assert handler_mock.called_once_with(SiteId("old"), SiteId("NO_SITE"))
+    handler_mock.assert_called_once_with(
+        SiteId("old"), SiteId("NO_SITE"), logging.getLogger("cmk.post_rename_site")
+    )

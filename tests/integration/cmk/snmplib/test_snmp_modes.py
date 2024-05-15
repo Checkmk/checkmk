@@ -12,6 +12,7 @@ SNMP device and back.
 """
 
 import ast
+import dataclasses
 from collections.abc import Sequence
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -22,7 +23,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostAddress
 
-from cmk.snmplib import OID, SNMPBackendEnum, SNMPHostConfig, SNMPRowInfoForStoredWalk
+from cmk.snmplib import OID, SNMPBackendEnum, SNMPHostConfig, SNMPRowInfoForStoredWalk, SNMPVersion
 
 from .snmp_helpers import default_config, get_single_oid
 
@@ -32,7 +33,8 @@ def test_get_single_oid_ipv6(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(
+    config = dataclasses.replace(
+        default_config(backend_type),
         is_ipv6_primary=True,
         ipaddress=HostAddress("::1"),
     )
@@ -46,13 +48,15 @@ def test_get_single_oid_snmpv3(site: Site, backend_type: SNMPBackendEnum) -> Non
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(
+    config = dataclasses.replace(
+        default_config(backend_type),
         credentials=(
             "authNoPriv",
             "md5",
             "authOnlyUser",
             "authOnlyUser",
-        )
+        ),
+        snmp_version=SNMPVersion.V3,
     )
 
     result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
@@ -67,7 +71,8 @@ def test_get_single_oid_snmpv3_higher_encryption(
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(
+    config = dataclasses.replace(
+        default_config(backend_type),
         credentials=(
             "authPriv",
             "SHA-512",
@@ -76,6 +81,7 @@ def test_get_single_oid_snmpv3_higher_encryption(
             priv_proto,
             "A_long_privKey",
         ),
+        snmp_version=SNMPVersion.V3,
         # TODO: Reorganize snmp tests: at the moment we create *all* snmpsimd processes at setup
         #  but with different ports. Those different processes are then used in test_snmp_modes.py and
         #  backend_snmp.py...
@@ -91,7 +97,7 @@ def test_get_single_oid_wrong_credentials(site: Site, backend_type: SNMPBackendE
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(credentials="dingdong")
+    config = dataclasses.replace(default_config(backend_type), credentials="dingdong")
 
     result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
     assert result is None
@@ -163,7 +169,7 @@ def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(ipaddress=HostAddress("bla.local"))
+    config = dataclasses.replace(default_config(backend_type), ipaddress=HostAddress("bla.local"))
 
     assert get_single_oid(site, ".1.3.6.1.2.1.1.7.0", backend_type, config)[0] is None
 

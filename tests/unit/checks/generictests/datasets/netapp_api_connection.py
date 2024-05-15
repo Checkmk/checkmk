@@ -14,13 +14,13 @@ info = [
     ["line_2_element_0", "line_2_element_1", "line_2_element_2"],
 ]
 
-discovery = {"": [(None, [])]}
+discovery = {"": [(None, {})]}
 
 checks = {
     "": [
         (
             None,
-            {},
+            {"warning_overrides": []},
             [
                 (
                     1,

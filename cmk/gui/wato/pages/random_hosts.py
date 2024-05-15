@@ -50,7 +50,7 @@ class ModeRandomHosts(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -62,22 +62,21 @@ class ModeRandomHosts(WatoMode):
         return redirect(mode_url("folder", folder=folder.path()))
 
     def page(self) -> None:
-        html.begin_form("random")
-        forms.header(_("Add random hosts"))
-        forms.section(_("Number to create"))
-        html.write_text("%s: " % _("Hosts to create in each folder"))
-        html.text_input("count", default_value="10", cssclass="number")
-        html.set_focus("count")
-        html.br()
-        html.write_text("%s: " % _("Number of folders to create in each level"))
-        html.text_input("folders", default_value="10", cssclass="number")
-        html.br()
-        html.write_text("%s: " % _("Levels of folders to create"))
-        html.text_input("levels", default_value="1", cssclass="number")
+        with html.form_context("random"):
+            forms.header(_("Add random hosts"))
+            forms.section(_("Number to create"))
+            html.write_text("%s: " % _("Hosts to create in each folder"))
+            html.text_input("count", default_value="10", cssclass="number")
+            html.set_focus("count")
+            html.br()
+            html.write_text("%s: " % _("Number of folders to create in each level"))
+            html.text_input("folders", default_value="10", cssclass="number")
+            html.br()
+            html.write_text("%s: " % _("Levels of folders to create"))
+            html.text_input("levels", default_value="1", cssclass="number")
 
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_fields()
 
     def _create_random_hosts(self, folder, count, folders, levels):
         if levels == 0:

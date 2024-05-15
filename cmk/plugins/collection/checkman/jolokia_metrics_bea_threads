@@ -1,0 +1,21 @@
+title: BEA Weblogic: Number of JVM Threads
+agents: linux, windows
+catalog: app/java
+license: GPLv2
+distribution: check_mk
+description:
+ This check works on the number of threads running in a JVM.
+ time.
+
+ To use this plugin, Jolokia and the agent plug-in need to be installed
+ on the monitored server.
+
+ This check does not have configurable levels.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
+
+item:
+ The name of the application server instance as configured by the agent.
+
+discovery:
+ One service is created for each JVM instance sent by the Jolokia agent.

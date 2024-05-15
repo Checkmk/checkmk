@@ -5,11 +5,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
+    CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Age, Dictionary, Tuple
+from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
 def _parameter_valuespec_azure_ad():
@@ -30,11 +30,12 @@ def _parameter_valuespec_azure_ad():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="azure_ad",
         match_type="dict",
         group=RulespecGroupCheckParametersNetworking,
         parameter_valuespec=_parameter_valuespec_azure_ad,
         title=lambda: _("Azure AD Connect"),
+        item_spec=lambda: TextInput(title=_("Accounts display name")),
     )
 )

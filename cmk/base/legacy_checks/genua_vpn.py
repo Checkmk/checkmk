@@ -5,8 +5,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.genua import DETECT_GENUA
 
 # .1.3.6.1.4.1.3717.2.1.3.1.1.1 1
 # .1.3.6.1.4.1.3717.2.1.3.1.1.2 2
@@ -58,7 +59,12 @@ def check_genua_vpn(item, params, info):
     return None
 
 
+def parse_genua_vpn(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["genua_vpn"] = LegacyCheckDefinition(
+    parse_function=parse_genua_vpn,
     detect=DETECT_GENUA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3717.2.1.3.1",

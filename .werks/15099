@@ -1,0 +1,26 @@
+Title: crash when calling bulk-delete via the REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1696950736
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, when doing a bulk_delete operation via the REST API,
+an exception could occur under certain conditions, most notably
+one where the DCD (Dynamic Configuration Daemon) is configured
+to automatically delete hosts without piggyback data.
+
+If the error occured, in the logs these lines are occuring:
+
+<pre>
+PermissionError: Required permissions not declared for this endpoint.
+Endpoint: &lt;Endpoint cmk.gui.plugins.openapi.endpoints.host_config:bulk_delete&gt;
+Permission: general.see_all
+Used permission: {'wato.all_folders', 'general.see_all', 'wato.manage_hosts'}
+Declared: AllPerm([{wato.manage_hosts}, {wato.all_folders}?)
+</pre>
+
+This werk fixes this problem.

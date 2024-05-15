@@ -6,16 +6,17 @@
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from cmk.gui.groups import (
-    GroupSpecs,
-    load_contact_group_information,
-    load_host_group_information,
-    load_service_group_information,
-)
+from cmk.utils.config_validation_layer.groups import GroupSpecs
+
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ChoiceText
 from cmk.gui.valuespec import ElementSelection
+from cmk.gui.watolib.groups_io import (
+    load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
+)
 
 
 # TODO: Refactor this and all other children of ElementSelection() to base on

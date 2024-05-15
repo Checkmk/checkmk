@@ -148,7 +148,7 @@ class ModeBackgroundJobDetails(WatoMode):
                 is_suggested=True,
             )
 
-    def back_url(self):
+    def back_url(self) -> str:
         return request.get_url_input("back_url", deflt="")
 
     def page(self) -> None:

@@ -7,7 +7,6 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.cisco_asa_failover import (
@@ -16,6 +15,8 @@ from cmk.base.plugins.agent_based.cisco_asa_failover import (
     parse_cisco_asa_failover,
     Section,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 _CHECK_PARAMS = {
     "primary": "active",

@@ -1,0 +1,20 @@
+Title: agent-updater change behaviour of trust-cert option
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1695817306
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When registering the agent-updater and using the <tt>--trust-cert</tt> option the agent-updater used to traverse the certificate-chain and trust the first self-signed certificate in the chain which is usually a CA.
+Unfortunately this relied on the server to provide the full certificate chain.
+It is not uncommon to only provide the certificate and the corresponding intermediate CA certificate.
+In these scenarios the agent-updater failed to trust the certificate.
+Also the help text indicates that only the server certificate is trusted.
+
+With this Werk the agent-updater retrieves the certificate of the server and trusts just that certificate.
+
+Caution: If your registration workflow relies on an initial registration with <tt>--trust-cert</tt> option and you don't provide a certificate via another channel (see https://docs.checkmk.com/latest/en/agent_deployment.html#provide_certificates), you'll now lose trust when changing the Checkmk server's server certificate.
+If your workflow relies on the <tt>--trust-cert</tt> option, please make sure to  provide a valid certificate via the agent updater ruleset or via global settings.

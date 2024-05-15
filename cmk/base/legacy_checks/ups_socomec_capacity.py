@@ -12,8 +12,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.ups_socomec import DETECT_SOCOMEC
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.ups_socomec import DETECT_SOCOMEC
 
 
 def inventory_ups_socomec_capacity(info):
@@ -71,7 +72,12 @@ def check_ups_socomec_capacity(item, params, info):
         yield 0, "On battery for %d min" % time_on_bat
 
 
+def parse_ups_socomec_capacity(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
+    parse_function=parse_ups_socomec_capacity,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.2",

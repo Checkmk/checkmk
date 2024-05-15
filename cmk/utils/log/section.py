@@ -11,26 +11,24 @@ from . import console
 # Note: section_begin|success|error|step is a naive and incomplete
 # finite-state machine.  The four functions should be used together.
 def section_begin(text: str) -> None:
-    console.verbose("%s%s%s:\n", tty.bold, text, tty.normal)
+    console.verbose(f"{tty.bold}{text}{tty.normal}:\n")
 
 
 def section_success(text: str) -> None:
-    console.verbose("%sSUCCESS%s - %s\n", tty.green, tty.normal, text)
+    console.verbose(f"{tty.green}SUCCESS{tty.normal} - {text}\n")
 
 
 def section_error(text: str, verbose: bool = True) -> None:
     if verbose:
-        console.verbose("%s - %s\n", tty.error, text)
+        console.verbose(f"{tty.error} - {text}\n")
     else:
-        console.info("%s - %s\n", tty.error, text)
+        console.info(f"{tty.error} - {text}\n")
 
 
 def section_step(text: str, add_info: str = "", verbose: bool = True) -> None:
     if add_info:
-        # Additional information, not titlecased
-        add_info = " (%s)" % add_info
-
+        add_info = f" ({add_info})"  # Additional information, not titlecased
     if verbose:
-        console.verbose("%s+%s %s%s\n", tty.yellow, tty.normal, text.upper(), add_info)
+        console.verbose(f"{tty.yellow}+{tty.normal} {text.upper()}{add_info}\n")
     else:
-        console.info("%s+%s %s%s\n", tty.yellow, tty.normal, text.upper(), add_info)
+        console.info(f"{tty.yellow}+{tty.normal} {text.upper()}{add_info}\n")

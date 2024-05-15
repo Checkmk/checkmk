@@ -3,22 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
+# TODO(sk): Code below is utter bs and must be fully rewritten
+# Lack of comments with links to MSDN. THIS IS MUST HAVE FOR WINDOWS.
+# Tripled code for the same thing. This is a bad idea.
+# Lack of typing
+# Absolutely inappropriate list comprehension counting 40+ lines of code
+# Wrong naming oper_status has no "media disconnect" status
+# Bad typing dict[str,tuple[str,str]]  - is not typing at all
+
+from collections.abc import Callable, Collection, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict
-from typing import Any, NamedTuple
+from functools import partial
+from typing import Any, Final, NamedTuple
+
+from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
+from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
 
 from .agent_based_api.v1 import get_value_store, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils import interfaces
-from .utils.inventory_interfaces import Interface as InterfaceInv
-from .utils.inventory_interfaces import inventorize_interfaces
 
 Line = Sequence[str]
 Lines = Iterator[Line]
 
 
+# Pseudo counters must be in sync with code in windows agent, grep if_status_pseudo_counter in WA
+_IF_STATUS_PSEUDO_COUNTER: Final[str] = "2002"
+_IF_MAC_PSEUDO_COUNTER: Final[str] = "2006"
+
+
 def _canonize_name(name: str) -> str:
-    return name.replace("_", " ").replace("  ", " ").rstrip()
+    return " ".join(name.replace("_", " ").split())
 
 
 def _line_to_mapping(
@@ -72,14 +87,41 @@ def _parse_timestamp_and_instance_names(
     return agent_timestamp, instances
 
 
+def _get_windows_if_status(counter_index: int) -> str:
+    return interfaces.get_if_state_name(str(counter_index))
+
+
+def _get_oper_status(agent_section: Mapping[str, Line], idx: int) -> int:
+    """returns oper status, see MSDN meaning, from pseudo counter if presented
+    otherwise 1 (up)"""
+    if line := agent_section.get(_IF_STATUS_PSEUDO_COUNTER):
+        return int(line[idx])
+    return 1
+
+
+def _get_mac(agent_section: Mapping[str, Line], idx: int) -> str:
+    """returns mac address byte string if pseudo counter exists
+    otherwise empty"""
+    if line := agent_section.get(_IF_MAC_PSEUDO_COUNTER):
+        mac = interfaces.mac_address_from_hexstring(line[idx])
+        # WA can return 0 if MAC is not known/on error, defense is implemented on base of beta
+        # testing where minimal errors in WA output led to a crash in WATO
+        return "" if mac == "\0x00" else mac
+    return ""
+
+
 def _parse_counters(
     raw_nic_names: Sequence[str],
     agent_section: Mapping[str, Line],
 ) -> Mapping[str, interfaces.InterfaceWithCounters]:
-    ifaces: MutableMapping[str, interfaces.InterfaceWithCounters] = {}
+    def get_int_value(pos: int, row: str) -> int:
+        return int(agent_section[row][pos])
+
+    ifaces: dict[str, interfaces.InterfaceWithCounters] = {}
     for idx, raw_nic_name in enumerate(raw_nic_names):
+        counter: Callable[[str], int] = partial(get_int_value, idx)
         name = _canonize_name(raw_nic_name)
-        counters = {counter: int(line[idx]) for counter, line in agent_section.items()}
+        oper_status = _get_oper_status(agent_section, idx)
         ifaces.setdefault(
             name,
             interfaces.InterfaceWithCounters(
@@ -88,22 +130,23 @@ def _parse_counters(
                     descr=name,
                     alias=name,
                     type="loopback" in name.lower() and "24" or "6",
-                    speed=counters["10"],
-                    oper_status=None,
-                    out_qlen=counters["34"],
-                    oper_status_name=interfaces.MISSING_OPER_STATUS,
+                    speed=counter("10"),
+                    oper_status=str(oper_status),
+                    out_qlen=counter("34"),
+                    oper_status_name=_get_windows_if_status(oper_status),
+                    phys_address=_get_mac(agent_section, idx),
                 ),
                 interfaces.Counters(
-                    in_octets=counters["-246"],
-                    in_ucast=counters["14"],
-                    in_bcast=counters["16"],
-                    in_disc=counters["18"],
-                    in_err=counters["20"],
-                    out_octets=counters["-4"],
-                    out_ucast=counters["26"],
-                    out_bcast=counters["28"],
-                    out_disc=counters["30"],
-                    out_err=counters["32"],
+                    in_octets=counter("-246"),
+                    in_ucast=counter("14"),
+                    in_nucast=counter("16"),
+                    in_disc=counter("18"),
+                    in_err=counter("20"),
+                    out_octets=counter("-4"),
+                    out_ucast=counter("26"),
+                    out_nucast=counter("28"),
+                    out_disc=counter("30"),
+                    out_err=counter("32"),
                 ),
             ),
         )
@@ -148,14 +191,20 @@ def _filter_out_deprecated_plugin_lines(
     return native_agent_data, found_windows_if, found_mk_dhcp_enabled
 
 
-def parse_winperf_if(string_table: StringTable) -> SectionCounters:
-    agent_timestamp = None
-    raw_nic_names: Sequence[str] = []
-    agent_section: MutableMapping[str, Line] = {}
+def _is_first_line(line: Sequence[str]) -> bool:
+    """
+    Return true if the line[0] is a float, meaning timestamp.
 
+    All other variants are assumed as malformed input.
+    """
+    # counter can.t contain dot in the name
+    return "." in line[0]
+
+
+def parse_winperf_if(string_table: StringTable) -> SectionCounters:
     # There used to be only a single winperf_if-section which contained both the native agent data
-    # and plugin data which is now located in the sections winperf_if_... For compatibily reasons,
-    # we still handle this case by filtering out the plugin data and advising the user to update
+    # and plug-in data which is now located in the sections winperf_if_... For compatibily reasons,
+    # we still handle this case by filtering out the plug-in data and advising the user to update
     # the agent.
     (
         string_table_filtered,
@@ -163,11 +212,12 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
         found_mk_dhcp_enabled,
     ) = _filter_out_deprecated_plugin_lines(string_table)
 
+    agent_timestamp = None
+    raw_nic_names: Sequence[str] = []
+    agent_section: dict[str, Line] = {}
+
     for line in (lines := iter(string_table_filtered)):  # pylint: disable=superfluous-parens
-        if len(line) in (2, 3) and not line[-1].endswith("count"):
-            # Do not consider lines containing counters:
-            # ['-122', '38840302775', 'bulk_count']
-            # ['10', '10000000000', 'large_rawcount']
+        if _is_first_line(line):
             agent_timestamp, raw_nic_names = _parse_timestamp_and_instance_names(
                 line,
                 lines,
@@ -239,6 +289,8 @@ class AdditionalIfData(NamedTuple):
 
 SectionExtended = Collection[AdditionalIfData]
 
+# TODO(sk): remove this after deprecation of the corresponding plug-in winperf_if.ps1
+# NOTE: this case os for command `Get-WmiObject Win32_NetworkAdapter`
 # Windows NetConnectionStatus Table to ifOperStatus Table
 # 1 up
 # 2 down
@@ -250,7 +302,7 @@ SectionExtended = Collection[AdditionalIfData]
 _NetConnectionStatus_TO_OPER_STATUS: Mapping[str, tuple[str, str]] = {
     "0": ("2", "Disconnected"),
     "1": ("2", "Connecting"),
-    "2": ("1", "Connected"),
+    "2": ("1", "up"),
     "3": ("2", "Disconnecting"),
     "4": ("2", "Hardware not present"),
     "5": ("2", "Hardware disabled"),
@@ -270,10 +322,12 @@ def parse_winperf_if_win32_networkadapter(string_table: StringTable) -> SectionE
             name=_canonize_name(line_dict["Name"]),
             alias=line_dict["NetConnectionID"],
             # Some interfaces report several exabyte as bandwidth when down ...
-            speed=speed
-            if "Speed" in line_dict
-            and (speed := interfaces.saveint(line_dict["Speed"])) <= 1024**5
-            else 0,
+            speed=(
+                speed
+                if "Speed" in line_dict
+                and (speed := interfaces.saveint(line_dict["Speed"])) <= 1024**5
+                else 0
+            ),
             oper_status=oper_status,
             oper_status_name=oper_status_name,
             mac_address=line_dict["MACAddress"],
@@ -289,7 +343,7 @@ def parse_winperf_if_win32_networkadapter(string_table: StringTable) -> SectionE
         for oper_status, oper_status_name in [
             _NetConnectionStatus_TO_OPER_STATUS.get(
                 line_dict["NetConnectionStatus"],
-                ("2", "Disconnected"),
+                ("2", "down"),
             )
         ]
         # we need to ignore data on interfaces in the optional
@@ -380,12 +434,12 @@ def _normalize_name(
     return mod_name
 
 
-def _match_add_data_to_interfaces(  # type: ignore[no-untyped-def]
+def _match_add_data_to_interfaces(
     interface_names: Collection[str],
     section_teaming: SectionTeaming,
     section_extended: SectionExtended,
-):
-    additional_data: MutableMapping[str, AdditionalIfData] = {}
+) -> Mapping[str, AdditionalIfData]:
+    additional_data: dict[str, AdditionalIfData] = {}
 
     for add_data in section_extended:
         if add_data.guid is not None and (teaming_entry := section_teaming.get(add_data.guid)):
@@ -437,28 +491,33 @@ def _merge_sections(
     )
 
     return [
-        interfaces.InterfaceWithCounters(
-            attributes=interfaces.Attributes(
-                **{
-                    **asdict(interface.attributes),
+        (
+            interfaces.InterfaceWithCounters(
+                attributes=interfaces.Attributes(
                     **{
-                        "alias": add_if_data.alias,
-                        "speed": add_if_data.speed or interface.attributes.speed,
-                        "group": section_teaming[add_if_data.guid].team_name
-                        if add_if_data.guid in section_teaming
-                        else None,
-                        "oper_status": add_if_data.oper_status,
-                        "oper_status_name": add_if_data.oper_status_name,
-                        "phys_address": interfaces.mac_address_from_hexstring(
-                            add_if_data.mac_address
-                        ),
+                        **asdict(interface.attributes),
+                        **{
+                            "alias": add_if_data.alias,
+                            "speed": add_if_data.speed or interface.attributes.speed,
+                            "group": (
+                                section_teaming[add_if_data.guid].team_name
+                                if add_if_data.guid is not None
+                                and add_if_data.guid in section_teaming
+                                else None
+                            ),
+                            "oper_status": add_if_data.oper_status,
+                            "oper_status_name": add_if_data.oper_status_name,
+                            "phys_address": interfaces.mac_address_from_hexstring(
+                                add_if_data.mac_address
+                            ),
+                        },
                     },
-                },
-            ),
-            counters=interface.counters,
+                ),
+                counters=interface.counters,
+            )
+            if (add_if_data := additional_data.get(name))
+            else interface
         )
-        if (add_if_data := additional_data.get(name))
-        else interface
         for name, interface in ifaces.items()
     ]
 
@@ -578,13 +637,13 @@ def _check_deprecated_plugins(
     if windows_if:
         yield Result(
             state=State.CRIT,
-            summary="Detected deprecated version of plugin 'windows_if.ps1' or 'wmic_if.bat' "
+            summary="Detected deprecated version of plug-in 'windows_if.ps1' or 'wmic_if.bat' "
             "(bakery ruleset 'Network interfaces on Windows'). Please update the agent plugin.",
         )
     if mk_dhcp_enabled:
         yield Result(
             state=State.CRIT,
-            summary="Detected deprecated version of plugin 'mk_dhcp_enabled.bat'. Please update "
+            summary="Detected deprecated version of plug-in 'mk_dhcp_enabled.bat'. Please update "
             "the agent plugin.",
         )
 
@@ -602,7 +661,7 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_winperf_if,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_winperf_if,
 )
@@ -644,9 +703,7 @@ def inventory_winperf_if(
                 alias=interface.attributes.alias,
                 type=interface.attributes.type,
                 speed=int(interface.attributes.speed),
-                oper_status=int(interface.attributes.oper_status[0])
-                if isinstance(interface.attributes.oper_status, str)
-                else None,
+                oper_status=int(interface.attributes.oper_status[0]),
                 phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
             )
             for interface in sorted(
@@ -661,7 +718,7 @@ def inventory_winperf_if(
     )
 
 
-# TODO: make this plugin use the inventory ruleset inv_if
+# TODO: make this plug-in use the inventory ruleset inv_if
 register.inventory_plugin(
     name="winperf_if",
     sections=[

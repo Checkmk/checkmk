@@ -18,7 +18,7 @@ from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import (
     CheckCredentialsResult,
     ConnectorType,
-    user_connector_registry,
+    HtpasswdUserConnectionConfig,
     UserConnector,
 )
 
@@ -36,7 +36,6 @@ from cmk.gui.userdb import (
 #
 # See:
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
-# - https://passlib.readthedocs.io/en/stable/lib/passlib.apache.html
 #
 def hash_password(password: Password) -> PasswordHash:
     """Hash a password
@@ -54,8 +53,7 @@ def hash_password(password: Password) -> PasswordHash:
         raise MKUserError(None, "Password could not be hashed.")
 
 
-@user_connector_registry.register
-class HtpasswdUserConnector(UserConnector):
+class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
     @classmethod
     def type(cls) -> str:
         return ConnectorType.HTPASSWD
@@ -66,13 +64,13 @@ class HtpasswdUserConnector(UserConnector):
 
     @classmethod
     def title(cls) -> str:
-        return _("Apache Local Password File (htpasswd)")
+        return _("Apache local password file (htpasswd)")
 
     @classmethod
     def short_title(cls) -> str:
         return _("htpasswd")
 
-    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, cfg: HtpasswdUserConnectionConfig) -> None:
         super().__init__(cfg)
         self._htpasswd = Htpasswd(Path(cmk.utils.paths.htpasswd_file))
 
@@ -117,7 +115,7 @@ class HtpasswdUserConnector(UserConnector):
 
             if user.get("password"):
                 entries[uid] = PasswordHash(
-                    "{}{}".format("!" if user.get("locked", False) else "", user["password"])
+                    "{}{}".format("!" if user["locked"] else "", user["password"])
                 )
 
         self._htpasswd.save_all(entries)

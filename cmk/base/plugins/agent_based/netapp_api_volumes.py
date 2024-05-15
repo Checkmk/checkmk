@@ -2,15 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""
+This special agent is deprecated. Please use netapp_ontap_volumes.
+"""
 
 import time
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_rate,
     get_value_store,
-    GetRateError,
     Metric,
     register,
     Result,
@@ -21,7 +22,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.df import (
+
+from cmk.plugins.lib.df import (
     df_check_filesystem_single,
     df_discovery,
     FILESYSTEM_DEFAULT_LEVELS,
@@ -30,6 +32,7 @@ from cmk.base.plugins.agent_based.utils.df import (
     mountpoints_in_group,
     TREND_DEFAULT_PARAMS,
 )
+from cmk.plugins.lib.netapp_api import combine_netapp_api_volumes, single_volume_metrics
 
 Section = Mapping[str, Mapping[str, int | str]]
 
@@ -68,12 +71,6 @@ def discover_netapp_api_volumes(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
     yield from df_discovery(params, section)
-
-
-def _create_key(protocol: str, mode: str, field: str) -> str:
-    if protocol:
-        return "_".join([protocol, mode, field])
-    return "_".join([mode, field])
 
 
 def _check_single_netapp_api_volume(  # type: ignore[no-untyped-def]
@@ -116,98 +113,15 @@ def _generate_volume_metrics(
     volume: Mapping[str, float],
 ) -> Iterable[Metric]:
     now = time.time()
-    base = {}
-    metrics_map = {"write_ops": "write_ops_s"}
 
     for protocol in params.get("perfdata", []):
-        for mode in ["read", "write", "other"]:
-            for field in ["data", "ops", "latency"]:
-                key = _create_key(protocol, mode, field)
-                value = volume.get(key)
-                if value is None:
-                    continue
+        counters_keys = [
+            (protocol, mode, field)
+            for mode in ["read", "write", "other"]
+            for field in ["data", "ops", "latency"]
+        ]
 
-                try:
-                    delta = get_rate(value_store, key, now, value, raise_overflow=True)
-                except GetRateError:
-                    continue
-
-                # Quite hacky.. this base information is used later on by the "latency" field
-                if field == "ops":
-                    if delta == 0.0:
-                        base[key] = 1.0
-                    else:
-                        base[key] = float(delta)
-
-                if mode in ["read", "write"] and field == "latency":
-                    # See https://library.netapp.com/ecmdocs/ECMP1608437/html/GUID-04407796-688E-489D-901C-A6C9EAC2A7A2.html
-                    # for scaling issues:
-                    # read_latency           micro
-                    # write_latency          micro
-                    # other_latency          micro
-                    # nfs_read_latency       micro
-                    # nfs_write_latency      micro
-                    # nfs_other_latency      micro
-                    # cifs_read_latency      micro
-                    # cifs_write_latency     micro
-                    # cifs_other_latency     micro
-                    # san_read_latency       micro
-                    # san_write_latency      micro
-                    # san_other_latency      micro
-                    #
-                    # === 7-Mode environments only ===
-                    # fcp_read_latency       milli
-                    # fcp_write_latency      milli
-                    # fcp_other_latency      milli
-                    # iscsi_read_latency     milli
-                    # iscsi_write_latency    milli
-                    # iscsi_other_latency    milli
-                    #
-                    # FIXME The metric system expects milliseconds but should get seconds
-                    if protocol in ["fcp", "iscsi"]:
-                        divisor = 1.0
-                    else:
-                        divisor = 1000.0
-                    delta /= (
-                        divisor
-                        * base[
-                            _create_key(
-                                protocol,
-                                mode,
-                                "ops",
-                            )
-                        ]
-                    )  # fixed: true-division
-
-                yield Metric(metrics_map.get(key, key), delta)
-
-
-def _combine_netapp_api_volumes(
-    volumes_in_group: list[str], section: Section
-) -> tuple[Mapping[str, float], Mapping[str, str]]:
-    combined_volume: dict[str, float] = {}
-    volumes_not_online = {}
-
-    for volume_name in volumes_in_group:
-        volume = section[volume_name]
-
-        state = str(volume.get("state"))
-        if volume.get("state") != "online":
-            volumes_not_online[volume_name] = state
-
-        else:
-            for k, v in volume.items():
-                if isinstance(v, int):
-                    combined_volume.setdefault(k, 0.0)
-                    combined_volume[k] += v
-
-    n_vols_online = len(volumes_in_group) - len(volumes_not_online)
-    if n_vols_online:
-        for k, vs in combined_volume.items():
-            if k.endswith("latency"):
-                combined_volume[k] = float(vs) / n_vols_online
-
-    return combined_volume, volumes_not_online
+        yield from single_volume_metrics(counters_keys, volume, value_store, now)
 
 
 # Cannot use decorator get_parsed_item_data for this check function due to the
@@ -222,7 +136,7 @@ def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Sect
             )
             return
 
-        combined_volumes, volumes_not_online = _combine_netapp_api_volumes(
+        combined_volumes, volumes_not_online = combine_netapp_api_volumes(
             volumes_in_group,
             section,
         )

@@ -433,6 +433,32 @@ from cmk.special_agents.agent_proxmox_ve import BackupInfo, BackupTask, collect_
             },
             None,
         ),
+        (
+            "proxmox_ve-backup-2023-09-23.log",
+            {
+                "255": {
+                    "archive_name": "/mnt/pve/backup/dump/vzdump-qemu-255-2023_09_23-04_35_29.vma.zst",
+                    "archive_size": 2000,
+                    "started_time": "2023-09-23 04:35:29",
+                    "total_duration": 0.0,
+                    "transfer_size": 131072,
+                    "transfer_time": 1,
+                }
+            },
+            None,
+        ),
+        (
+            "proxmox_ve-backup-2023-10-01.log",
+            {
+                "9001": {
+                    "archive_name": "/mnt/pve/backup/dump/vzdump-qemu-9001-2023_10_01-07_00_01.vma.zst",
+                    "archive_size": 1050000000,
+                    "started_time": "2023-10-01 07:00:01",
+                    "total_duration": 46.0,
+                },
+            },
+            None,
+        ),
     ),
 )
 def test_parse_backup_logs(
@@ -454,12 +480,12 @@ def test_parse_backup_logs(
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    from tests.testlib.utils import cmk_path
+    from tests.testlib.utils import repo_path
 
     assert not pytest.main(
         [
             "--doctest-modules",
-            os.path.join(cmk_path(), "cmk/special_agents/agent_proxmox_ve.py"),
+            os.path.join(repo_path(), "cmk/special_agents/agent_proxmox_ve.py"),
         ]
     )
     pytest.main(["-T=unit", "-vvsx", __file__])

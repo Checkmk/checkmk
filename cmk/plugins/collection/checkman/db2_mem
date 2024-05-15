@@ -1,0 +1,16 @@
+title: DB2: Instance Memory Usage
+agents: solaris, aix, linux
+catalog: app/db2
+license: GPLv2
+distribution: check_mk
+description:
+ This Check determines the memory limit and the usage limit for
+ each db2 instance found on server. The agent plug-in {db2_mem} is needed.
+ The agent plug-in greps for the instances in the process list, and try
+ to switch to each instance and execute {db2pd -dptnmem}.
+
+item:
+ The DB2 instance name
+
+discovery:
+ One service is created for each instance.

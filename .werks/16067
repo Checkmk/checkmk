@@ -1,0 +1,13 @@
+Title: Fix possible "Internal server error" while saving large formulars
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1698237843
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Werk #15393 already solved this for most users but in rare cases, the
+formulars were still so big that an "Internal server error" occurred on saving.
+This change should fix that behaviour even for such cases.

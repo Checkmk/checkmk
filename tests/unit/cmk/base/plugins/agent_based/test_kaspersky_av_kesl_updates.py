@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import set_timezone
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kaspersky_av_kesl_updates import (
@@ -18,7 +19,7 @@ from cmk.base.plugins.agent_based.kaspersky_av_kesl_updates import (
 
 @pytest.fixture(scope="module", autouse=True)
 def set_fixed_timezone():
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         yield
 
 
@@ -33,7 +34,7 @@ def set_fixed_timezone():
             },
             [
                 Result(state=State.CRIT, summary="Databases loaded: False"),
-                Result(state=State.OK, summary="Database date: Jan 01 1970 00:00:00"),
+                Result(state=State.OK, summary="Database date: 1970-01-01 00:00:00"),
                 Result(state=State.OK, summary="Database records: 1"),
             ],
         ),

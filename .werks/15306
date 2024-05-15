@@ -1,0 +1,10 @@
+Title: prism_host_networks: new check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1698910922
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Add a new check to monitor host networks via prism.

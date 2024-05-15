@@ -7,15 +7,16 @@
 
 from collections.abc import Mapping
 
-from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.f5_bigip import (
+from cmk.plugins.lib.f5_bigip import (
     F5_BIGIP,
     F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     F5BigipClusterStatusVSResult,
     VERSION_PRE_V11_2,
     VERSION_V11_2_PLUS,
 )
+
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 NodeState = int
 

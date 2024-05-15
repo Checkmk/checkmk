@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.stulz import DETECT_STULZ
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.stulz import DETECT_STULZ
 
 
 def inventory_stulz_pump(info):
@@ -37,7 +40,12 @@ def check_stulz_pump(item, _no_params, info):
     return 3, "Pump %s not found" % item
 
 
+def parse_stulz_pump(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["stulz_pump"] = LegacyCheckDefinition(
+    parse_function=parse_stulz_pump,
     detect=DETECT_STULZ,
     fetch=[
         SNMPTree(

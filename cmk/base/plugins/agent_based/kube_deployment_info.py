@@ -11,8 +11,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import check_with_time, DeploymentInfo
-from cmk.base.plugins.agent_based.utils.kube_info import check_info, host_labels
+
+from cmk.plugins.kube.schemata.section import DeploymentInfo
+from cmk.plugins.lib.kube import check_with_time
+from cmk.plugins.lib.kube_info import check_info, host_labels
 
 
 def parse(string_table: StringTable) -> DeploymentInfo:
@@ -28,7 +30,7 @@ def parse(string_table: StringTable) -> DeploymentInfo:
     ... '"kubernetes_cluster_hostname": "host",'
     ... '"cluster": "cluster"}'
     ... ]])
-    DeploymentInfo(name='oh-lord', namespace='have-mercy', labels={}, annotations={}, selector=Selector(match_labels={}, match_expressions=[{'key': 'app', 'operator': 'In', 'values': ['sleep']}]), creation_timestamp=1638798546.0, containers=ThinContainers(images=frozenset({'i/name:0.5'}), names=['name']), cluster='cluster', kubernetes_cluster_hostname='host')
+    DeploymentInfo(name='oh-lord', namespace='have-mercy', labels={}, annotations={}, selector=Selector(match_labels={}, match_expressions=[MatchExpression(key='app', operator='In', values=['sleep'])]), creation_timestamp=1638798546.0, containers=ThinContainers(images=frozenset({'i/name:0.5'}), names=['name']), cluster='cluster', kubernetes_cluster_hostname='host')
     """
     return DeploymentInfo(**json.loads(string_table[0][0]))
 

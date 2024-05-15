@@ -3,19 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+import datetime
 import itertools
 import time
 from typing import Any, NamedTuple
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest_mock import MockerFixture
-
-from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, Service, State
-from cmk.base.plugins.agent_based.utils import ps as ps_utils
+
+from cmk.plugins.lib import ps as ps_utils
 
 
 def splitter(
@@ -606,7 +610,7 @@ check_results = [
                 "<table><tr><th>name</th><th>user</th><th>virtual size</th>"
                 "<th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr>"
                 "<tr><td>emacs</td><td>on</td><td>1.00 GiB</td><td>296 MiB</td>"
-                "<td>Oct 23 2018 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"
+                "<td>2018-10-23 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"
             ),
         ),
     ],
@@ -635,7 +639,7 @@ check_results = [
             state=State.OK,
             notice=(
                 "name /usr/lib/firefox/firefox, user on, virtual size 2.79 GiB,"
-                " resident size 461 MiB, creation time Oct 24 2018 04:38:07, pid 7912,"
+                " resident size 461 MiB, creation time 2018-10-24 04:38:07, pid 7912,"
                 " cpu usage 0.0%\r\n"
             ),
         ),
@@ -656,7 +660,7 @@ check_results = [
             state=State.OK,
             notice=(
                 "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 10.9 MiB,"
-                " resident size 1.12 MiB, creation time Oct 24 2018 08:08:12, pid 10884,"
+                " resident size 1.12 MiB, creation time 2018-10-24 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\n"
             ),
         ),
@@ -678,9 +682,9 @@ check_results = [
             state=State.OK,
             notice=(
                 "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 10.9 MiB,"
-                " resident size 1.12 MiB, creation time Oct 24 2018 08:08:12, pid 10884,"
+                " resident size 1.12 MiB, creation time 2018-10-24 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve,"
-                " virtual size 10.9 MiB, resident size 1.21 MiB, creation time Oct 24 2018 09:24:43, "
+                " virtual size 10.9 MiB, resident size 1.21 MiB, creation time 2018-10-24 09:24:43, "
                 "pid 30136, cpu usage 0.0%\r\n"
             ),
         ),
@@ -701,7 +705,7 @@ check_results = [
             state=State.OK,
             notice=(
                 "name /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 10.9 MiB,"
-                " resident size 1.21 MiB, creation time Oct 24 2018 09:24:43, pid 30136,"
+                " resident size 1.21 MiB, creation time 2018-10-24 09:24:43, pid 30136,"
                 " cpu usage 0.0%\r\n"
             ),
         ),
@@ -986,11 +990,10 @@ def test_check_ps_common(inv_item: Service, reference: type_defs.CheckResult) ->
         _cpu_cores, data, _ = ps_section._parse_ps(now, info)
         parsed.extend((None, ps_info, cmd_line, now) for (ps_info, cmd_line) in data)
 
-    factory_defaults = {"levels": (1, 1, 99999, 99999)}
-    factory_defaults.update(inv_item.parameters)
+    factory_defaults = {"levels": (1, 1, 99999, 99999), **inv_item.parameters}
     item = inv_item.item
     assert item is not None
-    with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("CET"))):
         test_result: type_defs.CheckResult = list(
             ps_utils.check_ps_common(
                 label="Processes",
@@ -1304,7 +1307,7 @@ def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
             (None, ps_info, cmd_line, ps_time) for (ps_info, cmd_line) in parsed_lines
         ]
 
-        with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime
+        with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("CET"))):
             return list(
                 ps_utils.check_ps_common(
                     label="Processes",
@@ -1343,13 +1346,13 @@ def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
             notice="\r\n".join(
                 [
                     "name firefox, user on, virtual size 2.17 GiB, resident size 424 MiB,"
-                    " creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%",
+                    " creation time 1970-01-01 00:34:02, pid 25576, cpu usage 0.0%",
                     "name firefox, user on, virtual size 1.78 GiB, resident size 351 MiB,"
-                    " creation time Jan 01 1970 00:54:03, pid 25664, cpu usage 0.0%",
+                    " creation time 1970-01-01 00:54:03, pid 25664, cpu usage 0.0%",
                     "name firefox, user on, virtual size 7.59 GiB, resident size 224 MiB,"
-                    " creation time Jan 01 1970 00:34:04, pid 25758, cpu usage 0.0%",
+                    " creation time 1970-01-01 00:34:04, pid 25758, cpu usage 0.0%",
                     "name firefox, user on, virtual size 1.45 GiB, resident size 81.1 MiB,"
-                    " creation time Jan 01 1970 00:34:05, pid 25898, cpu usage %.1f%%\r\n"
+                    " creation time 1970-01-01 00:34:05, pid 25898, cpu usage %.1f%%\r\n"
                     % cpu_util,
                 ]
             ),
@@ -1400,7 +1403,7 @@ def test_parse_ps_windows(mocker: MockerFixture) -> None:
         assert False, "how do I not have an item"
     item = service.item
 
-    mocker.patch("cmk.base.plugins.agent_based.utils.ps.cpu_rate", return_value=1000000)
+    mocker.patch("cmk.plugins.lib.ps.cpu_rate", return_value=1000000)
     mocker.patch("cmk.base.plugins.agent_based.agent_based_api.v1.get_value_store", return_value={})
     results = list(
         ps_check.check_ps(

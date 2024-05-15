@@ -6,10 +6,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.plugins.lib.fan import check_fan
+from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.fan import check_fan
-from .utils.netextreme import DETECT_NETEXTREME
 
 
 @dataclass
@@ -17,7 +18,9 @@ class VSPSwitchFanInfo:
     description: str
     operational_status: str
     operational_speed: str
-    operational_speed_rpm: float | None  # there are cases where this is not present in the walk, because only newer devices have it
+    operational_speed_rpm: (
+        float | None
+    )  # there are cases where this is not present in the walk, because only newer devices have it
 
 
 VSPSwitchesSection = Mapping[str, VSPSwitchFanInfo]

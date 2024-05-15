@@ -8,9 +8,10 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.cisco import DETECT_CISCO
-from cmk.base.plugins.agent_based.utils.cisco_sensor_item import cisco_sensor_item
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.cisco import DETECT_CISCO
+from cmk.plugins.lib.cisco_sensor_item import cisco_sensor_item
 
 # .1.3.6.1.4.1.9.9.13.1.5.1.2.1 "removed"
 # .1.3.6.1.4.1.9.9.13.1.5.1.2.2 "AC Power Supply"
@@ -78,7 +79,12 @@ def check_cisco_power(item, _no_params, info):
     return None
 
 
+def parse_cisco_power(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_power"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_power,
     detect=DETECT_CISCO,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.13.1.5.1",

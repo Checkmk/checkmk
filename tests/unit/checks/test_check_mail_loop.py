@@ -7,9 +7,58 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from .checktestlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
+
+
+def test_check_mail_loop_basic() -> None:
+    raw_params = {
+        "item": "MailLoop_imap",
+        "subject": "Some subject",
+        "send": (
+            "SMTP",
+            {
+                "server": "smtp.gmx.de",
+                "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+                "connection": {"tls": True, "port": 42},
+            },
+        ),
+        "fetch": (
+            "IMAP",
+            {
+                "server": "imap.gmx.de",
+                "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                "connection": {"disable_tls": False, "port": 123},
+            },
+        ),
+        "mail_from": "me_from@gmx.de",
+        "mail_to": "me_to@gmx.de",
+        "connect_timeout": 23,
+        "duration": (93780, 183840),
+    }
+
+    assert ActiveCheck("check_mail_loop").run_argument_function(raw_params) == [
+        "--fetch-protocol=IMAP",
+        "--fetch-server=imap.gmx.de",
+        "--fetch-tls",
+        "--fetch-port=123",
+        "--fetch-username=me@gmx.de",
+        "--fetch-password=p4ssw0rd",
+        "--connect-timeout=23",
+        "--send-protocol=SMTP",
+        "--send-server=smtp.gmx.de",
+        "--send-port=42",
+        "--send-tls",
+        "--send-username=me@gmx.de",
+        "--send-password=p4ssw0rd",
+        "--mail-from=me_from@gmx.de",
+        "--mail-to=me_to@gmx.de",
+        "--status-suffix=non-existent-testhost-MailLoop_imap",
+        "--warning=93780",
+        "--critical=183840",
+        "--subject=Some subject",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -18,11 +67,12 @@ pytestmark = pytest.mark.checks
         (
             {
                 "item": "foo",
+                "send": ("SMTP", {"connection": {}}),
                 "fetch": (
-                    None,
+                    "IMAP",
                     {
                         "server": "bar",
-                        "connection": {"disable_tls": True, "tcp_port": 143},
+                        "connection": {"disable_tls": True, "port": 143},
                         "auth": ("basic", ("hans", "wurst")),
                     },
                 ),
@@ -30,12 +80,13 @@ pytestmark = pytest.mark.checks
                 "mail_to": None,
             },
             [
-                "--fetch-protocol=None",
+                "--fetch-protocol=IMAP",
                 "--fetch-server=bar",
                 "--fetch-port=143",
                 "--fetch-username=hans",
                 "--fetch-password=wurst",
-                "--smtp-server=$HOSTADDRESS$",
+                "--send-protocol=SMTP",
+                "--send-server=$HOSTADDRESS$",
                 "--mail-from=None",
                 "--mail-to=None",
                 "--status-suffix=non-existent-testhost-foo",
@@ -45,16 +96,19 @@ pytestmark = pytest.mark.checks
             {
                 "item": "MailLoop_imap",
                 "subject": "Some subject",
-                "smtp_server": "smtp.gmx.de",
-                "smtp_tls": True,
-                "imap_tls": True,
-                "smtp_port": 42,
-                "smtp_auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+                "send": (
+                    "SMTP",
+                    {
+                        "server": "smtp.gmx.de",
+                        "connection": {"tls": True, "port": 42},
+                        "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+                    },
+                ),
                 "fetch": (
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "connection": {},
+                        "connection": {"disable_tls": False},
                         "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
                     },
                 ),
@@ -70,11 +124,12 @@ pytestmark = pytest.mark.checks
                 "--fetch-username=me@gmx.de",
                 "--fetch-password=p4ssw0rd",
                 "--connect-timeout=23",
-                "--smtp-server=smtp.gmx.de",
-                "--smtp-tls",
-                "--smtp-port=42",
-                "--smtp-username=me@gmx.de",
-                "--smtp-password=p4ssw0rd",
+                "--send-protocol=SMTP",
+                "--send-server=smtp.gmx.de",
+                "--send-port=42",
+                "--send-tls",
+                "--send-username=me@gmx.de",
+                "--send-password=p4ssw0rd",
                 "--mail-from=me_from@gmx.de",
                 "--mail-to=me_to@gmx.de",
                 "--status-suffix=non-existent-testhost-MailLoop_imap",
@@ -82,6 +137,103 @@ pytestmark = pytest.mark.checks
                 "--critical=183840",
                 "--subject=Some subject",
             ],
+        ),
+        pytest.param(
+            {
+                "item": "foo",
+                "send": (
+                    "EWS",
+                    {
+                        "server": "$HOSTADDRESS$",
+                        "connection": {
+                            "disable_tls": False,
+                            "disable_cert_validation": True,
+                            "port": 50,
+                        },
+                        "auth": ("oauth2", ("client_id", ("store", "password_1"), "tenant_id")),
+                        "email_address": "address@email.com",
+                    },
+                ),
+                "fetch": (
+                    "IMAP",
+                    {
+                        "server": "bar",
+                        "connection": {"disable_tls": True, "port": 143},
+                        "auth": ("basic", ("hans", "wurst")),
+                    },
+                ),
+                "mail_from": None,
+                "mail_to": None,
+            },
+            [
+                "--fetch-protocol=IMAP",
+                "--fetch-server=bar",
+                "--fetch-port=143",
+                "--fetch-username=hans",
+                "--fetch-password=wurst",
+                "--send-protocol=EWS",
+                "--send-server=$HOSTADDRESS$",
+                "--send-port=50",
+                "--send-tls",
+                "--send-disable-cert-validation",
+                "--send-client-id=client_id",
+                ("store", "password_1", "--send-client-secret=%s"),
+                "--send-tenant-id=tenant_id",
+                "--send-email-address=address@email.com",
+                "--mail-from=None",
+                "--mail-to=None",
+                "--status-suffix=non-existent-testhost-foo",
+            ],
+            id="send EWS, OAuth",
+        ),
+        pytest.param(
+            {
+                "item": "foo",
+                "send": (
+                    "EWS",
+                    {
+                        "server": "$HOSTADDRESS$",
+                        "connection": {
+                            "disable_tls": False,
+                            "disable_cert_validation": True,
+                            "port": 50,
+                        },
+                        "auth": ("basic", ("user", ("store", "password_1"))),
+                        "email_address": "address@email.com",
+                    },
+                ),
+                "fetch": (
+                    "IMAP",
+                    {
+                        "server": "bar",
+                        "connection": {"disable_tls": True, "port": 143},
+                        "auth": ("basic", ("hans", "wurst")),
+                    },
+                ),
+                "mail_from": None,
+                "mail_to": None,
+                "delete_messages": True,
+            },
+            [
+                "--fetch-protocol=IMAP",
+                "--fetch-server=bar",
+                "--fetch-port=143",
+                "--fetch-username=hans",
+                "--fetch-password=wurst",
+                "--send-protocol=EWS",
+                "--send-server=$HOSTADDRESS$",
+                "--send-port=50",
+                "--send-tls",
+                "--send-disable-cert-validation",
+                "--send-username=user",
+                ("store", "password_1", "--send-password=%s"),
+                "--send-email-address=address@email.com",
+                "--mail-from=None",
+                "--mail-to=None",
+                "--delete-messages",
+                "--status-suffix=non-existent-testhost-foo",
+            ],
+            id="send EWS, basic auth",
         ),
     ],
 )

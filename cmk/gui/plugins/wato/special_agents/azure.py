@@ -9,7 +9,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -20,11 +19,16 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Migrate,
     MigrateNotUpdated,
+    RegExp,
     TextInput,
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import HTTPProxyReference, MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import (
+    HTTPProxyReference,
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupVMCloudContainer,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
@@ -52,7 +56,7 @@ CCE_AZURE_SERVICES: Final = [
 
 
 def get_azure_services() -> list[tuple[str, str]]:
-    if edition() is Edition.CCE:
+    if edition() in (Edition.CME, Edition.CCE):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
 
     return RAW_AZURE_SERVICES
@@ -221,7 +225,7 @@ def _valuespec_special_agents_azure():
                         help=_(
                             "By default, data relating to a VM is sent to the group host"
                             " corresponding to the resource group of the VM, the same way"
-                            " as for any other resource. If the VM is present in your "
+                            " as for any other resource. If the VM is present in your"
                             " monitoring as a separate host, you can choose to send the data"
                             " to the VM itself."
                         ),
@@ -245,8 +249,45 @@ def _valuespec_special_agents_azure():
                         ],
                     ),
                 ),
+                (
+                    "import_tags",
+                    CascadingDropdown(
+                        title=("Import tags as host/service labels"),
+                        choices=[
+                            (
+                                "all_tags",
+                                _("Import all valid tags"),
+                                None,
+                            ),
+                            (
+                                "filter_tags",
+                                _("Filter valid tags by key pattern"),
+                                RegExp(
+                                    mode=RegExp.infix,
+                                    allow_empty=False,
+                                    size=50,
+                                ),
+                            ),
+                        ],
+                        orientation="horizontal",
+                        help=_(
+                            "By default, Checkmk imports all Azure tags as host/service labels. "
+                            "The imported tags are added as host labels for resource groups and "
+                            "VMs monitored as hosts and as service labels for resources monitored "
+                            "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"
+                            "Additionally, each host representing a resource group is given the "
+                            "host label 'cmk/azure/resource_group:{rg_name}', and VMs monitored as "
+                            "hosts are given the host label 'cmk/azure/vm:instance', which is done "
+                            "independent of this option.<br>"
+                            "You can further restrict the imported tags by specifying a pattern "
+                            "which Checkmk searches for in the key of the Azure tag, or you can "
+                            "disable the import of Azure tags altogether."
+                        ),
+                    ),
+                ),
             ],
-            optional_keys=["subscription", "proxy", "piggyback_vms", "sequential"],
+            optional_keys=["subscription", "proxy", "import_tags", "piggyback_vms", "sequential"],
+            default_keys=["import_tags"],
         ),
         migrate=_migrate_services,
     )
@@ -280,9 +321,9 @@ def get_services_vs() -> tuple[str, ValueSpec]:
                 allow_empty=True,
                 help=_(
                     "Select which Azure services to monitor.\n"
-                    "In case you want to monitor 'Users in the Active Directory' or 'AD Connect Sync',"
-                    " you will need to grant the 'Directory.Read.All' graph permission to the Azure app"
-                    " and to grant admin consent to it."
+                    "In case you want to monitor 'Users in the Active Directory', 'AD Connect Sync',"
+                    " or 'App Registrations' you will need to grant the 'Directory.Read.All' graph "
+                    "permission to the Azure app and to grant admin consent to it."
                 ),
             ),
             # silently drop values that are only valid in CCE if we're CEE now.

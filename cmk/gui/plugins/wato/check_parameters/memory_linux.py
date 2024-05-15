@@ -21,12 +21,12 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import CascadingDropdown, DEF_VALUE, Dictionary, Sentinel
 
 
-def UpperMemoryLevels(  # type: ignore[no-untyped-def]
-    what,
-    default_percents=None,
-    of_what=None,
+def UpperMemoryLevels(
+    what: str,
+    default_percents: tuple[float, float] | None = None,
+    of_what: str | None = None,
     default_levels_type: Literal["ignore", "abs_used", "perc_used"] | Sentinel = DEF_VALUE,
-):
+) -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Upper levels for %s") % what,
         choices=[
@@ -43,7 +43,12 @@ def UpperMemoryLevels(  # type: ignore[no-untyped-def]
     )
 
 
-def LowerMemoryLevels(what, default_percents=None, of_what=None, help_text=None):
+def LowerMemoryLevels(
+    what: str,
+    default_percents: tuple[float, float] | None = None,
+    of_what: str | None = None,
+    help_text: str | None = None,
+) -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Lower levels for %s") % what,
         help=help_text,

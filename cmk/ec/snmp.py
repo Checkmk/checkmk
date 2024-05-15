@@ -10,18 +10,18 @@ from pathlib import Path
 from typing import Any
 
 import pyasn1.error
-import pysnmp.debug  # type: ignore[import]
-import pysnmp.entity.config  # type: ignore[import]
-import pysnmp.entity.engine  # type: ignore[import]
-import pysnmp.entity.rfc3413.ntfrcv  # type: ignore[import]
-import pysnmp.proto.api  # type: ignore[import]
-import pysnmp.proto.errind  # type: ignore[import]
-import pysnmp.proto.rfc1155  # type: ignore[import]
-import pysnmp.proto.rfc1902  # type: ignore[import]
-import pysnmp.smi.builder  # type: ignore[import]
-import pysnmp.smi.error  # type: ignore[import]
-import pysnmp.smi.rfc1902  # type: ignore[import]
-import pysnmp.smi.view  # type: ignore[import]
+import pysnmp.debug  # type: ignore[import-untyped]
+import pysnmp.entity.config  # type: ignore[import-untyped]
+import pysnmp.entity.engine  # type: ignore[import-untyped]
+import pysnmp.entity.rfc3413.ntfrcv  # type: ignore[import-untyped]
+import pysnmp.proto.api  # type: ignore[import-untyped]
+import pysnmp.proto.errind  # type: ignore[import-untyped]
+import pysnmp.proto.rfc1155  # type: ignore[import-untyped]
+import pysnmp.proto.rfc1902  # type: ignore[import-untyped]
+import pysnmp.smi.builder  # type: ignore[import-untyped]
+import pysnmp.smi.error  # type: ignore[import-untyped]
+import pysnmp.smi.rfc1902  # type: ignore[import-untyped]
+import pysnmp.smi.view  # type: ignore[import-untyped]
 from pyasn1.type.base import SimpleAsn1Type
 
 import cmk.utils.paths
@@ -37,7 +37,7 @@ VarBinds = Iterable[VarBind]
 
 class SNMPTrapParser:
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
-    class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
+    class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):  # type: ignore[misc]
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
@@ -211,7 +211,7 @@ class SNMPTrapParser:
         cb_ctx: None,
     ) -> None:
         if (
-            variables["securityLevel"] in [1, 2]
+            variables["securityLevel"] in {1, 2}
             and variables["statusInformation"]["errorIndication"]
             == pysnmp.proto.errind.unknownCommunityName
         ):
@@ -295,10 +295,7 @@ class SNMPTrapTranslator:
     def _translate_binding_simple(
         oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
     ) -> tuple[str, str]:
-        if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0):
-            key = "Uptime"
-        else:
-            key = str(oid)
+        key = "Uptime" if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0) else str(oid)
         # We could use Asn1Type.isSuperTypeOf() instead of isinstance() below.
         if isinstance(value, (pysnmp.proto.rfc1155.TimeTicks, pysnmp.proto.rfc1902.TimeTicks)):
             val = str(Age(float(value) / 100))
@@ -323,7 +320,7 @@ class SNMPTrapTranslator:
                 )
                 self._logger.debug(
                     "Failed trap var binds:\n%s",
-                    "\n".join([f"{i}: {repr(i)}" for i in var_bind_list]),
+                    "\n".join(f"{i}: {repr(i)}" for i in var_bind_list),
                 )
                 self._logger.debug(traceback.format_exc())
                 translated_oid = str(oid)
@@ -341,8 +338,8 @@ class SNMPTrapTranslator:
         node = mib_var[0].getMibNode()
         translated_oid = mib_var[0].prettyPrint().replace('"', "")
         translated_value = mib_var[1].prettyPrint()
-        if units := getattr(node, "getUnits", lambda: "")():
+        if units := getattr(node, "getUnits", str)():
             translated_value += f" {units}"
-        if description := getattr(node, "getDescription", lambda: "")():
+        if description := getattr(node, "getDescription", str)():
             translated_value += f"({description})"
         return translated_oid, translated_value

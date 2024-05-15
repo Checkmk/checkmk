@@ -1,0 +1,10 @@
+Title: Fix color of Perf-O-Meter for CPU utilization
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1700145079
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The color for the Perf-O-Meter of the CPU utilization lead to hardly readable text in the light theme of Checkmk. This is now fixed.

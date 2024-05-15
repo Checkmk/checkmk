@@ -6,8 +6,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.intel import DETECT_INTEL_TRUE_SCALE
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
 
 # mypy: disable-error-code="var-annotated"
 
@@ -126,9 +127,7 @@ def inventory_intel_true_scale_sensors_temp(parsed):
 
 def check_intel_true_scale_sensors_temp(item, params, parsed):
     if item in parsed:
-        yield check_temperature_list(
-            parsed[item]["temp"], params, "intel_true_scale_sensors_temp_%s" % item
-        )
+        yield from check_temperature_list(parsed[item]["temp"], params)
 
 
 check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(

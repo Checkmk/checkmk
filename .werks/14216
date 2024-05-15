@@ -1,0 +1,13 @@
+Title: Prevent LDAP users from disappearing at remote sites
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1699364878
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+If a remote site had ldap connectors specified, which where not available at the central site,
+the users on the remote site were regularly removed during activate changes.
+This error was not always clearly visible, as the ldap users were resynchronised immediately after activate changes.
+However, this introduced race conditions, such as users not known to the monitoring core or automatic logouts at the remote site.

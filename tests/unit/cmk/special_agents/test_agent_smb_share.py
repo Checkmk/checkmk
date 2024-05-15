@@ -7,10 +7,10 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 from unittest import mock
 
-import freezegun
 import pytest
-from smb.base import NotConnectedError, SharedFile  # type: ignore[import]
-from smb.smb_structs import OperationFailure  # type: ignore[import]
+import time_machine
+from smb.base import NotConnectedError, SharedFile  # type: ignore[import-untyped]
+from smb.smb_structs import OperationFailure  # type: ignore[import-untyped]
 
 from cmk.special_agents.agent_smb_share import (
     connect,
@@ -707,7 +707,7 @@ def test_get_all_shared_files(
     [
         (
             ["\\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1"],
-            r"Pattern \\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1 doesn't match HOSTNAME hostname",
+            r"Pattern \\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1 doesn't match HOSTNAME host name",
         ),
         (
             ["\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1"],
@@ -771,7 +771,7 @@ def test_get_all_shared_files_errors(
     ],
 )
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection", MockSMBConnection)
-@freezegun.freeze_time(datetime(2022, 1, 1, 7, 0, 0, 0))
+@time_machine.travel(datetime(2022, 1, 1, 7, 0, 0, 0))
 def test_smb_share_agent(
     arg_list: Sequence[str] | None,
     files: tuple[str, Sequence[File]],

@@ -2,13 +2,16 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 import pytest
 
 from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.base.plugins.agent_based import esx_vsphere_vm, esx_vsphere_vm_name
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
-from cmk.base.plugins.agent_based.utils.esx_vsphere import ESXVm
+
+from cmk.plugins.lib.esx_vsphere import ESXVm
 
 
 def test_parse_esx_vsphere_name():

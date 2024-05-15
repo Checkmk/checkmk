@@ -11,16 +11,16 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
-tsm_session_default_levels = (300, 600)
+from cmk.agent_based.v2 import StringTable
 
 
 def inventory_tsm_sessions(info):
-    return [(None, tsm_session_default_levels)]
+    yield None, {}
 
 
-def check_tsm_sessions(item, params, info):
+def check_tsm_sessions(item, _no_params, info):
     state = 0
-    warn, crit = params
+    warn, crit = 300, 600
     count = 0
     for entry in info:
         if len(entry) == 4:
@@ -41,7 +41,12 @@ def check_tsm_sessions(item, params, info):
     return state, "%d sessions too long in RecvW or MediaW state" % count
 
 
+def parse_tsm_sessions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["tsm_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_tsm_sessions,
     service_name="tsm_sessions",
     discovery_function=inventory_tsm_sessions,
     check_function=check_tsm_sessions,

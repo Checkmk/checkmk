@@ -46,6 +46,10 @@ def parse_ibm_svc_enclosurestats(info):
     return parsed
 
 
+check_info["ibm_svc_enclosurestats"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_enclosurestats,
+)
+
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -56,15 +60,14 @@ def parse_ibm_svc_enclosurestats(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_enclosurestats_temp(info):
-    for enclosure_id, data in parse_ibm_svc_enclosurestats(info).items():
+def inventory_ibm_svc_enclosurestats_temp(section):
+    for enclosure_id, data in section.items():
         if "temp_c" in data:
             yield enclosure_id, {}
 
 
-def check_ibm_svc_enclosurestats_temp(item, params, info):
-    parsed = parse_ibm_svc_enclosurestats(info)
-    data = parsed.get(item)
+def check_ibm_svc_enclosurestats_temp(item, params, section):
+    data = section.get(item)
     if data is None:
         return None
     return check_temperature(data["temp_c"], params, "ibm_svc_enclosurestats_%s" % item)
@@ -90,15 +93,14 @@ check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_enclosurestats_power(info):
-    for enclosure_id, data in parse_ibm_svc_enclosurestats(info).items():
+def inventory_ibm_svc_enclosurestats_power(section):
+    for enclosure_id, data in section.items():
         if "power_w" in data:
             yield enclosure_id, {}
 
 
-def check_ibm_svc_enclosurestats_power(item, _no_params, info):
-    parsed = parse_ibm_svc_enclosurestats(info)
-    data = parsed.get(item)
+def check_ibm_svc_enclosurestats_power(item, _no_params, section):
+    data = section.get(item)
     if data is None:
         return None
     stat_current = data["power_w"]

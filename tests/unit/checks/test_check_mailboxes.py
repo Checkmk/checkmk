@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from .checktestlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
@@ -23,7 +23,7 @@ pytestmark = pytest.mark.checks
                         "server": "foo",
                         "connection": {
                             "disable_tls": True,
-                            "tcp_port": 143,
+                            "port": 143,
                         },
                         "auth": ("basic", ("hans", "wurst")),
                     },
@@ -75,6 +75,48 @@ pytestmark = pytest.mark.checks
                 "--fetch-client-secret=client_secret",
                 "--fetch-tenant-id=tenant_id",
             ],
+        ),
+        pytest.param(
+            {
+                "service_description": "Mailboxes",
+                "fetch": (
+                    "IMAP",
+                    {
+                        "server": "$HOSTNAME$",
+                        "connection": {
+                            "disable_tls": True,
+                            "disable_cert_validation": True,
+                            "port": 10,
+                        },
+                        "auth": ("basic", ("user", ("store", "password_1"))),
+                    },
+                ),
+                "connect_timeout": 10,
+                "age": (0, 0),
+                "age_newest": (0, 0),
+                "count": (0, 0),
+                "mailboxes": ["mailbox1", "mailbox2"],
+                "retrieve_max": 100,
+            },
+            [
+                "--fetch-protocol=IMAP",
+                "--fetch-server=$HOSTNAME$",
+                "--fetch-disable-cert-validation",
+                "--fetch-port=10",
+                "--fetch-username=user",
+                ("store", "password_1", "--fetch-password=%s"),
+                "--connect-timeout=10",
+                "--retrieve-max=100",
+                "--warn-age-oldest=0",
+                "--crit-age-oldest=0",
+                "--warn-age-newest=0",
+                "--crit-age-newest=0",
+                "--warn-count=0",
+                "--crit-count=0",
+                "--mailbox=mailbox1",
+                "--mailbox=mailbox2",
+            ],
+            id="all parameters",
         ),
     ],
 )

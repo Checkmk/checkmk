@@ -5,6 +5,8 @@
 
 import colorsys
 import random
+from collections import Counter
+from typing import Literal
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -184,7 +186,10 @@ scalar_colors = {
 }
 
 
-def get_palette_color_by_index(i: int, shading="a") -> str:  # type: ignore[no-untyped-def]
+def get_palette_color_by_index(
+    i: int,
+    shading: Literal["a", "b"] = "a",
+) -> str:
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return f"{color_key}/{shading}"
 
@@ -315,3 +320,9 @@ def render_color_icon(color: str) -> HTML:
         style="background-color: rgba(%d, %d, %d, 0.3); border-color: %s;"
         % (*_hex_color_to_rgb_color(color), color),
     )
+
+
+def get_gray_tone(color_counter: Counter[Literal["metric", "predictive"]]) -> str:
+    color_counter.update({"predictive": 1})
+    value = ((color_counter["predictive"] * 15) % 136) + 60
+    return _rgb_color_to_hex_color(value, value, value)

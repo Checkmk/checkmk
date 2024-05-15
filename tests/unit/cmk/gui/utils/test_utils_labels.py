@@ -97,6 +97,7 @@ def test_collect_labels_from_livestatus_rows(
     label_type: LabelType,
     expected_query: str,
     expected_labels: set[tuple[str, str]],
+    request_context: None,
     live: MockLiveStatusConnection,
 ) -> None:
     with live(expect_status_query=False):

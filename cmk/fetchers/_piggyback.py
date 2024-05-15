@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import json
 import logging
-from collections.abc import Mapping, Sequence
-from typing import Any, Final
+from collections.abc import Sequence
+from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.log import VERBOSE
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 
-from cmk.fetchers import Fetcher, Mode
+from ._abstract import Fetcher, Mode
 
 
 class PiggybackFetcher(Fetcher[AgentRawData]):
@@ -24,10 +24,11 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         address: HostAddress | None,
         time_settings: Sequence[tuple[str | None, str, int]],
     ) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.piggyback"))
+        super().__init__()
         self.hostname: Final = hostname
         self.address: Final = address
         self.time_settings: Final = time_settings
+        self._logger: Final = logging.getLogger("cmk.helper.piggyback")
         self._sources: list[PiggybackRawDataInfo] = []
 
     def __repr__(self) -> str:
@@ -43,16 +44,14 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
             + ")"
         )
 
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> "PiggybackFetcher":
-        return cls(**copy.deepcopy(dict(serialized)))
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "hostname": self.hostname,
-            "address": self.address,
-            "time_settings": self.time_settings,
-        }
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, PiggybackFetcher):
+            return False
+        return (
+            self.hostname == other.hostname
+            and self.address == other.address
+            and self.time_settings == other.time_settings
+        )
 
     def open(self) -> None:
         for origin in (self.hostname, self.address):
@@ -62,6 +61,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         self._sources.clear()
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
+        self._logger.log(VERBOSE, "Get piggybacked data")
         return AgentRawData(bytes(self._get_main_section() + self._get_source_labels_section()))
 
     def _get_main_section(self) -> bytearray | bytes:

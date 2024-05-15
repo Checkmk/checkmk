@@ -18,7 +18,7 @@ def _parameter_valuespec_bgp_peer():
             (
                 "admin_state_mapping",
                 Dictionary(
-                    title=_("Admin States"),
+                    title=_("Admin states"),
                     elements=[
                         ("halted", MonitoringState(title="halted")),
                         ("running", MonitoringState(title="running")),
@@ -29,9 +29,10 @@ def _parameter_valuespec_bgp_peer():
             (
                 "peer_state_mapping",
                 Dictionary(
-                    title=_("Peer States"),
+                    title=_("Peer states"),
                     elements=[
                         ("idle", MonitoringState(title="idle")),
+                        ("connect", MonitoringState(title="connect")),
                         ("active", MonitoringState(title="active")),
                         ("opensent", MonitoringState(title="opensent")),
                         ("openconfirm", MonitoringState(title="openconfirm")),

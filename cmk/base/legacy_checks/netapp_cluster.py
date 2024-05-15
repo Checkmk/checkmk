@@ -21,7 +21,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, SNMPTree, startswith
+
+from cmk.agent_based.v2 import all_of, contains, SNMPTree, startswith, StringTable
 
 
 def inventory_netapp_cluster(info):
@@ -89,7 +90,12 @@ def check_netapp_cluster(item, _no_params, info):
     return (3, "Got unhandled information")
 
 
+def parse_netapp_cluster(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netapp_cluster"] = LegacyCheckDefinition(
+    parse_function=parse_netapp_cluster,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "netapp release"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),

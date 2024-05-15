@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from .checktestlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
@@ -15,12 +15,12 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        (
+        pytest.param(
             {
                 "fetch": (
                     "IMAP",
                     {
-                        "connection": {"disable_tls": False, "tcp_port": 143},
+                        "connection": {"disable_tls": False, "port": 143},
                         "auth": ("basic", ("foo", "bar")),
                     },
                 ),
@@ -35,8 +35,58 @@ pytestmark = pytest.mark.checks
                 "--fetch-password=bar",
                 "--connect-timeout=15",
             ],
+            id="imap",
         ),
-        (
+        pytest.param(
+            {
+                "fetch": (
+                    "EWS",
+                    {
+                        "connection": {"disable_tls": True, "port": 143},
+                        "auth": ("basic", ("foo", "bar")),
+                    },
+                ),
+                "connect_timeout": 15,
+            },
+            [
+                "--fetch-protocol=EWS",
+                "--fetch-server=$HOSTADDRESS$",
+                "--fetch-port=143",
+                "--fetch-username=foo",
+                "--fetch-password=bar",
+                "--connect-timeout=15",
+            ],
+            id="ews_no_tls",
+        ),
+        pytest.param(
+            {
+                "fetch": (
+                    "EWS",
+                    {
+                        "server": "$HOSTNAME$",
+                        "connection": {"disable_tls": True, "port": 143},
+                        "auth": (
+                            "oauth2",
+                            ("client_id", ("password", "client_secret"), "tenant_id"),
+                        ),
+                        "email_address": "foo@bar.com",
+                    },
+                ),
+                "connect_timeout": 15,
+            },
+            [
+                "--fetch-protocol=EWS",
+                "--fetch-server=$HOSTNAME$",
+                "--fetch-port=143",
+                "--fetch-client-id=client_id",
+                "--fetch-client-secret=client_secret",
+                "--fetch-tenant-id=tenant_id",
+                "--fetch-email-address=foo@bar.com",
+                "--connect-timeout=15",
+            ],
+            id="ews_oauth",
+        ),
+        pytest.param(
             {
                 "service_description": "Email",
                 "fetch": (
@@ -44,7 +94,7 @@ pytestmark = pytest.mark.checks
                     {
                         "server": "imap.gmx.de",
                         "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
-                        "connection": {"disable_tls": True, "tcp_port": 123},
+                        "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
                 "forward": {
@@ -65,6 +115,45 @@ pytestmark = pytest.mark.checks
                 "--forward-host=me.too@checkmk.com",
                 "--cleanup=delete",
             ],
+            id="imap_with_forward",
+        ),
+        pytest.param(
+            {
+                "service_description": "Email",
+                "fetch": (
+                    "IMAP",
+                    {
+                        "server": "imap.gmx.de",
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                        "connection": {"disable_tls": True, "port": 123},
+                    },
+                ),
+                "forward": {
+                    "facility": 2,
+                    "host": "me.too@checkmk.com",
+                    "method": "my_method",
+                    "match_subject": "subject",
+                    "application": "application",
+                    "body_limit": 1000,
+                    "cleanup": "archive",
+                },
+            },
+            [
+                "--fetch-protocol=IMAP",
+                "--fetch-server=imap.gmx.de",
+                "--fetch-port=123",
+                "--fetch-username=me@gmx.de",
+                "--fetch-password=p4ssw0rd",
+                "--forward-ec",
+                "--forward-method=my_method",
+                "--match-subject=subject",
+                "--forward-facility=2",
+                "--forward-host=me.too@checkmk.com",
+                "--forward-app=application",
+                "--body-limit=1000",
+                "--cleanup=archive",
+            ],
+            id="all_parameters",
         ),
     ],
 )

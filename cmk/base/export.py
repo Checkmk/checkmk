@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """
 Utility module for common code between the CMK base and other parts
 of Check_MK. The GUI is e.g. accessing this module for gathering things
@@ -14,7 +16,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.config as config
 
@@ -34,9 +36,7 @@ def reset_config() -> None:
     _config_loaded = False
 
 
-def service_description(
-    hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item
-) -> str:
+def service_description(hostname: HostName, check_plugin_name: str, item: Item) -> str:
     return config.service_description(
         get_ruleset_matcher(), hostname, CheckPluginName(check_plugin_name), item
     )

@@ -16,8 +16,10 @@ from cmk.checkengine.checking import CheckPluginName
 import cmk.base.plugins.agent_based.netapp_api_qtree_quota as qtree_quota
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.netapp_api_qtree_quota import get_item_names, Qtree
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.netapp_api_qtree_quota import get_item_names
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.netapp_api import Qtree
 
 
 @pytest.fixture(name="value_store_patch")
@@ -278,12 +280,12 @@ def test_get_item_names(qtree: Qtree, expected_result: tuple[str, str]) -> None:
                 Metric("fs_used", 0.0, levels=(0.0046875, 0.0052734375)),
                 Metric("fs_free", 0.005859375, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Used: 0% - 0 B of 6.00 KiB"),
+                Result(state=State.OK, summary="Used: 0% - 0 B of 6.14 kB"),
                 Metric("fs_size", 0.005859375, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-                Metric("trend", 0.0, boundaries=(0.0, 0.000244140625)),
+                Metric("trend", 0.0),
             ],
             id="qtree_without_inodes",
         ),
@@ -324,12 +326,12 @@ def test_get_item_names(qtree: Qtree, expected_result: tuple[str, str]) -> None:
                 Metric("fs_used", 0.0, levels=(0.0046875, 0.0052734375)),
                 Metric("fs_free", 0.005859375, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Used: 0% - 0 B of 6.00 KiB"),
+                Result(state=State.OK, summary="Used: 0% - 0 B of 6.14 kB"),
                 Metric("fs_size", 0.005859375, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-                Metric("trend", 0.0, boundaries=(0.0, 0.000244140625)),
+                Metric("trend", 0.0),
                 Metric("inodes_used", 99.0, levels=(90.0, 95.0), boundaries=(0.0, 100.0)),
                 Result(
                     state=State.CRIT,

@@ -8,9 +8,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 
-raritan_pdu_ocprot_current_default_levels = (14.0, 15.0)
+from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree
 
 # Example for info:
 # [[[u'1.1.1', u'4', u'0'],
@@ -58,7 +57,7 @@ def parse_raritan_pdu_ocprot(string_table):
 
 
 def discover_raritan_pdu_ocprot(section):
-    yield from ((item, raritan_pdu_ocprot_current_default_levels) for item in section)
+    yield from ((item, {}) for item in section)
 
 
 def check_raritan_pdu_ocprot(item, params, parsed):
@@ -73,7 +72,9 @@ def check_raritan_pdu_ocprot(item, params, parsed):
         yield states[data["state"]]
 
     if "current" in data:
-        yield check_levels(data["current"], "current", params, unit="A", infoname="Current")
+        yield check_levels(
+            data["current"], "current", params["levels"], unit="A", infoname="Current"
+        )
 
 
 check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
@@ -93,4 +94,5 @@ check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
     discovery_function=discover_raritan_pdu_ocprot,
     check_function=check_raritan_pdu_ocprot,
     check_ruleset_name="ocprot_current",
+    check_default_parameters={"levels": (14.0, 15.0)},
 )

@@ -7,7 +7,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.mem_used_sections import parse_openbsd_mem
-from cmk.base.plugins.agent_based.utils.memory import SectionMemUsed
+
+from cmk.plugins.lib.memory import SectionMemUsed
 
 
 @pytest.mark.parametrize(

@@ -9,23 +9,34 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Age, Tuple
+from cmk.gui.valuespec import Age, Dictionary, Migrate, Tuple
 
 
 def _parameter_valuespec_lamp_operation_time():
-    return Tuple(
-        elements=[
-            Age(
-                title=_("Warning at"),
-                default_value=1000 * 3600,
-                display=["hours"],
-            ),
-            Age(
-                title=_("Critical at"),
-                default_value=1500 * 3600,
-                display=["hours"],
-            ),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        elements=[
+                            Age(
+                                title=_("Warning at"),
+                                default_value=1000 * 3600,
+                                display=["hours"],
+                            ),
+                            Age(
+                                title=_("Critical at"),
+                                default_value=1500 * 3600,
+                                display=["hours"],
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

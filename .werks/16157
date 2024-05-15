@@ -1,0 +1,14 @@
+Title: rules: value_raw now a required field for create and update
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1698333357
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+
+This werk addresses an issue when creating or updating a rule. Previously,
+the value_raw field was not a required field and when it was not provided,
+would cause a crash.  This change makes this value_raw field a required
+field.

@@ -6,16 +6,17 @@
 import abc
 import json
 import urllib.parse
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from typing import Any, Generic, Literal, TypeVar
 
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.type_defs import RoleName, SingleInfos, VisualContext
+from cmk.gui.type_defs import HTTPVariables, RoleName, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -71,6 +72,11 @@ class Dashlet(abc.ABC, Generic[T]):
     def single_infos(cls) -> SingleInfos:
         """Return a list of the single infos (for the visual context) of this dashlet"""
         return []
+
+    @classmethod
+    def ignored_context_choices(cls) -> Sequence[str]:
+        """Return a sequence of strings that should be ignored in the context filter dropdown"""
+        return ()
 
     @classmethod
     def is_selectable(cls) -> bool:
@@ -159,12 +165,14 @@ class Dashlet(abc.ABC, Generic[T]):
     def __init__(
         self,
         dashboard_name: DashboardName,
+        dashboard_owner: UserId,
         dashboard: DashboardConfig,
         dashlet_id: DashletId,
         dashlet: T,
     ) -> None:
         super().__init__()
         self._dashboard_name = dashboard_name
+        self._dashboard_owner = dashboard_owner
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id
         self._dashlet_spec = dashlet
@@ -200,6 +208,10 @@ class Dashlet(abc.ABC, Generic[T]):
     @property
     def dashboard_name(self) -> str:
         return self._dashboard_name
+
+    @property
+    def dashboard_owner(self) -> UserId:
+        return self._dashboard_owner
 
     def default_display_title(self) -> str:
         return self.title()
@@ -288,7 +300,7 @@ class Dashlet(abc.ABC, Generic[T]):
         new_qs = urllib.parse.urlencode(url_vars)
         return urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
-    def _dashlet_context_vars(self) -> list[tuple[str, str]]:
+    def _dashlet_context_vars(self) -> HTTPVariables:
         return visuals.context_to_uri_vars(self.context)
 
     def unconfigured_single_infos(self) -> set[str]:
@@ -343,6 +355,7 @@ class Dashlet(abc.ABC, Generic[T]):
             request,
             [
                 ("name", self._dashboard_name),
+                ("owner", self._dashboard_owner),
                 ("id", self._dashlet_id),
                 ("mtime", self._dashboard["mtime"]),
             ],

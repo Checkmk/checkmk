@@ -16,12 +16,12 @@
 #include <algorithm>
 #include <atomic>
 #include <cerrno>
+#include <charconv>
 #include <chrono>
 #include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <functional>
@@ -29,7 +29,10 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
+#include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -42,12 +45,12 @@
 #include "livestatus/Poller.h"
 #include "livestatus/Queue.h"
 #include "livestatus/RegExp.h"
+#include "livestatus/StringUtils.h"
 #include "livestatus/TrialManager.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
 #include "livestatus/data_encoding.h"
 #include "livestatus/global_counters.h"
-#include "livestatus/strutil.h"
 #include "neb/Comment.h"
 #include "neb/Downtime.h"
 #include "neb/NebCore.h"
@@ -55,6 +58,8 @@
 #include "neb/nagios.h"
 
 using namespace std::chrono_literals;
+using namespace std::string_literals;
+using namespace std::string_view_literals;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
@@ -305,7 +310,8 @@ private:
     void publish(const LogRecord &record) override {
         std::ostringstream os;
         getFormatter()->format(os, record);
-        // TODO(sp) The Nagios headers are (once again) not const-correct...
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         write_to_all_logs(const_cast<char *>(os.str().c_str()),
                           NSLOG_INFO_MESSAGE);
     }
@@ -462,11 +468,13 @@ void open_unix_socket() {
 
     // Bind it to its address. This creates the file with the name
     // fl_paths.livestatus_socket
-    struct sockaddr_un sockaddr;
-    sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, fl_paths.livestatus_socket.c_str(),
-            sizeof(sockaddr.sun_path) - 1);
+    struct sockaddr_un sockaddr {
+        .sun_family = AF_UNIX, .sun_path = ""
+    };
+    fl_paths.livestatus_socket.string().copy(&sockaddr.sun_path[0],
+                                             sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     if (::bind(fl_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
                sizeof(sockaddr)) < 0) {
         generic_error ge{"cannot bind UNIX socket to address \"" +
@@ -645,7 +653,7 @@ int broker_command(int event_type __attribute__((__unused__)), void *data) {
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
         if (sc->command_type == CMD_CUSTOM_COMMAND &&
-            strcmp(sc->command_string, "_LOG") == 0) {
+            sc->command_string == "_LOG"s) {
             write_to_all_logs(sc->command_args, -1);
             counterIncrement(Counter::log_messages);
             fl_core->triggers().notify_all(Triggers::Kind::log);
@@ -858,18 +866,166 @@ void deregister_callbacks() {
 }
 
 std::filesystem::path check_path(const std::string &name,
-                                 const std::string &path) {
+                                 std::string_view path) {
     struct stat st;
-    if (stat(path.c_str(), &st) != 0) {
+    if (stat(std::string{path}.c_str(), &st) != 0) {
         Error(fl_logger_nagios) << name << " '" << path << "' not existing!";
         return {};  // disable
     }
-    if (access(path.c_str(), R_OK) != 0) {
+    if (access(std::string{path}.c_str(), R_OK) != 0) {
         Error(fl_logger_nagios) << name << " '" << path
                                 << "' not readable, please fix permissions.";
         return {};  // disable
     }
     return path;
+}
+
+template <typename T>
+T parse_number(std::string_view str) {
+    T value{};
+    auto [ptr, ec] = std::from_chars(str.begin(), str.end(), value);
+    // TODO(sp) Error handling
+    return ec != std::errc{} || ptr != str.end() ? T{} : value;
+}
+
+void livestatus_parse_argument(Logger *logger, std::string_view param_name,
+                               std::string_view param_value) {
+    Warning(logger) << "name=[" << param_name << "], value=[" << param_value
+                    << "]\n";
+    if (param_name == "debug"sv) {
+        const int debug_level = parse_number<int>(param_value);
+        if (debug_level >= 2) {
+            fl_livestatus_log_level = LogLevel::debug;
+        } else if (debug_level >= 1) {
+            fl_livestatus_log_level = LogLevel::informational;
+        } else {
+            fl_livestatus_log_level = LogLevel::notice;
+        }
+        Notice(logger) << "setting debug level to " << fl_livestatus_log_level;
+    } else if (param_name == "max_cached_messages"sv) {
+        fl_limits._max_cached_messages = parse_number<size_t>(param_value);
+        Notice(logger) << "setting max number of cached log messages to "
+                       << fl_limits._max_cached_messages;
+    } else if (param_name == "max_lines_per_logfile"sv) {
+        fl_limits._max_lines_per_logfile = parse_number<size_t>(param_value);
+        Notice(logger) << "setting max number lines per logfile to "
+                       << fl_limits._max_lines_per_logfile;
+    } else if (param_name == "thread_stack_size"sv) {
+        fl_thread_stack_size = parse_number<size_t>(param_value);
+        Notice(logger) << "setting size of thread stacks to "
+                       << fl_thread_stack_size;
+    } else if (param_name == "max_response_size"sv) {
+        fl_limits._max_response_size = parse_number<size_t>(param_value);
+        Notice(logger) << "setting maximum response size to "
+                       << fl_limits._max_response_size << " bytes ("
+                       << (fl_limits._max_response_size / (1024.0 * 1024.0))
+                       << " MB)";
+    } else if (param_name == "num_client_threads"sv) {
+        const int c = parse_number<int>(param_value);
+        if (c <= 0 || c > 1000) {
+            Warning(logger) << "cannot set num_client_threads to " << c
+                            << ", must be > 0 and <= 1000";
+        } else {
+            Notice(logger) << "setting number of client threads to " << c;
+            g_livestatus_threads = c;
+        }
+    } else if (param_name == "query_timeout"sv) {
+        const int c = parse_number<int>(param_value);
+        if (c < 0) {
+            Warning(logger) << "query_timeout must be >= 0";
+        } else {
+            fl_query_timeout = std::chrono::milliseconds(c);
+            if (c == 0) {
+                Notice(logger) << "disabled query timeout!";
+            } else {
+                Notice(logger)
+                    << "Setting timeout for reading a query to " << c << " ms";
+            }
+        }
+    } else if (param_name == "idle_timeout"sv) {
+        const int c = parse_number<int>(param_value);
+        if (c < 0) {
+            Warning(logger) << "idle_timeout must be >= 0";
+        } else {
+            fl_idle_timeout = std::chrono::milliseconds(c);
+            if (c == 0) {
+                Notice(logger) << "disabled idle timeout!";
+            } else {
+                Notice(logger) << "setting idle timeout to " << c << " ms";
+            }
+        }
+    } else if (param_name == "service_authorization"sv) {
+        if (param_value == "strict") {
+            fl_authorization._service = ServiceAuthorization::strict;
+        } else if (param_value == "loose") {
+            fl_authorization._service = ServiceAuthorization::loose;
+        } else {
+            Warning(logger) << "invalid service authorization mode, "
+                               "allowed are strict and loose";
+        }
+    } else if (param_name == "group_authorization"sv) {
+        if (param_value == "strict") {
+            fl_authorization._group = GroupAuthorization::strict;
+        } else if (param_value == "loose") {
+            fl_authorization._group = GroupAuthorization::loose;
+        } else {
+            Warning(logger)
+                << "invalid group authorization mode, allowed are strict and loose";
+        }
+    } else if (param_name == "log_file"sv) {
+        fl_paths.log_file = param_value;
+    } else if (param_name == "crash_reports_path"sv) {
+        fl_paths.crash_reports_directory =
+            check_path("crash reports directory", param_value);
+    } else if (param_name == "license_usage_history_path"sv) {
+        fl_paths.license_usage_history_file =
+            check_path("license usage history file", param_value);
+    } else if (param_name == "mk_inventory_path"sv) {
+        fl_paths.inventory_directory =
+            check_path("inventory directory", param_value);
+    } else if (param_name == "structured_status_path"sv) {
+        fl_paths.structured_status_directory =
+            check_path("structured status directory", param_value);
+    } else if (param_name == "robotmk_html_log_path"sv) {
+        fl_paths.robotmk_html_log_directory =
+            check_path("robotmk html log directory", param_value);
+    } else if (param_name == "mk_logwatch_path"sv) {
+        fl_paths.logwatch_directory =
+            check_path("logwatch directory", param_value);
+    } else if (param_name == "prediction_path"sv) {
+        fl_paths.prediction_directory =
+            check_path("prediction directory", param_value);
+    } else if (param_name == "mkeventd_socket"sv) {
+        fl_paths.event_console_status_socket = param_value;
+    } else if (param_name == "state_file_created_file"sv) {
+        fl_paths.state_file_created_file = param_value;
+    } else if (param_name == "licensed_state_file"sv) {
+        fl_paths.licensed_state_file = param_value;
+    } else if (param_name == "pnp_path"sv) {
+        fl_paths.rrd_multiple_directory =
+            check_path("RRD multiple directory", param_value);
+    } else if (param_name == "data_encoding"sv) {
+        if (param_value == "utf8") {
+            fl_data_encoding = Encoding::utf8;
+        } else if (param_value == "latin1") {
+            fl_data_encoding = Encoding::latin1;
+        } else if (param_value == "mixed") {
+            fl_data_encoding = Encoding::mixed;
+        } else {
+            Warning(logger) << "invalid data_encoding " << param_value
+                            << ", allowed are utf8, latin1 and mixed";
+        }
+    } else if (param_name == "edition"sv) {
+        fl_edition = param_value;
+    } else if (param_name == "livecheck"sv) {
+        Warning(logger) << "livecheck has been removed from Livestatus, sorry.";
+    } else if (param_name == "disable_statehist_filtering"sv) {
+        Warning(logger)
+            << "the disable_statehist_filtering option has been removed, filtering is always active now.";
+    } else {
+        Warning(logger) << "ignoring invalid option " << param_name << "="
+                        << param_value;
+    }
 }
 
 void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
@@ -886,162 +1042,24 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         return;  // no arguments, use default options
     }
 
-    // TODO(sp) Nuke next_field and friends. Use C++ strings everywhere.
-    std::vector<char> args_buf(args_orig, args_orig + strlen(args_orig) + 1);
-    char *args = args_buf.data();
-    while (char *token = next_field(&args)) {
-        /* find = */
-        char *part = token;
-        const std::string left = safe_next_token(&part, '=');
-        const char *right_token = next_token(&part, 0);
-        if (right_token == nullptr) {
-            fl_paths.livestatus_socket = left;
+    std::string_view args{args_orig};
+    while (true) {
+        args.remove_prefix(
+            std::min(args.size(), args.find_first_not_of(mk::whitespace)));
+        if (args.empty()) {
+            break;
+        }
+        auto arg = args.substr(0, args.find_first_of(mk::whitespace));
+        args.remove_prefix(std::min(args.size(), arg.size() + 1));
+        auto equal_pos = arg.find('=');
+        if (equal_pos == std::string_view::npos) {
+            Warning(logger)
+                << "### setting livestatus_socket=[" << arg << "]\n";
+            fl_paths.livestatus_socket = arg;
         } else {
-            const std::string right{right_token};
-            if (left == "debug") {
-                const int debug_level = atoi(right.c_str());
-                if (debug_level >= 2) {
-                    fl_livestatus_log_level = LogLevel::debug;
-                } else if (debug_level >= 1) {
-                    fl_livestatus_log_level = LogLevel::informational;
-                } else {
-                    fl_livestatus_log_level = LogLevel::notice;
-                }
-                Notice(logger)
-                    << "setting debug level to " << fl_livestatus_log_level;
-            } else if (left == "max_cached_messages") {
-                fl_limits._max_cached_messages =
-                    strtoul(right.c_str(), nullptr, 10);
-                Notice(logger)
-                    << "setting max number of cached log messages to "
-                    << fl_limits._max_cached_messages;
-            } else if (left == "max_lines_per_logfile") {
-                fl_limits._max_lines_per_logfile =
-                    strtoul(right.c_str(), nullptr, 10);
-                Notice(logger) << "setting max number lines per logfile to "
-                               << fl_limits._max_lines_per_logfile;
-            } else if (left == "thread_stack_size") {
-                fl_thread_stack_size = strtoul(right.c_str(), nullptr, 10);
-                Notice(logger) << "setting size of thread stacks to "
-                               << fl_thread_stack_size;
-            } else if (left == "max_response_size") {
-                fl_limits._max_response_size =
-                    strtoul(right.c_str(), nullptr, 10);
-                Notice(logger)
-                    << "setting maximum response size to "
-                    << fl_limits._max_response_size << " bytes ("
-                    << (fl_limits._max_response_size / (1024.0 * 1024.0))
-                    << " MB)";
-            } else if (left == "num_client_threads") {
-                const int c = atoi(right.c_str());
-                if (c <= 0 || c > 1000) {
-                    Warning(logger) << "cannot set num_client_threads to " << c
-                                    << ", must be > 0 and <= 1000";
-                } else {
-                    Notice(logger)
-                        << "setting number of client threads to " << c;
-                    g_livestatus_threads = c;
-                }
-            } else if (left == "query_timeout") {
-                const int c = atoi(right.c_str());
-                if (c < 0) {
-                    Warning(logger) << "query_timeout must be >= 0";
-                } else {
-                    fl_query_timeout = std::chrono::milliseconds(c);
-                    if (c == 0) {
-                        Notice(logger) << "disabled query timeout!";
-                    } else {
-                        Notice(logger)
-                            << "Setting timeout for reading a query to " << c
-                            << " ms";
-                    }
-                }
-            } else if (left == "idle_timeout") {
-                const int c = atoi(right.c_str());
-                if (c < 0) {
-                    Warning(logger) << "idle_timeout must be >= 0";
-                } else {
-                    fl_idle_timeout = std::chrono::milliseconds(c);
-                    if (c == 0) {
-                        Notice(logger) << "disabled idle timeout!";
-                    } else {
-                        Notice(logger)
-                            << "setting idle timeout to " << c << " ms";
-                    }
-                }
-            } else if (left == "service_authorization") {
-                if (right == "strict") {
-                    fl_authorization._service = ServiceAuthorization::strict;
-                } else if (right == "loose") {
-                    fl_authorization._service = ServiceAuthorization::loose;
-                } else {
-                    Warning(logger) << "invalid service authorization mode, "
-                                       "allowed are strict and loose";
-                }
-            } else if (left == "group_authorization") {
-                if (right == "strict") {
-                    fl_authorization._group = GroupAuthorization::strict;
-                } else if (right == "loose") {
-                    fl_authorization._group = GroupAuthorization::loose;
-                } else {
-                    Warning(logger)
-                        << "invalid group authorization mode, allowed are strict and loose";
-                }
-            } else if (left == "log_file") {
-                fl_paths.log_file = right;
-            } else if (left == "crash_reports_path") {
-                fl_paths.crash_reports_directory =
-                    check_path("crash reports directory", right);
-            } else if (left == "license_usage_history_path") {
-                fl_paths.license_usage_history_file =
-                    check_path("license usage history file", right);
-            } else if (left == "mk_inventory_path") {
-                fl_paths.inventory_directory =
-                    check_path("inventory directory", right);
-            } else if (left == "structured_status_path") {
-                fl_paths.structured_status_directory =
-                    check_path("structured status directory", right);
-            } else if (left == "robotmk_html_log_path") {
-                fl_paths.robotmk_html_log_directory =
-                    check_path("robotmk html log directory", right);
-            } else if (left == "mk_logwatch_path") {
-                fl_paths.logwatch_directory =
-                    check_path("logwatch directory", right);
-            } else if (left == "prediction_path") {
-                fl_paths.prediction_directory =
-                    check_path("prediction directory", right);
-            } else if (left == "mkeventd_socket") {
-                fl_paths.event_console_status_socket = right;
-            } else if (left == "state_file_created_file") {
-                fl_paths.state_file_created_file = right;
-            } else if (left == "licensed_state_file") {
-                fl_paths.licensed_state_file = right;
-            } else if (left == "pnp_path") {
-                fl_paths.rrd_multiple_directory =
-                    check_path("RRD multiple directory", right);
-            } else if (left == "data_encoding") {
-                if (right == "utf8") {
-                    fl_data_encoding = Encoding::utf8;
-                } else if (right == "latin1") {
-                    fl_data_encoding = Encoding::latin1;
-                } else if (right == "mixed") {
-                    fl_data_encoding = Encoding::mixed;
-                } else {
-                    Warning(logger) << "invalid data_encoding " << right
-                                    << ", allowed are utf8, latin1 and mixed";
-                }
-            } else if (left == "edition") {
-                fl_edition = right;
-            } else if (left == "livecheck") {
-                Warning(logger)
-                    << "livecheck has been removed from Livestatus, sorry.";
-            } else if (left == "disable_statehist_filtering") {
-                Warning(logger)
-                    << "the disable_statehist_filtering option has been removed, filtering is always active now.";
-            } else {
-                Warning(logger)
-                    << "ignoring invalid option " << left << "=" << right;
-            }
+            auto param_name = arg.substr(0, equal_pos);
+            arg.remove_prefix(std::min(arg.size(), param_name.size() + 1));
+            livestatus_parse_argument(logger, param_name, arg);
         }
     }
 

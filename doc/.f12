@@ -13,4 +13,4 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 echo "TARGET: $ROOT/share/check_mk/checks"
-sudo rsync -ar --delete-after ./ "$ROOT/share/doc/check_mk/"
+rsync -rlD --delete-after ./ "$ROOT/share/doc/check_mk/"

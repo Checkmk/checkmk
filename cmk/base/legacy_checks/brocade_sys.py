@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree, startswith
+
+from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, startswith
 
 
 def parse_brocade_sys(string_table):
@@ -19,7 +20,7 @@ def parse_brocade_sys(string_table):
             "mem_used_percent": int(string_table[0][1]),
         }
     except (IndexError, ValueError):
-        return {}
+        return None
 
 
 #   .--Memory--------------------------------------------------------------.
@@ -37,24 +38,12 @@ def inventory_brocade_sys_mem(parsed):
 
 
 def check_brocade_sys_mem(item, params, parsed):
-    mem_used_percent = parsed["mem_used_percent"]
-    infotext = "%s%%" % mem_used_percent
-    if not params:
-        perfdata = [("mem_used_percent", mem_used_percent)]
-        return 0, infotext, perfdata
-
-    warn, crit = params
-    perfdata = [("mem_used_percent", mem_used_percent, warn, crit)]
-    levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
-    if mem_used_percent >= crit:
-        status = 2
-    elif mem_used_percent >= warn:
-        status = 1
-    else:
-        status = 0
-    if status:
-        infotext += levelstext
-    return status, infotext, perfdata
+    yield check_levels(
+        parsed["mem_used_percent"],
+        "mem_used_percent",
+        params["levels"],
+        human_readable_func=render.percent,
+    )
 
 
 check_info["brocade_sys.mem"] = LegacyCheckDefinition(
@@ -63,6 +52,7 @@ check_info["brocade_sys.mem"] = LegacyCheckDefinition(
     discovery_function=inventory_brocade_sys_mem,
     check_function=check_brocade_sys_mem,
     check_ruleset_name="memory_relative",
+    check_default_parameters={"levels": None},
 )
 
 # .

@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import NamedTuple
+from typing import NamedTuple, TypeVar
 
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.view_utils import CellContent, CellSpec
 
 from .painter_lib import PainterConfiguration
+
+T = TypeVar("T")
 
 
 def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
@@ -31,13 +33,13 @@ def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
         return str(e)
 
 
-def is_stale(row: Row) -> bool:
+def is_stale(row: Row, *, config: Config) -> bool:
     staleness = row.get("service_staleness", row.get("host_staleness", 0)) or 0
-    return staleness >= active_config.staleness_threshold
+    return staleness >= config.staleness_threshold
 
 
-def paint_stalified(row: Row, text: CellContent) -> CellSpec:
-    if is_stale(row):
+def paint_stalified(row: Row, text: CellContent, *, config: Config) -> CellSpec:
+    if is_stale(row, config=config):
         return "stale", text
     return "", text
 

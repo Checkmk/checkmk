@@ -4,22 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module implements password hashing and validation of password hashes.
 
-At the moment it wraps the respective functionality from passlib, with the goal of replacing
-passlib in the future.
-
 The password hashing functions return hashes in the Modular Crypto Format
 (https://passlib.readthedocs.io/en/stable/modular_crypt_format.html#modular-crypt-format).
+
 The format contains an identifier for the hash algorithm that was used, the number of rounds,
 a salt, and the actual checksum -- which is all the information needed to verify the hash with a
 given password (see `verify`).
 """
 import logging
-import sys
+import re
 
-# pylint errors are suppressed since this is the only module that should import passlib.
-import passlib.context  # pylint: disable=passlib-module-import
-import passlib.exc  # pylint: disable=passlib-module-import
-from passlib import hash as passlib_hash  # pylint: disable=passlib-module-import
+import bcrypt
 
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.exceptions import MKException
@@ -29,8 +24,6 @@ logger = logging.getLogger(__name__)
 # Using code should not be able to change the number of rounds (to unsafe values), but test code
 # has to run with reduced rounds. They can be monkeypatched here.
 BCRYPT_ROUNDS = 12
-# The default modern bcrypt identifier is "2b", but htpasswd will only accept "2y".
-BCRYPT_IDENT = "2y"
 
 
 class PasswordTooLongError(MKException):
@@ -61,29 +54,14 @@ def hash_password(password: Password, *, allow_truncation: bool = False) -> Pass
     :raise: PasswordTooLongError if the provided password is longer than 72 bytes.
     :raise: ValueError if the input password contains null bytes.
     """
-    try:
+
+    if len(password.raw_bytes) <= 72 or allow_truncation:
+        hash_pass = bcrypt.hashpw(password.raw_bytes, bcrypt.gensalt(BCRYPT_ROUNDS)).decode("utf-8")
+        assert hash_pass.startswith("$2b$")
         return PasswordHash(
-            # The typing stubs for passlib are buggy (incorrect use of multiple inheritance).
-            passlib_hash.bcrypt.using(  # type: ignore[call-arg]
-                rounds=BCRYPT_ROUNDS, truncate_error=not allow_truncation, ident=BCRYPT_IDENT
-            ).hash(password.raw)
-        )
-    except passlib.exc.PasswordTruncateError as e:
-        raise PasswordTooLongError(e)
-
-
-_context = passlib.context.CryptContext(
-    # The only scheme we support is bcrypt. This includes the regular '$2b$' form of the hash,
-    # as well as Apache's legacy form '$2y$' (which we currently also create).
-    #
-    # Other hashing schemes that were supported in the past should have been migrated to bcrypt
-    # with Werk #14391. For the record, hashes that could be encountered on old installations were
-    # sha256_crypt, md5_crypt, apr_md5_crypt and des_crypt.
-    schemes=["bcrypt"],
-    # There are currently no "deprecated" algorithms that we auto-update on login.
-    deprecated=[],
-    bcrypt__ident=BCRYPT_IDENT,
-)
+            "$2y$" + hash_pass.removeprefix("$2b$")
+        )  # Forcing 2y for htpasswd, bcrypt will still verify 2y hashes but not generate them.
+    raise PasswordTooLongError("Password too long")
 
 
 def verify(password: Password, password_hash: PasswordHash) -> None:
@@ -95,28 +73,32 @@ def verify(password: Password, password_hash: PasswordHash) -> None:
     :return: None if the password is valid; raises an exception otherwise (see below).
 
     :raise: PasswordInvalidError if the password does not match the hash.
-    :raise: ValueError - if the hash algorithm in `password_hash` could not be identified.
-                       - if the identified hash algorithm specifies too few rounds.
-                       - if `password` or `password_hash` contain invalid characters (e.g. NUL).
     """
-    try:
-        valid = _context.verify(password.raw, password_hash)
-    except passlib.exc.UnknownHashError:
-        logger.warning(
-            "Invalid hash. Only bcrypt is supported.",
-            exc_info=sys.exc_info(),
-        )
-        raise ValueError("Invalid hash")
-    if not valid:
-        raise PasswordInvalidError
+    if not matches(password, password_hash):
+        raise PasswordInvalidError("Checkmk failed to validate the provided password")
+
+
+def matches(password: Password, password_hash: PasswordHash) -> bool:
+    """check if a password matches the password hash
+
+    If you can please use verify()"""
+
+    # Null bytes in the password are prohibited by the Password type
+    if "\0" in password_hash:
+        raise ValueError("Null character identified in password hash.")
+
+    return bcrypt.checkpw(password.raw_bytes, password_hash.encode("utf-8"))
 
 
 def is_unsupported_legacy_hash(password_hash: PasswordHash) -> bool:
     """Was the hash algorithm used for this hash once supported but isn't anymore?"""
-    legacy = ["sha256_crypt", "md5_crypt", "apr_md5_crypt", "des_crypt"]
-    return (
-        passlib.context.CryptContext(schemes=legacy + ["bcrypt"]).identify(
-            password_hash, required=False
-        )
-        in legacy
-    )
+    regex_list = [
+        r"^\$5\$(rounds=[0-9]+\$)?[a-zA-Z0-9\/.]{0,16}\$[a-zA-Z0-9\/.]{43}$",  # SHA256 crypt
+        r"^\$1\$[a-zA-Z0-9\/.]{0,8}\$[a-zA-Z0-9\/.]{22}",  # MD5 crypt
+        r"^\$apr1\$[a-zA-Z0-9\/.]{0,8}\$[a-zA-Z0-9\/.]{22}$",  # Apache MD5
+        r"^[a-zA-Z0-9\/.]{13}$",  # DES crypt
+    ]
+    for regex in regex_list:
+        if re.match(regex, password_hash):
+            return True
+    return False

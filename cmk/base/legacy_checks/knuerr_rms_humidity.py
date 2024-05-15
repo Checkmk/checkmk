@@ -7,14 +7,13 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.knuerr import DETECT_KNUERR
 
-knuerr_rms_humidity_default_levels = (30, 40, 70, 75)
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.knuerr import DETECT_KNUERR
 
 
 def inventory_knuerr_rms_humidity(info):
-    return [(None, knuerr_rms_humidity_default_levels)]
+    yield None, {}
 
 
 def check_knuerr_rms_humidity(_no_item, params, info):
@@ -22,7 +21,12 @@ def check_knuerr_rms_humidity(_no_item, params, info):
     return check_humidity(float(reading) / 10, params)
 
 
+def parse_knuerr_rms_humidity(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(
+    parse_function=parse_knuerr_rms_humidity,
     detect=DETECT_KNUERR,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3711.15.1.1.1.2",
@@ -32,4 +36,8 @@ check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_knuerr_rms_humidity,
     check_function=check_knuerr_rms_humidity,
     check_ruleset_name="single_humidity",
+    check_default_parameters={
+        "levels_lower": (40, 30),
+        "levels": (70, 75),
+    },
 )

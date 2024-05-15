@@ -8,10 +8,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.plugins.lib.fan import check_fan
+from cmk.plugins.lib.primekey import DETECT_PRIMEKEY
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.fan import check_fan
-from .utils.primekey import DETECT_PRIMEKEY
 
 
 @dataclass(frozen=True)
@@ -81,7 +82,7 @@ def check(
 
 register.check_plugin(
     name="primekey_fan",
-    service_name="Fan PrimeKey %s",
+    service_name="PrimeKey Fan %s",
     discovery_function=discover,
     check_function=check,
     check_default_parameters={"lower": (1000, 0), "output_metrics": True},

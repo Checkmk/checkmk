@@ -2,6 +2,8 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 from collections.abc import Sequence
 
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -10,7 +12,8 @@ from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_s
 
 from cmk.base.plugins.agent_based import esx_vsphere_vm, esx_vsphere_vm_datastores
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
-from cmk.base.plugins.agent_based.utils import esx_vsphere
+
+from cmk.plugins.lib import esx_vsphere
 
 
 def test_parse_esx_vsphere_datastore():

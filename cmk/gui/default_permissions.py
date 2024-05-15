@@ -7,24 +7,44 @@ from cmk.gui import config
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
     Permission,
-    permission_registry,
-    permission_section_registry,
+    PermissionRegistry,
     PermissionSection,
+    PermissionSectionRegistry,
 )
 
-#   .----------------------------------------------------------------------.
-#   |        ____                     _         _                          |
-#   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___l(_) ___  _ __  ___          |
-#   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
-#   |       |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \         |
-#   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Declare general permissions for Multisite                            |
-#   '----------------------------------------------------------------------'
+
+def register(
+    permission_section_registry: PermissionSectionRegistry, permission_registry: PermissionRegistry
+) -> None:
+    permission_section_registry.register(PermissionSectionGeneral)
+    permission_registry.register(PermissionGeneralUse)
+    permission_registry.register(PermissionServerSideRequests)
+    permission_registry.register(PermissionSeeAll)
+    permission_registry.register(PermissionViewOptionColumns)
+    permission_registry.register(PermissionViewOptionRefresh)
+    permission_registry.register(PermissionPainterOptions)
+    permission_registry.register(PermissionAct)
+    permission_registry.register(PermissionSeeSidebar)
+    permission_registry.register(PermissionConfigureSidebar)
+    permission_registry.register(PermissionEditProfile)
+    permission_registry.register(PermissionSeeAvailability)
+    permission_registry.register(PermissionCsvExport)
+    permission_registry.register(PermissionEditNotifications)
+    permission_registry.register(PermissionDisableNotifications)
+    permission_registry.register(PermissionEditUserAttributes)
+    permission_registry.register(PermissionChangePassword)
+    permission_registry.register(PermissionManage2Fa)
+    permission_registry.register(PermissionLogout)
+    permission_registry.register(PermissionIgnoreSoftLimit)
+    permission_registry.register(PermissionIgnoreHardLimit)
+    permission_registry.register(PermissionAcknowledgeWerks)
+    permission_registry.register(PermissionSeeFailedNotifications24H)
+    permission_registry.register(PermissionSeeFailedNotifications)
+    permission_registry.register(PermissionSeeStalesInTacticalOverview)
+    permission_registry.register(PermissionSeeCrashReports)
+    permission_registry.register(PermissionParentChildTopology)
 
 
-@permission_section_registry.register
 class PermissionSectionGeneral(PermissionSection):
     @property
     def name(self) -> str:
@@ -39,319 +59,265 @@ class PermissionSectionGeneral(PermissionSection):
         return 10
 
 
-PermissionGeneralUse = permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="use",
-        title=_l("Use the GUI at all"),
-        description=_l("Users without this permission are not let in at all"),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionGeneralUse = Permission(
+    section=PermissionSectionGeneral,
+    name="use",
+    title=_l("Use the GUI at all"),
+    description=_l("Users without this permission are not let in at all"),
+    defaults=config.default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="server_side_requests",
-        title=_l("Perform requests from the Checkmk server"),
-        description=_l(
-            "Users with this permission can use GUI features that initiate network connections "
-            "from the Checkmk server to other hosts on the intra/internet. Although this feature "
-            "makes it e.g. easier to fetch CAs from servers it may be used to scan the internal "
-            "network for open ports and running services."
-        ),
-        defaults=["admin"],
-    )
+PermissionServerSideRequests = Permission(
+    section=PermissionSectionGeneral,
+    name="server_side_requests",
+    title=_l("Perform requests from the Checkmk server"),
+    description=_l(
+        "Users with this permission can use GUI features that initiate network connections "
+        "from the Checkmk server to other hosts on the intra/internet. Although this feature "
+        "makes it e.g. easier to fetch CAs from servers it may be used to scan the internal "
+        "network for open ports and running services."
+    ),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="see_all",
-        title=_l("See all host and services"),
-        description=_l(
-            "See all objects regardless of contacts and contact groups. "
-            "If combined with 'perform commands' then commands may be done on all objects."
-        ),
-        defaults=["admin", "guest"],
-    )
+PermissionSeeAll = Permission(
+    section=PermissionSectionGeneral,
+    name="see_all",
+    title=_l("See all host and services"),
+    description=_l(
+        "See all objects regardless of contacts and contact groups. "
+        "If combined with 'perform commands' then commands may be done on all objects."
+    ),
+    defaults=["admin", "guest"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="view_option_columns",
-        title=_l("Change view display columns"),
-        description=_l(
-            "Interactively change the number of columns being displayed by a view (does not edit or customize the view)"
-        ),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionViewOptionColumns = Permission(
+    section=PermissionSectionGeneral,
+    name="view_option_columns",
+    title=_l("Change view display columns"),
+    description=_l(
+        "Interactively change the number of columns being displayed by a view (does not edit or customize the view)"
+    ),
+    defaults=config.default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="view_option_refresh",
-        title=_l("Change view display refresh"),
-        description=_l(
-            "Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)"
-        ),
-        defaults=["admin", "user"],
-    )
+PermissionViewOptionRefresh = Permission(
+    section=PermissionSectionGeneral,
+    name="view_option_refresh",
+    title=_l("Change view display refresh"),
+    description=_l(
+        "Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)"
+    ),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="painter_options",
-        title=_l("Change column display options"),
-        description=_l(
-            "Some of the display columns offer options for customizing their output. "
-            "For example time stamp columns can be displayed absolute, relative or "
-            "in a mixed style. This permission allows the user to modify display options"
-        ),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionPainterOptions = Permission(
+    section=PermissionSectionGeneral,
+    name="painter_options",
+    title=_l("Change column display options"),
+    description=_l(
+        "Some of the display columns offer options for customizing their output. "
+        "For example time stamp columns can be displayed absolute, relative or "
+        "in a mixed style. This permission allows the user to modify display options"
+    ),
+    defaults=config.default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="act",
-        title=_l("Perform commands in views"),
-        description=_l(
-            "Allows users to perform commands on hosts and services in the views. If "
-            "no further permissions are granted, actions can only be done on objects one is a contact for"
-        ),
-        defaults=["admin", "user"],
-    )
+PermissionAct = Permission(
+    section=PermissionSectionGeneral,
+    name="act",
+    title=_l("Perform commands in views"),
+    description=_l(
+        "Allows users to perform commands on hosts and services in the views. If "
+        "no further permissions are granted, actions can only be done on objects one is a contact for"
+    ),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="see_sidebar",
-        title=_l("Use Checkmk sidebar"),
-        description=_l("Without this permission the Checkmk sidebar will be invisible"),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionSeeSidebar = Permission(
+    section=PermissionSectionGeneral,
+    name="see_sidebar",
+    title=_l("Use Checkmk sidebar"),
+    description=_l("Without this permission the Checkmk sidebar will be invisible"),
+    defaults=config.default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="configure_sidebar",
-        title=_l("Configure sidebar"),
-        description=_l("This allows the user to add, move and remove sidebar snapins."),
-        defaults=["admin", "user"],
-    )
+PermissionConfigureSidebar = Permission(
+    section=PermissionSectionGeneral,
+    name="configure_sidebar",
+    title=_l("Configure sidebar"),
+    description=_l("This allows the user to add, move and remove sidebar snap-ins."),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="edit_profile",
-        title=_l("Edit the user profile"),
-        description=_l("Permits the user to change the user profile settings."),
-        defaults=["admin", "user"],
-    )
+PermissionEditProfile = Permission(
+    section=PermissionSectionGeneral,
+    name="edit_profile",
+    title=_l("Edit the user profile"),
+    description=_l("Permits the user to change the user profile settings."),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="see_availability",
-        title=_l("See the availability"),
-        description=_l("See the availability views of hosts and services"),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionSeeAvailability = Permission(
+    section=PermissionSectionGeneral,
+    name="see_availability",
+    title=_l("See the availability"),
+    description=_l("See the availability views of hosts and services"),
+    defaults=config.default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="csv_export",
-        title=_l("Use CSV export"),
-        description=_l("Export data of views using the CSV export"),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionCsvExport = Permission(
+    section=PermissionSectionGeneral,
+    name="csv_export",
+    title=_l("Use CSV export"),
+    description=_l("Export data of views using the CSV export"),
+    defaults=config.default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="edit_notifications",
-        title=_l("Edit personal notification settings"),
-        description=_l(
-            "This allows a user to edit his personal notification settings. You also need the permission "
-            "<i>Edit the user profile</i> in order to do this."
-        ),
-        defaults=["admin", "user"],
-    )
+PermissionEditNotifications = Permission(
+    section=PermissionSectionGeneral,
+    name="edit_notifications",
+    title=_l("Edit personal notification settings"),
+    description=_l(
+        "This allows a user to edit his personal notification settings. You also need the permission "
+        "<i>Edit the user profile</i> in order to do this."
+    ),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="disable_notifications",
-        title=_l("Disable all personal notifications"),
-        description=_l(
-            "This permissions provides a checkbox and timerange in the personal settings of the user that "
-            "allows him to completely disable all of his notifications. Use with caution."
-        ),
-        defaults=["admin"],
-    )
+PermissionDisableNotifications = Permission(
+    section=PermissionSectionGeneral,
+    name="disable_notifications",
+    title=_l("Disable all personal notifications"),
+    description=_l(
+        "This permissions provides a checkbox and time range in the personal settings of the user that "
+        "allows him to completely disable all of his notifications. Use with caution."
+    ),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="edit_user_attributes",
-        title=_l("Edit personal user attributes"),
-        description=_l(
-            "This allows a user to edit his personal user attributes. You also need the permission "
-            "<i>Edit the user profile</i> in order to do this."
-        ),
-        defaults=["admin", "user"],
-    )
+PermissionEditUserAttributes = Permission(
+    section=PermissionSectionGeneral,
+    name="edit_user_attributes",
+    title=_l("Edit personal user attributes"),
+    description=_l(
+        "This allows a user to edit his personal user attributes. You also need the permission "
+        "<i>Edit the user profile</i> in order to do this."
+    ),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="change_password",
-        title=_l("Edit the user password"),
-        description=_l("Permits the user to change the password."),
-        defaults=["admin", "user"],
-    )
+PermissionChangePassword = Permission(
+    section=PermissionSectionGeneral,
+    name="change_password",
+    title=_l("Edit the user password"),
+    description=_l("Permits the user to change the password."),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="manage_2fa",
-        title=_l("Edit the user two-factor authentication"),
-        description=_l(
-            "Permits the user to edit two-factor authentication (Webauthn credentials)."
-        ),
-        defaults=["admin", "user"],
-    )
+PermissionManage2Fa = Permission(
+    section=PermissionSectionGeneral,
+    name="manage_2fa",
+    title=_l("Edit the user two-factor authentication"),
+    description=_l("Permits the user to edit two-factor authentication (Webauthn credentials)."),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="logout",
-        title=_l("Logout"),
-        description=_l("Permits the user to logout."),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionLogout = Permission(
+    section=PermissionSectionGeneral,
+    name="logout",
+    title=_l("Logout"),
+    description=_l("Permits the user to logout."),
+    defaults=config.default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="ignore_soft_limit",
-        title=_l("Ignore soft query limit"),
-        description=_l(
-            "Allows to ignore the soft query limit imposed upon the number of datasets returned by a query"
-        ),
-        defaults=["admin", "user"],
-    )
+PermissionIgnoreSoftLimit = Permission(
+    section=PermissionSectionGeneral,
+    name="ignore_soft_limit",
+    title=_l("Ignore soft query limit"),
+    description=_l(
+        "Allows to ignore the soft query limit imposed upon the number of datasets returned by a query"
+    ),
+    defaults=["admin", "user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="ignore_hard_limit",
-        title=_l("Ignore hard query limit"),
-        description=_l(
-            "Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"
-        ),
-        defaults=["admin"],
-    )
+PermissionIgnoreHardLimit = Permission(
+    section=PermissionSectionGeneral,
+    name="ignore_hard_limit",
+    title=_l("Ignore hard query limit"),
+    description=_l(
+        "Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"
+    ),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="acknowledge_werks",
-        title=_l("Acknowledge Incompatible Werks"),
-        description=_l(
-            "In the change log of the Checkmk software version the administrator can manage change log entries "
-            "(Werks) that requrire user interaction. These <i>incompatible Werks</i> can be acknowledged only "
-            "if the user has this permission."
-        ),
-        defaults=["admin"],
-    )
+PermissionAcknowledgeWerks = Permission(
+    section=PermissionSectionGeneral,
+    name="acknowledge_werks",
+    title=_l("Acknowledge incompatible Werks"),
+    description=_l(
+        "In the change log of the Checkmk software version the administrator can manage change log entries "
+        "(Werks) that requrire user interaction. These <i>incompatible Werks</i> can be acknowledged only "
+        "if the user has this permission."
+    ),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="see_failed_notifications_24h",
-        title=_l("See failed Notifications (last 24 hours)"),
-        description=_l(
-            "If Checkmk is unable to notify users about problems, the site will warn about this situation "
-            "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
-            "users with this permission. Users with this permission will only see failed notifications "
-            "that occured within the last 24 hours."
-        ),
-        defaults=["user"],
-    )
+PermissionSeeFailedNotifications24H = Permission(
+    section=PermissionSectionGeneral,
+    name="see_failed_notifications_24h",
+    title=_l("See failed notifications (last 24 hours)"),
+    description=_l(
+        "If Checkmk is unable to notify users about problems, the site will warn about this situation "
+        "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+        "users with this permission. Users with this permission will only see failed notifications "
+        "that occured within the last 24 hours."
+    ),
+    defaults=["user"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="see_failed_notifications",
-        title=_l("See failed Notifications (all)"),
-        description=_l(
-            "If Checkmk is unable to notify users about problems, the site will warn about this situation "
-            "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
-            "users with this permission. Users with this permission will see failed notifications between now "
-            'and the configured <a href="wato.py?mode=edit_configvar&varname=failed_notification_horizon">Failed notification horizon</a>.'
-        ),
-        defaults=["admin"],
-    )
+PermissionSeeFailedNotifications = Permission(
+    section=PermissionSectionGeneral,
+    name="see_failed_notifications",
+    title=_l("See failed notifications (all)"),
+    description=_l(
+        "If Checkmk is unable to notify users about problems, the site will warn about this situation "
+        "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+        "users with this permission. Users with this permission will see failed notifications between now "
+        'and the configured <a href="wato.py?mode=edit_configvar&varname=failed_notification_horizon">Failed notification horizon</a>.'
+    ),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="see_stales_in_tactical_overview",
-        title=_l("See stale objects in tactical overview"),
-        description=_l(
-            "Show the column for stale host and service checks in the tactical overview snapin."
-        ),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionSeeStalesInTacticalOverview = Permission(
+    section=PermissionSectionGeneral,
+    name="see_stales_in_tactical_overview",
+    title=_l("See stale objects in tactical overview"),
+    description=_l(
+        "Show the column for stale host and service checks in the tactical overview snap-in."
+    ),
+    defaults=config.default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="see_crash_reports",
-        title=_l("See crash reports"),
-        description=_l(
-            "In case an exception happens while Checkmk is running it may produce crash reports that you can "
-            "use to track down the issues in the code or send it as report to the Checkmk team to fix this issue "
-            "Only users with this permission are able to see the reports in the GUI."
-        ),
-        defaults=["admin"],
-    )
+PermissionSeeCrashReports = Permission(
+    section=PermissionSectionGeneral,
+    name="see_crash_reports",
+    title=_l("See crash reports"),
+    description=_l(
+        "In case an exception happens while Checkmk is running it may produce crash reports that you can "
+        "use to track down the issues in the code or send it as report to the Checkmk team to fix this issue "
+        "Only users with this permission are able to see the reports in the GUI."
+    ),
+    defaults=["admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="parent_child_topology",
-        title=_l("Network Topology"),
-        description=_l(
-            "This dashboard uses the parent relationships of your hosts to "
-            "display a hierarchical map."
-        ),
-        defaults=config.default_authorized_builtin_role_ids,
-    )
+PermissionParentChildTopology = Permission(
+    section=PermissionSectionGeneral,
+    name="parent_child_topology",
+    title=_l("Network topology"),
+    description=_l(
+        "This dashboard uses the parent relationships of your hosts to "
+        "display a hierarchical map."
+    ),
+    defaults=config.default_authorized_builtin_role_ids,
 )

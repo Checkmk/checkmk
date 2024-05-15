@@ -1,0 +1,18 @@
+title: Mailman: Mailinglist Statistics
+agents: linux
+catalog: app/mailman
+license: GPLv2
+distribution: check_mk
+description:
+  This check gathers statistics of Mailinglists hosted with Mailman.
+  Currently the check monitors only the number of subscribed members
+  but might be extended by other statistic information.
+
+  To make this check work, you have to install the mailman_lists
+  agent plug-in on your the host running mailman.
+
+item:
+ Name of the mailinglist
+
+discovery:
+ One service is created for each mailinglist.

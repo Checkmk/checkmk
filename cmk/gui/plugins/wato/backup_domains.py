@@ -13,7 +13,7 @@ backup_domains.update(
         "check_mk": {
             "group": _("Configuration"),
             "title": _(
-                "Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring Configuration"
+                "Hosts, Services, Groups, Time Periods, Business Intelligence and Monitoring Configuration"
             ),
             "prefix": cmk.utils.paths.default_config_dir,
             "paths": [
@@ -32,7 +32,7 @@ backup_domains.update(
         },
         "authorization_v1": {
             "group": _("Configuration"),
-            "title": _("Local Authentication Data"),
+            "title": _("Local authentication data"),
             "prefix": cmk.utils.paths.omd_root,
             "paths": [
                 ("file", "etc/htpasswd"),

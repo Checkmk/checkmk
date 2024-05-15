@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.data_source import DataSourceRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
@@ -15,7 +16,7 @@ from cmk.gui.watolib.host_rename import RenameHostHook, RenameHostHookRegistry, 
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-from . import _config, _filters, _icons, _snapins
+from . import _config, _filters, _icons, _openapi, _snapins, _valuespecs
 from ._host_rename import rename_host_in_bi
 from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
 from .permissions import PermissionBISeeAll, PermissionSectionBI
@@ -60,6 +61,7 @@ def register(
     mode_registry: ModeRegistry,
     icon_and_action_registry: IconRegistry,
     snapin_registry: SnapinRegistry,
+    endpoint_registry: EndpointRegistry,
 ) -> None:
     data_source_registry.register(DataSourceBIAggregations)
     data_source_registry.register(DataSourceBIHostAggregations)
@@ -104,7 +106,9 @@ def register(
     )
     _icons.register(icon_and_action_registry)
     _snapins.register(snapin_registry)
+    _valuespecs.register()
 
     rename_host_hook_registry.register(
         RenameHostHook(RenamePhase.SETUP, "BI aggregations", rename_host_in_bi)
     )
+    _openapi.register(endpoint_registry)

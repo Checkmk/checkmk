@@ -12,7 +12,6 @@
 #include <string_view>
 
 #include "livestatus/Interface.h"
-#include "livestatus/StringUtils.h"
 
 inline double badness(ServiceState state) {
     // unknown is effectively between warning and critical
@@ -136,9 +135,9 @@ public:
     [[nodiscard]] std::string plugin_output() const {
         return std::string{plugin_output_};
     }
-    [[nodiscard]] std::string long_plugin_output() const {
-        return mk::to_multi_line(std::string{long_plugin_output_});
-    }
+    [[nodiscard]] std::string long_plugin_output() const;
+    // See also `cmc::MonitoringLog::decode()`
+    static std::string encode(const std::string &str);
 
 private:
     size_t lineno_;

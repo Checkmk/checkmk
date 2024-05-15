@@ -15,7 +15,9 @@
 #include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/PerfdataAggregator.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/StringFilter.h"
+#include "livestatus/StringSorter.h"
 #include "livestatus/opids.h"
 class Aggregator;
 class Row;
@@ -24,7 +26,7 @@ class User;
 
 // TODO(ml, sp): C++-20 should let us use strings as default template parameter
 // (see P0732).
-template <class T>
+template <typename T>
 class StringColumn : public Column {
 public:
     StringColumn(const std::string &name, const std::string &description,
@@ -49,6 +51,18 @@ public:
             relOp, value);
     }
 
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<StringSorter>(
+            [this](Row row, const std::optional<std::string> &key) {
+                if (key) {
+                    throw std::runtime_error("string column '" + name() +
+                                             "' does not expect key '" +
+                                             (*key) + "'");
+                }
+                return getValue(row);
+            });
+    }
+
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory /*factory*/) const override {
         throw std::runtime_error("aggregating on string column '" + name() +
@@ -65,7 +79,7 @@ private:
     const std::function<std::string(const T &)> f_;
 };
 
-template <class T>
+template <typename T>
 class StringColumnPerfData : public StringColumn<T> {
 public:
     using StringColumn<T>::StringColumn;

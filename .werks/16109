@@ -1,0 +1,12 @@
+Title: host_tag_group: restrict ident to same pattern as in UI
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1698323057
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the allowed string pattern for the host tag group id
+differed to the pattern allowed in the UI. This werk adjusts the pattern
+allowed in the REST API to match the one in the UI.

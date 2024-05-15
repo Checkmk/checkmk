@@ -31,9 +31,10 @@
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
 
 
 def inventory_oracle_jobs(info):
@@ -193,7 +194,7 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
     else:
         last_duration = int(job_runtime.replace(".", ",").split(",", 1)[0])
         # bugfix for an error in mk_oracle agent with missing round over last_duration
-        output.append("Last Duration: %s" % (get_age_human_readable(last_duration)))
+        output.append("Last Duration: %s" % (render.timespan(last_duration)))
 
     if "run_duration" in params:
         warn, crit = params["run_duration"]
@@ -259,7 +260,12 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
     return (state, ", ".join(output), perfdata)
 
 
+def parse_oracle_jobs(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["oracle_jobs"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_jobs,
     service_name="ORA %s Job",
     discovery_function=inventory_oracle_jobs,
     check_function=check_oracle_jobs,

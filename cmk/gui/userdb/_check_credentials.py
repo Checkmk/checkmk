@@ -15,6 +15,7 @@ from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -132,16 +133,11 @@ def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
     if cmk_version.edition() is not cmk_version.Edition.CME:
         return True
 
-    try:
-        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    except ImportError:
-        return True
-
     user = LoggedInUser(user_id)
-    if managed.is_global(user.customer_id):
+    if customer_api().is_global(user.customer_id):
         return True
 
-    return managed.is_current_customer(user.customer_id)
+    return customer_api().is_current_customer(user.customer_id)
 
 
 def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = True) -> None:
@@ -152,4 +148,4 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
 
 
 def user_locked(user_id: UserId) -> bool:
-    return bool(load_user(user_id).get("locked"))
+    return load_user(user_id)["locked"]

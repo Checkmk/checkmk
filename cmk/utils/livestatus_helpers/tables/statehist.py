@@ -759,6 +759,13 @@ class Statehist(Table):
     )
     """Optional performance data of the last check"""
 
+    current_host_performance_data = Column(
+        'current_host_performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     current_host_plugin_output = Column(
         'current_host_plugin_output',
         col_type='string',
@@ -1578,6 +1585,13 @@ class Statehist(Table):
     )
     """Optional performance data of the last check"""
 
+    current_service_performance_data = Column(
+        'current_service_performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     current_service_plugin_output = Column(
         'current_service_plugin_output',
         col_type='string',
@@ -1591,6 +1605,13 @@ class Statehist(Table):
         description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
     """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
+
+    current_service_prediction_files = Column(
+        'current_service_prediction_files',
+        col_type='list',
+        description='List currently available predictions',
+    )
+    """List currently available predictions"""
 
     current_service_previous_hard_state = Column(
         'current_service_previous_hard_state',

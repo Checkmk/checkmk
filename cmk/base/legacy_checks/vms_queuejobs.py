@@ -12,6 +12,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_vms_queuejobs(info):
     return [(None, {})]
@@ -46,7 +48,12 @@ def check_vms_queuejobs(_no_item, params, info):
     return 0, infotext
 
 
+def parse_vms_queuejobs(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["vms_queuejobs"] = LegacyCheckDefinition(
+    parse_function=parse_vms_queuejobs,
     service_name="Queue Jobs",
     discovery_function=inventory_vms_queuejobs,
     check_function=check_vms_queuejobs,

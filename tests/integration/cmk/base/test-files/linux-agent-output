@@ -7,6 +7,10 @@ DataDirectory: /var/lib/check_mk_agent
 SpoolDirectory: /var/lib/check_mk_agent/spool
 PluginsDirectory: /usr/lib/check_mk_agent/plugins
 LocalDirectory: /usr/lib/check_mk_agent/local
+OSType: linux
+OSPlatform: ubuntu
+OSName: Ubuntu
+OSVersion: 22.04
 <<<df>>>
 udev                              devtmpfs     8131600         0   8131600       0% /dev
 tmpfs                             tmpfs        1630584     18312   1612272       2% /run
@@ -800,7 +804,7 @@ unused devices: <none>
 QUEUE_deferred 68 0
 QUEUE_active 4 0
 <<<postfix_mailq_status:sep(58)>>>
-postfix: Postfix is running with backwards-compatible default settings postfix: See http://www.postfix.org/COMPATIBILITY_README.html for details postfix: To disable backwards compatibility use "postconf compatibility_level=2" and "postfix reload" postfix/postfix-script: the Postfix mail system is running: PID: 2051
+postfix/postfix-script: the Postfix mail system is running: PID: 2051
 <<<omd_status:cached(1483648213,60)>>>
 [heute]
 mkeventd 0

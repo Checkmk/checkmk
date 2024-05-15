@@ -55,7 +55,7 @@ def main(args: list[str]) -> int:
 
 def load_plugins() -> None:
     for plugin, exc in _load_plugins():
-        logger.error("Error in action plugin %s: %s\n", plugin, exc)
+        logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if cmk.utils.debug.enabled():
             raise exc
 
@@ -64,7 +64,7 @@ def _load_plugins() -> PluginFailures:
     yield from load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions")
     if edition() is not Edition.CRE:
         yield from load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
-    if edition() is Edition.CCE:
+    if edition() in (Edition.CME, Edition.CCE):
         yield from load_plugins_with_exceptions("cmk.post_rename_site.cce.plugins.actions")
 
 

@@ -1,0 +1,7 @@
+====================
+server_side_calls.v1
+====================
+
+.. automodule:: cmk.server_side_calls.v1
+   :members:
+   :show-inheritance:

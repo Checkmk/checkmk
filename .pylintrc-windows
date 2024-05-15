@@ -96,8 +96,10 @@ disable=
     # https://github.com/psf/black/issues/1331
     line-too-long,
     #---------------------------------------------------------------------------
-    # We are light years away from enabling this...
-    missing-docstring,
+    # We are light years away from enabling these...
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

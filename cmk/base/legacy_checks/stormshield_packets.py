@@ -8,8 +8,9 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
-from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
+
+from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
 
 # Unfortunalty we can not use the normal interface names here, because
 # the interface IDs from the enterprise MIBs and RFC are not the same.
@@ -46,7 +47,12 @@ def check_stormshield_packets(item, _no_params, info):
             yield 0, infotext, perfdata
 
 
+def parse_stormshield_packets(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["stormshield_packets"] = LegacyCheckDefinition(
+    parse_function=parse_stormshield_packets,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.4.1.1",

@@ -9,23 +9,27 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Percentage, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Migrate, Percentage, TextInput
 
 
 def _parameter_valuespec_db2_mem():
-    return Tuple(
-        elements=[
-            Percentage(
-                title=_("Warning if less than"),
-                # xgettext: no-python-format
-                unit=_("% memory left"),
-            ),
-            Percentage(
-                title=_("Critical if less than"),
-                # xgettext: no-python-format
-                unit=_("% memory left"),
-            ),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels_lower",
+                    SimpleLevels(
+                        spec=Percentage,
+                        # xgettext: no-python-format
+                        unit=_("% memory left"),
+                        direction="lower",
+                    ),
+                )
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
     )
 
 

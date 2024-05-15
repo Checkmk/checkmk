@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
 
 from cmk.utils import password_store
-from cmk.utils.config_path import LATEST_CONFIG
 
 from cmk.special_agents import agent_mqtt
-from cmk.special_agents.utils.argument_parsing import Args
+from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 def test_parse_minimal_arguments() -> None:
@@ -50,14 +51,14 @@ def test_parse_all_arguments() -> None:
     assert args.client_id == "ding"
 
 
-def test_parse_password_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    password_store.save({"mqtt_password": "blablu"})
-    password_store.save_for_helpers(LATEST_CONFIG)
+def test_parse_password_store(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    store_file = tmp_path / "store"
+    password_store.save({"mqtt_password": "blablu"}, store_file)
     monkeypatch.setattr(
         "sys.argv",
         [
             "agent_mqtt",
-            "--pwstore=2@0@mqtt_password",
+            f"--pwstore=2@0@{store_file}@mqtt_password",
             "--password",
             "******",
             "--username",

@@ -10,7 +10,7 @@ import schemathesis
 from requests.structures import CaseInsensitiveDict
 
 from tests.schemathesis_openapi import settings
-from tests.schemathesis_openapi.response import fix_response, problem_response
+from tests.schemathesis_openapi.response import fix_response
 from tests.schemathesis_openapi.schema import (
     add_formats_and_patterns,
     require_properties,
@@ -37,33 +37,27 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
 
     # SCHEMA modifications
     require_properties(raw_schema, "InputRuleObject", ["raw_value", "conditions"], "CMK-TODO")
-    require_properties(raw_schema, "LicenseSettings", ["settings"], "CMK-14100")
-
-    require_properties(raw_schema, "UpdateContactGroup", ["attributes"], "CMK-14291")
-    require_properties(raw_schema, "UpdateHostGroup", ["attributes"], "CMK-14291")
-    require_properties(raw_schema, "UpdateServiceGroup", ["attributes"], "CMK-14291")
-
     require_properties(raw_schema, "CheckboxWithStrValue", ["state"], "CMK-TODO", merge=False)
     require_properties(
         raw_schema, "NotificationBulkingCheckbox", ["state"], "CMK-TODO", merge=False
     )
 
-    update_property(raw_schema, "BulkDeleteHost", "entries", {"minItems": 1}, "CMK-14259")
-
     update_property(
         raw_schema,
-        "TimeAllowedRange",
-        "start",
-        {"pattern": "^\\d\\d:\\d\\d(:\\d\\d)?$"},
-        "CMK-14314",
+        "HostOrServiceCondition",
+        "match_on",
+        {"items": {"type": "string", "minLength": 1}},
+        "CMK-15035",
     )
-    update_property(
-        raw_schema,
-        "TimeAllowedRange",
-        "end",
-        {"pattern": "^\\d\\d:\\d\\d(:\\d\\d)?$"},
-        "CMK-14314",
+    require_properties(raw_schema, "HostOrServiceCondition", ["operator", "match_on"], "CMK-15035")
+    require_properties(
+        raw_schema, "TagConditionScalarSchemaBase", ["key", "operator", "value"], "CMK-15035"
     )
+    require_properties(
+        raw_schema, "TagConditionConditionSchemaBase", ["key", "operator", "value"], "CMK-15035"
+    )
+    require_properties(raw_schema, "LabelCondition", ["operator"], "CMK-15035")
+    require_properties(raw_schema, "PreDefinedTimeRange", ["range"], "CMK-15166")
 
     # NOTE: CMK-12182 is mostly done, but fixing InputPassword was apparently overlooked
     update_property(
@@ -72,14 +66,6 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
         "ident",
         {"pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]+$"},
         "CMK-12182",
-    )
-
-    update_property(
-        raw_schema,
-        "InputHostTagGroup",
-        "ident",
-        {"pattern": "^[a-zA-Z_]+[-0-9a-zA-Z_]$"},
-        "CMK-14263",
     )
 
     update_property(
@@ -95,28 +81,6 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
         "snmp_community",
         {"nullable": True},
         "CMK-TODO",
-    )
-
-    update_property(
-        raw_schema,
-        "HostExtensions",
-        "effective_attributes",
-        {"nullable": True},
-        "CMK-14110",
-    )
-    update_property(
-        raw_schema,
-        "NetworkScanResult",
-        "start",
-        {"nullable": True},
-        "CMK-14261",
-    )
-    update_property(
-        raw_schema,
-        "NetworkScanResult",
-        "end",
-        {"nullable": True},
-        "CMK-14261",
     )
 
     update_property(
@@ -201,6 +165,14 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
             "CMK-TODO",
         )
 
+    update_property(
+        raw_schema,
+        "ChangesFields",
+        "user_id",
+        {"nullable": True},
+        "CMK-14995",
+    )
+
     # SCHEMA modifications: additionalProperties
     # control the creation of additionalProperties in the root level of schema object definitions:
     # * do not allow any additionalProperties by default
@@ -233,47 +205,6 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
             ] = settings.default_string_pattern
 
     # PATH modifications
-    paths = raw_schema["paths"]
-    for endpoint in [
-        {"path": _path, "method": _method} for _path in paths for _method in paths[_path]
-    ]:
-        path = endpoint["path"]
-        method = endpoint["method"].lower()
-        responses = paths[path][method]["responses"]
-        if "UNDEFINED-HTTP500" in settings.suppressed_issues and not set(responses).intersection(
-            {"5XX", "500"}
-        ):
-            logger.warning(
-                "%s %s: Suppressed undefined status code 500! #UNDEFINED-HTTP500",
-                method.upper(),
-                path,
-            )
-            responses.update(problem_response("500", "Internal Server Error"))
-        if "UNDEFINED-HTTP400" in settings.suppressed_issues and not set(responses).intersection(
-            {"4XX", "400"}
-        ):
-            logger.warning(
-                "%s %s: Suppressed undefined status code 400!",
-                method.upper(),
-                path,
-            )
-            responses.update(problem_response("400", "Bad request"))
-        if (
-            "UNDEFINED-HTTP404" in settings.suppressed_issues
-            and method in ("get", "put", "patch", "delete")
-            and not "404" in responses
-        ):
-            logger.warning(
-                "%s %s: Suppressed undefined status code 404!",
-                method.upper(),
-                path,
-            )
-            responses.update(problem_response("404", "Not found"))
-    if "CMK-12421" in settings.suppressed_issues:
-        paths["/domain-types/activation_run/actions/activate-changes/invoke"]["post"][
-            "responses"
-        ].update(problem_response("204", "No Content"))
-
     # ignore some endpoints (via deprecating them) to avoid failures during parametrization
     for path, methods in {
         "/objects/rule/{rule_id}/actions/move/invoke": ("post",),
@@ -313,7 +244,7 @@ def hook_before_call(
 def hook_after_call(  # pylint: disable=too-many-branches
     context: schemathesis.hooks.HookContext,
     case: schemathesis.models.Case,
-    response: schemathesis.utils.GenericResponse,
+    response: schemathesis.GenericResponse,
 ) -> None:
     """Modify the case after execution but before validation.
 
@@ -332,7 +263,6 @@ def hook_after_call(  # pylint: disable=too-many-branches
                 valid_body=False,
                 body={},
                 set_body={"links": []},
-                ticket_id="CMK-14101",
             )
         else:
             fix_response(
@@ -348,15 +278,6 @@ def hook_after_call(  # pylint: disable=too-many-branches
                 },
                 ticket_id="INVALID-JSON",
             )
-    fix_response(
-        case,
-        response,
-        method="GET",
-        path="/domain-types/audit_log/collections/all",
-        status_code=200,
-        set_body={"links": []},
-        ticket_id="CMK-14403",
-    )
 
     # generic: empty response Content-Type
     fix_response(
@@ -417,19 +338,6 @@ def hook_after_call(  # pylint: disable=too-many-branches
     fix_response(
         case,
         response,
-        method="POST|PUT",
-        path="/objects/bi_aggregation/{aggregation_id}",
-        status_code=500,
-        traceback=".*\nKeyError:.*",
-        valid_body=True,
-        set_status_code=400,
-        update_headers={"Content-Type": "{problem}"},
-        set_body={"title": "Bad Request", "status": 400, "detail": "Bad Request"},
-        ticket_id="CMK-14416",
-    )
-    fix_response(
-        case,
-        response,
         method="POST",
         path="/domain-types/metric/actions/filter/invoke",
         status_code=500,
@@ -483,24 +391,43 @@ def hook_after_call(  # pylint: disable=too-many-branches
         },
         ticket_id="CMK-13216",
     )
-
-    # invalid status: 500 instead of 401
     fix_response(
         case,
         response,
         method="POST",
-        path="/objects/folder_config/{folder}/actions/move/invoke",
-        body={"detail": "AssertionError: . Crash report generated. Please submit."},
+        path="/domain-types/host_tag_group/collections/all",
+        body={"detail": 'The tag ID ".*" is used twice.'},
         status_code=500,
         set_status_code=400,
-        set_body={
+        update_body={
             "title": "Bad Request",
             "status": 400,
-            "detail": "Can not delete the root folder.",
         },
-        ticket_id="CMK-14256",
+        ticket_id="CMK-15167",
     )
 
     # invalid status: 500 instead of 404
+    fix_response(
+        case,
+        response,
+        method="DELETE",
+        path="/objects/bi_pack/{pack_id}",
+        status_code=500,
+        body={"detail": "The requested pack_id does not exist"},
+        set_status_code=404,
+        update_body={"title": "Not Found", "status": 404},
+        ticket_id="CMK-14991",
+    )
+    fix_response(
+        case,
+        response,
+        method="POST",
+        path="/domain-types/metric/actions/get_custom_graph/invoke",
+        status_code=500,
+        body={"detail": "Cannot find Custom graph with the name .*"},
+        set_status_code=400,
+        update_body={"title": "Not Found", "status": 404},
+        ticket_id="CMK-15515",
+    )
 
     # invalid status: 500 instead of 409

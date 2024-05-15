@@ -6,12 +6,12 @@
 """
 
 import contextlib
+import hashlib
 from collections.abc import Callable, MutableMapping, Sequence
 from functools import partial
 from typing import assert_never
 
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.log import console
+from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.sectionname import SectionMap as _HostSection
 from cmk.utils.sectionname import SectionName
 
@@ -20,6 +20,8 @@ from ._typedefs import (
     ensure_str,
     OID,
     SNMPBackend,
+    SNMPContext,
+    SNMPContextTimeout,
     SNMPRawValue,
     SNMPRowInfo,
     SNMPValueEncoding,
@@ -39,15 +41,15 @@ SNMPScanFunction = Callable[[OIDFunction], bool]
 
 _ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 _ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]
-_ResultColumnsDecoded = list[list[SNMPDecodedValues]]
 
 
 def get_snmp_table(
     *,
     section_name: SectionName | None,
     tree: BackendSNMPTree,
-    walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
+    walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
     backend: SNMPBackend,
+    log: Callable[[str], None],
 ) -> Sequence[SNMPTable]:
     index_column = -1
     index_format: SpecialColumn | None = None
@@ -76,13 +78,14 @@ def get_snmp_table(
             index_column = len(columns)
             index_format = oid.column
         else:
-            rowinfo = _get_snmpwalk(
+            rowinfo = get_snmpwalk(
                 section_name,
                 tree.base,
                 fetchoid,
                 walk_cache=walk_cache,
                 save_walk_cache=oid.save_to_cache,
                 backend=backend,
+                log=log,
             )
             if len(rowinfo) > max_len:
                 max_len_col = len(columns)
@@ -98,7 +101,31 @@ def get_snmp_table(
         index_encoding = columns[index_column][-1]
         columns[index_column] = fetchoid, index_rows, index_encoding
 
-    return _make_table(columns, partial(ensure_str, encoding=backend.config.character_encoding))
+    # Here we have to deal with a nasty problem: Some brain-dead devices
+    # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
+    # in the interfaces MIB with 64 bit counters. So we need to look at
+    # the OIDs and watch out for gaps we need to fill with dummy values.
+    sanitized_columns = _sanitize_snmp_table_columns(columns)
+
+    # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
+    # get python byte strings. But for Checkmk we need unicode strings now.
+    # Convert them by using the standard Checkmk approach for incoming data
+    decoded_columns = [
+        _decode_column(
+            column, value_encoding, partial(ensure_str, encoding=backend.config.character_encoding)
+        )
+        for column, value_encoding in sanitized_columns
+    ]
+
+    if not decoded_columns:
+        return []
+
+    # Now construct table by swapping X and Y.
+    new_info = []
+    for index in range(len(decoded_columns[0])):
+        row = [c[index] for c in decoded_columns]
+        new_info.append(row)
+    return new_info
 
 
 def _make_index_rows(
@@ -125,23 +152,6 @@ def _make_index_rows(
     return index_rows
 
 
-def _make_table(
-    columns: _ResultColumnsUnsanitized, ensure_str_cb: Callable[[str | bytes], str]
-) -> Sequence[SNMPTable]:
-    # Here we have to deal with a nasty problem: Some brain-dead devices
-    # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
-    # in the interfaces MIB with 64 bit counters. So we need to look at
-    # the OIDs and watch out for gaps we need to fill with dummy values.
-    sanitized_columns = _sanitize_snmp_table_columns(columns)
-
-    # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
-    # get python byte strings. But for Checkmk we need unicode strings now.
-    # Convert them by using the standard Checkmk approach for incoming data
-    decoded_columns = _sanitize_snmp_encoding(sanitized_columns, ensure_str_cb)
-
-    return _construct_snmp_table_of_rows(decoded_columns)
-
-
 def _oid_to_bin(oid: OID) -> SNMPRawValue:
     return bytes(int(p) for p in oid.split(".") if p)
 
@@ -166,68 +176,71 @@ def _key_oid_pairs(pair1: tuple[OID, SNMPRawValue]) -> list[int]:
     return _oid_to_intlist(pair1[0].lstrip("."))
 
 
-def _get_snmpwalk(
-    section_name: SectionName | None,
-    base: str,
-    fetchoid: OID,
-    *,
-    walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
-    save_walk_cache: bool,
-    backend: SNMPBackend,
-) -> SNMPRowInfo:
-    with contextlib.suppress(KeyError):
-        cache_info = walk_cache[fetchoid][1]
-        console.vverbose(f"Already fetched OID: {fetchoid}\n")
-        return cache_info
-    info = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
-    walk_cache[fetchoid] = (save_walk_cache, info)
-    return info
-
-
-def _perform_snmpwalk(
+def get_snmpwalk(
     section_name: SectionName | None,
     base_oid: str,
     fetchoid: OID,
     *,
+    walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
+    save_walk_cache: bool,
     backend: SNMPBackend,
+    log: Callable[[str], None],
 ) -> SNMPRowInfo:
+    contexts = backend.config.snmpv3_contexts_of(section_name).contexts
+    context_string = "-".join(["no_context" if not c else c for c in contexts])
+
+    # contexts are hashed in order not to exceed max pathname length
+    context_hash = hashlib.shake_256(context_string.encode("utf-8")).hexdigest(15)
+
+    with contextlib.suppress(KeyError):
+        cache_info = walk_cache[(fetchoid, context_hash, save_walk_cache)]
+        log(f"Already fetched OID: {fetchoid}")
+        return cache_info
+
     added_oids: set[OID] = set()
     rowinfo: SNMPRowInfo = []
 
-    for context in backend.config.snmpv3_contexts_of(section_name):
-        rows = backend.walk(
-            fetchoid,
-            section_name=section_name,
-            table_base_oid=base_oid,
-            context=context,
-        )
+    skip: set[SNMPContext] = set()
+    context_config = backend.config.snmpv3_contexts_of(section_name)
+    for context in context_config.contexts:
+        if context in skip:
+            continue
+
+        try:
+            rows = backend.walk(
+                fetchoid,
+                section_name=section_name,
+                table_base_oid=base_oid,
+                context=context,
+            )
+        except SNMPContextTimeout:
+            if context_config.timeout_policy == "stop":
+                raise
+
+            log(f"Timeout for SNMP context {context}.  Skipping for now.")
+            skip.add(context)
+            continue
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when
         # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
         # by removing any duplicate OID information
         if len(rows) > 1 and rows[0][0] == rows[1][0]:
-            console.vverbose(
-                "Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0]
-            )
+            log("Detected broken SNMP agent. Ignoring duplicate OID {rows[0][0]}.")
             rows = rows[:1]
 
         for row_oid, val in rows:
             if row_oid in added_oids:
-                console.vverbose(f"Duplicate OID found: {row_oid} ({val!r})\n")
+                log(f"Duplicate OID found: {row_oid} ({val!r})")
             else:
                 rowinfo.append((row_oid, val))
                 added_oids.add(row_oid)
 
+    if skip and not rowinfo:
+        raise MKSNMPError("SNMP Error on %s: SNMP query timed out" % backend.config.hostname)
+
+    walk_cache[(fetchoid, context_hash, save_walk_cache)] = rowinfo
     return rowinfo
-
-
-def _sanitize_snmp_encoding(
-    columns: _ResultColumnsSanitized, ensure_str_cb: Callable[[str | bytes], str]
-) -> _ResultColumnsDecoded:
-    return [
-        _decode_column(column, value_encoding, ensure_str_cb) for column, value_encoding in columns
-    ]
 
 
 def _decode_column(
@@ -301,15 +314,3 @@ def _are_ascending_oids(oid_list: list[OID]) -> bool:
         if _cmp_oids(oid_list[a], oid_list[a + 1]) > 0:  # == 0 should never happen
             return False
     return True
-
-
-def _construct_snmp_table_of_rows(columns: _ResultColumnsDecoded) -> Sequence[SNMPTable]:
-    if not columns:
-        return []
-
-    # Now construct table by swapping X and Y.
-    new_info = []
-    for index in range(len(columns[0])):
-        row = [c[index] for c in columns]
-        new_info.append(row)
-    return new_info

@@ -1,0 +1,10 @@
+Title: Broken hostname icon link for parent/child topology
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1698039942
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The parameter host_name in the icon url was wrong. It now uses host_regex instead.

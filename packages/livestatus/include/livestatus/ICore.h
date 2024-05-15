@@ -126,6 +126,7 @@ public:
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     lastCommandCheckTime() const = 0;
     [[nodiscard]] virtual int32_t intervalLength() const = 0;
+    [[nodiscard]] virtual int32_t maxLongOutputSize() const = 0;
     [[nodiscard]] virtual int32_t numHosts() const = 0;
     [[nodiscard]] virtual int32_t numServices() const = 0;
     [[nodiscard]] virtual std::string programVersion() const = 0;
@@ -159,9 +160,9 @@ public:
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     stateFileCreatedTime() const = 0;
     [[nodiscard]] virtual std::vector<std::string> metrics(
-        const IHost &, Logger *logger) const = 0;
+        const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::string> metrics(
-        const IService &, Logger *logger) const = 0;
+        const IService &) const = 0;
 
     [[nodiscard]] virtual Encoding dataEncoding() const = 0;
     [[nodiscard]] virtual size_t maxResponseSize() const = 0;

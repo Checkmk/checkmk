@@ -8,8 +8,9 @@ It defines active_check_info["mailboxes"]
 
 """
 
+CHECK_IDENT = "check_mailboxes"
 
-from cmk.base.check_api import passwordstore_get_cmdline
+from cmk.base.check_legacy_includes.check_mail import general_check_mail_args_from_params
 from cmk.base.config import active_check_info
 
 
@@ -21,7 +22,7 @@ def check_mailboxes_arguments(params):
     ...       'server': 'srv', 'connection': {},
     ...       'auth': ('basic', ('usr', 'pw')),
     ...       'email_address': 'usr@srv.com',
-    ...       'connection': {'disable_tls': True, 'disable_cert_validation': False, 'tcp_port': 123}}),
+    ...       'connection': {'disable_tls': True, 'disable_cert_validation': False, 'port': 123}}),
     ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
     ...     'mailboxes': ['abc', 'def']}):
     ...   print(l)
@@ -40,52 +41,9 @@ def check_mailboxes_arguments(params):
     --mailbox=abc
     --mailbox=def
     """
-    # pylint: disable=too-many-branches
-    try:
-        fetch_protocol, fetch_params = params["fetch"]
-        connection_params = fetch_params["connection"]
-        auth_type, auth_data = fetch_params["auth"]
-    except KeyError as exc:
-        raise ValueError(
-            f"Params for check_mailboxes are faulty (missing {exc}), did you update the config?"
-        )
-
-    args: list[str | tuple[str, str, str]] = [
-        f"--fetch-protocol={fetch_protocol}",
-        f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
-    ]
-
-    # NOTE: this argument will be turned into `--fetch-disable-tls` when
-    # refactoring all mailbox based active checks
-    if not connection_params.get("disable_tls"):
-        args.append("--fetch-tls")
-
-    if connection_params.get("disable_cert_validation"):
-        args.append("--fetch-disable-cert-validation")
-
-    if (fetch_port := connection_params.get("tcp_port")) is not None:
-        args.append(f"--fetch-port={fetch_port}")
-
-    if auth_type == "basic":
-        username, password = auth_data
-        args += [
-            f"--fetch-username={username}",
-            passwordstore_get_cmdline("--fetch-password=%s", password),
-        ]
-
-    else:
-        client_id, client_secret, tenant_id = auth_data
-        args += [
-            f"--fetch-client-id={client_id}",
-            passwordstore_get_cmdline("--fetch-client-secret=%s", client_secret),
-            f"--fetch-tenant-id={tenant_id}",
-        ]
-
-    if "email_address" in fetch_params:
-        args.append(f"--fetch-email-address={fetch_params['email_address']}")
-
-    if "connect_timeout" in params:
-        args.append(f"--connect-timeout={params['connect_timeout']}")
+    args: list[str | tuple[str, str, str]] = general_check_mail_args_from_params(
+        CHECK_IDENT, params
+    )
 
     if "retrieve_max" in params:
         args.append(f"--retrieve-max={params['retrieve_max']}")
@@ -109,7 +67,7 @@ def check_mailboxes_arguments(params):
 
 
 active_check_info["mailboxes"] = {  # pylint: disable=undefined-variable
-    "command_line": "check_mailboxes $ARG1$",
+    "command_line": f"{CHECK_IDENT} $ARG1$",
     "argument_function": check_mailboxes_arguments,
     "service_description": lambda params: params["service_description"],
 }

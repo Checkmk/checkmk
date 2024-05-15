@@ -5,12 +5,10 @@
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-from .checktestlib import CheckResult
+from .checktestlib import Check, CheckResult
 
 pytestmark = pytest.mark.checks
 

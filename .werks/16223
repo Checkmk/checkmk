@@ -1,0 +1,21 @@
+Title: Deprecate automation user login via HTTP parameters
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1700383158
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Checkmk offers a method to authenticate individual requests with the `_username`/`_secret` parameter.
+This also works for GET requests and was used for the Webapi (removed in 2.2).
+
+Having secrets in GET parameters is considered bad practice since these parameters are usually logged by webservers and web proxies.
+
+With this Werk we deprecate this authentication method.
+This means we now introduced a configuration option *Enable automation user authentication via HTTP parameters* to enable/disable this method.
+By default it is enabled to not interrupt existing workflows.
+In Checkmk 2.4 we will disable this by default so it will still be possible to enable this.
+In Checkmk 2.5 this method will be removed entirely.
+
+If you currently use this method we recommend to switch to Basic Authentication.

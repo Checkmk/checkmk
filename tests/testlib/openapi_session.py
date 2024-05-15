@@ -36,7 +36,7 @@ class RequestSessionRequestHandler(RequestHandler):
             params=query_params,
             data=body,
             headers=headers,
-            allow_redirects=False,
+            allow_redirects=True,
         )
         return Response(status_code=resp.status_code, body=resp.text.encode(), headers=resp.headers)
 
@@ -86,11 +86,13 @@ class CMKOpenApiSession(requests.Session):
         port: int = 80,
         site: str = "heute",
         api_version: str = "1.0",
+        site_version_spec: str = "",
     ):
         super().__init__()
         self.host = host
         self.port = port
         self.site = site
+        self.site_version_spec = site_version_spec
         self.api_version = api_version
         self.headers["Accept"] = "application/json"
         self.set_authentication_header(user, password)
@@ -113,7 +115,21 @@ class CMKOpenApiSession(requests.Session):
 
         logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
         response = super().request(method, url, *args, **kwargs)
-        logger.debug("< [%s] %s", response.status_code, response.text)
+
+        if (content_type := response.headers.get("content-type")) in (
+            "application/json",
+            "application/json; charset=utf-8",
+            "text/html; charset=utf-8",
+            "application/problem+json",
+        ):
+            logger.debug("< [%s] %s", response.status_code, response.text)
+        else:
+            logger.debug(
+                "< [%s] Unhandled content type %r (length: %d)",
+                response.status_code,
+                content_type,
+                len(response.content),
+            )
 
         if response.status_code == 401:
             assert isinstance(self.headers["Authorization"], str)  # HACK
@@ -155,6 +171,13 @@ class CMKOpenApiSession(requests.Session):
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         raise UnexpectedResponse.from_response(response)
 
+    def pending_changes(self, sites: list[str] | None = None) -> list[dict[str, Any]]:
+        """Returns a list of all changes currently pending."""
+        response = self.get("/domain-types/activation_run/collections/pending_changes")
+        assert response.status_code == 200
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
     def activate_changes_and_wait_for_completion(
         self,
         sites: list[str] | None = None,
@@ -162,25 +185,39 @@ class CMKOpenApiSession(requests.Session):
         timeout: int = 60,
     ) -> bool:
         with self._wait_for_completion(timeout, "get"):
-            return self.activate_changes(sites, force_foreign_changes)
+            if activation_started := self.activate_changes(sites, force_foreign_changes):
+                pending_changes = self.pending_changes()
+                assert (
+                    len(pending_changes) == 0
+                ), f"There are pending changes that were not activated: {pending_changes}"
+            return activation_started
 
     def create_user(
-        self, username: str, fullname: str, password: str, email: str, contactgroups: list[str]
+        self,
+        username: str,
+        fullname: str,
+        password: str,
+        email: str,
+        contactgroups: list[str],
+        customer: None | str = None,
     ) -> None:
+        body = {
+            "username": username,
+            "fullname": fullname,
+            "auth_option": {
+                "auth_type": "password",
+                "password": password,
+            },
+            "contact_options": {
+                "email": email,
+            },
+            "contactgroups": contactgroups,
+        }
+        if customer:
+            body["customer"] = customer
         response = self.post(
             "domain-types/user_config/collections/all",
-            json={
-                "username": username,
-                "fullname": fullname,
-                "auth_option": {
-                    "auth_type": "password",
-                    "password": password,
-                },
-                "contact_options": {
-                    "email": email,
-                },
-                "contactgroups": contactgroups,
-            },
+            json=body,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -359,6 +396,29 @@ class CMKOpenApiSession(requests.Session):
         with self._wait_for_completion(timeout, "post"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
 
+    def create_host_group(self, name: str, alias: str) -> requests.Response:
+        response = self.post(
+            "/domain-types/host_group_config/collections/all",
+            json={"name": name, "alias": alias},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get_host_group(self, name: str) -> tuple[dict[Any, str], str]:
+        response = self.get(f"/objects/host_group_config/{name}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete_host_group(self, name: str) -> None:
+        response = self.delete(f"/objects/host_group_config/{name}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
     def discover_services(
         self,
         hostname: str,
@@ -379,41 +439,72 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def bulk_discover_services(
+    def bulk_discover_services_and_wait_for_completion(
         self,
         hostnames: list[str],
-        mode: str = "new",
+        monitor_undecided_services: bool = True,
+        remove_vanished_services: bool = False,
+        update_service_labels: bool = False,
+        update_host_labels: bool = True,
         do_full_scan: bool = True,
         bulk_size: int = 10,
         ignore_errors: bool = True,
-        wait_for_completion: bool = False,
     ) -> str:
+        body = {
+            "hostnames": hostnames,
+            "do_full_scan": do_full_scan,
+            "bulk_size": bulk_size,
+            "ignore_errors": ignore_errors,
+        }
+        # TODO: this should be removed once the 2.3.0b3 is available as this
+        # will introduce the options field to the api call. Until then the test should
+        # use the deprecated mode field
+        if self.site_version_spec in ["2.3.0b1", "2.3.0b2"]:
+            body["mode"] = "new"
+        else:
+            body["options"] = {
+                "monitor_undecided_services": monitor_undecided_services,
+                "remove_vanished_services": remove_vanished_services,
+                "update_service_labels": update_service_labels,
+                "update_host_labels": update_host_labels,
+            }
+
         response = self.post(
-            "/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
-            json={
-                "hostnames": hostnames,
-                "mode": mode,
-                "do_full_scan": do_full_scan,
-                "bulk_size": bulk_size,
-                "ignore_errors": ignore_errors,
-            },
+            "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         job_id: str = response.json()["id"]
-        while wait_for_completion and self.get_bulk_discovery_status(job_id) in (
+        while self.get_bulk_discovery_status(job_id) in (
             "initialized",
             "running",
         ):
             time.sleep(0.5)
+
+        status = self.get_bulk_discovery_job_status(job_id)
+
+        if status["extensions"]["state"] != "finished":
+            raise RuntimeError(f"Discovery job {job_id} failed: {status}")
+
+        output = "\n".join(status["extensions"]["logs"]["progress"])
+        if "Traceback (most recent call last)" in output:
+            raise RuntimeError(f"Found traceback in job output: {output}")
+        if "0 failed" not in output:
+            raise RuntimeError(f"Found a failure in job output: {output}")
+
         return job_id
 
     def get_bulk_discovery_status(self, job_id: str) -> str:
+        job_status_response = self.get_bulk_discovery_job_status(job_id)
+        status: str = job_status_response["extensions"]["state"]
+        return status
+
+    def get_bulk_discovery_job_status(self, job_id: str) -> dict:
         response = self.get(f"/objects/discovery_run/{job_id}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        status: str = response.json()["extensions"]["state"]
-        return status
+        job_status_response: dict = response.json()
+        return job_status_response
 
     def discover_services_and_wait_for_completion(
         self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
@@ -431,7 +522,11 @@ class CMKOpenApiSession(requests.Session):
         try:
             yield None
         except Redirect as redirect:
-            redirect_url = redirect.redirect_url
+            if not redirect.redirect_url.startswith("http://"):
+                redirect_url = f"http://{self.host}:{self.port}{redirect.redirect_url}"
+            else:
+                redirect_url = redirect.redirect_url
+
             while redirect_url:
                 if time.time() > (start + timeout):
                     raise TimeoutError("wait for completion timed out")
@@ -441,7 +536,7 @@ class CMKOpenApiSession(requests.Session):
                     url=redirect_url,
                     allow_redirects=False,
                 )
-                if response.status_code == 204:  # job has finished
+                if response.status_code == 204 and not response.content:  # job has finished
                     break
 
                 if response.status_code != 302:
@@ -491,27 +586,47 @@ class CMKOpenApiSession(requests.Session):
 
     def create_rule(
         self,
-        ruleset_name: str,
         value: object,
+        ruleset_name: str | None = None,
         folder: str = "/",
         conditions: dict[str, Any] | None = None,
     ) -> str:
         response = self.post(
             "/domain-types/rule/collections/all",
-            json={
-                "ruleset": ruleset_name,
-                "folder": folder,
-                "properties": {
-                    "disabled": False,
-                },
-                "value_raw": repr(value),
-                "conditions": conditions or {},
-            },
+            json=(
+                {
+                    "ruleset": ruleset_name,
+                    "folder": folder,
+                    "properties": {
+                        "disabled": False,
+                    },
+                    "value_raw": repr(value),
+                    "conditions": conditions or {},
+                }
+                if ruleset_name
+                else value
+            ),
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         the_id: str = response.json()["id"]
         return the_id
+
+    def get_rule(self, rule_id: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the rule details and the Etag header if the rule_id was found
+            None if the rule_id was not found
+        """
+        response = self.get(f"/objects/rule/{rule_id}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
 
     def delete_rule(self, rule_id: str) -> None:
         response = self.delete(f"/objects/rule/{rule_id}")
@@ -522,6 +637,15 @@ class CMKOpenApiSession(requests.Session):
         response = self.get(
             "/domain-types/rule/collections/all",
             params={"ruleset_name": ruleset_name},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def get_rulesets(self) -> list[dict[str, Any]]:
+        response = self.get(
+            "/domain-types/ruleset/collections/all",
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

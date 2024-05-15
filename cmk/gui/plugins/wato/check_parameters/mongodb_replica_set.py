@@ -5,11 +5,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Age, Dictionary, Integer, TextInput, Tuple
+from cmk.gui.valuespec import Age, Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_mongodb_replication_lag():
@@ -40,20 +40,17 @@ def _sec_tuple(title: str) -> Tuple:
         ],
         help=_(
             "Replication lag is a delay between an operation on the primary and the application "
-            "of that operation from the oplog to the secondary."
-            "With this configuration, check_mk will alert if replication lag is "
+            "of that operation from the oplog to the secondary. "
+            "With this configuration, Checkmk will alert if replication lag is "
             "exceeding a threshold over an extended period of time."
         ),
     )
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="mongodb_replica_set",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextInput(
-            title=_("MongoDB Replica Set"),
-        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_replication_lag,
         title=lambda: _("MongoDB Replica Set"),

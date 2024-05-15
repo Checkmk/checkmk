@@ -23,9 +23,9 @@ from typing import NewType, Protocol, TypeVar
 
 import jsonschema
 import yaml
-from astroid import nodes  # type: ignore[import]
-from pylint.checkers import BaseChecker  # type: ignore[import]
-from pylint.lint import PyLinter  # type: ignore[import]
+from astroid import nodes  # type: ignore[import-untyped]
+from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter
 
 ####################################################################################################
 # our main "business logic", the heart of our import checking logic
@@ -37,13 +37,13 @@ ImportedName = NewType("ImportedName", str)
 
 
 class PackageFor(Protocol):
-    def __call__(self, name: ModuleName | ImportedName) -> PackageName:
-        ...
+    def __call__(self, name: ModuleName | ImportedName) -> PackageName: ...
 
 
 class IsPackageRelationshipOK(Protocol):
-    def __call__(self, *, importing_package: PackageName, imported_package: PackageName) -> bool:
-        ...
+    def __call__(
+        self, *, importing_package: PackageName, imported_package: PackageName
+    ) -> bool: ...
 
 
 class IsImportOK:
@@ -96,7 +96,7 @@ class LayerViolationChecker(BaseChecker):
         ),
     )
 
-    def __init__(self, linter: PyLinter | None = None) -> None:
+    def __init__(self, linter: PyLinter) -> None:
         super().__init__(linter)
         # The config file and commandline arguments have not been processed yet, so linter.config is
         # not yet complete. We need to delay any configuration processing to open().
@@ -104,7 +104,7 @@ class LayerViolationChecker(BaseChecker):
         self._linter = linter
 
     def open(self) -> None:
-        if self._linter and (filename := self._linter.config.layering_definition):
+        if filename := self._linter.config.layering_definition:
             self._is_import_ok = load_layering_configuration(Path(filename))
 
     def visit_import(self, node: nodes.Import) -> None:
@@ -170,7 +170,7 @@ class UniqueKeyLoader(yaml.SafeLoader):  # pylint: disable=too-many-ancestors
     def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
         mapping = set()
         for key_node, _value_node in node.value:
-            key = self.construct_object(key_node, deep=deep)  # type: ignore[no-untyped-call]
+            key = self.construct_object(key_node, deep=deep)
             if key in mapping:
                 raise yaml.MarkedYAMLError(
                     "while constructing a mapping",

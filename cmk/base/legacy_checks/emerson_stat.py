@@ -34,52 +34,55 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
-emerson_stat_default = (0, 0)  # warning / critical, unused
-
-
-def inventory_emerson_stat(info):
-    if info:
-        return [(None, emerson_stat_default)]
-    return []
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, startswith, StringTable
 
 
-def check_emerson_stat(item, params, info):
-    if info:
-        status_text = {
-            1: "unknown",
-            2: "normal",
-            3: "observation",
-            4: "warning - A3",
-            5: "minor - MA",
-            6: "major - CA",
-            7: "unmanaged",
-            8: "restricted",
-            9: "testing",
-            10: "disabled",
-        }
-        status = int(info[0][0])
-        infotext = "Status: " + status_text[status]
+def discover_emerson_stat(string_table: StringTable) -> DiscoveryResult:
+    if string_table:
+        yield Service()
 
-        state = 0
-        if status in [5, 6, 10]:
-            state = 2
-        elif status in [1, 3, 4, 7, 8, 9]:
-            state = 1
 
-        return (state, infotext)
+def check_emerson_stat(_no_item, _no_params, info):
+    if not info:
+        return
 
-    return (3, "Status not found in SNMP output")
+    status_text = {
+        1: "unknown",
+        2: "normal",
+        3: "observation",
+        4: "warning - A3",
+        5: "minor - MA",
+        6: "major - CA",
+        7: "unmanaged",
+        8: "restricted",
+        9: "testing",
+        10: "disabled",
+    }
+    status = int(info[0][0])
+    infotext = "Status: " + status_text[status]
+
+    state = 0
+    if status in [5, 6, 10]:
+        state = 2
+    elif status in [1, 3, 4, 7, 8, 9]:
+        state = 1
+
+    yield state, infotext
+
+
+def parse_emerson_stat(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 check_info["emerson_stat"] = LegacyCheckDefinition(
+    parse_function=parse_emerson_stat,
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2.1",
         oids=["0"],
     ),
     service_name="Status",
-    discovery_function=inventory_emerson_stat,
+    discovery_function=discover_emerson_stat,
     check_function=check_emerson_stat,
 )

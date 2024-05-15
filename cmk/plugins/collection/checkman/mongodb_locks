@@ -1,0 +1,17 @@
+title: MongoDB: Locks
+agents: linux
+catalog: app/mongodb
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of read, write and total locks
+ for the active clients and queued operations on a MongoDB instance.
+ You can configure levels for the read, write and total count.
+ Without configuration this check is always OK.
+
+ Note: If the MongoDB is running as a replica set, this check is not discovered
+ on the same host where the {mk_mongodb} plug-in is installed. The data is piggybacked
+ to a pseudo host named after the replica set name, intead.
+
+discovery:
+ One service is created.

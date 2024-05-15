@@ -5,7 +5,6 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
-raritan_pdu_ocprot_current_default_levels = (14.0, 15.0)
 
 checkname = "raritan_pdu_ocprot"
 
@@ -29,12 +28,12 @@ info = [
 
 discovery = {
     "": [
-        ("C1", raritan_pdu_ocprot_current_default_levels),
-        ("C2", raritan_pdu_ocprot_current_default_levels),
-        ("C3", raritan_pdu_ocprot_current_default_levels),
-        ("C4", raritan_pdu_ocprot_current_default_levels),
-        ("C5", raritan_pdu_ocprot_current_default_levels),
-        ("C6", raritan_pdu_ocprot_current_default_levels),
+        ("C1", {}),
+        ("C2", {}),
+        ("C3", {}),
+        ("C4", {}),
+        ("C5", {}),
+        ("C6", {}),
     ]
 }
 
@@ -42,7 +41,7 @@ checks = {
     "": [
         (
             "C1",
-            (14.0, 15.0),
+            {"levels": (14.0, 15.0)},
             [
                 (0, "Overcurrent protector is closed", []),
                 (0, "Current: 0.00 A", [("current", 0.0, 14.0, 15.0, None, None)]),
@@ -50,7 +49,7 @@ checks = {
         ),
         (
             "C2",
-            (14.0, 15.0),
+            {"levels": (14.0, 15.0)},
             [
                 (0, "Overcurrent protector is closed", []),
                 (0, "Current: 0.00 A", [("current", 0.0, 14.0, 15.0, None, None)]),
@@ -58,7 +57,7 @@ checks = {
         ),
         (
             "C3",
-            (14.0, 15.0),
+            {"levels": (14.0, 15.0)},
             [
                 (0, "Overcurrent protector is closed", []),
                 (0, "Current: 7.00 A", [("current", 7.0, 14.0, 15.0, None, None)]),
@@ -66,7 +65,7 @@ checks = {
         ),
         (
             "C4",
-            (14.0, 15.0),
+            {"levels": (14.0, 15.0)},
             [
                 (0, "Overcurrent protector is closed", []),
                 (0, "Current: 0.00 A", [("current", 0.0, 14.0, 15.0, None, None)]),
@@ -74,7 +73,7 @@ checks = {
         ),
         (
             "C5",
-            (14.0, 15.0),
+            {"levels": (14.0, 15.0)},
             [
                 (0, "Overcurrent protector is closed", []),
                 (0, "Current: 0.00 A", [("current", 0.0, 14.0, 15.0, None, None)]),
@@ -82,7 +81,7 @@ checks = {
         ),
         (
             "C6",
-            (14.0, 15.0),
+            {"levels": (14.0, 15.0)},
             [
                 (0, "Overcurrent protector is closed", []),
                 (0, "Current: 0.00 A", [("current", 0.0, 14.0, 15.0, None, None)]),

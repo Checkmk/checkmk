@@ -20,9 +20,10 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.plugins.lib.cpu_util import check_cpu_util
+
 from .agent_based_api.v1 import check_levels, get_value_store, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cpu_util import check_cpu_util
 
 
 @dataclass(frozen=True)

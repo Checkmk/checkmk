@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pytest import MonkeyPatch
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import time_machine
+from pytest import MonkeyPatch
 
 from cmk.base.plugins.agent_based import cadvisor_if
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
@@ -55,7 +57,7 @@ def test_check_cadvisor_if(monkeypatch: MonkeyPatch) -> None:
     }
     monkeypatch.setattr(cadvisor_if, "get_value_store", lambda: vs)
 
-    with on_time(1060, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1060, tz=ZoneInfo("UTC"))):
         assert list(cadvisor_if.check_cadvisor_if("Summary", SECTION)) == [
             Result(state=State.OK, summary="[0]"),
             Result(state=State.OK, summary="(up)", details="Operational state: up"),

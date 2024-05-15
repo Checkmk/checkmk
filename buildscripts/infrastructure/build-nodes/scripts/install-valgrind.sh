@@ -6,10 +6,10 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-# shellcheck source=build_lib.sh
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 
 VALGRIND_VERSION=3.19.0
 DIR_NAME=valgrind-${VALGRIND_VERSION}
@@ -37,16 +37,9 @@ build_package() {
     rm -rf "$TARGET_DIR/src"
 }
 
-test_package() {
-    log "Testing for valgrind $VALGRIND_VERSION in \$PATH"
-    valgrind --version | grep "^valgrind-$VALGRIND_VERSION$" >/dev/null 2>&1 || (
-        echo "Invalid valgrind version: $(valgrind --version)"
-        exit 1
-    )
-}
-
 if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"
-test_package
+
+test_package "${TARGET_DIR}/bin/valgrind --version" "^valgrind-$VALGRIND_VERSION$"

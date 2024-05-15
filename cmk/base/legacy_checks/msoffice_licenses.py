@@ -22,7 +22,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+from cmk.agent_based.v2 import render
 
 
 def parse_msoffice_licenses(string_table):
@@ -58,7 +59,7 @@ def check_msoffice_licenses(item, params, parsed):
         else:
             warn_abs, crit_abs = warn, crit
 
-        # the agent plugin also gathers the last 3 unused licenses with no
+        # the agent plug-in also gathers the last 3 unused licenses with no
         # active licenses. To handle this, we only output consumed licenses for
         # licenses with active ones
         yield check_levels(

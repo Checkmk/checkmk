@@ -1,0 +1,11 @@
+Title: mk_tsm: agent not delivering data for tsm_storagepools and tsm_stagingpools
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1697704166
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+In some cases, the agent was not gathering data about the storagepools and stagingpools, even though they were present.
+This has now been fixed and all pools should be discovered.

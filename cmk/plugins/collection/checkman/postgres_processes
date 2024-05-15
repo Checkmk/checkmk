@@ -1,0 +1,16 @@
+title: PostgreSQL: Process Count
+agents: linux
+catalog: app/postgresql
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of processes matching the PostgreSQL instances.
+
+ If the process count is zero, then the check is CRIT. If an empty instance
+ name is specified by the mk_postgres configuration, then any PostgreSQL process
+ (as determined by mk_postgres) is counted.
+
+ This check needs the Checkmk mk_postgres plug-in installed in the agent.
+
+discovery:
+ One service is created.

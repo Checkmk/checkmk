@@ -1,4 +1,4 @@
 [submodule "tests/qa-test-data"]
 	path = tests/qa-test-data
-	url = ssh://jenkins@review.lan.tribe29.com:29418/qa-test-data
-	branch = main
+        url = ../qa-test-data
+	branch = master

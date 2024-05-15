@@ -38,7 +38,7 @@ pytestmark = pytest.mark.checks
                     state=State.OK,
                     summary="Values are averaged",
                     details=(
-                        "All values are averaged, as the Windows DHCP plugin collects statistics, "
+                        "All values are averaged, as the Windows DHCP plug-in collects statistics, "
                         "not real-time measurements"
                     ),
                 ),

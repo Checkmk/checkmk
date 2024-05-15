@@ -1,0 +1,17 @@
+title: Windows: License Information
+agents: windows
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check parses the information provided by the slmgr.vbs command on a
+ windows host. Information about the License status as well as the time to
+ expiration are shown.
+
+ As a preparation you need to install the agent plug-in {win_license.bat}
+ into your agent's plugins directory.
+
+ The check can be configured via the corresponding WATO rule {Windows License}
+
+discovery:
+ One service named {Windows License} is created.

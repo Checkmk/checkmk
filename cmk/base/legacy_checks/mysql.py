@@ -4,17 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="no-untyped-def"
-
 import time
 from collections.abc import Iterable, Mapping
 from typing import Any, Protocol
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.diskstat import check_diskstat_line
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
+
+from cmk.agent_based.v2 import get_average, get_rate, get_value_store, render
 
 # <<<mysql>>>
 # [[mysql]]
@@ -47,8 +45,7 @@ Service = tuple[str, dict]
 
 
 class DiscoveryFunction(Protocol):
-    def __call__(self, section: Section) -> Iterable[Service]:
-        ...
+    def __call__(self, section: Section) -> Iterable[Service]: ...
 
 
 @mysql_parse_per_item
@@ -163,8 +160,69 @@ def check_mysql_iostat(item, params, parsed):
     if not ("Innodb_data_read" in data and "Innodb_data_written" in data):
         return
 
-    line = [None, None, data["Innodb_data_read"] // 512, data["Innodb_data_written"] // 512]
-    yield check_diskstat_line(time.time(), "innodb_io" + item, params, line)
+    yield from check_diskstat_line(
+        time.time(),
+        "innodb_io" + item,
+        params,
+        read_value=int(data["Innodb_data_read"]),
+        write_value=int(data["Innodb_data_written"]),
+    )
+
+
+def check_diskstat_line(
+    this_time: float,
+    item: str,
+    params: Mapping[str, Any],
+    read_value: int,
+    write_value: int,
+) -> Iterable[tuple[int, str, list] | tuple[int, str]]:
+    average_range = params.get("average")
+    if average_range == 0:
+        average_range = None  # disable averaging when 0 is set
+
+    value_store = get_value_store()
+
+    # collect perfdata, apparently we want to re-order them
+    perfdata: list = []
+
+    for metric_name, value in (("read", read_value), ("write", write_value)):
+        # unpack levels now, need also for perfdata
+        levels = params.get(f"{metric_name}_bytes")
+        if isinstance(levels, tuple):
+            warn, crit = levels
+        else:
+            warn, crit = None, None
+
+        bytes_per_sec = get_rate(
+            get_value_store(), metric_name, this_time, value, raise_overflow=True
+        )
+
+        # compute average of the rate over ___ minutes
+        if average_range is not None:
+            perfdata.append((metric_name, bytes_per_sec, warn, crit))
+            bytes_per_sec = get_average(
+                value_store, f"{metric_name}.avg", this_time, bytes_per_sec, average_range
+            )
+            metric_name_suffix = ".avg"
+        else:
+            metric_name_suffix = ""
+
+        # check levels (no predictive)
+        state, text, extraperf = check_levels(
+            bytes_per_sec,
+            metric_name + metric_name_suffix,
+            levels,
+            human_readable_func=render.iobandwidth,
+            infoname=metric_name.capitalize(),
+        )
+        yield state, text
+        perfdata += extraperf
+
+    # Add performance data for averaged IO
+    if average_range is not None:
+        perfdata = [perfdata[0], perfdata[2], perfdata[1], perfdata[3]]
+
+    yield 0, "", perfdata
 
 
 check_info["mysql.innodb_io"] = LegacyCheckDefinition(
@@ -274,7 +332,7 @@ check_info["mysql.connections"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def _has_wsrep_provider(data) -> bool:
+def _has_wsrep_provider(data: Mapping[str, object]) -> bool:
     return data.get("wsrep_provider") not in (None, "none")
 
 

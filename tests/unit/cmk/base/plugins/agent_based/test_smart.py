@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping, Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 
-from tests.testlib import on_time
-
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import smart
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     GetRateError,
@@ -19,6 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE_SD = [
     [
@@ -484,6 +486,13 @@ SECTION_NVME = {
     },
 }
 
+# attributes not relevant for the smart check
+SECTION_WITH_TEMPERATURE_ONLY = {
+    "/dev/nvme0n1": {
+        "Temperature": 39,
+    }
+}
+
 
 @pytest.mark.parametrize(
     "string_table, section", [(STRING_TABLE_SD, SECTION_SD), (STRING_TABLE_NVME, SECTION_NVME)]
@@ -524,6 +533,11 @@ def test_parse_smart(string_table: StringTable, section: smart.Section) -> None:
                 ),
             ],
             id="NVME",
+        ),
+        pytest.param(
+            SECTION_WITH_TEMPERATURE_ONLY,
+            [],
+            id="No service discovered",
         ),
     ],
 )
@@ -602,14 +616,17 @@ def test_check_smart_stats(
 @pytest.mark.usefixtures("initialised_item_state")
 def test_check_smart_command_timeout_rate() -> None:
     section_timeout = {"/dev/sda": {"Command_Timeout_Counter": 0}}
-    now_simulated = 581792400, "UTC"
-    with pytest.raises(GetRateError), on_time(*now_simulated):
+    now_simulated = 581792400
+    with (
+        pytest.raises(GetRateError),
+        time_machine.travel(datetime.datetime.fromtimestamp(now_simulated, tz=ZoneInfo("UTC"))),
+    ):
         list(smart.check_smart_stats("/dev/sda", {"Command_Timeout_Counter": 0}, section_timeout))
 
     # Simulate an accepted increment rate of the counter
-    thirty_min_later = now_simulated[0] + 30 * 60, "UTC"
+    thirty_min_later = now_simulated + 30 * 60
     section_timeout["/dev/sda"]["Command_Timeout_Counter"] = 1
-    with on_time(*thirty_min_later):
+    with time_machine.travel(datetime.datetime.fromtimestamp(thirty_min_later, tz=ZoneInfo("UTC"))):
         assert list(
             smart.check_smart_stats("/dev/sda", {"Command_Timeout_Counter": 0}, section_timeout)
         ) == [
@@ -618,9 +635,9 @@ def test_check_smart_command_timeout_rate() -> None:
         ]
 
     # Simulate an exceeding rate for command timeouts
-    ten_sec_later = thirty_min_later[0] + 10, "UTC"
+    ten_sec_later = thirty_min_later + 10
     section_timeout["/dev/sda"]["Command_Timeout_Counter"] = 5
-    with on_time(*ten_sec_later):
+    with time_machine.travel(datetime.datetime.fromtimestamp(ten_sec_later, tz=ZoneInfo("UTC"))):
         assert list(
             smart.check_smart_stats("/dev/sda", {"Command_Timeout_Counter": 0}, section_timeout)
         ) == [

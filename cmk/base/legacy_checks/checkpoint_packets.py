@@ -8,8 +8,9 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
-from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
+
+from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree
+from cmk.plugins.lib.checkpoint import DETECT
 
 # .1.3.6.1.2.1.1.1.0 Linux gateway1 2.6.18-92cp #1 SMP Tue Dec 4 21:44:22 IST 2012 i686
 # .1.3.6.1.4.1.2620.1.1.4.0 131645

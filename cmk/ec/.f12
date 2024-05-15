@@ -13,5 +13,5 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 )
 
 if [ -z "$ONLY_COPY" ]; then
-    sudo omd restart "$SITE" mkeventd
+    sudo --login -u "$SITE" -- bash -c "omd restart mkeventd"
 fi

@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="arg-type"
 
-import cmk.base.plugins.agent_based.utils.db
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+
+import cmk.plugins.lib.db
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 # No used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -31,9 +32,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, 
 # MYTMPSPACE SMS NORMAL 64 64 64 959659392
 # SYSTOOLSTMPSPACE SMS NORMAL 32 32 32 959659392
 
-db_get_tablespace_levels_in_bytes = (
-    cmk.base.plugins.agent_based.utils.db.get_tablespace_levels_in_bytes
-)
+db_get_tablespace_levels_in_bytes = cmk.plugins.lib.db.get_tablespace_levels_in_bytes
 
 
 def inventory_db2_tablespaces(parsed):
@@ -73,7 +72,7 @@ def check_db2_tablespaces(item, params, parsed):
 
     warn, crit, levels_text, as_perc = db_get_tablespace_levels_in_bytes(usable, params)
 
-    infotext = f"{get_bytes_human_readable(used)} of {get_bytes_human_readable(usable)} used"
+    infotext = f"{render.disksize(used)} of {render.disksize(usable)} used"
     perfdata = [
         ("tablespace_size", usable, max(0, total - (warn or 0)), max(0, total - (crit or 0))),
         ("tablespace_used", used),
@@ -94,7 +93,7 @@ def check_db2_tablespaces(item, params, parsed):
         if as_perc:
             value_str = render.percent(perc_free)
         else:
-            value_str = get_bytes_human_readable(abs_free)
+            value_str = render.disksize(abs_free)
         infotext = f"only {value_str} left {levels_text}"
     yield state, infotext
 

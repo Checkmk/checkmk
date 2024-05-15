@@ -8,9 +8,10 @@ import urllib.parse
 from collections.abc import Mapping, Sequence
 from typing import NamedTuple
 
+from cmk.plugins.lib import cache_helper
+
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import cache_helper
 
 
 class PluginData(NamedTuple):
@@ -46,7 +47,7 @@ def parse_mrpe(string_table: StringTable) -> MRPESection:
         try:
             state = State(int(raw_state))
         except ValueError:
-            line.insert(0, "Invalid plugin status '%s'. Output is:" % raw_state)
+            line.insert(0, "Invalid plug-in status '%s'. Output is:" % raw_state)
             state = State.UNKNOWN
 
         # convert to original format by joining and splitting at \1 (which replaced \n)
@@ -156,15 +157,16 @@ def check_mrpe(item: str, section: MRPESection) -> CheckResult:
                 perfdata += parts[1].strip().split()
                 now_comes_perfdata = True
 
-    if dataset.cache_info is not None:
-        yield Result(state=State.OK, summary=cache_helper.render_cache_info(dataset.cache_info))
-
     yield Result(
         state=dataset.state,
         summary=output[0] if output[0] else "No further information available",
         details="\n".join(output) if output[0] else None,
     )
     yield from _output_metrics(perfdata)
+
+    # This is at the end of the summary, to be consistent with local checks.
+    if dataset.cache_info is not None:
+        yield Result(state=State.OK, summary=cache_helper.render_cache_info(dataset.cache_info))
 
     # name of check command needed for PNP to choose the correct template
     if dataset.name:

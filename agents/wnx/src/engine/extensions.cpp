@@ -8,7 +8,9 @@
 
 #include "wnx/extensions.h"
 
+#include <condition_variable>
 #include <filesystem>
+#include <fstream>
 #include <set>
 #include <string>
 #include <vector>
@@ -18,9 +20,20 @@
 #include "wnx/logger.h"
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::string_literals;
+using namespace std::chrono_literals;
 
 namespace cma::cfg::extensions {
+std::string FindBinary(std::string_view name) {
+    if (tools::IsEqual(name, "powershell") ||
+        tools::IsEqual(name, "powershell.exe")) {
+        auto found = wtools::ToUtf8(cma::FindPowershellExe());
+        return found.empty() ? std::string{name} : found;
+    }
+    return std::string{name};
+}
+
 namespace {
 Mode ToMode(std::string_view mode) {
     std::string m{mode};
@@ -36,15 +49,6 @@ Mode ToMode(std::string_view mode) {
     }
     XLOG::t("Bad mode value {}, fallback to no", m);
     return Mode::no;
-}
-
-std::string FindBinary(std::string_view name) {
-    if (tools::IsEqual(name, "powershell") ||
-        tools::IsEqual(name, "powershell.exe")) {
-        auto found = wtools::ToUtf8(cma::FindPowershellExe());
-        return found.empty() ? std::string{name} : found;
-    }
-    return std::string{name};
 }
 
 std::vector<Extension> GatherExtensions(const YAML::Node &group) {
@@ -109,43 +113,154 @@ std::optional<uint32_t> RunExtension(const std::wstring &command) {
     }
     return {};
 }
+
+fs::path GetRunFile(const Extension &extension) {
+    auto p = fs::path{GetTempDir()} / extension.name;
+    p.replace_extension(RUN_FILE_EXTENSION);
+    return p;
+}
+void RemoveRunFile(const fs::path p) {
+    std::error_code ec;
+    fs::remove(p, ec);
+    XLOG::l.i("Agent extension run file '{}' has been removed with code {}", p,
+              ec.value());
+    if (ec.value() == 0 || ec.value() == 2) {
+        return;
+    }
+
+    auto new_file = p;
+    new_file.replace_extension(RUN_FILE_OLD_EXTENSION);
+    fs::rename(p, new_file, ec);
+    XLOG::l.i("Agent extension run file has been moved to {} with code {}",
+              new_file, ec.value());
+}
+
+void CreateRunFile(const Extension &extension) {
+    std::ofstream ofs(GetRunFile(extension));
+    ofs << "run file";
+}
+
+void RemoveRunFile(const Extension &extension) {
+    RemoveRunFile(GetRunFile(extension));
+}
+
+std::optional<ProcessInfo> StartExtension(const Extension &extension) {
+    XLOG::l.i("Agent extension '{}' to be processed", extension.name);
+    if (extension.binary.empty() || extension.mode == Mode::no) {
+        return {};
+    }
+
+    const auto exe = FindBinary(ReplacePredefinedMarkers(extension.binary));
+
+    fs::path path{exe};
+    if (std::error_code ec;
+        !fs::exists(path, ec) && (extension.mode != Mode::yes)) {
+        XLOG::l.i("'{}' not found, skipping", path);
+        return {};
+    }
+
+    auto to_run = path.wstring();
+
+    if (!extension.command_line.empty()) {
+        to_run += L" "s + wtools::ConvertToUtf16(extension.command_line);
+    }
+
+    CreateRunFile(extension);
+    if (const auto pid = RunExtension(to_run); pid.has_value()) {
+        XLOG::l.i("Agent extension '{}' started, pid is {}",
+                  wtools::ToUtf8(to_run), *pid);
+        return ProcessInfo{path, *pid, extension};
+    } else {
+        RemoveRunFile(extension);
+        XLOG::l("Agent extension '{}' failed to start", wtools::ToUtf8(to_run));
+        return {};
+    }
+}
+
 }  // namespace
 
 std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions) {
     std::vector<ProcessInfo> started;
-    for (auto &&[name, binary, command_line, mode] : extensions) {
-        XLOG::l.i("Agent extension '{}' to be processed", name);
-        if (binary.empty() || mode == Mode::no) {
-            continue;
-        }
-
-        fs::path path{ReplacePredefinedMarkers(binary)};
-        if (std::error_code ec; !fs::exists(path, ec) && (mode != Mode::yes)) {
-            XLOG::l.i("'{}' not found, skipping", path);
-            continue;
-        }
-
-        auto to_run = path.wstring();
-
-        if (!command_line.empty()) {
-            to_run += L" "s + wtools::ConvertToUtf16(command_line);
-        }
-        if (auto pid = RunExtension(to_run); pid.has_value()) {
-            XLOG::l.i("Agent extension '{}' started, pid is {}",
-                      wtools::ToUtf8(to_run), *pid);
-            started.emplace_back(path, *pid);
-        } else {
-            XLOG::l("Agent extension '{}' failed to start",
-                    wtools::ToUtf8(to_run));
+    for (const auto &extension : extensions) {
+        auto ret = StartExtension(extension);
+        if (ret.has_value()) {
+            started.emplace_back(*ret);
         }
     }
     return started;
 }
 
-void KillAll(const std::vector<ProcessInfo> &processes) {
+void KillAll(const std::vector<ProcessInfo> &processes,
+             const std::optional<std::chrono::milliseconds> &wait_before_kill) {
     XLOG::l.i("Killing Agent extensions");
-    for (auto &&[path, pid] : processes) {
-        wtools::KillProcessesByPathEndAndPid(path, pid);
+    rs::for_each(processes, [](const auto &p) { RemoveRunFile(p.extension); });
+    if (wait_before_kill.has_value()) {
+        auto t = *wait_before_kill;
+        while (t > 0ms) {
+            if (!rs::any_of(processes, [](const auto &p) {
+                    return wtools::FindProcessByPathEndAndPid(p.path, p.pid);
+                })) {
+                XLOG::l.i("All extensions are dead, ok.");
+                return;
+            }
+            std::this_thread::sleep_for(500ms);
+            t -= 500ms;
+        }
+    }
+    XLOG::l.i("Killing still running extensions");
+    rs::for_each(processes, [](const auto &p) {
+        if (wtools ::FindProcessByPathEndAndPid(p.path, p.pid)) {
+            wtools::KillProcessesByPathEndAndPid(p.path, p.pid);
+        }
+    });
+}
+
+void ValidateAndRestart(std::vector<ProcessInfo> &processes) {
+    for (auto &process : processes) {
+        if (!wtools::FindProcessByPathEndAndPid(process.path, process.pid)) {
+            XLOG::l.i("Agent extensions {} is dead", process.extension.name);
+            const auto ret = StartExtension(process.extension);
+            if (ret.has_value()) {
+                process.pid = ret->pid;
+                XLOG::l.i("Agent extensions {} is restarted",
+                          process.extension.name);
+            }
+            XLOG::l.i("Agent extensions {} failed to restart",
+                      process.extension.name);
+        }
+    }
+}
+
+ExtensionsManager::~ExtensionsManager() {
+    {
+        std::scoped_lock l(mutex_);
+        stop_requested_ = true;
+    }
+    t_.join();
+    KillAll(processes_, time_to_wait_before_kill_);
+}
+
+void ExtensionsManager::thread_proc() {
+    processes_ = StartAll(extensions_);
+    if (processes_.empty()) {
+        return;
+    }
+    auto check_point = validate_period_.has_value()
+                           ? std::optional{std::chrono::steady_clock::now() +
+                                           *validate_period_ * 1s}
+                           : std::nullopt;
+    while (true) {
+        std::unique_lock lock(mutex_);
+        if (cv_.wait_until(lock, std::chrono::steady_clock::now() + 100ms,
+                           [&] { return stop_requested_; })) {
+            break;
+        }
+        if (check_point.has_value() &&
+            std::chrono::steady_clock::now() > *check_point) {
+            check_point =
+                std::chrono::steady_clock::now() + *validate_period_ * 1s;
+            ValidateAndRestart(processes_);
+        }
     }
 }
 

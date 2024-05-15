@@ -209,39 +209,35 @@ void ServiceProcessor::stopTestingMainThread() {
     thread_.join();
 }
 
-namespace {
-std::string FindWinPerfExe() {
-    auto exe_name = cfg::groups::g_winperf.exe();
-
-    if (tools::IsEqual(exe_name, "agent")) {
-        XLOG::t.i("Looking for default agent");
-        const fs::path f{cfg::GetRootDir()};
-        std::vector names{f / cfg::kDefaultAppFileName};
-
-        if constexpr (tgt::Is64bit()) {
-            names.emplace_back(f / "check_mk_service64.exe");
-        }
-
-        names.emplace_back(f / "check_mk_service32.exe");
-
-        exe_name.clear();
-        for (const auto &name : names) {
-            std::error_code ec;
-            if (fs::exists(name, ec)) {
-                XLOG::d.i("Using file '{}' for winperf", name);
-                break;
-            }
-        }
-        if (exe_name.empty()) {
-            XLOG::l.crit("In folder '{}' not found binaries to exec winperf");
-            return {};
-        }
-    } else {
+std::string FindWinPerfExe(std::string_view exe_name) {
+    if (!tools::IsEqual(exe_name, "agent")) {
         XLOG::d.i("Looking for agent '{}'", exe_name);
+        return std::string{exe_name};
     }
-    return exe_name;
+
+    XLOG::t.i("Looking for default agent");
+    const fs::path f{cfg::GetRootDir()};
+    std::vector names{f / cfg::kDefaultAppFileName};
+
+    if constexpr (tgt::Is64bit()) {
+        names.emplace_back(f / "check_mk_service64.exe");
+    }
+
+    names.emplace_back(f / "check_mk_service32.exe");
+
+    for (const auto &name : names) {
+        std::error_code ec;
+        if (fs::exists(name, ec)) {
+            XLOG::d.i("Using file '{}' for winperf", name);
+            return name.string();
+        }
+    }
+
+    XLOG::l.crit("In folder '{}' not found binaries to exec winperf");
+    return {};
 }
 
+namespace {
 std::wstring GetWinPerfLogFile() {
     return cfg::groups::g_winperf.isTrace()
                ? (fs::path{cfg::GetLogDir()} / "winperf.log").wstring()
@@ -257,7 +253,8 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
         cmd_line = L"ip:" + wtools::ConvertToUtf16(ip_addr) + L" " + cmd_line;
     }
 
-    auto exe_name = wtools::ConvertToUtf16(FindWinPerfExe());
+    auto exe_name =
+        wtools::ConvertToUtf16(FindWinPerfExe(cfg::groups::g_winperf.exe()));
     const auto timeout = cfg::groups::g_winperf.timeout();
     auto prefix = wtools::ConvertToUtf16(cfg::groups::g_winperf.prefix());
 
@@ -549,8 +546,9 @@ bool FindProcessByPid(uint32_t pid) {
     wtools::ScanProcessList([&found, pid](const PROCESSENTRY32 &entry) {
         if (entry.th32ProcessID == pid) {
             found = true;
+            return wtools::ScanAction::terminate;
         }
-        return true;
+        return wtools::ScanAction::advance;
     });
     return found;
 }
@@ -702,6 +700,23 @@ world::ExternalPort::IoParam AsIoParam(
     };
 }
 
+void PrepareTempFolder() {
+    try {
+        const auto path = wtools::MakeSafeTempFolder(wtools::safe_temp_sub_dir);
+        if (path.has_value()) {
+            for (const auto &entry :
+                 std::filesystem::directory_iterator(*path)) {
+                fs::remove_all(entry.path());
+            }
+            XLOG::l.i("Temp folder: {}", path);
+        } else {
+            XLOG::l("Failed to create temp folder");
+        }
+
+    } catch (const std::exception &e) {
+        XLOG::l("Failed to create temp folder: {}", e.what());
+    }
+}
 }  // namespace
 
 /// <HOSTING THREAD>
@@ -740,17 +755,16 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         if (is_service) {
             mc_.InstallDefault(cfg::modules::InstallMode::normal);
             install::ClearPostInstallFlag();
+            PrepareTempFolder();
         } else {
             mc_.LoadDefault();
         }
 
-        std::vector<cfg::extensions::ProcessInfo> processes;
-        if (is_service) {
-            processes = cfg::extensions::StartAll(
-                cfg::extensions::GetAll(cfg::GetLoadedConfig()));
-        }
-
-        ON_OUT_OF_SCOPE(cfg::extensions::KillAll(processes));
+        auto to_load = is_service
+                           ? cfg::extensions::GetAll(cfg::GetLoadedConfig())
+                           : std::vector<cfg::extensions::Extension>{};
+        cfg::extensions::ExtensionsManager em{
+            to_load, cfg::vars::kExtensionDefaultCheckPeriod};
 
         preStartBinaries();
 

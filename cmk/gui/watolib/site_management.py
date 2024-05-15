@@ -29,7 +29,8 @@ from cmk.utils import version
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-from cmk.gui.config import prepare_raw_site_config
+from cmk.gui.config import active_config, prepare_raw_site_config
+from cmk.gui.customer import customer_api
 from cmk.gui.i18n import _
 from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
@@ -40,24 +41,17 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import SiteManagementFactory
 
-if version.edition() is version.Edition.CME:
-    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
+
+class SiteDoesNotExistException(Exception): ...
 
 
-class SiteDoesNotExistException(Exception):
-    ...
+class SiteAlreadyExistsException(Exception): ...
 
 
-class SiteAlreadyExistsException(Exception):
-    ...
+class SiteVersionException(Exception): ...
 
 
-class SiteVersionException(Exception):
-    ...
-
-
-class LoginException(Exception):
-    ...
+class LoginException(Exception): ...
 
 
 @dataclass
@@ -335,7 +329,7 @@ class BasicSettings:
             return cls(
                 alias=internal_config["alias"],
                 site_id=site_id,
-                customer=internal_config.get("customer", default_customer_id()),
+                customer=internal_config.get("customer", customer_api().default_customer_id()),
             )
         return cls(alias=internal_config["alias"], site_id=site_id)
 
@@ -471,7 +465,7 @@ class ConfigurationConnection:
             direct_login_to_web_gui_allowed=internal_config["user_login"],
             user_sync=UserSync.from_internal(
                 internal_config=internal_config.get(
-                    "user_sync", "all" if site_is_local(site_id) else "disabled"
+                    "user_sync", "all" if site_is_local(active_config, site_id) else "disabled"
                 )
             ),
             replicate_event_console=internal_config["replicate_ec"],
@@ -614,7 +608,7 @@ def add_changes_after_editing_site_connection(
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!
-    if not replication_enabled and not site_is_local(site_id):
+    if not replication_enabled and not site_is_local(active_config, site_id):
         clear_site_replication_status(site_id)
 
     if site_id != omd_site():

@@ -5,9 +5,7 @@
 
 import time
 from collections.abc import MutableMapping
-from typing import Any, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -16,7 +14,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils.kube import PodContainers
+
+from cmk.plugins.kube.schemata.section import PodContainers
 
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE
@@ -63,9 +62,9 @@ def _check(
     if restart_rate is not None:
         yield from check_levels(
             restart_rate,
-            levels_upper=params["restart_rate"][1]
-            if params["restart_rate"] != "no_levels"
-            else None,
+            levels_upper=(
+                params["restart_rate"][1] if params["restart_rate"] != "no_levels" else None
+            ),
             metric_name="kube_pod_restart_rate",
             render_func=str,
             label="In last hour",

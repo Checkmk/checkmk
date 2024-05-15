@@ -5,6 +5,8 @@
 
 #include "livestatus/HostListState.h"
 
+#include <functional>
+
 #include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/ServiceListState.h"

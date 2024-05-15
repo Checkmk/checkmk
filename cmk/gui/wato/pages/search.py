@@ -41,7 +41,7 @@ class ModeSearch(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = folder_from_request()
+        self._folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -98,7 +98,7 @@ class ModeSearch(WatoMode):
     def page(self) -> None:
         html.help(
             _(
-                "For the Hostname field, a partial word search (infix search) is used "
+                "For the host name field, a partial word search (infix search) is used "
                 "— the entered text is searched, at any position, in the host name. "
                 "Furthermore, you can limit the search using other host attributes. Please note "
                 "that you can search for the attributes configured in the hosts and folders and "
@@ -108,33 +108,28 @@ class ModeSearch(WatoMode):
             )
         )
         # Show search form
-        html.begin_form("edit_host", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit_host", method="POST"):
+            html.prevent_password_auto_completion()
 
-        basic_attributes = [
-            (
-                "host_search_host",
-                TextInput(
-                    title=_(
-                        "Hostname",
-                    )
+            basic_attributes = [
+                (
+                    "host_search_host",
+                    TextInput(title=_("Host name")),
+                    "",
                 ),
-                "",
-            ),
-        ]
-        html.set_focus("host_search_host")
+            ]
+            html.set_focus("host_search_host")
 
-        # Attributes
-        configure_attributes(
-            new=False,
-            hosts={},
-            for_what="host_search",
-            parent=None,
-            varprefix="host_search_",
-            basic_attributes=basic_attributes,
-        )
+            # Attributes
+            configure_attributes(
+                new=False,
+                hosts={},
+                for_what="host_search",
+                parent=None,
+                varprefix="host_search_",
+                basic_attributes=basic_attributes,
+            )
 
-        forms.end()
-        html.hidden_field("host_search", "1")
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_field("host_search", "1")
+            html.hidden_fields()

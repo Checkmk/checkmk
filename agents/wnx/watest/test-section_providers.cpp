@@ -111,15 +111,16 @@ TEST(SectionProviders, SystemTime) {
 
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
-    static constexpr size_t core_lines_ = 19;
+    static constexpr size_t core_lines_ = 23;
     static constexpr size_t full_lines_ = core_lines_ + 3;
     static constexpr std::string_view names_[core_lines_ - 1] = {
-        "Version",          "BuildDate",       "AgentOS",
-        "Hostname",         "Architecture",    "WorkingDirectory",
-        "ConfigFile",       "LocalConfigFile", "AgentDirectory",
-        "PluginsDirectory", "StateDirectory",  "ConfigDirectory",
-        "TempDirectory",    "LogDirectory",    "SpoolDirectory",
-        "LocalDirectory",   "OnlyFrom"};
+        "Version",          "BuildDate",        "AgentOS",
+        "Hostname",         "Architecture",     "OSName",
+        "OSVersion",        "OSType",           "Time",
+        "WorkingDirectory", "ConfigFile",       "LocalConfigFile",
+        "AgentDirectory",   "PluginsDirectory", "StateDirectory",
+        "ConfigDirectory",  "TempDirectory",    "LogDirectory",
+        "SpoolDirectory",   "LocalDirectory",   "OnlyFrom"};
 
     static constexpr std::pair<std::string_view, std::string_view>
         only_from_cases_[] = {

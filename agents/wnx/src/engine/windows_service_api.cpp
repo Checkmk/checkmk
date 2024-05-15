@@ -638,13 +638,13 @@ void ReportNoPythonModule(const std::vector<std::wstring> &params) {
 int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
     ModifyStdio(true);
 
-    fs::path plugins_dir{cma::cfg::GetUserPluginsDir()};
+    fs::path plugins_dir{cfg::GetUserPluginsDir()};
     if (!fs::exists(plugins_dir)) {
         ReportNoPluginDir(plugins_dir);
         return 1;
     }
 
-    auto updater_file = plugins_dir / cma::cfg::files::kAgentUpdaterPython;
+    auto updater_file = plugins_dir / cfg::files::kAgentUpdaterPython;
     if (!fs::exists(updater_file)) {
         ReportNoUpdaterFile(updater_file, params);
         return 1;
@@ -652,7 +652,7 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
 
     XLOG::d.i("'{}' will be used for updater", updater_file);
 
-    cma::cfg::modules::ModuleCommander mc;
+    cfg::modules::ModuleCommander mc;
     mc.LoadDefault();
     auto command_to_run = mc.buildCommandLine(wtools::ToStr(updater_file));
     if (command_to_run.empty()) {
@@ -662,14 +662,13 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
 
     for (auto &p : params) command_to_run += L" " + p;
 
-    cma::cfg::SetupPluginEnvironment();
+    cfg::SetupPluginEnvironment();
 
     ModifyStdio(false);
-    auto proc_id =
-        cma::tools::RunStdCommand(command_to_run, tools::WaitForEnd::yes);
+    auto proc_id = tools::RunStdCommand(command_to_run, tools::WaitForEnd::yes);
     ModifyStdio(true);
 
-    if (proc_id > 0) {
+    if (proc_id.has_value() && *proc_id > 0) {
         XLOG::l.i("Agent Updater process [{}] started\n", proc_id);
         return 0;
     }
@@ -853,8 +852,8 @@ int ExecSkypeTest() {
     XLOG::setup::ColoredOutputOnStdio(true);
     ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false););
     XLOG::l.i("<<<Skype testing>>>");
-    cma::provider::SkypeProvider skype;
-    auto result = skype.generateContent(cma::section::kUseEmbeddedName, true);
+    provider::SkypeProvider skype;
+    auto result = skype.generateContent(section::kUseEmbeddedName, true);
     XLOG::l.i("*******************************************************");
     if (!result.empty())
         XLOG::l.i("{}", result);
@@ -938,14 +937,13 @@ private:
         }
 
         // decoding
-        auto [success, len] = crypt_.decode(
-            data_ + cma::rt::kDataOffset, length - cma::rt::kDataOffset, true);
+        auto [success, len] = crypt_.decode(data_ + rt::kDataOffset,
+                                            length - rt::kDataOffset, true);
 
         // printing
         if (success) {
-            data_[cma::rt::kDataOffset + len] = 0;
-            XLOG::l.t("{}",
-                      std::string_view(data_ + cma::rt::kDataOffset, length));
+            data_[rt::kDataOffset + len] = 0;
+            XLOG::l.t("{}", std::string_view(data_ + rt::kDataOffset, length));
         } else {
             XLOG::l("Failed to decrypt data");
         }
@@ -956,7 +954,7 @@ private:
     }
 
     const std::string password_{kRtTestPassword};
-    cma::encrypt::Commander crypt_{password_};
+    encrypt::Commander crypt_{password_};
 
     asio::ip::udp::socket socket_;
     asio::ip::udp::endpoint sender_endpoint_;
@@ -992,10 +990,10 @@ int ExecRealtimeTest(bool print) {
     xlog::sendStringToStdio(
         "Press any key to START testing Realtime Sections\n",
         xlog::internal::Colors::green);
-    cma::tools::GetKeyPress();  // blocking  wait for key press
+    tools::GetKeyPress();  // blocking  wait for key press
     dev.connectFrom("127.0.0.1", kRtTestPort,
                     {"mem", "df", "winperf_processor"}, kRtTestPassword, 30);
-    cma::tools::GetKeyPress();  // blocking  wait for key press
+    tools::GetKeyPress();  // blocking  wait for key press
     dev.stop();
 
     context.stop();
@@ -1122,7 +1120,7 @@ wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(
 // called once on start of the service
 // also on reload of the config
 bool ProcessServiceConfiguration(std::wstring_view service_name) {
-    using namespace cma::cfg;
+    using namespace cfg;
 
     wtools::WinService ws(service_name);
 
@@ -1177,9 +1175,9 @@ int ServiceAsService(std::wstring_view /*app_name*/,
         return 0;
     }
 
-    cma::OnStartApp();
+    OnStartApp();
     XLOG::l.i("service to run");
-    ON_OUT_OF_SCOPE(cma::OnExit());
+    ON_OUT_OF_SCOPE(OnExit());
 
     SelfConfigure();
 
@@ -1329,11 +1327,11 @@ SC_HANDLE SelfOpen() {
     }
     ON_OUT_OF_SCOPE(::CloseServiceHandle(manager_handle));
 
-    auto *handle = ::OpenService(manager_handle, cma::srv::kServiceName,
-                                 SERVICE_ALL_ACCESS);
+    auto *handle =
+        ::OpenService(manager_handle, srv::kServiceName, SERVICE_ALL_ACCESS);
     if (handle == nullptr) {
         XLOG::l.crit("Cannot open Service {}, error =  {}",
-                     wtools::ToUtf8(cma::srv::kServiceName), ::GetLastError());
+                     wtools::ToUtf8(srv::kServiceName), ::GetLastError());
     }
 
     return handle;
@@ -1343,7 +1341,7 @@ void SelfConfigure() {
     auto *handle = SelfOpen();
     ON_OUT_OF_SCOPE(::CloseServiceHandle(handle));
     if (!IsServiceConfigured(handle)) {
-        XLOG::l.i("Configure check mk service");
+        XLOG::l.i("Configure Checkmk service");
         ConfigureServiceAsRestartable(handle);
     }
 }

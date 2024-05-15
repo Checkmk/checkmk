@@ -6,20 +6,23 @@
 
 from __future__ import annotations
 
+import dataclasses
 from ast import literal_eval
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Final, Self
-
-from typing_extensions import TypedDict
+from typing import Any, Final, Literal, Self, TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 
 Labels = Mapping[str, str]
+
+LabelSource = Literal["discovered", "ruleset", "explicit"]
+LabelSources = dict[str, LabelSource]
 
 
 class HostLabelValueDict(TypedDict):
@@ -61,7 +64,7 @@ class ServiceLabel(_Label):
 class HostLabel(_Label):
     """Representing a host label in Checkmk during runtime
 
-    Besides the label itself it keeps the information which plugin discovered the host label
+    Besides the label itself it keeps the information which plug-in discovered the host label
     """
 
     __slots__ = ("plugin_name",)
@@ -71,9 +74,11 @@ class HostLabel(_Label):
         return cls(
             name=str(raw["name"]),
             value=str(raw["value"]),
-            plugin_name=None
-            if (raw_plugin_name := raw.get("plugin_name")) is None
-            else SectionName(raw_plugin_name),
+            plugin_name=(
+                None
+                if (raw_plugin_name := raw.get("plugin_name")) is None
+                else SectionName(raw_plugin_name)
+            ),
         )
 
     # rather use (de)serialize
@@ -117,6 +122,9 @@ class HostLabel(_Label):
         As long as this does not change, we're talking about "the same" label (but it might have changed).
         """
         return self.label  # Fairly certain this is wrong. Shouldn't this be 'name'?
+
+    def comparator(self) -> str:
+        return self.value
 
     # rather use (de)serialize
     def to_dict(self) -> HostLabelValueDict:
@@ -190,3 +198,38 @@ class BuiltinHostLabelsStore:
         return {
             "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
         }
+
+
+# Label group specific types
+AndOrNotLiteral = Literal["and", "or", "not"]
+LabelGroup = Sequence[tuple[AndOrNotLiteral, str]]
+LabelGroups = Sequence[tuple[AndOrNotLiteral, LabelGroup]]
+
+
+def single_label_group_from_labels(
+    labels: Sequence[str] | dict[str, Any], operator: AndOrNotLiteral = "and"
+) -> LabelGroups:
+    if isinstance(labels, dict):
+        # Convert the old condition labels to a label group
+        # e.g.: labels = {"os": "linux", "foo": {"$ne": "bar"}}
+        #           ->   [("and", [("and", "os:linux"), ("not", "foo:bar")])]
+        andornot_labels: list[tuple[AndOrNotLiteral, str]] = []
+        for key, value in labels.items():
+            if isinstance(value, dict):
+                andornot_labels.append(("not", f"{key}:{value['$ne']}"))
+            else:
+                andornot_labels.append(("and", f"{key}:{value}"))
+        return [("and", andornot_labels)]
+
+    return [
+        (
+            "and",
+            [(operator, label) for label in labels],
+        )
+    ]
+
+
+@dataclasses.dataclass(frozen=True)
+class CollectedHostLabels:
+    host_labels: Labels
+    service_labels: dict[ServiceName, Labels]

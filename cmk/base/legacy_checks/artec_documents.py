@@ -8,13 +8,15 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     all_of,
     contains,
     equals,
     get_rate,
     get_value_store,
     SNMPTree,
+    StringTable,
 )
 
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.48 Amount Documents Count --> ARTEC-MIB::artecDocumentsName.1.48
@@ -39,7 +41,12 @@ def check_artec_documents(_no_item, _no_params, info):
             yield 0, "%s: %d (%.2f/s)" % (name, documents, rate)
 
 
+def parse_artec_documents(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["artec_documents"] = LegacyCheckDefinition(
+    parse_function=parse_artec_documents,
     detect=all_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         contains(".1.3.6.1.2.1.1.1.0", "version"),

@@ -13,9 +13,7 @@
 import time
 from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from .agent_based_api.v1 import (
     any_of,

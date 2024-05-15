@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypedDict
 
-from typing_extensions import TypedDict
+from cmk.plugins.lib.cisco_mem import check_cisco_mem_sub, DETECT_MULTIITEM
 
 from .agent_based_api.v1 import get_value_store, OIDEnd, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cisco_mem import check_cisco_mem_sub, DETECT_MULTIITEM
 
 
 class MemInfo(TypedDict):

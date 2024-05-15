@@ -372,7 +372,7 @@ def test_response_del_cookie(monkeypatch: MonkeyPatch) -> None:
 def test_pre_16_format_cookie_handling() -> None:
     environ = dict(
         create_environ(),
-        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(),
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123",
     )
     _request = http.Request(environ)
 
@@ -511,6 +511,7 @@ def test_content_disposition_valid(
     content_type: str,
     disposition_type: ContentDispositionType,
     file_name: str,
+    request_context: None,
 ) -> None:
     response.set_content_type(content_type)
     response.set_content_disposition(disposition_type, file_name)
@@ -535,6 +536,7 @@ def test_content_disposition_invalid_extension(
     content_type: str,
     disposition_type: ContentDispositionType,
     file_name: str,
+    request_context: None,
 ) -> None:
     response.set_content_type(content_type)
     with pytest.raises(
@@ -562,6 +564,7 @@ def test_content_disposition_invalid_characters(
     content_type: str,
     disposition_type: ContentDispositionType,
     file_name: str,
+    request_context: None,
 ) -> None:
     response.set_content_type(content_type)
     with pytest.raises(ValueError, match="Invalid character in filename"):

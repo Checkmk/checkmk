@@ -35,13 +35,11 @@ def _parameter_valuespec_mssql_instance_blocked_sessions():
                         Float(
                             title=_("Warning at"),
                             unit=_("seconds"),
-                            display_format="%.3f",
                             default_value=0,
                         ),
                         Float(
                             title=_("Critical at"),
                             unit=_("seconds"),
-                            display_format="%.3f",
                             default_value=0,
                         ),
                     ],

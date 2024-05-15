@@ -44,7 +44,7 @@ is_valid_plugin() {
     # test if a file is executable and does not have certain
     # extensions (remnants from distro upgrades).
     case "${1:?No plugin defined}" in
-        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp | *.dpkg-tmp) return 1 ;;
         *) [ -f "${1}" ] && [ -x "${1}" ] ;;
     esac
 }
@@ -215,7 +215,7 @@ set_up_profiling() {
 unset_locale() {
     # eliminate localized outputs where possible
     # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
-    unset -v LANG
+    unset -v LANG LC_ALL
     if inpath locale && inpath paste; then
         # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
         case "$(locale -a | paste -sd ' ' -)" in
@@ -302,7 +302,7 @@ waitmax() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.3.0b1"
+    echo "Version: 2.4.0b1"
     echo "AgentOS: aix"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -310,6 +310,9 @@ section_checkmk() {
     echo "SpoolDirectory: ${SPOOLDIR}"
     echo "PluginsDirectory: ${PLUGINSDIR}"
     echo "LocalDirectory: ${LOCALDIR}"
+    echo "OSType: unix"
+    echo "OSName: AIX"
+    echo "OSVersion: $(oslevel -s)"
 
     #
     # BEGIN COMMON AGENT CODE
@@ -416,11 +419,6 @@ section_lparstat_aix() {
         echo '<<<lparstat_aix>>>'
         lparstat 1 1
     fi
-}
-
-section_vmstat_aix() {
-    echo '<<<vmstat_aix>>>'
-    vmstat | tail -n1
 }
 
 section_aix_diskio() {
@@ -642,24 +640,60 @@ section_aix_hacmp() {
 # BEGIN COMMON AGENT CODE
 #
 
-# Run a command asynchronous by use of a cache file.
-# Usage: run_cached NAME MAXAGE [COMMAND ...]
-#   NAME     name of the section (also used as cache file name)
-#   MAXAGE   maximum cache livetime in seconds
-#   REFRESH_INTERVAL threshold in seconds when the cache file needs to be regenerated
-#   COMMAND  command to run
-#
-# Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
-# This means that extra escaping is required.
-# For example: to run `cat "My File"` every two minutes, you'll have to call
-#
-#     run_cached "my_file_output" 120 120 "cat \"My File\""
-#
 run_cached() {
+    # Compatibility wrapper for plugins that might use run_cached.
+    # We should have never exposed this as quasi API.
     NAME="${1}"
     MAXAGE="${2}"
     REFRESH_INTERVAL="${3}"
     shift 3
+
+    OUTPUT_TIMEOUT=$((MAXAGE * 3))
+    CREATION_TIMEOUT=$((MAXAGE * 2))
+
+    _run_cached_internal "${NAME}" "${REFRESH_INTERVAL}" "${MAXAGE}" "${OUTPUT_TIMEOUT}" "${CREATION_TIMEOUT}" "$@"
+}
+
+if inpath setsid; then
+    # we can kill the whole process group, including children.
+    _nohup_kill_id() { printf "0"; }
+    _nohup() { setsid nohup "$@"; }
+else
+    # we can only the main process, children will survive :-/
+    _nohup_kill_id() { printf "\$\$"; }
+    _nohup() { nohup "$@"; }
+fi
+
+_run_cached_internal() {
+    # Run a command asynchronous by use of a cache file.
+    # Usage: _run_cached_internal NAME REFRESH_INTERVAL MAXAGE OUTPUT_TIMEOUT OUTPUT_TIMEOUT CREATION_TIMEOUT [COMMAND ...]
+    # Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
+    # This means that extra escaping is required.
+    # For example:
+    # To run a cat command every two minutes, considering the created data valid for one three minutes,
+    # send the created data for four minutes and allowing the command to run for 12 minutes, you'll have to call
+    #
+    #   _run_cached_interal "my_file_content" 120 180 240 720 "cat \"My File\""
+    #
+    # Mind the escaping...
+
+    NAME="${1}"
+    # name of the section (also used as cache file name)
+
+    REFRESH_INTERVAL="${2}"
+    # threshold in seconds when the cache file needs to be regenerated
+
+    MAXAGE="${3}"
+    # maximum cache livetime in seconds
+
+    OUTPUT_TIMEOUT="${4}"
+    # threshold in seconds for how long the cache file will be output (regardless of whether it is outdated)
+
+    CREATION_TIMEOUT="${5}"
+    # threshold in seconds for how long the process is allowed to be running before it is killed (see below for details)
+
+    shift 5
+    # $* is now the command to run
 
     if ${DISABLE_CACHING:-false}; then
         # We need the re-splitting to be compatible with the caching case, so:
@@ -668,18 +702,16 @@ run_cached() {
         return
     fi
 
-    # ideally, these should be independent parameters:
-    TIMEOUT=$((MAXAGE * 2))
-
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
+    FAIL_REPORT_FILE="${SPOOLDIR}/${NAME}.cachefail"
 
     NOW="$(get_epoch)"
     MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
 
     if ${MK_RUN_SYNC_PARTS}; then
-        if [ -s "${CACHEFILE}" ]; then
-            # Output the file (even if it is outdated)
+        if [ -s "${CACHEFILE}" ] && [ $((NOW - MTIME)) -le "${OUTPUT_TIMEOUT}" ]; then
+            # Output the file (if it is not too outdated)
             CACHE_INFO="cached(${MTIME},${MAXAGE})"
             # prefix or insert cache info, unless already present.
             # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
@@ -690,36 +722,9 @@ run_cached() {
             fi
         fi
 
-        # Error information about plugin, if available.
-        # Output independent of cachefile existance
-        [ -s "${CACHEFILE}.fail" ] && cat "${CACHEFILE}.fail"
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
-        # Kill the process if it is running too long (cache file not accessed for more than TIMEOUT seconds).
-        # If killing succeeds, remove CACHFILE.new.PID.
-        # Remove CACHEFILE unconditionally.
-        # Write info about the timed out process and the kill attempt to CACHEFILE.fail.
-        # It will be reported to the Check_MK agent service later on, by the sync part.
-        # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
-        for cfile in "${CACHEFILE}.new."*; do
-            [ -e "${cfile}" ] || break # no match
-            if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
-                {
-                    echo "<<<checkmk_cached_plugins:sep(124)>>>"
-                    pid="${cfile##*.new.}"
-                    printf "timeout|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
-                    kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
-                    if [ -n "$(ps -o args= -p "${pid}")" ]; then
-                        printf "killfailed|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
-                    else
-                        rm -f "${cfile}"
-                    fi
-                    rm -f "${CACHEFILE}"
-                } >"${CACHEFILE}".fail 2>&1
-            fi
-        done
-
         # This does the right thing, regardless whether the pattern matches!
         _cfile_in_use() {
             for cfile in "${CACHEFILE}.new."*; do
@@ -730,17 +735,35 @@ run_cached() {
 
         # Time to refresh cache file and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
-            # Start it. If the command fails the output is thrown away
-            cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
-eval '${MK_DEFINE_LOG_SECTION_TIME}'
-exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}.fail" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+
+            # Start it.
+            # We're running two parrallel blocks, implementing a timeout. Roughly:
+            # First block: Run command then kill ourselves (including the other block!)
+            # Second block: Sleep for a while. If I survive: Handle the fact that block one did not kill me.
+            cat <<HERE | _nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
+             {
+                eval '${MK_DEFINE_LOG_SECTION_TIME}'
+                exec > "${CACHEFILE}.new.\$\$" || exit 1
+                $* \
+                && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" \
+                || rm -f "${CACHEFILE}.new.\$\$"
+                kill $(_nohup_kill_id)
+             } &
+             {
+                sleep ${CREATION_TIMEOUT}
+                {
+                      printf "<<<checkmk_cached_plugins:sep(124)>>>\\n"
+                      printf "timeout|${NAME}|${CREATION_TIMEOUT}|\$\$\\n"
+                } >"${FAIL_REPORT_FILE}" 2>&1
+                rm -f "${CACHEFILE}.new.\$\$"
+                kill -9 $(_nohup_kill_id)
+             } &
 HERE
         fi
 
     fi
 
-    unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO
+    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO TRYING_SINCE OUTPUT_TIMEOUT
 }
 
 run_local_checks() {
@@ -759,7 +782,7 @@ run_local_checks() {
     for script in [1-9]*/*; do
         if is_valid_plugin "${script}"; then
             interval="${script%/*}"
-            run_cached "local_${script##*/}" "${interval}" "${interval}" "_log_section_time '${script}'"
+            _run_cached_internal "local_${script##*/}" "${interval}" "${interval}" $((interval * 3)) $((interval * 2)) "_log_section_time '${script}'"
         fi
     done
 }
@@ -856,7 +879,7 @@ run_plugins() {
             if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
                 interval="${script%/*}"
                 # shellcheck disable=SC2086
-                run_cached "plugins_${script##*/}" "${interval}" "${interval}" _log_section_time ${plugin_interpreter} "${script}"
+                _run_cached_internal "plugins_${script##*/}" "${interval}" "${interval}" $((interval * 3)) $((interval * 2)) _log_section_time ${plugin_interpreter} "${script}"
             fi
         fi
     done
@@ -894,7 +917,7 @@ run_remote_plugins() {
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
             # Sourcing the agent here is not very performant, but we need 'run_mrpe', and not all shells support exporting of functions.
-            run_cached "mrpe_${descr}" "${interval}" "${interval}" "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe '${descr}' '${cmdline}'"
+            _run_cached_internal "mrpe_${descr}" "${interval}" "${interval}" $((interval * 3)) $((interval * 2)) "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe \"${descr}\" \"${cmdline}\""
         fi
 
     done
@@ -924,7 +947,7 @@ run_purely_synchronous_sections() {
 
     _log_section_time section_cmk_agent_ctl_status
 
-    [ -z "${MK_SKIP_CHECKMK_AGENT_PLUGINS}" ] && log_section_time section_checkmk_agent_plugins
+    [ -z "${MK_SKIP_CHECKMK_AGENT_PLUGINS}" ] && _log_section_time section_checkmk_agent_plugins
 
     [ -z "${MK_SKIP_DF}" ] && _log_section_time section_df
 
@@ -997,16 +1020,13 @@ main_sync_parts() {
 }
 
 main_mixed_parts() {
+
     run_partially_asynchronous_sections
 
-    # run_remote_plugins -> _log_section_time CMD
     run_remote_plugins "${MK_CONFDIR}/mrpe.cfg"
 
-    # run_local_checks -> _log_section_time CMD
-    #                  -> run_cached _log_section_time CMD
     run_local_checks
 
-    # run_plugins -> _log_section_time CMD
     run_plugins
 
 }

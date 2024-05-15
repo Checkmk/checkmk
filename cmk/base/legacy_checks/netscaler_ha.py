@@ -12,8 +12,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 netscaler_ha_cur_states = {
     0: ("unknown", 1),
@@ -84,7 +85,12 @@ def check_netscaler_ha(_no_item, _no_params, info):
     return None
 
 
+def parse_netscaler_ha(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netscaler_ha"] = LegacyCheckDefinition(
+    parse_function=parse_netscaler_ha,
     detect=SNMP_DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.23",

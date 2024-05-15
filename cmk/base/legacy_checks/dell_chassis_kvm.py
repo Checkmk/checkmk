@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_CHASSIS
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.dell import DETECT_CHASSIS
 
 
 def inventory_dell_chassis_kvm(info):
@@ -34,7 +35,12 @@ def check_dell_chassis_kvm(_no_item, _no_params, info):
     return state, infotext
 
 
+def parse_dell_chassis_kvm(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_chassis_kvm"] = LegacyCheckDefinition(
+    parse_function=parse_dell_chassis_kvm,
     detect=DETECT_CHASSIS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2",

@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.memory import check_element
+
+from cmk.plugins.lib.memory import check_element
 
 Section = Mapping[str, float]
 

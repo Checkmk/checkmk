@@ -7,9 +7,10 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from cmk.plugins.lib.palo_alto import DETECT_PALO_ALTO
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.palo_alto import DETECT_PALO_ALTO
 
 
 @dataclass(frozen=True)
@@ -83,15 +84,19 @@ def check(
         summary=f"HA mode: {section.ha_mode}",
     )
     yield Result(
-        state=State.OK
-        if section.ha_mode == "disabled"
-        else State(params[f"ha_local_state_{_uniform_format(section.ha_local_state)}"]),
+        state=(
+            State.OK
+            if section.ha_mode == "disabled"
+            else State(params[f"ha_local_state_{_uniform_format(section.ha_local_state)}"])
+        ),
         summary=f"HA local state: {section.ha_local_state}",
     )
     yield Result(
-        state=State.OK
-        if section.ha_mode == "disabled"
-        else State(params[f"ha_peer_state_{_uniform_format(section.ha_peer_state)}"]),
+        state=(
+            State.OK
+            if section.ha_mode == "disabled"
+            else State(params[f"ha_peer_state_{_uniform_format(section.ha_peer_state)}"])
+        ),
         notice=f"HA peer state: {section.ha_peer_state}",
     )
 

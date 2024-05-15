@@ -10,12 +10,24 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Migrate
 
 
 def _parameter_valuespec_safenet_ntls_links():
-    return Levels(
-        title=_("NTLS Links"),
-        default_value=None,
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    Levels(
+                        title=_("NTLS Links"),
+                        default_value=None,
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) and set(p) == {"levels"} else {"levels": p},
     )
 
 

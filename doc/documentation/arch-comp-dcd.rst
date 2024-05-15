@@ -89,7 +89,80 @@ TODO: Describe phase 1 and 2 of the synchronization
 Runtime view
 ============
 
-TODO: Add a sequence diagram showing the processing of a sync.
+.. uml::
+
+    control "Manager" as M
+    control "Connection\nManager" as ConnManager
+    control "Command\nManager" as CommManager
+    participant "Connection N" as Connection
+    participant Connector as Conn
+    database "Filesystem" as FS
+    control "REST\nAPI" as RA
+    control "Automation\nAPI" as Auto
+
+    M -> ConnManager : start
+    M -> CommManager : start
+    ConnManager -> Connection : create
+    activate Connection
+    |||
+    Connection -> Conn : execute_sync
+    deactivate Connection
+    activate Conn
+
+    group Phase1
+        Conn -> FS : get_source_and_piggyback_hosts
+        activate FS
+        FS --> Conn : retrieve PiggybackHosts
+        deactivate FS
+    end
+    |||
+    alt local case
+        Conn -> Conn : get result (piggyback hosts)
+    else distributed case
+        note right Conn
+            On remote DCD instances, //phase 2// is not executed, but the
+            result of //phase 1// is stored and fetched by the central DCD.
+            The central DCD then executes //phase 2//.
+        end note
+        Conn -> RA : REST API call\nfetch_phase_one/invoke
+        RA -> Auto : execute-dcd-command\n[get_phase1_result]
+        Auto -> CommManager : get_phase1_result
+        CommManager -> Connection : get_connection
+        Connection -> Conn: serialize
+        Connection <-- Conn: result:serialize
+        CommManager <-- Connection : result:get_connection
+        Auto <-- CommManager : result:get_phase1_result
+        RA <-- Auto : result:execute-dcd-command\n[get_phase1_result]
+        Conn <-- RA : result:REST API call
+    end
+    |||
+    group Phase2
+        note right Conn
+            This phase receives the final output of //phase 1// as input.
+        end note
+        Conn -> Conn : Execution status OK?\n(abort/continue)
+        Conn -> RA : Fetch all configured hosts
+        activate RA
+        RA --> Conn : Retrieve configured hosts
+        deactivate RA
+
+        Conn -> Conn : partition hosts to:\n* create\n* modify\n* delete
+        |||
+        Conn -> RA : create
+        Conn -> RA : modify
+        Conn -> RA : delete
+        |||
+        Conn -> RA : activate changes
+        deactivate Conn
+    end
+
+Risks and technical debts
+=========================
+
+Hosts may exist as source hosts and piggyback hosts at the same time in
+the data files, as this is not prevented by the layout of the data on disk.
+This may lead to problems.
+
 
 Interfaces
 ==========

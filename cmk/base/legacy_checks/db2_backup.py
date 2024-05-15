@@ -6,21 +6,20 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 # <<<db2_backup>>>
 # [[[db2taddm:CMDBS1]]]
 # 2015-03-12-04.00.13.000000
 
-db2_backup_default_levels = (86400 * 14, 86400 * 28)
-
 
 def inventory_db2_backup(parsed):
     for instance in parsed[1]:
-        yield instance, db2_backup_default_levels
+        yield instance, {}
 
 
 def check_db2_backup(item, params, parsed):
@@ -38,16 +37,13 @@ def check_db2_backup(item, params, parsed):
         return
 
     age = time.time() - last_backup
-    if params:
-        warn, crit = params
-        if age >= crit:
-            yield 2, "Time since last backup: %s" % get_age_human_readable(age)
-        elif age >= warn:
-            yield 1, "Time since last backup: %s" % get_age_human_readable(age)
-        else:
-            yield 0, "Time since last backup: %s" % get_age_human_readable(age)
-    else:
-        yield 0, "Time since last backup: %s" % get_age_human_readable(age)
+    yield check_levels(
+        age,
+        None,
+        params["levels"],
+        human_readable_func=render.timespan,
+        infoname="Time since last backup",
+    )
 
 
 check_info["db2_backup"] = LegacyCheckDefinition(
@@ -56,4 +52,7 @@ check_info["db2_backup"] = LegacyCheckDefinition(
     discovery_function=inventory_db2_backup,
     check_function=check_db2_backup,
     check_ruleset_name="db2_backup",
+    check_default_parameters={
+        "levels": (86400 * 14, 86400 * 28),
+    },
 )

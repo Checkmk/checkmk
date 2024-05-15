@@ -9,15 +9,25 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Age, Dictionary, Migrate
 
 
 def _parameter_valuespec_antivir_update_age():
-    return Tuple(
-        elements=[
-            Age(title=_("Warning level for time since last update")),
-            Age(title=_("Critical level for time since last update")),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Age,
+                        help=_("Levels for time since last update"),
+                    ),
+                )
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

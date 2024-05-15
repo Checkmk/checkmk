@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
-
 import logging
 import sys
 from collections.abc import Generator
@@ -38,61 +36,33 @@ _handler.terminator = ""  # TODO: let the handler add '\n'
 _console = logging.getLogger("cmk.base.console")
 _console.propagate = False
 
-isEnabledFor = _console.isEnabledFor
+
+def format_warning(text: str) -> str:
+    stripped = text.lstrip()
+    indent = text[: len(text) - len(stripped)]
+    return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}"
 
 
-def log(level: int, text: str, *args: object, **kwargs: TextIO) -> None:
-    stream = kwargs.pop("stream", sys.stdout)
-    assert not kwargs
-
-    with set_stream(_console, _handler, stream):
+def _log(level: int, text: str, *args: object, stream: TextIO | None = None) -> None:
+    with set_stream(_console, _handler, sys.stdout if stream is None else stream):
         _console.log(level, text, *args)
 
 
-def debug(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if, opt_verbose >= 2 (-vv)."""
-    log(logging.DEBUG, text, *args, **kwargs)
+def debug(text: str) -> None:
+    _log(logging.DEBUG, text)
 
 
-vverbose = debug
+def verbose(text: str, stream: TextIO | None = None) -> None:
+    _log(VERBOSE, text, stream=stream)
 
 
-def verbose(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if opt_verbose is set (-v).
-
-    Adds no linefeed.
-
-    """
-    log(VERBOSE, text, *args, **kwargs)
+def info(text: str) -> None:
+    _log(logging.INFO, text)
 
 
-def info(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if opt_verbose is set (-v).
-
-    Adds no linefeed.
-
-    """
-    log(logging.INFO, text, *args, **kwargs)
+def warning(text: str, stream: TextIO | None = None) -> None:
+    _log(logging.WARNING, text, stream=stream)
 
 
-#
-# More top level wrappers
-#
-
-
-def warning(text: str, *args: object, **kwargs: TextIO) -> None:
-    stream = kwargs.pop("stream", sys.stderr)
-    assert not kwargs
-    log(logging.WARNING, _format_warning(text), *args, stream=stream)
-
-
-# TODO: Inconsistent -> Adds newline and other functions don't
-def _format_warning(text: str) -> str:
-    # type (str) -> str
-    stripped = text.lstrip()
-    indent = text[: len(text) - len(stripped)]
-    return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}\n"
-
-
-def error(text: str, *args: object) -> None:
-    log(logging.ERROR, text, *args, stream=sys.stderr)
+def error(text: str) -> None:
+    _log(logging.ERROR, text, stream=sys.stderr)

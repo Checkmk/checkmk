@@ -7,9 +7,10 @@ import json
 import time
 from collections.abc import Mapping
 
+from cmk.plugins.lib import interfaces
+
 from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import interfaces
 
 Section = Mapping[str, float]
 

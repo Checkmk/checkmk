@@ -5,16 +5,72 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.check_legacy_includes.fsc_sc2 import (
-    check_fsc_sc2_fans,
-    FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS,
-    inventory_fsc_sc2_fans,
-)
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+
+
+def parse_fsc_sc2_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.1.1 "FAN1 SYS"
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.1.2 "FAN2 SYS"
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.1.3 "FAN3 SYS"
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.1.4 "FAN4 SYS"
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.1.5 "FAN5 SYS"
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.1.6 "FAN PSU1"
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.1.7 "FAN PSU2"
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.5.1.1 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.5.1.2 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.5.1.3 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.5.1.4 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.5.1.5 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.5.1.6 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.5.1.7 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.1 5820
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.2 6000
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.3 6000
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.4 6000
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.5 6120
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.6 2400
+# .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.7 2400
+
+
+def inventory_fsc_sc2_fans(info):
+    for line in info:
+        if line[1] not in ["8"]:
+            yield line[0], {}
+
+
+def check_fsc_sc2_fans(item, params, info):
+    status_map = {
+        "1": (3, "Status is unknown"),
+        "2": (0, "Status is disabled"),
+        "3": (0, "Status is ok"),
+        "4": (2, "Status is failed"),
+        "5": (1, "Status is prefailure-predicted"),
+        "6": (1, "Status is redundant-fan-failed"),
+        "7": (3, "Status is not-manageable"),
+        "8": (0, "Status is not-present"),
+    }
+
+    if isinstance(params, tuple):
+        params = {"lower": params}
+
+    for designation, status, rpm in info:
+        if designation == item:
+            yield status_map.get(status, (3, "Status is unknown"))
+            if rpm:
+                yield check_fan(int(rpm), params)
+            else:
+                yield 0, "Device did not deliver RPM values"
+
 
 check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
+    parse_function=parse_fsc_sc2_fans,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.5.2.1",
@@ -24,5 +80,7 @@ check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
     discovery_function=inventory_fsc_sc2_fans,
     check_function=check_fsc_sc2_fans,
     check_ruleset_name="hw_fans",
-    check_default_parameters=FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters={
+        "lower": (1500, 2000),
+    },
 )

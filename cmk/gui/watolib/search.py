@@ -30,14 +30,19 @@ from cmk.gui.background_job import (
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
 )
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.global_config import get_global_config
 from cmk.gui.hooks import register_builtin
 from cmk.gui.http import request
-from cmk.gui.i18n import _, get_current_language, get_languages, localize
+from cmk.gui.i18n import (
+    _,
+    get_current_language,
+    get_languages,
+    localize,
+    translate_to_current_language,
+)
 from cmk.gui.logged_in import user
 from cmk.gui.pages import get_page_handler
 from cmk.gui.session import SuperUserContext
@@ -76,18 +81,15 @@ class ABCMatchItemGenerator(ABC):
         return hash(self.name)
 
     @abstractmethod
-    def generate_match_items(self) -> MatchItems:
-        ...
+    def generate_match_items(self) -> MatchItems: ...
 
     @staticmethod
     @abstractmethod
-    def is_affected_by_change(change_action_name: str) -> bool:
-        ...
+    def is_affected_by_change(change_action_name: str) -> bool: ...
 
     @property
     @abstractmethod
-    def is_localization_dependent(self) -> bool:
-        ...
+    def is_localization_dependent(self) -> bool: ...
 
 
 class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
@@ -406,7 +408,15 @@ class IndexSearcher:
                 lambda job_interface: _index_building_in_background_job(
                     job_interface,
                     self._redis_client,
-                )
+                ),
+                # We deliberately do not provide an estimated duration here, since that involves I/O.
+                # We need to be as fast as possible here, since this is done at the end of HTTP
+                # requests.
+                InitialStatusArgs(
+                    title=_("Search index"),
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
             )
 
     def _search_redis_categories(
@@ -435,14 +445,13 @@ class IndexSearcher:
                     IndexBuilder.add_to_prefix(prefix_category, idx_matched_item)
                 )
 
-                # This call to i18n._ with a non-constant string is ok. Here, we translate the
-                # topics of our search results. For localization-dependent search results, such as
-                # rulesets, they are already localized anyway. However, for localization-independent
-                # results, such as hosts, they are not. For example, "Hosts" in French is "Hôtes".
-                # Without this call to i18n._, found hosts would be displayed under the topic
-                # "Hosts" instead of "Hôtes" in the setup search.
-                # pylint: disable=translation-of-non-string
-                results[_(match_item_dict["topic"])].append(
+                # We translate the topics of our search results. For localization-dependent search
+                # results, such as rulesets, they are already localized anyway. However, for
+                # localization-independent results, such as hosts, they are not. For example,
+                # "Hosts" in French is "Hôtes". Without this call to translate_to_current_language,
+                # found hosts would be displayed under the topic "Hosts" instead of "Hôtes" in the
+                # setup search.
+                results[translate_to_current_language(match_item_dict["topic"])].append(
                     _SearchResultWithPermissionsCheck(
                         SearchResult(
                             match_item_dict["title"],
@@ -545,7 +554,15 @@ def _launch_requests_processing_background() -> None:
             lambda job_interface: _process_update_requests_background(
                 job_interface,
                 get_redis_client(),
-            )
+            ),
+            # We deliberately do not provide an estimated duration here, since that involves I/O.
+            # We need to be as fast as possible here, since this is done at the end of HTTP
+            # requests.
+            InitialStatusArgs(
+                title=_("Search index"),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
         )
 
 
@@ -589,7 +606,6 @@ def _process_update_requests(
     job_interface.send_result_message(_("Search index successfully updated"))
 
 
-@job_registry.register
 class SearchIndexBackgroundJob(BackgroundJob):
     job_prefix = "search_index"
 
@@ -598,13 +614,4 @@ class SearchIndexBackgroundJob(BackgroundJob):
         return _("Search index")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            # We deliberately do not provide an estimated duration here, since that involves I/O.
-            # We need to be as fast as possible here, since this is done at the end of HTTP
-            # requests.
-            InitialStatusArgs(
-                title=_("Search index"),
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)

@@ -466,6 +466,32 @@ def test_services_split(
             ),
             id="parse a socket instead of a service",
         ),
+        pytest.param(
+            [
+                "[list-unit-files]",
+                "[status]",
+                "cockpit.socket",
+                "disabled",
+                "[all]",
+                "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+                "cockpit.socket loaded active listening",
+            ],
+            Section(
+                sockets={
+                    "cockpit": UnitEntry(
+                        name="cockpit",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="listening",
+                        description="",
+                        enabled_status="unknown",
+                        time_since_change=None,
+                    )
+                },
+                services={},
+            ),
+            id="missing description",
+        ),
     ],
 )
 def test_parse_systemd_units(pre_string_table: Sequence[str], section: Section) -> None:
@@ -752,7 +778,7 @@ def test_discover_systemd_units_sockets(
     [
         (
             SECTION,
-            [Service(item="Summary")],
+            [Service()],
         ),
     ],
 )
@@ -1070,10 +1096,5 @@ def test_check_systemd_units_services_summary(
     params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
 ) -> None:
     assert (
-        list(
-            check_systemd_units_services_summary(
-                item="nonsense-backward-compatibility", params=params, section=section
-            )
-        )
-        == check_results
+        list(check_systemd_units_services_summary(params=params, section=section)) == check_results
     )

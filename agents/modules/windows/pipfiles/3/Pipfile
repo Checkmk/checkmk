@@ -6,15 +6,15 @@ name = "pypi"
 [dev-packages]
 
 [packages]
-colorama = "==0.4.1"    # Windows has to have some color output
-pyyaml = "==5.1.2"      # to support the agent config
-certifi= "==2020.4.5.1" # jolokia
-chardet = "==3.0.4"     # jolokia
-idna = "==2.9"          # jolokia
-requests = {extras = ["socks"], version = "2.23.0"}   # jolokia, cmk_update_agent
-urllib3 = "==1.25.9"    # jolokia
-pyopenssl = "19.1.0"    # cmk_update_agent
-pywin32 = "==303"       # logwatch
+colorama = "==0.4.6"    # Windows has to have some color output
+pyyaml = "==6.0.1"      # to support the agent config
+certifi= "==2023.11.17" # jolokia
+chardet = "==5.2.0"     # jolokia
+idna = "==3.6"          # jolokia
+requests = {extras = ["socks"], version = "2.31.0"}   # jolokia, cmk_update_agent
+urllib3 = "==2.1.0"     # jolokia
+pyopenssl = "~=24.0"    # cmk_update_agent
+pywin32 = "==306"       # logwatch
 
 [requires]
-python_version = "3.10"
+python_version = "3.12"

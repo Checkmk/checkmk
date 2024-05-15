@@ -18,9 +18,6 @@ from cmk.base.config import check_info
 # humidity,6QHSgJ.c.ugg,250
 # ambient,6JLy11.c.uKA,124
 
-# based on customers investigation
-tinkerforge_humidity_default_levels = (35, 40, 50, 55)
-
 
 def parse_tinkerforge(string_table):
     # biggest trouble here is generating sensible item names as tho ones
@@ -72,12 +69,7 @@ def parse_tinkerforge(string_table):
 
 def inventory_tinkerforge(brick_type, parsed):
     for path in parsed.get(brick_type, {}):
-        if brick_type == "humidity":
-            yield path, tinkerforge_humidity_default_levels
-        elif brick_type == "ambient":
-            yield path, None
-        else:
-            yield path, {}
+        yield path, {}
 
 
 def check_tinkerforge_master(item, params, parsed):
@@ -101,9 +93,9 @@ def check_tinkerforge_temperature(item, params, parsed):
 def check_tinkerforge_ambient(item, params, parsed):
     if "ambient" in parsed and item in parsed["ambient"]:
         reading = float(parsed["ambient"][item][0]) / 100.0
-        if not params:
-            params = None
-        return check_levels(reading, "brightness", params, unit="lx", infoname="Brightness")
+        return check_levels(
+            reading, "brightness", params["levels"], unit="lx", infoname="Brightness"
+        )
     return None
 
 
@@ -137,41 +129,71 @@ def check_tinkerforge_motion(item, params, parsed):
         return 0, "No motion detected", [("motion", reading)]
 
 
+def discover_tinkerforge(parsed):
+    return inventory_tinkerforge("master", parsed)
+
+
 check_info["tinkerforge"] = LegacyCheckDefinition(
     parse_function=parse_tinkerforge,
     service_name="Master %s",
-    discovery_function=lambda parsed: inventory_tinkerforge("master", parsed),
+    discovery_function=discover_tinkerforge,
     check_function=check_tinkerforge_master,
 )
+
+
+def discover_tinkerforge_temperature(parsed):
+    return inventory_tinkerforge("temperature", parsed)
+
 
 check_info["tinkerforge.temperature"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     sections=["tinkerforge"],
-    discovery_function=lambda parsed: inventory_tinkerforge("temperature", parsed),
+    discovery_function=discover_tinkerforge_temperature,
     check_function=check_tinkerforge_temperature,
     check_ruleset_name="temperature",
 )
 
+
+def discover_tinkerforge_ambient(parsed):
+    return inventory_tinkerforge("ambient", parsed)
+
+
 check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
     service_name="Ambient Light %s",
     sections=["tinkerforge"],
-    discovery_function=lambda parsed: inventory_tinkerforge("ambient", parsed),
+    discovery_function=discover_tinkerforge_ambient,
     check_function=check_tinkerforge_ambient,
     check_ruleset_name="brightness",
+    check_default_parameters={"levels": None},
 )
+
+
+def discover_tinkerforge_humidity(parsed):
+    return inventory_tinkerforge("humidity", parsed)
+
 
 check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     sections=["tinkerforge"],
-    discovery_function=lambda parsed: inventory_tinkerforge("humidity", parsed),
+    discovery_function=discover_tinkerforge_humidity,
     check_function=check_tinkerforge_humidity,
     check_ruleset_name="humidity",
+    # based on customers investigation
+    check_default_parameters={
+        "levels": (50.0, 55.0),
+        "levels_lower": (35.0, 40.0),
+    },
 )
+
+
+def discover_tinkerforge_motion(parsed):
+    return inventory_tinkerforge("motion", parsed)
+
 
 check_info["tinkerforge.motion"] = LegacyCheckDefinition(
     service_name="Motion Detector %s",
     sections=["tinkerforge"],
-    discovery_function=lambda parsed: inventory_tinkerforge("motion", parsed),
+    discovery_function=discover_tinkerforge_motion,
     check_function=check_tinkerforge_motion,
     check_ruleset_name="motion",
 )

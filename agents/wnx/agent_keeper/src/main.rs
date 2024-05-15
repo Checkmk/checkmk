@@ -1,7 +1,6 @@
 use clap::{Parser, Subcommand};
 #[macro_use]
 extern crate windows_service;
-use cmk_agent_ctl;
 use windows_service::service_dispatcher;
 
 use lazy_static::lazy_static;

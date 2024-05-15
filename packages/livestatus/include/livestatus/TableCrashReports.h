@@ -18,7 +18,8 @@ public:
     explicit TableCrashReports(ICore *mc);
     [[nodiscard]] std::string name() const final;
     [[nodiscard]] std::string namePrefix() const final;
-    void answerQuery(Query &query, const User &user) override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
 };
 
 #endif  // TableCrashReports_h

@@ -19,9 +19,9 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, assert_never, Literal
+from typing import Any, assert_never, Literal, TypedDict
 
-from typing_extensions import TypedDict
+from cmk.plugins.lib import humidity, temperature
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -36,7 +36,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import humidity, temperature
 
 
 @dataclass(frozen=True)
@@ -266,10 +265,13 @@ register.check_plugin(
 
 
 class SmokeParams(TypedDict):
-    smoke_handling: tuple[Literal["binary"], tuple[int, int]] | tuple[
-        Literal["levels"],
-        None | tuple[float, float],
-    ]
+    smoke_handling: (
+        tuple[Literal["binary"], tuple[int, int]]
+        | tuple[
+            Literal["levels"],
+            None | tuple[float, float],
+        ]
+    )
 
 
 def check_etherbox_smoke(item: str, params: SmokeParams, section: Section) -> CheckResult:

@@ -8,8 +8,9 @@ import re
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.cmciii import DETECT_CMCIII_LCP
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.cmciii import DETECT_CMCIII_LCP
 
 
 def inventory_cmciii_lcp_fans(info):
@@ -61,7 +62,12 @@ def check_cmciii_lcp_fans(item, params, info):
     return None
 
 
+def parse_cmciii_lcp_fans(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["cmciii_lcp_fans"] = LegacyCheckDefinition(
+    parse_function=parse_cmciii_lcp_fans,
     detect=DETECT_CMCIII_LCP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10.2",

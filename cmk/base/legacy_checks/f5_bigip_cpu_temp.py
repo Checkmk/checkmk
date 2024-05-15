@@ -8,14 +8,13 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-f5_bigip_cpu_temp_default_params = (60, 80)
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
 def inventory_f5_bigip_cpu_temp(info):
     for line in info:
-        yield line[0], f5_bigip_cpu_temp_default_params
+        yield line[0], {}
 
 
 def check_f5_bigip_cpu_temp(item, params, info):
@@ -25,7 +24,12 @@ def check_f5_bigip_cpu_temp(item, params, info):
     return None
 
 
+def parse_f5_bigip_cpu_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["f5_bigip_cpu_temp"] = LegacyCheckDefinition(
+    parse_function=parse_f5_bigip_cpu_temp,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.3.6.2.1",
@@ -35,4 +39,5 @@ check_info["f5_bigip_cpu_temp"] = LegacyCheckDefinition(
     discovery_function=inventory_f5_bigip_cpu_temp,
     check_function=check_f5_bigip_cpu_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={"levels": (60.0, 80.0)},
 )

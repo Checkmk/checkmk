@@ -8,11 +8,9 @@
 import dataclasses
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
-from typing_extensions import TypedDict
-
-from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, InodesSubsection
+from cmk.plugins.lib.df import BlocksSubsection, InodesSubsection
 
 from .agent_based_api.v1 import (
     check_levels,

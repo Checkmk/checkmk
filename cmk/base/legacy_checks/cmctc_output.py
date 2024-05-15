@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
+
+from cmk.agent_based.v2 import SNMPTree
+from cmk.plugins.lib.cmctc import DETECT_CMCTC
 
 # .1.3.6.1.4.1.2606.4.2.5.6.2.1.1.1 1
 # .1.3.6.1.4.1.2606.4.2.5.6.2.1.1.2 2

@@ -24,6 +24,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_3ware_units(info):
     inventory = []
@@ -63,7 +65,13 @@ def check_3ware_units(item, _no_params, info):
 
 # declare the check to Checkmk
 
+
+def parse_3ware_units(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["3ware_units"] = LegacyCheckDefinition(
+    parse_function=parse_3ware_units,
     service_name="RAID 3ware unit %s",
     discovery_function=inventory_3ware_units,
     check_function=check_3ware_units,

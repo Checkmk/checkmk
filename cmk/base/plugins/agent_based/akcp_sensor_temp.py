@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
-from .utils.akcp import DETEC_AKCP_SP2PLUS
-from .utils.akcp_sensor import (
+from cmk.plugins.lib.akcp import DETEC_AKCP_SP2PLUS
+from cmk.plugins.lib.akcp_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
     inventory_akcp_sensor_temp,
     parse_akcp_sensor,
 )
+
+from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
 
 # Example for contents of info
 #   description     degree  unit status low_crit low_warn high_warn  high_crit degreeraw online
@@ -43,6 +44,7 @@ register.snmp_section(
 
 register.snmp_section(
     name="akcp_sensor2plus_temp",
+    parse_function=parse_akcp_sensor,
     parsed_section_name="akcp_sensor_temp",
     detect=DETEC_AKCP_SP2PLUS,
     fetch=SNMPTree(

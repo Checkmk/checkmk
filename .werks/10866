@@ -1,4 +1,4 @@
-Title: LDAP: Fix WATO change of edited users containing HTML <br> tags
+Title: LDAP: Fix WATO change of edited users containing HTML &lt;br> tags
 Class: fix
 Compatible: compat
 Component: wato
@@ -8,5 +8,3 @@ Knowledge: undoc
 Level: 1
 State: unknown
 Version: 2.0.0i1
-
-

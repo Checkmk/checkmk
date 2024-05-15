@@ -3,45 +3,102 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Alternative, FixedValue, Integer, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FixedValue,
+    Integer,
+    Migrate,
+    Percentage,
+    TextInput,
+    Tuple,
+)
+
+
+def _migrate_licenses(
+    params: dict | tuple[float, float] | tuple[int, int] | None | Literal[False]
+) -> dict:
+    match params:
+        case dict():
+            return params
+        case int(), int():
+            return {"levels": ("absolute", params)}
+        case float(), float():
+            return {"levels": ("percentage", params)}
+        case None:
+            return {"levels": ("crit_on_all", params)}
+
+    # case False: # mypy does not see that this is all that is left...
+    return {"levels": ("always_ok", False)}
 
 
 def _vs_license():
-    return Alternative(
-        title=_("Levels for Number of Licenses"),
-        default_value=None,
-        elements=[
-            Tuple(
-                title=_("Absolute levels for unused licenses"),
-                elements=[
-                    Integer(title=_("Warning below"), default_value=5, unit=_("unused licenses")),
-                    Integer(title=_("Critical below"), default_value=0, unit=_("unused licenses")),
-                ],
-            ),
-            Tuple(
-                title=_("Percentual levels for unused licenses"),
-                elements=[
-                    Percentage(title=_("Warning below"), default_value=10.0),
-                    Percentage(title=_("Critical below"), default_value=0),
-                ],
-            ),
-            FixedValue(
-                value=None,
-                totext=_("Critical when all licenses are used"),
-                title=_("Go critical if all licenses are used"),
-            ),
-            FixedValue(
-                value=False,
-                title=_("Always report OK"),
-                totext=_("Alerting depending on the number of used licenses is disabled"),
-            ),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    CascadingDropdown(
+                        title=_("Levels for Number of Licenses"),
+                        default_value=None,
+                        choices=[
+                            (
+                                "absolute",
+                                _("Absolute levels for unused licenses"),
+                                Tuple(
+                                    elements=[
+                                        Integer(
+                                            title=_("Warning below"),
+                                            default_value=5,
+                                            unit=_("unused licenses"),
+                                        ),
+                                        Integer(
+                                            title=_("Critical below"),
+                                            default_value=0,
+                                            unit=_("unused licenses"),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "percentage",
+                                _("Percentual levels for unused licenses"),
+                                Tuple(
+                                    elements=[
+                                        Percentage(title=_("Warning below"), default_value=10.0),
+                                        Percentage(title=_("Critical below"), default_value=0),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "crit_on_all",
+                                _("Go critical if all licenses are used"),
+                                FixedValue(
+                                    value=None,
+                                ),
+                            ),
+                            (
+                                "always_ok",
+                                _("Always be OK"),
+                                FixedValue(
+                                    value=False,
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=_migrate_licenses,
     )
 
 

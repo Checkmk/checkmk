@@ -1,4 +1,4 @@
-Title: <tt>heartbeat_rscstatus</tt>: Fix error during update
+Title: heartbeat_rscstatus: Fix error during update
 Class: fix
 Compatible: compat
 Component: checks

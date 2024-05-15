@@ -1,0 +1,128 @@
+load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+)
+
+configure_make(
+    name = "net-snmp",
+    args = ["-j4"],
+    build_data = [
+        "@omd_packages//omd/packages/perl-modules:perl-modules.tar",
+        "@omd_packages//omd/packages/python3-modules:python3-modules.tar",
+    ],
+    configure_in_place = True,
+    configure_options = [
+        "-v",
+        "--enable-ipv6",
+        "-enable-blumenthal-aes",
+        "--disable-agent",
+        "--disable-snmptrapd-subagent",
+        "--with-defaults",
+        "--disable-scripts",
+        '--with-mibdirs="\\\\$$\\$$HOME/local/share/snmp/mibs:\\\\$$\\$$HOME/share/snmp/mibs:/usr/share/snmp/mibs"',
+    ],
+    copts = [
+        "-I$BUILD_TMPDIR/include",
+        "-I${EXT_BUILD_DEPS}/python/include/python%s/" % PYTHON_MAJOR_DOT_MINOR,
+        "-I$EXT_BUILD_DEPS/python/lib/",
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    ],
+    env = {
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+        "RANLIB": "ranlib",
+        "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
+        "PERL_MODULES_TAR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar)",
+        "PYTHON_MODULES_TAR": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)",
+        "PERL_DIR": "$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
+        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/python3-modules/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "HOME": "/home/\\$$\\$${USER}/",
+    },
+    lib_source = ":all_srcs",
+    out_binaries = [
+        "encode_keychange",
+        "snmpbulkwalk",
+        "snmpdf",
+        "snmpgetnext",
+        "snmppcap",
+        "snmpps",
+        "snmpstatus",
+        "snmptest",
+        "snmptrap",
+        "snmpvacm",
+        "snmpbulkget",
+        "snmpdelta",
+        "snmpget",
+        "snmpnetstat",
+        "snmpping",
+        "snmpset",
+        "snmptable",
+        "snmptranslate",
+        "snmpusm",
+        "snmpwalk",
+    ],
+    out_data_dirs = [
+        "share/snmp/mibs",
+        "share/man/",
+        "lib/python%s/site-packages/netsnmp" % PYTHON_MAJOR_DOT_MINOR,
+        "lib/perl5/",
+    ],
+    out_shared_libs = [
+        "libnetsnmp.so",
+        "libnetsnmp.so.40",
+        "libnetsnmp.so.40.1.0",
+    ],
+    out_static_libs = [
+        "libnetsnmp.a",
+    ],
+    postfix_script = """
+        set -x
+        tar xf ${PERL_MODULES_TAR} -C $(dirname ${PERL_MODULES_TAR});
+        tar xf ${PYTHON_MODULES_TAR} -C $(dirname ${PYTHON_MODULES_TAR});
+        mkdir -p lib/python
+        cd python && \
+            ${EXT_BUILD_DEPS}/python/bin/python3 setup.py install \
+                --basedir=.. \
+                --root=${INSTALLDIR} \
+                --prefix='' \
+                --single-version-externally-managed
+        cd -
+        echo "Build perl"
+            make -C perl DESTDIR=${INSTALLDIR}/ \
+                INSTALLSITEARCH=/lib/perl5/lib/perl5 \
+                INSTALLSITEMAN3DIR=/share/man/man3 \
+                INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
+                install
+    """,
+    targets = [
+        "",
+        "-C snmplib DESTDIR='/' installlibs",
+        "-C apps DESTDIR='/' installbin",
+        "-C man DESTDIR='/' install",
+        "-C mibs DESTDIR='/' mibsinstall",
+    ],
+    deps = ["@python"],
+)
+
+genrule(
+    name = "skel",
+    srcs = [
+        "@omd_packages//omd/packages/stunnel/skel",
+        "@omd_packages//omd/packages/stunnel/skel:skel_root",
+    ],
+    outs = [
+        "skel/etc/init.d/stunnel",
+        "skel/etc/logrotate.d/stunnel",
+        "skel/etc/rc.d/85-stunnel",
+        "skel/etc/stunnel/server.conf",
+        "skel/etc/stunnel/conf.d",
+    ],
+    cmd = """
+        cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/stunnel/skel:skel_root)) $$(realpath $(RULEDIR))
+    """,
+)

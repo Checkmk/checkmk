@@ -11,15 +11,10 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 
 from cmk.utils.version import RType, Version
 
+from cmk.werks.models import Class, Compatibility, Edition, Werk
+
 from .. import has_content, load_raw_files
-from ..werk import (
-    Class,
-    Compatibility,
-    Edition,
-    sort_by_version_and_component,
-    Werk,
-    WerkTranslator,
-)
+from ..werk import sort_by_version_and_component, WerkTranslator
 
 
 class SimpleWerk(NamedTuple):
@@ -87,9 +82,15 @@ def main(args: argparse.Namespace) -> None:
     )
 
     version = Version.from_str(args.version)
+    feedback_mail = None
+
     if version.release.r_type == RType.b:
         release_type = "beta"
-    elif version.release.r_type == RType.p:
+        assert (
+            version.base is not None
+        ), f"Expected version.base to be not None for release type beta: {version}"
+        feedback_mail = f"feedback-{version.base.major}.{version.base.minor}-beta@checkmk.com"
+    elif version.release.r_type == RType.p or version.release.is_unspecified():
         release_type = "stable"
     elif version.release.r_type == RType.daily:
         release_type = "daily"
@@ -102,6 +103,6 @@ def main(args: argparse.Namespace) -> None:
             werks=werks,
             release_type=release_type,
             version=args.version,
-            feedback_mail=args.feedback_mail,
+            feedback_mail=feedback_mail,
         )
     )

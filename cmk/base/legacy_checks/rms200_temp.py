@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 
 def inventory_rms200_temp(info):
@@ -28,7 +29,12 @@ def check_rms200_temp(item, params, info):
     return None
 
 
+def parse_rms200_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["rms200_temp"] = LegacyCheckDefinition(
+    parse_function=parse_rms200_temp,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1909.13"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1909.13.1.1.1",

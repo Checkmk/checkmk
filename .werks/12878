@@ -1,4 +1,4 @@
-Title: <tt>systemd_units</tt>: Handle "●" as marker for broken units correctly
+Title: systemd_units: Handle "●" as marker for broken units correctly
 Class: fix
 Compatible: compat
 Component: checks

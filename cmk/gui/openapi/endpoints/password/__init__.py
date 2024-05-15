@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""Passwords
+
+Passwords intended for authentication of certain checks can be stored in the Checkmk
+password store. You can use a stored password in a rule without knowing or entering
+the password.
+
+These endpoints provide a way to manage stored passwords via the REST-API in the
+same way the user interface does. This includes being able to create, update and delete
+stored passwords. You are also able to fetch a list of passwrods or individual passwords,
+however, the password itself is not returned for security reasons.
+"""
+from collections.abc import Mapping
+from typing import Any, cast
+
+from cmk.utils import version
+from cmk.utils.password_store import Password
+
+from cmk.gui.http import Response
+from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
+from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
+from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
+from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.passwords import (
+    load_password,
+    load_password_to_modify,
+    load_passwords,
+    remove_password,
+    save_password,
+)
+
+PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.passwords"),
+        permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+    ]
+)
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.passwords"),
+        permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+    ]
+)
+
+
+@Endpoint(
+    constructors.collection_href("password"),
+    "cmk/create",
+    method="post",
+    request_schema=InputPassword,
+    etag="output",
+    response_schema=PasswordObject,
+    permissions_required=RW_PERMISSIONS,
+)
+def create_password(params: Mapping[str, Any]) -> Response:
+    """Create a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
+    body = params["body"]
+    ident = body["ident"]
+    password_details = {
+        k: v
+        for k, v in body.items()
+        if k
+        not in (
+            "ident",
+            "owned_by",
+            "customer",
+        )
+    }
+    if version.edition() is version.Edition.CME:
+        password_details = update_customer_info(password_details, body["customer"])
+    password_details["owned_by"] = None if body["owned_by"] == "admin" else body["owned_by"]
+    save_password(ident, cast(Password, password_details), new_password=True)
+    return _serve_password(ident, load_password(ident))
+
+
+@Endpoint(
+    constructors.object_href("password", "{name}"),
+    ".../update",
+    method="put",
+    path_params=[NAME_ID_FIELD],
+    request_schema=UpdatePassword,
+    etag="both",
+    response_schema=PasswordObject,
+    permissions_required=RW_PERMISSIONS,
+)
+def update_password(params: Mapping[str, Any]) -> Response:
+    """Update a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
+    body = params["body"]
+    ident = params["name"]
+    try:
+        password_details = load_password_to_modify(ident)
+    except KeyError:
+        return problem(
+            status=404,
+            title=f'Password "{ident}" is not known.',
+            detail="The password you asked for is not known. Please check for eventual misspellings.",
+        )
+    password_details.update(body)
+    save_password(ident, password_details)
+    return _serve_password(ident, load_password(ident))
+
+
+@Endpoint(
+    constructors.object_href("password", "{name}"),
+    ".../delete",
+    method="delete",
+    path_params=[NAME_ID_FIELD],
+    output_empty=True,
+    permissions_required=RW_PERMISSIONS,
+)
+def delete_password(params: Mapping[str, Any]) -> Response:
+    """Delete a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
+    ident = params["name"]
+    if ident not in load_passwords():
+        return problem(
+            status=404,
+            title='Password "{ident}" is not known.',
+            detail="The password you asked for is not known. Please check for eventual misspellings.",
+        )
+    remove_password(ident)
+    return Response(status=204)
+
+
+@Endpoint(
+    constructors.object_href("password", "{name}"),
+    "cmk/show",
+    method="get",
+    etag="output",
+    path_params=[NAME_ID_FIELD],
+    response_schema=PasswordObject,
+    permissions_required=PERMISSIONS,
+)
+def show_password(params: Mapping[str, Any]) -> Response:
+    """Show a password"""
+    user.need_permission("wato.passwords")
+    ident = params["name"]
+    passwords = load_passwords()
+    if ident not in passwords:
+        return problem(
+            status=404,
+            title=f'Password "{ident}" is not known.',
+            detail="The password you asked for is not known. Please check for eventual misspellings.",
+        )
+    password_details: Password = passwords[ident]
+    return _serve_password(ident, password_details)
+
+
+@Endpoint(
+    constructors.collection_href("password"),
+    ".../collection",
+    method="get",
+    response_schema=PasswordCollection,
+    permissions_required=PERMISSIONS,
+)
+def list_passwords(params: Mapping[str, Any]) -> Response:
+    """Show all passwords"""
+    user.need_permission("wato.passwords")
+    return serve_json(
+        constructors.collection_object(
+            domain_type="password",
+            value=[
+                serialize_password(ident, details) for ident, details in load_passwords().items()
+            ],
+        )
+    )
+
+
+def _serve_password(ident: str, password_details: Password) -> Response:
+    response = serve_json(serialize_password(ident, complement_customer(password_details)))
+    password_as_dict = cast(dict[str, Any], password_details)
+    return constructors.response_with_etag_created_from_dict(response, password_as_dict)
+
+
+def serialize_password(ident: str, details: Password) -> DomainObject:
+    if details["owned_by"] is None:
+        details["owned_by"] = "admin"
+
+    return constructors.domain_object(
+        domain_type="password",
+        identifier=ident,
+        title=details["title"],
+        members={},
+        extensions={
+            k: v
+            for k, v in complement_customer(details).items()
+            if k
+            in (
+                "comment",
+                "docu_url",
+                "owned_by",
+                "shared_with",
+                "customer",
+            )
+        },
+        editable=True,
+        deletable=True,
+    )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create_password)
+    endpoint_registry.register(update_password)
+    endpoint_registry.register(delete_password)
+    endpoint_registry.register(show_password)
+    endpoint_registry.register(list_passwords)

@@ -5,9 +5,9 @@
 
 import pytest
 
-from tests.testlib import Check
+from cmk.base.legacy_checks.ra32e_power import check_ra32e_power, discover_ra32e_power
 
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.agent_based.v2 import Service
 
 from .checktestlib import BasicCheckResult
 
@@ -16,15 +16,16 @@ pytestmark = pytest.mark.checks
 RA32E_POWER = "ra32e_power"
 
 
-@pytest.mark.parametrize("info,result", [([[""]], None), ([["0"]], [(None, {})])])
-def test_ra32e_power_discovery(info: StringTable, result: object) -> None:
-    check = Check(RA32E_POWER)
-    assert check.run_discovery(info) == result
+def test_ra32e_power_discover_nothing() -> None:
+    assert not list(discover_ra32e_power([[""]]))
+
+
+def test_ra32e_power_discover_something() -> None:
+    assert list(discover_ra32e_power([["0"]])) == [Service()]
 
 
 def test_ra32e_power_check_battery() -> None:
-    check = Check(RA32E_POWER)
-    result = check.run_check(None, {}, [["0"]])
+    result = check_ra32e_power(None, {}, [["0"]])
 
     assert len(result) == 2
     status, infotext = result
@@ -33,16 +34,14 @@ def test_ra32e_power_check_battery() -> None:
 
 
 def test_ra32e_power_check_acpower() -> None:
-    check = Check(RA32E_POWER)
-    result = BasicCheckResult(*check.run_check(None, {}, [["1"]]))
+    result = BasicCheckResult(*check_ra32e_power(None, {}, [["1"]]))
 
     assert result.status == 0
     assert "AC/Utility" in result.infotext
 
 
 def test_ra32e_power_check_nodata() -> None:
-    check = Check(RA32E_POWER)
-    result = BasicCheckResult(*check.run_check(None, {}, [[""]]))
+    result = BasicCheckResult(*check_ra32e_power(None, {}, [[""]]))
 
     assert result.status == 3
     assert "unknown" in result.infotext

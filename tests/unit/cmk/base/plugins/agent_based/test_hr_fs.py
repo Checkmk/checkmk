@@ -4,11 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.hr_fs import check_hr_fs, discover_hr_fs, parse_hr_fs, Section
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.hr_fs import (
+    check_hr_fs_testable,
+    discover_hr_fs,
+    parse_hr_fs,
+    Section,
+)
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.fixture(name="section", scope="module")
@@ -79,19 +84,18 @@ def test_discover_hr_fs(section: Section) -> None:
     ]
 
 
-def test_check_hr_fs(mocker: MockerFixture, section: Section) -> None:
-    mocker.patch(
-        "cmk.base.plugins.agent_based.hr_fs.get_value_store",
-        return_value={
-            "/mnt/pool1.trend": (1676554542.4808888, 1676556884.145195, 0.0),
-            "/mnt/pool1.delta": (1676556884.145195, 3.41796875),
-        },
-    )
+def test_check_hr_fs(section: Section) -> None:
+    value_store: dict[str, object] = {
+        "/mnt/pool1.trend": (1676554542.4808888, 1676556884.145195, 0.0),
+        "/mnt/pool1.delta": (1676556884.145195, 3.41796875),
+    }
+
     assert list(
-        check_hr_fs(
+        check_hr_fs_testable(
             "/mnt/pool1",
             FILESYSTEM_DEFAULT_PARAMS,
             section,
+            value_store,
         )
     ) == [
         Metric(
@@ -107,10 +111,41 @@ def test_check_hr_fs(mocker: MockerFixture, section: Section) -> None:
             levels=(79.99999997407181, 89.9999999654291),
             boundaries=(0.0, 100.0),
         ),
-        Result(state=State.OK, summary="Used: 0.15% - 3.42 MiB of 2.16 GiB"),
+        Result(state=State.OK, summary="Used: 0.15% - 3.58 MB of 2.31 GB"),
         Metric("fs_size", 2206.8828125, boundaries=(0.0, None)),
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-        Metric("trend", 0.0, boundaries=(0.0, 91.95345052083334)),
+        Metric("trend", 0.0),
+    ]
+
+
+def test_check_hr_fs_free_levels() -> None:
+    value_store: dict[str, object] = {
+        "/some/small/fs.delta": (1713882925.0620046, 0.00012969970703125),
+        "/some/small/fs.trend": (1713882925.0620046, 1713882925.0620046, 0.0),
+    }
+
+    assert list(
+        check_hr_fs_testable(
+            "/some/small/fs",
+            dict(FILESYSTEM_DEFAULT_PARAMS) | {"levels": [(1, (-15.0, -10.0))]},
+            [("/some/small/fs", 0.390625, 0.39049530029296875, 0)],
+            value_store,
+        )
+    ) == [
+        Metric(
+            "fs_used",
+            0.00012969970703125,
+            levels=(0.33203125, 0.3515625),
+            boundaries=(0.0, 0.390625),
+        ),
+        Metric("fs_free", 0.39049530029296875, boundaries=(0.0, None)),
+        Metric("fs_used_percent", 0.033203125, levels=(85.0, 90.0), boundaries=(0.0, 100.0)),
+        Result(state=State.OK, summary="Used: 0.03% - 136 B of 410 kB"),
+        Metric("fs_size", 0.390625, boundaries=(0.0, None)),
+        Metric("growth", 0.0),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+        Metric("trend", 0.0),
     ]

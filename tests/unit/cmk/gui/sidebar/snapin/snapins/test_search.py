@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.sidebar._snapin.snapins.search import (
+from cmk.gui.sidebar._snapin._search import (
     ABCLabelMatchPlugin,
     HostLabelMatchPlugin,
     ServiceLabelMatchPlugin,

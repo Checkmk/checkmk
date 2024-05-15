@@ -205,7 +205,7 @@ class PageAutomation(AjaxPage):
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
 
-        user_id = request.var("user_id")
+        user_id = request.get_validated_type_input(UserId, "user_id")
         if not user_id:
             raise MKGeneralException(_("Missing variable user_id"))
 
@@ -222,7 +222,7 @@ class PageAutomation(AjaxPage):
             raise MKGeneralException(_("Invalid call: The profile is missing."))
 
         users = userdb.load_users(lock=True)
-        users[UserId(user_id)] = watolib_utils.mk_eval(profile)
+        users[user_id] = watolib_utils.mk_eval(profile)
         userdb.save_users(users, datetime.now())
 
         return True

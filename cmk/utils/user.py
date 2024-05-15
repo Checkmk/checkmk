@@ -41,7 +41,7 @@ class UserId(str):
         * cmk.gui.userdb and htpasswd (LDAP is only ingress of users)
         * various logs, including Audit Log
 
-        * Microcore
+        * Micro Core
         * Nagios core
         * livestatus queries and commands
             * livestatus.py (the validation regex is currently duplicated here!)
@@ -55,7 +55,7 @@ class UserId(str):
     """
 
     # Note: livestatus.py duplicates the regex to validate incoming UserIds!
-    USER_ID_REGEX = re.compile(r"^[\w$][-@.\w$]*$", re.UNICODE)
+    USER_ID_REGEX = re.compile(r"^[\w$][-@.+\w$]*$", re.UNICODE)
 
     @classmethod
     def __get_pydantic_core_schema__(
@@ -95,6 +95,11 @@ class UserId(str):
                 >>> UserId.validate("cmkadmin")
                 >>> UserId.validate("$cmkädmin")
                 >>> UserId.validate("ↄ𝒽ѥ𝕔𖹬-艋く")
+
+            Emails are allowed
+
+                >>> UserId.validate("cmkadmin@hi.com")
+                >>> UserId.validate("cmkadmin+test@hi.com")
 
             Special characters other than '$_-@.' are not allowed (see `USER_ID_REGEX`).
 

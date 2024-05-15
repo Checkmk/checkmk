@@ -5,14 +5,29 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hwg import (
-    check_hwg_humidity,
-    HWG_HUMIDITY_DEFAULTLEVELS,
-    inventory_hwg_humidity,
-    parse_hwg,
-)
+from cmk.base.check_legacy_includes.humidity import check_humidity
+from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree
+
+HWG_HUMIDITY_DEFAULTLEVELS = {"levels": (60.0, 70.0)}
+
+
+def inventory_hwg_humidity(parsed):
+    for index, attrs in parsed.items():
+        if attrs.get("humidity"):
+            yield index, {}
+
+
+def check_hwg_humidity(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+
+    status, infotext, perfdata = check_humidity(data["humidity"], params)
+    infotext += " (Description: {}, Status: {})".format(data["descr"], data["dev_status_name"])
+    yield status, infotext, perfdata
+
 
 check_info["hwg_humidity"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
@@ -22,6 +37,15 @@ check_info["hwg_humidity"] = LegacyCheckDefinition(
     ),
     parse_function=parse_hwg,
     service_name="Humidity %s",
+    discovery_function=inventory_hwg_humidity,
+    check_function=check_hwg_humidity,
+    check_ruleset_name="humidity",
+    check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,
+)
+
+check_info["hwg_ste2.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
+    sections=["hwg_ste2"],
     discovery_function=inventory_hwg_humidity,
     check_function=check_hwg_humidity,
     check_ruleset_name="humidity",

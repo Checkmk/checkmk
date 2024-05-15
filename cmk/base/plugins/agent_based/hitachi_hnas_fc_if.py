@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.plugins.lib import hitachi_hnas, if64, interfaces
+
 from .agent_based_api.v1 import register, SNMPTree, type_defs
-from .utils import hitachi_hnas, if64, interfaces
 
 
 def parse_hitachi_hnas_fc_if(
@@ -65,7 +66,7 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=if64.generic_check_if64,
     cluster_check_function=interfaces.cluster_check,

@@ -29,6 +29,7 @@ def _parameter_valuespec_viprinet_router():
                 ),
             ),
         ],
+        ignored_keys=["mode_inv"],
     )
 
 

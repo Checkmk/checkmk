@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 
 from collections.abc import Sequence
 from typing import Any
@@ -58,7 +60,7 @@ class TestListChoice:
         assert _get_list_choice().value_to_json([1, 2]) == [1, 2]
         assert _get_list_choice().value_from_json([1, 2]) == [1, 2]
 
-    def test_from_html_vars(self):
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(l_0="on", l_2="on"):
             assert _get_list_choice().from_html_vars("l") == [1, 3]
 

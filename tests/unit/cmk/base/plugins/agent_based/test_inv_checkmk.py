@@ -10,8 +10,8 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.plugins.agent_based import inventory_checkmk_server as inv_checkmk
+from cmk.agent_based.v2 import Attributes, TableRow
+from cmk.plugins.collection.agent_based import inventory_checkmk_server as inv_checkmk
 
 from .utils_inventory import sort_inventory_result
 

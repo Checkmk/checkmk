@@ -7,21 +7,35 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, exists, SNMPTree, startswith
+
+from cmk.agent_based.v2 import (
+    all_of,
+    DiscoveryResult,
+    exists,
+    Service,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 # .1.3.6.1.4.1.9.2.1.57.0 13 --> OLD-CISCO-CPU-MIB::avgBusy1.0
 
 
-def inventory_cisco_oldcpu(info):
-    if info[0][0]:
-        yield None, {}
+def discover_cisco_oldcpu(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0]:
+        yield Service()
 
 
 def check_cisco_oldcpu(_no_item, params, info):
     return check_cpu_util(float(info[0][0]), params)
 
 
+def parse_cisco_oldcpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_oldcpu"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_oldcpu,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1745"),
         exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"),
@@ -32,7 +46,7 @@ check_info["cisco_oldcpu"] = LegacyCheckDefinition(
         oids=["57"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_cisco_oldcpu,
+    discovery_function=discover_cisco_oldcpu,
     check_function=check_cisco_oldcpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

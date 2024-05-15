@@ -11,16 +11,14 @@ import re
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree
 
 # Agent / MIB output
 # see: 1.3.6.1.4.1.3375.2.2.5.1.2.1
 # F5-BIGIP-LOCAL-MIB::ltmPoolName.              8.80.111.111.108.asci_encoded_str = Pool_NMA
 # F5-BIGIP-LOCAL-MIB::ltmPoolMemberCnt.         8.80.111.111.108.95.78.77.65 = 2
 # F5-BIGIP-LOCAL-MIB::ltmPoolActiveMemberCnt.   8.80.111.111.108.95.78.77.65 = 0
-
-# warn, crit numbers of pool members
-f5_bigip_pool_default_levels = (2, 1)
 
 
 def parse_f5_bigip_pool(string_table):
@@ -54,7 +52,7 @@ def inventory_f5_bigip_pool(parsed):
     # inventorize all pools and their member count
     for item in parsed:
         if item != "":
-            yield item, f5_bigip_pool_default_levels
+            yield item, {}
 
 
 def f5_bigip_pool_get_down_members(down_info):
@@ -70,8 +68,6 @@ def f5_bigip_pool_get_down_members(down_info):
 
 
 def check_f5_bigip_pool(item, params, parsed):
-    warn, crit = params
-
     pool_info = parsed.get(item)
     if not pool_info:
         return None
@@ -79,15 +75,17 @@ def check_f5_bigip_pool(item, params, parsed):
     pool_act_members = pool_info["act_members"]
     pool_def_members = pool_info["def_members"]
     message = "%d of %d members are up" % (pool_act_members, pool_def_members)
+
+    levels = params["levels_lower"]
     state = 0
-    if pool_act_members == pool_def_members or pool_act_members >= warn:
+    if pool_act_members == pool_def_members or not levels or pool_act_members >= levels[0]:
         state = 0
-    elif pool_act_members < crit:
+    elif pool_act_members < levels[1]:
         state = 2
-        message += f" (warn/crit: {warn}/{crit})"
-    elif pool_act_members < warn:
+        message += f" (warn/crit: {levels[0]}/{levels[1]})"
+    elif pool_act_members < levels[0]:
         state = 1
-        message += f" (warn/crit: {warn}/{crit})"
+        message += f" (warn/crit: {levels[0]}/{levels[1]})"
 
     if pool_act_members < pool_def_members:
         downs = f5_bigip_pool_get_down_members(pool_info["down_info"])
@@ -113,4 +111,5 @@ check_info["f5_bigip_pool"] = LegacyCheckDefinition(
     discovery_function=inventory_f5_bigip_pool,
     check_function=check_f5_bigip_pool,
     check_ruleset_name="f5_pools",
+    check_default_parameters={"levels_lower": (2, 1)},
 )

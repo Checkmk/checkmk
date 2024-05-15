@@ -8,10 +8,11 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
+
+from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
 
 
 def parse_f5_bigip_snat(string_table):
@@ -99,9 +100,7 @@ def check_f5_bigip_snat(item, params, parsed):
                 value,
                 param_var,
                 levels,
-                human_readable_func=lambda x, p=param_var: get_bytes_human_readable(x, base=1000.0)
-                if "octets" in p
-                else str(x),
+                human_readable_func=render.disksize if "octets" in param_var else str,
                 infoname=map_paramvar_to_text[param_var.rstrip("_lower")],
             )
             if state:

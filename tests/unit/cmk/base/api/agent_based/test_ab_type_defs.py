@@ -9,8 +9,7 @@ import pytest
 
 from cmk.snmplib import SpecialColumn
 
-from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
-from cmk.base.api.agent_based.type_defs import OIDSpecTuple
+from cmk.agent_based.v1 import OIDEnd, SNMPTree
 
 
 def test_oid_end_repr() -> None:
@@ -30,6 +29,6 @@ def test_oid_end_compat_with_backend() -> None:
         (".1.2", ["42.1", "42.2"]),  # 42 should be in base
     ],
 )
-def test_snmptree_valid(base: str, oids: Sequence[str | OIDSpecTuple]) -> None:
+def test_snmptree_valid(base: str, oids: Sequence) -> None:
     with pytest.raises((ValueError, TypeError)):
         SNMPTree(base=base, oids=oids).validate()

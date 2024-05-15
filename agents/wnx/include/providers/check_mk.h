@@ -7,6 +7,7 @@
 #ifndef CHECK_MK_H
 #define CHECK_MK_H
 
+#include <chrono>
 #include <string>
 #include <string_view>
 
@@ -34,6 +35,10 @@ private:
     static std::string makeOnlyFrom();
 };
 
+std::string GetTimezoneOffset();
+
+std::string PrintIsoTime(
+    std::chrono::time_point<std::chrono::system_clock> now);
 }  // namespace cma::provider
 
 #endif  // CHECK_MK_H

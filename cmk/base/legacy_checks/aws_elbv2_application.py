@@ -14,8 +14,9 @@ from cmk.base.check_legacy_includes.aws import (
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
+
+from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 
 def parse_aws_elbv2_application(string_table):
@@ -75,10 +76,14 @@ def check_aws_elbv2_application_lcu(item, params, parsed):
     )
 
 
+def discover_aws_elbv2_application(p):
+    return inventory_aws_generic_single(p, ["ConsumedLCUs"])
+
+
 check_info["aws_elbv2_application"] = LegacyCheckDefinition(
     parse_function=parse_aws_elbv2_application,
     service_name="AWS/ApplicationELB LCUs",
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
+    discovery_function=discover_aws_elbv2_application,
     check_function=check_aws_elbv2_application_lcu,
     check_ruleset_name="aws_elbv2_lcu",
 )
@@ -130,12 +135,14 @@ def check_aws_elbv2_application_connections(item, params, parsed):
     return check_aws_metrics(metric_infos)
 
 
+def discover_aws_elbv2_application_connections(p):
+    return inventory_aws_generic_single(p, _aws_elbv2_application_connection_types, requirement=any)
+
+
 check_info["aws_elbv2_application.connections"] = LegacyCheckDefinition(
     service_name="AWS/ApplicationELB Connections",
     sections=["aws_elbv2_application"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_application_connection_types, requirement=any
-    ),
+    discovery_function=discover_aws_elbv2_application_connections,
     check_function=check_aws_elbv2_application_connections,
 )
 
@@ -159,10 +166,14 @@ def check_aws_elbv2_application_http_elb(item, params, parsed):
     )
 
 
+def discover_aws_elbv2_application_http_elb(p):
+    return inventory_aws_generic_single(p, ["RequestCount"])
+
+
 check_info["aws_elbv2_application.http_elb"] = LegacyCheckDefinition(
     service_name="AWS/ApplicationELB HTTP ELB",
     sections=["aws_elbv2_application"],
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
+    discovery_function=discover_aws_elbv2_application_http_elb,
     check_function=check_aws_elbv2_application_http_elb,
     check_ruleset_name="aws_elb_http",
 )
@@ -205,12 +216,16 @@ def check_aws_elbv2_application_http_redirects(item, params, parsed):
     )
 
 
+def discover_aws_elbv2_application_http_redirects(p):
+    return inventory_aws_generic_single(
+        p, _aws_elbv2_application_http_redirects_metrics, requirement=any
+    )
+
+
 check_info["aws_elbv2_application.http_redirects"] = LegacyCheckDefinition(
     service_name="AWS/ApplicationELB HTTP Redirects",
     sections=["aws_elbv2_application"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_application_http_redirects_metrics, requirement=any
-    ),
+    discovery_function=discover_aws_elbv2_application_http_redirects,
     check_function=check_aws_elbv2_application_http_redirects,
 )
 
@@ -261,11 +276,15 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
     return check_aws_metrics(metric_infos)
 
 
+def discover_aws_elbv2_application_statistics(p):
+    return inventory_aws_generic_single(
+        p, _aws_elbv2_application_statistics_metrics, requirement=any
+    )
+
+
 check_info["aws_elbv2_application.statistics"] = LegacyCheckDefinition(
     service_name="AWS/ApplicationELB Statistics",
     sections=["aws_elbv2_application"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_application_statistics_metrics, requirement=any
-    ),
+    discovery_function=discover_aws_elbv2_application_statistics,
     check_function=check_aws_elbv2_application_statistics,
 )

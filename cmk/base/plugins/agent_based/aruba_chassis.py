@@ -6,6 +6,16 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
+from cmk.plugins.lib.aruba import DETECT_2930M
+from cmk.plugins.lib.temperature import (
+    check_temperature,
+    render_temp,
+    temp_unitsym,
+    TempParamDict,
+    TempParamType,
+    to_celsius,
+)
+
 from .agent_based_api.v1 import (
     all_of,
     exists,
@@ -18,15 +28,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.aruba import DETECT_2930M
-from .utils.temperature import (
-    check_temperature,
-    render_temp,
-    temp_unitsym,
-    TempParamDict,
-    TempParamType,
-    to_celsius,
-)
 
 
 class Chassis(NamedTuple):

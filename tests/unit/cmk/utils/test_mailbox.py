@@ -40,7 +40,7 @@ Args = argparse.Namespace
                 fetch_protocol="POP3",
                 fetch_port=110,
                 fetch_tls=False,
-                no_cert_check=False,
+                fetch_no_cert_check=False,
                 verbose=0,
             ),
             id="POP3 protocol",
@@ -69,7 +69,7 @@ Args = argparse.Namespace
                 fetch_protocol="IMAP",
                 fetch_port=143,
                 fetch_tls=False,
-                no_cert_check=False,
+                fetch_no_cert_check=False,
                 verbose=0,
             ),
             id="IMAP protocol",
@@ -98,7 +98,7 @@ Args = argparse.Namespace
                 fetch_protocol="EWS",
                 fetch_port=80,
                 fetch_tls=False,
-                no_cert_check=False,
+                fetch_no_cert_check=False,
                 verbose=0,
             ),
             id="EWS protocol",
@@ -107,7 +107,7 @@ Args = argparse.Namespace
 )
 def test_parse_arguments(argv: Sequence[str], expected_result: Args) -> None:
     parser = argparse.ArgumentParser(description="parser")
-    result = parse_arguments(parser, argv, True)
+    result = parse_arguments(parser, argv)
     assert result == expected_result
 
 
@@ -125,7 +125,7 @@ def test_parse_arguments_error(capsys: pytest.CaptureFixture[str]) -> None:
     ]
 
     with pytest.raises(SystemExit) as err:
-        parse_arguments(parser, argv, True)
+        parse_arguments(parser, argv)
 
     assert err.value.code == 3
 

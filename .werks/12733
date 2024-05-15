@@ -1,4 +1,4 @@
-Title: <tt>logwatch_groups</tt>: Re-add "Open Log" to action menu
+Title: logwatch_groups: Re-add "Open Log" to action menu
 Class: fix
 Compatible: compat
 Component: checks

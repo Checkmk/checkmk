@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib import sap_hana
+
 from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import sap_hana
 
 
 def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:

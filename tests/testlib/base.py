@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import uuid
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,7 @@ from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.tags
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
@@ -88,6 +90,7 @@ class Scenario:
             [
                 {
                     "condition": {"host_name": list(test_hosts)},
+                    "id": str(uuid.uuid4()),
                     "value": f"cat {cmk.utils.paths.tcp_cache_dir}/<HOST>",
                 }
             ],
@@ -163,8 +166,13 @@ class Scenario:
     def set_option(self, varname: str, option: object) -> None:
         self.config[varname] = option
 
-    def set_ruleset(self, varname: str, ruleset: object) -> None:
-        """Warning: This is used in more cases than setting rule sets."""
+    def set_ruleset(self, varname: str, ruleset: Sequence[RuleSpec[Any]]) -> None:
+        self.config[varname] = ruleset
+
+    def set_ruleset_bundle(
+        self, varname: str, ruleset: Mapping[str, Sequence[RuleSpec[Any]]]
+    ) -> None:
+        # active checks, special agents, etc.
         self.config[varname] = ruleset
 
     def set_autochecks(self, hostname: HostName, entries: Sequence[AutocheckEntry]) -> None:

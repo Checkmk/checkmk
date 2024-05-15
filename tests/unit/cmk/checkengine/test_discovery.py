@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -19,6 +21,7 @@ from cmk.checkengine.discovery import (
     DiscoveryMode,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery._utils import DiscoveredItem
 
 
 def _service(plugin_name: str, item: str) -> AutocheckEntry:
@@ -146,6 +149,9 @@ class _Discoverable:
     def id(self) -> str:
         return self.name
 
+    def comparator(self) -> str:
+        return self.value
+
 
 def test_qualified_discovery() -> None:
     result = QualifiedDiscovery(
@@ -158,10 +164,16 @@ def test_qualified_discovery() -> None:
     assert result.new == [_Discoverable("three")]
     assert result.present == [_Discoverable("two"), _Discoverable("three")]
 
-    assert list(result.chain_with_qualifier()) == [
-        ("vanished", _Discoverable("one")),
-        ("old", _Discoverable("two")),
-        ("new", _Discoverable("three")),
+    assert list(result.chain_with_transition()) == [
+        ("vanished", DiscoveredItem(previous=_Discoverable(name="one", value=""), new=None)),
+        (
+            "unchanged",
+            DiscoveredItem(
+                previous=_Discoverable(name="two", value=""),
+                new=_Discoverable(name="two", value=""),
+            ),
+        ),
+        ("new", DiscoveredItem(previous=None, new=_Discoverable(name="three", value=""))),
     ]
 
 
@@ -307,14 +319,18 @@ def test__get_service_filter_func(
 
 
 @pytest.mark.parametrize(
-    "parameters, new_whitelist, new_blacklist, vanished_whitelist, vanished_blacklist",
+    "parameters, new_whitelist, new_blacklist, vanished_whitelist, vanished_blacklist, changed_labels_whitelist, changed_labels_blacklist, changed_params_whitelist, changed_params_blacklist",
     [
-        ({}, None, None, None, None),
-        ({}, None, None, None, None),
+        ({}, None, None, None, None, None, None, None, None),
+        ({}, None, None, None, None, None, None, None, None),
         (
             {
                 "service_whitelist": ["white"],
             },
+            ["white"],
+            None,
+            ["white"],
+            None,
             ["white"],
             None,
             ["white"],
@@ -328,12 +344,20 @@ def test__get_service_filter_func(
             ["black"],
             None,
             ["black"],
+            None,
+            ["black"],
+            None,
+            ["black"],
         ),
         (
             {
                 "service_whitelist": ["white"],
                 "service_blacklist": ["black"],
             },
+            ["white"],
+            ["black"],
+            ["white"],
+            ["black"],
             ["white"],
             ["black"],
             ["white"],
@@ -347,6 +371,10 @@ def test__get_service_filter_func(
             None,
             None,
             None,
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -357,6 +385,10 @@ def test__get_service_filter_func(
                     },
                 ),
             },
+            ["white"],
+            None,
+            ["white"],
+            None,
             ["white"],
             None,
             ["white"],
@@ -375,6 +407,10 @@ def test__get_service_filter_func(
             ["black"],
             None,
             ["black"],
+            None,
+            ["black"],
+            None,
+            ["black"],
         ),
         (
             {
@@ -386,6 +422,10 @@ def test__get_service_filter_func(
                     },
                 ),
             },
+            ["white"],
+            ["black"],
+            ["white"],
+            ["black"],
             ["white"],
             ["black"],
             ["white"],
@@ -399,6 +439,10 @@ def test__get_service_filter_func(
             None,
             None,
             None,
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -410,6 +454,10 @@ def test__get_service_filter_func(
                 ),
             },
             ["white"],
+            None,
+            None,
+            None,
+            None,
             None,
             None,
             None,
@@ -427,6 +475,10 @@ def test__get_service_filter_func(
             ["black"],
             None,
             None,
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -442,6 +494,10 @@ def test__get_service_filter_func(
             ["black"],
             None,
             None,
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -455,6 +511,10 @@ def test__get_service_filter_func(
             None,
             None,
             ["white"],
+            None,
+            None,
+            None,
+            None,
             None,
         ),
         (
@@ -470,6 +530,10 @@ def test__get_service_filter_func(
             None,
             None,
             ["black"],
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -478,6 +542,8 @@ def test__get_service_filter_func(
                     {
                         "vanished_service_whitelist": ["white"],
                         "vanished_service_blacklist": ["black"],
+                        "changed_service_labels_blacklist": ["black"],
+                        "changed_service_labels_whitelist": ["white"],
                     },
                 ),
             },
@@ -485,6 +551,10 @@ def test__get_service_filter_func(
             None,
             ["white"],
             ["black"],
+            ["white"],
+            ["black"],
+            None,
+            None,
         ),
         (
             {
@@ -493,12 +563,18 @@ def test__get_service_filter_func(
                     {
                         "service_whitelist": ["white_new"],
                         "vanished_service_whitelist": ["white_vanished"],
+                        "changed_service_labels_whitelist": ["white_changed"],
+                        "changed_service_params_whitelist": ["white_changed"],
                     },
                 ),
             },
             ["white_new"],
             None,
             ["white_vanished"],
+            None,
+            ["white_changed"],
+            None,
+            ["white_changed"],
             None,
         ),
         (
@@ -515,6 +591,10 @@ def test__get_service_filter_func(
             None,
             None,
             ["black_vanished"],
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -529,6 +609,10 @@ def test__get_service_filter_func(
             None,
             ["black_new"],
             ["white_vanished"],
+            None,
+            None,
+            None,
+            None,
             None,
         ),
         (
@@ -545,6 +629,10 @@ def test__get_service_filter_func(
             ["black_new"],
             None,
             ["black_vanished"],
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -561,6 +649,10 @@ def test__get_service_filter_func(
             ["black_new"],
             ["white_vanished"],
             None,
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -577,6 +669,10 @@ def test__get_service_filter_func(
             ["black_new"],
             None,
             ["black_vanished"],
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -587,6 +683,10 @@ def test__get_service_filter_func(
                         "service_blacklist": ["black_new"],
                         "vanished_service_whitelist": ["white_vanished"],
                         "vanished_service_blacklist": ["black_vanished"],
+                        "changed_service_labels_blacklist": ["black_changed"],
+                        "changed_service_labels_whitelist": ["white_changed"],
+                        "changed_service_params_blacklist": ["black_changed"],
+                        "changed_service_params_whitelist": ["white_changed"],
                     },
                 ),
             },
@@ -594,6 +694,10 @@ def test__get_service_filter_func(
             ["black_new"],
             ["white_vanished"],
             ["black_vanished"],
+            ["white_changed"],
+            ["black_changed"],
+            ["white_changed"],
+            ["black_changed"],
         ),
         (
             {
@@ -610,6 +714,10 @@ def test__get_service_filter_func(
             None,
             ["white_vanished"],
             ["black_vanished"],
+            None,
+            None,
+            None,
+            None,
         ),
         (
             {
@@ -626,17 +734,33 @@ def test__get_service_filter_func(
             ["black_new"],
             ["white_vanished"],
             ["black_vanished"],
+            None,
+            None,
+            None,
+            None,
         ),
     ],
 )
 def test__get_service_filters_lists(
-    parameters, new_whitelist, new_blacklist, vanished_whitelist, vanished_blacklist
+    parameters,
+    new_whitelist,
+    new_blacklist,
+    vanished_whitelist,
+    vanished_blacklist,
+    changed_labels_whitelist,
+    changed_labels_blacklist,
+    changed_params_whitelist,
+    changed_params_blacklist,
 ):
     service_filter_lists = _filters._get_service_filter_lists(parameters)
     assert service_filter_lists.new_whitelist == new_whitelist
     assert service_filter_lists.new_blacklist == new_blacklist
     assert service_filter_lists.vanished_whitelist == vanished_whitelist
     assert service_filter_lists.vanished_blacklist == vanished_blacklist
+    assert service_filter_lists.changed_labels_whitelist == changed_labels_whitelist
+    assert service_filter_lists.changed_labels_blacklist == changed_labels_blacklist
+    assert service_filter_lists.changed_params_whitelist == changed_params_whitelist
+    assert service_filter_lists.changed_params_blacklist == changed_params_blacklist
 
     service_filters = _filters.ServiceFilters.from_settings(parameters)
     assert service_filters.new is not None

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, NamedTuple, Protocol
 
@@ -17,7 +17,6 @@ from cmk.utils.validatedstr import ValidatedString
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 
@@ -25,21 +24,13 @@ __all__ = [
     "AggregatedResult",
     "CheckPlugin",
     "CheckPluginName",
-    "CheckPluginNameStr",
     "ConfiguredService",
     "ServiceID",
 ]
 
 
-CheckPluginNameStr = str
-
-
 class CheckPluginName(ValidatedString):
     MANAGEMENT_PREFIX: Final = "mgmt_"
-
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
 
     def is_management_name(self) -> bool:
         return self._value.startswith(self.MANAGEMENT_PREFIX)
@@ -67,8 +58,7 @@ class ConfiguredService(NamedTuple):
     item: Item
     description: ServiceName
     parameters: TimespecificParameters
-    # Explicitly optional b/c enforced services don't have disocvered params.
-    discovered_parameters: LegacyCheckParameters | None
+    discovered_parameters: Mapping[str, object]
     service_labels: Mapping[str, ServiceLabel]
     is_enforced: bool
 
@@ -87,7 +77,6 @@ class ConfiguredService(NamedTuple):
 @dataclass(frozen=True)
 class AggregatedResult:
     service: ConfiguredService
-    submit: bool
     data_received: bool
     result: ServiceCheckResult
     cache_info: tuple[int, int] | None
@@ -100,8 +89,7 @@ class CheckFunction(Protocol):
         service: ConfiguredService,
         *,
         providers: Mapping[HostKey, Provider],
-    ) -> AggregatedResult:
-        ...
+    ) -> AggregatedResult: ...
 
 
 @dataclass(frozen=True)
@@ -110,3 +98,4 @@ class CheckPlugin:
     function: CheckFunction
     default_parameters: Mapping[str, object] | None
     ruleset_name: RuleSetName | None
+    discovery_ruleset_name: RuleSetName | None

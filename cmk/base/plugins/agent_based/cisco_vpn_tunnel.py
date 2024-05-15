@@ -6,9 +6,7 @@
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from time import time
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from .agent_based_api.v1 import (
     any_of,

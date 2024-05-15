@@ -6,13 +6,14 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.enviromux_digital import (
     check_enviromux_digital,
     discover_enviromux_digital,
 )
-from cmk.base.plugins.agent_based.utils.enviromux import parse_enviromux_digital
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.enviromux import parse_enviromux_digital
 
 STRING_TABLE = [
     ["0", "Digital Input #1", "1", "1"],

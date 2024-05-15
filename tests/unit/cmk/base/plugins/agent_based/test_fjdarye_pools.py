@@ -2,109 +2,117 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
 
-import freezegun
+from collections.abc import Mapping
+
 import pytest
 
-from tests.unit.checks.checktestlib import mock_item_state
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from cmk.base.plugins.agent_based.fjdarye_pools import (
+    _check_fjdarye_pools,
     check_fjdarye_pools,
     discover_fjdarye_pools,
-    FjdaryePoolsSection,
     parse_fjdarye_pools,
-    PoolEntry,
+    Pool,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.mark.parametrize(
-    "string_table, parse_result",
+    "string_table, expected_result",
     [
         pytest.param(
-            [
-                [["0", "117190584", "105269493"]],
-            ],
-            {"0": PoolEntry(capacity=117190584, usage=105269493, available=11921091)},
-            id="The input is parsed into a dictionary and contains the id of the pool, the capacity, the usage and the available space.",
+            [["0", "117190584", "105269493"]],
+            {"0": Pool(capacity=117190584, usage=105269493, available=11921091)},
+            id="standard case",
         ),
         pytest.param(
             [],
             {},
-            id="If the input is empty, nothing is parsed.",
+            id="empty data",
         ),
     ],
 )
 def test_parse_fjdarye_pools(
-    string_table: list[StringTable], parse_result: FjdaryePoolsSection
+    string_table: StringTable,
+    expected_result: Mapping[str, Pool],
 ) -> None:
-    assert parse_fjdarye_pools(string_table) == parse_result
+    assert parse_fjdarye_pools(string_table) == expected_result
 
 
 @pytest.mark.parametrize(
-    "section, discovery_result",
+    "section, expected_result",
     [
         pytest.param(
             {
-                "0": PoolEntry(capacity=117190584, usage=105269493, available=11921091),
-                "1": PoolEntry(capacity=117190584, usage=105269493, available=11921091),
+                "0": Pool(capacity=117190584, usage=105269493, available=11921091),
+                "1": Pool(capacity=117190584, usage=105269493, available=11921091),
             },
             [Service(item="0"), Service(item="1")],
-            id="Services with the pool id as item are discovered.",
+            id="standard case",
         ),
         pytest.param(
             {},
             [],
-            id="If the section is empty, no services are discovered.",
+            id="empty section",
         ),
     ],
 )
 def test_discover_fjdarye_pools(
-    section: FjdaryePoolsSection, discovery_result: Sequence[Service]
+    section: Mapping[str, Pool], expected_result: DiscoveryResult
 ) -> None:
-    assert list(discover_fjdarye_pools(section)) == discovery_result
+    assert list(discover_fjdarye_pools(section)) == expected_result
 
 
-@pytest.mark.parametrize(
-    "item, section",
-    [
-        pytest.param(
-            "0",
-            {"0": PoolEntry(capacity=117190584, usage=111331055, available=5859529)},
-            id="Testing if the check function is being called.",
-        ),
-    ],
-)
-def test_check_fjdarye_pools(
-    item: str,
-    section: FjdaryePoolsSection,
-) -> None:
-    with freezegun.freeze_time("2022-07-16 07:00:00"), mock_item_state((1596100000, 42)):
-        assert list(
-            check_fjdarye_pools(item=item, params=FILESYSTEM_DEFAULT_PARAMS, section=section)
+def test_check_fjdarye_pools() -> None:
+    assert list(
+        _check_fjdarye_pools(
+            item="item",
+            pool=Pool(
+                capacity=117190584,
+                usage=111331055,
+                available=5859529,
+            ),
+            params=FILESYSTEM_DEFAULT_PARAMS,
+            value_store={"item.delta": (42, 1231231)},
+            timestamp=123,
         )
-
-
-@pytest.mark.parametrize(
-    "item, section, check_result",
-    [
-        pytest.param(
-            "1",
-            {"0": PoolEntry(capacity=117190584, usage=111331055, available=5859529)},
-            [],
-            id="If the item is not found, no result is returned. This will lead to a UNKNOWN state on the service.",
+    ) == [
+        Metric(
+            "fs_used",
+            111331055.0,
+            levels=(93752467.19999981, 105471525.59999943),
+            boundaries=(0.0, 117190584.0),
         ),
-    ],
-)
-def test_check_fjdarye_pools_no_item_found(
-    item: str,
-    section: FjdaryePoolsSection,
-    check_result: Sequence[Result | Metric],
-) -> None:
-    assert (
-        list(check_fjdarye_pools(item=item, params=FILESYSTEM_DEFAULT_PARAMS, section=section))
-        == check_result
+        Metric("fs_free", 5859529.0, boundaries=(0.0, None)),
+        Metric(
+            "fs_used_percent",
+            95.00000017066218,
+            levels=(79.99999999999984, 89.99999999999952),
+            boundaries=(0.0, 100.0),
+        ),
+        Result(
+            state=State.CRIT,
+            summary="Used: 95.00% - 117 TB of 123 TB (warn/crit at 80.00%/90.00% used)",
+        ),
+        Metric("fs_size", 117190584.0, boundaries=(0.0, None)),
+        Metric("growth", 117439812266.66666),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +123 PB"),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +100212.67%"),
+        Metric("trend", 117439812266.66666),
+        Result(state=State.OK, summary="Time left until disk full: 4 seconds"),
+    ]
+
+
+def test_check_fjdarye_pools_item_not_found() -> None:
+    assert not (
+        list(
+            check_fjdarye_pools(
+                item="irrelevant",
+                params=FILESYSTEM_DEFAULT_PARAMS,
+                section={},
+            )
+        )
     )

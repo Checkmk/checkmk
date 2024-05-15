@@ -1,0 +1,16 @@
+Title: Add max_long_output_size livestatus column
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1696505149
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The "max_long_output_size" in the status table returns the
+value that is currently configured.
+
+For Nagios, the column always returns 0 as Nagios doesn't
+support this feature.
+

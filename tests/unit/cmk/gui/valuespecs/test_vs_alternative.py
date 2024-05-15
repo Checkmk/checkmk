@@ -82,7 +82,7 @@ class TestValuespecAlternative:
             "text<br />testing"
         )
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(a_use="2", a_2_0="2", a_2_1="3"):
             assert get_alternative().from_html_vars("a") == (2, 3)
 

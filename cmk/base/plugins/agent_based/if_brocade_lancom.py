@@ -5,9 +5,10 @@
 
 from collections.abc import Iterable, Mapping
 
+from cmk.plugins.lib import if64, interfaces
+
 from .agent_based_api.v1 import all_of, any_of, contains, OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringByteTable
-from .utils import if64, interfaces
 
 StringByteLine = list[str | list[int]]
 
@@ -85,12 +86,14 @@ def _augment_name(
     one place rather than in dedicated locations.
     """
     index, name_raw, type_str, speed, *rest = line
-    name = str(name_raw)
+    # Sometimes Lancom routers don't provide a name, so we use the description instead
+    # SUP-17225
+    name = str(name_raw) if name_raw else str(description)
     return [
         index,
         (  # augment name - applies to Lancom routers only
             f"{name} Logical {name_map.get(name, '')}"  #
-            if description.startswith("Logical Network")
+            if description.startswith("Logical Network") and name_raw  # SUP-17225
             else name
         ).strip(),
         type_str,
@@ -144,6 +147,7 @@ def parse_if_lancom(
     string_table: list[StringByteTable],
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if_table, ssid_table, port_mapping = string_table
+
     return parse_if_brocade_lancom(
         if_table,
         name_map={str(ssid_line[0]): str(ssid_line[1]) for ssid_line in ssid_table},

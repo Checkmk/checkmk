@@ -8,6 +8,7 @@
 import copy
 from collections.abc import Sequence
 from typing import Any, cast
+from urllib.parse import unquote
 
 from cmk.utils.user import UserId
 
@@ -79,6 +80,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     visual: dict[str, Any] = {
         "link_from": {},
         "context": {},
+        "megamenu_search_terms": [],
     }
 
     mode = request.get_str_input_mandatory("mode", "edit")
@@ -93,7 +95,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             return _get_visual("", "builtins")
         raise MKUserError(mode, _("The %s does not exist.") % visual_type.title)
 
-    back_url = request.get_url_input("back", "edit_%s.py" % what)
+    back_url = unquote(request.get_url_input("back", "edit_%s.py" % what))
 
     if visualname:
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
@@ -203,7 +205,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                 "public",
                 vs_no_permission_to_publish(
                     type_title=what[:-1],
-                    title=_("Make this %s available for other users") % what[:-1],
+                    title=_("Make this %s available for other users") % what[:-1].lower(),
                 ),
             )
         )
@@ -242,7 +244,10 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 
             old_visual = visual
             # TODO: Currently not editable, but keep settings
-            visual = {"link_from": old_visual["link_from"]}
+            visual = {
+                "link_from": old_visual["link_from"],
+                "megamenu_search_terms": old_visual["megamenu_search_terms"],
+            }
 
             # Important for saving
             visual["packaged"] = False
@@ -330,51 +335,54 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
         except MKUserError as e:
             html.user_error(e)
 
-    html.begin_form("visual", method="POST")
-    html.hidden_field("back", back_url)
-    html.hidden_field("mode", mode)
-    if request.has_var("owner"):
-        html.hidden_field("owner", request.var("owner"))
-    html.hidden_field("load_name", oldname)  # safe old name in case user changes it
+    with html.form_context("visual", method="POST"):
+        html.hidden_field("back", back_url)
+        html.hidden_field("mode", mode)
+        if request.has_var("owner"):
+            html.hidden_field("owner", request.var("owner"))
+        html.hidden_field("load_name", oldname)  # safe old name in case user changes it
 
-    # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
-    # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
-    visib = {}
-    for key, _vs in visibility_elements:
-        if visual.get(key):
-            visib[key] = visual[key]
-    visual["visibility"] = visib
+        # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
+        # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
+        visib = {}
+        for key, _vs in visibility_elements:
+            if visual.get(key):
+                visib[key] = visual[key]
+        visual["visibility"] = visib
 
-    visual["topic"] = visual.get("topic") or "other"  # default to "other" (in case of empty string)
-    vs_general.render_input("general", visual)
+        visual["topic"] = (
+            visual.get("topic") or "other"
+        )  # default to "other" (in case of empty string)
+        vs_general.render_input("general", visual)
 
-    if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":
-        custom_field_handler(visual)
+        if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":
+            custom_field_handler(visual)
 
-    render_context_specs(
-        # During view configuration: if a MKUserError is raised BEFORE the visual context is set
-        # via 'visual["context"] = process_context_specs(context_specs)' from above then we get a
-        # KeyError here and the whole configuration is lost and has to be started from scratch.
-        # Example: If no column is choosen.
-        visual.get("context", {}),
-        context_specs,
-        isopen=what != "dashboards",
-        help_text=help_text_context,
-    )
+        render_context_specs(
+            # During view configuration: if a MKUserError is raised BEFORE the visual context is set
+            # via 'visual["context"] = process_context_specs(context_specs)' from above then we get a
+            # KeyError here and the whole configuration is lost and has to be started from scratch.
+            # Example: If no column is choosen.
+            visual.get("context", {}),
+            context_specs,
+            isopen=what != "dashboards",
+            help_text=help_text_context,
+        )
 
-    if custom_field_handler and custom_field_handler.__name__ == "dashboard_fields_handler":
-        custom_field_handler(visual)
+        if custom_field_handler and custom_field_handler.__name__ == "dashboard_fields_handler":
+            custom_field_handler(visual)
 
-    forms.end()
-    html.show_localization_hint()
+        forms.end()
+        html.show_localization_hint()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
     html.footer()
 
 
 def get_context_specs(
-    single_infos: Sequence[InfoName], info_keys: Sequence[InfoName]
+    single_infos: Sequence[InfoName],
+    info_keys: Sequence[InfoName],
+    ignored_context_choices: Sequence[str] = (),
 ) -> list[tuple[InfoName, Transform[dict] | VisualFilterList]]:
     single_info_keys = [key for key in info_keys if key in single_infos]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
@@ -393,7 +401,7 @@ def get_context_specs(
     ] + [
         (info_key, spec)
         for info_key in multi_info_keys
-        for spec in [_visual_spec_multi(info_key)]
+        for spec in [_visual_spec_multi(info_key, ignored_context_choices)]
         if spec is not None
     ]
 
@@ -448,9 +456,13 @@ def _visual_spec_single(info_key: InfoName) -> Transform[dict]:
     )
 
 
-def _visual_spec_multi(info_key: InfoName) -> VisualFilterList | None:
+def _visual_spec_multi(
+    info_key: InfoName, ignored_context_choices: Sequence[str] = ()
+) -> VisualFilterList | None:
     info = visual_info_registry[info_key]()
-    filter_list = VisualFilterList([info_key], title=info.title)
+    filter_list = VisualFilterList(
+        [info_key], title=info.title, ignored_context_choices=ignored_context_choices
+    )
     filter_names = filter_list.filter_names()
     # Skip infos which have no filters available
     return filter_list if filter_names else None
@@ -490,9 +502,11 @@ def render_context_specs(
     for info_key, spec in context_specs:
         forms.section(
             spec.title(),
-            is_show_more=spec.has_show_more()
-            if isinstance(spec, Transform)
-            else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None),
+            is_show_more=(
+                spec.has_show_more()
+                if isinstance(spec, Transform)
+                else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None)
+            ),
         )
         ident = "context_" + info_key
         spec.render_input(ident, context)
@@ -508,7 +522,7 @@ def _vs_general(
     what: VisualTypeName,
 ) -> Dictionary:
     return Dictionary(
-        title=_("General Properties"),
+        title=_("General properties"),
         render="form",
         optional_keys=False,
         show_more_keys=["description", "add_context_to_title", "sort_index", "is_show_more"],
@@ -632,8 +646,10 @@ def single_infos_spec(single_infos: SingleInfos) -> tuple[str, FixedValue]:
         FixedValue(
             value=single_infos,
             title=_("Show information of single"),
-            totext=", ".join(single_infos)
-            if single_infos
-            else _("Not restricted to showing a specific object."),
+            totext=(
+                ", ".join(single_infos)
+                if single_infos
+                else _("Not restricted to showing a specific object.")
+            ),
         ),
     )

@@ -23,6 +23,7 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     HTTPVariables,
+    InventoryJoinMacrosSpec,
     SingleInfos,
     SorterSpec,
     ViewSpec,
@@ -46,8 +47,7 @@ class ABCViewDashletConfig(DashletConfig):
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
 
-class LinkedViewDashletConfig(ABCViewDashletConfig):
-    ...
+class LinkedViewDashletConfig(ABCViewDashletConfig): ...
 
 
 class _ViewDashletConfigMandatory(ABCViewDashletConfig):
@@ -80,6 +80,7 @@ class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
     force_checkboxes: bool
     play_sounds: bool
     user_sortable: bool
+    inventory_join_macros: InventoryJoinMacrosSpec
 
 
 def copy_view_into_dashlet(
@@ -143,9 +144,10 @@ def copy_view_into_dashlet(
             ).items()
         ),
     )
+    dashletcontext_vars = visuals.context_to_uri_vars(dashlet["context"])
     dashlet["title_url"] = makeuri_contextless(
         request,
-        name_part + singlecontext_vars,
+        name_part + singlecontext_vars + dashletcontext_vars,
         filename="view.py",
     )
 
@@ -316,7 +318,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
 def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
     """Should be aligned with copy_view_into_dashlet"""
     # Sadly there is currently no less verbose way of doing this
-    return ViewSpec(
+    view_spec = ViewSpec(
         {
             "datasource": dashlet["datasource"],
             "group_painters": dashlet["group_painters"],
@@ -333,6 +335,13 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
             "sort_index": dashlet["sort_index"],
             "add_context_to_title": dashlet["add_context_to_title"],
             "is_show_more": dashlet["is_show_more"],
+            # Add the following NotRequired ViewSpec values here, so they are correctly displayed
+            # when editing a builtin dashboard's view dashlet
+            "mobile": dashlet.get("mobile", False),
+            "mustsearch": dashlet.get("mustsearch", False),
+            "force_checkboxes": dashlet.get("force_checkboxes", False),
+            "user_sortable": dashlet.get("user_sortable", False),
+            "play_sounds": dashlet.get("play_sounds", False),
             # Just to satisfy ViewSpec, not saved to storage and not needed for
             # rendering in a ViewDashlet.
             "owner": UserId.builtin(),
@@ -344,8 +353,12 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
             "public": False,
             "link_from": {},
             "packaged": False,
+            "megamenu_search_terms": [],
         }
     )
+    if inventory_join_macros := dashlet.get("inventory_join_macros"):
+        view_spec["inventory_join_macros"] = inventory_join_macros
+    return view_spec
 
 
 class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):

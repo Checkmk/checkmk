@@ -20,6 +20,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_netapp_api_info(info):
     return [(None, None)]
@@ -32,7 +34,12 @@ def check_netapp_api_info(item, _no_params, info):
     return None
 
 
+def parse_netapp_api_info(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netapp_api_info"] = LegacyCheckDefinition(
+    parse_function=parse_netapp_api_info,
     service_name="NetApp Version",
     discovery_function=inventory_netapp_api_info,
     check_function=check_netapp_api_info,

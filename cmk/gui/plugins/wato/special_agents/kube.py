@@ -11,11 +11,10 @@ import pydantic
 import pydantic_core
 
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import Edition, edition, mark_edition_only
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
@@ -32,8 +31,14 @@ from cmk.gui.valuespec import (
     Tuple,
     Url,
 )
-from cmk.gui.wato import HTTPProxyReference, MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import (
+    HTTPProxyReference,
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupVMCloudContainer,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
+
+OPENSHIFT_EDITIONS = (Edition.CME, Edition.CCE, Edition.CEE)
 
 
 def is_valid_hostname(hostname: str) -> bool:
@@ -91,7 +96,7 @@ def _validate(url: str, varprefix: str) -> None:
         raise MKUserError(varprefix, f"{url} has problem(s): {message}") from e
 
 
-def _url(title: str, _help: str, default_value: str) -> Url:
+def _url(title: str, _help: str, default_value: str, placeholder: str = "") -> Url:
     return Url(
         allow_empty=False,
         show_as_link=True,
@@ -100,6 +105,8 @@ def _url(title: str, _help: str, default_value: str) -> Url:
         default_value=default_value,
         validate=_validate,
         size=80,
+        title=title,
+        placeholder=placeholder,
         help=_help,
     )
 
@@ -134,8 +141,8 @@ def _tcp_timeouts():
     )
 
 
-def _usage_endpoint(cloud_edition: bool) -> tuple[str, CascadingDropdown] | tuple[str, Tuple]:
-    if cloud_edition:
+def _usage_endpoint() -> tuple[str, CascadingDropdown] | tuple[str, Tuple]:
+    if edition() in OPENSHIFT_EDITIONS:
         return (
             "usage_endpoint",
             CascadingDropdown(
@@ -168,7 +175,9 @@ def _is_cre_spec(k: str, vs: object) -> bool:
 
 
 def _migrate_cce2cre(p: dict[str, object]) -> dict[str, object]:
-    return p if edition() is Edition.CCE else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
+    return (
+        p if edition() in OPENSHIFT_EDITIONS else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
+    )
 
 
 def _migrate_old_style_url(p: dict[str, object]) -> dict[str, object]:
@@ -180,7 +189,7 @@ def _migrate_old_style_url(p: dict[str, object]) -> dict[str, object]:
 def _openshift() -> tuple[str, str, Migrate]:
     return (
         "prometheus",
-        mark_edition_only(_("Use data from OpenShift"), Edition.CCE),
+        _("Use data from OpenShift"),
         Migrate(
             valuespec=Dictionary(
                 elements=[
@@ -222,7 +231,8 @@ def _cluster_collector() -> tuple[str, str, Migrate]:
                         "endpoint_v2",
                         _url(
                             title=_("Collector NodePort / Ingress endpoint"),
-                            default_value="https://<service url>:30035",
+                            default_value="",
+                            placeholder="https://<service url>:30035",
                             _help=_(
                                 "The full URL to the Cluster Collector service including "
                                 "the protocol (http or https) and the port. Depending on "
@@ -255,7 +265,8 @@ def _api_endpoint() -> tuple[str, Migrate]:
                         "endpoint_v2",
                         _url(
                             title=_("Endpoint"),
-                            default_value="https://<control plane ip>:443",
+                            default_value="",
+                            placeholder="https://<control plane ip>:443",
                             _help=_(
                                 "The full URL to the Kubernetes API server including the protocol "
                                 "(http or https) and the port. One trailing slash (if present) "
@@ -303,7 +314,7 @@ def _valuespec_special_agents_kube():
                     ),
                 ),
                 _api_endpoint(),
-                _usage_endpoint(edition() is Edition.CCE),
+                _usage_endpoint(),
                 (
                     "monitored-objects",
                     ListChoice(

@@ -1,2 +1,4 @@
+#!/bin/bash
+
 make htmlhelp
 echo "Open in your browser: file://$(pwd)/_build/htmlhelp/index.html"

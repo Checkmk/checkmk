@@ -6,14 +6,12 @@
 #include "livestatus/Table.h"
 
 #include <cstdlib>
+#include <ranges>
 #include <stdexcept>
 
 #include "livestatus/Column.h"
 #include "livestatus/DynamicColumn.h"
-#include "livestatus/ICore.h"
 #include "livestatus/Logger.h"
-
-Table::Table(ICore *mc) : _mc(mc) {}
 
 Table::~Table() = default;
 
@@ -30,6 +28,11 @@ void Table::addColumn(std::unique_ptr<Column> col) {
 
 void Table::addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol) {
     _dynamic_columns.emplace(dyncol->name(), std::move(dyncol));
+}
+
+std::vector<std::shared_ptr<Column>> Table::allColumns() const {
+    auto v = std::views::values(_columns);  // TODO(sp): one-liner with C++23
+    return {v.begin(), v.end()};
 }
 
 std::shared_ptr<Column> Table::column(std::string colname) const {
@@ -80,8 +83,8 @@ std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
     return it->second->createColumn(colname2, rest.substr(sep_pos + 1));
 }
 
-Row Table::get(const std::string & /*unused*/) const { return Row{nullptr}; }
+Row Table::get(const std::string & /*unused*/, const ICore & /*core*/) const {
+    return Row{nullptr};
+}
 
-Row Table::getDefault() const { return Row{nullptr}; }
-
-Logger *Table::logger() const { return _mc->loggerLivestatus(); }
+Row Table::getDefault(const ICore & /*core*/) const { return Row{nullptr}; }

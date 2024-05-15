@@ -1,0 +1,17 @@
+title: qmail: Mailqueue Length
+agents: linux
+catalog: app/qmail
+license: GPLv2
+distribution: check_mk
+description:
+ This check uses the output of {qmail-qstat} as sent by the linux agent of
+ Checkmk. The command lists all mails which wait in the mail queue.
+
+ This check creates one service per host which represents the state
+ of the servers mailqueue.
+
+ The check will result in WARNING/CRITICAL states when the number of items
+ in the queue reach the defined thresholds.
+
+discovery:
+ One service is created on each system which provides the {qmail-qstat} command.

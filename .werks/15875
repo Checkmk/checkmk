@@ -1,0 +1,10 @@
+Title: viprinet_router: Fix failing config migration
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698007452
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Fix failing config migration in environments containing discovered viprinet_router checks.

@@ -1,218 +1,84 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from cmk.gui.graphing._expression import CriticalOf, Metric, WarningOf
+from cmk.gui.graphing._loader import load_graphing_plugins
+from cmk.gui.graphing._utils import (
+    _graph_templates_internal,
+    add_graphing_plugins,
+    check_metrics,
+    GraphTemplate,
+    MetricDefinition,
+    metrics_from_api,
+    ScalarDefinition,
+)
 
-import numpy as np
-import pytest
 
-import cmk.gui.metrics as metrics
-from cmk.gui.type_defs import UnitInfo
+def test_add_graphing_plugins() -> None:
+    add_graphing_plugins(load_graphing_plugins())
 
+    assert "idle_connections" in metrics_from_api
+    idle_connections = metrics_from_api["idle_connections"]
+    assert idle_connections["name"] == "idle_connections"
+    assert idle_connections["title"] == "Idle connections"
+    assert idle_connections["unit"]["id"] == "DecimalNotation__StrictPrecision_2"
+    assert idle_connections["color"] == "#7814a0"
 
-def test_registered_renderers() -> None:
-    registered_plugins = sorted(metrics.renderer_registry.keys())
-    assert registered_plugins == ["dual", "linear", "logarithmic", "stacked"]
+    assert "active_connections" in metrics_from_api
+    active_connections = metrics_from_api["active_connections"]
+    assert active_connections["name"] == "active_connections"
+    assert active_connections["title"] == "Active connections"
+    assert active_connections["unit"]["id"] == "DecimalNotation__StrictPrecision_2"
+    assert idle_connections["color"] == "#7814a0"
 
+    assert "check_mk-citrix_serverload" in check_metrics
+    assert check_metrics["check_mk-citrix_serverload"] == {
+        "perf": {"name": "citrix_load", "scale": 0.01},
+    }
 
-class TestMetricometerRendererLinear:
-    def _renderer(
-        self,
-        unit_info: UnitInfo,
-    ) -> metrics.MetricometerRendererLinear:
-        return metrics.MetricometerRendererLinear(
-            {
-                "type": "linear",
-                "segments": ["my_metric"],
-                "total": 100.0,
-            },
-            {
-                "my_metric": {
-                    "orig_name": ["my_metric"],
-                    "value": 60.0,
-                    "scalar": {"warn": 80.0, "crit": 90.0},
-                    "scale": [1.0],
-                    "auto_graph": True,
-                    "title": "My metric",
-                    "unit": unit_info,
-                    "color": "#ffa000",
-                }
-            },
-        )
+    assert "check_mk-genau_fan" in check_metrics
+    assert check_metrics["check_mk-genau_fan"] == {
+        "rpm": {"name": "fan"},
+    }
 
-    @pytest.mark.parametrize(
-        ["unit_info", "expected_result"],
-        [
-            pytest.param(
-                {
-                    "title": "My unit",
-                    "symbol": "U",
-                    "render": str,
-                    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' U'",
-                    "id": "u",
-                    "description": "My unit",
-                },
-                [[(60.0, "#ffa000"), (40.0, "#bdbdbd")]],
-                id="no unit conversion",
+    assert "check_mk-ibm_svc_nodestats_disk_latency" in check_metrics
+    assert check_metrics["check_mk-ibm_svc_nodestats_disk_latency"] == {
+        "read_latency": {"scale": 0.001},
+        "write_latency": {"scale": 0.001},
+    }
+
+    graph_templates = _graph_templates_internal()
+    assert "db_connections" in graph_templates
+    assert graph_templates["db_connections"] == GraphTemplate(
+        id="db_connections",
+        title="DB Connections",
+        scalars=[
+            ScalarDefinition(
+                WarningOf(Metric("active_connections")),
+                "Warning of Active connections",
             ),
-            pytest.param(
-                {
-                    "title": "My unit",
-                    "symbol": "U",
-                    "render": str,
-                    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' U'",
-                    "id": "u",
-                    "description": "My unit",
-                    "conversion": lambda v: 2 * v - 10,
-                },
-                [
-                    [
-                        (60.0 / (2 * 100 - 10) * 100, "#ffa000"),
-                        (100 - 60.0 / (2 * 100 - 10) * 100, "#bdbdbd"),
-                    ]
-                ],
-                id="with unit conversion",
+            ScalarDefinition(
+                CriticalOf(Metric("active_connections")),
+                "Critical of Active connections",
+            ),
+        ],
+        conflicting_metrics=(),
+        optional_metrics=(),
+        consolidation_function=None,
+        range=None,
+        omit_zero_metrics=False,
+        metrics=[
+            MetricDefinition(
+                Metric("active_connections"),
+                "line",
+                "Active connections",
+            ),
+            MetricDefinition(
+                Metric("idle_connections"),
+                "line",
+                "Idle connections",
             ),
         ],
     )
-    def test_get_stack(
-        self,
-        unit_info: UnitInfo,
-        expected_result: metrics.MetricRendererStack,
-    ) -> None:
-        assert self._renderer(unit_info).get_stack() == expected_result
-
-    @pytest.mark.parametrize(
-        ["perfometer_render", "expected_result"],
-        [
-            pytest.param(
-                None,
-                "60.0",
-                id="no dedicated perfometer renderer",
-            ),
-            pytest.param(
-                lambda v: f"{2*v} U",
-                "120.0 U",
-                id="dedicated perfometer renderer",
-            ),
-        ],
-    )
-    def test_get_label(
-        self,
-        perfometer_render: Callable[[float], str] | None,
-        expected_result: str,
-    ) -> None:
-        unit_info: UnitInfo = {
-            "title": "My unit",
-            "symbol": "U",
-            "render": str,
-            "js_render": "v => cmk.number_format.drop_dotzero(v) + ' U'",
-            "id": "u",
-            "description": "My unit",
-        }
-        if perfometer_render:
-            unit_info["perfometer_render"] = perfometer_render
-        assert self._renderer(unit_info).get_label() == expected_result
-
-
-class TestMetricometerRendererLogarithmic:
-    def _renderer(
-        self,
-        unit_info: UnitInfo,
-    ) -> metrics.MetricometerRendererLogarithmic:
-        return metrics.MetricometerRendererLogarithmic(
-            {
-                "type": "logarithmic",
-                "metric": "my_metric",
-                "half_value": 40.0,
-                "exponent": 1.2,
-            },
-            {
-                "my_metric": {
-                    "orig_name": ["my_metric"],
-                    "value": 123.0,
-                    "scalar": {"warn": 158.0, "crit": 176.0},
-                    "scale": [1.0],
-                    "auto_graph": True,
-                    "title": "My metric",
-                    "unit": unit_info,
-                    "color": "#ffa000",
-                }
-            },
-        )
-
-    @pytest.mark.parametrize(
-        ["conversion", "expected_result"],
-        [
-            pytest.param(
-                lambda v: v,
-                (40, 1.2),
-                id="no-op conversion",
-            ),
-            # a purely multiplicate conversion should not lead to change in the 10%-factor
-            pytest.param(
-                lambda v: 0.7 * v,
-                (0.7 * 40, 1.2),
-                id="multiplicative stretch only",
-            ),
-            # a huge additive offset should lead to a multiplicate 10%-factor very close to 1
-            pytest.param(
-                lambda v: v + 1000000,
-                (40 + 1000000, 1.0),
-                id="huge additive offset",
-            ),
-        ],
-    )
-    def test_estimate_parameters_for_converted_units(
-        self,
-        conversion: Callable[[float], float],
-        expected_result: tuple[float, float],
-    ) -> None:
-        assert np.allclose(
-            self._renderer(
-                {
-                    "title": "My unit",
-                    "symbol": "U",
-                    "render": str,
-                    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' U'",
-                    "id": "u",
-                    "description": "My unit",
-                    "perfometer_render": lambda _v: "testing",
-                }
-            ).estimate_parameters_for_converted_units(conversion),
-            expected_result,
-        )
-
-    @pytest.mark.parametrize(
-        ["perfometer_render", "expected_result"],
-        [
-            pytest.param(
-                None,
-                "123.0",
-                id="no dedicated perfometer renderer",
-            ),
-            pytest.param(
-                lambda v: f"{2*v} U",
-                "246.0 U",
-                id="dedicated perfometer renderer",
-            ),
-        ],
-    )
-    def test_get_label(
-        self,
-        perfometer_render: Callable[[float], str] | None,
-        expected_result: str,
-    ) -> None:
-        unit_info: UnitInfo = {
-            "title": "My unit",
-            "symbol": "U",
-            "render": str,
-            "js_render": "v => cmk.number_format.drop_dotzero(v) + ' U'",
-            "id": "u",
-            "description": "My unit",
-        }
-        if perfometer_render:
-            unit_info["perfometer_render"] = perfometer_render
-        assert self._renderer(unit_info).get_label() == expected_result

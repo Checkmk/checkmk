@@ -5,8 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Mapping, Sequence
-from typing import Final
+from collections.abc import Mapping, Sequence
+from typing import Final, Protocol
 
 import pytest
 
@@ -22,13 +22,11 @@ from cmk.special_agents.agent_aws import (
     OverallTags,
     ResultDistributor,
     StatusEnum,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
-
-GetSectionsCallable = Callable[
-    [Sequence[str] | None, OverallTags], tuple[ECSLimits, ECSSummary, ECS]
-]
 
 CLUSTERS_CLIENT_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
     {
@@ -140,13 +138,29 @@ class FakeECSClient:
         }
 
 
+ECSSectionsOut = tuple[ECSLimits, ECSSummary, ECS]
+
+
+class ECSSections(Protocol):
+    def __call__(
+        self,
+        names: Sequence[str] | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> ECSSectionsOut: ...
+
+
 @pytest.fixture()
-def get_ecs_sections() -> GetSectionsCallable:
+def get_ecs_sections() -> ECSSections:
     def _create_ecs_sections(
-        names: Sequence[str] | None, tags: OverallTags
-    ) -> tuple[ECSLimits, ECSSummary, ECS]:
+        names: Sequence[str] | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> ECSSectionsOut:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("ecs_names", names)
         config.add_service_tags("ecs_tags", tags)
         fake_ecs_client1 = FakeECSClient(CLUSTERS_CLIENT_RESPONSE1)
@@ -176,6 +190,7 @@ CLUSTER1: Final[object] = {
     "registeredContainerInstancesCount": 1,
     "status": StatusEnum.active,
     "tags": [{"Key": "tag1", "Value": "true"}, {"Key": "tag2", "Value": "2"}],
+    "TagsForCmkLabels": {"tag1": "true", "tag2": "2"},
 }
 
 CLUSTER2: Final[object] = {
@@ -186,6 +201,7 @@ CLUSTER2: Final[object] = {
     "registeredContainerInstancesCount": 2,
     "status": StatusEnum.provisioning,
     "tags": [{"Key": "tag1", "Value": "false"}, {"Key": "tag3", "Value": "my_tag"}],
+    "TagsForCmkLabels": {"tag1": "false", "tag3": "my_tag"},
 }
 
 CLUSTER3: Final[object] = {
@@ -196,6 +212,7 @@ CLUSTER3: Final[object] = {
     "registeredContainerInstancesCount": 10,
     "status": StatusEnum.active,
     "tags": [],
+    "TagsForCmkLabels": {},
 }
 
 LIMITS = [
@@ -262,7 +279,7 @@ LIMITS2 = [
 
 
 def test_agent_aws_ecs_limits(
-    get_ecs_sections: GetSectionsCallable,
+    get_ecs_sections: ECSSections,
 ) -> None:
     ecs_limits, _ecs_summary, _ecs = get_ecs_sections(None, (None, None))
 
@@ -278,7 +295,7 @@ def test_agent_aws_ecs_limits(
 
 
 def test_agent_aws_ecs_limits_without_quota_client(
-    get_ecs_sections: GetSectionsCallable,
+    get_ecs_sections: ECSSections,
 ) -> None:
     region = "region"
     config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
@@ -314,7 +331,7 @@ def test_agent_aws_ecs_limits_without_quota_client(
     ],
 )
 def test_agent_aws_ecs_summary(
-    get_ecs_sections: GetSectionsCallable,
+    get_ecs_sections: ECSSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     expected_content: Sequence[object],
@@ -355,7 +372,7 @@ def test_agent_aws_ecs_summary(
     ],
 )
 def test_agent_aws_ecs_summary_without_colleague_content(
-    get_ecs_sections: GetSectionsCallable,
+    get_ecs_sections: ECSSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     expected_content: Sequence[object],
@@ -417,7 +434,7 @@ def test_agent_aws_ecs_summary_without_colleague_content(
     ],
 )
 def test_agent_aws_ecs(
-    get_ecs_sections: GetSectionsCallable,
+    get_ecs_sections: ECSSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     expected_content: Sequence[object],
@@ -437,9 +454,58 @@ def test_agent_aws_ecs(
     assert result.content == expected_content
 
 
-def test_agent_aws_ecs_without_colleague_content(get_ecs_sections: GetSectionsCallable) -> None:
+def test_agent_aws_ecs_without_colleague_content(get_ecs_sections: ECSSections) -> None:
     _ecs_limits, _ecs_summary, ecs = get_ecs_sections(None, (None, None))
 
     results = ecs.run()
     assert isinstance(results, AWSSectionResults)
     assert results.results == []
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (
+            TagsImportPatternOption.import_all,
+            {
+                "arn:aws:ecs:us-east-1:710145618630:cluster/cluster-test1": [
+                    "tag1",
+                    "tag2",
+                ],
+                "arn:aws:ecs:us-east-1:710145618631:cluster/cluster-test2": [
+                    "tag1",
+                    "tag3",
+                ],
+            },
+        ),
+        (
+            r".*3$",
+            {
+                "arn:aws:ecs:us-east-1:710145618630:cluster/cluster-test1": [],
+                "arn:aws:ecs:us-east-1:710145618631:cluster/cluster-test2": [
+                    "tag3",
+                ],
+            },
+        ),
+        (
+            TagsImportPatternOption.ignore_all,
+            {
+                "arn:aws:ecs:us-east-1:710145618630:cluster/cluster-test1": [],
+                "arn:aws:ecs:us-east-1:710145618631:cluster/cluster-test2": [],
+            },
+        ),
+    ],
+)
+def test_agent_aws_ecs_summary_filters_tags(
+    get_ecs_sections: ECSSections,
+    tag_import: TagsOption,
+    expected_tags: dict[str, Sequence[str]],
+) -> None:
+    _ecs_limits, ecs_summary, _ecs = get_ecs_sections(None, (None, None), tag_import)
+    ecs_summary_results = ecs_summary.run().results
+    ecs_summary_result = ecs_summary_results[0]
+
+    assert len(ecs_summary_result.content) == 2
+
+    for result in ecs_summary_result.content:
+        assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["clusterArn"]]

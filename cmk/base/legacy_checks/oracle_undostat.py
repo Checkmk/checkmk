@@ -9,9 +9,10 @@
 # TUX2 160 0 1081 300 0
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 
 def parse_oracle_undostat(string_table):
@@ -38,7 +39,7 @@ def check_oracle_undostat(item, params, parsed):
         tuned_undoretention,
         None,
         params=None if tuned_undoretention == -1 else (None, None, warn, crit),
-        human_readable_func=get_age_human_readable,
+        human_readable_func=str if tuned_undoretention == -1 else render.timespan,
         infoname="Undo retention",
     )
 
@@ -46,7 +47,7 @@ def check_oracle_undostat(item, params, parsed):
         yield 0, "Active undo blocks: %d" % activeblks
 
     yield 0, "Max concurrent transactions: %d" % maxconcurrency
-    yield 0, "Max querylen: %s" % get_age_human_readable(maxquerylen)
+    yield 0, "Max querylen: %s" % render.timespan(maxquerylen)
     state_errcnt = params["nospaceerrcnt_state"] if nospaceerrcnt else 0
     yield state_errcnt, "Space errors: %d" % nospaceerrcnt
 

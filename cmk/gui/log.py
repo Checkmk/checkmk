@@ -5,12 +5,25 @@
 
 import logging
 from dataclasses import dataclass
+from enum import Enum
+from typing import Literal
 
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils.log.security_event import SecurityEvent
+from cmk.utils.user import UserId
 
 logger = logging.getLogger("cmk.web")
+
+
+class TwoFactorEventType(Enum):
+    totp_add = "Authenticator application key added"
+    totp_remove = "Authenticator application key revoked"
+    webauthn_add_ = "Webauthn key added"
+    webauthn_remove = "Webauthn key revoked"
+    backup_add = "New backup codes generated, previous revoked"
+    backup_remove = "All backup codes revoked"
+    backup_used = "Backup code used for authentication"
 
 
 def init_logging() -> None:
@@ -39,14 +52,14 @@ class AuthenticationFailureEvent(SecurityEvent):
     """Indicates a failed authentication attempt"""
 
     def __init__(
-        self, *, user_error: str, auth_method: str, username: str | None, remote_ip: str | None
+        self, *, user_error: str, auth_method: str, username: UserId | None, remote_ip: str | None
     ) -> None:
         super().__init__(
             "authentication failed",
             {
                 "user_error": user_error,  # Note: may be localized
                 "method": auth_method,
-                "user": username,
+                "user": str(username or "Unknown user"),
                 "remote_ip": remote_ip,
             },
             SecurityEvent.Domain.auth,
@@ -57,9 +70,53 @@ class AuthenticationFailureEvent(SecurityEvent):
 class AuthenticationSuccessEvent(SecurityEvent):
     """Indicates a successful authentication"""
 
-    def __init__(self, *, auth_method: str, username: str, remote_ip: str | None) -> None:
+    def __init__(self, *, auth_method: str, username: UserId | None, remote_ip: str | None) -> None:
         super().__init__(
             "authentication succeeded",
-            {"method": auth_method, "user": username, "remote_ip": remote_ip},
+            {
+                "method": auth_method,
+                "user": str(username or "Unknown user"),
+                "remote_ip": remote_ip,
+            },
             SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
+class UserManagementEvent(SecurityEvent):
+    """Indicates a user creation, modification or deletion"""
+
+    def __init__(
+        self,
+        *,
+        event: Literal["user created", "user deleted", "user modified", "password changed"],
+        affected_user: UserId,
+        acting_user: UserId | None,
+    ) -> None:
+        super().__init__(
+            event,
+            {
+                "affected_user": str(affected_user),
+                "acting_user": str(acting_user or "Unknown user"),
+            },
+            SecurityEvent.Domain.user_management,
+        )
+
+
+@dataclass
+class TwoFactorEvent(SecurityEvent):
+    """Indicates a user has added, or removed two factor controls"""
+
+    def __init__(
+        self,
+        *,
+        event: TwoFactorEventType,
+        username: UserId,
+    ) -> None:
+        super().__init__(
+            event.value,
+            {
+                "user": str(username),
+            },
+            SecurityEvent.Domain.user_management,
         )

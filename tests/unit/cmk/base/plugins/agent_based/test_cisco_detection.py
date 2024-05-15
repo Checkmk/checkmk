@@ -11,7 +11,7 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import evaluate_snmp_detection
+from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
 
 
 @pytest.mark.parametrize(

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest
 from pytest_mock.plugin import MockerFixture
 
@@ -77,7 +79,7 @@ def test_site_config_for_livestatus_tcp_tls(site_spec: SiteConfiguration, result
     assert sites._site_config_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
-def test_sorted_sites(mocker: MockerFixture) -> None:
+def test_sorted_sites(mocker: MockerFixture, request_context: None) -> None:
     mocker.patch.object(
         user,
         "authorized_sites",

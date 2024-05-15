@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.genua import DETECT_GENUA
 
 # Example Agent Output:
 # GENUA-MIB:
@@ -26,7 +29,7 @@ from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
 def inventory_genua_state(info):
     # remove empty elements due to two alternative enterprise ids in snmp_info
     info = [_f for _f in info if _f]
-    if info[0]:
+    if info and info[0]:
         numifs = 0
         for _ifIndex, _ifName, _ifType, _ifLinkState, ifCarpState in info[0]:
             if ifCarpState in ["0", "1", "2"]:
@@ -74,7 +77,12 @@ def check_genua_state(item, _no_params, info):
     return (state, output)
 
 
+def parse_genua_state_correlation(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["genua_state_correlation"] = LegacyCheckDefinition(
+    parse_function=parse_genua_state_correlation,
     detect=DETECT_GENUA,
     fetch=[
         SNMPTree(

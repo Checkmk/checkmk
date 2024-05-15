@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
-from cmk.base.plugins.agent_based.utils.tplink import DETECT_TPLINK
+
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib.tplink import DETECT_TPLINK
 
 
 def inventory_tplink_mem(info):
@@ -38,7 +39,12 @@ def check_tplink_mem(_no_item, params, info):
     )
 
 
+def parse_tplink_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["tplink_mem"] = LegacyCheckDefinition(
+    parse_function=parse_tplink_mem,
     detect=DETECT_TPLINK,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11863.6.4.1.2.1.1",

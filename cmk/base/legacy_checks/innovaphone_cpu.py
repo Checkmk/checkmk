@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_innovaphone_cpu(info):
     yield None, {}
@@ -18,7 +20,12 @@ def check_innovaphone_cpu(_no_item, params, info):
     return check_cpu_util(usage, params)
 
 
+def parse_innovaphone_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["innovaphone_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_innovaphone_cpu,
     service_name="CPU utilization",
     discovery_function=inventory_innovaphone_cpu,
     check_function=check_innovaphone_cpu,

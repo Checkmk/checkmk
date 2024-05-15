@@ -1,1 +1,2 @@
 etc/init.d/stunnel 750
+etc/bash_completion.d/stunnel.bash 0640

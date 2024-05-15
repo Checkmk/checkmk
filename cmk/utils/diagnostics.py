@@ -7,9 +7,7 @@ import os
 from collections.abc import Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, Literal, NamedTuple
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from livestatus import SiteId
 
@@ -33,6 +31,7 @@ DiagnosticsElementFilepaths = Iterator[Path]
 class DiagnosticsParameters(TypedDict):
     site: SiteId
     general: Literal[True]
+    timeout: int
     opt_info: DiagnosticsOptionalParameters | None
     comp_specific: DiagnosticsOptionalParameters | None
 
@@ -40,6 +39,7 @@ class DiagnosticsParameters(TypedDict):
 OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"
 OPT_CHECKMK_OVERVIEW = "checkmk-overview"
+OPT_CHECKMK_CRASH_REPORTS = "checkmk-crashes"
 OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
 OPT_CHECKMK_CORE_FILES = "checkmk-core-files"
 OPT_CHECKMK_LICENSING_FILES = "checkmk-licensing-files"
@@ -61,6 +61,7 @@ _BOOLEAN_CONFIG_OPTS = [
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
+    OPT_CHECKMK_CRASH_REPORTS,
 ]
 
 _FILES_OPTS = [
@@ -68,44 +69,6 @@ _FILES_OPTS = [
     OPT_CHECKMK_CORE_FILES,
     OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
-]
-
-
-_MODULE_TO_PATH = {
-    "agent_based": "lib/check_mk/base/plugins/agent_based",
-    "agents": "share/check_mk/agents",
-    "alert_handlers": "share/check_mk/alert_handlers",
-    "bin": "bin",
-    "checkman": "share/check_mk/checkman",
-    "checks": "share/check_mk/checks",
-    "doc": "share/doc/check_mk",
-    "ec_rule_packs": "EC_RULE",
-    "inventory": "share/check_mk/inventory",
-    "lib": "lib",
-    "locales": "share/check_mk/locale",
-    "mibs": "share/snmp/mibs",
-    "notifications": "share/check_mk/notifications",
-    "pnp-templates": "share/check_mk/pnp-templates",
-    "web": "share/check_mk/web",
-}
-
-_CSV_COLUMNS = [
-    "path",
-    "exists",
-    "package",
-    "author",
-    "description",
-    "download_url",
-    "name",
-    "title",
-    "version",
-    "version.min_required",
-    "version.packaged",
-    "version.usable_until",
-    "permissions",
-    "installed",
-    "optional_packages",
-    "unpackaged",
 ]
 
 
@@ -537,6 +500,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains GUI related user properties.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "multisite.d/wato/user_connections.mk": CheckmkFileInfo(
+        components=[],
         sensitivity=CheckmkFileSensitivity.high_sensitive,
         description="Contains GUI related user properties.",
         encryption=CheckmkFileEncryption.none,

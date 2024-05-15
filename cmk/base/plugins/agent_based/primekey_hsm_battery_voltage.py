@@ -5,23 +5,31 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Literal
+
+from cmk.plugins.lib.primekey import DETECT_PRIMEKEY
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.primekey import DETECT_PRIMEKEY
 
 
 @dataclass(frozen=True)
 class HSMBattery:
-    voltage: float
+    voltage: float | None | Literal["absence"]
     state_fail: bool
 
 
 _Section = Mapping[str, HSMBattery]
 
 
-def _parse_voltage(voltage_entry: str) -> float:
-    return float(voltage_entry.removesuffix(" V"))
+def _parse_voltage(voltage_entry: str) -> float | None | Literal["absence"]:
+    if "absence" in voltage_entry:
+        return "absence"
+
+    try:
+        return float(voltage_entry.removesuffix(" V"))
+    except ValueError:
+        return None
 
 
 def parse(string_table: StringTable) -> _Section | None:
@@ -68,11 +76,18 @@ def check(
     if not (battery := section.get(item)):
         return
 
-    yield Result(
-        state=State.CRIT, summary=f"PrimeKey HSM battery {item} status not OK"
-    ) if battery.state_fail else Result(
-        state=State.OK, summary=f"PrimeKey HSM battery {item} status OK"
+    if battery.voltage == "absence":
+        yield Result(state=State.OK, summary=f"PrimeKey HSM battery {item} status absence")
+        return
+
+    yield (
+        Result(state=State.CRIT, summary=f"PrimeKey HSM battery {item} status not OK")
+        if battery.state_fail
+        else Result(state=State.OK, summary=f"PrimeKey HSM battery {item} status OK")
     )
+
+    if battery.voltage is None:
+        return
 
     yield from check_levels(
         levels_upper=params.get("levels"),

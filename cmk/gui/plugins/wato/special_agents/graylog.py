@@ -7,9 +7,8 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, ListChoice, NetworkPort, TextInput
-from cmk.gui.wato import IndividualOrStoredPassword
+from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
@@ -31,7 +30,7 @@ def _valuespec_special_agents_graylog():
                     help=_(
                         "Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
-                        "hostname here, eg. my_graylog.com."
+                        "host name here, eg. my_graylog.com."
                     ),
                     size=32,
                     allow_empty=False,

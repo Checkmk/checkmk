@@ -6,44 +6,13 @@
 include defines.make
 include artifacts.make
 
-NAME               := check_mk
-PREFIX             := /usr
-BINDIR             := $(PREFIX)/bin
-CONFDIR            := /etc/$(NAME)
-LIBDIR             := $(PREFIX)/lib/$(NAME)
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-# We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
-CXX_FLAGS          := -gdwarf-4 -O3 -Wall -Wextra
-export DOXYGEN     := doxygen
-ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
 BLACK              := scripts/run-black
-
-LIVESTATUS_API_SOURCES := api/c++/{Makefile,*.{h,cc}} \
-                      api/perl/* \
-                      api/python/{README,*.py}
-
-WERKS              := $(wildcard .werks/[0-9]*)
-
-JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
-                          $(wildcard \
-                              $(foreach edir,. enterprise managed, \
-                                  $(foreach subdir,* */* */*/* */*/*/*,$(edir)/web/htdocs/js/$(subdir).[jt]s))))
-
-SCSS_SOURCES := $(wildcard \
-					$(foreach edir,. enterprise managed, \
-						$(foreach subdir,* */*,$(edir)/web/htdocs/themes/$(subdir)/*.scss)))
-
-
-PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
-
-RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
-
-WEBPACK_MODE       ?= production
 
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
@@ -52,14 +21,19 @@ LOCK_PATH := .venv.lock
 PY_PATH := .venv/bin/python
 ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
+else
+  PY_VIRT_MAJ_MIN := "unknown"
 endif
 
-.PHONY: announcement all build check check-binaries check-permissions check-version \
-        clean css dist documentation \
+# The CI environment variable should only be set by Jenkins
+CI ?= false
+
+.PHONY: announcement all build check-setup \
+        clean dist docker-context-clean documentation \
         format format-c test-format-c format-python format-shell \
-        format-js GTAGS help install iwyu mrproper mrclean optimize-images \
-        packages setup setversion tidy version skel openapi \
-        protobuf-files
+        help install mrproper mrclean \
+        packages setup setversion version openapi \
+        protobuf-files frontend-vue
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -78,21 +52,6 @@ deb:
 cma:
 	$(MAKE) -C omd cma
 
-check: check-permissions check-binaries check-version
-
-check-permissions:
-	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
-
-check-binaries:
-	@if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
-	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
-	fi
-
-check-version:
-	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
-	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
-	    false ; }
-
 check-setup:
 	echo "From here on we check the successful setup of some parts ..."
 	@if [[ ":$(PATH):" != *":$(HOME)/.local/bin:"* ]]; then \
@@ -106,11 +65,11 @@ $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
 
 ifeq ($(ENTERPRISE),yes)
-$(REPO_PATH)/agents/plugins/cmk-update-agent:
-	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
-
-$(REPO_PATH)/agents/plugins/cmk-update-agent-32:
-	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
+$(SOURCE_BUILT_AGENT_UPDATER):
+	@echo "ERROR: Should have already been built by artifact providing jobs"
+	@echo "If you don't need the artifacts, you can use "
+	@echo "'scripts/fake-windows-artifacts' to continue with stub files"
+	@exit 1
 endif
 
 $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
@@ -125,7 +84,7 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files cmk-frontend frontend-vue
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -136,7 +95,7 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_A
 		fi ; \
 	    done ; \
 	else \
-	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} enterprise/agents/plugins/{build,build-32,src} enterprise/agents/winbuild; do \
+	    for F in $(DIST_ARCHIVE) non-free/cmk-update-agent/{build,build-32,src} non-free/cmk-update-agent/{build,build-32,src} enterprise/agents/winbuild; do \
 		EXCLUDES+=" --exclude $$F" ; \
 	    done ; \
 	fi ; \
@@ -161,11 +120,11 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_A
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
-$(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks precompile .werks .werks/werks --filter-by-edition cre
+cmk-frontend:
+	ENTERPRISE=$(ENTERPRISE) packages/cmk-frontend/run --setup-environment --all
 
-$(REPO_PATH)/ChangeLog: $(CHECK_MK_RAW_PRECOMPILED_WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks changelog ChangeLog .werks/werks
+frontend-vue:
+	packages/cmk-frontend-vue/run --setup-environment --all
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
@@ -176,16 +135,6 @@ announcement:
 packages:
 	$(MAKE) -C agents packages
 
-
-# NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
-# so we do things in a slightly complicated way.
-$(LIVESTATUS_INTERMEDIATE_ARCHIVE):
-	rm -rf mk-livestatus-$(VERSION)
-	mkdir -p mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_API_SOURCES) )  | tar xf - -C mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat packages/neb third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
-	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
-	rm -rf mk-livestatus-$(VERSION)
 
 version:
 	[ "$$(head -c 6 /etc/issue)" = "Ubuntu" \
@@ -202,13 +151,14 @@ setversion:
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/livedump
 	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/neb/CMakeLists.txt
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
-	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
+	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
 ifeq ($(ENTERPRISE),yes)
+	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' non-free/cmk-update-agent/cmk_update_agent.py
+	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' omd/packages/enterprise/bin/cmcdump
 	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/cmc/CMakeLists.txt
-	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
 
-$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
+$(OPENAPI_SPEC): $(shell find cmk/gui/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
 	export TMPFILE=$$(mktemp);  \
 	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
@@ -220,71 +170,6 @@ openapi-clean:
 openapi: $(OPENAPI_SPEC)
 
 
-optimize-images:
-	@if type pngcrush >/dev/null 2>&1; then \
-	    for F in $(PNG_FILES); do \
-	        echo "Optimizing $$F..." ; \
-	        pngcrush -q -rem alla -brute $$F $$F.opt ; \
-	        mv $$F.opt $$F; \
-	    done ; \
-	else \
-	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
-	fi
-
-# TODO: The --unsafe-perm was added because the CI executes this as root during
-# tests and building versions. Once we have the then build system this should not
-# be necessary anymore.
-#
-# NOTE 1: What we actually want are grouped targets, but this would require GNU
-# make >= 4.3, so we use the common workaround of an intermediate target.
-#
-# NOTE 2: NPM people have a totally braindead idea about reproducible builds
-# which almost all other people consider a bug, so we have to touch our target
-# files. Read https://github.com/npm/npm/issues/20439 and be amazed...
-#
-# NOTE 3: NPM sometimes terminates with a very unhelpful "npm ERR! cb() never
-# called!" message, where the underlying reason seems to be quite obscure, see
-# https://npm.community/t/crash-npm-err-cb-never-called/858.
-#
-# NOTE 4: The sed call is to get the same "resolved" entries independent of the
-# used registry. The resolved entry is only a hint for npm.
-.INTERMEDIATE: .ran-npm
-node_modules/.bin/webpack: .ran-npm
-node_modules/.bin/prettier: .ran-npm
-.ran-npm: package.json package-lock.json
-	@echo "npm version: $$(npm --version)"
-	npm --version | grep "^$(NPM_VERSION)\." >/dev/null 2>&1
-	@echo "node version: $$(node --version)"
-	node --version | grep "^v$(NODEJS_VERSION)\." >/dev/null 2>&1
-	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
-	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
-	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
-	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
-            export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
-	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \
-	else \
-	    REGISTRY= ; \
-	    echo "Installing from public registry" ; \
-        fi ; \
-	npm ci --yes --audit=false --unsafe-perm $$REGISTRY
-	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
-	touch node_modules/.bin/webpack node_modules/.bin/prettier
-
-# NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
-# list all targets separately.
-#
-# NOTE 2: For the touch command refer to the notes above.
-#
-# NOTE 3: The cma_facelift.scss target is used to generate a css file for the virtual
-# appliance. It is called from the cma git's makefile and the built css file is moved
-# to ~/git/cma/skel/usr/share/cma/webconf/htdocs/
-.INTERMEDIATE: .ran-webpack
-$(JAVASCRIPT_MINI): .ran-webpack
-$(THEME_CSS_FILES): .ran-webpack
-.ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) CLOUD=$(CLOUD) SAAS=$(SAAS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-	touch $(JAVASCRIPT_MINI) $(THEME_CSS_FILES)
-
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
 # fact, we should really clean up all this cleaning-chaos and finally follow the
@@ -292,16 +177,9 @@ $(THEME_CSS_FILES): .ran-webpack
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
 	$(MAKE) -C omd clean
-	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
-	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
-	       $(NAME)-*.tar.gz *~ counters autochecks \
-	       precompiled cache web/htdocs/js/*_min.js \
-	       web/htdocs/themes/*/theme.css \
-	       .werks/werks \
-	       ChangeLog \
-	       announce*
-
-css: .ran-webpack
+	rm -rf *.rpm *.deb *.exe \
+	       *~ counters autochecks \
+	       precompiled cache announce*
 
 EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \
@@ -318,12 +196,12 @@ EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 # The list of files and folders to be protected from remove after "buildclean" is called
 # Rust dirs are kept due to heavy load when compiled: .cargo, controller
 AGENT_CTL_TARGET_PATH=packages/cmk-agent-ctl/target
-CHECK_SQL_TARGET_PATH=packages/check-sql/target
+MK_SQL_TARGET_PATH=packages/mk-sql/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
 	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \
 	    --exclude=$(AGENT_CTL_TARGET_PATH) \
-	    --exclude=$(CHECK_SQL_TARGET_PATH) \
+	    --exclude=$(MK_SQL_TARGET_PATH) \
 	    --exclude="agents/plugins/*_2.py" \
 	    --exclude="agents/plugins/*.py.checksum"
 
@@ -333,10 +211,6 @@ mrproper:
 mrclean:
 	git clean -d --force -x $(EXCLUDE_CLEAN)
 
-# The target is reserved for a future use
-workspaceclean:
-	# Stub
-
 # Used by our version build (buildscripts/scripts/build-cmk-version.jenkins)
 # for cleaning up while keeping some build artifacts between version builds.
 # This helps to speed up "make dist"
@@ -344,69 +218,21 @@ buildclean:
 	git clean -d --force -x $(EXCLUDE_BUILD_CLEAN)
 
 
+# This target should clean up everything which may have been built previously in the same working directory
+# within a specific docker image, which would be *falsely* re-used in another (incompatible) docker image.
+# One example:
+# - python-ldap wheel has been built in docker image ubuntu:20.04
+# - this would include a shared object file which is linked against the system's libldap in version 2.4
+# - switching to another docker image, e.g. ubuntu:22.04, would not have libldap in that version (but in version 2.5)
+# 	ldd .venv/lib/python3.12/site-packages/_ldap.cpython-312-x86_64-linux-gnu.so | grep "ldap"
+#		libldap_r-2.4.so.2 => not found
+# TODO: The list of to-be-cleaned artifacts is by no means complete. Add more as soon we know about them.
+docker-context-clean:
+	rm -rf .cache .venv
+
 setup:
-# librrd-dev is still needed by the python rrd package we build in our virtual environment
-	sudo apt-get install \
-	    build-essential \
-	    clang-$(CLANG_VERSION) \
-	    clang-format-$(CLANG_VERSION) \
-	    clang-tidy-$(CLANG_VERSION) \
-	    clang-tools-$(CLANG_VERSION) \
-	    clangd-$(CLANG_VERSION) \
-	    cmake \
-	    curl \
-	    direnv \
-	    doxygen \
-	    figlet \
-	    gawk \
-	    git \
-	    ksh \
-	    libclang-$(CLANG_VERSION)-dev \
-	    libjpeg-dev \
-	    libkrb5-dev \
-	    libldap2-dev \
-	    libmariadb-dev-compat \
-	    libpango1.0-dev \
-	    libpcap-dev \
-	    librrd-dev \
-	    libsasl2-dev \
-	    libsqlite3-dev \
-	    libtool-bin \
-	    libxml2-dev \
-	    libreadline-dev \
-	    libxml2-dev \
-	    libxslt-dev \
-	    libpq-dev \
-	    libreadline-dev \
-	    lld-$(CLANG_VERSION) \
-	    lldb-$(CLANG_VERSION) \
-	    musl-tools \
-	    p7zip-full \
-	    patchelf \
-	    pngcrush \
-	    python3-pip \
-	    python3-venv \
-	    shellcheck \
-	    valgrind \
-	    zlib1g-dev
-	if type pyenv >/dev/null 2>&1 && pyenv shims --short | grep '^pipenv$$'; then \
-	    CMD="pyenv exec" ; \
-	else \
-	    CMD="" ; \
-	fi ; \
-	$$CMD pip3 install --user --upgrade \
-	    pip \
-	    pipenv=="$(PIPENV_VERSION)" \
-	    virtualenv=="$(VIRTUALENV_VERSION)" \
-	    wheel
-	if ! type rustup >/dev/null 2>&1; then \
-		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh; \
-		source $$HOME/.cargo/env; \
-	fi ; \
-	rustup target add x86_64-unknown-linux-musl
-	$(MAKE) -C web setup
-	$(MAKE) -C docker_image setup
-	$(MAKE) -C locale setup
+	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile all
+	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
 	$(MAKE) check-setup
 
 linesofcode:
@@ -414,10 +240,10 @@ linesofcode:
 
 protobuf-files:
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise protobuf-files
+	$(MAKE) -C non-free/cmc-protocols protobuf-files
 endif
 
-format: format-python format-c format-shell format-js format-css format-bazel
+format: format-python format-c format-shell format-bazel
 
 format-c:
 	packages/livestatus/run --format
@@ -450,12 +276,6 @@ format-shell:
 
 what-gerrit-makes:
 	$(MAKE)	-C tests what-gerrit-makes
-
-format-js:
-	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
-
-format-css:
-	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"
 
 format-bazel:
 	scripts/run-buildifier --lint=fix --mode=fix
@@ -494,14 +314,17 @@ Pipfile.lock: Pipfile
 # This is extremely fast since the dependencies do not have to be resolved.
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
+# SETUPTOOLS_ENABLE_FEATURES="legacy-editable" is needed for mypy being able to
+# type check a package that's installed editable:
+# https://github.com/python/mypy/issues/13392
 .venv: Pipfile.lock .python-$(PYTHON_MAJOR_DOT_MINOR)-stamp
 	@( \
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \
 	    if [ "$(CI)" == "true" ] || [ "$(PY_VIRT_MAJ_MIN)" != "$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)" ]; then \
-	      echo "CI is $(CI), Python version of .venv is $(PY_VIRT_MAJ_MIN), Target python version is $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)"; \
+	      echo "INFO: Runs on CI: $(CI), Python version of .venv: $(PY_VIRT_MAJ_MIN), Target python version: $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)"; \
 	      echo "Cleaning up .venv before sync..."; \
 	      $(RM) -r .venv; \
 	    fi; \
-	    ( SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( SKIP_MAKEFILE_CALL=1 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)

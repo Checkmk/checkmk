@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from pathlib import Path
 
 import pytest
@@ -24,11 +26,12 @@ def test_create_secret_and_hmac(tmp_path: Path) -> None:
 
     assert secret.path == my_secret_file
     assert (
-        secret.hmac("hello") == "3bc5a0f1f479929f6c6330bd2dabf2d78ed389ab329f2c0b0baadfb3a01dbeae"
+        secret.secret.hmac(b"hello").hex()
+        == "3bc5a0f1f479929f6c6330bd2dabf2d78ed389ab329f2c0b0baadfb3a01dbeae"
     )
 
 
-def test_automation_user_secret() -> None:
+def test_automation_user_secret(patch_omd_site: None) -> None:
     aus = secrets.AutomationUserSecret(UserId("crypto_secrets_new_user"))
 
     assert not aus.exists()
@@ -36,6 +39,11 @@ def test_automation_user_secret() -> None:
         aus.read()
 
     aus.path.parent.mkdir()  # profile dir of the test user
-    aus.save(secret := "this is a test")
+    aus.save(secret := "this is a test 🤡")
+
     assert aus.exists()
     assert aus.read() == secret
+
+    assert not aus.check("")
+    assert not aus.check("wrong")
+    assert aus.check(secret)

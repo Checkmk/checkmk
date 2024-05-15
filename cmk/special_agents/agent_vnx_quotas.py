@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import shlex
 import sys
 from typing import Any
 
@@ -27,7 +28,7 @@ def get_client_connection(args):
         import paramiko  # pylint: disable=import-outside-toplevel
 
         client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B511
         client.connect(args.hostname, username=args.username, password=args.password, timeout=5)
         return client
 
@@ -42,7 +43,7 @@ def main(args=None):
 
     args = parse_arguments(args)
     opt_debug = args.debug
-    nas_db_env = "export NAS_DB=%s; " % args.nas_db
+    nas_db_env = "export NAS_DB=%s; " % shlex.quote(args.nas_db)
     queries = {
         "quotas": nas_db_env + "/nas/bin/nas_fs -query:* "
         "-fields:TreeQuotas -format:'%q' -query:* "
@@ -55,13 +56,17 @@ def main(args=None):
     client = get_client_connection(args)
 
     sys.stdout.write("<<<vnx_version:sep(124)>>>\n")
-    stdin, stdout, stderr = client.exec_command(nas_db_env + "/nas/bin/nas_version")
+    stdin, stdout, stderr = client.exec_command(  # nosec B601 # BNS:2aa916
+        nas_db_env + "/nas/bin/nas_version"
+    )
     stdin.close()
     sys.stdout.write("Version|%s\n" % stdout)
     if opt_debug:
         sys.stderr.write("%s\n" % repr(stderr))
 
-    stdin, stdout, stderr = client.exec_command(nas_db_env + "/nas/sbin/model")
+    stdin, stdout, stderr = client.exec_command(  # nosec B601 # BNS:2aa916
+        nas_db_env + "/nas/sbin/model"
+    )
     stdin.close()
     sys.stdout.write("AgentOS|%s\n" % stdout)
     if opt_debug:
@@ -69,7 +74,7 @@ def main(args=None):
 
     results: dict[str, dict[str, Any]] = {}
     for query_type, query in queries.items():
-        stdin, stdout, stderr = client.exec_command(query)
+        stdin, stdout, stderr = client.exec_command(query)  # nosec B601 # BNS:2aa916
         results.setdefault(
             query_type,
             {

@@ -2,20 +2,23 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""
+This special agent is deprecated. Please use netapp_ontap_luns.
+"""
 
 import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import netapp_api
-from .utils.df import (
-    df_check_filesystem_single,
+from cmk.plugins.lib import netapp_api
+from cmk.plugins.lib.df import (
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
     TREND_DEFAULT_PARAMS,
 )
+
+from .agent_based_api.v1 import get_value_store, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _MEBI = 1048576
 
@@ -62,37 +65,23 @@ def _check_netapp_api_luns(
     if (lun := section.get(item)) is None:
         return
 
-    if lun.get("online") != "true":
-        yield Result(state=State.CRIT, summary="LUN is offline")
-
-    read_only = lun.get("read-only") == "true"
-    if read_only != params.get("read_only"):
-        expected = str(params.get("read_only")).lower()
-        yield Result(
-            state=State.WARN,
-            summary="read-only is {} (expected: {})".format(lun.get("read-only"), expected),
-        )
+    yield Result(state=State.OK, summary=f"Volume: {lun['volume']}")
+    yield Result(state=State.OK, summary=f"Vserver: {lun['vserver']}")
 
     size_total_bytes = int(lun["size"])
+    size_avail_bytes = size_total_bytes - int(lun["size-used"])
 
-    if params.get("ignore_levels"):
-        yield Result(state=State.OK, summary=f"Total size: {render.bytes(size_total_bytes)}")
-        yield Result(state=State.OK, summary="Used space is ignored")
-    else:
-        size_avail_bytes = size_total_bytes - int(lun["size-used"])
-        yield from df_check_filesystem_single(
-            value_store,
-            item,
-            # df_check_filesystem_single expects input in Megabytes
-            # (mo: but we're passing mebibytes, apparently.)
-            size_total_bytes / _MEBI,
-            size_avail_bytes / _MEBI,
-            0,
-            None,
-            None,
-            params,
-            this_time=now,
-        )
+    yield from netapp_api.check_netapp_luns(
+        item=item,
+        online=lun.get("online") == "true",
+        read_only=lun.get("read-only") == "true",
+        size_total_bytes=size_total_bytes,
+        size_total=size_total_bytes / _MEBI,
+        size_available=size_avail_bytes / _MEBI,
+        now=now,
+        value_store=value_store,
+        params=params,
+    )
 
 
 register.check_plugin(

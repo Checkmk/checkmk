@@ -106,7 +106,7 @@ def test_discover_oracle_dataguard_stats(
                 Result(state=State.CRIT, summary="Apply lag: no value"),
                 Result(state=State.OK, summary="Transport lag: 0 seconds"),
                 Metric("transport_lag", 0.0),
-                Result(state=State.OK, summary="old plugin data found, recovery active?"),
+                Result(state=State.OK, summary="old plug-in data found, recovery active?"),
             ],
         ),
     ],

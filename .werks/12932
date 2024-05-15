@@ -1,4 +1,4 @@
-Title: <tt>df</tt>: Show volume name in service output
+Title: df: Show volume name in service output
 Class: feature
 Compatible: compat
 Component: checks

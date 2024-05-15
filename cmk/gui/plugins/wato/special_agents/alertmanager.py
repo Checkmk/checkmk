@@ -3,31 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing
-
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
-    api_request_connection_elements,
-    RulespecGroupVMCloudContainer,
+    prometheus_connection,
 )
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    ListOfStrings,
-    TextInput,
-)
-
-
-def _deprecate_dynamic_host_adress(*value: object, **kwargs: object) -> typing.NoReturn:
-    raise MKUserError(None, _("The options IP Address and Host name are deprecated - Werk 14573."))
+from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, ListOfStrings, TextInput
+from cmk.gui.wato import RulespecGroupVMCloudContainer
 
 
 def _valuespec_generic_metrics_alertmanager():
@@ -42,69 +28,7 @@ def _valuespec_generic_metrics_alertmanager():
                     ),
                 ),
             ),
-            (
-                "connection",
-                CascadingDropdown(
-                    choices=[
-                        (
-                            "ip_address",
-                            _("(deprecated) IP Address"),
-                            Dictionary(
-                                elements=api_request_connection_elements(
-                                    help_text=_(
-                                        "Specifies a URL path prefix, which is prepended to API calls "
-                                        "to the Prometheus API. If this option is not relevant for "
-                                        "your installation, please leave it unchecked."
-                                    ),
-                                    default_port=9091,
-                                ),
-                                help=_("Use IP address of assigned host"),
-                                validate=_deprecate_dynamic_host_adress,
-                            ),
-                        ),
-                        (
-                            "host_name",
-                            _("(deprecated) Host name"),
-                            Dictionary(
-                                elements=api_request_connection_elements(
-                                    help_text=_(
-                                        "Specifies a URL path prefix, which is prepended to API calls "
-                                        "to the Prometheus API. If this option is not relevant for "
-                                        "your installation, please leave it unchecked."
-                                    ),
-                                    default_port=9091,
-                                ),
-                                help=_("Use host name of assigned host"),
-                                validate=_deprecate_dynamic_host_adress,
-                            ),
-                        ),
-                        (
-                            "url_custom",
-                            _("Custom URL"),
-                            Dictionary(
-                                elements=[
-                                    (
-                                        "url_address",
-                                        TextInput(
-                                            title=_("Custom URL server address"),
-                                            help=_(
-                                                "Specify a custom URL to connect to "
-                                                "your server. Do not include the "
-                                                "protocol. This option overwrites "
-                                                "all available options such as port and "
-                                                "other URL prefixes."
-                                            ),
-                                            allow_empty=False,
-                                        ),
-                                    )
-                                ],
-                                optional_keys=[],
-                            ),
-                        ),
-                    ],
-                    title=_("Prometheus connection option"),
-                ),
-            ),
+            ("connection", prometheus_connection()),
             tls_verify_flag_default_no(),
             api_request_authentication(),
             (

@@ -5,9 +5,10 @@
 
 import cmk.utils.paths
 
-import cmk.gui.plugins.wato as api_module
-import cmk.gui.plugins.wato.datasource_programs as datasource_programs
-import cmk.gui.plugins.wato.utils as wato_utils
+import cmk.gui.plugins.wato as api_module  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato.datasource_programs as datasource_programs  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato.special_agents.common  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato.utils as wato_utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.valuespec
 import cmk.gui.view_utils
 import cmk.gui.watolib.attributes
@@ -23,7 +24,7 @@ import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 from cmk.gui.hooks import register_hook
-from cmk.gui.plugins.wato.utils import (
+from cmk.gui.plugins.wato.utils import (  # pylint: disable=cmk-module-layer-violation
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
@@ -39,7 +40,7 @@ from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import register_check_parameters, register_rule
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
-# calls in the Setup plugin context
+# calls in the Setup plug-in context
 subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
 subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
 subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name
@@ -52,9 +53,9 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 import cmk.gui.watolib.config_domains
 
-# Make some functions of watolib available to Setup plugins without using the
+# Make some functions of watolib available to Setup plug-ins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep
-# the current plugin API functions working
+# the current plug-in API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
 from cmk.gui.wato._main_module_topics import (
@@ -77,6 +78,18 @@ from ._notification_parameter import (
     register_notification_parameters,
 )
 from ._permissions import PermissionSectionWATO
+from ._rulespec_groups import (
+    RulespecGroupActiveChecks,
+    RulespecGroupDatasourcePrograms,
+    RulespecGroupDatasourceProgramsApps,
+    RulespecGroupDatasourceProgramsCloud,
+    RulespecGroupDatasourceProgramsCustom,
+    RulespecGroupDatasourceProgramsHardware,
+    RulespecGroupDatasourceProgramsOS,
+    RulespecGroupDatasourceProgramsTesting,
+    RulespecGroupIntegrateOtherServices,
+    RulespecGroupVMCloudContainer,
+)
 from .pages._password_store_valuespecs import (
     IndividualOrStoredPassword,
     MigrateToIndividualOrStoredPassword,
@@ -89,10 +102,10 @@ def register() -> None:  # pylint: disable=too-many-branches
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
@@ -253,16 +266,19 @@ def register() -> None:  # pylint: disable=too-many-branches
     ):
         api_module.__dict__[name] = cmk.gui.watolib.utils.__dict__[name]
 
-    for name in (
-        "RulespecGroupDatasourcePrograms",
-        "RulespecGroupDatasourceProgramsOS",
-        "RulespecGroupDatasourceProgramsApps",
-        "RulespecGroupDatasourceProgramsCloud",
-        "RulespecGroupDatasourceProgramsContainer",
-        "RulespecGroupDatasourceProgramsCustom",
-        "RulespecGroupDatasourceProgramsHardware",
-        "RulespecGroupDatasourceProgramsTesting",
+    for name, value in (
+        ("RulespecGroupVMCloudContainer", RulespecGroupVMCloudContainer),
+        ("RulespecGroupDatasourcePrograms", RulespecGroupDatasourcePrograms),
+        ("RulespecGroupDatasourceProgramsOS", RulespecGroupDatasourceProgramsOS),
+        ("RulespecGroupDatasourceProgramsApps", RulespecGroupDatasourceProgramsApps),
+        ("RulespecGroupDatasourceProgramsCloud", RulespecGroupDatasourceProgramsCloud),
+        ("RulespecGroupDatasourceProgramsCustom", RulespecGroupDatasourceProgramsCustom),
+        ("RulespecGroupDatasourceProgramsHardware", RulespecGroupDatasourceProgramsHardware),
+        ("RulespecGroupDatasourceProgramsTesting", RulespecGroupDatasourceProgramsTesting),
+        ("RulespecGroupIntegrateOtherServices", RulespecGroupIntegrateOtherServices),
+        ("RulespecGroupActiveChecks", RulespecGroupActiveChecks),
+        ("MigrateToIndividualOrStoredPassword", MigrateToIndividualOrStoredPassword),
     ):
         datasource_programs.__dict__[name] = cmk.gui.plugins.wato.special_agents.common.__dict__[
             name
-        ]
+        ] = value

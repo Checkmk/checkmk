@@ -1,0 +1,11 @@
+Title: Add cloud edition features to Managed Services Edition
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1700123142
+Edition: cme
+Level: 3
+Version: 2.3.0b1
+
+With this werk, the Checkmk Managed Services Edition is now based on the Checkmk Cloud Edition and includes thus all features of the Checkmk Cloud Edition.
+A technical overview of the new features can be found in the user manual: https://docs.checkmk.com/latest/en/cce.html

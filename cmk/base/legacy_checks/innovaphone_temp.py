@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_innovaphone_temp(info):
     yield "Ambient", {}
@@ -17,7 +19,12 @@ def check_innovaphone_temp(item, params, info):
     return check_temperature(int(info[0][1]), params, "innovaphone_temp_%s" % item)
 
 
+def parse_innovaphone_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["innovaphone_temp"] = LegacyCheckDefinition(
+    parse_function=parse_innovaphone_temp,
     service_name="Temperature %s",
     discovery_function=inventory_innovaphone_temp,
     check_function=check_innovaphone_temp,

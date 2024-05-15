@@ -9,7 +9,7 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import CheckFunction, CheckPlugin, DiscoveryFunction
+from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -58,13 +58,13 @@ def test_check_ok(check_fireeye_active_vms: CheckFunction, section: StringTable)
 
 def test_check_warn(check_fireeye_active_vms: CheckFunction, section: StringTable) -> None:
     assert list(check_fireeye_active_vms({"vms": (23, 50)}, section)) == [
-        Result(state=State.WARN, summary="Active VMs: 42 (warn/crit at 23.0/50.0)"),
+        Result(state=State.WARN, summary="Active VMs: 42 (warn/crit at 23/50)"),
         Metric("active_vms", 42.0, levels=(23.0, 50.0)),
     ]
 
 
 def test_check_crit(check_fireeye_active_vms: CheckFunction, section: StringTable) -> None:
     assert list(check_fireeye_active_vms({"vms": (23, 36)}, section)) == [
-        Result(state=State.CRIT, summary="Active VMs: 42 (warn/crit at 23.0/36.0)"),
+        Result(state=State.CRIT, summary="Active VMs: 42 (warn/crit at 23/36)"),
         Metric("active_vms", 42.0, levels=(23.0, 36.0)),
     ]

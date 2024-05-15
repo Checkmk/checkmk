@@ -11,87 +11,104 @@
 # mypy: disable-error-code="list-item"
 
 import time
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+from cmk.agent_based.v2 import get_rate, get_value_store, render, StringTable
+
+Section = Mapping[str, Mapping[str, int]]
+
+DiscoveryResult = Iterable[tuple[str, Mapping]]
+
+CheckResult = Iterable[tuple[int, str, list]]
 
 
-def inventory_appdynamics_web_container(info):
-    for line in info:
-        yield " ".join(line[0:2]), {}
+def _parse_metrics(raw_metrics: Sequence[str]) -> Iterable[tuple[str, int]]:
+    for metric in raw_metrics:
+        name, value = metric.split(":")
+        yield name, int(value)
 
 
-def check_appdynamics_web_container(item, params, info):  # pylint: disable=too-many-branches
-    for line in info:
-        if item == " ".join(line[0:2]):
-            values = {}
-            for metric in line[2:]:
-                name, value = metric.split(":")
-                values[name] = int(value)
+def parse_appdynamics_web_container(string_table: StringTable) -> Section:
+    """
+    >>> parse_appdynamics_web_container([
+    ...    ['line', '1', 'foo:23', 'bar:42'],
+    ...    ['line', '2', 'gee:21', 'boo:40'],
+    ... ])
+    {'line 1': {'foo': 23, 'bar': 42}, 'line 2': {'gee': 21, 'boo': 40}}
 
-            error_count = values.get("Error Count", None)
-            request_count = values.get("Request Count", None)
+    """
+    return {" ".join(line[0:2]): dict(_parse_metrics(line[2:])) for line in string_table}
 
-            current_threads = values.get("Current Threads In Pool", None)
-            busy_threads = values.get("Busy Threads", None)
-            max_threads = values.get("Maximum Threads", None)
 
-            if isinstance(params, tuple):
-                warn, crit = params
-            else:
-                warn, crit = (None, None)
+def discover_appdynamics_web_container(section: Section) -> DiscoveryResult:
+    yield from ((name, {}) for name in section)
 
-            if current_threads is not None:
-                state = 0
-                if crit and current_threads >= crit:
-                    state = 2
-                elif warn and current_threads >= warn:
-                    state = 1
 
-                thread_levels_label = ""
-                if state > 0:
-                    thread_levels_label = " (warn/crit at %d/%d)" % (warn, crit)
+def check_appdynamics_web_container(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if (values := section.get(item)) is None:
+        return
 
-                if max_threads is not None:
-                    perfdata = [("current_threads", current_threads, warn, crit, 0, max_threads)]
-                    threads_percent = 100.0 * current_threads / max(1, max_threads)
-                    max_info = " of %d (%.2f%%)" % (max_threads, threads_percent)
-                else:
-                    perfdata = [("current_threads", current_threads, warn, crit)]
-                    max_info = ""
-                yield state, "Current threads: %d%s%s" % (
-                    current_threads,
-                    max_info,
-                    thread_levels_label,
-                ), perfdata
+    error_count = values.get("Error Count", None)
+    request_count = values.get("Request Count", None)
 
-                if busy_threads is not None:
-                    perfdata = [("busy_threads", busy_threads)]
-                    yield 0, "Busy threads: %d" % busy_threads, perfdata
+    current_threads = values.get("Current Threads In Pool", None)
+    busy_threads = values.get("Busy Threads", None)
+    max_threads = values.get("Maximum Threads", None)
 
-            now = time.time()
+    if current_threads is not None:
+        yield check_levels(
+            current_threads,
+            "current_threads",
+            params["levels"],
+            human_readable_func=str,
+            infoname="Current threads",
+        )
 
-            if error_count is not None:
-                rate_id = "appdynamics_web_container.%s.error" % (item.lower().replace(" ", "_"))
-                error_rate = get_rate(
-                    get_value_store(), rate_id, now, error_count, raise_overflow=True
-                )
-                perfdata = [("error_rate", error_rate)]
-                yield 0, "Errors: %.2f/sec" % error_rate, perfdata
+        if max_threads:
+            threads_percent = 100.0 * current_threads / max(1, max_threads)
+            yield 0, f"{render.percent(threads_percent)} of {max_threads}", []
 
-            if request_count is not None:
-                rate_id = "appdynamics_web_container.%s.request" % (item.lower().replace(" ", "_"))
-                request_rate = get_rate(
-                    get_value_store(), rate_id, now, request_count, raise_overflow=True
-                )
-                perfdata = [("request_rate", request_rate)]
-                yield 0, "Requests: %.2f/sec" % request_rate, perfdata
+        if busy_threads is not None:
+            yield check_levels(
+                busy_threads,
+                "busy_threads",
+                None,
+                human_readable_func=str,
+                infoname="Busy threads",
+            )
+
+    now = time.time()
+    store = get_value_store()
+    if error_count is not None:
+        yield check_levels(
+            get_rate(store, "error", now, error_count, raise_overflow=True),
+            "error_rate",
+            None,
+            human_readable_func=lambda x: f"{x:.2f}/sec",
+            infoname="Errors",
+        )
+
+    if request_count is not None:
+        yield check_levels(
+            get_rate(store, "request", now, request_count, raise_overflow=True),
+            "request_rate",
+            None,
+            human_readable_func=lambda x: f"{x:.2f}/sec",
+            infoname="Requests",
+        )
 
 
 check_info["appdynamics_web_container"] = LegacyCheckDefinition(
     service_name="AppDynamics Web Container %s",
-    discovery_function=inventory_appdynamics_web_container,
+    parse_function=parse_appdynamics_web_container,
+    discovery_function=discover_appdynamics_web_container,
     check_function=check_appdynamics_web_container,
     check_ruleset_name="jvm_threads",
+    check_default_parameters={"levels": None},
 )

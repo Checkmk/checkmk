@@ -5,9 +5,10 @@
 
 from dataclasses import dataclass
 
-from .agent_based_api.v1 import Attributes, register
-from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.cisco_meraki import load_json, MerakiAPIData
+from cmk.plugins.lib.cisco_meraki import load_json, MerakiAPIData
+
+from .agent_based_api.v1 import Attributes, HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,32 @@ class DeviceInfo:
         )
 
 
+def host_label_meraki_device_info(section: DeviceInfo) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+        cmk/meraki:
+            This label is set to "yes" for all Meraki devices
+
+        cmk/meraki/device_type:
+            This label is set to the Meraki product type to which the device belongs, such as "switch" or "wireless".
+
+        cmk/meraki/net_id:
+            This label is set to the network id the Meraki device belongs to.
+
+        cmk/meraki/org_id:
+            This label is set to the organisation id the Meraki device belongs to.
+
+        cmk/meraki/org_name:
+            This label is set to the organisation name the Meraki device belongs to.
+    """
+    yield HostLabel("cmk/meraki", "yes")
+    yield HostLabel("cmk/meraki/device_type", section.product)
+    yield HostLabel("cmk/meraki/net_id", section.network_id)
+    yield HostLabel("cmk/meraki/org_id", section.organisation_id)
+    yield HostLabel("cmk/meraki/org_name", section.organisation_name)
+
+
 def parse_device_info(string_table: StringTable) -> DeviceInfo | None:
     return DeviceInfo.parse(loaded_json[0]) if (loaded_json := load_json(string_table)) else None
 
@@ -47,6 +74,7 @@ def parse_device_info(string_table: StringTable) -> DeviceInfo | None:
 register.agent_section(
     name="cisco_meraki_org_device_info",
     parse_function=parse_device_info,
+    host_label_function=host_label_meraki_device_info,
 )
 
 

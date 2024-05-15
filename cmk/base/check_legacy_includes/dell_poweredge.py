@@ -19,12 +19,6 @@ from .temperature import check_temperature
 #   '----------------------------------------------------------------------'
 
 
-def inventory_dell_poweredge_cpu(info):
-    for _chassisIndex, _Index, StateSettings, _Status, LocationName in info[0]:
-        if LocationName != "" and StateSettings != "1":
-            yield LocationName, None
-
-
 def check_dell_poweredge_cpu(item, _no_params, info):
     for chassisIndex, Index, _StateSettings, Status, LocationName in info[0]:
         if item == LocationName:
@@ -61,15 +55,6 @@ def check_dell_poweredge_cpu(item, _no_params, info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_dell_poweredge_mem(info):
-    inventory = []
-    for line in info:
-        location = line[1]
-        if location != "":
-            inventory.append((location, None))
-    return inventory
-
-
 def check_dell_poweredge_mem(item, _no_params, info):
     di = {}
     for status, location, size, di["Speed"], di["MFR"], di["P/N"], di["S/N"] in info:
@@ -103,14 +88,6 @@ def check_dell_poweredge_mem(item, _no_params, info):
 #   |                  |_| |_|\___|\__\__,_|\___| \_/                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def inventory_dell_poweredge_netdev(info):
-    inventory = []
-    for line in info:
-        if line[1] != "2" and line[4] != "":
-            inventory.append((line[4], None))
-    return inventory
 
 
 def check_dell_poweredge_netdev(item, _no_params, info):
@@ -160,15 +137,6 @@ def check_dell_poweredge_netdev(item, _no_params, info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_dell_poweredge_pci(info):
-    inventory = []
-    for line in info:
-        fqdd = line[4]
-        if fqdd != "":
-            inventory.append((fqdd, None))
-    return inventory
-
-
 def check_dell_poweredge_pci(item, _no_params, info):
     di = {}
     for status, di["BusWidth"], di["MFR"], di["Desc."], fqdd in info:
@@ -203,12 +171,6 @@ def check_dell_poweredge_pci(item, _no_params, info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_dell_poweredge_status(info):
-    if info:
-        return [(None, None)]
-    return []
-
-
 def check_dell_poweredge_status(item, _no_params, info):
     di = {}
     (
@@ -229,7 +191,7 @@ def check_dell_poweredge_status(item, _no_params, info):
         "5": ("Critical, ", 2),
         "6": ("NonRecoverable, ", 2),
     }
-    infotext, state = state_table.get(status, "2")  # type: ignore[misc]
+    infotext, state = state_table.get(status, ("unknown state, ", 2))
     for parameter, value in di.items():
         infotext += f"{parameter}: {value}, "
     infotext = re.sub(", $", "", infotext)
@@ -246,22 +208,6 @@ def check_dell_poweredge_status(item, _no_params, info):
 #   |                   | .__/ \___/ \_/\_/ \___|_|                        |
 #   |                   |_|                                                |
 #   '----------------------------------------------------------------------'
-
-
-def inventory_dell_poweredge_amperage_power(info):
-    inventory = []
-    for line in info:
-        if line[6] != "" and line[5] in ("24", "26"):
-            inventory.append((line[6], None))
-    return inventory
-
-
-def inventory_dell_poweredge_amperage_current(info):
-    inventory = []
-    for line in info:
-        if line[6] != "" and line[5] in ("23", "25"):
-            inventory.append((line[6], None))
-    return inventory
 
 
 def check_dell_poweredge_amperage(item, _no_params, info):
@@ -335,13 +281,6 @@ def dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
     if item.endswith(" Temp"):
         item = item[:-5]
     return item
-
-
-def inventory_dell_poweredge_temp(info):
-    for line in info:
-        if line[2] != "1":  # StateSettings not 'unknown'
-            item = dell_poweredge_temp_makeitem(line[0], line[1], line[5])
-            yield item, {}
 
 
 def check_dell_poweredge_temp(item, params, info):

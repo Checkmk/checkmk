@@ -7,9 +7,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import get_value_store, regex, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.df import (
+from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,
     DfBlock,
@@ -18,6 +16,9 @@ from .utils.df import (
     EXCLUDED_MOUNTPOINTS,
     FILESYSTEM_DEFAULT_PARAMS,
 )
+
+from .agent_based_api.v1 import get_value_store, regex, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 _INVENTORY_DF_EXCLUDE_FS = ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]
 

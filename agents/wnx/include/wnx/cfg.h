@@ -1025,8 +1025,8 @@ private:
     int max_wait_{kDefaultPluginTimeout};
 };
 
-void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
-                          const std::vector<YAML::Node> &yaml_node) noexcept;
+std::vector<Plugins::ExeUnit> 
+LoadExeUnitsFromYaml(const std::vector<YAML::Node> &yaml_node) noexcept;
 
 // used to setup on start and forever. These environment variables are
 // stable

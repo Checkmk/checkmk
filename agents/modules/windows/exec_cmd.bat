@@ -4,13 +4,13 @@
 ::
 :: 'exec.cmd script PY_VER PY_SUBVER'
 ::
-:: Example: exec.cmd install_legacy.cmd 3.9 7
+:: Example: exec.cmd install_legacy.cmd 3.12 0
 :: Always return back to current dir
 :: *********************************************
 
 @echo off
 
-if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.9 7" -foreground red && exit /b 1
+if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.12 0" -foreground red && exit /b 1
 set PY_VER=%2
 set PY_SUBVER=%3
 :: remove dot from the PY_VER
@@ -31,10 +31,6 @@ set chm_368=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp\python368
 set chm_dir=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp
 set chm_file=%chm_dir%\python%PY_VER_COMPACT%%PY_SUBVER%.chm
 
-:: msiexec doesn't understand relative paths, we have to normalize
-call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python\windows\python-3.4.4.msi"
-set legacy_msi=%RETVAL%
-
 set my_tmp=%cd%\tmp\%PY_VER%
 set build_dir=%my_tmp%\out
 set uninstall_dir=%my_tmp%\uninstall
@@ -43,17 +39,11 @@ set pexe_uninstall=%uninstall_dir%\%p_full_name%.exe
 set install_dir=%my_tmp%\to_install
 set save_dir=%my_tmp%\to_save
 set build_msi=python\%PY_VER%\%p_full_name%\Tools\msi
-call %1 
+call %1
 if %errorlevel% EQU 0 (
-cd %cur_dir% 
+cd %cur_dir%
 exit /b 0
-) Else ( 
+) Else (
 cd %cur_dir%
 exit /b 1
 )
-
-
-:: ========== FUNCTIONS ==========
-:NORMALIZEPATH
-  set retval=%~f1
-  exit /B

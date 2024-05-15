@@ -7,9 +7,8 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import Dictionary, Integer, NetworkPort, TextInput
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
@@ -29,7 +28,7 @@ def _valuespec_special_agents_appdynamics():
             (
                 "username",
                 TextInput(
-                    title=_("AppDynamics login username"),
+                    title=_("AppDynamics login user name"),
                     allow_empty=False,
                 ),
             ),

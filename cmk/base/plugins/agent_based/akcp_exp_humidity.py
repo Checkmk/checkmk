@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import register, SNMPTree
-from .utils.akcp import DETECT_AKCP_EXP
-from .utils.akcp_sensor import (
+from cmk.plugins.lib.akcp import DETECT_AKCP_EXP
+from cmk.plugins.lib.akcp_sensor import (
     AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
     check_akcp_humidity,
     inventory_akcp_humidity,
     parse_akcp_sensor,
 )
+
+from .agent_based_api.v1 import register, SNMPTree
 
 # Example for contents of info
 #           description         percent  status  online

@@ -1,0 +1,13 @@
+Title: cisco_ucs_mem: check for memory faults
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1700038826
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+As of this werk, the plugin additionally checks and reports memory faults reported by the device.
+Acknowledged faults will be reported as OK. Otherwise, the monitoring state depends on
+the fault severity: "major" and "critical" are reported as CRITICAL, "warning" and
+"minor" as WARNING and "cleared" and "info" as OK.

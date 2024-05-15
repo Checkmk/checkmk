@@ -1,0 +1,11 @@
+Title: Fix inconsistent interaction for graphs in dashboards
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1700147621
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The mouse interaction (zooming, scrolling etc.) for graphs in dashboards only worked sporadically
+and at seemingly random points.

@@ -67,18 +67,21 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
         dropdown_visuals = _get_visuals_for_page_menu_dropdown(linked_visuals, info, is_single_info)
 
         # Special hack for host setup and parent/child topology links
+        host_setup_topic = []
+        parent_child_topic = []
+        service_setup_topic = []
         if info_name == "host" and is_single_info:
             host_setup_topic = _page_menu_host_setup_topic(view)
             parent_child_topic = _page_menu_networking_topic(view)
-        else:
-            host_setup_topic = []
-            parent_child_topic = []
+        elif info_name == "service" and is_single_info:
+            service_setup_topic = _page_menu_service_setup_topic(view)
 
         dropdowns.append(
             PageMenuDropdown(
                 name=ident,
                 title=info.title if is_single_info else info.title_plural,
                 topics=host_setup_topic
+                + service_setup_topic
                 + parent_child_topic
                 + list(
                     _get_context_page_menu_topics(
@@ -95,113 +98,6 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
         )
 
     return dropdowns
-
-
-def get_ntop_page_menu_dropdown(view, host_address):
-    return PageMenuDropdown(
-        name="ntopng",
-        title="ntopng",
-        topics=_get_ntop_page_menu_topics(view, host_address),
-    )
-
-
-def _get_ntop_page_menu_topics(view, host_address):
-    if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
-        return []
-
-    host_name = request.get_ascii_input_mandatory("host")
-    # TODO insert icons when available
-    topics = [
-        PageMenuTopic(
-            title="Network statistics",
-            entries=[
-                PageMenuEntry(
-                    name="overview",
-                    title="Host",
-                    icon_name="folder",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "host_tab"),
-                ),
-                PageMenuEntry(
-                    name="overview",
-                    title="Traffic",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "traffic_tab"),
-                ),
-                PageMenuEntry(
-                    name="overview",
-                    title="Packets",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "packets_tab"),
-                ),
-                PageMenuEntry(
-                    name="overview",
-                    title="Ports",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "ports_tab"),
-                ),
-                PageMenuEntry(
-                    name="overview",
-                    title="Peers",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "peers_tab"),
-                ),
-                PageMenuEntry(
-                    name="overview",
-                    title="Apps",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "applications_tab"),
-                ),
-                PageMenuEntry(
-                    name="overview",
-                    title="Flows",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "flows_tab"),
-                ),
-            ],
-        ),
-        PageMenuTopic(
-            title="Alerts",
-            entries=[
-                PageMenuEntry(
-                    name="overview",
-                    title="Engaged Host",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "engaged_alerts_tab"),
-                ),
-                PageMenuEntry(
-                    name="overview",
-                    title="Past Host",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "past_alerts_tab"),
-                ),
-                PageMenuEntry(
-                    name="overview",
-                    title="Past Flow",
-                    icon_name="trans",
-                    item=_get_ntop_entry_item_link(host_name, host_address, "flow_alerts_tab"),
-                ),
-            ],
-        ),
-    ]
-
-    return topics
-
-
-def _get_ntop_entry_item_link(  # type: ignore[no-untyped-def]
-    host_name: str, host_address: str, tab: str
-):
-    return make_simple_link(
-        makeuri(
-            request,
-            [
-                ("host", host_name),
-                ("host_address", host_address),
-                ("tab", tab),
-            ],
-            filename="ntop_host_details.py",
-            delvars=["view_name"],
-        )
-    )
 
 
 def _get_context_page_menu_topics(
@@ -399,9 +295,9 @@ def _get_availability_entry(
             makeuri(request, [("mode", "availability")], delvars=["show_checkboxes", "selection"])
         ),
         is_enabled=not view.missing_single_infos,
-        disabled_tooltip=_("Missing required context information")
-        if view.missing_single_infos
-        else None,
+        disabled_tooltip=(
+            _("Missing required context information") if view.missing_single_infos else None
+        ),
     )
 
 
@@ -545,6 +441,33 @@ def _page_menu_host_setup_topic(view: View) -> list[PageMenuTopic]:
     ]
 
 
+def _page_menu_service_setup_topic(view: View) -> list[PageMenuTopic]:
+    if "service" not in view.spec["single_infos"] or "service" in view.missing_single_infos:
+        return []
+    if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
+        return []
+
+    if not active_config.wato_enabled:
+        return []
+
+    if not user.may("wato.use"):
+        return []
+
+    if not user.may("wato.hosts") and not user.may("wato.seeall"):
+        return []
+
+    return [
+        PageMenuTopic(
+            title=_("Setup"),
+            entries=list(
+                page_menu_entries_service_setup(
+                    view.context["host"]["host"], view.context["service"]["service"]
+                )
+            ),
+        )
+    ]
+
+
 def _link_to_host_by_name(host_name: str) -> str:
     """Return an URL to the edit-properties of a host when we just know its name"""
     return makeuri_contextless(
@@ -582,8 +505,8 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
     is_cluster = False
     if is_cluster:
         yield PageMenuEntry(
-            title=_("Connection tests"),
-            icon_name="diagnose",
+            title=_("Test connection"),
+            icon_name="analysis",
             item=make_simple_link(
                 makeuri_contextless(
                     request,
@@ -623,3 +546,37 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
                 )
             ),
         )
+    yield PageMenuEntry(
+        title=_("Test notifications"),
+        icon_name="analysis",
+        item=make_simple_link(
+            makeuri_contextless(
+                request,
+                [
+                    ("mode", "notifications"),
+                    ("host_name", host_name),
+                    ("_test_host_notifications", 1),
+                ],
+                filename="wato.py",
+            )
+        ),
+    )
+
+
+def page_menu_entries_service_setup(host_name: str, serivce_name: str) -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Test notifications"),
+        icon_name="analysis",
+        item=make_simple_link(
+            makeuri_contextless(
+                request,
+                [
+                    ("mode", "notifications"),
+                    ("host_name", host_name),
+                    ("service_name", serivce_name),
+                    ("_test_service_notifications", 1),
+                ],
+                filename="wato.py",
+            )
+        ),
+    )

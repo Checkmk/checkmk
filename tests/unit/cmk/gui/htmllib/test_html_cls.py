@@ -7,7 +7,7 @@ import traceback
 
 import pytest
 
-from tests.testlib import compare_html
+from tests.unit.cmk.gui.compare_html import compare_html
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -32,6 +32,24 @@ def test_render_help_empty() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
+def test_html_form_context():
+    with html.output_funnel.plugged():
+        with html.form_context("foo", method="POST"):
+            html.upload_file("bar")
+        output = html.output_funnel.drain()
+
+    assert output.startswith(
+        """
+<form id="form_foo" name="foo" action="index.py" method="POST" enctype="multipart/form-data" class="foo">
+        """.strip()
+    )
+    # Skipping comparing CSRF token fields
+    assert output.endswith(
+        """<input type="file" name="bar" /><input type="submit" name="_save" class="hidden_submit" /></form>"""
+    )
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_html() -> None:
     assert html.have_help is False
     assert compare_html(
@@ -45,7 +63,7 @@ def test_render_help_html() -> None:
     assert html.have_help is True
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_text() -> None:
     assert compare_html(
         html.render_help("äbc"),
@@ -57,7 +75,7 @@ def test_render_help_text() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
@@ -71,7 +89,7 @@ def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link() -> None:
     assert user.language == "en"
     assert compare_html(
@@ -85,7 +103,7 @@ def test_add_manual_link() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "language", lambda: "de")
@@ -100,7 +118,7 @@ def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link_anchor(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "language", lambda: "de")
@@ -228,7 +246,7 @@ def test_text_input() -> None:
         )
 
     with output_funnel.plugged():
-        html.text_input("blabla", placeholder="placido", data_world="welt", data_max_labels=42)
+        html.text_input("blabla", placeholder="placido", data_attrs={"data-foo": "42"})
         written_text = "".join(output_funnel.drain())
         assert compare_html(
             written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />'

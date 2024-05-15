@@ -9,8 +9,9 @@ from functools import cache
 import cmk.utils.paths
 import cmk.utils.store as store
 
+from cmk.werks.models import Compatibility, Werk
+
 from . import load
-from .werk import Compatibility, Werk
 
 ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 

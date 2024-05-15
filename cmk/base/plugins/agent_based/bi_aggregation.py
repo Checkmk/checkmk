@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Iterator, Mapping, Sequence
+from dataclasses import dataclass, field
+from typing import Any, TypedDict
 
 from cmk.checkengine.checkresults import state_markers  # pylint: disable=cmk-module-layer-violation
 
@@ -12,6 +13,37 @@ from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, Any]
+
+
+class ErrorInfo(TypedDict, total=False):
+    state: int
+    output: str
+
+
+class CustomInfo(TypedDict, total=False):
+    output: str
+
+
+class AggrInfos(TypedDict, total=False):
+    error: ErrorInfo
+    custom: CustomInfo
+
+
+Infos = tuple[AggrInfos, Sequence["Infos"]]
+
+
+@dataclass
+class Aggregation:
+    error_state: int | None = None
+    error_output: str | None = None
+    custom_output: str | None = None
+    children: list["Aggregation"] = field(default_factory=list)
+
+
+@dataclass
+class AggregationError:
+    output: str
+    affects_state: bool
 
 
 def parse_bi_aggregation(string_table: StringTable) -> Section:
@@ -32,29 +64,41 @@ def discover_bi_aggregation(section: Section) -> DiscoveryResult:
         yield Service(item=aggr_name)
 
 
-def render_bi_infos(infos) -> None | list[str]:  # type: ignore[no-untyped-def]
-    if not infos:
-        return None
-
+def get_aggregations(infos: Infos) -> Aggregation:
     own_infos, nested_infos = infos
-    lines = []
-    if "error" in own_infos:
-        lines.append(
-            "{} {}".format(state_markers[own_infos["error"]["state"]], own_infos["error"]["output"])
+
+    return Aggregation(
+        error_state=own_infos.get("error", {}).get("state"),
+        error_output=own_infos.get("error", {}).get("output"),
+        custom_output=own_infos.get("custom", {}).get("output"),
+        children=[get_aggregations(nested_info) for nested_info in nested_infos],
+    )
+
+
+def get_aggregation_errors(
+    aggr: Aggregation, parent_affects_state: bool
+) -> Iterator[AggregationError]:
+    affects_state = aggr.error_state is not None and parent_affects_state
+
+    if aggr.error_state is not None:
+        yield AggregationError(
+            output=f"{state_markers[aggr.error_state]} {aggr.error_output}",
+            affects_state=affects_state,
         )
-    if "custom" in own_infos:
-        lines.append(own_infos["custom"]["output"])
 
-    for nested_info in nested_infos:
-        nested_lines = render_bi_infos(nested_info)
-        assert nested_lines is not None
-        for idx, line in enumerate(nested_lines):
-            if idx == 0:
-                lines.append("+-- %s" % line)
-            else:
-                lines.append("| %s" % line)
+    if aggr.custom_output is not None:
+        yield AggregationError(output=aggr.custom_output, affects_state=affects_state)
 
-    return lines
+    for child in aggr.children:
+        if errors := list(get_aggregation_errors(child, affects_state)):
+            yield AggregationError(
+                output=f"+-- {errors[0].output}", affects_state=errors[0].affects_state
+            )
+
+            for error in errors[1:]:
+                yield AggregationError(
+                    output=f"| {error.output}", affects_state=error.affects_state
+                )
 
 
 def check_bi_aggregation(item: str, section: Section) -> CheckResult:
@@ -62,9 +106,17 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
         return
 
     overall_state = bi_data["state_computed_by_agent"]
+    # The state of an aggregation may be PENDING (-1). Map it to OK.
+    bi_state_map = {
+        0: "Ok",
+        1: "Warning",
+        2: "Critical",
+        3: "Unknown",
+        -1: "Pending",
+    }
     yield Result(
-        state=State(overall_state),
-        summary="Aggregation state: %s" % ["Ok", "Warning", "Critical", "Unknown"][overall_state],
+        state=State(0 if overall_state == -1 else overall_state),
+        summary="Aggregation state: %s" % bi_state_map[overall_state],
     )
 
     yield Result(
@@ -77,10 +129,21 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
     )
 
     if bi_data["infos"]:
-        infos = ["", "Aggregation Errors"]
-        info = render_bi_infos(bi_data["infos"])
-        assert info is not None
-        infos.extend(info)
+        aggregations = get_aggregations(bi_data["infos"])
+        errors = list(get_aggregation_errors(aggregations, bool(overall_state)))
+
+        errors_affecting_state = [error.output for error in errors if error.affects_state]
+        other_errors = [error.output for error in errors if not error.affects_state]
+
+        infos = []
+        if errors_affecting_state:
+            infos.extend(["", "Aggregation problems affecting the state:"])
+            infos.extend(errors_affecting_state)
+
+        if other_errors:
+            infos.extend(["", "Aggregation problems not affecting the state:"])
+            infos.extend(other_errors)
+
         yield Result(state=State.OK, notice="\n".join(infos))
 
 

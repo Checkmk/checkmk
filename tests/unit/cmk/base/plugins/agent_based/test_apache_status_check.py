@@ -5,9 +5,10 @@
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import apache_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 
 def make_agent_output_1():

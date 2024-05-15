@@ -1,0 +1,21 @@
+title: NFS Mounts: IO Performance
+agents: linux
+catalog: os/storage
+distribution: check_mk
+author: Marius Pana <mp@spearhead.systems>
+license: GPLv2
+description:
+ This check monitors the performance of NFS mounts on client systems by way of
+ the nfsiostat command. This requires the nfs-utils (Red Hat) or nfs-common
+ (Debian) packages to be installed.
+ It monitors every nfs mount point found and provides the following metrics:
+ operations per second, rpc backlog, read/write: operations per second, bytes per
+ second, bytes per operation, retransmissions (%), average RTT (ms) and average
+ exe (ms).
+ All metrics are average values since the time the filesystem was mounted.
+
+item:
+ Name of the NFS mount
+
+discovery:
+ One service is created for each NFS mount.

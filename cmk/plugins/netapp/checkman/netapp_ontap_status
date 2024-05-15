@@ -1,0 +1,10 @@
+title: NetApp Filer: Overall System Health
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the overall system health. Returns {OK} if no alerts are present, {CRIT} otherwise.
+
+discovery:
+ One service is created.

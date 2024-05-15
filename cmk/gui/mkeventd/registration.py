@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.data_source import DataSourceRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar import SnapinRegistry
@@ -19,12 +20,20 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableRegistry,
     SampleConfigGeneratorRegistry,
 )
+from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import match_item_generator_registry
+from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
 from . import _filters, views, wato
+from ._find_usage import (
+    find_timeperiod_usage_in_ec_rules,
+    find_usages_of_contact_group_in_ec_rules,
+    find_usages_of_contact_group_in_mkeventd_notify_contactgroup,
+)
+from ._openapi import register as openapi_register
 from ._sidebar_snapin import SidebarSnapinEventConsole
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
 from .config_domain import ConfigDomainEventConsole
@@ -54,6 +63,9 @@ def register(
     filter_registry: FilterRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     snapin_registry: SnapinRegistry,
+    contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
+    timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
+    endpoint_registry: EndpointRegistry,
 ) -> None:
     views.register(
         data_source_registry,
@@ -77,7 +89,15 @@ def register(
     )
     permission_section_registry.register(PermissionSectionEventConsole)
     config_domain_registry.register(ConfigDomainEventConsole)
-    autocompleter_registry.register_expression("syslog_facilities")(syslog_facilities_autocompleter)
-    autocompleter_registry.register_expression("service_levels")(service_levels_autocompleter)
+    autocompleter_registry.register_autocompleter(
+        "syslog_facilities", syslog_facilities_autocompleter
+    )
+    autocompleter_registry.register_autocompleter("service_levels", service_levels_autocompleter)
     _filters.register(filter_registry)
     snapin_registry.register(SidebarSnapinEventConsole)
+    contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_ec_rules)
+    contact_group_usage_finder_registry.register(
+        find_usages_of_contact_group_in_mkeventd_notify_contactgroup
+    )
+    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_ec_rules)
+    openapi_register(endpoint_registry)

@@ -7,8 +7,6 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
@@ -28,19 +26,13 @@ from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 # .1.3.6.1.4.1.2021.4.100.0 0       --> UCD-SNMP-MIB::memSwapError.0
 # .1.3.6.1.4.1.2021.4.101.0         --> UCD-SNMP-MIB::smemSwapErrorMsg.0
 
-# suggested by customer
-
-
-def parse_ucd_mem(string_table):
-    # this should never happen
-    raise RuntimeError("section is already migrated")
-
 
 def inventory_ucd_mem(parsed):
-    return [("", {})] if parsed else []
+    if parsed:
+        yield None, {}
 
 
-def check_ucd_mem(item, params, parsed):
+def check_ucd_mem(_no_item, params, parsed):
     if not parsed:
         return
 
@@ -62,18 +54,12 @@ def check_ucd_mem(item, params, parsed):
             yield params.get("swap_errors", 0), "Swap error: %s" % parsed["error_swap_msg"]
 
 
-# This check plugin uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
+# This check plug-in uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
 check_info["ucd_mem"] = LegacyCheckDefinition(
-    detect=ucd_hr_detection.USE_UCD_MEM,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.2021.4",
-        oids=["5", "6", "3", "4", "11", "12", "13", "14", "15", "100", "2", "101"],
-    ),
-    parse_function=parse_ucd_mem,
     service_name="Memory",
     discovery_function=inventory_ucd_mem,
     check_function=check_ucd_mem,
-    check_ruleset_name="memory_simple",
+    check_ruleset_name="memory_simple_single",
     check_default_parameters={
         "levels": ("perc_used", (80.0, 90.0)),
         "swap_errors": 0,

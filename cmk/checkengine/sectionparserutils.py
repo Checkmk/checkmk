@@ -46,9 +46,9 @@ def get_section_kwargs(
         return {}
 
     return {
-        "section"
-        if len(parsed_section_names) == 1
-        else f"section_{name}": resolved_map.get(name, _NO_PARSED_DATA).parsed_data
+        "section" if len(parsed_section_names) == 1 else f"section_{name}": resolved_map.get(
+            name, _NO_PARSED_DATA
+        ).parsed_data
         for name in parsed_section_names
     }
 

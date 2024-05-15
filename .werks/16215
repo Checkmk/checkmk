@@ -1,0 +1,14 @@
+Title: agent_elasticsearch: resolve error when requesting indices stats
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1699277518
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+There is a special error case which arises when trying to request the
+indices stats from Elasticsearch which has at least one alias
+pointing to a closed index. In the previous version, the special agent
+completely failed in such scenarios. This werk resolves this by
+requesting only the accessible indices.

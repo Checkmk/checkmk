@@ -1,1 +1,0 @@
-{"slice": 86400, "dsname": "load15", "cf": "MAX", "range": [1541804400.0, 1541890800.0], "params": {"period": "hour", "horizon": 90}, "time": 1541833200.0}

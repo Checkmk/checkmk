@@ -9,7 +9,7 @@ def main() {
         test_jenkins_helper.execute_test([
             name: "test-bazel-format",
             cmd: "make -C tests test-format-bazel-docker",
-            output_file: "bazel-prettier.txt"
+            output_file: "bazel-prettier.txt",
         ]);
 
         test_jenkins_helper.analyse_issues("BAZELFORMAT", "bazel-prettier.txt");

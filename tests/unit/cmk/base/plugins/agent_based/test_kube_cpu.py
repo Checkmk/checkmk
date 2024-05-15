@@ -3,20 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import itertools
 
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-import cmk.base.plugins.agent_based.utils.kube
 from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils import kube_resources
-from cmk.base.plugins.agent_based.utils.kube import Cpu, PerformanceUsage
+
+import cmk.plugins.lib.kube
+from cmk.plugins.kube.schemata.section import AllocatableResource, Cpu, PerformanceUsage, Resources
+from cmk.plugins.lib import kube_resources
 
 
 class ResourcesFactory(ModelFactory):
-    __model__ = kube_resources.Resources
+    __model__ = Resources
 
 
 ONE_MINUTE = 60
@@ -39,7 +42,7 @@ PARAMS = kube_resources.Params(
 )
 
 
-RESOURCES_SECTION = kube_resources.Resources(
+RESOURCES_SECTION = Resources(
     request=0.18,
     limit=0.36,
     count_total=2,
@@ -49,7 +52,7 @@ RESOURCES_SECTION = kube_resources.Resources(
 )
 
 
-ALLOCATABLE_RESOURCE_SECTION = kube_resources.AllocatableResource(context="node", value=ALLOCATABLE)
+ALLOCATABLE_RESOURCE_SECTION = AllocatableResource(context="node", value=ALLOCATABLE)
 
 
 def test_discovery() -> None:
@@ -105,10 +108,10 @@ def test_stored_usage_value() -> None:
     value_store = {
         "cpu_usage": (
             TIMESTAMP - ONE_MINUTE * 1,
-            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).json(),
+            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).model_dump_json(),
         )
     }
-    performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
+    performance_cpu = cmk.plugins.lib.kube_resources.performance_cpu(
         None, TIMESTAMP, value_store, "cpu_usage"
     )
     assert performance_cpu is not None
@@ -118,11 +121,11 @@ def test_stored_outdated_usage_value() -> None:
     value_store = {
         "cpu_usage": (
             TIMESTAMP - ONE_MINUTE * 2,
-            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).json(),
+            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).model_dump_json(),
         )
     }
 
-    performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
+    performance_cpu = cmk.plugins.lib.kube_resources.performance_cpu(
         None, TIMESTAMP, value_store, "cpu_usage"
     )
     assert performance_cpu is None

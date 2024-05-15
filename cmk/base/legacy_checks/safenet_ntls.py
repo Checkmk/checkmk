@@ -8,24 +8,23 @@ import time
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    any_of,
-    get_rate,
-    get_value_store,
-    SNMPTree,
-    startswith,
-)
+
+from cmk.agent_based.v2 import any_of, get_rate, get_value_store, SNMPTree, startswith
 
 
 def parse_safenet_ntls(string_table):
-    return {
-        "operation_status": string_table[0][0],
-        "connected_clients": int(string_table[0][1]),
-        "links": int(string_table[0][2]),
-        "successful_connections": int(string_table[0][3]),
-        "failed_connections": int(string_table[0][4]),
-        "expiration_date": string_table[0][5],
-    }
+    return (
+        {
+            "operation_status": string_table[0][0],
+            "connected_clients": int(string_table[0][1]),
+            "links": int(string_table[0][2]),
+            "successful_connections": int(string_table[0][3]),
+            "failed_connections": int(string_table[0][4]),
+            "expiration_date": string_table[0][5],
+        }
+        if string_table
+        else None
+    )
 
 
 # .
@@ -114,13 +113,13 @@ check_info["safenet_ntls.expiration"] = LegacyCheckDefinition(
 
 def inventory_safenet_ntls_links(parsed):
     if parsed:
-        return [(None, None)]
-    return []
+        yield None, {}
 
 
 def check_safenet_ntls_links(_no_item, params, parsed):
+    # NOTE: these can be predictive levels!
     return check_levels(
-        parsed["links"], "connections", params, unit="links", infoname="Connections"
+        parsed["links"], "connections", params["levels"], unit="links", infoname="Connections"
     )
 
 
@@ -130,6 +129,7 @@ check_info["safenet_ntls.links"] = LegacyCheckDefinition(
     discovery_function=inventory_safenet_ntls_links,
     check_function=check_safenet_ntls_links,
     check_ruleset_name="safenet_ntls_links",
+    check_default_parameters={"levels": None},
 )
 
 # .
@@ -151,15 +151,15 @@ check_info["safenet_ntls.links"] = LegacyCheckDefinition(
 
 def inventory_safenet_ntls_clients(parsed):
     if parsed:
-        return [(None, None)]
-    return []
+        yield None, {}
 
 
 def check_safenet_ntls_clients(_no_item, params, parsed):
+    # NOTE: these can be predictive levels!
     yield check_levels(
         parsed["connected_clients"],
         "connections",
-        params,
+        params["levels"],
         unit="connected clients",
         infoname="Connections",
     )
@@ -171,6 +171,7 @@ check_info["safenet_ntls.clients"] = LegacyCheckDefinition(
     discovery_function=inventory_safenet_ntls_clients,
     check_function=check_safenet_ntls_clients,
     check_ruleset_name="safenet_ntls_clients",
+    check_default_parameters={"levels": None},
 )
 
 # .

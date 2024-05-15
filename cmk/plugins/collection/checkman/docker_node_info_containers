@@ -1,0 +1,14 @@
+title: Docker: Node Info
+agents: linux
+catalog: containerization/docker
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the absolute number of containers as well as the number
+ of running, paused, and stopped containers. Absolute levels can be defined
+ for each of these values.
+
+ To make this check work the agent plug-in {{mk_docker.py}} has to be installed.
+
+discovery:
+ One service is created.

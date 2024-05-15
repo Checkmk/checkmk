@@ -1,4 +1,4 @@
-Title: <tt>mk_zypper</tt>: Increase timeout from 10 to 50 s
+Title: mk_zypper: Increase timeout from 10 to 50 s
 Class: fix
 Compatible: compat
 Component: checks

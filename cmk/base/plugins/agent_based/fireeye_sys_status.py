@@ -5,9 +5,10 @@
 
 from typing import NamedTuple
 
+from cmk.plugins.lib import fireeye
+
 from .agent_based_api.v1 import Attributes, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils import fireeye
 
 
 class Section(NamedTuple):

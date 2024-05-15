@@ -11,14 +11,11 @@ FigureResponse = dict[str, Any]
 FigureResponseData = dict[str, Any]
 
 
-def create_figures_response(data, context=None) -> FigureResponse:  # type: ignore[no-untyped-def]
+def create_figures_response(data: object) -> FigureResponse:
     """Any data for a figure is always wrapped into a dictionary
     This makes future extensions (meta_data, etc.) easier, preventing
     intermingling of dictionary keys"""
-    response = {"figure_response": data}
-    if context:
-        response["context"] = context
-    return response
+    return {"figure_response": data}
 
 
 class TableFigureDataCreator:

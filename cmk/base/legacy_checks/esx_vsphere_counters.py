@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -108,7 +109,7 @@ def check_esx_vsphere_counters_swap(item, params, parsed):
 
     for key in ("in", "out", "used"):
         if SWAP.get(key):
-            value = get_bytes_human_readable(float(SWAP[key]))
+            value = render.bytes(float(SWAP[key]))
         else:
             value = "not available"
 

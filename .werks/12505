@@ -1,4 +1,4 @@
-Title: Legacy Check API: drop <tt>clear_item_states_by_full_keys</tt>
+Title: Legacy Check API: drop clear_item_states_by_full_keys
 Class: fix
 Compatible: incomp
 Component: checks

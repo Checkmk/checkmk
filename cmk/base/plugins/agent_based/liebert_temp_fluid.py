@@ -6,10 +6,15 @@
 import dataclasses
 from collections.abc import Mapping
 
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+from cmk.plugins.liebert.agent_based.lib import (
+    DETECT_LIEBERT,
+    parse_liebert,
+    temperature_to_celsius,
+)
+
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert, temperature_to_celsius
-from .utils.temperature import check_temperature, TempParamDict
 
 
 @dataclasses.dataclass(frozen=True)
@@ -41,9 +46,9 @@ def parse_liebert_temp_fluid(string_table: StringTable) -> Section:
     return Section(
         readings=pre_parsed,
         upper_device_levels=upper_levels,
-        lower_device_levels=(lower_warn, lower_crit)
-        if lower_warn is not None and lower_crit is not None
-        else None,
+        lower_device_levels=(
+            (lower_warn, lower_crit) if lower_warn is not None and lower_crit is not None else None
+        ),
     )
 
 

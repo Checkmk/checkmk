@@ -11,8 +11,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.steelhead import DETECT_STEELHEAD
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.steelhead import DETECT_STEELHEAD
 
 
 def inventory_steelhead_peers(info):
@@ -26,7 +27,12 @@ def check_steelhead_peers(item, _no_params, info):
     return 2, "Peer not connected"
 
 
+def parse_steelhead_peers(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["steelhead_peers"] = LegacyCheckDefinition(
+    parse_function=parse_steelhead_peers,
     detect=DETECT_STEELHEAD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.17163.1.1.2.6.1.1",

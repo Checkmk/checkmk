@@ -6,7 +6,9 @@
 from __future__ import annotations
 
 import dataclasses
+from abc import abstractmethod
 from collections.abc import Sequence
+from typing import Self
 
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.hostaddress import HostName
@@ -15,7 +17,7 @@ from cmk.utils.metrics import MetricName
 __all__ = ["ActiveCheckResult", "MetricTuple", "ServiceCheckResult", "state_markers"]
 
 
-# Symbolic representations of states in plugin output
+# Symbolic representations of states in plug-in output
 # TODO(ml): Should probably be of type enum::int -> str
 state_markers = ("", "(!)", "(!!)", "(?)")
 
@@ -30,26 +32,41 @@ MetricTuple = tuple[
 ]
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ServiceCheckResult:
     state: int = 0
     output: str = ""
     metrics: Sequence[MetricTuple] = ()
 
+    @abstractmethod
+    def is_submittable(self) -> bool: ...
+
+
+class SubmittableServiceCheckResult(ServiceCheckResult):
+
+    def is_submittable(self) -> bool:
+        return True
+
     @classmethod
-    def item_not_found(cls) -> ServiceCheckResult:
+    def item_not_found(cls) -> Self:
         return cls(3, "Item not found in monitoring data")
 
     @classmethod
-    def received_no_data(cls) -> ServiceCheckResult:
-        return cls(3, "Check plugin received no monitoring data")
+    def check_not_implemented(cls) -> Self:
+        return cls(3, "Check plug-in not implemented")
+
+
+class UnsubmittableServiceCheckResult(ServiceCheckResult):
+
+    def is_submittable(self) -> bool:
+        return False
 
     @classmethod
-    def check_not_implemented(cls) -> ServiceCheckResult:
-        return cls(3, "Check plugin not implemented")
+    def received_no_data(cls) -> Self:
+        return cls(3, "Check plug-in received no monitoring data")
 
     @classmethod
-    def cluster_received_no_data(cls, nodes: Sequence[HostName]) -> ServiceCheckResult:
+    def cluster_received_no_data(cls, nodes: Sequence[HostName]) -> Self:
         node_hint = f"configured nodes: {', '.join(nodes)}" if nodes else "no nodes configured"
         return cls(3, f"Clustered service received no monitoring data ({node_hint})")
 
@@ -62,12 +79,16 @@ class ActiveCheckResult:
     metrics: tuple[str, ...] | list[str] = ()
 
     def as_text(self) -> str:
+        safe_summary = self._replace_pipe(self.summary)
+        safe_details = "".join(f"{self._replace_pipe(line)}\n" for line in self.details)
         return "\n".join(
             (
-                " | ".join((self.summary, " ".join(self.metrics)))
-                if self.metrics
-                else self.summary,
-                "".join(f"{line}\n" for line in self.details),
+                (
+                    " | ".join((safe_summary, " ".join(self.metrics)))
+                    if self.metrics
+                    else safe_summary
+                ),
+                safe_details,
             )
         ).strip()
 
@@ -91,3 +112,10 @@ class ActiveCheckResult:
     def _add_marker(txt: str, state: int) -> str:
         marker = state_markers[state]
         return txt if txt.endswith(marker) else f"{txt}{marker}"
+
+    @staticmethod
+    def _replace_pipe(txt: str) -> str:
+        """The vertical bar indicates end of service output and start of metrics.
+        Replace the ones in the output by a Uniocode "Light vertical bar"
+        """
+        return txt.replace("|", "\u2758")

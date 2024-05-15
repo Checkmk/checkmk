@@ -8,7 +8,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import netapp_api_psu as nap
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.utils import netapp_api
+
+from cmk.plugins.lib import netapp_api
 
 STRING_TABLE = [
     [

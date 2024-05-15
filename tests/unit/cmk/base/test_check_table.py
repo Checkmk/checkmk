@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+
+from collections.abc import Mapping
 
 import pytest
 from pytest import MonkeyPatch
@@ -16,18 +20,17 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.discovery import AutocheckEntry
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.config import FilterMode, HostCheckTable
 
 
 @pytest.fixture(autouse=True, scope="module")
 def _use_fix_register(fix_register):
-    """These tests modify the plugin registry. Make sure to load it first."""
+    """These tests modify the plug-in registry. Make sure to load it first."""
 
 
 def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
@@ -43,6 +46,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         "clustered_services",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
                     "host_name": [node],
@@ -69,7 +73,8 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
 
     clustered_service = config_cache.check_table(cluster)[service_id]
     assert clustered_service.parameters.entries == (
-        TimespecificParameterSet.from_parameters({"levels": (35, 40)}),
+        TimespecificParameterSet({}, ()),
+        TimespecificParameterSet({"levels": (35, 40)}, ()),
     )
 
 
@@ -94,14 +99,17 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
         {
             "temperature": [
                 {
+                    "id": "01",
                     "value": ("smart_temp", "cluster-item", {"source": "enforced-on-node"}),
                     "condition": {"host_name": [node]},
                 },
                 {
+                    "id": "02",
                     "value": ("smart_temp", "node-item", {"source": "enforced-on-node"}),
                     "condition": {"host_name": [node]},
                 },
                 {
+                    "id": "03",
                     "value": (
                         "smart_temp",
                         "cluster-item-overridden",
@@ -116,6 +124,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
         "clustered_services",
         [
             {
+                "id": "04",
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART cluster"}],
                     "host_name": [node],
@@ -137,7 +146,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
         p = timespecific_params.evaluate(lambda _: True)
         assert p is not None
         assert not isinstance(p, (tuple, list, str, int))
-        return p["source"]
+        return str(p["source"])
 
     assert _source_of_item(node_services, "node-item") == "enforced-on-node"
     assert _source_of_item(cluster_services, "cluster-item") == "enforced-on-node"
@@ -162,6 +171,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     description="Temperature SMART /dev/sda",
                     parameters=TimespecificParameters(
                         (
+                            TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
@@ -207,6 +217,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     parameters=TimespecificParameters(
                         (
                             TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
@@ -225,7 +236,10 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     item="auto-not-clustered",
                     description="Temperature SMART auto-not-clustered",
                     parameters=TimespecificParameters(
-                        (TimespecificParameterSet({"levels": (35, 40)}, ()),)
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
                     ),
                     discovered_parameters={},
                     service_labels={},
@@ -237,6 +251,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     description="Temperature SMART static-node1",
                     parameters=TimespecificParameters(
                         (
+                            TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
@@ -258,6 +273,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     parameters=TimespecificParameters(
                         (
                             TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
@@ -270,7 +286,10 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     item="auto-clustered",
                     description="Temperature SMART auto-clustered",
                     parameters=TimespecificParameters(
-                        (TimespecificParameterSet({"levels": (35, 40)}, ()),)
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
                     ),
                     discovered_parameters={},
                     service_labels={},
@@ -287,7 +306,10 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     item="auto-clustered",
                     description="Temperature SMART auto-clustered",
                     parameters=TimespecificParameters(
-                        (TimespecificParameterSet({"levels": (35, 40)}, ()),)
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
                     ),
                     discovered_parameters={},
                     service_labels={},
@@ -304,7 +326,10 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     item="auto-clustered",
                     description="Temperature SMART auto-clustered",
                     parameters=TimespecificParameters(
-                        (TimespecificParameterSet({"levels": (35, 40)}, ()),)
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
                     ),
                     discovered_parameters={},
                     service_labels={},
@@ -321,7 +346,10 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     item="auto-clustered",
                     description="Temperature SMART auto-clustered",
                     parameters=TimespecificParameters(
-                        (TimespecificParameterSet({"levels": (35, 40)}, ()),)
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
                     ),
                     discovered_parameters={},
                     service_labels={},
@@ -360,35 +388,43 @@ def test_check_table(
         {
             "temperature": [
                 {
+                    "id": "01",
                     "condition": {"host_name": ["no-autochecks", "autocheck-overwrite"]},
                     "value": ("smart.temp", "/dev/sda", {}),
                 },
                 {
+                    "id": "02",
                     "condition": {"host_name": ["ignore-not-existing-checks"]},
                     "value": ("blub.bla", "ITEM", {}),
                 },
                 {
+                    "id": "03",
                     "condition": {"host_name": ["ignore-disabled-rules"]},
                     "options": {"disabled": True},
                     "value": ("smart.temp", "ITEM1", {}),
                 },
                 {
+                    "id": "04",
                     "condition": {"host_name": ["ignore-disabled-rules"]},
                     "value": ("smart.temp", "ITEM2", {}),
                 },
                 {
+                    "id": "05",
                     "condition": {"host_name": ["static-check-overwrite"]},
                     "value": ("smart.temp", "/dev/sda", {"rule": 1}),
                 },
                 {
+                    "id": "06",
                     "condition": {"host_name": ["static-check-overwrite"]},
                     "value": ("smart.temp", "/dev/sda", {"rule": 2}),
                 },
                 {
+                    "id": "07",
                     "condition": {"host_name": ["node1"]},
                     "value": ("smart.temp", "static-node1", {}),
                 },
                 {
+                    "id": "08",
                     "condition": {"host_name": ["cluster1"]},
                     "value": ("smart.temp", "static-cluster", {}),
                 },
@@ -399,6 +435,7 @@ def test_check_table(
         "clustered_services",
         [
             {
+                "id": "09",
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
                     "host_name": [
@@ -518,6 +555,7 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
         {
             "filesystem": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [hostname_str]},
                     "value": (plugin_name, item, {"source": "static"}),
                 }
@@ -532,7 +570,7 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     assert len(chk_table) == 1
     # assert static checks won
     effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(lambda _: True)
-    assert effective_params["source"] == "static"  # type: ignore[index,call-overload]
+    assert effective_params["source"] == "static"
 
 
 @pytest.mark.parametrize(
@@ -545,7 +583,7 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     ],
 )
 def test_check_table__get_static_check_entries(
-    monkeypatch: MonkeyPatch, check_group_parameters: LegacyCheckParameters
+    monkeypatch: MonkeyPatch, check_group_parameters: Mapping[str, object]
 ) -> None:
     hostname = HostName("hostname")
 
@@ -553,6 +591,7 @@ def test_check_table__get_static_check_entries(
     static_checks: dict[str, list] = {
         "ps": [
             {
+                "id": "01",
                 "condition": {"service_description": [], "host_name": [hostname]},
                 "options": {},
                 "value": ("ps", "item", static_parameters_default),
@@ -564,11 +603,12 @@ def test_check_table__get_static_check_entries(
     ts.add_host(hostname)
     ts.set_option("static_checks", static_checks)
 
-    ts.set_ruleset(
+    ts.set_option(
         "checkgroup_parameters",
         {
             "ps": [
                 {
+                    "id": "02",
                     "condition": {"service_description": [], "host_name": [hostname]},
                     "options": {},
                     "value": check_group_parameters,
@@ -599,7 +639,7 @@ def test_check_table__get_static_check_entries(
     )
 
     static_check_parameters = [
-        service.parameters for service in config._get_enforced_services(config_cache, hostname)
+        service.parameters for _, service in config_cache.enforced_services_table(hostname).values()
     ]
 
     entries = config._get_checkgroup_parameters(
@@ -618,6 +658,7 @@ def test_check_table__get_static_check_entries(
     assert static_check_parameter == TimespecificParameters(
         (
             TimespecificParameterSet(static_parameters_default, ()),
+            TimespecificParameterSet({}, ()),
             TimespecificParameterSet({}, ()),
         )
     )

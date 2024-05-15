@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 
 def inventory_innovaphone_priports_l2(info):
@@ -51,7 +52,12 @@ def check_innovaphone_priports_l2(item, params, info):
     return 3, "Output not found"
 
 
+def parse_innovaphone_priports_l2(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["innovaphone_priports_l2"] = LegacyCheckDefinition(
+    parse_function=parse_innovaphone_priports_l2,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6666.1.1.1",
@@ -60,4 +66,5 @@ check_info["innovaphone_priports_l2"] = LegacyCheckDefinition(
     service_name="Port L2 %s",
     discovery_function=inventory_innovaphone_priports_l2,
     check_function=check_innovaphone_priports_l2,
+    check_default_parameters={},
 )

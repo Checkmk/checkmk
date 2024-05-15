@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <string_view>
+#include <unordered_set>
 
 #include "common/wtools.h"
 #include "common/wtools_user_control.h"
@@ -19,16 +20,17 @@
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace {
 // Internal description of assorted counter params.
 // Should be valid for all windows versions
 struct CounterParam {
     const wchar_t *const name_;  // usually number
-    const uint32_t index_;       // the same as name
-    const uint32_t counters_count;
-    const uint32_t instances_min_;
-    const uint32_t instances_max_;
+    uint32_t index_;             // the same as name
+    uint32_t counters_count;
+    uint32_t instances_min_;
+    uint32_t instances_max_;
 };
 
 constexpr CounterParam g_cpu_counter = {.name_ = L"238",
@@ -44,7 +46,7 @@ constexpr CounterParam g_disk_counter = {.name_ = L"234",
 
 }  // namespace
 
-namespace wtools {  // to become friendly for cma::cfg classes
+namespace wtools {
 
 class WtoolsKillProcFixture : public ::testing::Test {
 protected:
@@ -52,12 +54,11 @@ protected:
     static constexpr std::wstring_view nameToUse() { return L"kill_proc.exe"; }
 
     static void KillTmpProcesses() {
-        // kill process
         ScanProcessList([](const PROCESSENTRY32 &entry) {
             if (std::wstring{entry.szExeFile} == nameToUse()) {
                 KillProcess(entry.th32ProcessID, 99);
             }
-            return true;  // continue scan
+            return ScanAction::advance;
         });
     }
 
@@ -84,12 +85,12 @@ protected:
         std::wstring path;
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (std::wstring{entry.szExeFile} != nameToUse()) {
-                return true;  // continue scan
+                return ScanAction::advance;
             }
 
             path = GetProcessPath(entry.th32ProcessID);
             pid = entry.th32ProcessID;
-            return false;
+            return ScanAction::terminate;
         });
 
         return {path, pid};
@@ -143,11 +144,10 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     cma::tools::WideUpper(test_dir);
 
     EXPECT_EQ(KillProcessesByDir(test_dir), 2);
-    cma::tools::sleep(500ms);
-
-    auto [path, pid] = FindExpectedProcess();
-    EXPECT_TRUE(path.empty());
-    EXPECT_EQ(pid, 0);
+    EXPECT_TRUE(tst::WaitForSuccessSilent(1500ms, []() {
+        auto [path, pid] = FindExpectedProcess();
+        return path.empty() && pid == 0;
+    }));
 
     EXPECT_EQ(KillProcessesByDir(test_dir), 0);
     EXPECT_EQ(KillProcessesByDir(""), -1);
@@ -158,11 +158,10 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPath) {
     EXPECT_EQ(RunProcesses(1), 1);
     ASSERT_EQ(RunProcesses(1), 1);  // additional process
     KillProcessesByFullPath(test_exe_);
-    cma::tools::sleep(500ms);
-
-    auto [path, pid] = FindExpectedProcess();
-    EXPECT_TRUE(path.empty());
-    EXPECT_EQ(pid, 0);
+    EXPECT_TRUE(tst::WaitForSuccessSilent(1500ms, []() {
+        auto [path, pid] = FindExpectedProcess();
+        return path.empty() && pid == 0;
+    }));
 }
 
 TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
@@ -197,6 +196,20 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
     }
 }
 
+TEST_F(WtoolsKillProcFixture, FindProcsByFullPathAndPidComponent) {
+    const auto maybe_pid = RunProcess();
+    ASSERT_TRUE(maybe_pid.has_value());
+
+    EXPECT_FALSE(FindProcessByPathEndAndPid(test_exe_.filename(), 4));
+    EXPECT_TRUE(tst::WaitForSuccessSilent(5000ms, [&]() {
+        return FindProcessByPathEndAndPid(test_exe_.filename(), *maybe_pid);
+    })) << fmt::format("process {} not found", test_exe_.filename());
+    KillProcessesByPathEndAndPid(test_exe_.filename(), *maybe_pid);
+    EXPECT_TRUE(tst::WaitForSuccessSilent(5000ms, [&]() {
+        return !FindProcessByPathEndAndPid(test_exe_.filename(), *maybe_pid);
+    })) << fmt::format("process {} still found", test_exe_.filename());
+}
+
 class WtoolsKillProcessTreeFixture : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -212,7 +225,7 @@ protected:
                     names.back(), entry.th32ProcessID,
                     entry.th32ParentProcessID, ::GetCurrentProcessId());
             }
-            return true;
+            return ScanAction::advance;
         });
         EXPECT_TRUE(!names.empty());
         for (auto &name : names) {
@@ -247,9 +260,9 @@ protected:
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ProcessID == pid) {
                 found = true;
-                return false;
+                return ScanAction::terminate;
             }
-            return true;
+            return ScanAction::advance;
         });
         return found;
     }
@@ -259,9 +272,9 @@ protected:
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ParentProcessID == pid) {
                 found = true;
-                return false;
+                return ScanAction::terminate;
             }
-            return true;
+            return ScanAction::advance;
         });
         return found;
     }
@@ -272,11 +285,11 @@ protected:
         DWORD parent_process_id = 0;
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ProcessID != proc_id) {
-                return true;  // continue
+                return ScanAction::advance;
             }
             proc_name = entry.szExeFile;
             parent_process_id = entry.th32ParentProcessID;
-            return false;  // found
+            return ScanAction::terminate;
         });
 
         return {proc_name, parent_process_id};
@@ -786,22 +799,67 @@ TEST(Wtools, GetServiceStatus) {
 }
 
 TEST(Wtools, InternalUsersDbIntegration) {
-    const auto group_name = SidToName(L"S-1-5-32-545", SidTypeGroup);
-    auto iu = std::make_unique<InternalUsersDb>();
-    auto [name, pwd] = iu->obtainUser(group_name);
-    if (!name.empty()) {
-        EXPECT_EQ(name, L"cmk_TST_"s + group_name);
-        EXPECT_EQ(iu->size(), 1U);
+    // Power Users
+    const auto group = SidToName(L"S-1-5-32-547", SidTypeGroup);
+    auto group_name = group;
+    rs::replace(group_name, ' ', '_');
 
-        auto [name_2, pwd_2] = iu->obtainUser(group_name);
-        EXPECT_TRUE(!name_2.empty());
-        EXPECT_EQ(name_2, L"cmk_TST_"s + group_name);
-        EXPECT_EQ(name, name_2);
-        EXPECT_EQ(iu->size(), 1U);
-        iu.reset();
-        const uc::LdapControl lc;
-        ASSERT_EQ(lc.userDel(name), uc::Status::absent);
+    auto iu = std::make_unique<InternalUsersDb>();
+    const auto nothing = iu->obtainUser(L"weird group");
+    EXPECT_TRUE(nothing.first.empty());
+
+    auto [name, pwd] = iu->obtainUser(group);
+    if (name.empty()) {
+        GTEST_SKIP() << "can't get user, admin rights?";
     }
+
+    EXPECT_EQ(name, L"cmk_TST_"s + group_name);
+    EXPECT_EQ(iu->size(), 1U);
+
+    auto [name_2, pwd_2] = iu->obtainUser(group);
+    EXPECT_TRUE(!name_2.empty());
+    EXPECT_EQ(name_2, L"cmk_TST_"s + group_name);
+    EXPECT_EQ(name, name_2);
+    EXPECT_EQ(iu->size(), 1U);
+    iu.reset();
+    const uc::LdapControl lc;
+    ASSERT_EQ(lc.userDel(name), uc::Status::absent);
+}
+
+TEST(Wtools, MakeSafeFolderIntegration) {
+    const auto path = MakeSafeTempFolder("temp");  //
+    EXPECT_TRUE(fs::exists(*path));
+    fs::remove_all(*path);
+}
+
+TEST(Wtools, GetAdapterInfoStore) {
+    const auto store = GetAdapterInfoStore();
+    EXPECT_GE(store.size(), 1U);
+    std::unordered_set<IF_OPER_STATUS> types;
+    for (auto &&info : store | std::views::values) {
+        types.insert(info.oper_status);
+    }
+    EXPECT_TRUE(types.contains(IF_OPER_STATUS::IfOperStatusUp));
+    EXPECT_TRUE(types.contains(IF_OPER_STATUS::IfOperStatusDown));
+}
+
+TEST(Wtools, MangleNameForPerfCounter) {
+    EXPECT_EQ(MangleNameForPerfCounter(L"abc"), L"abc");
+    EXPECT_EQ(MangleNameForPerfCounter(L"/\\!@#$%^&**()__ `~'\""),
+              L"__!@_$%^&**[]__ `~'\"");
+}
+
+TEST(Wtools, OsInfo) {
+    const auto obtained = *GetOsInfo();
+    EXPECT_TRUE(obtained.name.starts_with(L"Microsoft Windows"));
+    EXPECT_TRUE(obtained.name.ends_with(L"Pro") ||      // local
+                obtained.name.ends_with(L"Standard"));  // CI
+
+    const auto num_strings = cma::tools::SplitString(obtained.version, L".");
+    // 10.0.14559
+    EXPECT_GE(std::stoi(num_strings[0]), 10);
+    EXPECT_GE(std::stoi(num_strings[1]), 0);
+    EXPECT_GE(std::stoi(num_strings[2]), 20);
 }
 
 }  // namespace wtools

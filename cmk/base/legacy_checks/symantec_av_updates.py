@@ -15,18 +15,17 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-symantec_av_updates_default_levels = (259200, 345600)
+from cmk.agent_based.v2 import render, StringTable
 
 
 def inventory_symantec_av_updates(info):
-    return [(None, symantec_av_updates_default_levels)]
+    return [(None, {})]
 
 
 def check_symantec_av_updates(_no_item, params, info):
-    warn, crit = params
     last_text = info[0][0]
     if "/" in last_text:
         if len(last_text) == 10:
@@ -39,17 +38,26 @@ def check_symantec_av_updates(_no_item, params, info):
     last_timestamp = time.mktime(last_broken)
     age = time.time() - last_timestamp
 
-    message = "%s since last update" % get_age_human_readable(age)
-    if age >= crit:
-        return 2, message
-    if age >= warn:
-        return 1, message
-    return 0, message
+    return check_levels(
+        age,
+        None,
+        params["levels"],
+        human_readable_func=render.timespan,
+        infoname="Time since last update",
+    )
+
+
+def parse_symantec_av_updates(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 check_info["symantec_av_updates"] = LegacyCheckDefinition(
+    parse_function=parse_symantec_av_updates,
     service_name="AV Update Status",
     discovery_function=inventory_symantec_av_updates,
     check_function=check_symantec_av_updates,
     check_ruleset_name="antivir_update_age",
+    check_default_parameters={
+        "levels": (3600 * 24 * 3, 3600 * 24 * 4),
+    },
 )

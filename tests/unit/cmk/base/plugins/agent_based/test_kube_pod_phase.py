@@ -6,7 +6,9 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_pod_phase import check_kube_pod_phase
-from cmk.base.plugins.agent_based.utils.kube import Phase, PodLifeCycle
+
+from cmk.plugins.kube.schemata.api import Phase
+from cmk.plugins.kube.schemata.section import PodLifeCycle
 
 
 @pytest.mark.parametrize(

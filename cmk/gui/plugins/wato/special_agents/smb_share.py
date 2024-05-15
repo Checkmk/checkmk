@@ -6,9 +6,8 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import Checkbox, Dictionary, HostAddress, ListOfStrings, TextInput, Tuple
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
@@ -18,10 +17,10 @@ def _valuespec_special_agents_smb_share():
             (
                 "hostname",
                 TextInput(
-                    title="Hostname",
+                    title="Host name",
                     allow_empty=False,
                     help=_(
-                        "<p>Usually Checkmk will use the hostname of the host it is attached to. "
+                        "<p>Usually Checkmk will use the host name of the host it is attached to. "
                         "With this option you can override this parameter.</p>"
                     ),
                 ),

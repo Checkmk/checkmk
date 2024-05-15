@@ -20,7 +20,8 @@ help:
 	@echo "update-pos - Pull changes in Checkmk localization repository, update, commit and push po-files in Checkmk repository accordingly"
 
 setup:
-	sudo apt-get install gettext
+	cd ..; \
+	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile localize
 
 mo:
 	for lang in $(LANGUAGES) ; do \
@@ -38,14 +39,7 @@ update-pot:
 	git pull --rebase
 	# back in CHECKMK_DIR
 	git pull --rebase
-	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 --keyword=_l --keyword=Localizable -o scanned.pot \
-	../web/app/index.wsgi \
-	../livestatus/api/python/livestatus.py \
-		$$(find -L ../cmk -type f -name "*.py") 2>&1 | \
-	sed "/format string with unnamed arguments cannot be properly localized/,/and a mapping instead of a tuple for the arguments./d"
-	sed -i "0,/^$$/d" scanned.pot # Remove default header, i.e. everything before first empty line
-	cat header scanned.pot > ../../$$CHECKMK_LOCALE_DIR/$(MULTISITE_POT) # Add our header and write to Checkmk localization repo
-	rm scanned.pot
+	./output_pot_file > ../../$$CHECKMK_LOCALE_DIR/$(MULTISITE_POT)
 	cd ../../$$CHECKMK_LOCALE_DIR; \
 	if [[ $$(git diff | wc -l) -gt 0 ]]; then \
 		git commit $(MULTISITE_POT) -m "Updated $(MULTISITE_POT)"; \

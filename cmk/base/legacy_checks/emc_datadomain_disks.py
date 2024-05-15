@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.emc import DETECT_DATADOMAIN
 
 
 def inventory_emc_datadomain_disks(info):
@@ -51,7 +54,12 @@ def check_emc_datadomain_disks(item, _no_params, info):
             )
 
 
+def parse_emc_datadomain_disks(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["emc_datadomain_disks"] = LegacyCheckDefinition(
+    parse_function=parse_emc_datadomain_disks,
     detect=DETECT_DATADOMAIN,
     fetch=[
         SNMPTree(

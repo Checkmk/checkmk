@@ -37,13 +37,13 @@ mock_item_state = {
 
 discovery = {
     "": [
-        ("Job One", (86400, 172800)),
-        ("Job Two", (86400, 172800)),
-        ("Job Three", (86400, 172800)),
-        ("Job Four", (86400, 172800)),
-        ("Job Five (older)", (86400, 172800)),
-        ("Job Six", (86400, 172800)),
-        ("Job Seven (older)", (86400, 172800)),
+        ("Job One", {}),
+        ("Job Two", {}),
+        ("Job Three", {}),
+        ("Job Four", {}),
+        ("Job Five (older)", {}),
+        ("Job Six", {}),
+        ("Job Seven (older)", {}),
     ],
 }
 
@@ -52,7 +52,7 @@ checks = {
     "": [
         (
             "Job One",
-            (86400, 172800),
+            {"levels_upper": (86400, 172800)},
             [
                 (0, "Last backup result: Success", []),
                 (0, "Last state: Stopped", []),
@@ -60,7 +60,7 @@ checks = {
         ),
         (
             "Job Two",
-            (86400, 172800),
+            {"levels_upper": (86400, 172800)},
             [
                 (1, "Last backup result: Warning", []),
                 (0, "Last state: Stopped", []),
@@ -68,7 +68,7 @@ checks = {
         ),
         (
             "Job Three",
-            (86400, 172800),
+            {"levels_upper": (86400, 172800)},
             [
                 (2, "Last backup result: Failed", []),
                 (0, "Last state: Stopped", []),
@@ -76,7 +76,7 @@ checks = {
         ),
         (
             "Job Four",
-            (86400, 172800),
+            {"levels_upper": (86400, 172800)},
             [
                 (0, "Backup in progress since 2019-07-02 10:26:40 (currently working)", []),
                 (0, "Running time: 14 minutes 37 seconds", []),
@@ -84,7 +84,7 @@ checks = {
         ),
         (
             "Job Five (older)",
-            (86400, 172800),
+            {"levels_upper": (86400, 172800)},
             [
                 (0, "Backup in progress since 2019-06-08 17:00:00 (currently working)", []),
                 (
@@ -96,7 +96,7 @@ checks = {
         ),
         (
             "Job Six",
-            (86400, 172800),
+            {"levels_upper": (86400, 172800)},
             [
                 (0, "Backup in progress since 2019-07-02 10:26:40 (currently idle)", []),
                 (0, "Running time: 14 minutes 37 seconds", []),
@@ -104,7 +104,7 @@ checks = {
         ),
         (
             "Job Seven (older)",
-            (86400, 172800),
+            {"levels_upper": (86400, 172800)},
             [
                 (0, "Backup in progress since 2019-06-08 17:00:00 (currently idle)", []),
                 (

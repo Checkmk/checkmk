@@ -1,0 +1,175 @@
+From cc92703cde60caac294388fda30787e70eb557e2 Mon Sep 17 00:00:00 2001
+From: Jared Deckard <jared@shademaps.com>
+Date: Fri, 22 Sep 2023 11:19:37 -0500
+Subject: [PATCH] Migrate from distutils to setuptools + sysconfig
+
+---
+ configure              | 29 ++++++++++++++---------------
+ configure.ac           |  5 ++---
+ setup.py               | 10 +++++-----
+ src/server/__init__.py |  3 +--
+ 4 files changed, 22 insertions(+), 25 deletions(-)
+
+diff --git a/configure b/configure
+index c1c77c1..2a80749 100755
+--- a/configure
++++ b/configure
+@@ -2850,11 +2850,11 @@ fi
+ 
+ 
+ PYTHON_VERSION=`${PYTHON} -c 'from sys import stdout; \
+-    from distutils import sysconfig; \
++    import sysconfig; \
+     stdout.write(sysconfig.get_config_var("VERSION"))'`
+ 
+ PYTHON_LDVERSION=`${PYTHON} -c 'from sys import stdout; \
+-    from distutils import sysconfig; \
++    import sysconfig; \
+     stdout.write(sysconfig.get_config_var("LDVERSION") or "")'`
+ 
+ if test x"${PYTHON_LDVERSION}" = x""; then
+@@ -2862,11 +2862,11 @@ if test x"${PYTHON_LDVERSION}" = x""; then
+ fi
+ 
+ CPPFLAGS1=`${PYTHON} -c 'from sys import stdout; \
+-    from distutils import sysconfig; \
++    import sysconfig; \
+     stdout.write("-I" + sysconfig.get_config_var("INCLUDEPY"))'`
+ 
+ CPPFLAGS2=`${PYTHON} -c 'from sys import stdout; \
+-    from distutils import sysconfig; \
++    import sysconfig; \
+     stdout.write(" ".join(filter(lambda x: x.startswith("-D"), \
+     sysconfig.get_config_var("CFLAGS").split())))'`
+ 
+@@ -2881,20 +2881,19 @@ CPPFLAGS="${CPPFLAGS} ${CPPFLAGS1} ${CPPFLAGS2} ${CPPFLAGS3}"
+ 
+ 
+ PYTHONLIBDIR=`${PYTHON} -c 'from sys import stdout; \
+-    from distutils import sysconfig; \
++    import sysconfig; \
+     stdout.write(sysconfig.get_config_var("LIBDIR"))'`
+ PYTHONCFGDIR=`${PYTHON} -c 'from sys import stdout; \
+-    import distutils.sysconfig; \
+-    stdout.write(distutils.sysconfig.get_python_lib(plat_specific=1, \
+-    standard_lib=1) +"/config")'`
++    import sysconfig; \
++    stdout.write(sysconfig.get_path("platstdlib") +"/config")'`
+ PYTHONFRAMEWORKDIR=`${PYTHON} -c 'from sys import stdout; \
+-    from distutils import sysconfig; \
++    import sysconfig; \
+     stdout.write(sysconfig.get_config_var("PYTHONFRAMEWORKDIR"))'`
+ PYTHONFRAMEWORKPREFIX=`${PYTHON} -c 'from sys import stdout; \
+-    from distutils import sysconfig; \
++    import sysconfig; \
+     stdout.write(sysconfig.get_config_var("PYTHONFRAMEWORKPREFIX"))'`
+ PYTHONFRAMEWORK=`${PYTHON} -c 'from sys import stdout; \
+-    from distutils import sysconfig; \
++    import sysconfig; \
+     stdout.write(sysconfig.get_config_var("PYTHONFRAMEWORK"))'`
+ 
+ if test "${PYTHON_LDVERSION}" != "${PYTHON_VERSION}"; then
+@@ -2920,10 +2919,10 @@ if test "${PYTHONFRAMEWORKDIR}" = "no-framework" -o \
+     fi
+ 
+     LDLIBS2=`${PYTHON} -c 'from sys import stdout; \
+-        from distutils import sysconfig; \
++        import sysconfig; \
+         stdout.write(sysconfig.get_config_var("LIBS"))'`
+     LDLIBS3=`${PYTHON} -c 'from sys import stdout; \
+-        from distutils import sysconfig; \
++        import sysconfig; \
+         stdout.write(sysconfig.get_config_var("SYSLIBS"))'`
+ else
+     LDFLAGS1="-Wl,-F${PYTHONFRAMEWORKPREFIX} -framework ${PYTHONFRAMEWORK}"
+@@ -2931,13 +2930,13 @@ else
+     VERSION="${PYTHON_VERSION}"
+     STRING="${PYTHONFRAMEWORKDIR}/Versions/${VERSION}/${PYTHONFRAMEWORK}"
+     LDFLAGS2=`${PYTHON} -c "from sys import stdout; \
+-        from distutils import sysconfig; \
++        import sysconfig; \
+         stdout.write(sysconfig.get_config_var(
+         \"LINKFORSHARED\").replace(\"${STRING}\", ''))" | \
+         sed -e 's/-Wl,-stack_size,[0-9]*//'`
+ 
+     LDLIBS1=`${PYTHON} -c 'from sys import stdout; \
+-        from distutils import sysconfig; \
++        import sysconfig; \
+         stdout.write(sysconfig.get_config_var("LIBS"))'`
+ fi
+ 
+diff --git a/configure.ac b/configure.ac
+index 25962bc..44f4718 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -141,9 +141,8 @@ PYTHONLIBDIR=`${PYTHON} -c 'from sys import stdout; \
+     import sysconfig; \
+     stdout.write(sysconfig.get_config_var("LIBDIR"))'`
+ PYTHONCFGDIR=`${PYTHON} -c 'from sys import stdout; \
+-    import distutils.sysconfig; \
+-    stdout.write(distutils.sysconfig.get_python_lib(plat_specific=1, \
+-    standard_lib=1) +"/config")'`
++    import sysconfig; \
++    stdout.write(sysconfig.get_path("platstdlib") +"/config")'`
+ PYTHONFRAMEWORKDIR=`${PYTHON} -c 'from sys import stdout; \
+     import sysconfig; \
+     stdout.write(sysconfig.get_config_var("PYTHONFRAMEWORKDIR"))'`
+diff --git a/setup.py b/setup.py
+index e0c8c84..4169375 100644
+--- a/setup.py
++++ b/setup.py
+@@ -15,9 +15,9 @@ except ImportError:
+     from urllib import urlretrieve
+ 
+ from setuptools import setup
+-from distutils.core import Extension
+-from distutils.sysconfig import get_config_var as get_python_config
+-from distutils.sysconfig import get_python_lib
++from setuptools.extension import Extension
++from sysconfig import get_config_var as get_python_config
++from sysconfig import get_path as get_python_lib
+ 
+ # First work out what all the available source code files are that should
+ # be compiled.
+@@ -293,7 +293,7 @@ else:
+ 
+     PYTHON_LIBDIR = get_python_config('LIBDIR')
+     APXS_LIBDIR = get_apxs_config('LIBDIR')
+-    PYTHON_CFGDIR =  get_python_lib(plat_specific=1, standard_lib=1) + '/config'
++    PYTHON_CFGDIR =  get_python_lib('platstdlib') + '/config'
+ 
+     if PYTHON_LDVERSION and PYTHON_LDVERSION != PYTHON_VERSION:
+         PYTHON_CFGDIR = '%s-%s' % (PYTHON_CFGDIR, PYTHON_LDVERSION)
+@@ -402,7 +402,7 @@ if os.name != 'nt':
+             not get_python_config('PYTHONFRAMEWORK')):
+         print(SHARED_LIBRARY_WARNING)
+ 
+-# Now finally run distutils.
++# Now finally run setuptools.
+ 
+ package_name = 'mod_wsgi'
+ long_description = open('README.rst').read()
+diff --git a/src/server/__init__.py b/src/server/__init__.py
+index 33f0fad..f2d8632 100644
+--- a/src/server/__init__.py
++++ b/src/server/__init__.py
+@@ -35,7 +35,6 @@ _py_dylib = ''
+ 
+ try:
+     import sysconfig
+-    import distutils.sysconfig
+ 
+     _py_soabi = sysconfig.get_config_var('SOABI')
+ 
+@@ -63,7 +62,7 @@ if not os.path.exists(MOD_WSGI_SO) and _py_soabi:
+     MOD_WSGI_SO = posixpath.join(posixpath.dirname(__file__), MOD_WSGI_SO)
+ 
+ if not os.path.exists(MOD_WSGI_SO) and os.name == 'nt':
+-    MOD_WSGI_SO = 'mod_wsgi%s' % distutils.sysconfig.get_config_var('EXT_SUFFIX')
++    MOD_WSGI_SO = 'mod_wsgi%s' % sysconfig.get_config_var('EXT_SUFFIX')
+     MOD_WSGI_SO = os.path.join(os.path.dirname(__file__), MOD_WSGI_SO)
+     MOD_WSGI_SO = MOD_WSGI_SO.replace('\\', '/')
+ 
+-- 
+2.34.1
+

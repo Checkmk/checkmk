@@ -2,9 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 from __future__ import annotations
 
-import uuid
 from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -23,12 +24,12 @@ from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb._user_attribute._custom_attributes
+import cmk.gui.userdb._custom_attributes
 import cmk.gui.userdb._user_attribute._registry
 import cmk.gui.userdb.session  # NOQA # pylint: disable-unused-import
 from cmk.gui import http, userdb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import session
 from cmk.gui.type_defs import (
     SessionId,
@@ -39,6 +40,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.userdb import UserAttributeRegistry
+from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
@@ -51,11 +53,6 @@ if TYPE_CHECKING:
 @pytest.fixture(name="user_id")
 def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
-
-
-@pytest.fixture(name="zero_uuid")
-def zero_uuid_fixture(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(uuid, "uuid4", lambda: "00000000-0000-0000-0000-000000000000")
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -79,28 +76,6 @@ def _load_users_uncached(*, lock: bool) -> userdb.Users:
 
 
 TimedOutSession = Callable[[], tuple[UserId, SessionInfo]]
-
-
-@pytest.fixture(name="timed_out_session")
-def do_timed_out_session(single_auth_request: SingleRequest) -> TimedOutSession:
-    def wrapper() -> tuple[UserId, SessionInfo]:
-        user_id, session_info = single_auth_request()
-        session_id = session_info.session_id
-        timestamp = int(datetime.now().timestamp()) - 20
-        userdb.session.save_session_infos(
-            user_id,
-            {
-                session_id: SessionInfo(
-                    session_id,
-                    started_at=timestamp,
-                    last_activity=timestamp,
-                    flashes=[],
-                )
-            },
-        )
-        return user_id, session_info
-
-    return wrapper
 
 
 def _make_valid_session(user_id: UserId, now: datetime) -> SessionId:
@@ -151,6 +126,7 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
             last_activity=session_info.last_activity,
             flashes=[],
             csrf_token=session_info.csrf_token,
+            encrypter_secret=session_info.encrypter_secret,
             logged_out=False,
             auth_type="web_server",
         )
@@ -257,18 +233,13 @@ def test_access_denied_with_invalidated_session(single_auth_request: SingleReque
     user_id, session_info = single_auth_request()
     session_id = session_info.session_id
 
-    now = datetime.now()
-
     assert session_id in load_session_infos(user_id)
-
-    userdb.on_access(user_id, session_id, now)
+    assert is_valid_user_session(user_id, load_session_infos(user_id), session_id)
     session.session_info.invalidate()
     userdb.session.save_session_infos(user_id, {session_id: session.session_info})
 
     assert load_session_infos(user_id)[session_info.session_id].logged_out
-
-    with pytest.raises(MKAuthException, match="Invalid user session"):
-        userdb.on_access(user_id, session_id, now)
+    assert not is_valid_user_session(user_id, load_session_infos(user_id), session_id)
 
 
 def test_on_access_update_valid_session(
@@ -316,25 +287,30 @@ def test_timed_out_session_gets_a_new_one_instead(
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
-def test_on_access_update_unknown_session(single_auth_request: SingleRequest) -> None:
-    now = datetime.now()
+def test_update_unknown_session(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
     session_valid = session_info.session_id
     session_info = load_session_infos(user_id)[session_valid]
     session_info.started_at = 10
-
-    with pytest.raises(MKAuthException, match="Invalid user session"):
-        userdb.on_access(user_id, "xyz", now)
+    assert not is_valid_user_session(user_id, load_session_infos(user_id), "xyz")
 
 
-def test_on_access_logout_on_idle_timeout(
-    timed_out_session: TimedOutSession, set_config: SetConfig
-) -> None:
-    user_id, session_info = timed_out_session()
-    session_timed_out = session_info.session_id
-    with set_config(session_mgmt={"user_idle_timeout": 8}):
-        with pytest.raises(MKAuthException, match="login timed out"):
-            userdb.on_access(user_id, session_timed_out, datetime.now())
+def test_logout_on_idle_timeout(single_auth_request: SingleRequest, set_config: SetConfig) -> None:
+    user_id, session_info = single_auth_request()
+    session.initialize(user_id, auth_type="web_server")
+    now = datetime.now()
+    session.session_info = session_info
+    session.session_info.last_activity = int(datetime.now().timestamp()) - 5401
+    assert session.is_expired(now)
+
+
+def test_logout_on_maximum_session_reached(single_auth_request: SingleRequest) -> None:
+    user_id, session_info = single_auth_request()
+    session.initialize(user_id, auth_type="web_server")
+    now = datetime.now()
+    session.session_info = session_info
+    session.session_info.started_at = int(datetime.now().timestamp()) - 86401
+    assert session.is_expired(now)
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
@@ -524,7 +500,7 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
         userdb.user_attribute_registry,
     )
     monkeypatch.setattr(
-        cmk.gui.userdb._user_attribute._custom_attributes,
+        cmk.gui.userdb._custom_attributes,
         "user_attribute_registry",
         userdb.user_attribute_registry,
     )
@@ -556,20 +532,60 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
         assert "vip" in ldap.ldap_attribute_plugin_registry
 
         connection = ldap.LDAPUserConnector(
-            {
-                "id": "ldp",
-                "directory_type": (
+            LDAPUserConnectionConfig(
+                id="ldp",
+                description="",
+                comment="",
+                docu_url="",
+                disabled=False,
+                directory_type=(
                     "ad",
-                    {
-                        "connect_to": (
+                    LDAPConnectionConfigFixed(
+                        connect_to=(
                             "fixed_list",
-                            {
-                                "server": "127.0.0.1",
-                            },
+                            Fixed(server="127.0.0.1"),
                         )
-                    },
+                    ),
                 ),
-            }
+                bind=(
+                    "CN=svc_checkmk,OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+                    ("store", "AD_svc_checkmk"),
+                ),
+                port=636,
+                use_ssl=True,
+                user_dn="OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+                user_scope="sub",
+                user_filter="(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
+                user_id_umlauts="keep",
+                group_dn="OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+                group_scope="sub",
+                active_plugins={
+                    "alias": {},
+                    "auth_expire": {},
+                    "groups_to_contactgroups": {"nested": True},
+                    "disable_notifications": {"attr": "msDS-cloudExtensionAttribute1"},
+                    "email": {"attr": "mail"},
+                    "icons_per_item": {"attr": "msDS-cloudExtensionAttribute3"},
+                    "nav_hide_icons_title": {"attr": "msDS-cloudExtensionAttribute4"},
+                    "pager": {"attr": "mobile"},
+                    "groups_to_roles": {
+                        "admin": [
+                            (
+                                "CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+                                None,
+                            )
+                        ]
+                    },
+                    "show_mode": {"attr": "msDS-cloudExtensionAttribute2"},
+                    "ui_sidebar_position": {"attr": "msDS-cloudExtensionAttribute5"},
+                    "start_url": {"attr": "msDS-cloudExtensionAttribute9"},
+                    "temperature_unit": {"attr": "msDS-cloudExtensionAttribute6"},
+                    "ui_theme": {"attr": "msDS-cloudExtensionAttribute7"},
+                    "force_authuser": {"attr": "msDS-cloudExtensionAttribute8"},
+                },
+                cache_livetime=300,
+                type="ldap",
+            )
         )
 
         ldap_plugin = ldap.ldap_attribute_plugin_registry["vip"]()

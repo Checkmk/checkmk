@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
-# (c) Andreas Doehler <andreas.doehler@bechtle.com/andreas.doehler@gmail.com>
-# This is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Any
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
-from .utils.prism import load_json
+from cmk.plugins.lib.prism import load_json
+
+from .agent_based_api.v1 import HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 
 Section = dict[str, Any]
 
@@ -23,7 +17,29 @@ def parse_prism_host(string_table: StringTable) -> Section:
     return load_json(string_table)
 
 
+def host_label_prism_host(section: Section) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+        cmk/nutanix/object:
+            This label is set to either "control_plane" for the host with the special agent, "node"
+            for Nutanix nodes or "vm" for VMs hosted in Nutanix.
+
+        cmk/os_name:
+            This label is set to the name of the operating system as reported by the agent as "OSName"
+
+        cmk/os_platform:
+            This label is set to the platform as reported by the agent as "OSPlatform". In case
+            "OSPlatform" is not set, the value of "AgentOS" is used.
+
+    """
+    yield HostLabel("cmk/nutanix/object", "node")
+    yield HostLabel("cmk/os_platform", "nutanix")
+    yield HostLabel("cmk/os_name", "Nutanix AHV")
+
+
 register.agent_section(
     name="prism_host",
     parse_function=parse_prism_host,
+    host_label_function=host_label_prism_host,
 )

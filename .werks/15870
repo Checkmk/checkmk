@@ -1,0 +1,14 @@
+Title: Gracefully handle individual fails of cached sections
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1696948219
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This changes the behavior of services processing cached data of the Linux, AIX, Solaris, FreeBSD and OpenWrt agent.
+
+Previous to this werk, a service would go to UNKNOWN if the execution of a cached section failed, reporting <i>"Missing data"</i> or <i>"Item not found in monitoring data"</i>.
+Those services now go stale, and only go to UNKNOWN after tripple the time of the caching intervall passed.

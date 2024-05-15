@@ -5,6 +5,8 @@
 from collections.abc import Mapping, MutableMapping
 from typing import Any, Final, NamedTuple
 
+from cmk.plugins.lib.cpu_util import check_cpu_util
+
 from .agent_based_api.v1 import (
     check_levels,
     get_rate,
@@ -19,7 +21,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cpu_util import check_cpu_util
 
 
 class CoreTicks(NamedTuple):
@@ -175,7 +176,6 @@ def check_winperf_processor_util(params: Mapping[str, Any], section: Section) ->
         )
 
     yield Result(state=State.OK, notice=f"Number of processors: {num_cpus}")
-    yield Metric("cpus", num_cpus)  # seriously?
 
 
 register.check_plugin(

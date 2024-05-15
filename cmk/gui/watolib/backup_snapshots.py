@@ -14,9 +14,7 @@ import traceback
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, IO, Literal, NotRequired, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
 
 import cmk.utils
 import cmk.utils.paths
@@ -297,7 +295,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             raise MKGeneralException(
                 _(
                     "You are currently using the Checkmk Micro Core, but this snapshot does not use the "
-                    "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
+                    "Checkmk Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )
             )
@@ -305,7 +303,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             raise MKGeneralException(
                 _(
                     "You are currently not using the Checkmk Micro Core, but this snapshot uses the "
-                    "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
+                    "Checkmk Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )
             )

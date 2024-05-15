@@ -1,4 +1,4 @@
-Title: <tt>mk_oracle</tt>: Fix asynchronous execution on <tt>systemd</tt> systems and direct call from the command line
+Title: mk_oracle: Fix asynchronous execution on systemd systems and direct call from the command line
 Class: fix
 Compatible: compat
 Component: checks

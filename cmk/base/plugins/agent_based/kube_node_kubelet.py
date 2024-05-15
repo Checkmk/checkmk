@@ -5,9 +5,10 @@
 
 import json
 
+from cmk.plugins.kube.schemata.section import KubeletInfo
+
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import KubeletInfo
 
 
 def parse_kube_node_kubelet_v1(string_table: StringTable) -> KubeletInfo:

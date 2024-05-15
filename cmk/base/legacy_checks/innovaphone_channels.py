@@ -8,13 +8,11 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.innovaphone import check_innovaphone
 from cmk.base.config import check_info
 
-innovaphone_channels_default_levels = (75.0, 80.0)
+from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 
 
-def inventory_innovaphone_channels(info):
-    return [
-        (x[0], innovaphone_channels_default_levels) for x in info if x[1] == "Up" and x[2] == "Up"
-    ]
+def discover_innovaphone_channels(string_table: StringTable) -> DiscoveryResult:
+    yield from (Service(item=x[0]) for x in string_table if x[1] == "Up" and x[2] == "Up")
 
 
 def check_innovaphone_channels(item, params, info):
@@ -22,18 +20,26 @@ def check_innovaphone_channels(item, params, info):
         if line[0] == item:
             link, physical = line[1:3]
             if link != "Up" or physical != "Up":
-                return 2, f"Link: {link}, Physical: {physical}"
+                yield 2, f"Link: {link}, Physical: {physical}"
+                return
             idle, total = map(float, line[3:])
             perc_used = (idle / total) * 100  # fixed: true-division
             perc_free = 100 - perc_used
             message = f"(used: {total - idle:.0f}, free: {idle:.0f}, total: {total:.0f})"
-            return check_innovaphone(params, [[None, perc_free]], "%", message)
-    return 3, "No Channel information found"
+            yield check_innovaphone(params["levels"], [[None, perc_free]], "%", message)
+            return
+
+
+def parse_innovaphone_channels(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 check_info["innovaphone_channels"] = LegacyCheckDefinition(
+    parse_function=parse_innovaphone_channels,
     service_name="Channel %s",
-    discovery_function=inventory_innovaphone_channels,
+    discovery_function=discover_innovaphone_channels,
     check_function=check_innovaphone_channels,
-    check_ruleset_name="hw_single_channelserature",
+    check_default_parameters={
+        "levels": (75.0, 80.0),
+    },
 )

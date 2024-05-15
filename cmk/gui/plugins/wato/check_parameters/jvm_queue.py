@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 
 def _item_spec_jvm_queue():
@@ -21,25 +22,26 @@ def _item_spec_jvm_queue():
 
 
 def _parameter_valuespec_jvm_queue():
-    return Tuple(
-        help=_(
-            "The BEA application servers have 'Execute Queues' "
-            "in which requests are processed. This rule allows to set "
-            "warn and crit levels for the number of requests that are "
-            "being queued for processing."
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Integer,
+                        help=_(
+                            "The BEA application servers have 'Execute Queues' "
+                            "in which requests are processed. This rule allows to set "
+                            "warn and crit levels for the number of requests that are "
+                            "being queued for processing."
+                        ),
+                        default_levels=(20, 50),
+                    ),
+                ),
+            ],
+            optional_keys=[],
         ),
-        elements=[
-            Integer(
-                title=_("Warning at"),
-                unit=_("requests"),
-                default_value=20,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("requests"),
-                default_value=50,
-            ),
-        ],
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

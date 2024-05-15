@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pylint.lint import PyLinter  # type: ignore[import]
+from pylint.lint import PyLinter
 
 from tests.testlib.utils import is_enterprise_repo
 
@@ -14,12 +14,12 @@ def register(linter: PyLinter) -> None:
     if not is_enterprise_repo():
         # Is used to disable import-error. Would be nice if no-name-in-module could be
         # disabled using this, but this does not seem to be possible :(
-        linter.global_set_option(
+        linter.set_option(
             "ignored-modules",
             "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed,cmk.gui.cce,cmk.gui.cse",
         )
         # This disables no-member errors
-        linter.global_set_option(
+        linter.set_option(
             "generated-members",
             r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme|cmk\.gui\.cce|cmk\.gui\.cse)(\..*)?",
         )

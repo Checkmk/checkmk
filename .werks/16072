@@ -1,0 +1,18 @@
+Title: Add wato audit log to logrotate cronjob
+Class: fix
+Compatible: incomp
+Component: omd
+Date: 1699864221
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The wato audit log ~/var/check_mk/wato/log/wato_audit.log was not rotated
+regularly. This lead to an ever growing audit log, which could not be viewed
+anymore once it reached several hundred MB of log lines.
+
+Therefore, the audit log will now rotate regularly to archive files bigger than
+300MB.
+
+Existing logfiles greater 300MB will be splitted up on update and the source
+file will be backed up as wato_audit.log_backup.

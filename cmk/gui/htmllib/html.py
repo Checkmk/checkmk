@@ -5,10 +5,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import pprint
 import re
+import time
+import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, overload
 
@@ -16,6 +20,7 @@ from flask import current_app, session
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.log as log
 import cmk.gui.utils as utils
@@ -23,6 +28,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -39,7 +45,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.theme import theme
+from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
@@ -55,6 +61,44 @@ from .tag_rendering import (
     render_start_tag,
 )
 from .type_defs import RequireConfirmation
+
+
+class ExperimentalRenderMode(Enum):
+    BACKEND = "backend"
+    FRONTEND = "frontend"
+    BACKEND_AND_FRONTEND = "backend_and_frontend"
+
+
+@request_memoize()
+def get_render_mode() -> ExperimentalRenderMode:
+    # Settings via url overwrite config based settings
+    if (rendering_mode := html.request.var("experimental_render_mode", None)) is None:
+        rendering_mode = active_config.experimental_features.get(
+            "render_mode", ExperimentalRenderMode.BACKEND.value
+        )
+
+    match rendering_mode:
+        case ExperimentalRenderMode.BACKEND.value:
+            return ExperimentalRenderMode.BACKEND
+        case ExperimentalRenderMode.FRONTEND.value:
+            return ExperimentalRenderMode.FRONTEND
+        case ExperimentalRenderMode.BACKEND_AND_FRONTEND.value:
+            return ExperimentalRenderMode.BACKEND_AND_FRONTEND
+        case _:
+            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
+
+
+def inject_js_profiling_code():
+    return active_config.inject_js_profiling_code or html.request.has_var(
+        "inject_js_profiling_code"
+    )
+
+
+EncType = typing.Literal[
+    "application/x-url-encoded",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+]
 
 
 class HTMLGenerator(HTMLWriter):
@@ -199,6 +243,8 @@ class HTMLGenerator(HTMLWriter):
         javascripts = javascripts if javascripts else []
 
         self.open_head()
+        if inject_js_profiling_code():
+            self._inject_profiling_code()
 
         self.default_html_headers()
         self.title(title)
@@ -219,9 +265,19 @@ class HTMLGenerator(HTMLWriter):
         # Load all scripts
         for js in javascripts:
             js_filepath = f"js/{js}_min.js"
-            if current_app.debug:
-                HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
-            self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
+            js_url = HTMLGenerator._append_cache_busting_query(js_filepath)
+            if js == "vue" and active_config.load_frontend_vue == "inject":
+                # stage1 will try to load the hot reloading files. if this fails,
+                # an error will be shown and the fallback files will be loaded.
+                self.js_entrypoint(
+                    json.dumps({"fallback": [js_url]}),
+                    type_="cmk-entrypoint-vue-stage1",
+                )
+                self.javascript_file(HTMLGenerator._append_cache_busting_query("js/vue_stage1.js"))
+            else:
+                if current_app.debug:
+                    HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
+                self.javascript_file(js_url)
 
         self.set_js_csrf_token()
 
@@ -229,6 +285,23 @@ class HTMLGenerator(HTMLWriter):
             self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
 
         self.close_head()
+
+    def _inject_profiling_code(self):
+        self.javascript("const startTime = Date.now();")
+        # A lambda, so it will get evaluated at the end of the request, not the beginning.
+        self.final_javascript(
+            lambda: f"""
+                const generationDuration = {round((time.monotonic() - self.request.started) * 1000, 0)};
+                const currentUrl = window.location.pathname + window.location.search;
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    () => {{
+                        activate_tracking(currentUrl, startTime, generationDuration);
+                    }}
+                );
+            """
+        )
+        self.javascript_file(HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js"))
 
     def set_js_csrf_token(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
@@ -279,13 +352,13 @@ class HTMLGenerator(HTMLWriter):
         main_javascript: str = "main",
         force: bool = False,
     ) -> None:
+        javascript_files = [main_javascript]
+        if get_render_mode() != ExperimentalRenderMode.BACKEND:
+            javascript_files.append("vue")
         if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))
             self.open_html()
-            self._head(
-                title,
-                [main_javascript],
-            )
+            self._head(title, javascript_files)
             self._header_sent = True
 
     def body_start(
@@ -327,6 +400,34 @@ class HTMLGenerator(HTMLWriter):
         self.close_body()
         self.close_html()
 
+    @contextlib.contextmanager
+    def form_context(
+        self,
+        name: str,
+        action: str | None = None,
+        method: str = "GET",
+        onsubmit: str | None = None,
+        add_transid: bool = True,
+        require_confirmation: RequireConfirmation | None = None,
+        only_close: bool = False,
+    ) -> typing.Iterator[None]:
+        html.begin_form(
+            name=name,
+            action=action,
+            method=method,
+            onsubmit=onsubmit,
+            add_transid=add_transid,
+            require_confirmation=require_confirmation,
+        )
+
+        try:
+            yield
+        finally:
+            if only_close:
+                html.close_form()
+            else:
+                html.end_form()
+
     def begin_form(
         self,
         name: str,
@@ -346,6 +447,8 @@ class HTMLGenerator(HTMLWriter):
 
         if action is None:
             action = requested_file_name(self.request) + ".py"
+
+        enctype: EncType = "multipart/form-data"
         self.open_form(
             id_="form_%s" % name,
             name=name,
@@ -354,9 +457,8 @@ class HTMLGenerator(HTMLWriter):
             method=method,
             onsubmit=onsubmit,
             data_cmk_form_confirmation=data_cmk_form_confirmation,
-            enctype="multipart/form-data" if method.lower() == "post" else None,
+            enctype=enctype if method.lower() == "post" else None,
         )
-
         if hasattr(session, "session_info"):
             self.hidden_field("csrf_token", session.session_info.csrf_token)
 
@@ -589,9 +691,12 @@ class HTMLGenerator(HTMLWriter):
             title=title,
         )
 
-    def user_error(self, e: MKUserError) -> None:
+    def user_error(self, e: MKUserError, show_as_warning: bool = False) -> None:
         """Display the given MKUserError and store message for later use"""
-        self.show_error(str(e))
+        if show_as_warning:
+            self.show_warning(str(e))
+        else:
+            self.show_error(str(e))
         user_errors.add(e)
 
     def show_user_errors(self) -> None:
@@ -623,11 +728,10 @@ class HTMLGenerator(HTMLWriter):
         autocomplete: str | None = None,
         style: str | None = None,
         type_: str | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         onblur: str | None = None,
         placeholder: str | None = None,
-        data_world: str | None = None,
-        data_max_labels: int | None = None,
+        data_attrs: HTMLTagAttributes | None = None,
         required: bool = False,
         title: str | None = None,
     ) -> None:
@@ -639,6 +743,9 @@ class HTMLGenerator(HTMLWriter):
         if error:
             self.set_focus(varname)
         self.form_vars.append(varname)
+
+        if data_attrs is not None:
+            assert all(data_attr_key.startswith("data-") for data_attr_key in data_attrs.keys())
 
         # View
         # TODO: Move styling away from py code
@@ -670,15 +777,16 @@ class HTMLGenerator(HTMLWriter):
             "readonly": "true" if read_only else None,
             "value": value,
             "onblur": onblur,
-            "onkeyup": onkeyup,
-            "onkeydown": ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
-            if submit
-            else None,
+            "oninput": oninput,
+            "onkeydown": (
+                ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
+                if submit
+                else None
+            ),
             "placeholder": placeholder,
-            "data-world": data_world,
-            "data-max-labels": None if data_max_labels is None else str(data_max_labels),
             "required": "" if required else None,
             "title": title,
+            **(data_attrs or {}),
         }
 
         if error:
@@ -709,7 +817,7 @@ class HTMLGenerator(HTMLWriter):
         onclick: str | None,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-        """Shows a colored button with text (used in site and customer status snapins)"""
+        """Shows a colored button with text (used in site and customer status snap-ins)"""
         self.div(
             content,
             title=title,
@@ -951,6 +1059,7 @@ class HTMLGenerator(HTMLWriter):
         self.close_select()
 
     def upload_file(self, varname: str) -> None:
+        # We need this to upload files, other enctypes won't work.
         error = user_errors.get(varname)
         if error:
             self.open_x(class_="inputerror")
@@ -1080,12 +1189,16 @@ class HTMLGenerator(HTMLWriter):
         self.write_html(HTMLGenerator.render_icon("trans"))
 
     @staticmethod
-    def render_icon(
+    def render_icon(  # pylint: disable=redefined-outer-name
         icon: Icon,
         title: str | None = None,
         id_: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        *,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> HTML:
         classes = ["icon"] + ([] if cssclass is None else [cssclass])
         if isinstance(class_, list):
@@ -1143,7 +1256,7 @@ class HTMLGenerator(HTMLWriter):
         )
 
     @staticmethod
-    def render_icon_button(
+    def render_icon_button(  # pylint: disable=redefined-outer-name
         url: None | str,
         title: str,
         icon: Icon,
@@ -1153,6 +1266,9 @@ class HTMLGenerator(HTMLWriter):
         target: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
@@ -1164,7 +1280,7 @@ class HTMLGenerator(HTMLWriter):
         assert href is not None
 
         return HTMLWriter.render_a(
-            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton")),
+            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme)),
             href=href,
             title=title,
             id_=id_,
@@ -1175,7 +1291,7 @@ class HTMLGenerator(HTMLWriter):
             onclick=onclick,
         )
 
-    def icon_button(
+    def icon_button(  # pylint: disable=redefined-outer-name
         self,
         url: str | None,
         title: str,
@@ -1186,10 +1302,13 @@ class HTMLGenerator(HTMLWriter):
         target: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
-                url, title, icon, id_, onclick, style, target, cssclass, class_
+                url, title, icon, id_, onclick, style, target, cssclass, class_, theme=theme
             )
         )
 
@@ -1334,15 +1453,47 @@ class HTMLGenerator(HTMLWriter):
             onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",
         )
 
+    def date(
+        self,
+        var: str,
+        value: str,
+        id_: str,
+        onchange: str | None = None,
+    ) -> None:
+        self.write_html(
+            self.render_input(
+                name=var,
+                value=value,
+                type_="date",
+                id=id_,
+                onchange=onchange,
+            )
+        )
+
+    def time(
+        self,
+        var: str,
+        value: str,
+        id_: str,
+        onchange: str | None = None,
+    ) -> None:
+        self.write_html(
+            self.render_input(
+                name=var,
+                value=value,
+                type_="time",
+                id=id_,
+                onchange=onchange,
+            )
+        )
+
 
 @overload
-def _path(path_or_str: Path) -> Path:
-    ...
+def _path(path_or_str: Path) -> Path: ...
 
 
 @overload
-def _path(path_or_str: str) -> Path:
-    ...
+def _path(path_or_str: str) -> Path: ...
 
 
 def _path(path_or_str: Path | str) -> Path:

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.utils import netapp_api
+from cmk.plugins.lib import netapp_api
 
 
 def get_and_try_cast_to_int(key: str, container: dict, default_value: int | None = None) -> int:

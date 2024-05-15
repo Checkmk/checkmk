@@ -3,15 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.heartbeat_crm import (
-    check_heartbeat_crm,
+    _check_heartbeat_crm,
+    _check_heartbeat_crm_resources,
     check_heartbeat_crm_resources,
     discover_heartbeat_crm,
+    heartbeat_crm_parse_resources,
     parse_heartbeat_crm,
     Section,
 )
@@ -228,23 +232,27 @@ def test_discovery_heartbeat_crm_dc_naildown(section_1: Section) -> None:
 
 
 def test_check_heartbeat_crm_too_old(section_1: Section) -> None:
-    (result,) = check_heartbeat_crm(
-        {"max_age": 60, "num_nodes": 2, "num_resources": 3},
-        section_1,
-    )
-
-    assert isinstance(result, Result)
-    assert result.state is State.CRIT
-    # Note: going crit is not the same as ignoring data.
-    assert result.summary.startswith("Ignoring reported data ")
+    assert list(
+        _check_heartbeat_crm(
+            {"max_age": 60, "num_nodes": 2, "num_resources": 3},
+            section_1,
+            1601339704.5458105,
+        )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="Ignoring reported data (Status output too old: 20 days 13 hours)",
+        )
+    ]
 
 
 def test_check_heartbeat_crm_ok(section_1: Section) -> None:
-    with on_time("2020-09-08 10:36:36", "UTC"):
+    with time_machine.travel(datetime.datetime(2020, 9, 8, 10, 36, 36, tzinfo=ZoneInfo("UTC"))):
         assert list(
-            check_heartbeat_crm(
+            _check_heartbeat_crm(
                 {"max_age": 60, "num_nodes": 2, "num_resources": 3},
                 section_1,
+                1589939704.5458105,
             )
         ) == [
             Result(state=State.OK, summary="DC: ha02"),
@@ -254,9 +262,9 @@ def test_check_heartbeat_crm_ok(section_1: Section) -> None:
 
 
 def test_check_heartbeat_crm_crit(section_2: Section) -> None:
-    with on_time("2019-08-18 10:36:36", "UTC"):
+    with time_machine.travel(datetime.datetime(2019, 8, 18, 10, 36, 36, tzinfo=ZoneInfo("UTC"))):
         assert list(
-            check_heartbeat_crm(
+            _check_heartbeat_crm(
                 {
                     "dc": "hasi",
                     "max_age": 60,
@@ -265,6 +273,7 @@ def test_check_heartbeat_crm_crit(section_2: Section) -> None:
                     "show_failed_actions": True,
                 },
                 section_2,
+                1559939704.5458105,
             )
         ) == [
             Result(state=State.CRIT, summary="DC: cluster (Expected hasi)"),
@@ -289,3 +298,103 @@ def test_check_heartbeat_crm_resources_promotable_clone(section_3: Section) -> N
             section_3,
         )
     ) == [Result(state=State.OK, summary="clone_1 Master Started ha_b")]
+
+
+def test_check_heartbeat_crm_resources_simple(section_3: Section) -> None:
+    assert list(
+        check_heartbeat_crm_resources(
+            "grp_omd",
+            {"expected_node": None},
+            section_3,
+        )
+    ) == [
+        Result(state=State.OK, summary="pri_fs_omd (ocf::heartbeat:Filesystem): Started ha_b"),
+        Result(state=State.OK, summary="pri_ip_omd (ocf::heartbeat:IPaddr2): Started ha_b"),
+        Result(state=State.OK, summary="pri_proc_omd (ocf::mk:omd): Stopped"),
+        Result(state=State.CRIT, summary='Resource is in state "Stopped"'),
+    ]
+
+
+def test_check_heartbeat_crm_resources_only() -> None:
+    resources = heartbeat_crm_parse_resources(
+        # data from SUP-14949
+        [
+            ["Resource", "Group:", "checkmk"],
+            [
+                "_",
+                "checkmk_lvm",
+                "(ocf::heartbeat:LVM):",
+                "Started",
+                "xxxxxxxx-rrrrr",
+                "(unmanaged)",
+            ],
+            [
+                "_",
+                "checkmk_fs",
+                "(ocf::heartbeat:Filesystem):",
+                "Started",
+                "xxxxxxxx-rrrrr",
+                "(unmanaged)",
+            ],
+            [
+                "_",
+                "checkmk_ip_1002",
+                "(ocf::heartbeat:IPaddr2):",
+                "Started",
+                "xxxxxxxx-rrrrr",
+                "(unmanaged)",
+            ],
+            [
+                "_",
+                "checkmk_ip_1000",
+                "(ocf::heartbeat:IPaddr2):",
+                "Started",
+                "xxxxxxxx-rrrrr",
+                "(unmanaged)",
+            ],
+            [
+                "_",
+                "checkmk_http",
+                "(systemd:httpd):",
+                "Started",
+                "xxxxxxxx-rrrrr",
+                "(unmanaged)",
+            ],
+            [
+                "_",
+                "checkmk_omd",
+                "(ocf::custom:omd):",
+                "Stopped",
+                "(unmanaged)",
+            ],
+        ]
+    )
+    assert list(
+        _check_heartbeat_crm_resources(
+            resources["checkmk"],
+            {"expected_node": None},
+        )
+    ) == [
+        Result(
+            state=State.OK,
+            summary="checkmk_lvm (ocf::heartbeat:LVM): Started xxxxxxxx-rrrrr (unmanaged)",
+        ),
+        Result(
+            state=State.OK,
+            summary="checkmk_fs (ocf::heartbeat:Filesystem): Started xxxxxxxx-rrrrr (unmanaged)",
+        ),
+        Result(
+            state=State.OK,
+            summary="checkmk_ip_1002 (ocf::heartbeat:IPaddr2): Started xxxxxxxx-rrrrr (unmanaged)",
+        ),
+        Result(
+            state=State.OK,
+            summary="checkmk_ip_1000 (ocf::heartbeat:IPaddr2): Started xxxxxxxx-rrrrr (unmanaged)",
+        ),
+        Result(
+            state=State.OK,
+            summary="checkmk_http (systemd:httpd): Started xxxxxxxx-rrrrr (unmanaged)",
+        ),
+        Result(state=State.OK, summary="checkmk_omd (ocf::custom:omd): Stopped (unmanaged)"),
+        Result(state=State.CRIT, summary='Resource is in state "Stopped"'),
+    ]

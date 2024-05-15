@@ -103,7 +103,7 @@ info = [
     ],
 ]
 
-discovery = {"": [(None, None)]}
+discovery = {"": [(None, {})]}
 
 checks = {
     "": [

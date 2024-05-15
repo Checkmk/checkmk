@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
+
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.casa import DETECT_CASA
 
 
 def inventory_casa_fan(info):
@@ -34,7 +37,12 @@ def check_casa_fan(item, _no_params, info):
     return (3, "Fan %s not found in snmp output" % item)
 
 
+def parse_casa_fan(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["casa_fan"] = LegacyCheckDefinition(
+    parse_function=parse_casa_fan,
     detect=DETECT_CASA,
     fetch=[
         SNMPTree(

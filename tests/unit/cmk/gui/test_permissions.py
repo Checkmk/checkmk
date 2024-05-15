@@ -7,10 +7,24 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.utils.plugin_registry import Registry
+
 import cmk.gui.permissions as permissions
+from cmk.gui.permissions import permission_registry, permission_section_registry
 
 
-def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.fixture(name="registry_list", scope="module")
+def fixture_registry_list() -> list[Registry]:
+    """Returns 'permission_registry' and 'permission_section_registry'.
+
+    Registries are to be reset after test-case execution.
+    """
+    return [permission_registry, permission_section_registry]
+
+
+def test_declare_permission_section(
+    reset_gui_registries: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -24,7 +38,7 @@ def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
     assert section.do_sort is False
 
 
-def test_declare_permission(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_declare_permission(reset_gui_registries: None, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )

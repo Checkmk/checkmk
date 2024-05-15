@@ -1,0 +1,17 @@
+title: Graylog: Sources
+agents: graylog
+catalog: app/graylog
+license: GPLv2
+distribution: check_mk
+description:
+ This check plug-in monitors the count of events a Graylog
+ instance. It outputs the total number of events in the last 24 hours.
+ You can also configure the check plug-in to monitor the number of events in a given timeframe.
+ You would do that by configuring the "Time for coverage of events" option
+ when configuring the Graylog special agent.
+
+item:
+ Does not have an item.
+
+discovery:
+ One service is created.

@@ -10,17 +10,22 @@ from livestatus import SiteId
 
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
+from cmk.gui import http
 from cmk.gui.config import active_config
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.tag_rendering import HTMLTagAttributeValue
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName, HTTPVariables, Row
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import urlencode
+from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.view_utils import CellSpec, get_host_list_links
 
 
@@ -72,21 +77,26 @@ def render_cache_info(what: str, row: Row) -> str:
     return text
 
 
-def paint_host_list(site: SiteId, hosts: list[HostName]) -> CellSpec:
+def paint_host_list(site: SiteId, hosts: list[HostName], *, request: Request) -> CellSpec:
     return "", HTML(
         ", ".join(
             get_host_list_links(
                 site,
                 [str(host) for host in hosts],
+                request=request,
             )
         )
     )
 
 
-def format_plugin_output(output: str, row: Row) -> HTML:
+def format_plugin_output(output: str, *, request: Request, row: Row) -> HTML:
     return cmk.gui.view_utils.format_plugin_output(
-        output, row, shall_escape=active_config.escape_plugin_output
+        output, request=request, row=row, shall_escape=active_config.escape_plugin_output
     )
+
+
+def format_labels_for_csv_export(labels: Labels) -> str:
+    return ", ".join(f"{k}:{v}" for k, v in labels.items())
 
 
 def get_tag_groups(row: Row, what: str) -> Mapping[TagGroupID, TagID]:
@@ -111,3 +121,55 @@ def paint_nagiosflag(row: Row, field: ColumnName, bold_if_nonzero: bool) -> Cell
         "badflag" if nonzero == bold_if_nonzero else "goodflag",
         HTMLWriter.render_span(_("yes") if nonzero else _("no")),
     )
+
+
+class RenderLink:
+    def __init__(
+        self,
+        request: http.Request,
+        response: http.Response,
+        display_options: DisplayOptions,
+    ):  # pylint: disable=redefined-outer-name
+        self.request = request
+        self.response = response
+        self.display_options = display_options
+
+    def link_direct(
+        self,
+        url: str,
+        *,
+        html_text: HTML | str | None = None,
+        **attributes: HTMLTagAttributeValue,
+    ) -> HTML:
+        if self.display_options.disabled(self.display_options.I):
+            return HTML()
+
+        return HTMLWriter.render_a(html_text, href=url, **attributes)
+
+    def link_from_filename(
+        self,
+        filename: str,
+        *,
+        html_text: str | None = None,
+        query_args: HTTPVariables | None = None,
+        mobile_filename: str | None = None,
+    ) -> HTML:
+        """Return a fully rendered <a href...>...</a> tag."""
+        _query_args: HTTPVariables = []
+        if options := self.request.var("display_options"):
+            _query_args.append(("display_options", options))
+
+        if query_args is not None:
+            _query_args.extend(query_args)
+
+        url = makeuri_contextless(
+            self.request,
+            _query_args,
+            filename=self.get_filename(filename=filename, mobile_filename=mobile_filename),
+        )
+        return self.link_direct(url, html_text=html_text)
+
+    def get_filename(self, *, filename: str, mobile_filename: str | None = None) -> str:
+        if mobile_filename is None:
+            return filename
+        return mobile_filename if is_mobile(self.request, self.response) else filename

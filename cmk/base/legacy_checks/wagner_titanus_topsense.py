@@ -4,12 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from collections.abc import Sequence
+
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
+
+from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, StringTable
+
+
+def parse_wagner_titanus_topsense(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable] | None:
+    return string_table if string_table[0] else None
+
 
 check_info["wagner_titanus_topsense"] = LegacyCheckDefinition(
+    parse_function=parse_wagner_titanus_topsense,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
@@ -76,13 +87,13 @@ def parse_wagner_titanus_topsens(info):
 
 
 def inventory_wagner_titanus_topsense_info(info):
-    return [(None, None)]
+    yield None, {}
 
 
 def check_wagner_titanus_topsense_info(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
     message = "System: " + parsed[0][0][0]
-    message += ", Uptime: " + get_age_human_readable(int(parsed[0][0][1]) // 100)
+    message += ", Uptime: " + render.timespan(int(parsed[0][0][1]) // 100)
     message += ", System Name: " + parsed[0][0][3]
     message += ", System Contact: " + parsed[0][0][2]
     message += ", System Location: " + parsed[0][0][4]
@@ -121,7 +132,7 @@ check_info["wagner_titanus_topsense.info"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_overall_status(info):
-    return [(None, None)]
+    yield None, {}
 
 
 def check_wagner_titanus_topsense_overall_status(item, _no_params, info):
@@ -156,7 +167,8 @@ check_info["wagner_titanus_topsense.overall_status"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_alarm(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_alarm(item, _no_params, info):
@@ -206,7 +218,8 @@ check_info["wagner_titanus_topsense.alarm"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_smoke(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_smoke(item, _no_params, info):
@@ -248,7 +261,8 @@ check_info["wagner_titanus_topsense.smoke"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_chamber_deviation(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
@@ -282,35 +296,28 @@ check_info["wagner_titanus_topsense.chamber_deviation"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-wagner_titanus_topsense_airflow_deviation_default_values = (-20.0, -20.0, 20.0, 20.0)
-
 
 def inventory_wagner_titanus_topsense_airflow_deviation(info):
-    return [
-        ("1", wagner_titanus_topsense_airflow_deviation_default_values),
-        ("2", wagner_titanus_topsense_airflow_deviation_default_values),
-    ]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
     parsed = parse_wagner_titanus_topsens(info)
-    lower_crit, lower_warn, upper_warn, upper_crit = params
-    status = 0
     if item == "1":
         airflow_deviation = float(parsed[2][0][4])
     elif item == "2":
         airflow_deviation = float(parsed[2][0][5])
     else:
-        return 3, "Airflow Deviation Detector %s not found in SNMP" % item
+        return
 
-    if airflow_deviation >= upper_warn or airflow_deviation <= lower_warn:
-        status = 1
-    if airflow_deviation >= upper_crit or airflow_deviation <= lower_crit:
-        status = 2
-
-    perfdata = [("airflow_deviation", airflow_deviation, upper_warn, upper_crit, 0)]
-
-    return status, "Airflow Deviation is %0.6f%%" % airflow_deviation, perfdata
+    yield check_levels(
+        airflow_deviation,
+        "airflow_deviation",
+        params["levels_upper"] + params["levels_lower"],
+        human_readable_func=lambda v: "%0.6f%%",
+        infoname="Airflow deviation",
+    )
 
 
 check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
@@ -319,6 +326,10 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
     discovery_function=inventory_wagner_titanus_topsense_airflow_deviation,
     check_function=check_wagner_titanus_topsense_airflow_deviation,
     check_ruleset_name="airflow_deviation",
+    check_default_parameters={
+        "levels_upper": (20.0, 20.0),
+        "levels_lower": (-20.0, -20.0),
+    },
 )
 
 # .
@@ -333,7 +344,8 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_temp(info):
-    return [("Ambient 1", {}), ("Ambient 2", {})]
+    yield "Ambient 1", {}
+    yield "Ambient 2", {}
 
 
 def check_wagner_titanus_topsense_temp(item, params, info):

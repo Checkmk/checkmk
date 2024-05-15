@@ -14,16 +14,20 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.liebert.agent_based.lib import (
+    DETECT_LIEBERT,
+    parse_liebert,
+    Section,
+    SystemSection,
+)
+
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import liebert
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
-    "levels": (50, 55),
-    "levels_lower": (10, 15),
+    "levels": (50.0, 55.0),
+    "levels_lower": (10.0, 15.0),
 }
-
-ParsedSection = Mapping[str, tuple[str, str]]
 
 
 def _item_from_key(key: str) -> str:
@@ -32,7 +36,7 @@ def _item_from_key(key: str) -> str:
 
 def _get_item_data(
     item: str,
-    section: ParsedSection,
+    section: Section[str],
 ) -> tuple:
     for key, data in section.items():
         if _item_from_key(key) == item:
@@ -40,13 +44,13 @@ def _get_item_data(
     return (None, None)
 
 
-def parse_liebert_humidity_air(string_table: list[StringTable]) -> ParsedSection:
-    return liebert.parse_liebert(string_table, str)
+def parse_liebert_humidity_air(string_table: list[StringTable]) -> Section[str]:
+    return parse_liebert(string_table, str)
 
 
 def discover_liebert_humidity_air(
-    section_liebert_humidity_air: ParsedSection | None,
-    section_liebert_system: liebert.SystemSection | None,
+    section_liebert_humidity_air: Section[str] | None,
+    section_liebert_system: SystemSection | None,
 ) -> DiscoveryResult:
     if section_liebert_humidity_air is None:
         return
@@ -59,8 +63,8 @@ def discover_liebert_humidity_air(
 def check_liebert_humidity_air(
     item: str,
     params: Mapping[str, Any],
-    section_liebert_humidity_air: ParsedSection | None,
-    section_liebert_system: liebert.SystemSection | None,
+    section_liebert_humidity_air: Section[str] | None,
+    section_liebert_system: SystemSection | None,
 ) -> CheckResult:
     if section_liebert_humidity_air is None or section_liebert_system is None:
         return
@@ -91,7 +95,7 @@ def check_liebert_humidity_air(
 
 register.snmp_section(
     name="liebert_humidity_air",
-    detect=liebert.DETECT_LIEBERT,
+    detect=DETECT_LIEBERT,
     parse_function=parse_liebert_humidity_air,
     fetch=[
         SNMPTree(

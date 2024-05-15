@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""
+This special agent is deprecated. Please use netapp_ontap_snapvault.
+"""
 
 # <<<netapp_api_vf_snapvault:sep(9)>>>
 # snapvault /vol/ipb_datap/   status idle state snapvaulted   lag-time 53812  source-system 172.31.12.15
@@ -19,9 +22,10 @@ from collections import OrderedDict
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from cmk.plugins.lib.netapp_api import SectionSingleInstance
+
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.netapp_api import SectionSingleInstance
 
 
 def _cleanse_item_name(name: str) -> str:

@@ -93,7 +93,6 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
                             target="main",
                         )
                     ),
-                    icon="foldable_sidebar",
                 ):
                     self._render_tree(attrs["__children__"])
             else:

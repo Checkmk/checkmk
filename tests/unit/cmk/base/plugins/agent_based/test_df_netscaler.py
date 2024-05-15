@@ -7,7 +7,8 @@ import pytest
 
 import cmk.base.plugins.agent_based.df_netscaler as dfn
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS, FSBlocks
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS, FSBlocks
 
 STRING_TABLE = [
     ["/var", "96133", "87418"],
@@ -52,12 +53,12 @@ def test_check_grouped(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -> No
             levels=(79.9999999998168, 89.99999999945038),
             boundaries=(0.0, 100.0),
         ),
-        Result(state=State.OK, summary="Used: 9.06% - 9.21 GiB of 102 GiB"),
+        Result(state=State.OK, summary="Used: 9.06% - 9.89 GB of 109 GB"),
         Metric("fs_size", 104109.0, boundaries=(0.0, None)),
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-        Metric("trend", 0.0, boundaries=(0.0, 4337.875)),
+        Metric("trend", 0.0),
         Result(state=State.OK, summary="2 filesystems"),
     ]
 
@@ -75,10 +76,10 @@ def test_check_single_item(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -
             levels=(79.99999999043456, 89.99999999521728),
             boundaries=(0.0, 100.0),
         ),
-        Result(state=State.OK, summary="Used: 9.03% - 720 MiB of 7.79 GiB"),
+        Result(state=State.OK, summary="Used: 9.03% - 755 MB of 8.36 GB"),
         Metric("fs_size", 7976.0, boundaries=(0.0, None)),
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-        Metric("trend", 0.0, boundaries=(0.0, 332.3333333333333)),
+        Metric("trend", 0.0),
     ]

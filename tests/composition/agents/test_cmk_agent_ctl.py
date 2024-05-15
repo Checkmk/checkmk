@@ -6,16 +6,16 @@
 from pathlib import Path
 
 from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
-from tests.testlib.utils import execute
+from tests.testlib.utils import run
 
 
 @skip_if_not_containerized
 def test_agent_controller_installed(agent_ctl: Path) -> None:
-    res = execute([agent_ctl.as_posix(), "--help"])
+    res = run([agent_ctl.as_posix(), "--help"])
     assert "Checkmk agent controller.\n\nUsage:" in res.stdout
 
 
 @skip_if_not_containerized
 def test_dump(agent_ctl: Path) -> None:
-    res = execute(["sudo", agent_ctl.as_posix(), "dump"])
+    res = run(["sudo", agent_ctl.as_posix(), "dump"])
     assert res.stdout.startswith("<<<check_mk>>>")

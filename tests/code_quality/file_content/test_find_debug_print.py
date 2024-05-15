@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import cmc_path, cme_path, cmk_path
+from tests.testlib import repo_path
 
 from ..conftest import ChangedFiles
 
@@ -55,13 +55,7 @@ def test_find_debugs_false(changed_files: ChangedFiles, line: str) -> None:
 
 @pytest.mark.parametrize(
     "path",
-    [
-        p  #
-        for base_path in [cmk_path(), cmc_path(), cme_path()]  #
-        for dir_path in check_paths  #
-        for p in [f"{base_path}/{dir_path}"]
-        if os.path.exists(p)
-    ],
+    [p for dir_path in check_paths for p in [repo_path() / dir_path] if p.exists()],
 )
 def test_find_debug_code(changed_files: ChangedFiles, path: str) -> None:
     scanned = 0
@@ -80,7 +74,7 @@ def test_find_debug_code(changed_files: ChangedFiles, path: str) -> None:
             if file_path.endswith((".pyc", ".whl", ".tar.gz", ".swp")):
                 continue
 
-            if os.path.relpath(file_path, cmk_path()) in exclude_files:
+            if os.path.relpath(file_path, repo_path()) in exclude_files:
                 continue
 
             try:

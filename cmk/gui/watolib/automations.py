@@ -9,6 +9,7 @@ and similar things."""
 from __future__ import annotations
 
 import ast
+import json
 import logging
 import re
 import subprocess
@@ -23,8 +24,8 @@ import urllib3
 
 from livestatus import SiteConfiguration, SiteId
 
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
@@ -38,15 +39,17 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
+    BackgroundStatusSnapshot,
     InitialStatusArgs,
-    job_registry,
     JobStatusSpec,
+    JobStatusStates,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.compatibility import (
     EditionsIncompatible,
@@ -56,7 +59,7 @@ from cmk.gui.utils.compatibility import (
     make_incompatible_info,
 )
 from cmk.gui.utils.urls import urlencode_vars
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
@@ -166,7 +169,7 @@ def local_automation_failure(
     out: str | None = None,
     err: str | None = None,
     exc: Exception | None = None,
-) -> MKGeneralException:
+) -> MKAutomationException:
     call = subprocess.list2cmdline(cmdline) if active_config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
     if code:
@@ -177,7 +180,7 @@ def local_automation_failure(
         msg += ", error: <pre>%s</pre>" % _hilite_errors(err)
     if exc:
         msg += ": %s" % exc
-    return MKGeneralException(msg)
+    return MKAutomationException(msg)
 
 
 def _hilite_errors(outdata: str) -> str:
@@ -195,7 +198,7 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
-    site = get_site_config(site_id)
+    site = get_site_config(active_config, site_id)
     if "secret" not in site:
         raise MKGeneralException(
             _('Cannot connect to site "%s": The site is not logged in') % site.get("alias", site_id)
@@ -219,7 +222,7 @@ def check_mk_remote_automation_serialized(
     # Synchronous execution of the actual remote command in a single blocking HTTP request
     return SerializedResult(
         _do_remote_automation_serialized(
-            site=get_site_config(site_id),
+            site=get_site_config(active_config, site_id),
             command="checkmk-automation",
             vars_=[
                 ("automation", command),  # The Checkmk automation command
@@ -314,9 +317,35 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
     return ast.literal_eval(
         str(
             do_remote_automation(
-                site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+                site=get_site_config(active_config, site_id),
+                command="execute-dcd-command",
+                vars_=command_args,
             )
         )
+    )
+
+
+def fetch_service_discovery_background_job_status(
+    site_id: SiteId, hostname: str
+) -> BackgroundStatusSnapshot:
+    details = json.loads(
+        str(
+            do_remote_automation(
+                site=get_site_config(active_config, site_id),
+                command="service-discovery-job-snapshot",
+                vars_=[("hostname", hostname)],
+            )
+        )
+    )
+    return BackgroundStatusSnapshot(
+        job_id=details["job_id"],
+        status=JobStatusSpec(**details["status"]),
+        exists=details["exists"],
+        is_active=details["is_active"],
+        has_exception=details["has_exception"],
+        acknowledged_by=details["acknowledged_by"],
+        may_stop=details["may_stop"],
+        may_delete=details["may_delete"],
     )
 
 
@@ -582,7 +611,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
 
     It starts the background job using one call. It then polls the remote site, waiting for
     completion of the job."""
-    site_config = get_site_config(site_id)
+    site_config = get_site_config(active_config, site_id)
 
     job_id = _start_remote_automation_job(site_config, automation_request)
 
@@ -598,12 +627,15 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
         )
         assert isinstance(raw_response, tuple)
         response = CheckmkAutomationGetStatusResponse(
-            JobStatusSpec.parse_obj(raw_response[0]),
+            JobStatusSpec.model_validate(raw_response[0]),
             raw_response[1],
         )
         auto_logger.debug("Job status: %r", response)
 
         if not response.job_status.is_active:
+            if response.job_status.state == JobStatusStates.EXCEPTION:
+                raise MKAutomationException("\n".join(response.job_status.loginfo["JobException"]))
+
             result = response.result
             auto_logger.debug("Job is not active anymore. Return the result: %s", result)
             break
@@ -631,7 +663,6 @@ def _start_remote_automation_job(
     return job_id
 
 
-@automation_command_registry.register
 class AutomationCheckmkAutomationStart(AutomationCommand):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
 
@@ -644,12 +675,20 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         )
 
     def execute(self, api_request: CheckmkAutomationRequest) -> str:
-        job = CheckmkAutomationBackgroundJob(api_request=api_request)
-        job.start(lambda job_interface: job.execute_automation(job_interface, api_request))
+        automation_id = str(uuid.uuid4())
+        job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
+        job = CheckmkAutomationBackgroundJob(job_id)
+        job.start(
+            lambda job_interface: job.execute_automation(job_interface, api_request),
+            InitialStatusArgs(
+                title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
+                user=str(user.id) if user.id else None,
+            ),
+        )
+
         return job.get_job_id()
 
 
-@automation_command_registry.register
 class AutomationCheckmkAutomationGetStatus(AutomationCommand):
     """Called by do_remote_automation_in_background_job to get the background job state from on a
     remote site"""
@@ -674,7 +713,6 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
         return dict(response[0]), response[1]
 
 
-@job_registry.register
 class CheckmkAutomationBackgroundJob(BackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 
@@ -683,25 +721,6 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
     @classmethod
     def gui_title(cls) -> str:
         return _("Checkmk automation")
-
-    def __init__(
-        self, job_id: str | None = None, api_request: CheckmkAutomationRequest | None = None
-    ) -> None:
-        if job_id is not None:
-            # Loading an existing job
-            super().__init__(job_id=job_id)
-            return
-
-        assert api_request is not None
-
-        # A new job is started
-        automation_id = str(uuid.uuid4())
-        super().__init__(
-            f"{self.job_prefix}{api_request.command}-{automation_id}",
-            InitialStatusArgs(
-                title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
-            ),
-        )
 
     @staticmethod
     def _store_result(

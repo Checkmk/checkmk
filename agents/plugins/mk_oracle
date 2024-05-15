@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 # Checkmk agent plugin for monitoring ORACLE databases
 # This plugin is a result of the common work of Thorsten Bruhns
@@ -206,6 +206,10 @@ CONFIGURATION CUSTOM SQLS:
                         Only useful if SQLS_SECTION_NAME is not 'oracle_sql'.
                         ASCII code, eg. '58' means ':'.
                         Can be set globally or within a section definition.
+                        If an error occurs, the error message will have the
+                        following format, independent of the separator chosen.
+
+                            <sid>|FAILURE|<error description>
 
   SQLS_ITEM_NAME=item_name
                         Only useful if SQLS_SECTION_NAME is 'oracle_sql'. In
@@ -602,9 +606,8 @@ set_ora_env() {
         if [ -f ${OLRLOC} ]; then
             # oratab is not supported in Grid-Infrastructure 12.2+
             # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
-            # OLRLOC holds CRS_HOME
-            # shellcheck disable=SC1090
-            . ${OLRLOC}
+            # OLRLOC holds crs_home
+            crs_home=$(get_crs_home_from_olrloc "${OLRLOC}")
             export ORA_HOME_SOURCE="(GI):    "
 
             # set ORACLE_HOME = crs_home for ASM
@@ -612,8 +615,10 @@ set_ora_env() {
                 # shellcheck disable=SC2154
                 ORACLE_HOME=${crs_home}
             else
+                crsctl_path="${crs_home}"/bin/crsctl
+                EXECUTION_MODE="$(get_binary_execution_mode "$crsctl_path" "$(get_binary_owner "$crsctl_path")")"
                 # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
-                ORACLE_HOME=$("${crs_home}"/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep -m1 "^ORACLE_HOME=" | cut -d"=" -f2)
+                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\" | ${GREP} -m1 ^ORACLE_HOME= | cut -d= -f2")
             fi
         else
             # Single Instance with oratab
@@ -634,7 +639,6 @@ set_ora_env() {
         fi
     fi
 
-    LD_LIBRARY_PATH=$ORACLE_HOME/lib
     if [ ! -d "${ORACLE_HOME:-'not_found'}" ]; then
         logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for SID '${ORACLE_SID}' not found or not existing!"
         return 2
@@ -645,7 +649,7 @@ set_ora_env() {
         logging -c -e "[${sid}] [set_ora_env]" "TNS_ADMIN/sqlnet.ora: ${TNS_ADMIN}/sqlnet.ora"
         exit 1
     fi
-    export ORACLE_HOME TNS_ADMIN ORACLE_SID LD_LIBRARY_PATH
+    export ORACLE_HOME TNS_ADMIN ORACLE_SID
 }
 
 set_ora_version() {
@@ -1242,7 +1246,7 @@ sql_dataguard_stats() {
               JOIN  v\$parameter vp on 1=1
               JOIN v\$instance i on 1=1
               left outer join V\$dataguard_stats ds on 1=1
-              left outer join (select listagg(to_char(inst_id) || '.' || status, ', ') status
+              left outer join (select listagg(to_char(inst_id) || '.' || status, ', ') WITHIN GROUP (ORDER BY to_char(inst_id) || '.' || status) status
                                 from gv\$managed_standby
                                where  process = 'MRP0') ms on 1=1
               WHERE vp.name = 'log_archive_config'
@@ -2136,6 +2140,16 @@ unset_custom_sqls_vars() {
     unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS SQLS_ITEM_SID
 }
 
+sid_matches_defined_sids() {
+    # first parameter is a list of coma separated values (SQLS_SIDS)
+    # second parameter is a single value (current sid)
+
+    # split $1 into array on , or newline
+    IFS=$',\n' read -d '' -ra sids_array <<<"$1"
+    # check if array contains $2
+    printf '%s\n' "${sids_array[@]}" | "${GREP}" -F -x -- "$2" >/dev/null
+}
+
 do_custom_sqls() {
     for section in $custom_sqls_sections; do
         if ! type "$section" >/dev/null 2>&1; then
@@ -2146,11 +2160,9 @@ do_custom_sqls() {
 
         $section
 
-        local sids=${SQLS_SIDS:-$custom_sqls_sids}
-        sids=${sids//,/ }
-
+        local sids="${SQLS_SIDS:-$custom_sqls_sids}"
         # If SID is not part of sids we can skip the rest
-        if ! echo "$sids" | "${GREP}" -q "$MK_SID"; then
+        if ! sid_matches_defined_sids "$sids" "$MK_SID"; then
             logging -w "[${MK_SID}] [custom_sql] [${section}]" \
                 "Skipping this section, runs only on SIDs '$sids'"
             unset_custom_sqls_vars
@@ -2326,9 +2338,58 @@ handle_custom_sql_errors() {
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+# BEGIN COMMON PLUGIN CODE
+
+# check that no users other than root can change the file
+only_root_can_modify() {
+    permissions=$1
+    owner=$2
+    group=$3
+
+    group_write_perm=$(echo "$permissions" | cut -c 6)
+    other_write_perm=$(echo "$permissions" | cut -c 9)
+
+    if [ "$owner" != "root" ] || [ "$other_write_perm" != "-" ]; then
+        return 1
+    fi
+
+    [ "$group" = "root" ] || [ "$group_write_perm" = "-" ]
+}
+
+get_binary_owner() {
+    BINARY_PATH=$1
+    stat -c '%U' "${BINARY_PATH}"
+}
+
+get_binary_execution_mode() {
+    BINARY_PATH=$1
+    BINARY_USER=$2
+
+    # if the executable belongs to someone besides root, do not execute it as root
+    if needs_user_switch_before_executing "$BINARY_PATH"; then
+        echo "su ${BINARY_USER} -c"
+        return
+    fi
+    echo "bash -c"
+}
+
+needs_user_switch_before_executing() {
+    BINARY_PATH=$1
+
+    [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"
+}
+
+# END COMMON PLUGIN CODE
+
+get_crs_home_from_olrloc() {
+    "${GREP}" "crs_home" "${1}" | cut -d"=" -f2
+}
+
 get_sqlplus_version_with_precision() {
     precision="$1"
-    "${ORACLE_HOME}"/bin/sqlplus -V | "${GREP}" ^SQL | cut -d" " -f3 | cut -d"." -f-"${precision}"
+    sqlplus_path="${ORACLE_HOME}"/bin/sqlplus
+    EXECUTION_MODE="$(get_binary_execution_mode "$sqlplus_path" "$(get_binary_owner "$sqlplus_path")")"
+    $EXECUTION_MODE "\"${sqlplus_path}\" -V" | ${GREP} ^SQL | cut -d" " -f3 | cut -d"." -f-"${precision}"
 }
 
 print_dummy_sections() {
@@ -2423,9 +2484,12 @@ run_cached() {
 
     NAME="oracle_${MK_SID}${3}"
     MAXAGE="${1}"
+    # Attention: CMD will contain the shell function to be executed. Make sure to export all needed functions during
+    # that execution (see e.g. export -f logging)
     CMD="${2}"
 
-    TIMEOUT=$((MAXAGE * 2))
+    CREATION_TIMEOUT=$((MAXAGE * 2))
+    OUTPUT_TIMEOUT=$((MAXAGE * 3))
     REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
@@ -2434,8 +2498,8 @@ run_cached() {
     NOW="$(get_epoch)"
     MTIME=$(get_file_mtime "${CACHEFILE}" 2>/dev/null) || MTIME=0
 
-    if [ -s "${CACHEFILE}" ]; then
-        # Output the file (even if it is outdated)
+    if [ -s "${CACHEFILE}" ] && [ $((NOW - MTIME)) -le "${OUTPUT_TIMEOUT}" ]; then
+        # Output the file (if it is not too outdated)
         CACHE_INFO="cached(${MTIME},${MAXAGE})"
         # prefix or insert cache info, unless already present.
         # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
@@ -2448,28 +2512,43 @@ run_cached() {
 
     # Error information about plugin, if available.
     # Output independent of cachefile existance
+    #
+    # Watch out!
+    # You cannot consolidate the error reporting with the agents.
+    # *This* way of error reporting is not suitable for the regular agents, because
+    # it might interrupt a 'local' or 'mrpe' section -- the agents use the SPOOL DIR
+    # for that. However, the SPOOL DIR is not known to this plugin.
     [ -s "${CACHEFILE}.fail" ] && cat "${CACHEFILE}.fail"
 
-    # Kill the process if it is running too long (cache file not accessed for more than TIMEOUT seconds).
+    # Kill the process if it is running too long (cache file not accessed for more than CREATION_TIMEOUT seconds).
     # If killing succeeds, remove CACHFILE.new.PID.
-    # Remove CACHEFILE unconditionally.
     # Write info about the timed out process and the kill attempt to CACHEFILE.fail.
     # It will be reported to the Check_MK agent service later on, by the sync part.
     # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
     for cfile in "${CACHEFILE}.new."*; do
         [ -e "${cfile}" ] || break # no match
-        if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
+        TRYING_SINCE="$(get_file_atime "${cfile}")"
+        [ -n "${TRYING_SINCE}" ] || break # race condition: file vanished
+        if [ $((NOW - TRYING_SINCE)) -ge "${CREATION_TIMEOUT}" ]; then
             {
                 echo "<<<checkmk_cached_plugins:sep(124)>>>"
                 pid="${cfile##*.new.}"
-                printf "timeout|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
-                kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
+                printf "timeout|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
+
+                # Workaround for AIX to kill child processes
+                if [ "$OS_TYPE" = 'AIX' ] && [ -x "$(command -v proctree 2>/dev/null)" ]; then
+                    # shellcheck disable=SC2016
+                    pidlist="$(proctree "$pid" 2>/dev/null | $AWK '{ printf $1" "}')"
+                fi
+                pidlist="${pidlist:-"${pid}"}"
+                # shellcheck disable=SC2086
+                kill -9 ${pidlist} >/dev/null 2>&1 && sleep 2 # TODO: what about child processes under non-AIX systems?
+
                 if [ -n "$(ps -o args= -p "${pid}")" ]; then
-                    printf "killfailed|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
+                    printf "killfailed|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
                 else
                     rm -f "${cfile}"
                 fi
-                rm -f "${CACHEFILE}"
             } >"${CACHEFILE}".fail 2>&1
         fi
     done
@@ -2489,18 +2568,18 @@ run_cached() {
         if $MK_ORA_DEBUG; then
             cat <<HERE | "${THIS_SHELL}"
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}.new.\$\$"
 HERE
         else
             cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}.new.\$\$"
 HERE
 
         fi
     fi
 
-    unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE MTIME CACHE_INFO NOW
+    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO TRYING_SINCE OUTPUT_TIMEOUT
 }
 
 # .
@@ -2627,8 +2706,10 @@ mk_ora_db_connect() {
 
         logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
 
-        if [ -f "${ORACLE_HOME}"/bin/tnsping ]; then
-            if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
+        tnsping_path="${ORACLE_HOME}"/bin/tnsping
+        if [ -f "${tnsping_path}" ]; then
+            EXECUTION_MODE="$(get_binary_execution_mode "$tnsping_path" "$(get_binary_owner "$tnsping_path")")"
+            if $EXECUTION_MODE "\"${tnsping_path}\" \"$TNSALIAS\"" >/dev/null 2>&1; then
                 TNSPINGOK=yes
             else
                 unset TNSALIAS
@@ -2696,18 +2777,24 @@ mk_ora_db_connect() {
 #   '----------------------------------------------------------------------'
 
 mk_ora_sqlplus() {
+    # Executes a SQL query by using sqlplus binary.
+    # The query will be piped-in and consumed via cat - so always execute cat at the very beginning of the function
+    function_stdin="$(cat)"
     local from_where="$1"
     local print_elapsed_time="$2"
     local start_time=
     local elapsed_time=
-    local loc_stdin=
     local output=
 
     logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Piggyback host: $MK_PIGGYBACK_HOST"
 
     start_time="$(perl -MTime::HiRes=time -wle 'print time')"
-    loc_stdin=$(cat)
-
+    read -r -d '' pipe_input <<EOM
+WHENEVER SQLERROR EXIT 1
+connect ${MK_DB_CONNECT}
+WHENEVER SQLERROR CONTINUE
+$(ora_session_environment)${function_stdin}
+EOM
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus
     if [ ! -x "${SQLPLUS}" ]; then
         logging -w -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
@@ -2718,7 +2805,23 @@ mk_ora_sqlplus() {
         echo "<<<<${MK_PIGGYBACK_HOST}>>>>"
     fi
 
-    if output=$(echo "$(ora_session_environment)${loc_stdin}" | "$SQLPLUS" -L -s "$MK_DB_CONNECT"); then
+    EXECUTION_USER="$(get_binary_owner "$SQLPLUS")"
+    EXECUTION_MODE="$(get_binary_execution_mode "$SQLPLUS" "$EXECUTION_USER")"
+
+    if ! $EXECUTION_MODE "test -r \"${TNS_ADMIN}/sqlnet.ora\""; then
+        # we can not read sqlnet.ora!
+        # set_ora_env already checked that the file exists
+        # and we want to transport a meaningful error message to the ui and in logging
+        local sqlnet_ora_error="${TNS_ADMIN}/sqlnet.ora can not be read by user \"${EXECUTION_USER}\"! Either use 'sqlnet.ora permission group' bakery rule, or directly modify permissions of the file."
+        logging -c -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "$sqlnet_ora_error"
+
+        echo '<<<oracle_instance:sep(124)>>>'
+        echo "$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|$sqlnet_ora_error"
+        exit 1
+
+    fi
+
+    if output=$(echo "$pipe_input" | $EXECUTION_MODE "\"$SQLPLUS\" -L -s /nolog"); then
         echo -e "$output"
 
         elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
@@ -2741,6 +2844,7 @@ mk_ora_sqlplus() {
         if $MK_ORA_DEBUG_CONNECT; then
             echo "    Logindetails:           ${MK_DB_CONNECT}" >&2
             echo -e "    Error Message:          ${output:0:100}"
+            exit 1
         else
             echo '<<<oracle_instance:sep(124)>>>'
             echo -e "$output"
@@ -2775,9 +2879,119 @@ do_async_checks() {
     echo "$MK_ASYNC_SECTIONS_QUERY" | mk_ora_sqlplus "do_async_checks"
 }
 
+do_suggest_group() {
+    local MODE=$1
+    local USER=$2
+    local FILE=$3
+    if id -Gn "$USER" | "${GREP}" '\boinstall\b' >/dev/null; then
+        echo "  We suggest to change the group to oinstall and give $MODE permission for the group:"
+        echo "  chgrp oinstall \"$FILE\""
+        local m="x"
+        if [ "$MODE" = "read" ]; then
+            m="r"
+        fi
+        echo "  chmod g+$m \"$FILE\""
+    fi
+}
+
+do_test_file_permission() {
+    local MODE=$1
+    local USER=$2
+    local FILE=$3
+
+    local m="-x"
+    if [ "$MODE" = "read" ]; then
+        m="-r"
+    fi
+
+    if su "${USER}" -c "test $m \"$FILE\""; then
+        echo "* user \"$USER\" can $MODE $FILE"
+        true
+    else
+        echo "* ERROR! user \"$USER\" can NOT $MODE $FILE"
+        echo "  $(ls -dl "$FILE")"
+        do_suggest_group "$MODE" "$USER" "$FILE"
+        echo
+        false
+    fi
+}
+
+do_test_permissions() {
+    local DEFAULT_SQLNET="LOG_DIRECTORY_CLIENT=/var/log/check_mk/oracle_clientDIAG_ADR_ENABLED=OFFSQLNET.WALLET_OVERRIDE=TRUEWALLET_LOCATION=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=/etc/check_mk/oracle_wallet)))"
+
+    echo
+    echo "---checking permissions-------------------------------------------------"
+    echo "see https://checkmk.atlassian.net/wiki/spaces/KB/pages/70582273/Troubleshooting+mk+oracle+for+Windows+and+Linux"
+    echo
+
+    local SQLPLUS="${ORACLE_HOME}/bin/sqlplus"
+    echo "* sqlplus binary: ${SQLPLUS}"
+    local BINARY_OWNER
+    BINARY_OWNER="$(get_binary_owner "$SQLPLUS")"
+    echo "* sqlplus binary owner: ${BINARY_OWNER}"
+    if ! needs_user_switch_before_executing "$SQLPLUS"; then
+        echo "* change user: false"
+        echo "------------------------------------------------------------------------"
+        return
+    fi
+    echo "* change user: true"
+
+    echo "* \$TNS_ADMIN: ${TNS_ADMIN}"
+    local PATH_SQLNET="$TNS_ADMIN/sqlnet.ora"
+    local PATH_TNSNAMES="$TNS_ADMIN/tnsnames.ora"
+    if ! do_test_file_permission "read" "$BINARY_OWNER" "$PATH_SQLNET"; then
+        echo "  If you use the AGENT BAKERY you have to use the rule 'sqlnet.ora premission group' to make this change permanently, otherwise it will be overwritten by an agent update."
+    fi
+    if [ -f "$PATH_TNSNAMES" ]; then
+        do_test_file_permission "read" "$BINARY_OWNER" "$PATH_TNSNAMES"
+    fi
+    echo
+
+    local GENERIC_ERROR_MESSAGE="
+  Could not login. In case you are using a wallet to connect, there might be a permission error.
+  Make sure that the wallet folder can be read and executed by user \"$BINARY_OWNER\" and
+  the files inside the wallet can be read by the user.
+  Consult your ora files for hints where the wallet is located:
+  $PATH_SQLNET
+  $PATH_TNSNAMES
+"
+
+    # let's go all in and see if the connection works:
+    if error=$(echo "" | mk_ora_sqlplus "do_testmode" "no" 2>&1); then
+        echo "* test login works"
+    else
+        echo "* test-login does not work!"
+        if echo "$error" | ${GREP} "ORA-12578" >/dev/null; then
+            echo "  ORA-12578 suggests, that there is an error reading the wallet."
+            if [ "$(sed '/^#/d' </etc/check_mk/sqlnet.ora | tr -d '\n' | sed -e 's/\s\+//g')" == "$DEFAULT_SQLNET" ]; then
+                echo "  Detected sqlnet.ora as suggested in the documentation."
+                local WALLET_PATH="/etc/check_mk/oracle_wallet"
+                if [ ! -d "$WALLET_PATH" ]; then
+                    echo
+                    echo "* '$WALLET_PATH' does not exist or is not a directory!"
+                else
+                    echo
+                    do_test_file_permission "read" "$BINARY_OWNER" "$WALLET_PATH"
+                    do_test_file_permission "execute" "$BINARY_OWNER" "$WALLET_PATH"
+                    for f in "$WALLET_PATH"/{c,e}wallet.*; do
+                        do_test_file_permission "read" "$BINARY_OWNER" "$f"
+                    done
+                fi
+            else
+                echo "$GENERIC_ERROR_MESSAGE"
+            fi
+        else
+            echo "$GENERIC_ERROR_MESSAGE"
+        fi
+    fi
+    echo "------------------------------------------------------------------------"
+}
+
 do_testmode() {
     local sections=$1
     local asections=$2
+
+    do_test_permissions
 
     echo
     echo "---login----------------------------------------------------------------"
@@ -2929,7 +3143,6 @@ execute_queries_for_sid() {
         "ORACLE_SID      : ${ORACLE_SID}" \
         "ORACLE_HOME     : ${ORACLE_HOME}" \
         "TNS_ADMIN       : ${TNS_ADMIN}" \
-        "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}" \
         "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})" \
         "ORACLE_VERSION_FOUR_PARTS  : ${NUMERIC_ORACLE_VERSION_FOUR_PARTS}"
 
@@ -2967,6 +3180,10 @@ export -f unset_custom_sqls_vars
 export -f custom_sql_section
 export -f do_async_custom_sqls
 export -f handle_custom_sql_errors
+export -f get_binary_execution_mode
+export -f needs_user_switch_before_executing
+export -f get_binary_owner
+export -f only_root_can_modify
 
 set_up_tmpdirs() {
     ORA_TMPDIR="${MK_VARDIR}/tmp/mk_oracle_tmp_dir"
@@ -3104,7 +3321,6 @@ main_queries() {
             "ORACLE_SID      : ${ORACLE_SID}" \
             "ORACLE_HOME     : ${ORACLE_HOME}" \
             "TNS_ADMIN       : ${TNS_ADMIN}" \
-            "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}" \
             "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
 
         db_connect=$(mk_ora_db_connect "$remote_instance")

@@ -13,7 +13,10 @@ import os
 import re
 import socket
 import time
+from email.message import Message as POPIMAPMessage
 from pathlib import Path
+
+from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from cmk.utils.mailbox import (
     active_check_main,
@@ -105,37 +108,48 @@ def syslog_time(localtime: time.struct_time = time.localtime()) -> str:
     return time.strftime("%b %d %H:%M:%S", localtime)
 
 
-def prepare_messages_for_ec(args: Args, mails: MailMessages) -> tuple[list[str], list[int]]:
+def _get_imap_or_pop_log_line(msg: POPIMAPMessage, body_limit: int) -> str:
+    subject = msg.get("Subject", "None")
+    encoding = msg.get("Content-Transfer-Encoding", "None")
+    payload = str(msg.get_payload())
+
+    # Add the body to the event
+    if msg.is_multipart():
+        # only care for the first text/plain element
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            disposition = str(part.get("Content-Disposition"))
+            encoding = part.get("Content-Transfer-Encoding", "None")
+            if content_type == "text/plain" and "attachment" not in disposition:
+                payload = str(part.get_payload())
+
+    if encoding == "base64":
+        # bytes -> str conversion with str() is brutal...
+        payload = str(base64.b64decode(payload))
+    return subject + " | " + payload[:body_limit]
+
+
+def prepare_messages_for_ec(args: Args, mails: MailMessages, protocol: str) -> list[str]:
     # create syslog message from each mail
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
     # <facility+priority> timestamp hostname application: message
     messages: list[str] = []
-    forwarded: list[int] = []
     cur_time = syslog_time()
     priority = 5  # OK
 
-    for index, msg in sorted(mails.items()):
-        subject = msg.get("Subject", "None")
-        encoding = msg.get("Content-Transfer-Encoding", "None")
-        log_line = subject
-        # Now add the body to the event
-        if msg.is_multipart():
-            # only care for the first text/plain element
-            for part in msg.walk():
-                content_type = part.get_content_type()
-                disposition = str(part.get("Content-Disposition"))
-                encoding = part.get("Content-Transfer-Encoding", "None")
-                if content_type == "text/plain" and "attachment" not in disposition:
-                    payload = part.get_payload()
-                    if encoding == "base64":
-                        payload = str(base64.b64decode(payload))
-                    log_line += "|" + payload[: args.body_limit]
-                    break
+    for _index, msg in sorted(mails.items()):
+        if protocol == "EWS":
+            assert isinstance(msg, EWSMessage)
+            subject = msg.subject
+            log_line = (
+                subject
+                + " | "
+                + (msg.text_body[: args.body_limit] if msg.text_body else "No mail body found.")
+            )
         else:
-            payload = msg.get_payload()
-            if encoding == "base64":
-                payload = str(base64.b64decode(payload))
-            log_line += "|" + payload[: args.body_limit]
+            # An 'assert isinstance(msg, email.message.Message)' doesn't do the job here for mypy
+            subject = msg.get("Subject", "None")  # type: ignore[attr-defined]
+            log_line = _get_imap_or_pop_log_line(msg, args.body_limit)
 
         log_line = log_line.replace("\r\n", "\0")
         log_line = log_line.replace("\n", "\0")
@@ -151,11 +165,11 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> tuple[list[str],
             application = subject.replace("\n", "")
 
         # Construct the final syslog message
-        log = "<%d>%s" % ((int(args.forward_facility) << 3) + priority, cur_time)
-        log += f" {args.forward_host or args.fetch_server} {application}: {log_line}"
-        messages.append(log)
-        forwarded.append(index)
-    return messages, forwarded
+        messages.append(
+            f"<{(int(args.forward_facility) << 3) + priority}> {cur_time}"
+            f" {args.forward_host or args.fetch_server} {application}: {log_line}"
+        )
+    return messages
 
 
 def forward_to_ec(args: Args, messages: list[str]) -> CheckResult:
@@ -168,7 +182,7 @@ def forward_to_ec(args: Args, messages: list[str]) -> CheckResult:
         if not description:
             return "%s/tmp/run/mkeventd/eventsocket" % os.getenv("OMD_ROOT", "")
         if description == "spool:":
-            return "spool: %s/var/mkeventd/spool" % os.getenv("OMD_ROOT", "")
+            return "spool:%s/var/mkeventd/spool" % os.getenv("OMD_ROOT", "")
         if "," in description:
             prot_addr_port = description.split(",")
             return prot_addr_port[0], prot_addr_port[1], prot_addr_port[3]
@@ -233,7 +247,7 @@ def forward_to_ec(args: Args, messages: list[str]) -> CheckResult:
 
 
 def check_mail(args: Args) -> CheckResult:
-    """Create a mailbox an try to connect. In case of success our check will happily return OK
+    """Create a mailbox and try to connect. In case of success our check will happily return OK
     If desired mails can also be fetched and forwarded to the event console (EC)
     """
     with Mailbox(args) as mailbox:
@@ -244,16 +258,15 @@ def check_mail(args: Args) -> CheckResult:
             return 2, str(exc), None
 
         if args.forward_ec:
-            messages, forwarded = prepare_messages_for_ec(
-                args,
-                mailbox.fetch_mails(args.match_subject),
-            )
-            result = forward_to_ec(args, messages)
+            fetched_mails: MailMessages = mailbox.fetch_mails(args.match_subject)
+            ec_messages = prepare_messages_for_ec(args, fetched_mails, mailbox.protocol())
+            result = forward_to_ec(args, ec_messages)
+
+            # (Copy and) Delete the forwarded mails if configured
             if args.cleanup:
                 if args.cleanup != "delete":
-                    mailbox.copy_mails(forwarded, args.cleanup)
-                mailbox.delete_mails(forwarded)
-
+                    mailbox.copy_mails(fetched_mails, folder=args.cleanup)
+                mailbox.delete_mails(fetched_mails)
             return result
 
     return 0, "Successfully logged in to mailbox", None
@@ -261,4 +274,4 @@ def check_mail(args: Args) -> CheckResult:
 
 if __name__ == "__main__":
     logging.getLogger().name = "check_mail"
-    active_check_main(create_argument_parser(), check_mail, allow_ews=False)
+    active_check_main(create_argument_parser(), check_mail)

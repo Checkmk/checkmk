@@ -5,7 +5,6 @@
 
 import copy
 import pickle
-from collections.abc import Container
 
 import pytest
 
@@ -13,32 +12,26 @@ from cmk.utils.sectionname import SectionName
 from cmk.utils.validatedstr import ValidatedString
 
 
-class VS(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
-
-
 @pytest.mark.parametrize(
     "str_name", ["", 23] + list("\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|")
 )
-def test_invalid_plugin_name(str_name) -> None:  # type: ignore[no-untyped-def]
+def test_invalid_plugin_name(str_name: object) -> None:
     with pytest.raises((TypeError, ValueError)):
-        VS(str_name)
+        ValidatedString(str_name)  # type: ignore[arg-type]
 
 
 def test_plugin_name_repr() -> None:
-    assert repr(VS("Margo")) == "VS('Margo')"
+    assert repr(ValidatedString("Margo")) == "ValidatedString('Margo')"
 
 
 def test_plugin_name_str() -> None:
-    assert str(VS("Margo")) == "Margo"
+    assert str(ValidatedString("Margo")) == "Margo"
 
 
 def test_plugin_name_equal() -> None:
-    assert VS("Stuart") == VS("Stuart")
+    assert ValidatedString("Stuart") == ValidatedString("Stuart")
     with pytest.raises(TypeError):
-        _ = VS("Stuart") == "Stuart"
+        _ = ValidatedString("Stuart") == "Stuart"
 
 
 def test_copyability() -> None:
@@ -50,25 +43,25 @@ def test_copyability() -> None:
 
 def test_plugin_name_as_key() -> None:
     plugin_dict = {
-        VS("Stuart"): None,
+        ValidatedString("Stuart"): None,
     }
-    assert VS("Stuart") in plugin_dict
+    assert ValidatedString("Stuart") in plugin_dict
 
 
 def test_plugin_name_sort() -> None:
     plugin_dict = {
-        VS("Stuart"): None,
-        VS("Bob"): None,
-        VS("Dave"): None,
+        ValidatedString("Stuart"): None,
+        ValidatedString("Bob"): None,
+        ValidatedString("Dave"): None,
     }
 
     assert sorted(plugin_dict) == [
-        VS("Bob"),
-        VS("Dave"),
-        VS("Stuart"),
+        ValidatedString("Bob"),
+        ValidatedString("Dave"),
+        ValidatedString("Stuart"),
     ]
 
 
 def test_cross_class_comparison_fails() -> None:
     with pytest.raises(TypeError):
-        _ = VS("foo") == SectionName("foo")
+        _ = ValidatedString("foo") == SectionName("foo")

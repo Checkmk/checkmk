@@ -15,13 +15,10 @@
 
 import collections
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 NetappApiTimeEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "NetappApiTimeEntry",
@@ -51,14 +48,14 @@ def check_netapp_api_systemtime(item, params, parsed):
         None,
         None,
         infoname="System time",
-        human_readable_func=get_timestamp_human_readable,
+        human_readable_func=render.datetime,
     )
     yield check_levels(
         entry.agent_time - entry.system_time,
         "time_difference",
         params.get("levels", (None, None)),
         infoname="Time difference",
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.time_offset,
     )
 
 

@@ -10,10 +10,9 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
 
-from cmk.base.api.agent_based.value_store._global_state import (
-    get_value_store,
-    load_host_value_store,
-)
+from cmk.base.api.agent_based.value_store import ValueStoreManager
+
+from cmk.agent_based.v1.value_store import get_value_store, set_value_store_manager
 
 _TEST_KEY = ("check", "item", "user-key")
 
@@ -28,8 +27,8 @@ def test_load_host_value_store_loads_file(monkeypatch: MonkeyPatch) -> None:
         % service_id,
     )
 
-    with load_host_value_store(
-        HostName("test_load_host_value_store_loads_file"),
+    with set_value_store_manager(
+        ValueStoreManager(HostName("test_load_host_value_store_loads_file")),
         store_changes=False,
     ) as mgr:
         with mgr.namespace(service_id):

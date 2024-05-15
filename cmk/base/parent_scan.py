@@ -8,40 +8,58 @@ import socket
 import subprocess
 import sys
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import cache_manager, DictCache
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError
+from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console
 
-from cmk.automations.results import Gateway
+from cmk.automations.results import Gateway, GatewayResult
 
-import cmk.base.config as config
 import cmk.base.obsolete_output as out
-from cmk.base.config import ConfigCache
+from cmk.base.ip_lookup import IPStackConfig
+
+
+@dataclass(frozen=True, kw_only=True)
+class ScanConfig:
+    active: bool
+    online: bool
+    ip_stack_config: IPStackConfig
+    parents: Sequence[HostName]
+
+
+class _IpAddressLookup(Protocol):
+    def __call__(
+        self, hostname: HostName, *, family: socket.AddressFamily
+    ) -> HostAddress | None: ...
 
 
 def do_scan_parents(
-    config_cache: ConfigCache,
+    scan_config: Mapping[HostName, ScanConfig],
+    hosts_config: Hosts,
     monitoring_host: HostName | None,
     hosts: list[HostName],
+    *,
+    max_num_processes: int,
+    lookup_ip_address: _IpAddressLookup,
 ) -> None:
     # pylint: disable=too-many-branches
     if not hosts:
-        hosts = list(sorted(config_cache.all_active_realhosts()))
+        hosts = sorted(
+            {hn for hn in hosts_config.hosts if scan_config[hn].active and scan_config[hn].online}
+        )
 
     parent_hosts = []
     parent_ips: dict[HostName, HostAddress] = {}
     parent_rules = []
     gateway_hosts: set[HostName] = set()
-
-    # TODO: Sneakily changing a global variable looks like a bad idea!
-    config.max_num_processes = max(config.max_num_processes, 1)
 
     outfilename = Path(cmk.utils.paths.check_mk_config_dir) / "parents.mk"
 
@@ -64,32 +82,37 @@ def do_scan_parents(
                 "the file and try again."
             )
 
-    out.output("Scanning for parents (%d processes)..." % config.max_num_processes)
+    out.output("Scanning for parents (%d processes)..." % max_num_processes)
     while hosts:
         chunk: list[HostName] = []
-        while len(chunk) < config.max_num_processes and hosts:
+        while len(chunk) < max_num_processes and hosts:
             host = hosts.pop()
 
             # skip hosts that already have a parent
-            if config_cache.parents(host):
+            if scan_config[host].parents:
                 console.verbose("(manual parent) ")
                 continue
             chunk.append(host)
 
-        gws = scan_parents_of(config_cache, monitoring_host, chunk)
+        results = scan_parents_of(
+            scan_config,
+            hosts_config,
+            monitoring_host,
+            chunk,
+            lookup_ip_address=lookup_ip_address,
+        )
 
-        for host, (gw, _unused_state, _unused_ping_fails, _unused_message) in zip(chunk, gws):
-            if gw:
-                gateway, gateway_ip, dns_name = gw
-                if not gateway:  # create artificial host
-                    if dns_name:
-                        gateway = dns_name
+        for host, result in zip(chunk, results):
+            if gw := result.gateway:
+                if not gw.existing_gw_host_name:  # create artificial host
+                    if gw.dns_name:
+                        gateway = gw.dns_name
                     else:
-                        gateway = HostName("gw-%s" % (gateway_ip.replace(".", "-")))
+                        gateway = HostName("gw-%s" % (gw.ip.replace(".", "-")))
                     if gateway not in gateway_hosts:
                         gateway_hosts.add(gateway)
                         parent_hosts.append("%s|parent|ping" % gateway)
-                        parent_ips[gateway] = gateway_ip
+                        parent_ips[gateway] = gw.ip
                         if monitoring_host:
                             parent_rules.append(
                                 (monitoring_host, [gateway])
@@ -124,20 +147,28 @@ def traceroute_available() -> str | None:
     return None
 
 
-def scan_parents_of(  # pylint: disable=too-many-branches
-    config_cache: ConfigCache,
+def scan_parents_of(
+    scan_config: Mapping[HostName, ScanConfig],
+    hosts_config: Hosts,
     monitoring_host: HostName | None,
     hosts: Iterable[HostName],
     silent: bool = False,
     settings: dict[str, int] | None = None,
-) -> Sequence[Gateway]:
+    *,
+    lookup_ip_address: _IpAddressLookup,
+) -> Sequence[GatewayResult]:
+    # pylint: disable=too-many-branches
     if settings is None:
         settings = {}
 
-    if monitoring_host:
-        nagios_ip = config.lookup_ip_address(config_cache, monitoring_host, family=socket.AF_INET)
-    else:
-        nagios_ip = None
+    nagios_ip = (
+        None
+        if (
+            monitoring_host is None
+            or scan_config[monitoring_host].ip_stack_config is IPStackConfig.NO_IP
+        )
+        else lookup_ip_address(monitoring_host, family=socket.AddressFamily.AF_INET)
+    )
 
     os.putenv("LANG", "")
     os.putenv("LC_ALL", "")
@@ -146,8 +177,16 @@ def scan_parents_of(  # pylint: disable=too-many-branches
     procs: list[tuple[HostName, HostAddress | None, str | subprocess.Popen]] = []
     for host in hosts:
         console.verbose("%s " % host)
+        if scan_config[host].ip_stack_config is IPStackConfig.NO_IP:
+            procs.append((host, None, "ERROR: Configured to be a No-IP host"))
+            continue
+
         try:
-            ip = config.lookup_ip_address(config_cache, host, family=socket.AF_INET)
+            ip = lookup_ip_address(
+                host,
+                # [IPv6] -- what about it?
+                family=socket.AddressFamily.AF_INET,
+            )
             if ip is None:
                 raise RuntimeError()
             command = [
@@ -161,7 +200,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
                 "-n",
                 ip,
             ]
-            console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
+            console.debug("Running '%s'\n" % subprocess.list2cmdline(command))
 
             procs.append(
                 (
@@ -188,7 +227,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
 
     # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
-    gateways: list[Gateway] = []
+    gateways: list[GatewayResult] = []
     for host, ip, proc_or_error in procs:
         if isinstance(proc_or_error, str):
             lines = [proc_or_error]
@@ -202,15 +241,17 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         if exitstatus:
             dot(tty.red, "*")
             gateways.append(
-                (None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255))
+                GatewayResult(
+                    None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)
+                )
             )
             continue
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
             message = lines[0][6:].strip()
-            console.verbose("%s: %s\n", host, message, stream=sys.stderr)
+            console.verbose(f"{host}: {message}\n", stream=sys.stderr)
             dot(tty.red, "D")
-            gateways.append((None, "dnserror", 0, message))
+            gateways.append(GatewayResult(None, "dnserror", 0, message))
             continue
 
         if len(lines) == 0:
@@ -225,7 +266,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
             if not silent:
                 console.error("{}: {}\n".format(host, " ".join(lines)))
             gateways.append(
-                (
+                GatewayResult(
                     None,
                     "garbled",
                     0,
@@ -264,7 +305,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."
             console.error(f"{host}: {error}\n")
-            gateways.append((None, "garbled", 0, error))
+            gateways.append(GatewayResult(None, "garbled", 0, error))
             dot(tty.red)
             continue
 
@@ -274,13 +315,17 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         # this in monitoring_host.
         if len(routes) == 1:
             if ip == nagios_ip:
-                gateways.append((None, "root", 0, ""))  # We are the root-monitoring host
+                gateways.append(
+                    GatewayResult(None, "root", 0, "")
+                )  # We are the root-monitoring host
                 dot(tty.white, "N")
             elif monitoring_host and nagios_ip:
-                gateways.append(((monitoring_host, nagios_ip, None), "direct", 0, ""))
+                gateways.append(
+                    GatewayResult(Gateway(monitoring_host, nagios_ip, None), "direct", 0, "")
+                )
                 dot(tty.cyan, "L")
             else:
-                gateways.append((None, "direct", 0, ""))
+                gateways.append(GatewayResult(None, "direct", 0, ""))
             continue
 
         # Try far most route which is not identical with host itself
@@ -294,7 +339,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
             # gateway can be monitored via the standard host check
             if ping_probes:
                 if not gateway_reachable_via_ping(r, ping_probes):
-                    console.verbose("(not using %s, not reachable)\n", r, stream=sys.stderr)
+                    console.verbose(f"(not using {r}, not reachable)\n", stream=sys.stderr)
                     skipped_gateways += 1
                     continue
             this_route = r
@@ -303,21 +348,25 @@ def scan_parents_of(  # pylint: disable=too-many-branches
             error = "No usable routing information"
             if not silent:
                 console.error(f"{host}: {error}\n")
-            gateways.append((None, "notfound", 0, error))
+            gateways.append(GatewayResult(None, "notfound", 0, error))
             dot(tty.blue)
             continue
 
         # TTLs already have been filtered out)
         gateway_ip = this_route
-        gateway = _ip_to_hostname(config_cache, this_route)
+        gateway = _ip_to_hostname(
+            scan_config, hosts_config, this_route, lookup_ip_address=lookup_ip_address
+        )
         if gateway:
-            console.verbose("%s(%s) ", gateway, gateway_ip)
+            console.verbose(f"{gateway}({gateway_ip}) ")
         else:
-            console.verbose("%s ", gateway_ip)
+            console.verbose(f"{gateway_ip} ")
 
         # Try to find DNS name of host via reverse DNS lookup
         dns_name = _ip_to_dnsname(gateway_ip)
-        gateways.append(((gateway, gateway_ip, dns_name), "gateway", skipped_gateways, ""))
+        gateways.append(
+            GatewayResult(Gateway(gateway, gateway_ip, dns_name), "gateway", skipped_gateways, "")
+        )
         dot(tty.green, "G")
     return gateways
 
@@ -334,23 +383,43 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
     )
 
 
-def _ip_to_hostname(config_cache: ConfigCache, ip: HostAddress | None) -> HostName | None:
+def _ip_to_hostname(
+    scan_config: Mapping[HostName, ScanConfig],
+    hosts_config: Hosts,
+    ip: HostAddress | None,
+    lookup_ip_address: _IpAddressLookup,
+) -> HostName | None:
     """Find hostname belonging to an ip address."""
     absent = "ip_to_hostname" not in cache_manager
     cache = cache_manager.obtain_cache("ip_to_hostname")
     if absent:
-        _fill_ip_to_hostname_cache(cache, config_cache)
+        _fill_ip_to_hostname_cache(
+            cache, scan_config, hosts_config, lookup_ip_address=lookup_ip_address
+        )
 
     return cache.get(ip)
 
 
-def _fill_ip_to_hostname_cache(cache: DictCache, config_cache: ConfigCache) -> None:
+def _fill_ip_to_hostname_cache(
+    cache: DictCache,
+    scan_config: Mapping[HostName, ScanConfig],
+    hosts_config: Hosts,
+    *,
+    lookup_ip_address: _IpAddressLookup,
+) -> None:
     """We must not use reverse DNS but the Checkmk mechanisms, since we do not
     want to find the DNS name but the name of a matching host from all_hosts"""
-    for host in config_cache.all_active_realhosts():
+    for host in {
+        # inconsistent with do_scan_parents where a list of hosts could be passed as an argument
+        hn
+        for hn in hosts_config.hosts
+        if scan_config[hn].active and scan_config[hn].online
+    }:
+        if scan_config[host].ip_stack_config is IPStackConfig.NO_IP:
+            continue
         try:
-            cache[config.lookup_ip_address(config_cache, host, family=socket.AF_INET)] = host
-        except Exception:
+            cache[lookup_ip_address(host, family=socket.AddressFamily.AF_INET)] = host
+        except MKIPAddressLookupError:
             pass
 
 

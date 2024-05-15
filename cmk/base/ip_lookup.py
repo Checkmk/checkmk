@@ -10,7 +10,7 @@ import socket
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, assert_never, Literal, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -30,26 +30,16 @@ _enforce_localhost = False
 
 
 @enum.unique
-class AddressFamily(enum.IntFlag):
+class IPStackConfig(enum.IntFlag):
     NO_IP = enum.auto()
     IPv4 = enum.auto()
     IPv6 = enum.auto()
     DUAL_STACK = IPv4 | IPv6
 
-    @classmethod
-    def from_socket(cls, /, af: socket.AddressFamily) -> AddressFamily:
-        match af:
-            case socket.AF_INET:
-                return cls.IPv4
-            case socket.AF_INET6:
-                return cls.IPv6
-            case _:
-                raise ValueError(af)
-
 
 class IPLookupConfig(NamedTuple):
     hostname: HostName
-    address_family: AddressFamily
+    ip_stack_config: IPStackConfig
     is_snmp_host: bool
     snmp_backend: SNMPBackendEnum
     default_address_family: socket.AddressFamily
@@ -57,21 +47,28 @@ class IPLookupConfig(NamedTuple):
     is_dyndns_host: bool
 
 
-def fallback_ip_for(family: socket.AddressFamily | AddressFamily) -> HostAddress:
-    if isinstance(family, socket.AddressFamily):
-        family = AddressFamily.from_socket(family)
+def fallback_ip_for(
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+) -> HostAddress:
     match family:
-        case AddressFamily.IPv4:
+        case socket.AddressFamily.AF_INET:
             return HostAddress("0.0.0.0")
-        case AddressFamily.IPv6:
+        case socket.AddressFamily.AF_INET6:
             return HostAddress("::")
-        case _:
-            # TODO(ml): [IPv6] This ignores `default_address_family()`
-            # and falls back to IPv6, where IPv4 is the default almost
-            # everywhere else.  Using "0.0.0.0" or "::" only makes sense
-            # for a server anyway, so the users of this function are
-            # most likely misconfigured.
-            return HostAddress("::")
+        case other:
+            assert_never(other)
+
+
+def _local_ip_for(
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+) -> HostAddress:
+    match family:
+        case socket.AddressFamily.AF_INET:
+            return HostAddress("127.0.0.1")
+        case socket.AddressFamily.AF_INET6:
+            return HostAddress("::1")
+        case other:
+            assert_never(other)
 
 
 def enforce_fake_dns(address: HostAddress) -> None:
@@ -93,7 +90,7 @@ def enforce_localhost() -> None:
 def lookup_ip_address(
     *,
     host_name: HostName | HostAddress,
-    family: AddressFamily | socket.AddressFamily,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     configured_ip_address: HostAddress | None,
     simulation_mode: bool,
     is_snmp_usewalk_host: bool,
@@ -109,12 +106,9 @@ def lookup_ip_address(
     if override_dns:
         return override_dns
 
-    if isinstance(family, socket.AddressFamily):
-        family = AddressFamily.from_socket(family)
-
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if simulation_mode or _enforce_localhost or is_snmp_usewalk_host:
-        return HostAddress("::1") if AddressFamily.IPv6 in family else HostAddress("127.0.0.1")
+        return _local_ip_for(family)
 
     # check if IP address is hard coded by the user
     if configured_ip_address:
@@ -125,15 +119,9 @@ def lookup_ip_address(
     if is_dyndns_host:
         return host_name
 
-    if family is AddressFamily.NO_IP:
-        return None
-
     return cached_dns_lookup(
         host_name,
-        # NO_IP handled in guard.
-        # TODO(ml): [IPv6] Default to IPv4 for DUAL_STACK.  Why doesn't this
-        # obey `default_address_family()` or handle both addresses in that case?
-        family=socket.AF_INET if AddressFamily.IPv4 in family else socket.AF_INET6,
+        family=family,
         force_file_cache_renewal=force_file_cache_renewal,
     )
 
@@ -157,9 +145,9 @@ def cached_dns_lookup(
 
     2) inner layer: see _file_cached_dns_lookup
     """
-    cache: dict[
-        tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None
-    ] = cache_manager.obtain_cache("cached_dns_lookup")
+    cache: dict[tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None] = (
+        cache_manager.obtain_cache("cached_dns_lookup")
+    )
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
@@ -256,9 +244,11 @@ class IPLookupCacheSerializer:
         assert isinstance(loaded_object, dict)
 
         return {
-            (HostName(k), socket.AF_INET)  # old pre IPv6 style
-            if isinstance(k, str)
-            else (HostName(k[0]), {4: socket.AF_INET, 6: socket.AF_INET6}[k[1]]): HostAddress(v)
+            (
+                (HostName(k), socket.AF_INET)  # old pre IPv6 style
+                if isinstance(k, str)
+                else (HostName(k[0]), {4: socket.AF_INET, 6: socket.AF_INET6}[k[1]])
+            ): HostAddress(v)
             for k, v in loaded_object.items()
         }
 
@@ -420,9 +410,29 @@ def update_dns_cache(
 
 def _annotate_family(
     ip_lookup_configs: Iterable[IPLookupConfig],
-) -> Iterable[tuple[HostName, IPLookupConfig, socket.AddressFamily]]:
+) -> Iterable[
+    tuple[
+        HostName,
+        IPLookupConfig,
+        Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    ]
+]:
     for host_config in ip_lookup_configs:
-        if AddressFamily.IPv4 in host_config.address_family:
-            yield host_config.hostname, host_config, socket.AF_INET
-        if AddressFamily.IPv6 in host_config.address_family:
-            yield host_config.hostname, host_config, socket.AF_INET6
+        if IPStackConfig.IPv4 in host_config.ip_stack_config:
+            yield host_config.hostname, host_config, socket.AddressFamily.AF_INET
+        if IPStackConfig.IPv6 in host_config.ip_stack_config:
+            yield host_config.hostname, host_config, socket.AddressFamily.AF_INET6
+
+
+class CollectFailedHosts:
+    """Collects hosts for which IP lookup fails"""
+
+    def __init__(self) -> None:
+        self._failed_ip_lookups: dict[HostName, Exception] = {}
+
+    @property
+    def failed_ip_lookups(self) -> Mapping[HostName, Exception]:
+        return self._failed_ip_lookups
+
+    def __call__(self, host_name: HostName, exc: Exception) -> None:
+        self._failed_ip_lookups[host_name] = exc

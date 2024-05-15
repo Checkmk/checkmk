@@ -9,8 +9,9 @@ import time
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
-from cmk.base.plugins.agent_based.utils import ucd_hr_detection
+
+from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree
+from cmk.plugins.lib import ucd_hr_detection
 
 #    UCD-SNMP-MIB::ssCpuRawUser.0 = Counter32: 219998591
 #    UCD-SNMP-MIB::ssCpuRawNice.0 = Counter32: 0

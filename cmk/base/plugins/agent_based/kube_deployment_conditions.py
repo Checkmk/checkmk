@@ -20,11 +20,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.kube.schemata.api import ConditionStatus
+from cmk.plugins.kube.schemata.section import DeploymentConditions
+from cmk.plugins.lib.kube import (
     condition_detailed_description,
     condition_short_description,
-    ConditionStatus,
-    DeploymentConditions,
     VSResultAge,
 )
 
@@ -60,7 +61,7 @@ def condition_levels(params: Mapping[str, VSResultAge], condition: str) -> tuple
 def _check(
     now: float, params: Mapping[str, VSResultAge], section: DeploymentConditions
 ) -> CheckResult:
-    conditions = section.dict()
+    conditions = section.model_dump()
     if all(
         condition["status"] is CONDITIONS_OK_MAPPINGS[name]
         for name, condition in conditions.items()

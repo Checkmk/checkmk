@@ -3,20 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.playwright.helpers import PPage
+from typing import override
+
+from tests.testlib.playwright.pom.navigation import CmkPage
 
 
-class Werks(PPage):
+class Werks(CmkPage):
     page_title: str = "Change log (Werks)"
 
-    def __init__(
-        self,
-        ppage: PPage,
-    ):
-        super().__init__(ppage.page, ppage.site_id, ppage.site_url)
+    @override
+    def navigate(self) -> str:
         self.click_and_wait(self.main_menu.help_werks, navigate=True)
         self.main_area.check_page_title(self.page_title)
-        self.main_area.page.wait_for_load_state("networkidle")
+        self.main_area.page.wait_for_load_state("load")
+        return self.page.url
 
     def get_recent_werks(self, count: int = 100) -> dict[int, str]:
         self.main_area.locator("#menu_suggestion_filters").click()

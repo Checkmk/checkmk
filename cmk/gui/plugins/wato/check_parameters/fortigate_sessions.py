@@ -9,16 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate
 
 
-def fortigate_sessions_element() -> Tuple:
-    return Tuple(
-        title=_("Levels for active sessions"),
-        elements=[
-            Integer(title=_("Warning at"), default_value=100000, size=10),
-            Integer(title=_("Critical at"), default_value=150000, size=10),
-        ],
+def fortigate_sessions_element() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Levels for active sessions"),
+                        default_levels=(100000, 150000),
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

@@ -7,7 +7,7 @@
 import enum
 import os
 import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from typing import Literal
 
@@ -22,7 +22,7 @@ from cmk.utils.hostaddress import HostName
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, IPLookup
 from cmk.base.core_config import MonitoringCore
 
 # suppress "Cannot find module" error from mypy
@@ -52,16 +52,20 @@ class CoreAction(enum.Enum):
 
 def do_reload(
     config_cache: ConfigCache,
+    ip_address_of: IPLookup,
     core: MonitoringCore,
-    hosts_to_update: set[HostName] | None = None,
     *,
+    all_hosts: Iterable[HostName],
+    hosts_to_update: set[HostName] | None = None,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
 ) -> None:
     do_restart(
         config_cache,
+        ip_address_of,
         core,
         action=CoreAction.RELOAD,
+        all_hosts=all_hosts,
         hosts_to_update=hosts_to_update,
         locking_mode=locking_mode,
         duplicates=duplicates,
@@ -70,10 +74,12 @@ def do_reload(
 
 def do_restart(
     config_cache: ConfigCache,
+    ip_address_of: IPLookup,
     core: MonitoringCore,
+    *,
+    all_hosts: Iterable[HostName],
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
-    *,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     skip_config_locking_for_bakery: bool = False,
@@ -83,6 +89,8 @@ def do_restart(
             core_config.do_create_config(
                 core=core,
                 config_cache=config_cache,
+                ip_address_of=ip_address_of,
+                all_hosts=all_hosts,
                 hosts_to_update=hosts_to_update,
                 duplicates=duplicates,
                 skip_config_locking_for_bakery=skip_config_locking_for_bakery,

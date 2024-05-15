@@ -8,15 +8,14 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Mapping, Sequence
-from typing import NamedTuple, NewType
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, NewType, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
 TagID = NewType("TagID", str)
 TagGroupID = NewType("TagGroupID", str)
+TAG_GROUP_NAME_PATTERN = r"^\A[-a-z0-9A-Z_]*\Z"
 
 
 class GroupedTagSpec(TypedDict):
@@ -63,14 +62,13 @@ def get_effective_tag_config(tag_config: TagConfigSpec) -> TagConfig:
 
 
 def _validate_tag_id(tag_id: TagID | TagGroupID) -> None:
-    if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
+    if not re.match(TAG_GROUP_NAME_PATTERN, tag_id):
         raise MKGeneralException(
             _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
         )
 
 
-class AuxTagInUseError(Exception):
-    ...
+class AuxTagInUseError(Exception): ...
 
 
 class AuxTag:
@@ -165,6 +163,11 @@ class AuxTagList:
             if builtin_config.aux_tag_list.exists(aux_tag.id):
                 raise MKGeneralException(
                     _('You can not override the builtin auxiliary tag "%s".') % aux_tag.id
+                )
+
+            if builtin_config.tag_group_exists(TagGroupID(aux_tag.id)):
+                raise MKGeneralException(
+                    _('You can not override the builtin tag group "%s".') % aux_tag.id
                 )
 
             if aux_tag.id in seen:
@@ -491,6 +494,11 @@ class TagConfig:
         if builtin_config.tag_group_exists(tag_group.id):
             raise MKGeneralException(
                 _('You can not override the builtin tag group "%s".') % tag_group.id
+            )
+
+        if builtin_config.aux_tag_list.exists(TagID(tag_group.id)):
+            raise MKGeneralException(
+                _('You can not override the builtin auxiliary tag "%s".') % tag_group.id
             )
 
         if not tag_group.title:

@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 # This agent uses the program "jarsigner" to read ssl certificate
 # information of jar files and outputs the information to stdout
@@ -30,7 +30,7 @@ echo "<<<jar_signature>>>"
 for JAR in $JAR_PATH; do
     if [ -e "$JAR" ]; then # avoid entry for '*.jar'
         echo "[[[${JAR##*/}]]]"
-        OUTPUT=$(jarsigner -verify -verbose -certs "$JAR")
+        OUTPUT=$(su - oracle -c "jarsigner -verify -verbose -certs $JAR")
         LINE=$(echo "$OUTPUT" | grep -n ^s | tail -n1 | cut -d: -f1)
         echo "${OUTPUT}" | tail -n +"${LINE}"
         echo

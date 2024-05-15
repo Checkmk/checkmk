@@ -42,13 +42,11 @@ class Quota(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def human_readable(v: float) -> str:
-        ...
+    def human_readable(v: float) -> str: ...
 
     @staticmethod
     @abc.abstractmethod
-    def exceeded_name() -> str:
-        ...
+    def exceeded_name() -> str: ...
 
     def exceeded_no_limit(self) -> str:
         return f"{self.owner} is within quota limits"

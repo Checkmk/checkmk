@@ -8,13 +8,10 @@
 
 import time
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+from cmk.agent_based.v2 import render
 
 
 def parse_veeam_client(string_table):
@@ -73,20 +70,20 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
 
     TotalSizeByte = int(data["TotalSizeByte"])
     perfdata.append(("totalsize", TotalSizeByte))
-    size_info.append(get_bytes_human_readable(TotalSizeByte))
+    size_info.append(render.bytes(TotalSizeByte))
     size_legend.append("total")
 
     # Output ReadSize and TransferedSize if available
     if "ReadSizeByte" in data:
         ReadSizeByte = int(data["ReadSizeByte"])
         perfdata.append(("readsize", ReadSizeByte))
-        size_info.append(get_bytes_human_readable(ReadSizeByte))
+        size_info.append(render.bytes(ReadSizeByte))
         size_legend.append("read")
 
     if "TransferedSizeByte" in data:
         TransferedSizeByte = int(data["TransferedSizeByte"])
         perfdata.append(("transferredsize", TransferedSizeByte))
-        size_info.append(get_bytes_human_readable(TransferedSizeByte))
+        size_info.append(render.bytes(TransferedSizeByte))
         size_legend.append("transferred")
 
     infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))
@@ -115,17 +112,17 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
             state = 2
             label = "(!!)"
             levels = " (Warn/Crit: {}/{})".format(
-                get_age_human_readable(warn),
-                get_age_human_readable(crit),
+                render.timespan(warn),
+                render.timespan(crit),
             )
         elif age >= warn:
             state = max(state, 1)
             label = "(!)"
             levels = " (Warn/Crit: {}/{})".format(
-                get_age_human_readable(warn),
-                get_age_human_readable(crit),
+                render.timespan(warn),
+                render.timespan(crit),
             )
-        infotexts.append(f"Last backup: {get_age_human_readable(age)} ago{label}{levels}")
+        infotexts.append(f"Last backup: {render.timespan(age)} ago{label}{levels}")
 
     # Check duration only if currently not running
     if data["Status"] not in ["InProgress", "Pending"]:
@@ -137,7 +134,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
             duration += minutes * 60
             duration += hours * 60 * 60
             duration += days * 60 * 60 * 24
-            infotexts.append("Duration: %s" % get_age_human_readable(duration))
+            infotexts.append("Duration: %s" % render.timespan(duration))
             perfdata.append(("duration", duration))
 
     if "AvgSpeedBps" in data:

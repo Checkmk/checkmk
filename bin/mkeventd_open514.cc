@@ -18,12 +18,11 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <filesystem>
+#include <vector>
 
 #define SYSLOG_PORT 514
 #define SNMPTRAP_PORT 162
-
-#define PROGRAM "mkeventd"
 
 // Example command line:
 // mkeventd_open514 --syslog --syslog-fd 3 --syslog-tcp --syslog-tcp-fd 4
@@ -47,8 +46,9 @@ void open_syslog(int syslog_fd) {
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SYSLOG_PORT);
         addr.sin_addr.s_addr = INADDR_ANY;
-        if (bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                 sizeof(addr)) != 0) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                   sizeof(addr)) != 0) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -74,8 +74,9 @@ void open_syslog(int syslog_fd) {
         addr.sin6_family = AF_INET6;
         addr.sin6_port = htons(SYSLOG_PORT);
         addr.sin6_addr = in6addr_any;
-        if (bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                 sizeof(addr)) != 0) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                   sizeof(addr)) != 0) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -118,9 +119,11 @@ void open_syslog_tcp(int syslog_tcp_fd) {
             addr.sin_family = AF_INET;
             addr.sin_port = htons(SYSLOG_PORT);
             addr.sin_addr.s_addr = INADDR_ANY;
-            if (bind(syslog_tcp_sock,
-                     reinterpret_cast<struct sockaddr *>(&addr),
-                     sizeof(addr)) != 0) {
+            if (::bind(
+                    syslog_tcp_sock,
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                    reinterpret_cast<struct sockaddr *>(&addr),
+                    sizeof(addr)) != 0) {
                 perror(
                     "Cannot bind UDP socket for syslog to port "
                     "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -146,8 +149,9 @@ void open_syslog_tcp(int syslog_tcp_fd) {
         addr.sin6_family = AF_INET6;
         addr.sin6_port = htons(SYSLOG_PORT);
         addr.sin6_addr = in6addr_any;
-        if (bind(syslog_tcp_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                 sizeof(addr)) != 0) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(syslog_tcp_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                   sizeof(addr)) != 0) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -189,8 +193,9 @@ void open_snmptrap(int snmptrap_fd) {
             addr.sin_family = AF_INET;
             addr.sin_port = htons(SNMPTRAP_PORT);
             addr.sin_addr.s_addr = INADDR_ANY;
-            if (bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                     sizeof(addr)) != 0) {
+            if (::bind(snmptrap_sock,
+                       reinterpret_cast<struct sockaddr *>(&addr),
+                       sizeof(addr)) != 0) {
                 perror(
                     "Cannot bind UDP socket for syslog to port "
                     "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -216,8 +221,9 @@ void open_snmptrap(int snmptrap_fd) {
         addr.sin6_family = AF_INET6;
         addr.sin6_port = htons(SNMPTRAP_PORT);
         addr.sin6_addr = in6addr_any;
-        if (bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                 sizeof(addr)) != 0) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                   sizeof(addr)) != 0) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -249,21 +255,20 @@ int main(int argc, char **argv) {
     int syslog_tcp_fd = -1;
     int snmptrap_fd = -1;
 
-    int i;
-
-    for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--syslog") == 0) {
+    std::vector<std::string> arguments{argv, argv + argc};
+    for (int i = 1; i < argc; i++) {
+        if (arguments[i] == "--syslog") {
             do_syslog = 1;
-        } else if (strcmp(argv[i], "--syslog-tcp") == 0) {
+        } else if (arguments[i] == "--syslog-tcp") {
             do_syslog_tcp = 1;
-        } else if (strcmp(argv[i], "--snmptrap") == 0) {
+        } else if (arguments[i] == "--snmptrap") {
             do_snmptrap = 1;
-        } else if (strcmp(argv[i], "--syslog-fd") == 0) {
-            syslog_fd = atoi(argv[i + 1]);
-        } else if (strcmp(argv[i], "--syslog-tcp-fd") == 0) {
-            syslog_tcp_fd = atoi(argv[i + 1]);
-        } else if (strcmp(argv[i], "--snmptrap-fd") == 0) {
-            snmptrap_fd = atoi(argv[i + 1]);
+        } else if (arguments[i] == "--syslog-fd") {
+            syslog_fd = atoi(arguments[i+1].c_str());
+        } else if (arguments[i] == "--syslog-tcp-fd") {
+            syslog_tcp_fd = atoi(arguments[i+1].c_str());
+        } else if (arguments[i] == "--snmptrap-fd") {
+            snmptrap_fd = atoi(arguments[i+1].c_str());
         }
     }
 
@@ -288,25 +293,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    // Execute the actual program that needs access to the
-    // socket. We take the path from argv[0]
-    char *last_slash = argv[0];
-    char *scan = argv[0];
-    while (*scan != 0) {
-        if (*scan == '/') {
-            last_slash = scan + 1;
-        }
-        scan++;
-    }
-    char newpath[512];
-    bzero(&newpath, 512);
-    int len_to_copy = last_slash - argv[0];
-    if (len_to_copy >= 512) {
-        exit(1);
-    }
-
-    memcpy(newpath, argv[0], len_to_copy);
-    strncpy(newpath + len_to_copy, PROGRAM, 511 - len_to_copy);
-    ::execv(newpath, argv);
+    // Execute the actual program that needs access to the socket.
+    ::execv((std::filesystem::path{argv[0]}.parent_path() / "mkeventd").c_str(),
+            argv);
     perror("Cannot execute mkeventd");
 }

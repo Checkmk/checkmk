@@ -6,11 +6,12 @@
 from collections.abc import Mapping
 from typing import Literal
 
+from cmk.plugins.lib.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
+from cmk.plugins.lib.ciena_ces import OperStateSection as Section
+from cmk.plugins.lib.ciena_ces import parse_ciena_oper_state
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
-from .utils.ciena_ces import OperStateSection as Section
-from .utils.ciena_ces import parse_ciena_oper_state
 
 
 def discover_ciena_tunnel(section: Section) -> DiscoveryResult:

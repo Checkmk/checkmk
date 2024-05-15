@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from .checktestlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 

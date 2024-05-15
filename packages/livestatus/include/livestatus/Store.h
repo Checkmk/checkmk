@@ -7,9 +7,9 @@
 #define Store_h
 
 #include <cstddef>
-#include <list>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "livestatus/LogCache.h"
 #include "livestatus/TableColumns.h"
@@ -47,7 +47,7 @@ public:
     explicit Store(ICore *mc);
     [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();
-    bool answerGetRequest(const std::list<std::string> &lines,
+    bool answerGetRequest(const std::vector<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
     void addTable(Table &table);
 

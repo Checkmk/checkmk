@@ -16,17 +16,23 @@ import subprocess
 import sys
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
+from contextlib import suppress
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Final, TextIO
+from typing import Final
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+
+# remove with 2.4 / after 2.3 is released
+_LEGACY_MAN_PAGE_PATHS = (
+    str(cmk.utils.paths.local_legacy_check_manpages_dir),
+    cmk.utils.paths.legacy_check_manpages_dir,
+)
 
 
 @dataclass
@@ -250,7 +256,6 @@ CATALOG_TITLES: Final = {
     "tsm": "IBM Tivoli Storage Manager (TSM)",
     "unitrends": "Unitrends",
     "vnx": "VNX NAS",
-    "websphere_mq": "WebSphere MQ",
     "zerto": "Zerto",
     "ibm_mq": "IBM MQ",
     "pulse_secure": "Pulse Secure",
@@ -299,6 +304,8 @@ CATALOG_TITLES: Final = {
     "gcp_status": "Google Cloud Platform (GCP) Status",
     "virtual": "Virtualization",
     "pure_storage": "Pure Storage",
+    "synthetic_monitoring": "Synthetic Monitoring",
+    "bazel_cache": "Bazel Remote Cache",
 }
 
 # TODO: Do we need a more generic place for this?
@@ -318,51 +325,36 @@ CHECK_MK_AGENTS: Final = {
 }
 
 
-def _get_man_page_dirs() -> Sequence[Path]:
-    # first match wins
-    return [
-        cmk.utils.paths.local_check_manpages_dir,
-        Path(cmk.utils.paths.check_manpages_dir),
-    ]
-
-
 def _is_valid_basename(name: str) -> bool:
     return not name.startswith(".") and not name.endswith("~")
 
 
-def man_page_path(name: str, man_page_dirs: Iterable[Path] | None = None) -> Path | None:
-    if not _is_valid_basename(name):
-        return None
-
-    if man_page_dirs is None:
-        man_page_dirs = _get_man_page_dirs()
-
-    for basedir in man_page_dirs:
-        # check plugins pre 1.7 could have dots in them. be nice and find those.
-        p = basedir / (name if name.startswith("check-mk") else maincheckify(name))
-        if p.exists():
-            return p
-    return None
-
-
-def all_man_pages(man_page_dirs: Iterable[Path] | None = None) -> Mapping[str, str]:
-    if man_page_dirs is None:
-        man_page_dirs = _get_man_page_dirs()
-
-    manuals = {}
-    for basedir in man_page_dirs:
-        if basedir.exists():
-            for file_path in basedir.iterdir():
-                if file_path.name not in manuals and _is_valid_basename(file_path.name):
-                    manuals[file_path.name] = str(file_path)
-    return manuals
+def make_man_page_path_map(
+    plugin_families: Mapping[str, Sequence[str]],
+    group_subdir: str,
+) -> Mapping[str, Path]:
+    families_man_paths = [
+        *(
+            os.path.join(p, group_subdir)
+            for _family, paths in plugin_families.items()
+            for p in paths
+        ),
+        *_LEGACY_MAN_PAGE_PATHS,
+    ]
+    return {
+        name: Path(dir, name)
+        for source in reversed(families_man_paths)
+        for dir, _subdirs, files in os.walk(source)
+        for name in files
+        if _is_valid_basename(name)
+    }
 
 
-def print_man_page_table() -> None:
+def print_man_page_table(man_page_path_map: Mapping[str, Path]) -> None:
     table = []
-    for name, path in sorted(all_man_pages().items()):
+    for name, path in sorted(man_page_path_map.items()):
         try:
-            table.append([name, get_title_from_man_page(Path(path))])
+            table.append([name, get_title_from_man_page(path)])
         except MKGeneralException as e:
             sys.stderr.write(str(f"ERROR: {e}"))
 
@@ -377,24 +369,32 @@ def get_title_from_man_page(path: Path) -> str:
     raise MKGeneralException(_("Invalid man page: Failed to get the title"))
 
 
-def load_man_page_catalog() -> ManPageCatalog:
+def load_man_page_catalog(
+    plugin_families: Mapping[str, Sequence[str]], group_subdir: str
+) -> ManPageCatalog:
+    man_page_path_map = make_man_page_path_map(plugin_families, group_subdir)
     catalog: dict[ManPageCatalogPath, list[ManPage]] = defaultdict(list)
-    for name, path in all_man_pages().items():
-        parsed = _parse_man_page(name, Path(path))
-
-        if parsed.catalog[0] == "os":
-            for agent in parsed.agents:
-                catalog[("os", agent, *parsed.catalog[1:])].append(parsed)
-        else:
-            catalog[tuple(parsed.catalog)].append(parsed)
+    for name, path in man_page_path_map.items():
+        parsed = parse_man_page(name, path)
+        for entry in _make_catalog_entries(parsed.catalog, parsed.agents):
+            catalog[entry].append(parsed)
 
     return catalog
 
 
-def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
-    catalog = load_man_page_catalog()
+def _make_catalog_entries(
+    pages_catalog: Sequence[str], agents: Sequence[str]
+) -> Sequence[tuple[str, ...]]:
+    if pages_catalog[0] == "os":
+        return [("os", agent, *pages_catalog[1:]) for agent in agents]
+    return [tuple(pages_catalog)]
 
-    entries = catalog.get(cat, [])
+
+def print_man_page_browser(
+    catalog: ManPageCatalog,
+    cat: ManPageCatalogPath = (),
+) -> None:
+    entries = {man_page.name: man_page for man_page in catalog.get(cat, [])}
     subtree_names = _manpage_catalog_subtree_names(catalog, cat)
 
     if entries and subtree_names:
@@ -425,7 +425,9 @@ def _manpage_num_entries(catalog: ManPageCatalog, cat: ManPageCatalogPath) -> in
 
 
 def _manpage_browser_folder(
-    catalog: ManPageCatalog, cat: ManPageCatalogPath, subtrees: Iterable[str]
+    catalog: ManPageCatalog,
+    cat: ManPageCatalogPath,
+    subtrees: Iterable[str],
 ) -> None:
     titles = []
     for e in subtrees:
@@ -449,16 +451,15 @@ def _manpage_browser_folder(
         if x[0]:
             index = int(x[1])
             subcat = titles[index - 1][1]
-            print_man_page_browser(cat + (subcat,))
+            print_man_page_browser(catalog, cat + (subcat,))
         else:
             break
 
 
-def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPage]) -> None:
-    checks = [(e.title, e.name) for e in entries]
-    checks.sort()
+def _manpage_browse_entries(cat: Iterable[str], entries: Mapping[str, ManPage]) -> None:
+    checks = sorted(entries.values(), key=lambda m: (m.title, m.name))
 
-    choices = [(str(n + 1), c[0]) for n, c in enumerate(checks)]
+    choices = [(str(num), mp.title) for num, mp in enumerate(checks, start=1)]
 
     while True:
         x = _dialog_menu(
@@ -471,8 +472,7 @@ def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPage]) -> N
         )
         if x[0]:
             index = int(x[1]) - 1
-            name = checks[index][1]
-            ConsoleManPageRenderer(name).paint()
+            write_output(ConsoleManPageRenderer(checks[index]).render_page())
         else:
             break
 
@@ -508,7 +508,7 @@ def _run_dialog(args: Sequence[str]) -> tuple[bool, bytes]:
     return completed_process.returncode == 0, completed_process.stderr
 
 
-def _parse_man_page(name: str, path: Path) -> ManPage:
+def parse_man_page(name: str, path: Path) -> ManPage:
     with path.open(encoding="utf-8") as fp:
         content = fp.read()
 
@@ -538,12 +538,6 @@ def _parse_man_page(name: str, path: Path) -> ManPage:
         )
 
 
-# TODO: accepting the path here would make things a bit easier.
-def load_man_page(name: str, man_page_dirs: Iterable[Path] | None = None) -> ManPage | None:
-    path = man_page_path(name, man_page_dirs)
-    return None if path is None else _parse_man_page(name, path)
-
-
 def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
     parsed: dict[str, list[str]] = defaultdict(list)
     current: list[str] = []
@@ -564,21 +558,25 @@ def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
     return {k: "\n".join(v).strip() for k, v in parsed.items()}
 
 
+def write_output(rendered_page: str) -> None:
+    if sys.stdout.isatty():
+        with suppress(FileNotFoundError):
+            subprocess.run(
+                ["/usr/bin/less", "-S", "-R", "-Q", "-u", "-L"],
+                input=rendered_page,
+                encoding="utf8",
+                check=False,
+            )
+            return
+    sys.stdout.write(rendered_page)
+
+
 class ManPageRenderer:
-    def __init__(self, name: str) -> None:
-        self.name = name
-        if man_page := load_man_page(name):
-            self._page = man_page
-        else:
-            raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
+    def __init__(self, man_page: ManPage) -> None:
+        self.name = man_page.name
+        self._page = man_page
 
-    def paint(self) -> None:
-        try:
-            self._paint_man_page()
-        except Exception as e:
-            sys.stdout.write(f"ERROR: Invalid check manpage {self.name}: {e}\n")
-
-    def _paint_man_page(self) -> None:
+    def render_page(self) -> str:
         self._print_header()
         self._print_manpage_title(self._page.title)
 
@@ -604,9 +602,9 @@ class ManPageRenderer:
             self._print_textbody(self._page.discovery)
 
         self._print_empty_line()
-        self._flush()
+        return self._get_value()
 
-    def _flush(self) -> None:
+    def _get_value(self) -> str:
         raise NotImplementedError()
 
     def _print_header(self) -> None:
@@ -647,18 +645,10 @@ def _format_distribution(distr: str) -> str:
             return distr
 
 
-def _console_stream() -> TextIO:
-    if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
-        # NOTE: We actually want to use subprocess.Popen here, but the tty is in
-        # a horrible state after rendering the man page if we do that. Why???
-        return os.popen("/usr/bin/less -S -R -Q -u -L", "w")  # nosec B605 # BNS:f6c1b9
-    return sys.stdout
-
-
 class ConsoleManPageRenderer(ManPageRenderer):
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
-        self.__output = _console_stream()
+    def __init__(self, man_page: ManPage) -> None:
+        super().__init__(man_page)
+        self._buffer: list[str] = []
         # NOTE: We must use instance variables for the TTY stuff because TTY-related
         # stuff might have been changed since import time, consider e.g. pytest.
         self.__width = tty.get_size()[1]
@@ -670,8 +660,8 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self._header_color_left = tty.colorset(0, 2)
         self._header_color_right = tty.colorset(7, 2, 1)
 
-    def _flush(self) -> None:
-        self.__output.flush()
+    def _get_value(self) -> str:
+        return "".join(self._buffer)
 
     def _patch_braces(self, line: str, *, color: str) -> str:
         """Replace braces in the line with a colors
@@ -698,7 +688,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def _print_subheader(self, line: str) -> None:
         self._print_empty_line()
-        self.__output.write(
+        self._buffer.append(
             self._subheader_color
             + " "
             + tty.underline
@@ -720,17 +710,17 @@ class ConsoleManPageRenderer(ManPageRenderer):
             text = self._patch_braces(line, color=color)
             l = self._print_len(line)
 
-        self.__output.write(f"{color} ")
-        self.__output.write(text)
-        self.__output.write(" " * (self.__width - 2 - l))
-        self.__output.write(f" {tty.normal}\n")
+        self._buffer.append(f"{color} ")
+        self._buffer.append(text)
+        self._buffer.append(" " * (self.__width - 2 - l))
+        self._buffer.append(f" {tty.normal}\n")
 
     def _print_splitline(self, attr1: str, left: str, color: str, right: str) -> None:
-        self.__output.write(f"{attr1} {left}")
-        self.__output.write(color)
-        self.__output.write(self._patch_braces(right, color=color))
-        self.__output.write(" " * (self.__width - 1 - len(left) - self._print_len(right)))
-        self.__output.write(tty.normal + "\n")
+        self._buffer.append(f"{attr1} {left}")
+        self._buffer.append(color)
+        self._buffer.append(self._patch_braces(right, color=color))
+        self._buffer.append(" " * (self.__width - 1 - len(left) - self._print_len(right)))
+        self._buffer.append(tty.normal + "\n")
 
     def _print_empty_line(self) -> None:
         self._print_line("", color=tty.colorset(7, 4))
@@ -800,25 +790,18 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
 
 class NowikiManPageRenderer(ManPageRenderer):
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+    def __init__(self, man_page: ManPage) -> None:
+        super().__init__(man_page)
         self.__output = StringIO()
 
-    def _flush(self) -> None:
-        pass
-
-    def index_entry(self) -> str:
-        return f'<tr><td class="tt">{self.name}</td><td>[check_{self.name}|{self._page.title}]</td></tr>\n'
-
-    def render(self) -> str:
-        self.paint()
+    def _get_value(self) -> str:
         return self.__output.getvalue()
 
     def _print_header(self) -> None:
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
         # of the man page here. More useful would be the Checkmk version where
-        # the plugin first appeared. But we have no access to that - alas.
+        # the plug-in first appeared. But we have no access to that - alas.
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")
 
@@ -863,26 +846,37 @@ def _apply_markup(line: str) -> str:
     )
 
 
-if __name__ == "__main__":
-    import argparse
+_SerializableManPageDerivative = dict[str, str | dict[str, str] | list[dict[str, str]] | None]
 
-    _parser = argparse.ArgumentParser(prog="man_pages", description="show manual pages for checks")
-    _parser.add_argument("checks", metavar="NAME", nargs="*", help="name of a check")
-    _parser.add_argument(
-        "-r",
-        "--renderer",
-        choices=["console", "nowiki"],
-        default="console",
-        help="use the given renderer (default: console)",
-    )
-    _args = _parser.parse_args()
-    cmk.utils.paths.local_check_manpages_dir = Path(__file__).parent.parent.parent / "checkman"
-    for check in _args.checks:
-        try:
-            print("----------------------------------------", check)
-            if _args.renderer == "console":
-                ConsoleManPageRenderer(check).paint()
-            else:
-                print(NowikiManPageRenderer(check).render())
-        except MKGeneralException as _e:
-            print(_e)
+
+def man_pages_for_website_export(
+    plugin_families: Mapping[str, Sequence[str]],
+    group_subdir: str,
+) -> dict[str, _SerializableManPageDerivative]:
+    """This is called from `scripts/create_man_pages.py` of the websites-essentials repo!
+
+    The result should be json serializable.
+    """
+    return {
+        name: _extend_categorization_info(parse_man_page(name, path))
+        for name, path in make_man_page_path_map(plugin_families, group_subdir).items()
+    }
+
+
+def _extend_categorization_info(man_page: ManPage) -> _SerializableManPageDerivative:
+    return {
+        "name": man_page.name,
+        "path": man_page.path,
+        "title": man_page.title,
+        "agents": {agent: CHECK_MK_AGENTS.get(agent, agent.title()) for agent in man_page.agents},
+        "catalog": [
+            {category: CATALOG_TITLES.get(category, category.title()) for category in categories}
+            for categories in _make_catalog_entries(man_page.catalog, man_page.agents)
+        ],
+        "license": man_page.license,
+        "distribution": man_page.distribution,
+        "description": man_page.description,
+        "item": man_page.item,
+        "discovery": man_page.discovery,
+        "cluster": man_page.cluster,
+    }

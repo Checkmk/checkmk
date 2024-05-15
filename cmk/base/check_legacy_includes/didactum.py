@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
+from cmk.agent_based.v2 import DiscoveryResult, Service
+
 from .elphase import check_elphase
 from .humidity import check_humidity
 from .temperature import check_temperature
@@ -67,12 +71,14 @@ def parse_didactum_sensors(info):
     return parsed
 
 
-def inventory_didactum_sensors(parsed, what):
-    return [
-        (sensorname, {})
+def discover_didactum_sensors(
+    parsed: Mapping[str, Mapping[str, Mapping[str, str]]], what: str
+) -> DiscoveryResult:
+    yield from (
+        Service(item=sensorname)
         for sensorname, attrs in parsed.get(what, {}).items()
         if attrs["state_readable"] not in ["off", "not connected"]
-    ]
+    )
 
 
 def check_didactum_sensors_temp(item, params, parsed):

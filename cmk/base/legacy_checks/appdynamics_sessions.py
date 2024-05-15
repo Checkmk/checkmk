@@ -11,9 +11,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 
 
 def inventory_appdynamics_sessions(info):
@@ -38,39 +39,35 @@ def check_appdynamics_sessions(item, params, info):
             rate_id = "appdynamics_sessions.%s.counter" % (item.lower().replace(" ", "_"))
             counter_rate = get_rate(get_value_store(), rate_id, now, counter, raise_overflow=True)
 
-            state = 0
-            perfdata = []
-            if isinstance(params, tuple):
-                min_warn, min_crit, max_warn, max_crit = params
-                perfdata.append(("running_sessions", active, max_warn, max_crit))
+            yield check_levels(
+                active,
+                "running_sessions",
+                (params["levels_upper"] or (None, None)) + (params["levels_lower"] or (None, None)),
+                human_readable_func=str,
+                infoname="Running sessions",
+            )
 
-                if active <= min_crit or active >= max_crit:
-                    state = 2
-                elif active <= min_warn or active >= max_warn:
-                    state = 1
-            else:
-                perfdata.append(("running_sessions", active))
+            yield check_levels(counter_rate, None, None, human_readable_func=lambda x: f"{x}/sec")
 
-            active_label = ""
-            if state > 0:
-                active_label = " (warn/crit below %d/%d / warn/crit at %d/%d)" % (
-                    min_warn,
-                    min_crit,
-                    max_warn,
-                    max_crit,
-                )
-
-            yield state, "Active: %d (%.2f/sec)%s" % (active, counter_rate, active_label), perfdata
-
-            perfdata = [("rejected_sessions", rejected)]
-            yield 0, "Rejected: %d" % rejected, perfdata
+            yield check_levels(
+                rejected, "rejected_sessions", None, human_readable_func=str, infoname="Rejected"
+            )
 
             yield 0, "Maximum active: %d" % max_active
 
 
+def parse_appdynamics_sessions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["appdynamics_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_appdynamics_sessions,
     service_name="AppDynamics Sessions %s",
     discovery_function=inventory_appdynamics_sessions,
     check_function=check_appdynamics_sessions,
     check_ruleset_name="jvm_sessions",
+    check_default_parameters={
+        "levels_lower": None,
+        "levels_upper": None,
+    },
 )

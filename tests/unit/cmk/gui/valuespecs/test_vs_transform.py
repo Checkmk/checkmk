@@ -5,8 +5,6 @@
 
 import pytest
 
-from cmk.utils.prediction import Seconds
-
 import cmk.gui.valuespec as vs
 
 from .utils import (
@@ -14,6 +12,8 @@ from .utils import (
     expect_validate_success_migrate_or_transform,
     request_var,
 )
+
+Seconds = int
 
 
 @pytest.fixture(name="transformed_age")
@@ -97,7 +97,9 @@ class TestTransform:
     def test_value_to_html(self, transformed_age: vs.Transform[Seconds]) -> None:
         assert transformed_age.value_to_html(60) == "1 hours"
 
-    def test_from_html_vars(self, transformed_age: vs.Transform[Seconds]) -> None:
+    def test_from_html_vars(
+        self, transformed_age: vs.Transform[Seconds], request_context: None
+    ) -> None:
         with request_var(age_minutes="1"):
             # normal age field (without transfrom) would return 60 as it saves
             # the age in seconds.

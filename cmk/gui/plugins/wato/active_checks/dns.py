@@ -9,7 +9,6 @@ from typing import Any
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
     Alternative,
@@ -23,6 +22,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato import RulespecGroupActiveChecks
 
 
 def _migrate(params: Mapping[str, Any] | tuple[str, Mapping[str, Any]]) -> Mapping[str, Any]:
@@ -67,9 +67,9 @@ def _valuespec_active_checks_dns():
         valuespec=Dictionary(
             title=_("Check DNS service"),
             help=_(
-                "Check the resolution of a hostname into an IP address by a DNS "
+                "Check the resolution of a host name into an IP address by a DNS "
                 "server. This check uses <tt>check_dns</tt> from the standard "
-                "Nagios plugins. Note, that check_dns will always be executed in "
+                "Nagios plug-ins. Note, that check_dns will always be executed in "
                 "the monitoring site. By default, the configured host(s) that "
                 "this rule applies to is used as DNS server. This behaviour can "
                 "be configured by using the option <tt>DNS Server</tt>. "
@@ -78,7 +78,7 @@ def _valuespec_active_checks_dns():
                 (
                     "hostname",
                     TextInput(
-                        title=_("Queried Hostname or IP address"),
+                        title=_("Queried host name or IP address"),
                         allow_empty=False,
                         help=_("The name or IPv4 address you want to query"),
                     ),

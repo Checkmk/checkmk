@@ -1,4 +1,4 @@
-Title: RRD files below var/check_mk/rrd/*/*.rrd are handled by diskspace cleanup
+Title: RRD files below var/check_mk/rrd/\*/\*.rrd are handled by diskspace cleanup
 Level: 1
 Edition: cee
 Component: metrics

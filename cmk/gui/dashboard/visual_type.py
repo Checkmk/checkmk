@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import json
 from collections.abc import Iterator
 from typing import cast
 
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.graphing._html_render import default_dashlet_graph_render_options
+from cmk.gui.graphing._graph_specification import GraphSpecification, parse_raw_graph_specification
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -64,7 +64,7 @@ class VisualTypeDashboards(VisualType):
                 ),
             )
 
-    def add_visual_handler(  # pylint: disable=too-many-branches
+    def add_visual_handler(
         self,
         target_visual_name: str,
         add_type: str,
@@ -85,54 +85,9 @@ class VisualTypeDashboards(VisualType):
             # Example:
             # parameters = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
             #                         'graph_index': 0, 'host_name': 'server123'}])
-            specification = parameters["definition"]["specification"]
-            if specification[0] == "template":
-                context = {
-                    "host": {"host": specification[1]["host_name"]},
-                    # The service context has to be set, even for host graphs. Otherwise the
-                    # pnpgraph dashlet would complain about missing context information when
-                    # displaying host graphs.
-                    "service": {"service": specification[1]["service_description"]},
-                }
-                parameters = {
-                    "source": specification[1]["graph_id"],
-                    "single_infos": [],
-                }
-
-            elif specification[0] == "custom":
-                # Override the dashlet type here. It would be better to get the
-                # correct dashlet type from the menu. But this does not seem to
-                # be a trivial change.
-                add_type = "custom_graph"
-                context = {}
-                parameters = {
-                    "custom_graph": specification[1],
-                    "single_infos": [],
-                }
-            elif specification[0] == "combined":
-                add_type = "combined_graph"
-                parameters = copy.deepcopy(specification[1])
-                parameters["graph_render_options"] = default_dashlet_graph_render_options
-                context = parameters.pop("context", {})
-                # FIXME: mypy doesn't know if the parameter is well-formed, but we promise it is!
-                assert isinstance(context, dict)
-
-                single_infos = specification[1]["single_infos"]
-                if "host" in single_infos:
-                    context["host"] = {"host": context.get("host")}
-                if "service" in single_infos:
-                    context["service"] = {"service": context.get("service")}
-                parameters["single_infos"] = []
-
-            else:
-                raise MKGeneralException(
-                    _(
-                        "Graph specification '%s' is insufficient for Dashboard. "
-                        "Please save your graph as a custom graph first, then "
-                        "add that one to the dashboard."
-                    )
-                    % specification[0]
-                )
+            add_type, context, parameters = self._handle_add_graph(
+                parse_raw_graph_specification(parameters["definition"]["specification"])
+            )
 
         # the DashletConfig below doesn't take None for context, so at this point we should have one
         if context is None:
@@ -188,3 +143,28 @@ class VisualTypeDashboards(VisualType):
     @property
     def permitted_visuals(self):
         return get_permitted_dashboards()
+
+    def _handle_add_graph(
+        self,
+        graph_specification: GraphSpecification,
+    ) -> tuple[str, VisualContext, dict[str, object]]:
+        if isinstance(graph_specification, TemplateGraphSpecification):
+            return (
+                "pnpgraph",
+                {
+                    "host": {"host": graph_specification.host_name},
+                    # The service context has to be set, even for host graphs. Otherwise the
+                    # pnpgraph dashlet would complain about missing context information when
+                    # displaying host graphs.
+                    "service": {"service": graph_specification.service_description},
+                },
+                {
+                    "source": graph_specification.graph_id,
+                    "single_infos": [],
+                },
+            )
+
+        raise MKGeneralException(
+            _("Graph specification '%s' is insufficient for Dashboard.")
+            % graph_specification.graph_type
+        )

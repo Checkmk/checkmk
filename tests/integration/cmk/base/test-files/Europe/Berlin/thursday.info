@@ -1,1 +1,0 @@
-{"slice": 86400, "dsname": "load15", "cf": "MAX", "range": [1543446000.0, 1543532400.0], "params": {"levels_upper": ["stdev", [2.0, 4.0]], "period": "wday", "horizon": 90}, "time": 1543503360.0}

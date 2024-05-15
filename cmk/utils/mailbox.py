@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 """Common module for mail related active checks
 Current responsibilities include:
 * common active check error output
@@ -18,34 +20,44 @@ import argparse
 import binascii
 import email
 import email.message
+import email.mime.text
 import email.utils
 import imaplib
 import logging
 import poplib
+import random
 import re
-import socket
+import smtplib
 import sys
 import time
 import warnings
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from datetime import datetime
+from email.message import Message as POPIMAPMessage
 from typing import Any, Literal
 
 import urllib3
-from exchangelib import (  # type: ignore[import]
+
+# Isort messes with the type annotation and creates a unused-ignore for the
+# OAUTH2 and OAuth2Credentials imports.
+# isort: off
+from exchangelib import (  # type: ignore[import-untyped]
     Account,
     Configuration,
     Credentials,
     DELEGATE,
     EWSDateTime,
     EWSTimeZone,
+    Folder,
     Identity,
     IMPERSONATION,
-    OAUTH2,
-    OAuth2Credentials,
-    protocol,
 )
+from exchangelib import Message as EWSMessage
+from exchangelib import OAUTH2, OAuth2Credentials
+from exchangelib import protocol as ews_protocol
+
+# isort: on
 
 import cmk.utils.password_store
 
@@ -56,9 +68,13 @@ CheckResult = tuple[Status, str, PerfData]
 
 MailIndex = int
 
-Message = Any
+Message = POPIMAPMessage | EWSMessage
 
-MailMessages = dict[MailIndex, Message]
+MailMessages = Mapping[MailIndex, Message]  # type: ignore[valid-type]
+POPIMAPMailMessages = Mapping[MailIndex, POPIMAPMessage]
+EWSMailMessages = Mapping[MailIndex, EWSMessage]
+
+MailID = tuple[int, int]
 
 
 class EWS:
@@ -88,6 +104,32 @@ class EWS:
             selected_folder /= s
         self._selected_folder = selected_folder
         return int(self._selected_folder.total_count)
+
+    def add_folder(self, folder_path: str) -> Folder:
+        subfolder_names = folder_path.split("/")
+
+        # Determine parent folder
+        parent_folder: Folder | None = None  # default
+        # Match the given folder_path to both a same-level folder and a subfolder of the inbox
+        for parent_folder in [self._account.inbox.parent, self._account.inbox]:
+            i = 0
+            for i, fname in enumerate(subfolder_names):
+                if f := next(parent_folder.glob(fname).resolve(), None):
+                    if i == len(subfolder_names) - 1:  # full match - folder path already exists
+                        return f
+                    parent_folder = f
+                else:
+                    break
+            if i > 0:  # break loop if at least the 1st lvl subfolder is found in the root folder
+                break
+        subfolder_names = subfolder_names[i:]
+
+        # Create new subfolder(s)
+        for fname in subfolder_names:
+            new_folder = Folder(parent=parent_folder, name=fname)
+            new_folder.save()
+            parent_folder = new_folder
+        return new_folder
 
     def mail_ids_by_date(
         self,
@@ -215,7 +257,7 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
 
 
 def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:
-    """Return the payload part of the (badly typed) result of IMAP/POP functions or eventlually
+    """Return the payload part of the (badly typed) result of IMAP/POP functions or eventually
     raise an exception if the result is not "OK"
     """
     if isinstance(data, tuple):
@@ -238,17 +280,19 @@ def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list
 
 
 class Mailbox:
-    """Mailbox reader supporting
-    * POP3 / SNMP
+    """Mailbox reader and mail sender supporting
+    * POP3 / SNMP / IMAP4 / EWS
+    * SMTP
     * BasicAuth login
     * TLS (or not)
     * OAuth https://stackoverflow.com/questions/5193707/use-imaplib-and-oauth-for-connection-with-gmail
             https://techcommunity.microsoft.com/t5/exchange-team-blog/improving-security-together/ba-p/805892
     """
 
-    def __init__(self, args: Args) -> None:
+    def __init__(self, args: Args, connection_type: Literal["fetch", "send"] = "fetch") -> None:
         self._connection: Any = None  # TODO: Typing is quite broken below...
         self._args = args
+        self._connection_type = connection_type
 
     def __enter__(self) -> "Mailbox":
         return self
@@ -257,10 +301,17 @@ class Mailbox:
         self._close_mailbox()
 
     def connect(self) -> None:
+        if self._connection_type == "fetch":
+            self._connect_fetcher()
+        else:
+            self._connect_sender()
+
+    def _connect_fetcher(self) -> None:
         def _connect_pop3() -> None:
             connection = (poplib.POP3_SSL if self._args.fetch_tls else poplib.POP3)(
                 self._args.fetch_server,
                 self._args.fetch_port,
+                timeout=self._args.connect_timeout,
             )
             verified_result(connection.user(self._args.fetch_username))
             verified_result(connection.pass_(self._args.fetch_password))
@@ -270,72 +321,115 @@ class Mailbox:
             connection = (imaplib.IMAP4_SSL if self._args.fetch_tls else imaplib.IMAP4)(
                 self._args.fetch_server,
                 self._args.fetch_port,
+                timeout=self._args.connect_timeout,
             )
             verified_result(connection.login(self._args.fetch_username, self._args.fetch_password))
             verified_result(connection.select("INBOX", readonly=False))
             self._connection = connection
 
-        def _connect_ews() -> None:
-            if self._args.no_cert_check:
-                protocol.BaseProtocol.HTTP_ADAPTER_CLS = protocol.NoVerifyHTTPAdapter
+        assert self._connection is None
 
-            primary_smtp_address = self._args.fetch_email_address or self._args.fetch_username
+        logging.debug(
+            "_connect_fetcher: %r %r %r %r",
+            self._args.fetch_protocol,
+            self._args.fetch_server,
+            self._args.fetch_port,
+            self._args.fetch_tls,
+        )
 
-            # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
-
-            self._connection = (
-                (
-                    EWS(
-                        Account(
-                            primary_smtp_address=primary_smtp_address,
-                            autodiscover=False,
-                            access_type=IMPERSONATION,
-                            config=Configuration(
-                                server=self._args.fetch_server,
-                                credentials=OAuth2Credentials(
-                                    client_id=self._args.fetch_client_id,
-                                    client_secret=self._args.fetch_client_secret,
-                                    tenant_id=self._args.fetch_tenant_id,
-                                    identity=Identity(smtp_address=primary_smtp_address),
-                                ),
-                                auth_type=OAUTH2,
-                            ),
-                            default_timezone=EWSTimeZone("Europe/Berlin"),
-                        )
-                    )
+        try:
+            if self._args.fetch_protocol == "POP3":
+                _connect_pop3()
+            elif self._args.fetch_protocol == "IMAP":
+                _connect_imap()
+            elif self._args.fetch_protocol == "EWS":
+                self._connect_ews()
+            else:
+                raise NotImplementedError(
+                    f"Fetching mails is not implemented for {self._args.fetch_protocol}"
                 )
-                if self._args.fetch_client_id
-                else (
-                    EWS(
-                        Account(
-                            primary_smtp_address=primary_smtp_address,
-                            autodiscover=False,
-                            access_type=DELEGATE,
-                            config=Configuration(
-                                server=self._args.fetch_server,
-                                credentials=Credentials(
-                                    self._args.fetch_username,
-                                    self._args.fetch_password,
-                                ),
+        except Exception as exc:
+            raise ConnectError(
+                f"Failed to connect to fetching server {self._args.fetch_server}: {exc}"
+            )
+
+    def _connect_sender(self) -> None:
+        assert self._connection is None
+        logging.debug(
+            "_connect_sender: %r %r %r %r",
+            self._args.send_protocol,
+            self._args.send_server,
+            self._args.send_port,
+            self._args.send_tls,
+        )
+        try:
+            if self._args.send_protocol == "EWS":
+                self._connect_ews()
+            elif self._args.send_protocol == "SMTP":
+                pass
+            else:
+                raise NotImplementedError(
+                    f"Sending mails is not implemented for {self._args.fetch_protocol}"
+                )
+        except Exception as exc:
+            raise ConnectError(
+                f"Failed to connect to sending server {self._args.send_server}: {exc}"
+            )
+
+    def _connect_ews(self) -> None:
+        ctype: Literal["fetch", "send"] = self._connection_type
+        args = vars(self._args)  # Namespace to dict
+
+        primary_smtp_address = args.get(ctype + "_email_address") or args.get(ctype + "_username")
+
+        # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
+
+        self._connection = (
+            (
+                EWS(
+                    Account(
+                        primary_smtp_address=primary_smtp_address,
+                        autodiscover=False,
+                        access_type=IMPERSONATION,
+                        config=Configuration(
+                            server=args.get(ctype + "_server"),
+                            credentials=OAuth2Credentials(
+                                client_id=args.get(ctype + "_client_id"),
+                                client_secret=args.get(ctype + "_client_secret"),
+                                tenant_id=args.get(ctype + "_tenant_id"),
+                                identity=Identity(smtp_address=primary_smtp_address),
                             ),
-                            default_timezone=EWSTimeZone("Europe/Berlin"),
-                        )
+                            auth_type=OAUTH2,
+                        ),
+                        default_timezone=EWSTimeZone("Europe/Berlin"),
                     )
                 )
             )
+            if args.get(ctype + "_client_id")
+            else (
+                EWS(
+                    Account(
+                        primary_smtp_address=primary_smtp_address,
+                        autodiscover=False,
+                        access_type=DELEGATE,
+                        config=Configuration(
+                            server=args.get(ctype + "_server"),
+                            credentials=Credentials(
+                                args.get(ctype + "_username"),
+                                args.get(ctype + "_password"),
+                            ),
+                        ),
+                        default_timezone=EWSTimeZone("Europe/Berlin"),
+                    )
+                )
+            )
+        )
 
-        assert self._connection is None
-        try:
-            socket.setdefaulttimeout(self._args.connect_timeout)
-            {
-                "POP3": _connect_pop3,
-                "IMAP": _connect_imap,
-                "EWS": _connect_ews,
-            }[self._args.fetch_protocol]()
-        except Exception as exc:
-            raise ConnectError(f"Failed to connect to {self._args.fetch_server}: {exc}")
+        if args.get(ctype + "_no_cert_check"):
+            self._connection._account.protocol.HTTP_ADAPTER_CLS = ews_protocol.NoVerifyHTTPAdapter
+        self._connection._account.protocol.TIMEOUT = args.get("connect_timeout")
 
-    def inbox_protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
+    def protocol(self) -> Literal["POP3", "IMAP", "EWS"]:
         if isinstance(self._connection, (poplib.POP3, poplib.POP3_SSL)):
             return "POP3"
         if isinstance(self._connection, (imaplib.IMAP4, imaplib.IMAP4_SSL)):
@@ -347,19 +441,20 @@ class Mailbox:
     def folders(self) -> Iterable[str]:
         """Returns names of available mailbox folders"""
         assert self._connection
-        if self.inbox_protocol() == "IMAP":
+        if self.protocol() == "IMAP":
             return extract_folder_names(
                 e for e in verified_result(self._connection.list()) if isinstance(e, bytes)
             )
-        if self.inbox_protocol() == "EWS":
+        if self.protocol() == "EWS":
             assert isinstance(self._connection, EWS)
             return self._connection.folders()
         raise AssertionError("connection must be IMAP4[_SSL] or EWS")
 
-    def _fetch_mails(self) -> MailMessages:
+    def fetch_mails(self, subject_pattern: str = "") -> MailMessages:
+        """Return mails contained in the currently selected folder matching @subject_pattern"""
         assert self._connection is not None
 
-        def _fetch_mails_pop3() -> MailMessages:
+        def _fetch_mails_pop3() -> POPIMAPMailMessages:
             return {
                 i: email.message_from_bytes(
                     b"\n".join(
@@ -371,11 +466,11 @@ class Mailbox:
                 for i in range(len(verified_result(self._connection.list())))
             }
 
-        def _fetch_mails_imap() -> MailMessages:
+        def _fetch_mails_imap() -> POPIMAPMailMessages:
             raw_messages = verified_result(self._connection.search(None, "NOT", "DELETED"))[0]
             assert isinstance(raw_messages, bytes)
             messages = raw_messages.decode().strip()
-            mails: MailMessages = {}
+            mails: POPIMAPMailMessages = {}
             for num in messages.split():
                 try:
                     data = verified_result(self._connection.fetch(num, "(RFC822)"))
@@ -389,36 +484,53 @@ class Mailbox:
                     ) from exc
             return mails
 
+        def _fetch_mails_ews() -> EWSMailMessages:
+            return dict(enumerate(self._connection._account.inbox.all()))
+
+        pattern = re.compile(subject_pattern) if subject_pattern else None
+
+        def matches(subject: None | str, re_pattern: None | re.Pattern[str]) -> bool:
+            if re_pattern and not re_pattern.match(subject or ""):
+                logging.debug("filter mail with non-matching subject %r", subject)
+                return False
+            return True
+
+        logging.debug("pattern used to receive mails: %s", pattern)
         try:
-            inbox_protocol = self.inbox_protocol()
-            if inbox_protocol == "POP3":
-                return _fetch_mails_pop3()
-            if inbox_protocol == "IMAP":
-                return _fetch_mails_imap()
-            raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
+            protocol = self.protocol()
+            if protocol == "POP3":
+                return {
+                    num: msg
+                    for num, msg in _fetch_mails_pop3().items()
+                    if matches(msg.get("Subject"), pattern)
+                }
+            if protocol == "IMAP":
+                return {
+                    num: msg
+                    for num, msg in _fetch_mails_imap().items()
+                    if matches(msg.get("Subject"), pattern)
+                }
+            if protocol == "EWS":
+                return {
+                    num: msg
+                    for num, msg in _fetch_mails_ews().items()
+                    if matches(msg.subject, pattern)
+                }
+            raise NotImplementedError(f"Fetching mails is not implemented for {protocol}")
         except Exception as exc:
             raise FetchMailsError("Failed to check for mails: %r" % exc) from exc
-
-    def fetch_mails(self, subject_pattern: str = "") -> MailMessages:
-        """Return mails contained in the currently selected folder matching @subject_pattern"""
-        pattern = re.compile(subject_pattern) if subject_pattern else None
-        return {
-            index: msg
-            for index, msg in self._fetch_mails().items()
-            if pattern is None or pattern.match(msg.get("Subject", ""))
-        }
 
     def select_folder(self, folder_name: str) -> int:
         """Select folder @folder_name and return the number of mails contained"""
         assert self._connection
         try:
-            if self.inbox_protocol() == "IMAP":
+            if self.protocol() == "IMAP":
                 encoded_number = verified_result(
                     self._connection.select(_mutf_7_encode(f'"{folder_name}"'))
                 )[0]
                 assert isinstance(encoded_number, bytes)
                 return int(encoded_number.decode())
-            if self.inbox_protocol() == "EWS":
+            if self.protocol() == "EWS":
                 assert isinstance(self._connection, EWS)
                 return self._connection.select_folder(folder_name)
             raise AssertionError("connection must be IMAP4[_SSL] or EWS")
@@ -442,7 +554,7 @@ class Mailbox:
         def format_date(timestamp: float) -> str:
             return time.strftime("%d-%b-%Y", time.gmtime(timestamp))
 
-        def fetch_timestamp(mail_id: str) -> int:
+        def fetch_timestamp(mail_id: str | bytes) -> int:
             # Alternative, more flexible but slower implementation using <DATE> rather than
             # <INTERNALDATE> - maybe we should make this selectable
             # msg = self._mailbox.fetch(mail_id, "(RFC822)")[1]
@@ -455,7 +567,7 @@ class Mailbox:
             assert time_tuple is not None
             return int(time.mktime(time_tuple))
 
-        if self.inbox_protocol() == "EWS":
+        if self.protocol() == "EWS":
             assert isinstance(self._connection, EWS)
             return self._connection.mail_ids_by_date(before=before, after=after)
 
@@ -486,7 +598,6 @@ class Mailbox:
             [
                 date
                 for mail_id in ids[0].split()
-                if isinstance(mail_id, str)
                 for date in (fetch_timestamp(mail_id),)
                 if before is None or date <= before
             ]
@@ -494,56 +605,146 @@ class Mailbox:
             else []
         )  # caused by verified_result() typing horror
 
-    def delete_mails(self, mails: Iterable[int]) -> None:
+    def delete_mails(self, mails: MailMessages) -> None:
+        """Delete mails specified by @mails. Please note that for POP/IMAP we delete mails by
+        index (mail.keys()) while with EWS we delete sets of EWSMessage (mail.values())"""
+        if not mails:
+            logging.debug("delete mails: no mails given")
+            return
         assert self._connection is not None
-        assert isinstance(mails, (list, tuple, set))
+        logging.debug("delete mails %s", mails)
         try:
-            if self.inbox_protocol() == "POP3":
+            protocol = self.protocol()
+            if protocol == "POP3":
                 for mail_index in mails:
                     verified_result(self._connection.dele(mail_index + 1))
-            elif self.inbox_protocol() == "IMAP":
+            elif protocol == "IMAP":
                 for mail_index in mails:
                     verified_result(self._connection.store(mail_index, "+FLAGS", "\\Deleted"))
                 self._connection.expunge()
+            elif protocol == "EWS":
+                self._connection._account.bulk_delete(mails.values(), delete_type="SoftDelete")
+            else:
+                raise NotImplementedError(f"Deleting mails is not implemented for {protocol}")
 
         except Exception as exc:
             raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
-    def copy_mails(self, mails: list[int], folder: str) -> None:
-        assert self._connection and self.inbox_protocol() == "IMAP"
+    def copy_mails(self, mails: MailMessages, folder: str) -> None:
+        if not mails:
+            logging.debug("copy mails: no mails given")
+            return
+        protocol = self.protocol()
+        assert self._connection and protocol in {"IMAP", "EWS"}
+        # The user wants the message to be moved to the folder
+        # refered by the string stored in "cleanup_messages"
+        folder = folder.strip("/")
         try:
-            for mail_index in mails:
-                # The user wants the message to be moved to the folder
-                # refered by the string stored in "cleanup_messages"
-                folder = folder.strip("/")
-
-                # Create maybe missing folder hierarchy
+            # Create maybe missing folder hierarchy and copy the mails
+            if protocol == "IMAP":
                 target = ""
                 for level in folder.split("/"):
                     target += f"{level}/"
                     self._connection.create(target)
-
-                # Copy the mail
-                verified_result(self._connection.copy(str(mail_index), folder))
-
+                verified_result(
+                    self._connection.copy(",".join(str(index) for index in mails), folder)
+                )
+            elif protocol == "EWS":
+                folder_obj = self._connection.add_folder(folder)
+                self._connection._account.bulk_copy(mails.values(), folder_obj)
         except Exception as exc:
             raise CleanupMailboxError("Failed to copy mail: %r" % exc) from exc
 
     def _close_mailbox(self) -> None:
         if not self._connection:
             return
-        if self.inbox_protocol() == "POP3":
+        if self.protocol() == "POP3":
             verified_result(self._connection.quit())
-        elif self.inbox_protocol() == "IMAP":
+        elif self.protocol() == "IMAP":
             with suppress(imaplib.IMAP4_SSL.error, imaplib.IMAP4.error):
                 verified_result(self._connection.close())
             verified_result(self._connection.logout())
-        elif self.inbox_protocol() == "EWS":
+        elif self.protocol() == "EWS":
             self._connection.close()
 
+    def _send_mail_smtp(self, args: Args, now: int, key: int) -> tuple[str, MailID]:
+        """Send an email with provided content using SMTP and provided credentials"""
+        mail = email.mime.text.MIMEText("")
+        mail["From"] = args.mail_from
+        mail["To"] = args.mail_to
+        mail["Subject"] = "%s %d %d" % (args.subject, now, key)
+        mail["Date"] = email.utils.formatdate(localtime=True)
 
-def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_ews: bool) -> Args:
-    protocols = {"IMAP", "POP3", "EWS"} if allow_ews else {"IMAP", "POP3"}
+        logging.debug(
+            "send roundtrip mail with subject %r to %s from %s via %s:%r tls=%s timeout=%s username=%s",
+            mail["Subject"],
+            args.mail_to,
+            args.mail_from,
+            args.send_server,
+            args.send_port,
+            args.send_tls,
+            args.connect_timeout,
+            args.send_username,
+        )
+
+        with smtplib.SMTP(
+            args.send_server, args.send_port, timeout=args.connect_timeout
+        ) as connection:
+            if args.send_tls:
+                connection.starttls()
+            if args.send_username:
+                connection.login(args.send_username, args.send_password)
+            connection.sendmail(args.mail_from, args.mail_to, mail.as_string())
+            connection.quit()
+            return "%d-%d" % (now, key), (now, key)
+
+    def _send_mail_ews(self, args: Args, now: int, key: int) -> tuple[str, MailID]:
+        """Send an email with provided content using EWS and provided oauth"""
+        m = EWSMessage(
+            account=self._connection._account,
+            subject="%s %d %d" % (args.subject, now, key),
+            author=args.mail_from,
+            to_recipients=[args.mail_to],
+        )
+        m.send()
+        return "%d-%d" % (now, key), (now, key)
+
+    def send_mail(self, args: Args) -> tuple[str, MailID]:
+        """Send an email with provided content using either SMTP or EWS and provided credentials/oauth.
+        This function just manages exceptions for _send_mail_smtp() or _send_mail_ews()"""
+        now = int(time.time())
+        key = random.randint(1, 1000)
+
+        try:
+            if args.send_protocol == "SMTP":
+                return self._send_mail_smtp(args, now, key)
+            if args.send_protocol == "EWS":
+                return self._send_mail_ews(args, now, key)
+            raise NotImplementedError(f"Sending mails is not implemented for {args.send_protocol}")
+        except smtplib.SMTPAuthenticationError as exc:
+            if exc.smtp_code == 530:
+                raise SendMailError(
+                    "Could not login to SMTP server. Looks like you have to use the --send-tls flag."
+                ) from exc
+            if exc.smtp_code == 535:
+                raise SendMailError(
+                    "Could not login to SMTP server. Looks like you provided the wrong credentials."
+                ) from exc
+            raise SendMailError("Could not login to SMTP server. (%r)" % exc) from exc
+        except smtplib.SMTPSenderRefused as exc:
+            raise SendMailError(
+                f"Could not send email, got {exc!r}, username={args.send_username}."
+            ) from exc
+        except smtplib.SMTPRecipientsRefused as exc:
+            raise SendMailError(
+                "Could not send email. Maybe you've sent too many mails? (%r)." % exc
+            ) from exc
+        except Exception as exc:
+            raise SendMailError("Failed to send mail: %r" % exc) from exc
+
+
+def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Args:
+    protocols = {"IMAP", "POP3", "EWS"}
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(
         "--debug",
@@ -574,7 +775,7 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
         "--fetch-email-address",
         required=False,
         metavar="EMAIL-ADDRESS",
-        help="Email address (default: same as username, only effects EWS protocol)",
+        help="Email address (default: same as username, only affects EWS protocol)",
     )
     parser.add_argument(
         "--fetch-password",
@@ -586,41 +787,41 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
         "--fetch-client-id",
         required=False,
         metavar="CLIENT_ID",
-        help="OAuth2 ClientID for EWS" if allow_ews else "Ignored, only for compatibility",
+        help="OAuth2 ClientID for EWS",
     )
     parser.add_argument(
         "--fetch-client-secret",
         required=False,
         metavar="CLIENT_SECRET",
-        help="OAuth2 ClientSecret for EWS" if allow_ews else "Ignored, only for compatibility",
+        help="OAuth2 ClientSecret for EWS",
     )
     parser.add_argument(
         "--fetch-tenant-id",
         required=False,
         metavar="TENANT_ID",
-        help="OAuth2 TenantID for EWS" if allow_ews else "Ignored, only for compatibility",
+        help="OAuth2 TenantID for EWS",
     )
     parser.add_argument(
         "--fetch-protocol",
         type=str.upper,
         choices=protocols,
-        help="Protocol used for fetching mail (default=IMAP)",
+        help="Protocol used for fetching mails (default=IMAP)",
     )
     parser.add_argument(
         "--fetch-port",
         type=int,
         metavar="PORT",
-        help="IMAP or POP3 port (defaults to 110/995 (TLS) for POP3"
-        " 143/993 (TLS) for IMAP and 80/443 (TLS) otherwise)",
+        help="{'/'.join(protocols)} port (defaults to 110/995 (TLS) for POP3, to 143/993 (TLS) for "
+        "IMAP and to 80/443 (TLS) for EWS)",
     )
     parser.add_argument(
         "--fetch-tls",
         "--fetch-ssl",
         action="store_true",
-        help="Use TLS/SSL for feching the mailbox (disabled by default)",
+        help="Use TLS/SSL for fetching the mailbox (disabled by default)",
     )
     parser.add_argument(
-        "--no-cert-check",
+        "--fetch-no-cert-check",
         "--fetch-disable-cert-validation",
         action="store_true",
         help="Don't enforce SSL/TLS certificate validation",
@@ -657,10 +858,18 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
     args.fetch_port = args.fetch_port or (
         (995 if args.fetch_tls else 110)
         if args.fetch_protocol == "POP3"
-        else (993 if args.fetch_tls else 143)
-        if args.fetch_protocol == "IMAP"
-        else (443 if args.fetch_tls else 80)
+        else (
+            (993 if args.fetch_tls else 143)
+            if args.fetch_protocol == "IMAP"
+            else (443 if args.fetch_tls else 80)
+        )
     )  # HTTP / REST (e.g. EWS)
+
+    if "send_protocol" in args:  # if sending is configured
+        args.send_port = args.send_port or (
+            25 if args.send_protocol == "SMTP" else (443 if args.send_tls else 80)
+        )
+
     return args
 
 
@@ -673,15 +882,16 @@ def _active_check_main_core(
     argument_parser: argparse.ArgumentParser,
     check_fn: Callable[[Args], CheckResult],
     argv: Sequence[str],
-    allow_ews: bool = True,
 ) -> CheckResult:
     """Main logic for active checks"""
     # todo argparse - exceptions?
-    args = parse_arguments(argument_parser, argv, allow_ews)
+    args = parse_arguments(argument_parser, argv)
     logging.basicConfig(
-        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
-        if args.debug or args.verbose > 0
-        else logging.CRITICAL
+        level=(
+            {0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
+            if args.debug or args.verbose > 0
+            else logging.CRITICAL
+        )
     )
 
     # when we disable certificate validation intensionally we don't want to see warnings
@@ -734,7 +944,6 @@ def _output_check_result(text: str, perfdata: PerfData) -> None:
 def active_check_main(
     argument_parser: argparse.ArgumentParser,
     check_fn: Callable[[Args], CheckResult],
-    allow_ews: bool = True,
 ) -> None:
     """Evaluate the check, write output according to Checkmk active checks and terminate the
     program in respect to the check result:
@@ -748,8 +957,6 @@ def active_check_main(
     Therefore _active_check_main_core and _output_check_result should be used for unit tests since
     they are not meant to modify the system environment or terminate the process."""
     cmk.utils.password_store.replace_passwords()
-    exitcode, status, perfdata = _active_check_main_core(
-        argument_parser, check_fn, sys.argv[1:], allow_ews
-    )
+    exitcode, status, perfdata = _active_check_main_core(argument_parser, check_fn, sys.argv[1:])
     _output_check_result(status, perfdata)
     raise SystemExit(exitcode)

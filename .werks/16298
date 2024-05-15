@@ -1,0 +1,12 @@
+Title: Avoid duplicate port allocations within the same site
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1700140615
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+When configuring ports via <tt>omd config</tt>, Checkmk checks if the configured port is already in
+use, both by the same site and by other sites. The check if the port is already in use by another
+process of the same site was broken, which could lead to duplicate port allocations within a site.

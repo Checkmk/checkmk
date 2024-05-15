@@ -9,14 +9,10 @@
 import ast
 import re
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-    state_markers,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 # params = {
 #     "mincount": (tuple, integer),
@@ -112,8 +108,8 @@ def check_filestats_extremes(files, params, show_files=False):
         return []
     long_output = {}
     for key, hr_function, minlabel, maxlabel in (
-        ("size", get_bytes_human_readable, "smallest", "largest"),
-        ("age", get_age_human_readable, "newest", "oldest"),
+        ("size", render.disksize, "smallest", "largest"),
+        ("age", render.timespan, "newest", "oldest"),
     ):
         files_with_metric = [f for f in files if f.get(key) is not None]
         if not files_with_metric:
@@ -148,8 +144,8 @@ def check_filestats_extremes(files, params, show_files=False):
                 break
             if efile["path"] not in long_output:
                 text = "Age: {}, Size: {}{}".format(
-                    get_age_human_readable(efile["age"]),
-                    get_bytes_human_readable(efile["size"]),
+                    render.timespan(efile["age"]),
+                    render.disksize(efile["size"]),
                     state_markers[state],
                 )
                 long_output[efile["path"]] = text
@@ -167,8 +163,8 @@ def check_filestats_extremes(files, params, show_files=False):
                 break
             if efile["path"] not in long_output:
                 text = "Age: {}, Size: {}{}".format(
-                    get_age_human_readable(efile["age"]),
-                    get_bytes_human_readable(efile["size"]),
+                    render.timespan(efile["age"]),
+                    render.disksize(efile["size"]),
                     state_markers[state],
                 )
                 long_output[efile["path"]] = text
@@ -265,14 +261,14 @@ def check_filestats_single(item, params, parsed):
         return
     _output_variety, reported_lines = data
     if len(reported_lines) != 1:
-        yield 1, "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats). For example, if there are multiple non-utf-8 filenames, then they may be mapped to the same file service."
+        yield 1, "Received multiple filestats per single file service. Please check agent plug-in configuration (mk_filestats). For example, if there are multiple non-utf-8 filenames, then they may be mapped to the same file service."
 
     single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
     if single_stat.get("size") is None and single_stat.get("age") is None:
         yield 0, f'Status: {single_stat.get("stat_status")}'
         return
 
-    for key, hr_function in (("size", get_bytes_human_readable), ("age", get_age_human_readable)):
+    for key, hr_function in (("size", render.disksize), ("age", render.timespan)):
         if (value := single_stat.get(key)) is None:
             continue
 

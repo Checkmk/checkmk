@@ -30,6 +30,8 @@
 #include "livestatus/User.h"
 #include "livestatus/opids.h"
 
+using row_type = ECRow;
+
 using namespace std::chrono_literals;
 
 namespace {
@@ -43,11 +45,11 @@ const std::vector<std::string> grepping_filters = {
 
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(ICore *mc, const Table &table, Query &query,
-                      std::function<bool(const ECRow &)> is_authorized)
-        : EventConsoleConnection(mc->loggerLivestatus(),
-                                 mc->paths()->event_console_status_socket())
-        , mc_{mc}
+    ECTableConnection(const ICore &mc, const Table &table, Query &query,
+                      std::function<bool(const row_type &)> is_authorized)
+        : EventConsoleConnection{mc.loggerLivestatus(),
+                                 mc.paths()->event_console_status_socket()}
+        , mc_{&mc}
         , table_{&table}
         , query_{&query}
         , is_authorized_{std::move(is_authorized)} {}
@@ -173,7 +175,7 @@ private:
                 headers = std::move(columns);
                 is_header = false;
             } else {
-                ECRow row{mc_, headers, columns};
+                row_type row{mc_, headers, columns};
                 if (is_authorized_(row) && !query_->processDataset(Row{&row})) {
                     return;
                 }
@@ -181,14 +183,14 @@ private:
         }
     }
 
-    ICore *mc_;
+    const ICore *mc_;
     const Table *table_;
     Query *query_;
-    std::function<bool(const ECRow &)> is_authorized_;
+    std::function<bool(const row_type &)> is_authorized_;
 };
 }  // namespace
 
-ECRow::ECRow(ICore *mc, const std::vector<std::string> &headers,
+ECRow::ECRow(const ICore *mc, const std::vector<std::string> &headers,
              const std::vector<std::string> &columns) {
     auto column_it = columns.cbegin();
     for (const auto &header : headers) {
@@ -201,50 +203,50 @@ ECRow::ECRow(ICore *mc, const std::vector<std::string> &headers,
 }
 
 // static
-std::unique_ptr<StringColumn<ECRow>> ECRow::makeStringColumn(
+std::unique_ptr<StringColumn<row_type>> ECRow::makeStringColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<StringColumn<ECRow>>(
+    return std::make_unique<StringColumn<row_type>>(
         name, description, offsets,
-        [name](const ECRow &r) { return r.getString(name); });
+        [name](const row_type &row) { return row.getString(name); });
 }
 
 // static
-std::unique_ptr<IntColumn<ECRow>> ECRow::makeIntColumn(
+std::unique_ptr<IntColumn<row_type>> ECRow::makeIntColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<IntColumn<ECRow>>(
+    return std::make_unique<IntColumn<row_type>>(
         name, description, offsets,
-        [name](const ECRow &r) { return r.getInt(name); });
+        [name](const row_type &row) { return row.getInt(name); });
 }
 
 // static
-std::unique_ptr<DoubleColumn<ECRow>> ECRow::makeDoubleColumn(
+std::unique_ptr<DoubleColumn<row_type>> ECRow::makeDoubleColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<DoubleColumn<ECRow>>(
+    return std::make_unique<DoubleColumn<row_type>>(
         name, description, offsets,
-        [name](const ECRow &r) { return r.getDouble(name); });
+        [name](const row_type &row) { return row.getDouble(name); });
 }
 
 // static
-std::unique_ptr<TimeColumn<ECRow>> ECRow::makeTimeColumn(
+std::unique_ptr<TimeColumn<row_type>> ECRow::makeTimeColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<TimeColumn<ECRow>>(
-        name, description, offsets, [name](const ECRow &r) {
+    return std::make_unique<TimeColumn<row_type>>(
+        name, description, offsets, [name](const row_type &row) {
             return std::chrono::system_clock::from_time_t(
-                static_cast<std::time_t>(r.getDouble(name)));
+                static_cast<std::time_t>(row.getDouble(name)));
         });
 }
 
 // static
-std::unique_ptr<ListColumn<ECRow>> ECRow::makeListColumn(
+std::unique_ptr<ListColumn<row_type>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<ListColumn<ECRow>>(
-        name, description, offsets, [name](const ECRow &r) {
-            return mk::ec::split_list(r.getString(name));
+    return std::make_unique<ListColumn<row_type>>(
+        name, description, offsets, [name](const row_type &row) {
+            return mk::ec::split_list(row.getString(name));
         });
 }
 
@@ -268,29 +270,28 @@ std::string ECRow::get(const std::string &column_name,
 
 const IHost *ECRow::host() const { return host_ ? host_.get() : nullptr; }
 
-TableEventConsole::TableEventConsole(ICore *mc) : Table{mc} {}
-
 namespace {
-std::function<bool(const ECRow &)> get_authorizer(const Table &table,
-                                                  const User &user) {
+std::function<bool(const row_type &)> get_authorizer(const Table &table,
+                                                     const User &user) {
     if (table.any_column([](const auto &c) {
             return c->name() == "event_contact_groups_precedence";
         })) {
-        return [&user](const ECRow &row) {
+        return [&user](const row_type &row) {
             const auto *host = row.host();
             return user.is_authorized_for_event(
                 row.getString("event_contact_groups_precedence"),
                 row.getString("event_contact_groups"), host);
         };
     }
-    return [](const ECRow & /*row*/) { return true; };
+    return [](const row_type & /*row*/) { return true; };
 }
 }  // namespace
 
-void TableEventConsole::answerQuery(Query &query, const User &user) {
-    if (core()->mkeventdEnabled()) {
+void TableEventConsole::answerQuery(Query &query, const User &user,
+                                    const ICore &core) {
+    if (core.mkeventdEnabled()) {
         try {
-            ECTableConnection{core(), *this, query, get_authorizer(*this, user)}
+            ECTableConnection{core, *this, query, get_authorizer(*this, user)}
                 .run();
         } catch (const std::runtime_error &err) {
             query.badGateway(err.what());

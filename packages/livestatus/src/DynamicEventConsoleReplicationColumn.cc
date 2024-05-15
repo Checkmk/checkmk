@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <iosfwd>
 #include <iterator>
+#include <ostream>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>

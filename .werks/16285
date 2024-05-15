@@ -1,0 +1,22 @@
+Title: rules: match_on items must be at least of length 1
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1702450037
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+
+This werk addresses an issue found by our QA team on the
+rules collection POST endpoint
+
+...domain-types/rule/collections/all
+
+The match_on field requires a list of strings but didn't
+enforce any length.  Previously, passing an empty string
+would provoke a crash.  We now enforce a minimum string
+length of 1.
+
+
+

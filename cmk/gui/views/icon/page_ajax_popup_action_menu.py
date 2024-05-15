@@ -5,10 +5,9 @@
 
 """Realizes the popup action menu for hosts/services in views"""
 
-from livestatus import SiteId
+from livestatus import livestatus_lql, SiteId
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import livestatus_lql
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
@@ -24,7 +23,7 @@ from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, 
 
 def ajax_popup_action_menu() -> None:
     site = SiteId(request.get_ascii_input_mandatory("site"))
-    host = HostName(request.get_ascii_input_mandatory("host"))
+    host = request.get_validated_type_input_mandatory(HostName, "host")
     svcdesc = request.get_str_input("service")
     what: IconObjectType = "service" if svcdesc else "host"
 

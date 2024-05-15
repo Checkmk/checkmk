@@ -5,8 +5,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_OSN
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
 
 # The dBm should not get too low. So we check only for lower levels
 
@@ -57,7 +58,12 @@ def check_huawei_osn_laser(item, params, info):
                 yield 0, f"FEC Correction before/after: {fec_before}/{fec_after}"
 
 
+def parse_huawei_osn_laser(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["huawei_osn_laser"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_osn_laser,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1",

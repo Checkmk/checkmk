@@ -1,0 +1,14 @@
+Title: linux interface shown as DOWN instead of UP
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696942593
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This werk is relevant for you, in case you're monitoring an interfaces which don't deliver information via <tt>ethtool</tt>.
+This regression existed since the release of 2.2 and shows your interface in operational state "DOWN" instead of "UP".
+

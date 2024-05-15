@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.utils.enviromux import (
+from cmk.plugins.lib.enviromux import (
     check_enviromux_humidity,
     check_enviromux_temperature,
     check_enviromux_voltage,

@@ -34,7 +34,7 @@ echo "$FIRST"
 printf "Lege RRD-Datenbank %s.neu an..." "$NEU"
 
 rrdtool create $NEU.neu -s 60 -b "$FIRST" $DS1 $DS2 $DS3 "$RRA" && echo OK || exit 1
-chown nagios.nagios $NEU.neu
+chown nagios:nagios $NEU.neu
 
 printf "Speise Daten aus %s ein..." "$ALT"
 xargs -n 1 rrdtool update $NEU.neu <werte 2>/dev/null

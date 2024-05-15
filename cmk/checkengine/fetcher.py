@@ -17,9 +17,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.fetchers import FetcherType
-
-__all__ = ["FetcherFunction", "HostKey", "SourceInfo", "SourceType"]
+__all__ = ["FetcherFunction", "FetcherType", "HostKey", "SourceInfo", "SourceType"]
 
 
 class SourceType(enum.Enum):
@@ -27,6 +25,19 @@ class SourceType(enum.Enum):
 
     HOST = enum.auto()
     MANAGEMENT = enum.auto()
+
+
+class FetcherType(enum.Enum):
+    # TODO(ml): That's too concrete for the engine.  The enum is misplaced.
+    #           We'll need a better solution later.  See also CMK-15979.
+    NONE = enum.auto()
+    PUSH_AGENT = enum.auto()
+    IPMI = enum.auto()
+    PIGGYBACK = enum.auto()
+    PROGRAM = enum.auto()
+    SPECIAL_AGENT = enum.auto()
+    SNMP = enum.auto()
+    TCP = enum.auto()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -45,13 +56,10 @@ class HostKey:
 
 
 class FetcherFunction(Protocol):
-    def __call__(
-        self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],
             Snapshot,
         ]
-    ]:
-        ...
+    ]: ...

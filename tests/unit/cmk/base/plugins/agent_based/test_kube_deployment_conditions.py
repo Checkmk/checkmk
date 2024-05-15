@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import json
@@ -14,7 +16,9 @@ import pytest
 from cmk.base.plugins.agent_based import kube_deployment_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import DeploymentConditions, VSResultAge
+
+from cmk.plugins.kube.schemata.section import DeploymentConditions
+from cmk.plugins.lib.kube import VSResultAge
 
 MINUTE = 60
 TIMESTAMP = 120
@@ -96,26 +100,32 @@ def string_table_element(
     state_replicafailure: int,
 ) -> Mapping[str, Any]:
     return {
-        "progressing": None
-        if status_progressing is None
-        else (
-            condition_true(state_progressing)
-            if status_progressing
-            else condition_false(state_progressing)
+        "progressing": (
+            None
+            if status_progressing is None
+            else (
+                condition_true(state_progressing)
+                if status_progressing
+                else condition_false(state_progressing)
+            )
         ),
-        "available": None
-        if status_available is None
-        else (
-            condition_true(state_available)
-            if status_available
-            else condition_false(state_available)
+        "available": (
+            None
+            if status_available is None
+            else (
+                condition_true(state_available)
+                if status_available
+                else condition_false(state_available)
+            )
         ),
-        "replicafailure": None
-        if status_replicafailure is None
-        else (
-            condition_true(state_replicafailure)
-            if status_replicafailure
-            else condition_false(state_replicafailure)
+        "replicafailure": (
+            None
+            if status_replicafailure is None
+            else (
+                condition_true(state_replicafailure)
+                if status_replicafailure
+                else condition_false(state_replicafailure)
+            )
         ),
     }
 
@@ -138,14 +148,14 @@ def check_result(params: Mapping[str, VSResultAge], section: DeploymentCondition
 def test_ok_state_mappings_match_conditions() -> None:
     assert all(
         condition in kube_deployment_conditions.CONDITIONS_OK_MAPPINGS
-        for condition in DeploymentConditions.schema()["properties"]
+        for condition in DeploymentConditions.model_json_schema()["properties"]
     )
 
 
 def test_parse(string_table: StringTable) -> None:
     section = kube_deployment_conditions.parse(string_table)
     assert section is not None
-    assert len(section.dict()) == 3
+    assert len(section.model_dump()) == 3
 
 
 def test_discovery(section: DeploymentConditions) -> None:

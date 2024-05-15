@@ -1,0 +1,11 @@
+Title: snmp inline backend ignores no Access error
+Class: fix
+Compatible: compat
+Component: core
+Date: 1697714323
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+Snmp walks that result in a "no Access" error are now be treated as if the walk
+returned no data. A debug log entry informs the user about this.

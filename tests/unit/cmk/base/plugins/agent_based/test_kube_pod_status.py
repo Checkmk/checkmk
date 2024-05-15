@@ -15,16 +15,16 @@ from cmk.base.plugins.agent_based.kube_pod_status import (
     DEFAULT_PARAMS,
     ValueStore,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.kube.schemata.api import (
     ContainerRunningState,
     ContainerStateType,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
     Phase,
-    PodContainers,
-    PodLifeCycle,
 )
+from cmk.plugins.kube.schemata.section import PodContainers, PodLifeCycle
 
 
 def _mocked_container_info_from_state(

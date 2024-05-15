@@ -1,0 +1,19 @@
+{
+  "slice": 86400,
+  "dsname": "load15",
+  "valid_interval": [
+    1543446000,
+    1543532400
+  ],
+  "params": {
+    "levels_upper": [
+      "stdev",
+      [
+        2,
+        4
+      ]
+    ],
+    "period": "wday",
+    "horizon": 90
+  }
+}

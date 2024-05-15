@@ -43,8 +43,6 @@ def agent_azure_arguments(  # pylint: disable=too-many-branches
         args += ["--services", *params["services"]]
 
     config = params["config"]
-    if "fetchall" in config:
-        return args
 
     explicit = config.get("explicit", [])
     if explicit:

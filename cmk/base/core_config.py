@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import abc
-import dataclasses
 import os
 import shutil
 import socket
@@ -22,11 +23,10 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
-from cmk.utils.licensing.handler import LicenseState, LicensingHandler
-from cmk.utils.licensing.helper import get_licensed_state_file_path, write_licensed_state
-from cmk.utils.paths import core_helper_config_dir
+from cmk.utils.licensing.handler import LicensingHandler
+from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
+from cmk.utils.store import lock_checkmk_configuration
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.parameters import TimespecificParameters
@@ -39,12 +39,6 @@ from cmk.base.nagios_utils import do_check_nagiosconfig
 
 CoreCommandName = str
 CoreCommand = str
-
-
-@dataclasses.dataclass(frozen=True)
-class CollectedHostLabels:
-    host_labels: Labels
-    service_labels: dict[ServiceName, Labels]
 
 
 class MonitoringCore(abc.ABC):
@@ -65,24 +59,27 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        ip_address_of: config.IPLookup,
+        passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         licensing_handler = self._licensing_handler_type.make()
-        self._persist_licensed_state(licensing_handler.state)
-        self._create_config(config_path, config_cache, licensing_handler, hosts_to_update)
+        licensing_handler.persist_licensed_state(get_licensed_state_file_path())
+        self._create_config(
+            config_path, config_cache, ip_address_of, licensing_handler, passwords, hosts_to_update
+        )
 
     @abc.abstractmethod
     def _create_config(
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,
+        passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         raise NotImplementedError
-
-    def _persist_licensed_state(self, license_state: LicenseState) -> None:
-        write_licensed_state(get_licensed_state_file_path(), license_state)
 
 
 ActiveServiceID = tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
@@ -99,8 +96,8 @@ def duplicate_service_warning(
 ) -> None:
     return config_warnings.warn(
         "ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
-        " - 1st occurrence: check plugin / item: %s / %r\n"
-        " - 2nd occurrence: check plugin / item: %s / %r\n"
+        " - 1st occurrence: check plug-in / item: %s / %r\n"
+        " - 2nd occurrence: check plug-in / item: %s / %r\n"
         % (checktype, description, host_name, *first_occurrence, *second_occurrence)
     )
 
@@ -248,6 +245,8 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    ip_address_of: config.IPLookup,
+    all_hosts: Iterable[HostName],
     hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Sequence[HostName],
@@ -262,7 +261,11 @@ def do_create_config(
 
     try:
         _create_core_config(
-            core, config_cache, hosts_to_update=hosts_to_update, duplicates=duplicates
+            core,
+            config_cache,
+            ip_address_of,
+            hosts_to_update=hosts_to_update,
+            duplicates=duplicates,
         )
     except Exception as e:
         if cmk.utils.debug.enabled():
@@ -270,10 +273,12 @@ def do_create_config(
         raise MKGeneralException("Error creating configuration: %s" % e)
 
     if config.bake_agents_on_restart and not config.is_wato_slave_site:
-        _bake_on_restart(config_cache, skip_config_locking_for_bakery)
+        _bake_on_restart(config_cache, all_hosts, skip_config_locking_for_bakery)
 
 
-def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> None:
+def _bake_on_restart(
+    config_cache: config.ConfigCache, all_hosts: Iterable[HostName], skip_locking: bool
+) -> None:
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
@@ -289,14 +294,14 @@ def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> No
 
     with nullcontext() if skip_locking else lock_checkmk_configuration():
         target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
-            config_cache, selected_hosts=None
+            config_cache, all_hosts=all_hosts, selected_hosts=None
         )
 
     agent_bakery.bake_agents(
         target_configs,
-        bake_revision_mode=BakeRevisionMode.INACTIVE
-        if config.apply_bake_revision
-        else BakeRevisionMode.DISABLED,
+        bake_revision_mode=(
+            BakeRevisionMode.INACTIVE if config.apply_bake_revision else BakeRevisionMode.DISABLED
+        ),
         logging_level=config.agent_bakery_logging,
         call_site="config creation",
     )
@@ -347,6 +352,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    ip_address_of: config.IPLookup,
     hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Sequence[HostName],
@@ -356,11 +362,23 @@ def _create_core_config(
     _verify_non_duplicate_hosts(duplicates)
     _verify_non_deprecated_checkgroups()
 
+    # recompute and save passwords, to ensure consistency:
+    passwords = config_cache.collect_passwords()
+    cmk.utils.password_store.save(passwords, cmk.utils.password_store.pending_password_store_path())
+
     config_path = next(VersionedConfigPath.current())
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
-        core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
+        core.create_config(
+            config_path,
+            config_cache,
+            ip_address_of,
+            hosts_to_update=hosts_to_update,
+            passwords=passwords,
+        )
 
-    cmk.utils.password_store.save_for_helpers(config_path)
+    cmk.utils.password_store.save(
+        passwords, cmk.utils.password_store.core_password_store_path(config_path)
+    )
 
 
 def _verify_non_deprecated_checkgroups() -> None:
@@ -415,21 +433,6 @@ def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
 #   +----------------------------------------------------------------------+
 #   | Command line arguments for special agents or active checks           |
 #   '----------------------------------------------------------------------'
-
-
-def make_special_agent_stdin(
-    hostname: HostName,
-    ipaddress: HostAddress | None,
-    agentname: str,
-    params: Mapping[str, object],
-) -> str | None:
-    info_func = config.special_agent_info[agentname]
-    # TODO: We call a user supplied function here.
-    # If this crashes during config generation, it can get quite ugly.
-    # We should really wrap this and implement proper sanitation and exception handling.
-    # Deal with this when modernizing the API (CMK-3812).
-    agent_configuration = info_func(params, hostname, ipaddress)
-    return getattr(agent_configuration, "stdin", None)
 
 
 def get_cmk_passive_service_attributes(
@@ -508,46 +511,6 @@ def _extra_service_attributes(
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
     return attrs
-
-
-def write_notify_host_file(
-    config_path: VersionedConfigPath,
-    labels_per_host: Mapping[HostName, CollectedHostLabels],
-) -> None:
-    notify_labels_path: Path = _get_host_file_path(config_path)
-    for host, labels in labels_per_host.items():
-        host_path = notify_labels_path / host
-        save_object_to_file(
-            host_path,
-            dataclasses.asdict(
-                CollectedHostLabels(
-                    host_labels=labels.host_labels,
-                    service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
-                )
-            ),
-        )
-
-
-def read_notify_host_file(
-    host_name: HostName,
-) -> CollectedHostLabels:
-    host_file_path: Path = _get_host_file_path(host_name=host_name)
-    return CollectedHostLabels(
-        **load_object_from_file(
-            path=host_file_path,
-            default={"host_labels": {}, "service_labels": {}},
-        )
-    )
-
-
-def _get_host_file_path(
-    config_path: VersionedConfigPath | None = None,
-    host_name: HostName | None = None,
-) -> Path:
-    root_path = Path(config_path) if config_path else core_helper_config_dir / Path("latest")
-    if host_name:
-        return root_path / "notify" / "labels" / host_name
-    return root_path / "notify" / "labels"
 
 
 def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:

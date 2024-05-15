@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import copy
 import itertools
 from collections.abc import Sequence
@@ -11,7 +13,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils import ps
+
+from cmk.plugins.lib import ps
 
 
 def splitter(

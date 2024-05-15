@@ -3,26 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 
 from pathlib import Path
 from stat import S_IMODE
 
 import pytest
 
-from tests.testlib.certs import (
-    check_certificate_against_private_key,
-    check_certificate_against_public_key,
-    check_cn,
-)
-
 from omdlib.certs import CertificateAuthority  # pylint: disable=wrong-import-order
 
-from cmk.utils.certs import (
-    _rsa_public_key_from_cert_or_csr,
-    load_cert_and_private_key,
-    root_cert_path,
-    RootCA,
-)
+from cmk.utils.certs import root_cert_path, RootCA
+from cmk.utils.crypto.certificate import Certificate, CertificatePEM
+from cmk.utils.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 
 CA_NAME = "test-ca"
 
@@ -37,14 +30,8 @@ def fixture_ca(tmp_path: Path) -> CertificateAuthority:
 
 
 def test_initialize(ca: CertificateAuthority) -> None:
-    assert check_cn(
-        ca.root_ca.cert,
-        CA_NAME,
-    )
-    check_certificate_against_private_key(
-        ca.root_ca.cert,
-        ca.root_ca.rsa,
-    )
+    assert ca.root_ca.certificate.common_name == CA_NAME
+    assert ca.root_ca.certificate.public_key == ca.root_ca.private_key.public_key
 
 
 def _file_permissions_is_660(path: Path) -> bool:
@@ -55,20 +42,14 @@ def test_create_site_certificate(ca: CertificateAuthority) -> None:
     site_id = "xyz"
     assert not ca.site_certificate_exists(site_id)
 
-    ca.create_site_certificate(site_id)
+    ca.create_site_certificate(site_id, key_size=1024)
     assert ca.site_certificate_exists(site_id)
     assert _file_permissions_is_660(ca._site_certificate_path(site_id))
 
-    cert, key = load_cert_and_private_key(ca._site_certificate_path(site_id))
-    assert check_cn(
-        cert,
-        site_id,
-    )
-    check_certificate_against_private_key(
-        cert,
-        key,
-    )
-    check_certificate_against_public_key(
-        cert,
-        _rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
-    )
+    mixed_pem = ca._site_certificate_path(site_id).read_bytes()
+    certificate = Certificate.load_pem(CertificatePEM(mixed_pem))
+    private_key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(mixed_pem), None)
+
+    assert certificate.common_name == site_id
+    assert certificate.public_key == private_key.public_key
+    certificate.verify_is_signed_by(ca.root_ca.certificate)

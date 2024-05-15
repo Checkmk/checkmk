@@ -39,24 +39,24 @@ void sleep(std::chrono::duration<T, B> dur) noexcept {
     std::this_thread::sleep_until(std::chrono::steady_clock::now() + dur);
 }
 
-inline bool CompareIgnoreCase(char lhs, char rhs) noexcept {
+inline auto CompareIgnoreCase(char lhs, char rhs) noexcept {
     // TODO(sk): naive implementation
-    return std::tolower(lhs) == std::tolower(rhs);
+    return std::tolower(lhs) <=> std::tolower(rhs);
 }
 
-inline bool CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
+inline auto CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
     // TODO(sk): naive implementation
-    return std::towlower(lhs) == std::towlower(rhs);
+    return std::towlower(lhs) <=> std::towlower(rhs);
 }
 
 /// Checks basically whether we have vector(ContiguousContainer)
 /// C++ concepts library doesn't support now ContiguosContainer
 template <typename C>
 concept VectorLike = requires(C c) {
-                         c[0];
-                         c.data();
-                         c.size();
-                     };
+    c[0];
+    c.data();
+    c.size();
+};
 template <VectorLike Data>
 std::string_view ToView(const Data &input) {
     return {reinterpret_cast<const char *>(input.data()),
@@ -94,24 +94,21 @@ template <class T, class V>
     requires UniStringLike<T> && UniStringLike<V>
 [[nodiscard]] bool IsEqual(const T &lhs, const V &rhs) {
     return std::ranges::equal(AsView(lhs), AsView(rhs), [](auto l, auto r) {
-        return CompareIgnoreCase(l, r);
+        return CompareIgnoreCase(l, r) == std::strong_ordering::equal;
     });
+}
+
+template <class T, class V>
+    requires UniStringLike<T> && UniStringLike<V>
+auto ThreeWayCompare(const T &lhs, const V &rhs) {
+    return std::lexicographical_compare_three_way(
+        lhs.begin(), lhs.end(), std::ranges::begin(rhs), std::ranges::end(rhs),
+        [](auto l, auto r) { return CompareIgnoreCase(l, r); });
 }
 
 [[nodiscard]] inline bool IsLess(std::string_view lhs,
                                  std::string_view rhs) noexcept {
-    auto li = lhs.cbegin();
-    auto ri = rhs.cbegin();
-    for (; li != lhs.cend() && ri != rhs.cend(); ++ri, ++li) {
-        const auto right_char = std::tolower(*ri);
-        const auto left_char = std::tolower(*li);
-        if (left_char != right_char) {
-            return left_char < right_char;
-        }
-    }
-
-    // If equal until here, lhs < rhs iff lhs shorter than rhs.
-    return lhs.size() < rhs.size();
+    return ThreeWayCompare(lhs, rhs) == std::strong_ordering::less;
 }
 
 // Stupid Approach but C++ has no good methods to uppercase/lowercase string
@@ -371,10 +368,17 @@ inline void AllTrim(std::string &str) {
     RightTrim(str);
 }
 
+template <typename C>
+concept TheChar = std::is_same_v<C, char> || std::is_same_v<C, wchar_t>;
+
+/// "a.b.", "." => {"a", "b"}
+/// "a.b", "." => {"a", "b"}
+/// ".b", "." => { "b"}
 /// max_count == 0 means inifinite parsing
-inline std::vector<std::string> SplitString(const std::string &str,
-                                            std::string_view delimiter,
-                                            size_t max_count) noexcept {
+template <TheChar T>
+std::vector<std::basic_string<T>> SplitString(
+    const std::basic_string<T> &str, std::basic_string_view<T> delimiter,
+    size_t max_count) noexcept {
     // sanity
     if (str.empty()) {
         return {};
@@ -384,10 +388,10 @@ inline std::vector<std::string> SplitString(const std::string &str,
     }
 
     size_t start = 0U;
-    std::vector<std::string> result;
+    std::vector<std::basic_string<T>> result;
 
     auto end = str.find(delimiter);
-    while (end != std::string::npos) {
+    while (end != std::basic_string<T>::npos) {
         result.push_back(str.substr(start, end - start));
 
         start = end + delimiter.length();
@@ -395,7 +399,7 @@ inline std::vector<std::string> SplitString(const std::string &str,
 
         // check for a skipping rest
         if (result.size() == max_count) {
-            end = std::string::npos;
+            end = std::basic_string<T>::npos;
             break;
         }
     }
@@ -408,58 +412,42 @@ inline std::vector<std::string> SplitString(const std::string &str,
     return result;
 }
 
-inline std::vector<std::string> SplitString(
-    const std::string &str, std::string_view delimiter) noexcept {
+template <TheChar T>
+std::vector<std::basic_string<T>> SplitString(const std::basic_string<T> &str,
+                                              const T *delimiter,
+                                              size_t max_count) noexcept {
+    return SplitString(str, std::basic_string_view<T>(delimiter), max_count);
+}
+
+template <TheChar T>
+std::vector<std::basic_string<T>> SplitString(
+    const std::basic_string<T> &str, const std::basic_string<T> &delimiter,
+    size_t max_count) noexcept {
+    return SplitString(str, std::basic_string_view<T>(delimiter), max_count);
+}
+
+template <TheChar T>
+std::vector<std::basic_string<T>> SplitString(
+    const std::basic_string<T> &str,
+    std::basic_string_view<T> delimiter) noexcept {
     return SplitString(str, delimiter, 0);
 }
 
-// "a.b.", "." => {"a", "b"}
-// "a.b", "." => {"a", "b"}
-// ".b", "." => { "b"}
-// max_count == 0 means inifinite parsing
-inline std::vector<std::wstring> SplitString(const std::wstring &str,
-                                             std::wstring_view delimiter,
-                                             size_t max_count) noexcept {
-    // sanity
-    if (str.empty()) {
-        return {};
-    }
-    if (delimiter.empty()) {
-        return {str};
-    }
-
-    size_t start = 0U;
-    std::vector<std::wstring> result;
-
-    auto end = str.find(delimiter);
-    while (end != std::string::npos) {
-        result.push_back(str.substr(start, end - start));
-
-        start = end + delimiter.length();
-        end = str.find(delimiter, start);
-
-        // check for a skipping rest
-        if (result.size() == max_count) {
-            end = std::string::npos;
-            break;
-        }
-    }
-
-    auto last_string = str.substr(start, end);
-    if (!last_string.empty()) {
-        result.push_back(last_string);
-    }
-
-    return result;
-}
-
-inline std::vector<std::wstring> SplitString(
-    const std::wstring &str, std::wstring_view delimiter) noexcept {
+template <TheChar T>
+std::vector<std::basic_string<T>> SplitString(const std::basic_string<T> &str,
+                                              const T *delimiter) noexcept {
     return SplitString(str, delimiter, 0);
 }
 
-// special case when we are parsing to the end
-// indirectly tested in the test-cma_tools
+template <TheChar T>
+std::vector<std::basic_string<T>> SplitString(
+    const std::basic_string<T> &str,
+    const std::basic_string<T> &delimiter) noexcept {
+    return SplitString(str, std::basic_string_view<T>(delimiter), 0);
+}
+
+/// special case when we are parsing to the end
+/// indirectly tested in the test-cma_tools
 inline std::vector<std::wstring> SplitStringExact(const std::wstring &str,
                                                   std::wstring_view delimiter,
                                                   size_t max_count) noexcept {
@@ -486,63 +474,40 @@ inline std::vector<std::wstring> SplitStringExact(const std::wstring &str,
             break;
         }
     }
-
-    auto last_string = str.substr(start, end);
-    result.push_back(last_string);
+    result.push_back(str.substr(start, end));
 
     return result;
 }
 
-// joiner :)
-// ["a", "b", "c" ] + Separator:"," => "a,b,c"
-// C++ is not happy with templating of this function
-// we have to make call like JoinVector<wchar_t>
-// so we have to implementations
-inline std::wstring JoinVector(const std::vector<std::wstring> &values,
-                               std::wstring_view separator) {
+/// Join strings a-la Python join()
+/// ["a", "b", "c" ] + Separator:"," => "a,b,c"
+template <TheChar T>
+std::basic_string<T> JoinVector(const std::vector<std::basic_string<T>> &values,
+                                std::basic_string_view<T> separator) {
     if (values.empty()) {
         return {};
     }
 
-    size_t sz = 0;
-    std::ranges::for_each(values, [&](const auto &entry) {
-        sz += entry.size() + separator.size();
-    });
-
-    std::wstring values_string;
-    values_string.reserve(sz);
-
+    size_t sz = separator.size() * values.size();
     std::ranges::for_each(values,
-                          [&values_string, separator](std::wstring_view entry) {
-                              values_string += entry;
-                              values_string += separator;
-                          });
-    values_string.resize(sz - separator.length());
-    return values_string;
+                          [&](const auto &entry) { sz += entry.size(); });
+
+    std::basic_string<T> result;
+    result.reserve(sz);
+
+    std::ranges::for_each(
+        values, [&result, separator](std::basic_string_view<T> entry) {
+            result += entry;
+            result += separator;
+        });
+    result.resize(sz - separator.length());
+    return result;
 }
 
-// version for string
-inline std::string JoinVector(const std::vector<std::string> &values,
-                              std::string_view separator) {
-    if (values.empty()) {
-        return {};
-    }
-
-    size_t sz = 0;
-    std::ranges::for_each(values, [&](const auto &entry) {
-        sz += entry.size() + separator.size();
-    });
-
-    std::string values_string;
-    values_string.reserve(sz);
-
-    std::ranges::for_each(values, [&](const auto &entry) {
-        values_string += entry;
-        values_string += separator;
-    });
-
-    values_string.resize(sz - separator.length());
-    return values_string;
+template <TheChar T>
+std::basic_string<T> JoinVector(const std::vector<std::basic_string<T>> &values,
+                                const T *separator) {
+    return JoinVector(values, std::basic_string_view<T>(separator));
 }
 
 template <typename T>
@@ -550,47 +515,38 @@ void ConcatVector(std::vector<T> &target, const std::vector<T> &source) {
     std::ranges::copy(source, std::back_inserter(target));
 }
 
-inline std::string TimeToString(
-    std::chrono::system_clock::time_point time_point) {
-    auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
-    std::stringstream sss;
-    const auto *loc_time = std::localtime(&in_time_t);  // NOLINT
-    auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
-    sss << p_time << std::ends;
-    return sss.str();
-}
-
 inline auto SecondsSinceEpoch() {
-    auto time_since = std::chrono::system_clock::now().time_since_epoch();
+    const auto time_since = std::chrono::system_clock::now().time_since_epoch();
     const auto now =
         std::chrono::duration_cast<std::chrono::seconds>(time_since);
     return now.count();
 }
 
-inline std::string RemoveQuotes(const std::string &in) {
-    std::string val{in};
-    if (val.size() < 2) {
-        return val;
-    }
-
-    if (val.back() == '\'' || val.back() == '\"') {
-        val.pop_back();
-    }
-    if (val[0] == '\'' || val[0] == '\"') {
-        val = val.substr(1, val.size() - 1);
-    }
-    return val;
+inline std::pair<uint32_t, uint32_t> IsQuoted(std::string_view in) {
+    return {in.front() == '\'' || in.front() == '\"' ? 1 : 0,
+            in.back() == '\'' || in.back() == '\"' ? 1 : 0};
 }
 
-inline std::wstring RemoveQuotes(const std::wstring &in) {
+inline std::pair<uint32_t, uint32_t> IsQuoted(std::wstring_view in) {
+    return {in.front() == L'\'' || in.front() == L'\"' ? 1 : 0,
+            in.back() == L'\'' || in.back() == L'\"' ? 1 : 0};
+}
+
+template <TheChar T>
+std::basic_string<T> RemoveQuotes(std::basic_string_view<T> in) {
     if (in.size() < 2) {
-        return in;
+        return std::basic_string<T>{in};
     }
 
-    size_t start = in.front() == L'\'' || in.front() == L'\"' ? 1 : 0;
-    size_t end = in.back() == L'\'' || in.back() == L'\"' ? 1 : 0;
+    const auto [start, end] = IsQuoted(in);
 
-    return end + start != 0 ? in.substr(start, in.size() - (start + end)) : in;
+    return std::basic_string<T>{
+        end + start != 0 ? in.substr(start, in.size() - (start + end)) : in};
+}
+
+template <TheChar T>
+std::basic_string<T> RemoveQuotes(const std::basic_string<T> &in) {
+    return RemoveQuotes(std::basic_string_view<T>{in});
 }
 
 }  // namespace cma::tools

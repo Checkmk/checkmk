@@ -9,17 +9,39 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Float, Tuple
+from cmk.gui.valuespec import Dictionary, Float, Migrate, Tuple
 
 
-def _parameter_valuespec_ps_voltage():
-    return Tuple(
-        elements=[
-            Float(title=_("Warning below"), unit="V"),
-            Float(title=_("Critical below"), unit="V"),
-            Float(title=_("Warning at or above"), unit="V"),
-            Float(title=_("Critical at or above"), unit="V"),
-        ],
+def _parameter_valuespec_ps_voltage() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels_lower",
+                    Tuple(
+                        elements=[
+                            Float(title=_("Warning below"), unit="V"),
+                            Float(title=_("Critical below"), unit="V"),
+                        ],
+                    ),
+                ),
+                (
+                    "levels_upper",
+                    Tuple(
+                        elements=[
+                            Float(title=_("Warning at"), unit="V"),
+                            Float(title=_("Critical at"), unit="V"),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: (
+            p
+            if isinstance(p, dict)
+            else {"levels_lower": (p[0], p[1]), "levels_upper": (p[2], p[3])}
+        ),
     )
 
 

@@ -6,16 +6,24 @@
 from __future__ import annotations
 
 import base64
+import binascii
+import contextlib
 import hmac
 import re
 import uuid
+import warnings
 from collections.abc import Callable
 from datetime import datetime
+from pathlib import Path
 from typing import Literal
 
+import cmk.utils.paths
+from cmk.utils import deprecation_warnings
+from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.utils.crypto.secrets import AutomationUserSecret, Secret, SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -30,10 +38,25 @@ from cmk.gui.utils.urls import requested_file_name
 
 auth_logger = logger.getChild("auth")
 
-AuthFunction = Callable[[], UserId | None]
+
+class SiteInternalPseudoUser:
+    """Alternative type for UserIds
+
+    If one component talks to another it usually has to authenticate itself against the called
+    component. We used to use the automation user for this but that has several caveats:
+    - It can be misconfigured
+    - We need the password for this user so we store it in plaintext
+    - It might be synchronized among many sites in a distributed setup
+
+    So the idea is to have this pseudo user that is site specific and makes it possible to
+    authenticate one component to another without a username and without the danger that this might
+    get misconfigured."""
 
 
-def check_auth() -> tuple[UserId, AuthType]:
+AuthFunction = Callable[[], UserId | SiteInternalPseudoUser | None]
+
+
+def check_auth() -> tuple[UserId | SiteInternalPseudoUser, AuthType]:
     """Try to authenticate a user from the current request.
 
     This will attempt to authenticate the user via all possible authentication types.
@@ -50,11 +73,12 @@ def check_auth() -> tuple[UserId, AuthType]:
         (_check_auth_by_remote_user, "web_server"),
         (_check_auth_by_basic_header, "basic_auth"),
         (_check_auth_by_bearer_header, "bearer"),
+        (_check_internal_token, "internal_token"),
         # Automation authentication via _username and _secret overrules everything else.
         (_check_auth_by_automation_credentials_in_request_values, "automation"),
     ]
 
-    selected: tuple[UserId, AuthType] | None = None
+    selected: tuple[UserId | SiteInternalPseudoUser, AuthType] | None = None
     user_id = None
     for auth_method, auth_type in auth_methods:
         # NOTE: It's important for these methods to always raise an exception whenever something
@@ -69,7 +93,7 @@ def check_auth() -> tuple[UserId, AuthType]:
                 AuthenticationFailureEvent(
                     user_error=str(e),
                     auth_method=auth_type,
-                    username=user_id,
+                    username=user_id if isinstance(user_id, UserId) else None,
                     remote_ip=request.remote_ip,
                 )
             )
@@ -78,7 +102,8 @@ def check_auth() -> tuple[UserId, AuthType]:
     if not selected:
         raise MKAuthException("Couldn't log in.")
 
-    _check_cme_login(selected[0])
+    if not isinstance(selected[0], SiteInternalPseudoUser):
+        _check_cme_login(selected[0])
 
     return selected
 
@@ -86,7 +111,7 @@ def check_auth() -> tuple[UserId, AuthType]:
 def is_site_login() -> bool:
     """Determine if login is a site login for connecting central and remote
     site. This login has to be allowed even if site login on remote site is not
-    permitted by rule "Direct login to Web GUI allowed".  This also applies to
+    permitted by rule "Direct login to web GUI allowed".  This also applies to
     all rest-api requests, they should also be allowed in this scenario otherwise
     the agent-receiver won't work."""
 
@@ -194,11 +219,16 @@ def _check_auth_by_header(
     try:
         password = Password(passwd)
     except ValueError as e:
+        # Note: not wrong, invalid. E.g. contains null bytes or is empty
         raise MKAuthException(f"Invalid password: {e}")
 
     # Could be an automation user or a regular user
     if _verify_automation_login(user_id, password.raw) or _verify_user_login(user_id, password):
         return user_id
+
+    # At this point: invalid credentials. Could be user, password or both.
+    # on_failed_login wants to be informed about non-existing users as well.
+    userdb.on_failed_login(user_id, datetime.now())
 
     raise MKAuthException(f"Wrong credentials ({token_name} header)")
 
@@ -265,6 +295,21 @@ def _check_auth_by_bearer_header() -> UserId | None:
     return _check_auth_by_header("Bearer", _parse_bearer_token)
 
 
+def _check_internal_token() -> SiteInternalPseudoUser | None:
+    if not (auth_header := request.environ.get("HTTP_AUTHORIZATION", "")).startswith(
+        "InternalToken "
+    ):
+        return None
+
+    _tokenname, token = auth_header.split("InternalToken ", maxsplit=1)
+
+    with contextlib.suppress(binascii.Error):  # base64 decoding failure
+        if SiteInternalSecret().check(Secret.from_b64(token)):
+            return SiteInternalPseudoUser()
+
+    return None
+
+
 def _parse_bearer_token(token: str) -> tuple[str, str]:
     """Read username and password from a Bearer token ("<username> <password>").
 
@@ -297,12 +342,33 @@ def _parse_bearer_token(token: str) -> tuple[str, str]:
 def _check_auth_by_automation_credentials_in_request_values() -> UserId | None:
     """Check credentials either in query string or form encoded POST body
 
+    This is deprecated with Werk #16223 and should be removed with Checkmk 2.5
+    The config option will be introduced with Checkmk 2.3, in 2.4 the default
+    will change, and then we're going to finally remove this
+
     Raises:
         MKAuthException: whenever an illegal username is detected.
     """
+    if not active_config.enable_deprecated_automation_user_authentication:
+        return None
+
     if (username := request.values.get("_username")) and (
         password := request.values.get("_secret")
     ):
+        warnings.warn(
+            "Request authentication deprecated. See https://checkmk.com/werk/16223/ "
+            f"User: {username!r}.",
+            category=deprecation_warnings.DeprecatedSince23Warning,
+        )
+        # NOTE
+        # For now, we don't use logging.captureWarnings to log all warnings into the "py.warnings"
+        # logger. We should be doing it, but this needs some consideration. Also, probably not all
+        # warnings should be logged that way. For the meantime, we do both here.
+        logger.warning(
+            "Deprecated automation user login method was used for %s. See Werk #16223",
+            username,
+        )
+
         user_id = _try_user_id(username)
         if _verify_automation_login(user_id, password):
             return user_id
@@ -333,10 +399,17 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
     Returns:
         True if user_id is an automation user and the secret matches.
     """
+
+    htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
+    password_hash = htpwd_entries.get(user_id)
+
     return (
         secret != ""
+        and password_hash is not None
+        and not password_hash.startswith("!")  # user is locked
         and (stored_secret := AutomationUserSecret(user_id)).exists()
-        and stored_secret.read() == secret
+        and password_hashing.matches(Password(secret), password_hash)
+        and stored_secret.check(secret)
     )
 
 

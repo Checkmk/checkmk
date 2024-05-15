@@ -3,17 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+import datetime
 import time
 from collections.abc import Mapping, Sequence
 from copy import copy
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 
-from tests.testlib import on_time
-
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import job
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 SECTION_1: job.Section = {
     "SHREK": {
@@ -113,7 +117,7 @@ SECTION_3: job.Section = {
     },
 }
 
-TIME = 1594300620.0, "CET"
+TIME = 1594300620.0
 
 
 def _modify_start_time(
@@ -312,7 +316,7 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
                 Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Jan 12 2019 14:53:21"),
+                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 1000 B"),
@@ -341,7 +345,7 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
                 Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Jan 12 2019 14:53:21"),
+                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(
                     state=State.CRIT,
                     summary="Job age: 1 year 178 days (warn/crit at 1 second/2 seconds)",
@@ -376,7 +380,7 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 ),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
                 Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Jan 12 2019 14:53:21"),
+                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 1000 B"),
@@ -412,9 +416,9 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                     state=State.OK,
                     notice=(
                         "6 jobs are currently running, started at"
-                        " May 08 2019 09:41:01, May 08 2019 09:42:01,"
-                        " May 08 2019 09:43:01, May 08 2019 09:44:01,"
-                        " Sep 18 2018 22:11:41, May 08 2019 09:46:01"
+                        " 2019-05-08 09:41:01, 2019-05-08 09:42:01,"
+                        " 2019-05-08 09:43:01, 2019-05-08 09:44:01,"
+                        " 2018-09-18 22:11:41, 2019-05-08 09:46:01"
                     ),
                 ),
                 Result(
@@ -451,7 +455,7 @@ def test_process_job_stats(
     exit_code_to_state_map,
     expected_results,
 ):
-    with on_time(*TIME):
+    with time_machine.travel(datetime.datetime.fromtimestamp(TIME, tz=ZoneInfo("CET"))):
         assert list(
             job._process_job_stats(
                 job_data,
@@ -473,7 +477,7 @@ def test_process_job_stats(
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
                 Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Jan 12 2019 14:53:21"),
+                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 1000 B"),
@@ -508,7 +512,7 @@ def test_process_job_stats(
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 10 seconds"),
                 Metric("real_time", 9.9, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Nov 05 2014 03:10:30"),
+                Result(state=State.OK, notice="Latest job started at 2014-11-05 03:10:30"),
                 Result(state=State.OK, summary="Job age: 5 years 248 days"),
                 Metric("job_age", 179147190.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 0 B"),
@@ -539,7 +543,7 @@ def test_process_job_stats(
                 Metric("real_time", 281.65, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
-                    notice="1 job is currently running, started at Nov 05 2014 17:41:53",
+                    notice="1 job is currently running, started at 2014-11-05 17:41:53",
                 ),
                 Result(
                     state=State.CRIT,
@@ -578,5 +582,5 @@ def test_check_job(
     section: job.Section,
     expected_results: Sequence[Result | Metric],
 ) -> None:
-    with on_time(*TIME):
+    with time_machine.travel(datetime.datetime.fromtimestamp(TIME, tz=ZoneInfo("CET"))):
         assert list(job.check_job(item, params, section)) == expected_results

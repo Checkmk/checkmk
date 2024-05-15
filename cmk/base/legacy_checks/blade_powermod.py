@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
+
+from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
 
 
 def inventory_blade_powermod(info):
@@ -25,7 +26,12 @@ def check_blade_powermod(index, _no_param, info):
     return (3, "Module %s not found in SNMP info" % index)
 
 
+def parse_blade_powermod(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["blade_powermod"] = LegacyCheckDefinition(
+    parse_function=parse_blade_powermod,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.1.0", "BladeCenter Management Module"),
         contains(".1.3.6.1.2.1.1.1.0", "BladeCenter Advanced Management Module"),

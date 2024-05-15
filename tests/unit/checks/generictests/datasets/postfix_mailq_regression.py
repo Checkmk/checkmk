@@ -17,12 +17,12 @@ info = [
     ["QUEUE_active", "4", "3"],
 ]
 
-discovery = {"": [("", {}), ("/etc/postfix-internal", {})]}
+discovery = {"": [("default", {}), ("/etc/postfix-internal", {})]}
 
 checks = {
     "": [
         (
-            "",
+            "default",
             {"active": (200, 300), "deferred": (10, 20)},
             [
                 (

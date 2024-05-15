@@ -4,18 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import passwordstore_get_cmdline
+from cmk.base.check_legacy_includes.check_mail import general_check_mail_args_from_params
 from cmk.base.config import active_check_info
 
+CHECK_IDENT = "check_mail"
 
-def check_mail_arguments(params):  # pylint: disable=too-many-branches
+
+def check_mail_arguments(params):
     """
     >>> for a in check_mail_arguments({
     ...     'service_description': 'Email',
     ...     'fetch': ('IMAP', {
     ...       'server': 'imap.gmx.de',
     ...       'auth': ('basic', ('me@gmx.de', ('password', 'p4ssw0rd'))),
-    ...       'connection': {'disable_tls': True, 'tcp_port': 123}}),
+    ...       'connection': {'disable_tls': True, 'port': 123}}),
     ...     'forward': {'facility': 2, 'application': None, 'host': 'me.too@checkmk.com',
     ...     'cleanup': True}}):
     ...   print(a)
@@ -29,42 +31,9 @@ def check_mail_arguments(params):  # pylint: disable=too-many-branches
     --forward-host=me.too@checkmk.com
     --cleanup=delete
     """
-    try:
-        fetch_protocol, fetch_params = params["fetch"]
-        connection_params = fetch_params["connection"]
-        auth_type, auth_data = fetch_params["auth"]
-    except KeyError as exc:
-        raise ValueError(
-            f"Params for check_mail are faulty (missing {exc}), did you update the config?"
-        )
-
-    args: list[str | tuple[str, str, str]] = [
-        f"--fetch-protocol={fetch_protocol}",
-        f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
-    ]
-
-    # NOTE: this argument will be turned into `--fetch-disable-tls` when
-    # refactoring all mailbox based active checks
-    if not connection_params.get("disable_tls"):
-        args.append("--fetch-tls")
-
-    if connection_params.get("disable_cert_validation"):
-        args.append("--fetch-disable-cert-validation")
-
-    if (fetch_port := connection_params.get("tcp_port")) is not None:
-        args.append(f"--fetch-port={fetch_port}")
-
-    if auth_type == "basic":
-        username, password = auth_data
-        args += [
-            f"--fetch-username={username}",
-            passwordstore_get_cmdline("--fetch-password=%s", password),
-        ]
-    else:
-        raise ValueError(f"{auth_type} authentication not (yet) supported for check_mail")
-
-    if "connect_timeout" in params:
-        args.append(f"--connect-timeout={params['connect_timeout']}")
+    args: list[str | tuple[str, str, str]] = general_check_mail_args_from_params(
+        CHECK_IDENT, params
+    )
 
     if "forward" in params:
         forward = params["forward"]
@@ -108,7 +77,7 @@ if __name__ == "__main__":
     assert not doctest.testmod().failed
 else:
     active_check_info["mail"] = {
-        "command_line": "check_mail $ARG1$",
+        "command_line": f"{CHECK_IDENT} $ARG1$",
         "argument_function": check_mail_arguments,
         "service_description": lambda params: params["service_description"],
     }

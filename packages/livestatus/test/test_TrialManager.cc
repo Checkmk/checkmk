@@ -9,15 +9,14 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "livestatus/ChronoUtils.h"
 #include "livestatus/TrialManager.h"
 
 namespace {
 auto recently_from(std::chrono::system_clock::time_point now) {
-    return now - TrialManager::trialPeriod() + mk::days{1};
+    return now - TrialManager::trialPeriod() + std::chrono::days{1};
 }
 auto long_ago_from(std::chrono::system_clock::time_point now) {
-    return now - TrialManager::trialPeriod() - mk::days{1};
+    return now - TrialManager::trialPeriod() - std::chrono::days{1};
 }
 auto few_services() { return TrialManager::maxServicesInTrialPeriod(); }
 auto many_services() { return TrialManager::maxServicesInTrialPeriod() + 1; }

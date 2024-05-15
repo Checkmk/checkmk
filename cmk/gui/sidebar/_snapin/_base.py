@@ -15,7 +15,7 @@ PageHandlers = dict[str, PageHandlerFunc]
 
 # TODO: Transform methods to class methods
 class SidebarSnapin(abc.ABC):
-    """Abstract base class for all sidebar snapins"""
+    """Abstract base class for all sidebar snap-ins"""
 
     @classmethod
     @abc.abstractmethod
@@ -50,7 +50,7 @@ class SidebarSnapin(abc.ABC):
 
     @classmethod
     def is_custom_snapin(cls) -> bool:
-        """Whether or not a snapin type is a customized snapin"""
+        """Whether or not a snap-in type is a customized snap-in"""
         return False
 
     @classmethod
@@ -73,9 +73,9 @@ class SidebarSnapin(abc.ABC):
 
 
 class CustomizableSidebarSnapin(SidebarSnapin, abc.ABC):
-    """Parent for all user configurable sidebar snapins
+    """Parent for all user configurable sidebar snap-ins
 
-    Subclass this class in case you want to implement a sidebar snapin type that can
+    Subclass this class in case you want to implement a sidebar snap-in type that can
     be customized by the user"""
 
     @classmethod
@@ -87,5 +87,5 @@ class CustomizableSidebarSnapin(SidebarSnapin, abc.ABC):
     @classmethod
     @abc.abstractmethod
     def parameters(cls):
-        """Default set of parameters to be used for the uncustomized snapin"""
+        """Default set of parameters to be used for the uncustomized snap-in"""
         raise NotImplementedError()

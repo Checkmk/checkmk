@@ -7,10 +7,11 @@
 import time
 from json import loads
 
+from cmk.plugins.kube.schemata.section import StartTime
+from cmk.plugins.lib.uptime import Section
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.kube import StartTime
-from .utils.uptime import Section
 
 
 def _parse_kube_start_time(now: float, string_table: StringTable) -> Section | None:

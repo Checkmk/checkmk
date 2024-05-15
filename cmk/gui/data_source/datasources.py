@@ -403,7 +403,7 @@ class DataSourceLogAlertStatistics(LogDataSource):
 
     @property
     def title(self) -> str:
-        return _("Alert Statistics")
+        return _("Alert statistics")
 
     @property
     def infos(self) -> SingleInfos:
@@ -515,13 +515,13 @@ class ServiceDiscoveryRowTable(RowTable):
                     continue
 
                 state, check, service_description = parts
-                if state not in ["ignored", "vanished", "unmonitored"]:
+                if state not in ["Ignored service", "Vanished service", "Unmonitored service"]:
                     continue
 
                 this_row = row.copy()
                 this_row.update(
                     {
-                        "discovery_state": state,
+                        "discovery_state": state.split(" ")[0].lower(),
                         "discovery_check": check,
                         "discovery_service": service_description,
                     }

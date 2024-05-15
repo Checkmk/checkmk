@@ -7,32 +7,49 @@
 # <<<logins>>>
 # 3
 
+from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-logins_default_levels = (20, 30)
+from cmk.agent_based.v2 import StringTable
+
+DiscoveryResult = Iterable[tuple[None, dict]]
+CheckResult = Iterable[tuple[int, str, list]]
+
+Section = int
 
 
-def inventory_logins(info):
-    if info:
-        return [(None, logins_default_levels)]
-    return []
-
-
-def check_logins(_no_item, params, info):
+def parse_logins(string_table: StringTable) -> Section | None:
     try:
-        logins = int(info[0][0])
+        return int(string_table[0][0])
     except (IndexError, ValueError):
         return None
-    return check_levels(
-        logins, "logins", params, infoname="On system", human_readable_func=lambda x: "%d" % x
+
+
+def discover_logins(section: Section) -> DiscoveryResult:
+    yield None, {}
+
+
+def check_logins(
+    _no_item: None, params: Mapping[str, tuple[int, int]], section: Section
+) -> CheckResult:
+    yield check_levels(
+        section,
+        "logins",
+        params["levels"],
+        infoname="On system",
+        human_readable_func=lambda x: "%d" % x,
     )
 
 
 check_info["logins"] = LegacyCheckDefinition(
     service_name="Logins",
-    discovery_function=inventory_logins,
+    parse_function=parse_logins,
+    discovery_function=discover_logins,
     check_function=check_logins,
     check_ruleset_name="logins",
+    check_default_parameters={
+        "levels": (20, 30),
+    },
 )

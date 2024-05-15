@@ -25,7 +25,7 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType
         check_mail_loop.create_argument_parser(),
         check_mail_loop.check_mail_roundtrip,
         [
-            "--smtp-server",
+            "--send-server",
             "foo",
             "--fetch-server",
             "bar",
@@ -193,9 +193,9 @@ def test_ac_check_mail_loop(
     ],
 )
 def test_regex_pattern(check_mail_loop: ModuleType, subject: str) -> None:
-    assert check_mail_loop._regex_pattern(subject).match(f"{subject} a b").groups() == (
-        "a",
-        "b",
+    assert check_mail_loop.subject_regex(subject).match(f"{subject} 123 45").groups() == (
+        "123",
+        "45",
     )
 
 

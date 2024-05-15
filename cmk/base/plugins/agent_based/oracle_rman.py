@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypedDict
 
-from typing_extensions import TypedDict
+from cmk.plugins.lib import oracle
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -18,7 +18,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import oracle
 
 # actual format
 # <<<oracle_rman>>>
@@ -229,7 +228,7 @@ def check_oracle_rman(
     else:
         yield Result(
             state=State.CRIT,
-            summary="no COMPLETED backup found in last 14 days (very old plugin in use?)",
+            summary="no COMPLETED backup found in last 14 days (very old plug-in in use?)",
         )
 
 

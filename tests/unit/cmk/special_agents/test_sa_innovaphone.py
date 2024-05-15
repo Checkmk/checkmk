@@ -8,7 +8,7 @@ import os
 from collections.abc import Sequence
 
 import pytest
-import vcr  # type: ignore[import]
+import vcr  # type: ignore[import-untyped]
 
 from cmk.special_agents import agent_innovaphone
 

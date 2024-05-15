@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,7 +15,6 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.packaging import id_to_mkp, Installer, PackageName, PackagePart
 from cmk.utils.store import save_object_to_file
 from cmk.utils.user import UserId
 
@@ -29,6 +28,8 @@ from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.type_defs import PermissionName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
+
+from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
 
 TVisual = TypeVar("TVisual", bound=Visual)
 CustomUserVisuals = dict[tuple[UserId, VisualName], TVisual]
@@ -165,7 +166,10 @@ class _CombinedVisualsCache(Generic[TVisual]):
             self._update_cache_info_timestamp()
             return False
 
-        if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:
+        try:
+            if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:
+                return False
+        except FileNotFoundError:
             return False
 
         return True
@@ -190,7 +194,9 @@ class _CombinedVisualsCache(Generic[TVisual]):
 
 
 hooks.register_builtin("snapshot-pushed", _CombinedVisualsCache.invalidate_all_caches)
-hooks.register_builtin("snapshot-pushed", store.clear_pickled_files_cache)
+hooks.register_builtin(
+    "snapshot-pushed", lambda: store.clear_pickled_files_cache(cmk.utils.paths.tmp_dir)
+)
 hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate_all_caches())
 
 
@@ -252,7 +258,9 @@ def load_visuals_of_a_user(
     user_id: UserId,
 ) -> CustomUserVisuals[TVisual]:
     user_visuals: CustomUserVisuals[TVisual] = {}
-    for name, raw_visual in store.try_load_file_from_pickle_cache(path, default={}).items():
+    for name, raw_visual in store.try_load_file_from_pickle_cache(
+        path, default={}, temp_dir=cmk.utils.paths.tmp_dir, root_dir=cmk.utils.paths.omd_root
+    ).items():
         visual = internal_to_runtime_transformer(raw_visual)
         visual["owner"] = user_id
         visual["name"] = name
@@ -277,7 +285,10 @@ def _get_packaged_visuals(
 
         try:
             for name, raw_visual in store.try_load_file_from_pickle_cache(
-                dirpath, default={}
+                dirpath,
+                default={},
+                temp_dir=cmk.utils.paths.tmp_dir,
+                root_dir=cmk.utils.paths.omd_root,
             ).items():
                 visual = internal_to_runtime_transformer(raw_visual)
                 visual["owner"] = UserId.builtin()
@@ -366,7 +377,7 @@ def _get_local_path(visual_type: VisualTypeName) -> Path:
 
 def declare_visual_permission(what: VisualTypeName, name: str, visual: TVisual) -> None:
     permname = PermissionName(f"{what[:-1]}.{name}")
-    if visual["public"] and permname not in permission_registry:
+    if published_to_user(visual) and permname not in permission_registry:
         declare_permission(
             permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
         )
@@ -409,7 +420,12 @@ def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
             if dirpath.is_dir():
                 continue
 
-            for name, visual in store.try_load_file_from_pickle_cache(dirpath, default={}).items():
+            for name, visual in store.try_load_file_from_pickle_cache(
+                dirpath,
+                default={},
+                temp_dir=cmk.utils.paths.tmp_dir,
+                root_dir=cmk.utils.paths.omd_root,
+            ).items():
                 visual["packaged"] = True
                 declare_packaged_visual_permission(what, name, visual)
         except Exception:
@@ -420,28 +436,28 @@ def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
                 raise
 
 
-# Get the list of visuals which are available to the user
-# (which could be retrieved with get_visual)
-def available(  # pylint: disable=too-many-branches
+def available(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
 ) -> dict[VisualName, TVisual]:
-    visuals = {}
+    visuals: dict[VisualName, TVisual] = {}
+    for n, _visuals in available_by_owner(what, all_visuals).items():
+        for u, v in _visuals.items():
+            if user.id == u:
+                visuals[n] = v
+            if u == UserId.builtin() and n not in visuals:
+                visuals[n] = v
+    return visuals
+
+
+# Get the list of visuals which are available to the user
+# (which could be retrieved with get_visual)
+def available_by_owner(  # pylint: disable=too-many-branches
+    what: VisualTypeName,
+    all_visuals: dict[tuple[UserId, VisualName], TVisual],
+) -> dict[VisualName, dict[UserId, TVisual]]:
+    visuals: dict[VisualName, dict[UserId, TVisual]] = {}
     permprefix = what[:-1]
-
-    def published_to_user(visual: TVisual) -> bool:
-        if visual["public"] is True:
-            return True
-
-        if isinstance(visual["public"], tuple):
-            if visual["public"][0] == "contact_groups":
-                user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
-                return bool(user_groups.intersection(visual["public"][1]))
-            if visual["public"][0] == "sites":
-                user_sites = set(user.authorized_sites().keys())
-                return bool(user_sites.intersection(visual["public"][1]))
-
-        return False
 
     def restricted_visual(visualname: VisualName) -> bool:
         permname = f"{permprefix}.{visualname}"
@@ -455,7 +471,8 @@ def available(  # pylint: disable=too-many-branches
     if user.may("general.edit_" + what):
         for (u, n), visual in all_visuals.items():
             if u == user.id:
-                visuals[n] = visual
+                visuals.setdefault(n, {})
+                visuals[n][u] = visual
 
     # 2. visuals of special users allowed to globally override built-in visuals
     for (u, n), visual in all_visuals.items():
@@ -467,12 +484,14 @@ def available(  # pylint: disable=too-many-branches
             and user.may("general.see_user_" + what)
             and not restricted_visual(n)
         ):
-            visuals[n] = visual
+            visuals.setdefault(n, {})
+            visuals[n][u] = visual
 
     # 3. Built-in visuals, if allowed.
     for (u, n), visual in all_visuals.items():
-        if u == UserId.builtin() and n not in visuals and user.may(f"{permprefix}.{n}"):
-            visuals[n] = visual
+        if u == UserId.builtin() and user.may(f"{permprefix}.{n}"):
+            visuals.setdefault(n, {})
+            visuals[n][u] = visual
 
     # 4. other users visuals, if public. Still make sure we honor permission
     #    for built-in visuals. Also the permission "general.see_user_visuals" is
@@ -486,7 +505,8 @@ def available(  # pylint: disable=too-many-branches
                 and user_may(u, "general.publish_" + what)
                 and not restricted_visual(n)
             ):
-                visuals[n] = visual
+                visuals.setdefault(n, {})
+                visuals[n][u] = visual
 
     # 5. packaged visuals
     if user.may("general.see_packaged_" + what) and n not in visuals:
@@ -494,9 +514,25 @@ def available(  # pylint: disable=too-many-branches
             if not visual["packaged"]:
                 continue
             if not restricted_packaged_visual(n):
-                visuals[n] = visual
+                visuals.setdefault(n, {})
+                visuals[n][u] = visual
 
     return visuals
+
+
+def published_to_user(visual: TVisual) -> bool:
+    if visual["public"] is True:
+        return True
+
+    if isinstance(visual["public"], tuple):
+        if visual["public"][0] == "contact_groups":
+            user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
+            return bool(user_groups.intersection(visual["public"][1]))
+        if visual["public"][0] == "sites":
+            user_sites = set(user.authorized_sites().keys())
+            return bool(user_sites.intersection(visual["public"][1]))
+
+    return False
 
 
 def get_permissioned_visual(
@@ -524,5 +560,4 @@ def get_permissioned_visual(
 
     if visual := permitted_visuals.get(item):
         return visual
-
     raise MKUserError("%s_name" % what, _("The requested %s %s does not exist") % (what, item))

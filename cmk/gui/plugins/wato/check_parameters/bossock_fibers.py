@@ -9,16 +9,19 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Integer, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 
 def _parameter_valuespec_bossock_fibers():
-    return Tuple(
-        title=_("Number of fibers"),
-        elements=[
-            Integer(title=_("Warning at"), unit=_("fibers")),
-            Integer(title=_("Critical at"), unit=_("fibers")),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                ("levels", SimpleLevels(spec=Integer, unit="fibers", title=_("Number of fibers")))
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

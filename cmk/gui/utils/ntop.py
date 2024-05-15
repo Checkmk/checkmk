@@ -32,26 +32,36 @@ def is_ntop_available() -> bool:
     return isinstance(get_ntop_connection(), dict)
 
 
+def is_ntop_active() -> bool:
+    if not is_ntop_available():
+        return False
+
+    ntop = get_ntop_connection_mandatory()
+    if not ntop.get("is_activated", False):
+        return False
+    return True
+
+
 def is_ntop_configured() -> bool:
     # Use this function if you want to know if the connection to ntop is fully set-up
     # e.g. to decide if ntop links should be hidden
 
-    if is_ntop_available():
-        ntop = get_ntop_connection_mandatory()
-        if not ntop.get("is_activated", False):
-            return False
-        custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", False)
+    if not is_ntop_available():
+        return False
 
-        # We currently have two options to get an ntop username
-        # 1) User needs to define his own -> if this string is empty, declare ntop as not configured
-        # 2) Take the checkmk username as ntop username -> always declare ntop as configured
-        return (
-            bool(user.get_attribute(custom_attribute_name, ""))
-            if isinstance(custom_attribute_name, str)
-            else not custom_attribute_name
-        )
+    ntop = get_ntop_connection_mandatory()
+    if not ntop.get("is_activated", False):
+        return False
 
-    return False
+    custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", False)
+    # We currently have two options to get an ntop username
+    # 1) User needs to define his own -> if this string is empty, declare ntop as not configured
+    # 2) Take the checkmk username as ntop username -> always declare ntop as configured
+    return (
+        bool(user.get_attribute(custom_attribute_name, ""))
+        if isinstance(custom_attribute_name, str)
+        else not custom_attribute_name
+    )
 
 
 def get_ntop_misconfiguration_reason() -> str:

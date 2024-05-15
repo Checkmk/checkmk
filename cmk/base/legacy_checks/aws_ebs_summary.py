@@ -11,7 +11,8 @@ from collections.abc import Iterable
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.aws import GenericAWSSection, parse_aws
+
+from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 AWSEBSStorageTypes = {
     "standard": "Magnetic volumes",
@@ -100,9 +101,13 @@ def check_aws_ebs_summary_health(item, params, parsed):
         yield 0, "{}: {}".format(row["Name"], row["Status"])
 
 
+def discover_aws_ebs_summary_health(p):
+    return inventory_aws_generic(p, ["VolumeStatus"])
+
+
 check_info["aws_ebs_summary.health"] = LegacyCheckDefinition(
     service_name="AWS/EBS Health %s",
     sections=["aws_ebs_summary"],
-    discovery_function=lambda p: inventory_aws_generic(p, ["VolumeStatus"]),
+    discovery_function=discover_aws_ebs_summary_health,
     check_function=check_aws_ebs_summary_health,
 )

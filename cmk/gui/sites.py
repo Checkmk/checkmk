@@ -7,9 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import cast, Literal, NamedTuple, NewType
-
-from typing_extensions import TypedDict
+from typing import cast, Literal, NamedTuple, NewType, TypedDict
 
 from livestatus import (
     ConnectedSite,
@@ -78,6 +76,7 @@ class SiteStatus(TypedDict, total=False):
     livestatus_version: str
     program_start: int
     program_version: str
+    max_long_output_size: int
     state: Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"]
 
 
@@ -109,7 +108,7 @@ def disconnect() -> None:
     """Actively closes all Livestatus connections."""
     if not g:
         return
-    logger.debug("Disconnecing site connections")
+    logger.debug("Disconnecting site connections")
     if "live" in g:
         g.live.disconnect()
     g.pop("live", None)
@@ -184,8 +183,10 @@ def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) 
         user = global_user
 
     if force_authuser is None:
-        request_force_authuser = request.get_str_input("force_authuser")
-        force_authuser = UserId(request_force_authuser) if request_force_authuser else None
+        # This makes also sure force_authuser is not the builtin user aka UserId("")
+        force_authuser = (
+            u if (u := request.get_validated_type_input(UserId, "force_authuser")) else None
+        )
 
     logger.debug(
         "Initializing livestatus connections as user %s (forced auth user: %s)",
@@ -272,19 +273,13 @@ def _inhibit_incompatible_site_connection(
     }
 
 
+ConnectionClass = MultiSiteConnection
+
+
 def _connect_multiple_sites(user: LoggedInUser) -> None:
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
-
-    if edition() is Edition.CME:
-        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-        from cmk.gui.cme.livestatus import (  # pylint: disable=no-name-in-module
-            CMEMultiSiteConnection,
-        )
-
-        g.live = CMEMultiSiteConnection(enabled_sites, disabled_sites)
-    else:
-        g.live = MultiSiteConnection(enabled_sites, disabled_sites)
+    g.live = ConnectionClass(enabled_sites, disabled_sites)
 
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.
@@ -292,11 +287,21 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     for response in g.live.query(
         "GET status\n"
         "Cache: reload\n"
-        "Columns: livestatus_version program_version program_start num_hosts num_services "
+        "Columns: livestatus_version program_version program_start num_hosts num_services max_long_output_size "
         "core_pid edition"
     ):
         try:
-            site_id, v1, v2, ps, num_hosts, num_services, pid, remote_edition = response
+            (
+                site_id,
+                v1,
+                v2,
+                ps,
+                num_hosts,
+                num_services,
+                max_long_output_size,
+                pid,
+                remote_edition,
+            ) = response
         except ValueError:
             e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
@@ -338,6 +343,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
                     "program_start": ps,
                     "num_hosts": num_hosts,
                     "num_services": num_services,
+                    "max_long_output_size": max_long_output_size,
                     "core": v2.startswith("Check_MK") and "cmc" or "nagios",
                     "core_pid": pid,
                 }

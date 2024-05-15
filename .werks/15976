@@ -1,0 +1,18 @@
+Title: mssql_backup: Correct timezone difference for last backup date
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696949130
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.4.0b1
+
+This werk is relevant for users monitoring the age of the last backup time of mssql databases in different timezones.
+
+The date/time of the last backup of a mssql database is currently stored in local host time without the information about the host timezone. When this time is used to check the age of the last backup, it is interpreted in the Checkmk server timezone.
+When using different timezones, this leads to incorrect values for "Age of last database backup" and  if the age is negative, in newer Checkmk versions to the warning "Cannot reasonably calculate time since last backup (hosts time running ahead)".
+
+The mssql agent plugin will now store the time in UTC and the mssql_backup check will interpret the time accordingly.
+
+You will need to update the agent plugin mssql.vbs to receive the corrected times.

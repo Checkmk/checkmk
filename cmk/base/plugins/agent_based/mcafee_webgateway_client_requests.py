@@ -2,14 +2,21 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""
+The McAfee Web Gateway has been rebranded to Skyhigh Secure Web Gateway with its release 12.2.2.
+Where possibile the "McAfee" string has been removed in favor of more generic therms.
+The old plug-in names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
+"""
 
 import time
 import typing
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils.mcafee_gateway import (
+
+from cmk.plugins.lib.mcafee_gateway import (
     compute_rate,
-    DETECT_WEB_GATEWAY,
+    DETECT_MCAFEE_WEBGATEWAY,
+    DETECT_SKYHIGH_WEBGATEWAY,
     MISC_DEFAULT_PARAMS,
     MiscParams,
     ValueStore,
@@ -31,10 +38,22 @@ def parse(string_table: v1.type_defs.StringTable) -> Section | None:
 
 v1.register.snmp_section(
     name="mcafee_webgateway_client_requests",
-    detect=DETECT_WEB_GATEWAY,
+    parsed_section_name="webgateway_client_requests",
+    detect=DETECT_MCAFEE_WEBGATEWAY,
     parse_function=parse,
     fetch=v1.SNMPTree(
         base=".1.3.6.1.4.1.1230.2.7.2",
+        oids=["2.1", "3.1", "6.1"],
+    ),
+)
+
+v1.register.snmp_section(
+    name="skyhigh_security_webgateway_client_requests",
+    parsed_section_name="webgateway_client_requests",
+    detect=DETECT_SKYHIGH_WEBGATEWAY,
+    parse_function=parse,
+    fetch=v1.SNMPTree(
+        base=".1.3.6.1.4.1.59732.2.7.2",
         oids=["2.1", "3.1", "6.1"],
     ),
 )
@@ -108,7 +127,7 @@ def _check_httpv2(
 
 v1.register.check_plugin(
     name="mcafee_webgateway_http_client_requests",
-    sections=["mcafee_webgateway_client_requests"],
+    sections=["webgateway_client_requests"],
     discovery_function=discovery_http,
     check_function=check_http,
     service_name="HTTP Client Request Rate",
@@ -118,7 +137,7 @@ v1.register.check_plugin(
 
 v1.register.check_plugin(
     name="mcafee_webgateway_https_client_requests",
-    sections=["mcafee_webgateway_client_requests"],
+    sections=["webgateway_client_requests"],
     discovery_function=discovery_https,
     check_function=check_https,
     service_name="HTTPS Client Request Rate",
@@ -128,7 +147,7 @@ v1.register.check_plugin(
 
 v1.register.check_plugin(
     name="mcafee_webgateway_httpv2_client_requests",
-    sections=["mcafee_webgateway_client_requests"],
+    sections=["webgateway_client_requests"],
     discovery_function=discovery_httpv2,
     check_function=check_httpv2,
     service_name="HTTPv2 Client Request Rate",

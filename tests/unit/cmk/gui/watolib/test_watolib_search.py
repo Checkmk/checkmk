@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -18,13 +20,13 @@ from cmk.automations.results import GetConfigurationResult
 
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import LoggedInNobody, user
-from cmk.gui.plugins.wato.omd_configuration import (
+from cmk.gui.session import _UserContext
+from cmk.gui.type_defs import SearchResult, SearchResultsByTopic
+from cmk.gui.wato._omd_configuration import (
     ConfigDomainApache,
     ConfigDomainDiskspace,
     ConfigDomainRRDCached,
 )
-from cmk.gui.session import _UserContext
-from cmk.gui.type_defs import SearchResult, SearchResultsByTopic
 from cmk.gui.watolib import search
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_tree

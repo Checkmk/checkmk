@@ -9,16 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate
 
 
 def _parameter_valuespec_disk_failures():
-    return Tuple(
-        title=_("Number of disk failures"),
-        elements=[
-            Integer(title="Warning at", default_value=1),
-            Integer(title="Critical at", default_value=2),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Number of disk failures"),
+                        default_levels=(1, 2),
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

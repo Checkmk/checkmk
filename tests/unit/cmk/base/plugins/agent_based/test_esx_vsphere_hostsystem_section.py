@@ -7,9 +7,10 @@ from collections import OrderedDict
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
-from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.esx_vsphere import Section
 
 
 @pytest.mark.parametrize(

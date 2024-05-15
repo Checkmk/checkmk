@@ -12,9 +12,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping
-from typing import Final
-
-from typing_extensions import TypedDict
+from typing import Final, TypedDict
 
 import livestatus
 from livestatus import SiteId
@@ -24,7 +22,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import CrashInfo
 
 import cmk.gui.forms as forms
-import cmk.gui.pages
 import cmk.gui.userdb as userdb
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import (
@@ -51,6 +48,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -64,12 +62,21 @@ from .views import CrashReportsRowTable
 CrashReportRow = dict[str, str]
 
 
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("crash")(PageCrash)
+    page_registry.register_page("download_crash_report")(PageDownloadCrashReport)
+    report_renderer_registry.register(ReportRendererGeneric)
+    report_renderer_registry.register(ReportRendererSection)
+    report_renderer_registry.register(ReportRendererCheck)
+    report_renderer_registry.register(ReportRendererGUI)
+
+
 class ReportSubmitDetails(TypedDict):
     name: str
     mail: str
 
 
-class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
+class ABCCrashReportPage(Page, abc.ABC):
     def __init__(self) -> None:
         super().__init__()
         self._crash_id: Final = request.get_str_input_mandatory("crash_id")
@@ -340,15 +347,14 @@ class PageCrash(ABCCrashReportPage):
         if crash_info["crash_type"] == "gui":
             self._add_gui_user_infos_to_details(details)
 
-        html.begin_form("report", method="GET")
-        html.show_user_errors()
-        vs = self._vs_crash_report()
-        vs.render_input("_report", details)
-        vs.set_focus("report")
-        forms.end()
-        html.button("_report", _("Submit report"), cssclass="hot")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("report", method="GET"):
+            html.show_user_errors()
+            vs = self._vs_crash_report()
+            vs.render_input("_report", details)
+            vs.set_focus("report")
+            forms.end()
+            html.button("_report", _("Submit report"), cssclass="hot")
+            html.hidden_fields()
 
     def _add_gui_user_infos_to_details(self, details: ReportSubmitDetails) -> None:
         users = userdb.load_users()
@@ -431,7 +437,6 @@ class ReportRendererRegistry(cmk.utils.plugin_registry.Registry[type[ABCReportRe
 report_renderer_registry = ReportRendererRegistry()
 
 
-@report_renderer_registry.register
 class ReportRendererGeneric(ABCReportRenderer):
     @classmethod
     def type(cls):
@@ -455,7 +460,6 @@ class ReportRendererGeneric(ABCReportRenderer):
         html.pre(pprint.pformat(crash_info["details"]))
 
 
-@report_renderer_registry.register
 class ReportRendererSection(ABCReportRenderer):
     @classmethod
     def type(cls):
@@ -491,7 +495,6 @@ class ReportRendererSection(ABCReportRenderer):
         html.close_table()
 
 
-@report_renderer_registry.register
 class ReportRendererCheck(ABCReportRenderer):
     @classmethod
     def type(cls):
@@ -571,7 +574,6 @@ class ReportRendererCheck(ABCReportRenderer):
         html.close_table()
 
 
-@report_renderer_registry.register
 class ReportRendererGUI(ABCReportRenderer):
     @classmethod
     def type(cls):

@@ -1,0 +1,25 @@
+title: AIX: SAP Process List
+agents: aix
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the SAP process list of instances running on a SAP
+ Application Server on AIX systems.
+
+ It shows:
+
+ - the start time of the process
+
+ - the time elapsed since the start time
+
+ The check uses the status information retrieved from the device to determine
+ the state of the service.
+
+ The check requires the mk_sap.aix agent plug-in to be installed on your AIX system.
+
+item:
+ The description and instance number of each process.
+
+discovery:
+ One service is created for each discovered process on each instance.

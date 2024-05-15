@@ -1,0 +1,12 @@
+Title: Fix permission "Move to monitored services" in service discovery
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1697785479
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+If users with permission "Move to monitored services" tried to move undecided
+services to monitored services, it was stated that the user needs the
+permission "Move to undecided services", what was wrong.

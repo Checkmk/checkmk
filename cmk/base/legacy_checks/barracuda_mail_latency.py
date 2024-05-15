@@ -5,41 +5,34 @@
 
 # .1.3.6.1.4.1.20632.2.5 2
 
-# Suggested by customer, in seconds
 
-
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.barracuda import DETECT_BARRACUDA
 
-barracuda_mail_latency_default_levels = (40, 60)
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
 
 
 def inventory_barracuda_mail_latency(info):
-    return [(None, barracuda_mail_latency_default_levels)]
+    yield None, {}
 
 
 def check_barracuda_mail_latency(_no_item, params, info):
-    avg_mail_latency = int(info[0][0])
-    state = 0
-    infotext = "Average: %s" % get_age_human_readable(avg_mail_latency)
+    return check_levels(
+        int(info[0][0]),
+        "mail_latency",
+        params["levels"],
+        human_readable_func=render.timespan,
+        infoname="Average",
+    )
 
-    warn, crit = params
-    if avg_mail_latency >= crit:
-        state = 2
-    elif avg_mail_latency >= warn:
-        state = 1
-    if state:
-        infotext += " (warn/crit at {}/{})".format(
-            get_age_human_readable(warn),
-            get_age_human_readable(crit),
-        )
 
-    return state, infotext, [("mail_latency", avg_mail_latency, warn, crit)]
+def parse_barracuda_mail_latency(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["barracuda_mail_latency"] = LegacyCheckDefinition(
+    parse_function=parse_barracuda_mail_latency,
     detect=DETECT_BARRACUDA,
     # The barracuda spam firewall does not response or returns a timeout error
     # executing 'snmpwalk' on whole tables. But we can workaround here specifying
@@ -52,4 +45,8 @@ check_info["barracuda_mail_latency"] = LegacyCheckDefinition(
     discovery_function=inventory_barracuda_mail_latency,
     check_function=check_barracuda_mail_latency,
     check_ruleset_name="mail_latency",
+    check_default_parameters={
+        # Suggested by customer, in seconds
+        "levels": (40, 60),
+    },
 )

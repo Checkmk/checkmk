@@ -8,10 +8,8 @@ from logging import Logger
 
 from cmk.utils.log import VERBOSE
 
-from cmk.gui.i18n import is_community_translation
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.userdb import load_users
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     filter_unknown_settings,
@@ -26,14 +24,14 @@ from cmk.gui.watolib.global_settings import (
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-_REMOVED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []
+_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []
+_REMOVED_OPTIONS: Sequence[str] = []
 
 
 class UpdateGlobalSettings(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         _update_installation_wide_global_settings(logger)
         _update_site_specific_global_settings(logger)
         _update_remote_site_specific_global_settings(logger)
@@ -51,14 +49,11 @@ update_action_registry.register(
 def _update_installation_wide_global_settings(logger: Logger) -> None:
     """Update the globals.mk of the local site"""
     save_global_settings(
-        _handle_community_translations(
+        update_global_config(
             logger,
-            update_global_config(
-                logger,
-                # Load full config (with undefined settings)
-                load_configuration_settings(full_config=True),
-            ),
-        )
+            # Load full config (with undefined settings)
+            load_configuration_settings(full_config=True),
+        ),
     )
 
 
@@ -93,20 +88,20 @@ def update_global_config(
     logger: Logger,
     global_config: GlobalSettings,
 ) -> GlobalSettings:
-    return _transform_global_config_values(
-        _update_removed_global_config_vars(
-            logger,
-            global_config,
-        )
+    new_config = _remove_options(logger, global_config, _REMOVED_OPTIONS)
+    new_config = _update_renamed_global_config_vars(
+        logger,
+        new_config,
     )
+    return _transform_global_config_values(new_config)
 
 
-def _update_removed_global_config_vars(
+def _update_renamed_global_config_vars(
     logger: Logger,
     global_config: GlobalSettings,
 ) -> GlobalSettings:
     global_config_updated = dict(global_config)
-    for old_config_name, new_config_name, replacement in _REMOVED_GLOBALS:
+    for old_config_name, new_config_name, replacement in _RENAMED_GLOBALS:
         if old_config_name in global_config_updated:
             logger.log(VERBOSE, f"Replacing {old_config_name} with {new_config_name}")
             old_value = global_config_updated[old_config_name]
@@ -120,36 +115,25 @@ def _update_removed_global_config_vars(
     return filter_unknown_settings(
         {
             **global_config_updated,
-            **_convert_user_idle_timeout(
-                logger,
-                global_config_updated,
-            ),
         }
     )
 
 
-def _convert_user_idle_timeout(
+def _remove_options(
     logger: Logger,
     global_config: GlobalSettings,
-) -> dict[str, dict[str, int | dict[str, None | int]]]:
-    """
-    Version 2.3 moved the former ConfigVariableUserIdleTimeout to ConfigVariableSessionManagement.
-    Make sure old settings are respected in the new variable before filter_unknown_settings()
-    """
-    # No such explicit setting or already converted
-    if "user_idle_timeout" not in global_config:
-        return {}
+    options_to_remove: Sequence[str],
+) -> GlobalSettings:
+    """remove options_to_remove from global_config
 
-    logger.log(VERBOSE, "Converting global setting 'user_idle_timeout' to new format")
-    # None, deactivated by user
-    if idle_timeout := global_config.get("user_idle_timeout") is None:
-        return {"session_mgmt": {}}
+    Meant to cleanup no longer used config options"""
 
-    return {
-        "session_mgmt": {
-            "user_idle_timeout": idle_timeout,
-        }
-    }
+    config = dict(global_config)
+    for option_to_remove in options_to_remove:
+        if option_to_remove in config:
+            logger.log(VERBOSE, f"Removing old unused option {option_to_remove!r}")
+        config.pop(option_to_remove, None)
+    return config
 
 
 def _transform_global_config_value(config_var: str, config_val: object) -> object:
@@ -169,29 +153,3 @@ def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSett
             if config_var not in UNREGISTERED_SETTINGS
         },
     }
-
-
-def _handle_community_translations(logger: Logger, global_config: GlobalSettings) -> GlobalSettings:
-    """Set the global setting "enable_community_translations" to True if it wasn't set in the old
-    version and if a community translated language was set as default language or as user specific
-    UI language. Otherwise this global setting defaults to False and community translations are not
-    choosable as language.
-    """
-    enable_ct_ident = "enable_community_translations"
-    if enable_ct_ident in global_config:
-        return global_config
-
-    enable_ct: bool = False
-    if is_community_translation(global_config.get("default_language", "en")):
-        enable_ct = True
-    else:
-        for user_config in load_users().values():
-            if is_community_translation(user_config.get("language", "en")):
-                enable_ct = True
-                break
-
-    if enable_ct:
-        logger.log(VERBOSE, "Changing global setting '%s' to true" % enable_ct_ident)
-        return {**global_config, "enable_ct_ident": True}
-
-    return global_config

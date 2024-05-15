@@ -11,7 +11,8 @@ import time
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     all_of,
     get_average,
     get_rate,
@@ -21,6 +22,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     render,
     SNMPTree,
     startswith,
+    StringTable,
 )
 
 # Taken from connUnitPortState
@@ -325,7 +327,12 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     yield 0, porttype_list[int(porttype)]
 
 
+def parse_fc_port(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fc_port"] = LegacyCheckDefinition(
+    parse_function=parse_fc_port,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         not_exists(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*"),

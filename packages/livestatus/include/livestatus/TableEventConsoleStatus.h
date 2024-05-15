@@ -14,10 +14,10 @@ class ICore;
 
 class TableEventConsoleStatus : public TableEventConsole {
 public:
-    explicit TableEventConsoleStatus(ICore *mc);
+    TableEventConsoleStatus();
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    [[nodiscard]] Row getDefault() const override;
+    [[nodiscard]] Row getDefault(const ICore &core) const override;
 };
 
 #endif  // TableEventConsoleStatus_h

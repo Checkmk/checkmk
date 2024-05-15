@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
+
+from cmk.plugins.lib.fileinfo import Fileinfo, FileinfoItem
 
 
 @pytest.mark.parametrize(

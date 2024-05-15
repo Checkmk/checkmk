@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 
 def inventory_apc_mod_pdu_modules(info):
@@ -23,11 +24,11 @@ def check_apc_mod_pdu_modules(item, _no_params, info):
     for name, status, current_power in info:
         if name == item:
             status = saveint(status)
-            # As per the device's MIB, the values are measured in tenths of KW
+            # As per the device's MIB, the values are measured in tenths of kW
             current_power = savefloat(current_power) / 10
-            message = f"Status {apc_states.get(status, 6)}, current: {current_power:.2f}kw "
+            message = f"Status {apc_states.get(status, 6)}, current: {current_power:.2f} kW "
 
-            perf = [("current_power", current_power)]
+            perf = [("power", current_power * 1000)]
             if status == 2:
                 return 1, message, perf
             if status in [3, 6]:
@@ -38,7 +39,12 @@ def check_apc_mod_pdu_modules(item, _no_params, info):
     return 3, "Module not found"
 
 
+def parse_apc_mod_pdu_modules(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["apc_mod_pdu_modules"] = LegacyCheckDefinition(
+    parse_function=parse_apc_mod_pdu_modules,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.24.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.22.2.6.1",

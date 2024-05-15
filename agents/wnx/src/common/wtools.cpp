@@ -8,7 +8,6 @@
 #include <comdef.h>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
-#include <iphlpapi.h>
 #include <sddl.h>
 #include <shellapi.h>
 
@@ -31,9 +30,11 @@
 #pragma comment(lib, "iphlpapi.lib")
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::chrono_literals;
 
 namespace wtools {
+
 bool ChangeAccessRights(
     const wchar_t *object_name,   // name of object
     SE_OBJECT_TYPE object_type,   // type of object
@@ -140,7 +141,7 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
         const auto pid = entry.th32ProcessID;
         const auto exe = wtools::GetProcessPath(pid);
         if (exe.length() < minimum_path_len) {
-            return true;  // skip short path
+            return ScanAction::advance;
         }
 
         fs::path p{exe};
@@ -151,7 +152,7 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
             KillProcess(pid, 99);
             killed_count++;
         }
-        return true;
+        return ScanAction::advance;
     });
 
     return killed_count;
@@ -166,24 +167,45 @@ void KillProcessesByFullPath(const fs::path &path) noexcept {
             XLOG::d.i("Killing process '{}'", exe);
             KillProcess(pid, 99);
         }
-        return true;
+        return ScanAction::advance;
     });
 }
+
+namespace {
+bool IsSameProcess(const PROCESSENTRY32W &entry, const fs::path &path_end,
+                   uint32_t need_pid) noexcept {
+    const auto pid = entry.th32ProcessID;
+    const auto exe = fs::path{GetProcessPath(pid)};
+
+    return (exe.wstring().ends_with(path_end.wstring()) || exe == path_end) &&
+           (pid == need_pid);
+}
+}  // namespace
 
 void KillProcessesByPathEndAndPid(const fs::path &path_end,
                                   uint32_t need_pid) noexcept {
     ScanProcessList([&](const PROCESSENTRY32W &entry) {
-        const auto pid = entry.th32ProcessID;
-        const auto exe = fs::path{GetProcessPath(pid)};
-
-        if ((exe.wstring().ends_with(path_end.wstring()) || exe == path_end) &&
-            pid == need_pid) {
-            XLOG::d.i("Killing process '{}' with pid {}", exe, pid);
-            KillProcess(pid, 99);
-            return false;
+        if (!IsSameProcess(entry, path_end, need_pid)) {
+            return ScanAction::advance;
         }
-        return true;
+        XLOG::d.i("Killing process '{}' with pid {}", path_end, need_pid);
+        KillProcess(need_pid, 99);
+        return ScanAction::terminate;
     });
+}
+
+bool FindProcessByPathEndAndPid(const fs::path &path_end,
+                                uint32_t need_pid) noexcept {
+    bool found{false};
+    ScanProcessList([&](const PROCESSENTRY32W &entry) {
+        if (!IsSameProcess(entry, path_end, need_pid)) {
+            return ScanAction::advance;
+        }
+        found = true;
+        return ScanAction::terminate;
+    });
+
+    return found;
 }
 
 void AppRunner::prepareResources(std::wstring_view command_line,
@@ -462,8 +484,7 @@ bool InstallService(const wchar_t *service_name, const wchar_t *display_name,
         auto error = GetLastError();
         if (error == ERROR_SERVICE_EXISTS) {
             XLOG::l(XLOG::kStdio)
-                .crit("The Service '{}' already exists",
-                      wtools::ToUtf8(service_name));
+                .crit("The Service '{}' already exists", ToUtf8(service_name));
             return false;
         }
         XLOG::l(XLOG::kStdio).crit("CreateService failed w/err {}", error);
@@ -534,7 +555,7 @@ bool UninstallService(const wchar_t *service_name,
         XLOG::l(XLOG::kStdio).crit("Parameter is null");
         return false;
     }
-    auto name = wtools::ToUtf8(service_name);
+    auto name = ToUtf8(service_name);
     // Open the local default service control manager database
     const SC_HANDLE service_manager =
         ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
@@ -596,8 +617,8 @@ void ServiceController::setServiceStatus(DWORD current_state,
             : check_point++;
 
     const auto ret = ::SetServiceStatus(status_handle_, &status_);
-    XLOG::l("Setting state {} result {}", current_state,
-            ret != 0 ? 0 : GetLastError());
+    XLOG::l.i("Setting service state {} result {}", current_state,
+              ret != 0 ? 0 : GetLastError());
 }
 
 void ServiceController::initStatus(bool can_stop, bool can_shutdown,
@@ -730,14 +751,12 @@ void ServiceController::Pause() {
         // Tell SCM that the service is paused.
         setServiceStatus(SERVICE_PAUSED);
     } catch (const DWORD &error_exception) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Pause");
 
         // Tell SCM that the service is still running.
         setServiceStatus(SERVICE_RUNNING);
     } catch (...) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           0, L"Service failed to pause.");
 
@@ -765,14 +784,12 @@ void ServiceController::Continue() {
         // Tell SCM that the service is running.
         setServiceStatus(SERVICE_RUNNING);
     } catch (const DWORD &error_exception) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Continue");
 
         // Tell SCM that the service is still paused.
         setServiceStatus(SERVICE_PAUSED);
     } catch (...) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           0, L"Service failed to continue.");
 
@@ -913,7 +930,7 @@ std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view key) {
         return {};
     }
 
-    for (const auto reg_type :
+    for (auto &&reg_type :
          {PerfCounterReg::national, PerfCounterReg::english}) {
         auto counter_str = ReadPerfCounterKeyFromRegistry(reg_type);
         auto *data = counter_str.data();
@@ -1030,13 +1047,7 @@ DataSequence ReadPerformanceDataFromRegistry(
     BYTE *buffer = nullptr;
 
     while (true) {
-        try {
-            buffer = new BYTE[buf_size];
-        } catch (...) {
-            XLOG::l(XLOG_FUNC + " Out of memory allocating [{}] bytes",
-                    buf_size);
-            return {};
-        }
+        buffer = new BYTE[buf_size];
 
         DWORD type = 0;
         auto ret =
@@ -2170,8 +2181,9 @@ std::string WmiPostProcess(const std::string &in, StatusColumn status_column,
 /// returns false on system failure
 // based on ToolHelp api family
 // normally require elevation
-// if op returns false, scan will be stopped(this is only optimization)
-bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
+// if action returns false, scan will be stopped(this is only optimization)
+bool ScanProcessList(
+    const std::function<ScanAction(const PROCESSENTRY32 &)> &action) {
     auto *snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
     if (snapshot == nullptr) {
         return false;
@@ -2179,16 +2191,17 @@ bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
 
     ON_OUT_OF_SCOPE(::CloseHandle(snapshot));
 
-    auto current_process_id = ::GetCurrentProcessId();
-    // scan...
+    const auto current_process_id = ::GetCurrentProcessId();
     PROCESSENTRY32 entry32 = {};
     entry32.dwSize = sizeof entry32;
     auto result = ::Process32First(snapshot, &entry32);
     while (result != FALSE) {
-        if (entry32.th32ProcessID != current_process_id && !op(entry32)) {
-            return true;  // break on false returned
+        if (entry32.th32ProcessID == current_process_id ||
+            action(entry32) == ScanAction::advance) {
+            result = ::Process32Next(snapshot, &entry32);
+        } else {
+            return true;
         }
-        result = ::Process32Next(snapshot, &entry32);
     }
 
     return true;
@@ -2200,14 +2213,13 @@ bool KillProcessFully(const std::wstring &process_name,
     std::vector<DWORD> processes_to_kill;
     std::wstring name{process_name};
     cma::tools::WideLower(name);
-    ScanProcessList(
-        [&processes_to_kill, name](const PROCESSENTRY32 &entry) -> bool {
-            std::wstring incoming_name = entry.szExeFile;
-            cma::tools::WideLower(incoming_name);
-            if (name == incoming_name)
-                processes_to_kill.push_back(entry.th32ProcessID);
-            return true;
-        });
+    ScanProcessList([&processes_to_kill, name](const PROCESSENTRY32 &entry) {
+        std::wstring incoming_name = entry.szExeFile;
+        cma::tools::WideLower(incoming_name);
+        if (name == incoming_name)
+            processes_to_kill.push_back(entry.th32ProcessID);
+        return ScanAction::advance;
+    });
 
     for (auto proc_id : processes_to_kill) {
         KillProcessTree(proc_id);
@@ -2228,7 +2240,7 @@ int FindProcess(std::wstring_view process_name) noexcept {
         if (name == incoming_name) {
             count++;
         }
-        return true;
+        return ScanAction::advance;
     });
 
     return count;
@@ -2306,8 +2318,8 @@ size_t GetCommitCharge(uint32_t pid) noexcept {
         ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid)};
 
     if (!h) {
-        XLOG::l("Can't open process with pid [{}], error [{}]", pid,
-                ::GetLastError());
+        XLOG::t.i("Can't open process with pid [{}], error [{}]", pid,
+                  ::GetLastError());
         return 0;
     }
 
@@ -2653,8 +2665,16 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
         return {};
     }
 
-    return prefix.empty() ? std::wstring{}
-                          : std::wstring{prefix} + group.data();
+    auto group_name = std::wstring{group};
+    rs::replace(group_name, ' ', '_');
+    auto name =
+        prefix.empty() ? std::wstring{} : std::wstring{prefix} + group_name;
+    // sometimes some Windows may restrict user name length
+    if (name.size() > 20) {
+        XLOG::l("User name '{}' is too long", ToUtf8(name));
+        name = name.substr(0, 20);
+    }
+    return name;
 }
 
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
@@ -2675,29 +2695,41 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
 
     auto pwd = GenerateRandomString(12);
 
-    uc::LdapControl primary_dc;
-    const auto ret = primary_dc.userDel(name);
-    XLOG::t(ret == uc::Status::success ? "delete success" : "delete fail");
+    const uc::LdapControl primary_dc;
     const auto add_user_status = primary_dc.userAdd(name, pwd);
-    if (add_user_status != uc::Status::success) {
-        XLOG::l("Can't add user '{}'", ToUtf8(name));
+    switch (add_user_status) {
+        case uc::Status::success:
+            break;
+        case uc::Status::exists:
+            XLOG::d.i("User '{}' already exists, updating credentials",
+                      ToUtf8(name));
+            if (primary_dc.changeUserPassword(name, pwd) !=
+                uc::Status::success) {
+                XLOG::l("Failed to change password for user '{}'",
+                        ToUtf8(name));
+                return {};
+            }
+            return {name, pwd};
+        case uc::Status::error:
+        case uc::Status::no_domain_service:
+        case uc::Status::absent:
+            XLOG::l("Can't add user '{}' status = {}", ToUtf8(name),
+                    static_cast<int>(add_user_status));
+            return {};
+    }
+
+    if (primary_dc.localGroupAddMembers(group_name, name) ==
+        uc::Status::error) {
+        XLOG::l("Can't add user '{}' to group_name '{}'", ToUtf8(name),
+                ToUtf8(group_name));
+        if (add_user_status == uc::Status::success) {
+            const auto del_ret = primary_dc.userDel(name);
+            XLOG::t("recover delete state {}", static_cast<int>(del_ret));
+        }
+
         return {};
     }
-
-    if (primary_dc.localGroupAddMembers(group_name, name) !=
-        uc::Status::error) {
-        return {name, pwd};
-    }
-
-    XLOG::l("Can't add user '{}' to group_name '{}'", ToUtf8(name),
-            ToUtf8(group_name));
-    if (add_user_status == uc::Status::success) {
-        const auto primary_ret = primary_dc.userDel(name);
-        XLOG::t(primary_ret == uc::Status::success ? "delete success"
-                                                   : "delete faid");
-    }
-
-    return {};
+    return {name, pwd};
 }
 
 bool RemoveCmaUser(const std::wstring &user_name) noexcept {
@@ -2711,14 +2743,19 @@ void ProtectPathFromUserWrite(const fs::path &path,
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
 
-    constexpr std::wstring_view command_templates[] = {
-        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user rights
-        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
+    // disable inheritance
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /inheritance:d /c", path.wstring()));
+    // remove all user rights
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c", path.wstring()));
+    // read/exec
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c",
+                    path.wstring()));
 
-    for (auto const t : command_templates) {
-        auto cmd = fmt::format(std::wstring{t}, path.wstring());
-        commands.emplace_back(cmd);
+    for (auto const t : commands) {
+        commands.emplace_back(t);
     }
     XLOG::l.i("Protect path from User write '{}'", path);
 }
@@ -2729,59 +2766,238 @@ void ProtectFileFromUserWrite(const fs::path &path,
     // folder "programdata/checkmk" we must remove inherited write rights
     // for Users in checkmk root data folder.
 
-    constexpr std::wstring_view command_templates[] = {
-        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user
-                                                      // rights
-        L"icacls \"{}\" /grant:r *S-1-5-32-545:(RX) /c"};  // read/exec
+    // disable inheritance
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /inheritance:d /c", path.wstring()));
+    // remove all user rights
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c", path.wstring()));
+    // read/exec
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(RX) /c", path.wstring()));
 
-    for (auto const t : command_templates) {
-        auto cmd = fmt::format(t.data(), path.wstring());
-        commands.emplace_back(cmd);
-    }
     XLOG::l.i("Protect file from User write '{}'", path);
 }
 
 void ProtectPathFromUserAccess(const fs::path &entry,
                                std::vector<std::wstring> &commands) {
     // CONTEXT: some files must be protected from the user fully
-    constexpr std::wstring_view command_templates[] = {
-        L"icacls \"{}\" /inheritance:d /c",          // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c"  // remove all user
-                                                     // rights
-    };
+    // disable inheritance
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /inheritance:d /c", entry.wstring()));
+    // remove all user rights
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c", entry.wstring()));
 
-    for (auto const t : command_templates) {
-        auto cmd = fmt::format(t.data(), entry.wstring());
-        commands.emplace_back(cmd);
-    }
     XLOG::l.i("Protect path from User access '{}'", entry);
 }
 
 namespace {
-fs::path MakeCmdFileInTemp(std::wstring_view name,
+fs::path MakeCmdFileInTemp(std::string_view sub_dir, std::wstring_view name,
                            const std::vector<std::wstring> &commands) {
     try {
         auto pid = ::GetCurrentProcessId();
         static int counter = 0;
         counter++;
+        const auto dir = MakeSafeTempFolder(sub_dir);
+        if (dir.has_value()) {
+            auto tmp_file =
+                *dir / fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
+            std::ofstream ofs(tmp_file, std::ios::trunc);
+            for (const auto &c : commands) {
+                ofs << ToUtf8(c) << "\n";
+            }
 
-        std::error_code ec;
-        auto temp_folder = fs::temp_directory_path(ec);
-        auto tmp_file =
-            temp_folder / fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
-        std::ofstream ofs(tmp_file, std::ios::trunc);
-        for (const auto &c : commands) {
-            ofs << ToUtf8(c) << "\n";
+            return tmp_file;
+        } else {
+            XLOG::l("Can't create file");
+            return {};
         }
-
-        return tmp_file;
     } catch (const std::exception &e) {
         XLOG::l("Exception creating file '{}'", e.what());
         return {};
     }
 }
 }  // namespace
+
+class Sid {
+public:
+    enum class Type { admin, everyone };
+    Sid(const Sid &) = delete;
+
+    Sid(Sid &&rhs) {
+        sid_ = rhs.sid_;
+        type_ = rhs.type_;
+        rhs.sid_ = nullptr;
+    }
+
+    Sid &operator=(const Sid &) = delete;
+    Sid &operator=(Sid &&) = delete;
+    explicit Sid(Type type) : type_{type} {
+        XLOG::l.i("sid");
+        switch (type_) {
+            case Type::admin: {
+                SID_IDENTIFIER_AUTHORITY SIDAuthNT = SECURITY_NT_AUTHORITY;
+                AllocateAndInitializeSid(
+                    &SIDAuthNT, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                    DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &sid_);
+                break;
+            }
+            case Type::everyone: {
+                SID_IDENTIFIER_AUTHORITY SIDAuthWorld =
+                    SECURITY_WORLD_SID_AUTHORITY;
+                AllocateAndInitializeSid(&SIDAuthWorld, 1, SECURITY_WORLD_RID,
+                                         0, 0, 0, 0, 0, 0, 0, &sid_);
+                break;
+            }
+        }
+    }
+    ~Sid() {
+        if (sid_ != nullptr) {
+            FreeSid(sid_);
+        }
+    }
+
+    PSID sid() const { return sid_; }
+    TRUSTEE_TYPE trusteeType() const {
+        switch (type_) {
+            case Type::admin:
+                return TRUSTEE_IS_GROUP;
+            case Type::everyone:
+                return TRUSTEE_IS_WELL_KNOWN_GROUP;
+        }
+        // unreachable
+        return TRUSTEE_IS_WELL_KNOWN_GROUP;
+    }
+
+private:
+    PSID sid_;
+    Type type_;
+};
+
+class Acl {
+    class Store {
+    public:
+        Store(std::vector<std::pair<Sid::Type, uint32_t>> input) {
+            for (const auto &[type, permission] : input) {
+                auto s = Sid{type};
+                sids_.emplace_back(std::move(s));
+                eas_.emplace_back(EXPLICIT_ACCESS{
+                    .grfAccessPermissions = permission,
+                    .grfAccessMode = SET_ACCESS,
+                    .grfInheritance = NO_INHERITANCE,
+                    .Trustee = {
+                        .TrusteeForm = TRUSTEE_IS_SID,
+                        .TrusteeType = sids_.back().trusteeType(),
+                        .ptstrName = static_cast<wchar_t *>(sids_.back().sid()),
+                    }});
+            }
+        }
+        std::vector<EXPLICIT_ACCESS> &eas() { return eas_; }
+
+    private:
+        std::vector<EXPLICIT_ACCESS> eas_;
+        std::vector<Sid> sids_;
+    };
+
+public:
+    Acl(const std::vector<std::pair<Sid::Type, uint32_t>> &input)
+        : store_{input} {
+        std::vector<EXPLICIT_ACCESS> &eas = store_.eas();
+        if (SetEntriesInAcl(static_cast<ULONG>(eas.size()), eas.data(), nullptr,
+                            &acl_) != ERROR_SUCCESS) {
+            return;
+        }
+    }
+    Acl(const Acl &) = delete;
+    Acl &operator=(const Acl &) = delete;
+
+    PACL acl() const { return acl_; }
+
+    ~Acl() {
+        if (acl_ != nullptr) {
+            LocalFree(acl_);
+        }
+    }
+
+private:
+    Store store_;
+    PACL acl_{nullptr};
+};
+
+class Sd {
+public:
+    Sd(const Acl &acl) {
+        sd_ = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR,
+                                               SECURITY_DESCRIPTOR_MIN_LENGTH);
+        if (sd_ == nullptr) {
+            return;
+        }
+        if (!InitializeSecurityDescriptor(sd_, SECURITY_DESCRIPTOR_REVISION)) {
+            return;
+        }
+        // Add the ACL to the security descriptor.
+        if (!SetSecurityDescriptorDacl(sd_,
+                                       TRUE,  // bDaclPresent flag
+                                       acl.acl(),
+                                       FALSE))  // not a default DACL
+        {
+            XLOG::l("Failed to set acl");
+            return;
+        }
+    }
+    Sd(const Sd &) = delete;
+    Sd &operator=(const Sd &) = delete;
+
+    PSECURITY_DESCRIPTOR sd() const { return sd_; }
+    ~Sd() {
+        if (sd_ != nullptr) {
+            LocalFree(sd_);
+        }
+    }
+
+private:
+    PSECURITY_DESCRIPTOR sd_{nullptr};
+};
+
+class SecurityAttribute {
+public:
+    explicit SecurityAttribute(
+        const std::vector<std::pair<Sid::Type, uint32_t>> &input)
+        : acl_{input}, sd_{acl_} {
+        sa_.nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa_.lpSecurityDescriptor = sd_.sd();
+        sa_.bInheritHandle = FALSE;
+    }
+
+    SECURITY_ATTRIBUTES *securityAttributes() {
+        if (sa_.lpSecurityDescriptor == nullptr) {
+            return nullptr;
+        }
+        return &sa_;
+    }
+
+private:
+    Acl acl_;
+    Sd sd_;
+    SECURITY_ATTRIBUTES sa_;
+};
+
+std::optional<fs::path> MakeSafeTempFolder(std::string_view sub_dir) {
+    SecurityAttribute sa{
+        {{Sid::Type::everyone, 0}, {Sid::Type::admin, GENERIC_ALL}}};
+    std::error_code ec;
+    fs::remove_all(fs::temp_directory_path(ec) / sub_dir, ec);
+    auto temp_folder = fs::temp_directory_path(ec) / sub_dir;
+    const auto ret =
+        CreateDirectoryW(temp_folder.wstring().data(), sa.securityAttributes());
+    if (!ret) {
+        XLOG::l("Failed to create temp folder '{}' {}", temp_folder,
+                GetLastError());
+        return {};
+    }
+    return temp_folder;
+}
 
 fs::path ExecuteCommands(std::wstring_view name,
                          const std::vector<std::wstring> &commands,
@@ -2792,7 +3008,7 @@ fs::path ExecuteCommands(std::wstring_view name,
         return {};
     }
 
-    auto to_exec = MakeCmdFileInTemp(name, commands);
+    auto to_exec = MakeCmdFileInTemp(safe_temp_sub_dir, name, commands);
     if (!to_exec.empty()) {
         auto pid = cma::tools::RunStdCommand(to_exec.wstring(),
                                              mode == ExecuteMode::sync
@@ -3081,7 +3297,7 @@ bool AppendHandleContent(std::vector<char> &buffer, HANDLE h,
 std::vector<char> ReadFromHandle(HANDLE handle) {
     std::vector<char> buf;
     while (true) {
-        const auto read_count = wtools::DataCountOnHandle(handle);
+        const auto read_count = DataCountOnHandle(handle);
         if (read_count == 0) {  // no data or error
             break;
         }
@@ -3093,7 +3309,7 @@ std::vector<char> ReadFromHandle(HANDLE handle) {
 }
 
 std::string RunCommand(std::wstring_view cmd) {
-    wtools::AppRunner ar;
+    AppRunner ar;
     const auto ret = ar.goExecAsJob(cmd);
     if (ret == 0) {
         XLOG::d("Failed to run '{}'", ToUtf8(cmd));
@@ -3439,7 +3655,7 @@ InternalUser InternalUsersDb::obtainUser(std::wstring_view group) {
         return it->second;
     }
 
-    auto iu = wtools::CreateCmaUserInGroup(group_name);
+    auto iu = CreateCmaUserInGroup(group_name);
     if (iu.first.empty()) {
         return {};
     }
@@ -3450,6 +3666,11 @@ InternalUser InternalUsersDb::obtainUser(std::wstring_view group) {
 }
 
 void InternalUsersDb::killAll() {
+    if (cma::GetModus() == cma::Modus::service) {
+        XLOG::d.i("service doesn't delete own users");
+        return;
+    }
+
     std::lock_guard lk(users_lock_);
     for (const auto &iu : users_ | std::views::values) {
         RemoveCmaUser(iu.first);
@@ -3485,6 +3706,122 @@ inline std::string ToUtf8(const std::wstring_view src,
     // some older engines may have problems if we do not have trailing zero
     AddSafetyEndingNull(str);
     return str;
+}
+
+std::optional<uint64_t> _to_speed(uint64_t speed) {
+    return speed == 0xFFFF'FFFF'FFFF'FFFF ? std::nullopt : std::optional{speed};
+}
+
+AdapterInfo ToAdapterInfo(const IP_ADAPTER_ADDRESSES &a) {
+    const auto address = std::accumulate(
+        std::next(std::begin(a.PhysicalAddress)), std::end(a.PhysicalAddress),
+        fmt::format("{:02X}", a.PhysicalAddress[0]),
+        [](std::string_view a, BYTE b) -> std::string {
+            return fmt::format("{}:{:02X}", a, b);
+        });
+    return AdapterInfo{
+        .guid{a.AdapterName},
+        .friendly_name{a.FriendlyName},
+        .description{a.Description},
+        .if_type{a.IfType},
+        .receive_speed{_to_speed(a.ReceiveLinkSpeed)},
+        .transmit_speed{_to_speed(a.TransmitLinkSpeed)},
+        .oper_status{a.OperStatus},
+        .mac_address{address},
+    };
+}
+
+using AdapterInfoStore = std::unordered_map<std::wstring, AdapterInfo>;
+
+std::wstring MangleNameForPerfCounter(std::wstring_view name) noexcept {
+    std::wstring output{name};
+    for (auto &c : output) {
+        switch (c) {
+            case L'(':
+                c = L'[';
+                break;
+            case L')':
+                c = L']';
+                break;
+            case L'\\':
+            case L'/':
+            case L'#':
+                c = L'_';
+                break;
+        }
+    }
+    return output;
+}
+
+AdapterInfoStore GetAdapterInfoStore() {
+    constexpr auto max_interfaces = 500;
+    const auto buffer =
+        std::make_unique<IP_ADAPTER_ADDRESSES[]>(max_interfaces);
+
+    AdapterInfoStore store;
+    ULONG length = max_interfaces * sizeof(IP_ADAPTER_ADDRESSES);
+
+    if (const auto error =
+            GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_ALL_INTERFACES,
+                                 nullptr, buffer.get(), &length);
+        error != ERROR_SUCCESS) {
+        return store;
+    }
+
+    const auto head = buffer.get();
+    for (auto cur = head; cur; cur = cur->Next) {
+        store[MangleNameForPerfCounter(cur->Description)] = ToAdapterInfo(*cur);
+    }
+    return store;
+}
+
+namespace {
+/// return string vector with Name and Version
+/// on error empty vector
+std::vector<std::wstring> GetOsRawInfo() {
+    wtools::WmiWrapper wmi;
+    wmi.open();
+    wmi.connect(L"ROOT\\CIMV2");
+    if (!wmi.impersonate()) {
+        XLOG::l("Failed to impersonate");
+    }
+    auto [result, status] = wmi.queryTable({L"Name", L"Version"},
+                                           L"Win32_OperatingSystem", L"\t", 5);
+    if (status != WmiStatus::ok) {
+        XLOG::l("Failed to query Win32_OperatingSystem");
+        return {};
+    }
+    const auto rows = cma::tools::SplitString(result, L"\n");
+    if (rows.size() != 2) {
+        XLOG::l("Query Win32_OperatingSystem returns bad data {}",
+                wtools::ToUtf8(result));
+        return {};
+    }
+    auto values = cma::tools::SplitString(rows[1], L"\t");
+    if (values.size() != 2) {
+        XLOG::l("Query Win32_OperatingSystem returns bad data {}",
+                wtools::ToUtf8(result));
+        return {};
+    }
+    const auto name_and_dirs = cma::tools::SplitString(values[0], L"|");
+
+    // contains smth like:
+    // Microsoft Windows 10 Pro|C:\Windows|\Device\Harddisk0\Partition3
+    values[0] = name_and_dirs[0];
+
+    return values;
+}
+}  // namespace
+
+std::optional<OsInfo> GetOsInfo() {
+    static auto os_info = GetOsRawInfo();
+    if (os_info.empty()) {
+        os_info = GetOsRawInfo();
+    }
+    if (os_info.empty()) {
+        return {};
+    }
+    return OsInfo{.name = os_info[0], .version = os_info[1]};
 }
 
 }  // namespace wtools

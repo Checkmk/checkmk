@@ -7,7 +7,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.primekey_temperature import check, discover, parse
-from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
+
+from cmk.plugins.lib.temperature import TempParamDict
 
 
 def test_parse() -> None:

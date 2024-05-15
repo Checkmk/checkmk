@@ -13,8 +13,9 @@ from cmk.base.check_legacy_includes.aws import (
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
+
+from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 
 def parse_aws_elbv2_network(string_table):
@@ -68,10 +69,14 @@ def check_aws_elbv2_network_lcu(item, params, parsed):
     )
 
 
+def discover_aws_elbv2_network(p):
+    return inventory_aws_generic_single(p, ["ConsumedLCUs"])
+
+
 check_info["aws_elbv2_network"] = LegacyCheckDefinition(
     parse_function=parse_aws_elbv2_network,
     service_name="AWS/NetworkELB LCUs",
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
+    discovery_function=discover_aws_elbv2_network,
     check_function=check_aws_elbv2_network_lcu,
     check_ruleset_name="aws_elbv2_lcu",
 )
@@ -116,12 +121,14 @@ def check_aws_elbv2_network_connections(item, params, parsed):
     )
 
 
+def discover_aws_elbv2_network_connections(p):
+    return inventory_aws_generic_single(p, _aws_elbv2_network_connection_types, requirement=any)
+
+
 check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB Connections",
     sections=["aws_elbv2_network"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_network_connection_types, requirement=any
-    ),
+    discovery_function=discover_aws_elbv2_network_connections,
     check_function=check_aws_elbv2_network_connections,
 )
 
@@ -169,7 +176,7 @@ check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
 #             yield check_levels(perc,
 #                                'aws_overall_hosts_health_perc',
 #                                params.get('levels_overall_hosts_health_perc'),
-#                                human_readable_func=get_percent_human_readable,
+#                                human_readable_func=render.percent,
 #                                infoname="Proportion of healthy hosts")
 #
 #
@@ -217,12 +224,14 @@ def check_aws_elbv2_network_tls_handshakes(item, params, parsed):
     )
 
 
+def discover_aws_elbv2_network_tls_handshakes(p):
+    return inventory_aws_generic_single(p, _aws_elbv2_network_tls_types, requirement=any)
+
+
 check_info["aws_elbv2_network.tls_handshakes"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB TLS Handshakes",
     sections=["aws_elbv2_network"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_network_tls_types, requirement=any
-    ),
+    discovery_function=discover_aws_elbv2_network_tls_handshakes,
     check_function=check_aws_elbv2_network_tls_handshakes,
 )
 
@@ -264,12 +273,14 @@ def check_aws_elbv2_network_rst_packets(item, params, parsed):
     )
 
 
+def discover_aws_elbv2_network_rst_packets(p):
+    return inventory_aws_generic_single(p, _aws_elbv2_network_rst_packets_types, requirement=any)
+
+
 check_info["aws_elbv2_network.rst_packets"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB Reset Packets",
     sections=["aws_elbv2_network"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_network_rst_packets_types, requirement=any
-    ),
+    discovery_function=discover_aws_elbv2_network_rst_packets,
     check_function=check_aws_elbv2_network_rst_packets,
 )
 
@@ -309,11 +320,15 @@ def check_aws_elbv2_network_statistics(item, params, parsed):
     )
 
 
+def discover_aws_elbv2_network_statistics(p):
+    return inventory_aws_generic_single(
+        p, _aws_elbv2_network_statistics_metric_names, requirement=any
+    )
+
+
 check_info["aws_elbv2_network.statistics"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB Statistics",
     sections=["aws_elbv2_network"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_network_statistics_metric_names, requirement=any
-    ),
+    discovery_function=discover_aws_elbv2_network_statistics,
     check_function=check_aws_elbv2_network_statistics,
 )

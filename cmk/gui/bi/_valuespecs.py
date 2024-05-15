@@ -11,7 +11,6 @@ import cmk.utils.plugin_registry as plugin_registry
 from cmk.utils.statename import short_service_state_name
 
 import cmk.gui.userdb as userdb
-from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -23,16 +22,16 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Integer,
+    LabelGroups,
     ListOf,
     ListOfStrings,
-    MonitoringState,
     Percentage,
     TextInput,
     Transform,
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import DictHostTagCondition, LabelCondition
+from cmk.gui.wato import DictHostTagCondition
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.bi import actions
@@ -44,6 +43,40 @@ from cmk.bi.aggregation_functions import (
 from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind
 from cmk.bi.packs import BIAggregationPack
 from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+
+from ._packs import get_cached_bi_packs
+
+
+def register() -> None:
+    bi_config_action_registry.register(BIConfigCallARuleAction)
+    bi_config_action_registry.register(BIConfigStateOfHostAction)
+    bi_config_action_registry.register(BIConfigStateOfServiceAction)
+    bi_config_action_registry.register(BIConfigStateOfRemainingServicesAction)
+    bi_config_search_registry.register(BIConfigEmptySearch)
+    bi_config_search_registry.register(BIConfigHostSearch)
+    bi_config_search_registry.register(BIConfigServiceSearch)
+    bi_config_search_registry.register(BIConfigFixedArgumentsSearch)
+    bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionBest)
+    bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionWorst)
+    bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionCountOK)
+
+
+def get_bi_state_dropdown() -> DropdownChoice[int]:
+    return DropdownChoice[int](
+        title=_("Restrict severity to at worst"),
+        help=_(
+            "Here a maximum severity of the node state can be set. This severity is not "
+            "exceeded, even if some of the children have more severe states."
+        ),
+        default_value=2,
+        choices=[
+            (0, _("OK")),
+            (1, _("WARN")),
+            (3, _("UNKNOWN")),
+            (2, _("CRIT")),
+        ],
+    )
+
 
 #   .--Generic converter---------------------------------------------------.
 #   |                   ____                      _                        |
@@ -81,7 +114,7 @@ def convert_from_cascading_vs_choice(value):
 #   ('host_search',
 #   ({'conditions': {'host_choice': {'type': 'all_hosts'},
 #                    'host_folder': '',
-#                    'host_labels': {},
+#                    'host_label_groups': [],
 #                    'host_tags': {}},
 #     'refer_to': 'host'},
 #    {'params': {'arguments': []},
@@ -147,7 +180,7 @@ def _get_aggregation_choices() -> CascadingDropdownChoices:
 # ('host_search',
 #  ({'conditions': {'host_choice': {'type': 'all_hosts'},
 #                   'host_folder': '',
-#                   'host_labels': {},
+#                   'host_label_groups': [],
 #                   'host_tags': {}},
 #    'refer_to': 'host'},
 #   ('call_a_rule',
@@ -285,7 +318,6 @@ def _bi_host_choice_vs(title):
     )
 
 
-@bi_config_search_registry.register
 class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
@@ -304,7 +336,6 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
         return FixedValue(value="")
 
 
-@bi_config_search_registry.register
 class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
@@ -391,12 +422,19 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                 ),
             ),
             ("host_tags", DictHostTagCondition(title=_("Host Tags"), help_txt="")),
-            ("host_labels", LabelCondition(title=_("Host Labels"), help_txt="")),
+            (
+                "host_label_groups",
+                LabelGroups(
+                    show_empty_group_by_default=False,
+                    add_label=_("Add to condition"),
+                    title=_("Host Labels"),
+                    help="",
+                ),
+            ),
             ("host_choice", _bi_host_choice_vs(_("Filter Host"))),
         ]
 
 
-@bi_config_search_registry.register
 class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
@@ -433,11 +471,18 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
                     size=80,
                 ),
             ),
-            ("service_labels", LabelCondition(title=_("Service Labels"), help_txt="")),
+            (
+                "service_label_groups",
+                LabelGroups(
+                    show_empty_group_by_default=False,
+                    add_label=_("Add to condition"),
+                    title=_("Service Labels"),
+                    help="",
+                ),
+            ),
         ]
 
 
-@bi_config_search_registry.register
 class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
@@ -509,7 +554,6 @@ class BIConfigActionRegistry(plugin_registry.Registry[type[ABCBIConfigAction]]):
 bi_config_action_registry = BIConfigActionRegistry()
 
 
-@bi_config_action_registry.register
 class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
@@ -622,7 +666,6 @@ def is_contact_for_pack(bi_pack: BIAggregationPack) -> bool:
     return False
 
 
-@bi_config_action_registry.register
 class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
@@ -654,7 +697,6 @@ class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
         )
 
 
-@bi_config_action_registry.register
 class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
@@ -688,7 +730,6 @@ class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAc
         )
 
 
-@bi_config_action_registry.register
 class BIConfigStateOfRemainingServicesAction(
     actions.BIStateOfRemainingServicesAction, ABCBIConfigAction
 ):
@@ -758,7 +799,6 @@ class BIConfigAggregationFunctionRegistry(
 bi_config_aggregation_function_registry = BIConfigAggregationFunctionRegistry()
 
 
-@bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggregationFunction):
     def __str__(self) -> str:
         return _("Best state, %d nodes, restrict to %s") % (
@@ -797,14 +837,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
                         default_value=1,
                         minvalue=1,
                     ),
-                    MonitoringState(
-                        title=_("Restrict severity to at worst"),
-                        help=_(
-                            "Here a maximum severity of the node state can be set. This severity is not "
-                            "exceeded, even if some of the children have more severe states."
-                        ),
-                        default_value=2,
-                    ),
+                    get_bi_state_dropdown(),
                 ]
             ),
             to_valuespec=convert_to_vs,
@@ -812,7 +845,6 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
         )
 
 
-@bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAggregationFunction):
     def __str__(self) -> str:
         return _("Worst state, %d nodes, restrict to %s") % (
@@ -852,14 +884,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
                         default_value=1,
                         minvalue=1,
                     ),
-                    MonitoringState(
-                        title=_("Restrict severity to at worst"),
-                        help=_(
-                            "Here a maximum severity of the node state can be set. This severity is not "
-                            "exceeded, even if some of the children have more severe states."
-                        ),
-                        default_value=2,
-                    ),
+                    get_bi_state_dropdown(),
                 ]
             ),
             to_valuespec=convert_to_vs,
@@ -867,7 +892,6 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
         )
 
 
-@bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionCountOK(
     BIAggregationFunctionCountOK, ABCBIConfigAggregationFunction
 ):

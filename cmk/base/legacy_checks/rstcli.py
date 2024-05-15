@@ -46,8 +46,6 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
@@ -65,7 +63,7 @@ def parse_rstcli_sections(info):
             continue
         else:
             if current_section is None:
-                raise MKGeneralException("error: %s" % " ".join(line))
+                raise ValueError(" ".join(line))
             current_section[1].append(line)
 
     yield current_section
@@ -112,12 +110,12 @@ def parse_rstcli(string_table):
     volumes = {}
     for section in rstcli_sections:
         if section[0] == "VOLUME INFORMATION":
-            volumes = parse_rstcli_volumes(section[1])
+            volumes.update(parse_rstcli_volumes(section[1]))
         elif section[0].startswith("DISKS IN VOLUME"):
             volume = section[0].split(":")[1].strip()
             volumes[volume]["Disks"] = parse_rstcli_disks(section[1])
         else:
-            raise MKGeneralException("invalid section in rstcli output: %s" % section[0])
+            raise ValueError("invalid section in rstcli output: %s" % section[0])
 
     return volumes
 

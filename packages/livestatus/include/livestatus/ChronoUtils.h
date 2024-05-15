@@ -27,7 +27,7 @@ using weeks = std::chrono::duration<int64_t, std::ratio<604800>>;
 // microseconds, the compiler will very probably still be happy, but all count()
 // use sites are wrong now! A much better alternative is to explicitly say in
 // which duration units you actually want the ticks.
-template <class ToDuration, class Rep, class Period>
+template <typename ToDuration, typename Rep, typename Period>
 constexpr typename ToDuration::rep ticks(
     const std::chrono::duration<Rep, Period> &d) {
     return std::chrono::duration_cast<ToDuration>(d).count();

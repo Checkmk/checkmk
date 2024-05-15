@@ -5,15 +5,16 @@
 
 from itertools import zip_longest
 
+from cmk.plugins.lib import docker
+
 from .agent_based_api.v1 import Attributes, HostLabel, register, TableRow
 from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
-from .utils import docker
 
 
 def parse_docker_node_info(string_table: StringTable) -> docker.NodeInfoSection:
     loaded: dict = {}
     # docker_node_info section may be present multiple times,
-    # this is how the docker agent plugin reports errors.
+    # this is how the docker agent plug-in reports errors.
     # Key 'Unknown' is present if there is a python exception
     # key 'Critical' is present if the python docker lib is not found
     string_table_iter = iter(string_table)
@@ -27,9 +28,11 @@ def parse_docker_node_info(string_table: StringTable) -> docker.NodeInfoSection:
                 "docker_node_info has wrong number of string_table elements. "
                 "This is an internal error and should never happen."
             )
-        parsed = docker.parse([version_info, payload]).data
-        # TODO: if there are two errors of the same type, only one will be shown.
-        loaded.update(parsed)
+        for key, val in docker.parse([version_info, payload]).data.items():
+            if key in ("Unknown", "Critical"):
+                loaded.setdefault(key, []).append(val)
+            else:
+                loaded[key] = val
     return loaded
 
 

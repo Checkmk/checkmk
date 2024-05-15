@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
@@ -20,10 +20,70 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     RegExp,
     TextInput,
+    Transform,
     Tuple,
 )
-from cmk.gui.wato import HTTPProxyReference, MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import (
+    HTTPProxyReference,
+    IndividualOrStoredPassword,
+    RulespecGroupDatasourceProgramsApps,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
+
+from cmk.rulesets.v1.form_specs import migrate_to_proxy as migrate_proxy_back
+
+
+def migrate_password_back(value):
+
+    # from this rulespec I just expect the old password formats
+    match value:
+        case "password", str(password):
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (ad_hoc_password_id(), password),
+            )
+        case "store", str(password_store_id):
+            return "cmk_postprocessed", "stored_password", (password_store_id, "")
+
+    raise TypeError(f"Could not migrate {value!r} to Password.")
+
+
+def migrate_password_forth(value):
+
+    match value:
+        # old formats
+        case ("password", str()) | ("store", str()):
+            return value
+
+        # already migrated passwords
+        case "cmk_postprocessed", "explicit_password", (str(_password_id), str(password)):
+            return "password", password
+        case "cmk_postprocessed", "stored_password", (str(password_store_id), str(password)):
+            return "store", password_store_id
+
+    raise ValueError(f"Invalid password format for forth function: {value}")
+
+
+def migrate_proxy_forth(value):
+
+    match value:
+
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            return "global", stored_proxy_id
+        case "cmk_postprocessed", "environment_proxy", str():
+            return "environment", "environment"
+        case "cmk_postprocessed", "explicit_proxy", str(url):
+            return "url", url
+        case "cmk_postprocessed", "no_proxy", str():
+            return "no_proxy", None
+
+        case ("global", str(_element)) | ("environment", str(_element)) | ("url", str(_element)):
+            return value
+        case "no_proxy", None:
+            return value
+
+    raise TypeError(f"Could not migrate {value!r} to Proxy.")
 
 
 def _valuespec_special_agents_datadog() -> Dictionary:
@@ -39,16 +99,24 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                     elements=[
                         (
                             "api_key",
-                            MigrateToIndividualOrStoredPassword(
-                                title=_("API Key"),
-                                allow_empty=False,
+                            Transform(
+                                valuespec=IndividualOrStoredPassword(
+                                    title=_("API Key"),
+                                    allow_empty=False,
+                                ),
+                                back=migrate_password_back,
+                                forth=migrate_password_forth,
                             ),
                         ),
                         (
                             "app_key",
-                            MigrateToIndividualOrStoredPassword(
-                                title=_("Application Key"),
-                                allow_empty=False,
+                            Transform(
+                                valuespec=IndividualOrStoredPassword(
+                                    title=_("Application Key"),
+                                    allow_empty=False,
+                                ),
+                                back=migrate_password_back,
+                                forth=migrate_password_forth,
                             ),
                         ),
                         (
@@ -64,7 +132,11 @@ def _valuespec_special_agents_datadog() -> Dictionary:
             ),
             (
                 "proxy",
-                HTTPProxyReference(),
+                Transform(
+                    valuespec=HTTPProxyReference(),
+                    back=migrate_proxy_back,
+                    forth=migrate_proxy_forth,
+                ),
             ),
             (
                 "monitors",

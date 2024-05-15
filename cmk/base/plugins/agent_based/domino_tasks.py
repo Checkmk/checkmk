@@ -6,9 +6,10 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib import domino, memory, ps
+
 from .agent_based_api.v1 import IgnoreResultsError, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import domino, memory, ps
 
 # Example SNMP walk:
 #
@@ -126,7 +127,7 @@ register.check_plugin(
     # corresponding autocheck. As a result, to the user it looks as if the parameters specified in
     # the enforced service configuration were simply passed to the check plugin, without any sort of
     # shadowing.
-    # Also note that we cannot simply remove this line. If we did that, the plugin domino_tasks
+    # Also note that we cannot simply remove this line. If we did that, the plug-in domino_tasks
     # would not be available any more when configuring enforced services.
     check_ruleset_name="domino_tasks",
     check_default_parameters={},

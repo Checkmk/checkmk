@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -11,7 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.megaraid import expand_abbreviation, LDISKS_DEFAULTS
+
+from cmk.plugins.lib.megaraid import expand_abbreviation, LDISKS_DEFAULTS
 
 from .agent_based_api.v1 import register, Result, Service, State
 
@@ -27,7 +28,7 @@ StorcliVDrivesSection = Mapping[str, StorcliVDrive]
 
 
 def parse_storcli_vdrives(string_table: StringTable) -> StorcliVDrivesSection:
-    section: MutableMapping[str, StorcliVDrive] = {}
+    section: dict[str, StorcliVDrive] = {}
 
     controller_num = 0
     separator_count = 0

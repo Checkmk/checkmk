@@ -20,7 +20,8 @@ from cmk.base.plugins.agent_based.citrix_controller import (
     discovery_citrix_controller_sessions,
     SessionParams,
 )
-from cmk.base.plugins.agent_based.utils.citrix_controller import parse_citrix_controller, Section
+
+from cmk.plugins.lib.citrix_controller import parse_citrix_controller, Section
 
 STRING_TABLE = [
     ["ControllerState", "Active"],

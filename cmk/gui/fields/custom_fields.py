@@ -3,17 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from os import path
 from typing import Any, Literal
 
 from marshmallow import validate, ValidationError
 
-from cmk.utils.tags import BuiltinTagConfig, TagID
+from cmk.utils.crypto import certificate, keys
+from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
-from cmk.gui.groups import load_contact_group_information
-from cmk.gui.userdb import connection_choices
+from cmk.gui.config import active_config
+from cmk.gui.userdb import connection_choices, get_saml_connections
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config_read_only
+from cmk.gui.watolib.tags import (
+    load_all_tag_config_read_only,
+    load_tag_config_read_only,
+    tag_group_exists,
+)
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
 from cmk import fields
@@ -186,10 +194,86 @@ class LDAPConnectionID(fields.String):
                 raise self.make_error("should_not_exist", path=value)
 
 
+class SAMLConnectionID(fields.String):
+    default_error_messages = {
+        "should_exist": "The SAML connection {path!r} should exist but it doesn't.",
+        "should_not_exist": "The SAML connection {path!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
+        required: bool = True,
+        description: str = "A SAML connection ID string.",
+        minLength: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(required=required, description=description, minLength=minLength, **kwargs)
+        self.presence = presence
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if self.presence == "should_exist":
+            if value not in get_saml_connections():
+                raise self.make_error("should_exist", path=value)
+
+        elif self.presence == "should_not_exist":
+            if value in get_saml_connections():
+                raise self.make_error("should_not_exist", path=value)
+
+
+class CertPublicKey(fields.String):
+    default_error_messages = {
+        "invalid_key": "Invalid certificate",
+    }
+
+    def __init__(
+        self,
+        description: str = "Public key in PEM format. Must be a single certificate, not a chain.",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(description=description, **kwargs)
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        try:
+            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
+        except Exception:
+            raise self.make_error("invalid_key")
+
+
+class CertPrivateKey(fields.String):
+    default_error_messages = {
+        "encrypted_key": "Encrypted private keys are not supported",
+        "invalid_key": "Invalid private key",
+    }
+
+    def __init__(
+        self,
+        description: str = "Private key in PEM format.",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(description=description, **kwargs)
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if value.startswith("-----BEGIN ENCRYPTED PRIVATE KEY"):
+            raise self.make_error("encrypted_key")
+
+        try:
+            keys.PrivateKey.load_pem(keys.PlaintextPrivateKeyPEM(value))
+        except Exception:
+            raise self.make_error("invalid_key")
+
+
 class AuxTagIDField(fields.String):
     default_error_messages = {
         "should_exist": "The aux_tag {aux_tag_id!r} should exist but it doesn't.",
         "should_not_exist": "The aux_tag {aux_tag_id!r} should not exist but it does.",
+        "should_not_exist_tag_group": "The id {aux_tag_id!r} is already in use by a tag group.",
         "should_exist_and_should_be_builtin": "The aux_tag {aux_tag_id!r} should be an existing built-in aux tag but it's not.",
         "should_exist_and_should_be_custom": "The aux_tag {aux_tag_id!r} should be an existing custom aux tag but it's not.",
     }
@@ -203,11 +287,13 @@ class AuxTagIDField(fields.String):
             "should_not_exist",
             "ignore",
         ] = "ignore",
+        example: str = "ip-v4",
+        description: str = "An auxiliary tag id",
         **kwargs: Any,
     ) -> None:
         super().__init__(
-            description="An auxiliary tag id",
-            example="ip-v4",
+            description=description,
+            example=example,
             pattern=r"^[-0-9a-zA-Z_]+\Z",
             **kwargs,
         )
@@ -226,8 +312,15 @@ class AuxTagIDField(fields.String):
                 raise self.make_error("should_exist_and_should_be_custom", aux_tag_id=tag_id)
 
         if self.presence == "should_not_exist":
-            if load_all_tag_config_read_only().aux_tag_list.exists(tag_id):
+            ro_config = load_tag_config_read_only()
+            builtin_config = BuiltinTagConfig()
+            if ro_config.aux_tag_list.exists(tag_id) or builtin_config.aux_tag_list.exists(tag_id):
                 raise self.make_error("should_not_exist", aux_tag_id=tag_id)
+
+            if ro_config.tag_group_exists(TagGroupID(tag_id)) or builtin_config.tag_group_exists(
+                TagGroupID(tag_id)
+            ):
+                raise self.make_error("should_not_exist_tag_group", aux_tag_id=tag_id)
 
         if self.presence == "should_exist":
             if not load_all_tag_config_read_only().aux_tag_list.exists(tag_id):
@@ -422,3 +515,68 @@ class PasswordStoreIDField(fields.String):
         if self.presence == "should_not_exist":
             if value in pw_ids:
                 raise self.make_error("should_not_exist", store_id=value)
+
+
+class ServiceLevelField(fields.Integer):
+    default_error_messages = {
+        "should_exist": "The provided service level {value!r} does not exist. The available service levels are [{choices!r}]",
+        "should_not_exist": "The provided service level {value!r} already exists.]",
+    }
+
+    def __init__(
+        self,
+        required: bool = True,
+        example: int = 10,
+        presence: Literal["should_exist", "should_not_exist"] = "should_exist",
+        description: str = "A service level represented as an integer",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(required=required, example=example, description=description, **kwargs)
+        self.presence = presence
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        choices = [int_val for int_val, _str_val in active_config.mkeventd_service_levels]
+
+        if self.presence == "should_exist":
+            if value not in choices:
+                raise self.make_error(
+                    "should_exist", value=value, choices=", ".join([str(c) for c in choices])
+                )
+
+        if self.presence == "should_not_exist":
+            if value in choices:
+                raise self.make_error("should_not_exist", value=value)
+
+
+class TagGroupIDField(fields.String):
+    """A field representing the host tag group id"""
+
+    default_error_messages = {
+        "should_exist": "The host tag group id {name!r} should exist but it doesn't",
+        "should_not_exist": "The host tag group id {name!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        description: str = "A host tag group id",
+        example: str = "piggyback",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(description=description, example=example, **kwargs)
+        self.presence = presence
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        if self.presence == "should_exist" and not tag_group_exists(value, builtin_included=True):
+            raise self.make_error("should_exist", name=value)
+
+        if self.presence == "should_not_exist" and tag_group_exists(value, builtin_included=True):
+            raise self.make_error("should_exist", name=value)

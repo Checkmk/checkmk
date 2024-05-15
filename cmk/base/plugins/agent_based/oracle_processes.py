@@ -6,6 +6,8 @@
 from collections.abc import Mapping, MutableMapping
 from typing import NamedTuple
 
+from cmk.plugins.lib.oracle import OraErrors
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -16,7 +18,6 @@ from .agent_based_api.v1 import (
     Service,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.oracle import OraErrors
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
@@ -54,6 +55,8 @@ def parse_oracle_processes(string_table: StringTable) -> SectionOracleProcesses:
         if ora_error.has_error:
             error_processes[line[0]] = ora_error
         else:
+            if len(line) < 3:
+                continue
             process = line[0]
             valid_oracle_processes[process] = OracleProcess(
                 name=process, processes_count=int(line[1]), processes_limit=int(line[2])

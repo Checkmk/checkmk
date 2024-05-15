@@ -5,14 +5,7 @@
 
 from collections.abc import Callable, Iterable
 
-from cmk.utils.aws_constants import (
-    AWSEC2InstFamilies,
-    AWSEC2InstTypes,
-    AWSEC2LimitsDefault,
-    AWSEC2LimitsSpecial,
-)
-
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -34,6 +27,13 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
     ValueSpec,
+)
+
+from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
+    AWSEC2InstFamilies,
+    AWSEC2InstTypes,
+    AWSEC2LimitsDefault,
+    AWSEC2LimitsSpecial,
 )
 
 
@@ -640,9 +640,9 @@ def _vs_limits_vcpu_families():
             choices=[
                 (
                     "%s_vcpu" % inst_fam,
-                    fam_name,
+                    fam_name.localize(translate_to_current_language),
                     vs_aws_limits(
-                        fam_name,
+                        fam_name.localize(translate_to_current_language),
                         AWSEC2LimitsSpecial.get("%s_vcpu" % inst_fam, AWSEC2LimitsDefault)[0],
                     ),
                 )
@@ -734,6 +734,34 @@ rulespec_registry.register(
     )
 )
 
+
+def _parameter_valuespec_aws_reservation_utilization():
+    return Dictionary(
+        elements=[
+            (
+                "levels_utilization_percent",
+                Tuple(
+                    title=_("Lower levels for reservation utilization"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=95.0),
+                        Percentage(title=_("Critical at"), default_value=90.0),
+                    ],
+                ),
+            )
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="aws_reservation_utilization",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_reservation_utilization,
+        title=lambda: _("AWS/CE Total Reservation Utilization"),
+    )
+)
+
 # .
 #   .--ELB-----------------------------------------------------------------.
 #   |                          _____ _     ____                            |
@@ -767,13 +795,11 @@ def _parameter_valuespec_aws_elb_statistics():
                     elements=[
                         Float(
                             title=_("Warning at"),
-                            display_format="%.3f",
                             default_value=0.001,
                             unit="/s",
                         ),
                         Float(
                             title=_("Critical at"),
-                            display_format="%.3f",
                             default_value=0.001,
                             unit="/s",
                         ),
@@ -820,9 +846,11 @@ def _parameter_valuespec_aws_elb_http() -> Dictionary:
                     title=_("Upper levels for Load Balancers"),
                     elements=_vs_elements_http_errors(
                         ["3xx", "4xx", "5xx", "500", "502", "503", "504"],
-                        title_add=lambda http_err_code: ""
-                        if http_err_code in ["4xx", "5xx"]
-                        else " (Application Load Balancers only)",
+                        title_add=lambda http_err_code: (
+                            ""
+                            if http_err_code in ["4xx", "5xx"]
+                            else " (Application Load Balancers only)"
+                        ),
                     ),
                 ),
             ),
@@ -1293,8 +1321,8 @@ def _parameter_valuespec_aws_rds_replica_lag():
                 Tuple(
                     title=_("Upper levels on the replica lag"),
                     elements=[
-                        Float(title=_("Warning at"), unit="s", display_format="%.3f"),
-                        Float(title=_("Critical at"), unit="s", display_format="%.3f"),
+                        Float(title=_("Warning at"), unit="s"),
+                        Float(title=_("Critical at"), unit="s"),
                     ],
                 ),
             ),

@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import db, oracle
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -18,7 +20,6 @@ from .agent_based_api.v1 import (
     TableRow,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils import db, oracle
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -298,7 +299,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
         # Check free space, but only if status is not READONLY
         # and Tablespace-Type must be PERMANENT or TEMPORARY, when temptablespace is True
         # old plugins without v$tempseg_usage info send TEMP as type.
-        # => Impossible to monitor old plugin with TEMP instead TEMPORARY
+        # => Impossible to monitor old plug-in with TEMP instead TEMPORARY
         if ts_status != "READONLY" and (
             ts_type == "PERMANENT"
             or (ts_type == "TEMPORARY" and params.get("temptablespace"))

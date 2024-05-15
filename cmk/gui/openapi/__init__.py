@@ -3,6 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.openapi._openapi import add_once, ENDPOINT_REGISTRY, generate_data
+from .restful_objects.registry import endpoint_registry
 
-__all__ = ["ENDPOINT_REGISTRY", "generate_data", "add_once"]
+__all__ = ["endpoint_registry"]

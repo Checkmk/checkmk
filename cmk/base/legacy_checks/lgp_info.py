@@ -13,10 +13,13 @@
 # [[['Rack PDU Card', '4.840.0', '535055G103T2010JUN240295']], [['1', '1', '.1.3.6.1.4.1.476.1.42.4.8.2.2', 'Emerson Network Power', '1']]]
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.lgp import DETECT_LGP
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.lgp import DETECT_LGP
 
 lgp_info_devices = {
     ".1.3.6.1.4.1.476.1.42.4.8.2.1": "lgpMPX",
@@ -48,7 +51,12 @@ def check_lgp_info(item, params, info):
     return None
 
 
+def parse_lgp_info(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["lgp_info"] = LegacyCheckDefinition(
+    parse_function=parse_lgp_info,
     detect=DETECT_LGP,
     fetch=[
         SNMPTree(

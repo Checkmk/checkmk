@@ -82,7 +82,6 @@ package-definitions:
   ordereddict: [ordereddict]
   paho: [paho]
   paramiko: [paramiko]
-  passlib: [passlib]
   Pillow: [PIL]
   pipfile: [pipfile]
   playwright: [playwright]
@@ -116,7 +115,6 @@ package-definitions:
   pytest-mock: [pytest_mock]
   redis: [redis]
   reportlab: [reportlab]
-  repoze-profile: [repoze.profile]
   requests: [requests]
   requests_kerberos: [requests_kerberos]
   requests_oauthlib: [requests_oauthlib]
@@ -323,7 +321,6 @@ allowed-package-relationships:
     pytz,
     redis,
     reportlab,
-    repoze-profile,
     requests,
     setproctitle,
     six,
@@ -347,7 +344,6 @@ allowed-package-relationships:
     deepdiff,
     exchangelib,
     jinja2,
-    passlib,
     pycryptodomex,
     pyopenssl,
     python-dateutil,

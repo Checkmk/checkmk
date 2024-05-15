@@ -6,11 +6,11 @@
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.kube import Cpu, PerformanceUsage
-from cmk.base.plugins.agent_based.utils.kube_resources import (
+
+from cmk.plugins.kube.schemata.section import Cpu, HardResourceRequirement, PerformanceUsage
+from cmk.plugins.lib.kube_resources import (
     check_resource_quota_resource,
     cpu_render_func,
-    HardResourceRequirement,
     Params,
     performance_cpu,
     RESOURCE_QUOTA_DEFAULT_PARAMS,
@@ -179,7 +179,12 @@ def test_stored_usage_value() -> None:
     performance_cpu_usage = performance_cpu(
         None,
         TIMESTAMP,
-        {"resource_quota_cpu_usage": (TIMESTAMP - 59, PerformanceUsageFactory.build().json())},
+        {
+            "resource_quota_cpu_usage": (
+                TIMESTAMP - 59,
+                PerformanceUsageFactory.build().model_dump_json(),
+            )
+        },
         "resource_quota_cpu_usage",
     )
     assert performance_cpu_usage is not None

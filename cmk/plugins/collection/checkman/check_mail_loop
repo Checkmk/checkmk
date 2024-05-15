@@ -1,0 +1,17 @@
+title: POP3/IMAP Connection and Optional Mail Forwarding
+agents: active
+catalog: agentless
+license: GPLv2
+distribution: check_mk
+
+item:
+ The name of the device
+
+description:
+ Sends out special emails to a defined mail address using either the SMTP protocol or an
+ EWS connection and then tries to receive these mails back by querying the inbox of an IMAP,
+ POP3 or EWS mailbox.
+
+ With this check you can verify that your whole mail delivery progress is working.
+
+ This check can be configured using WATO.

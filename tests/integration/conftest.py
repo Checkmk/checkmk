@@ -8,11 +8,12 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.event_console import CMKEventConsole
 from tests.testlib.openapi_session import RequestSessionRequestHandler
 from tests.testlib.rest_api_client import ClientRegistry, get_client_registry, RestApiClient
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.web_session import CMKWebSession
+
+from .event_console import CMKEventConsole
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,9 @@ def get_site() -> Iterator[Site]:
 @pytest.fixture(scope="session", name="web")
 def fixture_web(site: Site) -> CMKWebSession:
     web = CMKWebSession(site)
-    web.login()
+
+    if not site.version.is_saas_edition():
+        web.login()
     site.enforce_non_localized_gui(web)
     return web
 
@@ -57,9 +60,3 @@ def clients(site: Site) -> ClientRegistry:
     return get_client_registry(
         rq, f"{site.http_proto}://{site.http_address}:{site.apache_port}/{site.id}/check_mk/api/1.0"
     )
-
-
-@pytest.fixture()
-def skip_in_raw_edition(site: Site) -> None:
-    if site.version.is_raw_edition():
-        pytest.skip("Not relevant in raw edition")

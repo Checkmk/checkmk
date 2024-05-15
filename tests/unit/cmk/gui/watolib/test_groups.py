@@ -11,12 +11,9 @@ import pytest
 
 import cmk.utils.paths
 
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
-from cmk.ec.export import ECRulePack
-
-import cmk.gui.groups as gui_groups
-import cmk.gui.watolib.groups as groups
 from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.watolib import groups_io
+from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 
 
 @pytest.fixture(autouse=True)
@@ -33,9 +30,9 @@ def patch_config_paths(monkeypatch, tmp_path):
 @pytest.mark.usefixtures("tmp_path")
 def test_load_group_information_empty(run_as_superuser: Callable[[], ContextManager[None]]) -> None:
     with application_and_request_context(), run_as_superuser():
-        assert gui_groups.load_contact_group_information() == {}
-        assert gui_groups.load_host_group_information() == {}
-        assert gui_groups.load_service_group_information() == {}
+        assert groups_io.load_contact_group_information() == {}
+        assert groups_io.load_host_group_information() == {}
+        assert groups_io.load_service_group_information() == {}
 
 
 @pytest.mark.usefixtures("tmp_path")
@@ -44,9 +41,9 @@ def test_load_group_information(run_as_superuser: Callable[[], ContextManager[No
         f.write(
             """# encoding: utf-8
 
-define_contactgroups.update({'all': u'Everything'})
 define_hostgroups.update({'all_hosts': u'All hosts :-)'})
 define_servicegroups.update({'all_services': u'All särvices'})
+define_contactgroups.update({'all': u'Everything'})
 """
         )
 
@@ -56,147 +53,76 @@ define_servicegroups.update({'all_services': u'All särvices'})
 
 multisite_hostgroups = {
     "all_hosts": {
-        "ding": "dong",
+        "customer": "foo",
     },
 }
 
 multisite_servicegroups = {
     "all_services": {
-        "d1ng": "dong",
+        "unknown": "field",
     },
 }
 
 multisite_contactgroups = {
     "all": {
-        "d!ng": "dong",
+        "inventory_paths": "allow_all",
     },
 }
 """
         )
 
     with application_and_request_context(), run_as_superuser():
-        assert gui_groups.load_group_information() == {
-            "contact": {
-                "all": {
-                    "alias": "Everything",
-                    "d!ng": "dong",
-                }
-            },
+        assert groups_io.load_group_information() == {
             "host": {
                 "all_hosts": {
                     "alias": "All hosts :-)",
-                    "ding": "dong",
+                    "customer": "foo",
                 }
             },
             "service": {
                 "all_services": {
                     "alias": "All s\xe4rvices",
-                    "d1ng": "dong",
+                }
+            },
+            "contact": {
+                "all": {
+                    "alias": "Everything",
+                    "inventory_paths": "allow_all",
                 }
             },
         }
 
-        assert gui_groups.load_contact_group_information() == {
-            "all": {
-                "alias": "Everything",
-                "d!ng": "dong",
-            }
-        }
-
-        assert gui_groups.load_host_group_information() == {
+        assert groups_io.load_host_group_information() == {
             "all_hosts": {
                 "alias": "All hosts :-)",
-                "ding": "dong",
+                "customer": "foo",
             }
         }
 
-        assert gui_groups.load_service_group_information() == {
+        assert groups_io.load_service_group_information() == {
             "all_services": {
                 "alias": "All s\xe4rvices",
-                "d1ng": "dong",
+            }
+        }
+
+        assert groups_io.load_contact_group_information() == {
+            "all": {
+                "alias": "Everything",
+                "inventory_paths": "allow_all",
             }
         }
 
 
-def _rule_packs() -> list[ECRulePack]:
-    return [
-        {
-            "id": "default",
-            "title": "Default rule pack",
-            "disabled": False,
-            "rules": [
-                {
-                    "id": "test2",
-                    "contact_groups": {
-                        "groups": ["my_contact_group"],
-                        "notify": True,
-                        "precedence": "host",
-                    },
-                },
-                {
-                    "id": "test4",
-                    "contact_groups": {"groups": ["all"], "notify": True, "precedence": "host"},
-                },
-                {
-                    "id": "test1",
-                    "contact_groups": {
-                        "groups": ["my_contact_group"],
-                        "notify": True,
-                        "precedence": "host",
-                    },
-                },
-                {
-                    "id": "test",
-                    "contact_groups": {
-                        "groups": ["my_contact_group"],
-                        "notify": True,
-                        "precedence": "host",
-                    },
-                },
-            ],
-        }
+def test_group_usage_finder_registry_entries() -> None:
+    expected = [
+        "find_usages_of_contact_group_in_dashboards",
+        "find_usages_of_contact_group_in_default_user_profile",
+        "find_usages_of_contact_group_in_ec_rules",
+        "find_usages_of_contact_group_in_hosts_and_folders",
+        "find_usages_of_contact_group_in_mkeventd_notify_contactgroup",
+        "find_usages_of_contact_group_in_notification_rules",
+        "find_usages_of_contact_group_in_users",
     ]
 
-
-@pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize(
-    "contact_group, rule_packs, expected_result",
-    [
-        pytest.param(
-            "my_contact_group",
-            _rule_packs,
-            [
-                (
-                    "Event console rule: test2",
-                    "wato.py?edit=0&folder=&mode=mkeventd_edit_rule&rule_pack=default",
-                ),
-                (
-                    "Event console rule: test1",
-                    "wato.py?edit=2&folder=&mode=mkeventd_edit_rule&rule_pack=default",
-                ),
-                (
-                    "Event console rule: test",
-                    "wato.py?edit=3&folder=&mode=mkeventd_edit_rule&rule_pack=default",
-                ),
-            ],
-            id="existing contact group, should match",
-        ),
-        pytest.param(
-            "bielefeld",
-            _rule_packs,
-            [],
-            id="none existing contact group",
-        ),
-    ],
-)
-def test_find_usages_of_contact_group_in_ec_rules(
-    monkeypatch: pytest.MonkeyPatch,
-    contact_group: str,
-    rule_packs: list[ECRulePack],
-    expected_result: list[tuple[str, str]],
-) -> None:
-    monkeypatch.setattr(cmk.ec.export, "load_rule_packs", rule_packs)
-    assert (
-        groups._find_usages_of_contact_group_in_ec_rules(contact_group)
-        == expected_result  # pylint: disable=protected-access
-    )
+    registered = [f.__name__ for f in contact_group_usage_finder_registry.values()]
+    assert sorted(registered) == sorted(expected)

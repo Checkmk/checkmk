@@ -6,10 +6,10 @@ import time
 from collections.abc import MutableMapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.utils.kube_resources import (
+from cmk.plugins.kube.schemata.section import HardResourceRequirement, PerformanceUsage
+from cmk.plugins.lib.kube_resources import (
     check_resource_quota_resource,
     cpu_render_func,
-    HardResourceRequirement,
     Params,
     parse_hard_requirements,
     parse_performance_usage,
@@ -19,7 +19,6 @@ from cmk.base.plugins.agent_based.utils.kube_resources import (
 
 from .agent_based_api.v1 import get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.kube import PerformanceUsage
 
 register.agent_section(
     name="kube_resource_quota_cpu_resources_v1",

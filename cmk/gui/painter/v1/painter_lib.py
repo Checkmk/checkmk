@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
 import cmk.utils
-from cmk.utils.prediction import TimeRange
+import cmk.utils.plugin_registry
 
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
@@ -22,7 +22,7 @@ class PainterConfiguration:
     columns: Sequence[ColumnName]
     parameters: PainterParameters | None  # configured via valuespec
     painter_options: PainterOptions | None = None
-    time_range: TimeRange | None = None  # provided from external view/dashlet
+    time_range: tuple[int, int] | None = None  # provided from external view/dashlet
     dynamic_columns: Callable[["PainterConfiguration"], Sequence[ColumnName]] | None = None
 
 
@@ -49,9 +49,27 @@ class Formatters(Generic[T]):
 
 @dataclass(frozen=True, kw_only=True)
 class Painter(Generic[T]):
+    """Base class for "new" Painters.
+
+    This hierarchy is incompatible with old Painters, so it is necessary to wrap these classes with
+
+        cmk.gui.painters.v0.base.PainterAdapter
+
+    in order to make it work in existing code.
+
+    """
+
     ident: str
     computer: Callable[[Rows, PainterConfiguration], Sequence[T]]
+    """Function which generates the data from one or more rows into a sequence of entries.
+
+    These may be `int` or `str`, but more complex aggregate types like NamedTuple, etc are also
+    possible."""
+
     formatters: Formatters[T]
+    """Class which collects functions (html, css, json) which represent the output content-type
+    and will take the result of the compute method above and generates output from that."""
+
     title: str | LazyString
     short_title: str | LazyString
     columns: Sequence[ColumnName] = field(default_factory=list)
@@ -62,9 +80,9 @@ class Painter(Generic[T]):
     # dynamic_columns/derive will be reviewed later on
     dynamic_columns: Callable[[PainterParameters], Sequence[ColumnName]] | None = None
     derive: Callable[[Rows, PainterParameters, list[ColumnName]], None] | None = None
-    postprocess_query: None | (
-        Callable[[Rows, PainterParameters, Sequence[ColumnName]], Rows]
-    ) = None
+    postprocess_query: None | (Callable[[Rows, PainterParameters, Sequence[ColumnName]], Rows]) = (
+        None
+    )
 
     def export_title(self) -> str:
         return self.ident

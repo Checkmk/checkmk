@@ -7,10 +7,11 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import CheckResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.bonding import _check_ieee_302_3ad_specific
-from cmk.base.plugins.agent_based.utils.bonding import Bond
+
+from cmk.agent_based.v1 import Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.plugins.lib.bonding import Bond
 
 
 @pytest.mark.parametrize(

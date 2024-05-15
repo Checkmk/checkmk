@@ -9,12 +9,12 @@ import textwrap
 from collections.abc import Callable, Sequence
 
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostName, Hosts
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
+from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.tags import TagID
 
-import cmk.base.config as config
 from cmk.base.config import ConfigCache
 
 OptionSpec = str
@@ -132,17 +132,27 @@ class Modes:
     def parse_hostname_list(
         self,
         config_cache: ConfigCache,
+        hosts_config: Hosts,
         args: list[str],
         with_clusters: bool = True,
         with_foreign_hosts: bool = False,
     ) -> Sequence[HostName]:
         if with_foreign_hosts:
-            valid_hosts = config_cache.all_configured_realhosts()
+            valid_hosts = set(hosts_config.hosts)
         else:
-            valid_hosts = config_cache.all_active_realhosts()
+            valid_hosts = {
+                hn
+                for hn in hosts_config.hosts
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            }
 
         if with_clusters:
-            valid_hosts = valid_hosts.union(config_cache.all_active_clusters())
+            valid_hosts = valid_hosts.union(
+                hn
+                for hn in hosts_config.clusters
+                # Inconsistent with `with_foreign_hosts` above.
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            )
 
         hostlist: list[HostName] = []
         for arg in args:
@@ -155,14 +165,14 @@ class Modes:
 
                 num_found = 0
                 for hostname in valid_hosts:
-                    if config.hosttags_match_taglist(
+                    if hosttags_match_taglist(
                         config_cache.tag_list(hostname), (TagID(_) for _ in tagspec)
                     ):
                         hostlist.append(hostname)
                         num_found += 1
                 if num_found == 0:
                     raise MKBailOut(
-                        "Hostname or tag specification '%s' does " "not match any host." % arg
+                        "Host name or tag specification '%s' does " "not match any host." % arg
                     )
         return hostlist
 
@@ -393,7 +403,11 @@ class Mode(Option):
                     continue
 
                 if option.is_deprecated_option(o):
-                    console.warning("%r is deprecated in favour of option %r", o, option.name())
+                    console.warning(
+                        console.format_warning(
+                            f"{o!r} is deprecated in favour of option {option.name()!r}\n"
+                        )
+                    )
 
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)

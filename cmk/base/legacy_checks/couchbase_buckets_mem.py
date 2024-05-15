@@ -6,10 +6,12 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+from cmk.agent_based.v2 import render
+from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
 
 DiscoveryResult = Iterable[tuple[str, dict]]
 
@@ -43,7 +45,7 @@ def check_couchbase_bucket_mem(item, params, parsed):
             "mem_low_wat",
             None,
             infoname="Low watermark",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
         )
 
     high_watermark = data.get("ep_mem_high_wat")
@@ -53,7 +55,7 @@ def check_couchbase_bucket_mem(item, params, parsed):
             "mem_high_wat",
             None,
             infoname="High watermark",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
         )
 
 

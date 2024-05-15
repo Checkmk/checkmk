@@ -1,0 +1,16 @@
+Title: wato: Implementation of Natural sorting of hosts and folders in the host setup page
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1697633228
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces natural sorting order on folders and hosts in host setup page. The elements will be sorted acording to this criteria:
+* Special characters come first
+* Numbers are second
+* Multiple digits next to each other count as one number
+* Strings come last, no case sensivity
+

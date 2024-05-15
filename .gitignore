@@ -20,8 +20,8 @@
 .testmondata
 .venv.lock
 /.venv/
-/.docker_workspace/
-/build_user_home/
+/container_shadow_workspace*/
+/shared_cargo_folder/
 *.cookie
 *.gcno
 *.gcov
@@ -51,18 +51,17 @@ check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
-agent-receiver/dist/*
 agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 doc/documentation/*.png
 doc/documentation/*.cmapx
+version_txt_from_previous_run
 GPATH
 GRTAGS
 GTAGS
 htmlcov/
-agent-receiver/agent_receiver.egg-info
-agent-receiver/pyproject.toml
+logback.log
 mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*
@@ -78,7 +77,6 @@ tests/var/*
 tests/results/*
 tests/.hypothesis/
 /results
-/buildscripts/infrastructure/build-nodes/scripts/defines.make
 /buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 /bazel-*
 
@@ -101,3 +99,7 @@ tests/.hypothesis/
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
+
+# gui-e2e tests: playwright specific ignores
+test-results/
+*.png

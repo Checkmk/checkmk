@@ -1,4 +1,4 @@
-Title: hr_mem: don't crash on invalid SNMP values for `hrStorageType`
+Title: hr_mem: don't crash on invalid SNMP values for hrStorageType
 Class: fix
 Compatible: compat
 Component: checks

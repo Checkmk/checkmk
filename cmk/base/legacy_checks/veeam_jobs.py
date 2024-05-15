@@ -18,6 +18,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_veeam_jobs(info):
     return [(x[0], None) for x in info]
@@ -62,7 +64,12 @@ def check_veeam_jobs(item, _no_params, info):
         )
 
 
+def parse_veeam_jobs(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["veeam_jobs"] = LegacyCheckDefinition(
+    parse_function=parse_veeam_jobs,
     service_name="VEEAM Job %s",
     discovery_function=inventory_veeam_jobs,
     check_function=check_veeam_jobs,

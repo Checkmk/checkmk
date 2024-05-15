@@ -10,7 +10,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 hp_sts_drvbox_type_map = {
     "1": "other",
@@ -118,7 +119,12 @@ def check_hp_sts_drvbox(item, _no_params, info):
     return (3, "Controller not found in snmp data")
 
 
+def parse_hp_sts_drvbox(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hp_sts_drvbox"] = LegacyCheckDefinition(
+    parse_function=parse_hp_sts_drvbox,
     detect=contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.8.2.1.1",

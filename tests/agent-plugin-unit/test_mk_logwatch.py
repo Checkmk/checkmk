@@ -15,6 +15,7 @@ import sys
 from typing import Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 if sys.version_info[0] == 2:
     import agents.plugins.mk_logwatch_2 as lw  # pylint: disable=syntax-error
@@ -279,7 +280,7 @@ def test_read_config_logfiles(parsed_config):
         ("local", os.path.join("/path/to/config", "logwatch.state.local")),
         ("::ffff:192.168.1.2", os.path.join("/path/to/config", "logwatch.state.my_cluster")),
     ])
-def test_get_status_filename(env_var: str, expected_status_filename: str, monkeypatch ) -> None:  # type: ignore[no-untyped-def]
+def test_get_status_filename(env_var: str, expected_status_filename: str, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(lw, "MK_VARDIR", '/path/to/config')
     fake_config = [
         lw.ClusterConfigBlock(
@@ -477,7 +478,7 @@ def test_ip_in_subnetwork() -> None:
     (b'\xFF\xFE', 'utf_16', 2),
     (b'no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
-def test_log_lines_iter_encoding(monkeypatch, buff:bytes, encoding:str, position:int) -> None:  # type: ignore[no-untyped-def]
+def test_log_lines_iter_encoding(monkeypatch: MonkeyPatch, buff:bytes, encoding:str, position:int) -> None:
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'close', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)

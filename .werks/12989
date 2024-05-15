@@ -1,4 +1,4 @@
-Title: <tt>mem_used</tt>: "KeyError: 'SwapTotal'"
+Title: mem_used: "KeyError: 'SwapTotal'"
 Class: fix
 Compatible: compat
 Component: inv

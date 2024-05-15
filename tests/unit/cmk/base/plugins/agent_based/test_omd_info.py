@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.checkengine.discovery import HostLabel
-
 from cmk.base.plugins.agent_based import omd_info
+
+from cmk.agent_based.v1 import HostLabel
 
 
 def test_label_with_sites() -> None:

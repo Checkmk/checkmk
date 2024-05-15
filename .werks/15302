@@ -1,0 +1,15 @@
+Title: dell_poweredge_status: crash on unknown state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698738832
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+If the device returned an unknown state for <tt>globalSystemStatus</tt>
+dell_poweredge_status crashed with error <tt>ValueError: not enough values to
+unpack (expected 2, got 1)</tt>.
+
+The new behavior is, that the service will be cirital and report <tt>unknown
+state</tt> as system status.

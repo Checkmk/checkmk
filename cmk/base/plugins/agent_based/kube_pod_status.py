@@ -6,9 +6,7 @@
 import re
 import time
 from collections.abc import MutableMapping, Sequence
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -20,16 +18,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.kube.schemata.api import (
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
-    erroneous_or_incomplete_containers,
-    pod_status_message,
-    PodContainers,
-    PodLifeCycle,
-    VSResultAge,
 )
+from cmk.plugins.kube.schemata.section import PodContainers, PodLifeCycle
+from cmk.plugins.lib.kube import erroneous_or_incomplete_containers, pod_status_message, VSResultAge
 
 DESIRED_PHASE = [
     "Running",

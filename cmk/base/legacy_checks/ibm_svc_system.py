@@ -78,6 +78,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_ibm_svc_system(info):
     return [(None, None)]
@@ -93,7 +95,12 @@ def check_ibm_svc_system(item, _no_params, info):
     return 0, message
 
 
+def parse_ibm_svc_system(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ibm_svc_system"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_system,
     service_name="Info",
     discovery_function=inventory_ibm_svc_system,
     check_function=check_ibm_svc_system,

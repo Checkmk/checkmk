@@ -8,6 +8,7 @@
 #include <bitset>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <stdexcept>
 
@@ -29,16 +30,15 @@ class IHost;
 class IService;
 
 namespace {
-
 class LogRow {
 public:
-    LogRow(const LogEntry &entry_, ICore *mc)
+    LogRow(const LogEntry &entry_, const ICore &core)
         : entry{&entry_}
-        , hst{mc->find_host(entry_.host_name())}
-        , svc{mc->find_service(entry_.host_name(),
-                               entry_.service_description())}
-        , ctc{mc->find_contact(entry_.contact_name())}
-        , command{mc->find_command(entry_.command_name())} {}
+        , hst{core.find_host(entry_.host_name())}
+        , svc{core.find_service(entry_.host_name(),
+                                entry_.service_description())}
+        , ctc{core.find_contact(entry_.contact_name())}
+        , command{core.find_command(entry_.command_name())} {}
 
     const LogEntry *entry;
     const IHost *hst;
@@ -46,14 +46,14 @@ public:
     const IContact *ctc;
     Command command;
 };
-
 }  // namespace
 
-TableLog::TableLog(ICore *mc, LogCache *log_cache)
-    : Table(mc), _log_cache(log_cache) {
+using row_type = LogRow;
+
+TableLog::TableLog(ICore *mc, LogCache *log_cache) : _log_cache(log_cache) {
     const ColumnOffsets offsets{};
     auto offsets_entry{
-        offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};
+        offsets.add([](Row r) { return r.rawData<row_type>()->entry; })};
     addColumn(std::make_unique<TimeColumn<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) { return r.time(); }));
@@ -118,19 +118,19 @@ TableLog::TableLog(ICore *mc, LogCache *log_cache)
         offsets_entry, [](const LogEntry &r) { return r.command_name(); }));
 
     // join host and service tables
-    TableHosts::addColumns(this, "current_host_", offsets.add([](Row r) {
-        return r.rawData<LogRow>()->hst;
+    TableHosts::addColumns(this, *mc, "current_host_", offsets.add([](Row r) {
+        return r.rawData<row_type>()->hst;
     }),
                            LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(
-        this, "current_service_",
-        offsets.add([](Row r) { return r.rawData<LogRow>()->svc; }),
+        this, *mc, "current_service_",
+        offsets.add([](Row r) { return r.rawData<row_type>()->svc; }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::yes);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
-        return r.rawData<LogRow>()->ctc;
+        return r.rawData<row_type>()->ctc;
     }));
     TableCommands::addColumns(this, "current_command_", offsets.add([](Row r) {
-        return &r.rawData<LogRow>()->command;
+        return &r.rawData<row_type>()->command;
     }));
 }
 
@@ -147,24 +147,23 @@ bool rowWithoutHost(const LogRow &lr) {
 }
 }  // namespace
 
-void TableLog::answerQuery(Query &query, const User &user) {
-    auto log_filter = constructFilter(query, core()->maxLinesPerLogFile());
+void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
+    auto log_filter = constructFilter(query, core.maxLinesPerLogFile());
     if (log_filter.classmask == 0) {
         return;
     }
 
-    auto is_authorized = [&user](const LogRow &lr) {
+    auto is_authorized = [&user](const row_type &row) {
         // If we have an AuthUser, suppress entries for messages with hosts
         // that do not exist anymore, otherwise use the common authorization
         // logic.
-        return user.is_authorized_for_object(lr.hst, lr.svc,
-                                             rowWithoutHost(lr));
+        return user.is_authorized_for_object(row.hst, row.svc,
+                                             rowWithoutHost(row));
     };
 
-    auto process = [is_authorized, core = core(),
-                    &query](const LogEntry &entry) {
-        LogRow r{entry, core};
-        return !is_authorized(r) || query.processDataset(Row{&r});
+    auto process = [is_authorized, &core, &query](const LogEntry &entry) {
+        row_type row{entry, core};
+        return !is_authorized(row) || query.processDataset(Row{&row});
     };
     _log_cache->for_each(log_filter, process);
 }

@@ -10,6 +10,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_db2_version(info):
     for line in info:
@@ -30,7 +32,12 @@ def check_db2_version(item, _no_params, info):
     return 2, "Instance is down"
 
 
+def parse_db2_version(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["db2_version"] = LegacyCheckDefinition(
+    parse_function=parse_db2_version,
     service_name="DB2 Instance %s",
     discovery_function=inventory_db2_version,
     check_function=check_db2_version,

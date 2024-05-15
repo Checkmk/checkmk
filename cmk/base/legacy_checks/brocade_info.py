@@ -4,16 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    any_of,
-    equals,
-    exists,
-    SNMPTree,
-    startswith,
-)
+
+from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, startswith, StringTable
 
 
 def inventory_brocade_info(info):
@@ -68,7 +64,12 @@ def check_brocade_info(item, params, info):
     return 3, "no information found"
 
 
+def parse_brocade_info(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["brocade_info"] = LegacyCheckDefinition(
+    parse_function=parse_brocade_info,
     detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588"),

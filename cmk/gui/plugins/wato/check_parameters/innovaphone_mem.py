@@ -9,24 +9,25 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Percentage, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Migrate, Percentage
 
 
 def _parameter_valuespec_innovaphone_mem():
-    return Tuple(
-        title=_("Specify levels in percentage of total RAM"),
-        elements=[
-            Percentage(
-                title=_("Warning at a usage of"),
-                # xgettext: no-python-format
-                unit=_("% of RAM"),
-            ),
-            Percentage(
-                title=_("Critical at a usage of"),
-                # xgettext: no-python-format
-                unit=_("% of RAM"),
-            ),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Percentage,
+                        title=_("Levels in percentage of total RAM"),
+                    ),
+                )
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 
@@ -35,6 +36,6 @@ rulespec_registry.register(
         check_group_name="innovaphone_mem",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_innovaphone_mem,
-        title=lambda: _("Innovaphone Memory Usage"),
+        title=lambda: _("Innovaphone memory usage"),
     )
 )

@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from tests.unit.conftest import FixRegister
 
@@ -16,7 +17,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 _STRING_TABLE = [
@@ -55,7 +56,7 @@ def test_check_mongodb_collections(
     check_plugin: CheckPlugin,
     section: Mapping[str, Any],
 ) -> None:
-    with on_time(1659514516, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("UTC"))):
         assert list(
             check_plugin.check_function(
                 item="config.system.sessions",

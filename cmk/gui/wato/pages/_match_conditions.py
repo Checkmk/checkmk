@@ -47,9 +47,11 @@ def site_rule_match_condition(only_sites_with_replication: bool) -> DictionaryEn
         DualListChoice(
             title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of the selected sites."),
-            choices=get_activation_site_choices
-            if only_sites_with_replication
-            else get_configured_site_choices,
+            choices=(
+                get_activation_site_choices
+                if only_sites_with_replication
+                else get_configured_site_choices
+            ),
         ),
     )
 
@@ -74,10 +76,8 @@ def _multi_folder_rule_match_condition() -> DictionaryEntry:
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs["choices"] = folder_tree().folder_choices_fulltitle
-        kwargs.setdefault("title", _("Folder"))
-        DropdownChoice.__init__(self, **kwargs)
+    def __init__(self, title: str, help: str) -> None:  # pylint: disable=redefined-builtin
+        super().__init__(title=title, help=help, choices=folder_tree().folder_choices_fulltitle)
 
 
 def common_host_rule_match_conditions() -> list[DictionaryEntry]:

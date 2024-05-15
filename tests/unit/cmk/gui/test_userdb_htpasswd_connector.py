@@ -73,7 +73,16 @@ def test_truncation_error() -> None:
 def test_user_connector_verify_password(
     uid: UserId, password: Password, expect: CheckCredentialsResult
 ) -> None:
-    assert htpasswd.HtpasswdUserConnector({}).check_credentials(uid, password) == expect
+    assert (
+        htpasswd.HtpasswdUserConnector(
+            {
+                "type": "htpasswd",
+                "id": "htpasswd",
+                "disabled": False,
+            }
+        ).check_credentials(uid, password)
+        == expect
+    )
 
 
 @pytest.mark.parametrize(
@@ -88,4 +97,10 @@ def test_user_connector_verify_password_locked_users(
     password: Password,
 ) -> None:
     with pytest.raises(MKUserError, match="User is locked"):
-        htpasswd.HtpasswdUserConnector({}).check_credentials(uid, password)
+        htpasswd.HtpasswdUserConnector(
+            {
+                "type": "htpasswd",
+                "id": "htpasswd",
+                "disabled": False,
+            }
+        ).check_credentials(uid, password)

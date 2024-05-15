@@ -31,7 +31,7 @@ def check_prism_cluster_io(params: Mapping[str, Any], section: Section) -> Check
             levels_upper=params["io"],
             metric_name="prism_cluster_iobw",
             label="I/O Bandwidth",
-            render_func=lambda d: "%.2f MB/s" % d,
+            render_func=lambda d: f"{d:.2f} MB/s",
         )
 
     iops_used = section.get("stats", {}).get("controller_num_iops")
@@ -53,7 +53,7 @@ def check_prism_cluster_io(params: Mapping[str, Any], section: Section) -> Check
             levels_upper=params["iolat"],
             metric_name="prism_cluster_iolatency",
             label="I/O Latency",
-            render_func=lambda d: "%.1f ms" % d,
+            render_func=lambda d: f"{d:.1f} ms",
         )
 
 

@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping
 from copy import deepcopy
+from zoneinfo import ZoneInfo
 
 import pytest
-from freezegun import freeze_time
-
-from tests.testlib import set_timezone
+import time_machine
 
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -18,8 +18,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import fileinfo as fileinfo_utils
-from cmk.base.plugins.agent_based.utils.fileinfo import (
+
+from cmk.plugins.lib import fileinfo as fileinfo_utils
+from cmk.plugins.lib.fileinfo import (
     discovery_fileinfo_groups,
     DiscoveryParams,
     Fileinfo,
@@ -548,7 +549,7 @@ def test_fileinfo_discovery(
     expected_result: DiscoveryResult,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         assert list(fileinfo_utils.discovery_fileinfo(params, section)) == expected_result
 
 
@@ -773,7 +774,6 @@ def test_fileinfo_discovery(
         ),
     ],
 )
-@pytest.mark.skip(reason="flaky)")  # should be fixed with CMK-14223
 def test_fileinfo_check(
     info: StringTable,
     item: str,
@@ -837,7 +837,7 @@ def test_fileinfo_group_discovery(
     expected_result: DiscoveryResult,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         assert list(fileinfo_utils.discovery_fileinfo_groups(params, section)) == expected_result
 
 
@@ -967,7 +967,7 @@ def test_fileinfo_group_discovery(
         ),
     ],
 )
-@freeze_time("2021-07-12 12:00")
+@time_machine.travel(datetime.datetime(2021, 7, 12, 12, tzinfo=ZoneInfo("UTC")))
 def test_fileinfo_groups_check(
     info: StringTable,
     item: str,
@@ -975,5 +975,4 @@ def test_fileinfo_groups_check(
     expected_result: CheckResult,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-    with set_timezone("UTC"):
-        assert list(fileinfo_plugin.check_fileinfo_groups(item, params, section)) == expected_result
+    assert list(fileinfo_plugin.check_fileinfo_groups(item, params, section)) == expected_result

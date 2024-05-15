@@ -80,7 +80,7 @@ class MKTerminate(MKException):
 
 # This is raised to print an error message and then end the program.
 # The program should catch this at top level and end exit the program
-# with exit code 3, in order to be compatible with monitoring plugin API.
+# with exit code 3, in order to be compatible with monitoring plug-in API.
 class MKBailOut(MKException):
     pass
 

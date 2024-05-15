@@ -17,6 +17,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_solaris_multipath(info):
     for device, _total, operational in info:
@@ -67,9 +69,15 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
     return None
 
 
+def parse_solaris_multipath(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["solaris_multipath"] = LegacyCheckDefinition(
+    parse_function=parse_solaris_multipath,
     service_name="Multipath %s",
     discovery_function=inventory_solaris_multipath,
     check_function=check_solaris_multipath,
     check_ruleset_name="multipath",
+    check_default_parameters={},  # overwritten by discovery
 )

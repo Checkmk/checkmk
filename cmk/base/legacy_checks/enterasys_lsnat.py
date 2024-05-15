@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint, state_markers
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, exists, SNMPTree, startswith
+
+from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
 
 
 def inventory_enterasys_lsnat(info):
@@ -35,7 +36,12 @@ def check_enterasys_lsnat(_no_item, params, info):
     return state, "Current bindings %d%s" % (lsnat_bindings, state_info), perfdata
 
 
+def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["enterasys_lsnat"] = LegacyCheckDefinition(
+    parse_function=parse_enterasys_lsnat,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5624.2.1"),
         exists(".1.3.6.1.4.1.5624.1.2.74.1.1.5.0"),

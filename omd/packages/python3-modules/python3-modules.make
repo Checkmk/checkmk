@@ -22,23 +22,24 @@ PACKAGE_PYTHON3_MODULES_PYTHON         := \
 	LD_LIBRARY_PATH="$$LD_LIBRARY_PATH:$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" \
 	$(PACKAGE_PYTHON_EXECUTABLE)
 
-# on Centos8 we don't build our own OpenSSL, so we have to inform the build about it
-ifeq ($(DISTRO_CODE),el8)
-OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define no-own-openssl=true"
-endif
-
 # on Sles Distros we temporarily need to deactivate SSL checking
 ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
-OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define git-ssl-no-verify=true"
+	OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define git-ssl-no-verify=true"
 endif
 
 $(PYTHON3_MODULES_BUILD):
-	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) //omd/packages/python3-modules:python3-modules-modify
+	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) //omd/packages/python3-modules:python3-modules.tar
 
 $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
-	$(RSYNC) $(PYTHON3_MODULES_BUILD_DIR)/ $(PYTHON3_MODULES_INSTALL_DIR)/
-	$(TOUCH) $@
+	tar xf $(PYTHON3_MODULES_BUILD_DIR).tar -C $(INTERMEDIATE_INSTALL_BASE)/
+	# TODO: Investigate why this fix-up is needed
+	chmod +x $(PYTHON3_MODULES_INSTALL_DIR)/bin/*
 
 $(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)
-	$(RSYNC) $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
-	$(TOUCH) $@
+	$(PACKAGE_PYTHON_EXECUTABLE) -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)/" \
+	    "$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)/"
+	$(RSYNC) --times $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+

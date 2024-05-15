@@ -21,7 +21,8 @@ from cmk.base.plugins.agent_based.mem_used import (
     discover_mem_used,
     inventory_mem_used,
 )
-from cmk.base.plugins.agent_based.utils import memory
+
+from cmk.plugins.lib import memory
 
 from .utils_inventory import sort_inventory_result
 

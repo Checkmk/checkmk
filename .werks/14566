@@ -1,4 +1,4 @@
-Title: <tt>datadog_monitors</tt>: Allow empty custom messages
+Title: datadog_monitors: Allow empty custom messages
 Class: fix
 Compatible: compat
 Component: checks

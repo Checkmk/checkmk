@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.fireeye import DETECT
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.1 1 --> FE-FIREEYE-MIB::feFanIndex.1
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.2 2 --> FE-FIREEYE-MIB::feFanIndex.2
@@ -55,13 +56,22 @@ def check_fireeye_fans(item, params, info):
             yield 0, "Speed: %s RPM" % speed_str
 
 
+def parse_fireeye_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_fireeye_fans(info):
+    return inventory_fireeye_generic(info, True)
+
+
 check_info["fireeye_fans"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_fans,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.4.1.3.1",
         oids=["1", "2", "3", "4"],
     ),
     service_name="Fan %s",
-    discovery_function=lambda info: inventory_fireeye_generic(info, True),
+    discovery_function=discover_fireeye_fans,
     check_function=check_fireeye_fans,
 )

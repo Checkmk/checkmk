@@ -1,0 +1,19 @@
+title: Unitrends: Replication Status
+agents: linux
+catalog: app/unitrends
+license: GPLv2
+distribution: check_mk
+description:
+ Unitrends is an enterprise class backup solution.
+ This check needs the {unitrends_replication} plug-in installed on the unitrends server
+ in order to work. The plug-in will deliver a complete list of all replication entries and
+ her status
+
+ As long all of the jobs are succsessful the check returns a {OK} state. In each other
+ case the check will return {CRITICAL} and deliver the list of the failed replications
+
+item:
+ Target of the replication
+
+discovery:
+ One service is created for each replication target.

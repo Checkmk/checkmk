@@ -8,10 +8,14 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
-from cmk.base.api.agent_based.type_defs import SNMPParseFunction
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckFunction,
+    DiscoveryFunction,
+    SNMPParseFunction,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 parsed = {"Archiv_Test": [("Archiv_Test", 953674.31640625, 944137.5732421875, 0)]}
 check_name = "fast_lta_volumes"
@@ -59,7 +63,7 @@ def test_discovery_fast_lta_volumes(
 @pytest.mark.usefixtures("initialised_item_state")
 def test_check_fast_lta_volumes(check_fast_lta_volumes: CheckFunction) -> None:
     assert list(check_fast_lta_volumes("Archiv_Test", FILESYSTEM_DEFAULT_PARAMS, parsed)) == [
-        Result(state=State.OK, summary="Used: 1.00% - 9.31 GiB of 931 GiB"),
+        Result(state=State.OK, summary="Used: 1.00% - 10.0 GB of 1.00 TB"),
         Metric(
             "fs_used",
             9536.7431640625,

@@ -1,0 +1,9 @@
+Title: SIGNL4: better support of service alerting and two-way status updates
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1698405465
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+

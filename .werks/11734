@@ -1,4 +1,4 @@
-Title: cmk-update-config: <tt>KeyError: 'comment'</tt>
+Title: cmk-update-config: KeyError: 'comment'
 Class: fix
 Compatible: compat
 Component: ec

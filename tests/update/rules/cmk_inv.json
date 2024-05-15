@@ -1,0 +1,94 @@
+[
+  {
+    "ruleset": "active_checks:cmk_inv",
+    "folder": "/",
+    "properties": {
+      "description": "Factory default. Required for the shipped dashboards."
+    },
+    "value_raw": "{'status_data_inventory': True}",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [
+        {
+          "operator": "and",
+          "label_group": [
+            {
+              "operator": "and",
+              "label": "cmk/docker_object:node"
+            }
+          ]
+        }
+      ],
+      "service_label_groups": []
+    }
+  },
+  {
+    "ruleset": "active_checks:cmk_inv",
+    "folder": "/",
+    "properties": {
+      "description": "Factory default. Required for the shipped dashboards."
+    },
+    "value_raw": "{'status_data_inventory': True}",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [
+        {
+          "operator": "and",
+          "label_group": [
+            {
+              "operator": "and",
+              "label": "cmk/check_mk_server:yes"
+            }
+          ]
+        }
+      ],
+      "service_label_groups": []
+    }
+  },
+  {
+    "ruleset": "active_checks:cmk_inv",
+    "folder": "/",
+    "properties": {
+      "description": "Factory default. Required for the shipped dashboards."
+    },
+    "value_raw": "{'status_data_inventory': True}",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [
+        {
+          "operator": "and",
+          "label_group": [
+            {
+              "operator": "and",
+              "label": "cmk/kubernetes:yes"
+            }
+          ]
+        }
+      ],
+      "service_label_groups": []
+    }
+  },
+  {
+    "ruleset": "active_checks:cmk_inv",
+    "folder": "/",
+    "properties": {
+      "description": "Factory default. Required for the shipped dashboards."
+    },
+    "value_raw": "{'status_data_inventory': True}",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [
+        {
+          "operator": "and",
+          "label_group": [
+            {
+              "operator": "and",
+              "label": "cmk/rmk/node_type:local"
+            }
+          ]
+        }
+      ],
+      "service_label_groups": []
+    }
+  }
+]

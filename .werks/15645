@@ -1,0 +1,68 @@
+Title: postgres: Fix Internal error: 'NoneType' object has no attribute 'value_to_json_safe'
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1695631092
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In Werk 16016, an incompatible change to rule `PostgreSQL database and sessions (Linux, Windows)`
+was introduced.  This Werk caused multiple regression bugs, particularly affecting users with
+existing rulesets.
+
+If a user upgraded to 2.1.0p33 and had an existing rule  `PostgreSQL database and sessions (Linux,
+Windows)`, then the would see the following error during upgrade:
+C+:
+- ERROR: Failed to transform rule: (Ruleset: agent_config:mk_postgres, ...}}:
+C-:
+Moreover, if users tried to address the issue by editing the rule, then the following error was
+shown:
+C+:
+Internal error: 'NoneType' object has no attribute 'value_to_json_safe'
+C-:
+With this Werk, the configuration is automatically migrated to the new format and the errors should
+no longer occur. Users, whom upgraded to 2.2.0p8 were not affected by this problem.
+
+If a user updated the agent plugin `mk_postgres.py` with means other than the bakery, then they
+would encounter the following error while executing `mk_postgres.py`:
+C+:
+ValueError: not enough values to unpack (expected 4, got 3)
+C-:
+This error could be addressed by adopting the postgres.cfg in the ways described by Werk 16016.
+However, if the environment file was called `.env`, then another error might occur:
+C+:
+ValueError: Instance name can not be inferred from .env file, instance name should be specified explicitly
+C-:
+With this Werk, these errors no longer occur. Both, old configuration files and configuration files
+where the instance name is empty, are considered to be valid. The absence of an instance name is
+handled in the same way it was handled before Werk 16016.
+
+Note, that an empty instance is still a mistake. If you are affected by any of the two errors above,
+it is recommended to migrate to the configuration format and to specify a non-empty instance name
+explicitely. For example, let's assume your configuration file contains this line:
+C+:
+INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass
+C-:
+Then, you can find the instance name by taking the environment file path (`/home/postgres/db1.env`),
+removing the directory (`db1.env`), and removing everything after the `.` (`db1`). Thus, the new
+format is equivalent to:
+C+:
+INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass:db1
+C-:
+Sometimes, this may fail if your instance name is empty. For example,
+C+:
+INSTANCE=/home/postgres/.env:USER_NAME:/PATH/TO/.pgpass
+C-:
+would result in
+C+:
+INSTANCE=/home/postgres/.env:USER_NAME:/PATH/TO/.pgpass:
+C-:
+With this version of `mk_postgres.py` this configuration is allowed again, but it is not
+recommended. You view your instances, by creating a `psql` session and using the command
+C+:
+postgres-# \l
+C-:
+
+Additionally, Werk 15644 fixes the crash of the postgres_instances check.

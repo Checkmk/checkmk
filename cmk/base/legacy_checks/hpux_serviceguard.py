@@ -24,6 +24,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_hpux_serviceguard(info):
     inventory = []
@@ -51,7 +53,12 @@ def check_hpux_serviceguard(item, _no_params, info):
     return (3, "No such item found")
 
 
+def parse_hpux_serviceguard(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hpux_serviceguard"] = LegacyCheckDefinition(
+    parse_function=parse_hpux_serviceguard,
     service_name="Serviceguard %s",
     discovery_function=inventory_hpux_serviceguard,
     check_function=check_hpux_serviceguard,

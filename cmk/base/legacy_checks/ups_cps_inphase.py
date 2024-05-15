@@ -8,11 +8,15 @@ from typing import Literal
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_CPS
+
+from cmk.agent_based.v2 import SNMPTree
+from cmk.plugins.lib.ups import DETECT_UPS_CPS
 
 
-def parse_ups_cps_inphase(string_table: list[str]) -> dict[Literal["1"], dict[str, float]]:
+def parse_ups_cps_inphase(string_table: list[str]) -> dict[Literal["1"], dict[str, float]] | None:
+    if not string_table:
+        return None
+
     parsed = {}
     for index, stat_name in enumerate(("voltage", "frequency")):
         try:

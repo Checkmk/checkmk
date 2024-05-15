@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.viprinet import DETECT_VIPRINET
+
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 
 def check_viprinet_router(_no_item, params, info):
@@ -37,14 +38,24 @@ def check_viprinet_router(_no_item, params, info):
     return (3, "Undefined Mode")
 
 
+def parse_viprinet_router(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_viprinet_router(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service(parameters={"mode_inv": section[0][0][0]})
+
+
 check_info["viprinet_router"] = LegacyCheckDefinition(
+    parse_function=parse_viprinet_router,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.1",
         oids=["5"],
     ),
     service_name="Router Mode",
-    discovery_function=lambda info: len(info) > 0 and [(None, {"mode_inv": info[0][0][0]})] or [],
+    discovery_function=discover_viprinet_router,
     check_function=check_viprinet_router,
     check_ruleset_name="viprinet_router",
 )

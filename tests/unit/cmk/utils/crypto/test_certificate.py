@@ -3,32 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
+import cryptography.x509 as x509
 import pytest
+import time_machine
 from dateutil.relativedelta import relativedelta
-from freezegun import freeze_time
 
-from cmk.utils.crypto import HashAlgorithm
+from tests.unit.cmk.utils.crypto.certs import rsa_private_keys_equal
+
 from cmk.utils.crypto.certificate import (
     Certificate,
     CertificatePEM,
+    CertificateSigningRequest,
     CertificateWithPrivateKey,
     InvalidExpiryError,
-    InvalidPEMError,
-    InvalidSignatureError,
     PersistedCertificateWithPrivateKey,
-    RsaPrivateKey,
-    Signature,
-    WrongPasswordError,
+    X509Name,
 )
+from cmk.utils.crypto.keys import InvalidSignatureError
 from cmk.utils.crypto.password import Password
-
-# this is the same as in testlib.certs
-FROZEN_NOW = datetime(2023, 1, 1, 8, 0, 0)
+from cmk.utils.crypto.types import InvalidPEMError
 
 
 def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> None:
@@ -38,10 +38,12 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
         == self_signed_cert.private_key.public_key
     )
 
+    assert self_signed_cert.certificate._is_self_signed()
     self_signed_cert.certificate.verify_is_signed_by(self_signed_cert.certificate)
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
-    assert "Checkmk Site" in self_signed_cert.certificate.organization_name
+    assert self_signed_cert.certificate.organization_name is not None
+    assert "Checkmk Testing" in self_signed_cert.certificate.organization_name
 
 
 @pytest.mark.parametrize(
@@ -71,9 +73,9 @@ def test_verify_expiry(
     # time_offset is the time difference to (mocked) certificate creation
     # allowed_drift is the tolerance parameter of verify_expiry (defaults to 2 hours for None)
     #
-    # We assume the cert is valid from FROZEN_NOW til FROZEN_NOW + 2 hours.
+    # We assume self_signed_cert is valid for 2 hours. Otherwise the test will not work.
     #
-    with freeze_time(FROZEN_NOW + time_offset):
+    with time_machine.travel(self_signed_cert.certificate.not_valid_before + time_offset):
         with expectation:
             self_signed_cert.certificate.verify_expiry(allowed_drift)
 
@@ -93,7 +95,7 @@ def test_days_til_expiry(
     when: relativedelta,
     expected_days_remaining: relativedelta,
 ) -> None:
-    with freeze_time(FROZEN_NOW + when):
+    with time_machine.travel(self_signed_cert.certificate.not_valid_before + when):
         assert self_signed_cert.certificate.days_til_expiry() == expected_days_remaining
 
 
@@ -110,53 +112,7 @@ def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivate
     loaded = PersistedCertificateWithPrivateKey.read_files(cert_path, key_path, password)
 
     assert loaded.certificate.serial_number == self_signed_cert.certificate.serial_number
-
-    # mypy doesn't find most attributes of cryptography's RSAPrivateKey as it seems
-    loaded_nums = loaded.private_key._key.private_numbers()  # type: ignore[attr-defined]
-    orig_nums = self_signed_cert.private_key._key.private_numbers()  # type: ignore[attr-defined]
-    assert loaded_nums == orig_nums
-
-
-def test_serialize_rsa_key(tmp_path: Path) -> None:
-    key = RsaPrivateKey.generate(512)
-
-    pem_plain = key.dump_pem(None)
-    assert pem_plain.str.startswith("-----BEGIN PRIVATE KEY-----")
-
-    loaded_plain = RsaPrivateKey.load_pem(pem_plain)
-    assert loaded_plain._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
-
-    pem_enc = key.dump_pem(Password("verysecure"))
-    assert pem_enc.str.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----")
-
-    with pytest.raises((WrongPasswordError, InvalidPEMError)):
-        # This should really be a WrongPasswordError, but for some reason we see an InvalidPEMError
-        # instead. We're not sure if it's an issue of our unit tests or if this confusion can also
-        # happen in production. See also `RsaPrivateKey.load_pem()`.
-        RsaPrivateKey.load_pem(pem_enc, Password("wrong"))
-
-    loaded_enc = RsaPrivateKey.load_pem(pem_enc, Password("verysecure"))
-    assert loaded_enc._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
-
-    pem_pkcs1 = key.dump_legacy_pkcs1()
-    assert pem_pkcs1.str.startswith("-----BEGIN RSA PRIVATE KEY-----")
-
-    pubkey_pem = key.public_key.dump_pem()
-    assert pubkey_pem.str.startswith("-----BEGIN RSA PUBLIC KEY-----")
-
-    pubkey_openssh = key.public_key.dump_openssh()
-    assert pubkey_openssh.startswith("ssh-rsa ")
-
-
-@pytest.mark.parametrize("data", [b"", b"test", b"\0\0\0", "sign here: 📝".encode()])
-def test_verify_rsa_key(data: bytes) -> None:
-    private_key = RsaPrivateKey.generate(1024)
-    signed = private_key.sign_data(data)
-
-    private_key.public_key.verify(signed, data, HashAlgorithm.Sha512)
-
-    with pytest.raises(InvalidSignatureError):
-        private_key.public_key.verify(Signature(b"nope"), data, HashAlgorithm.Sha512)
+    assert rsa_private_keys_equal(loaded.private_key, self_signed_cert.private_key)
 
 
 def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateKey) -> None:
@@ -265,27 +221,149 @@ def test_default_subject_alt_names(self_signed_cert: CertificateWithPrivateKey) 
     assert self_signed_cert.certificate.get_subject_alt_names() == []
 
 
+def test_ec_cert() -> None:
+    # a self signed P256 certificate to act as CA:
+    #   openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 \
+    #       -keyout key.pem -out cert.pem -days 365
+    ca_pem = CertificatePEM(
+        """
+-----BEGIN CERTIFICATE-----
+MIICRTCCAeugAwIBAgIUEny8ZebcY4jqZF9XHElye219vi4wCgYIKoZIzj0EAwIw
+eDELMAkGA1UEBhMCREUxEDAOBgNVBAgMB0JhdmFyaWExHDAaBgNVBAoME0NoZWNr
+bWsgVGVzdGluZyBJbmMxFzAVBgNVBAMMDnAyNTYtdGVzdC1jZXJ0MSAwHgYJKoZI
+hvcNAQkBFhFoZWxsb0BleGFtcGxlLmNvbTAeFw0yMzExMDgxMzEwMDVaFw0yNDEx
+MDcxMzEwMDVaMHgxCzAJBgNVBAYTAkRFMRAwDgYDVQQIDAdCYXZhcmlhMRwwGgYD
+VQQKDBNDaGVja21rIFRlc3RpbmcgSW5jMRcwFQYDVQQDDA5wMjU2LXRlc3QtY2Vy
+dDEgMB4GCSqGSIb3DQEJARYRaGVsbG9AZXhhbXBsZS5jb20wWTATBgcqhkjOPQIB
+BggqhkjOPQMBBwNCAAT+ZbIByiW7aJLwBq3CfBNzcSs5+EvHnjRfZS1D3fHTty+G
+xslQ9dLhjEbuJET0apWkEkBXaJB6+vHpoJpOZdRlo1MwUTAdBgNVHQ4EFgQUEKFg
+CaDe8Hv5OZqdhO7ix0luLekwHwYDVR0jBBgwFoAUEKFgCaDe8Hv5OZqdhO7ix0lu
+LekwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNIADBFAiAqvRhu2oJCsWos
+bZf1yetY8sc2jXaDFlTTHQOp6Zx1FAIhAIjGd+50uRV66LND65uRipKkGOdNazvn
+CdnYjBDhp0Ud
+-----END CERTIFICATE-----"""
+    )
+    ca = Certificate.load_pem(ca_pem)
+    assert ca._is_self_signed()
+    ca.verify_is_signed_by(ca)
+
+    # an ed25519 certificate issued by that CA:
+    #   openssl req -newkey ed25519 -keyout ed25519-key.pem -out ed25519-csr.pem
+    #   openssl x509 -req -in ed25519-csr.pem -CA cert.pem -CAkey key.pem -CAcreateserial \
+    #       -out ed25519-cert.pem -days 365
+    child_pem = CertificatePEM(
+        """
+-----BEGIN CERTIFICATE-----
+MIIB0DCCAXYCFCQEVGZy+jv2HvByTHl3ENBZ7erjMAoGCCqGSM49BAMCMHgxCzAJ
+BgNVBAYTAkRFMRAwDgYDVQQIDAdCYXZhcmlhMRwwGgYDVQQKDBNDaGVja21rIFRl
+c3RpbmcgSW5jMRcwFQYDVQQDDA5wMjU2LXRlc3QtY2VydDEgMB4GCSqGSIb3DQEJ
+ARYRaGVsbG9AZXhhbXBsZS5jb20wHhcNMjMxMTA4MTMxNzM2WhcNMjQxMTA3MTMx
+NzM2WjCBizELMAkGA1UEBhMCREUxDzANBgNVBAgMBkJlcmxpbjEcMBoGA1UECgwT
+Q2hlY2ttayBUZXN0aW5nIEluYzEQMA4GA1UECwwHT3V0cG9zdDEbMBkGA1UEAwwS
+ZWQyNTUxOS1jaGlsZC1jZXJ0MR4wHAYJKoZIhvcNAQkBFg9ieWVAZXhhbXBsZS5j
+b20wKjAFBgMrZXADIQDGG15BAIjPlmsElcmidhhthCLuAD2uJtv6r/W9FCC0GjAK
+BggqhkjOPQQDAgNIADBFAiEA4QZF5KNx3hDIlThEOW+2o05/wCLOYtO8jJy4iuaK
+ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
+-----END CERTIFICATE-----"""
+    )
+    child = Certificate.load_pem(child_pem)
+    child.verify_is_signed_by(ca)
+
+
 @pytest.mark.parametrize(
-    "sans,expected",
+    "sans",
     (
-        ([], []),
-        (["foo.bar", "bar.foo"], ["foo.bar", "bar.foo"]),
+        ([]),
+        (["foo.bar", "bar.foo"]),
     ),
 )
-def test_subject_alt_names(
-    self_signed_cert: CertificateWithPrivateKey, sans: list[str], expected: list[str]
-) -> None:
+def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: list[str]) -> None:
     """test setting and retrieval of subject-alt-names (DNS)"""
     assert (
         Certificate._create(
-            public_key=self_signed_cert.private_key.public_key,
-            signing_key=self_signed_cert.private_key,
-            common_name="unittest",
-            organization="unit",
-            expiry=relativedelta(days=1),
-            start_date=datetime.now(),
-            organizational_unit_name="unit",
+            subject_public_key=self_signed_cert.private_key.public_key,
+            subject_name=X509Name.create(common_name="sans_test"),
             subject_alt_dns_names=sans,
+            expiry=relativedelta(days=1),
+            start_date=datetime.now(timezone.utc),
+            issuer_signing_key=self_signed_cert.private_key,
+            issuer_name=X509Name.create(common_name="sans_test"),
         ).get_subject_alt_names()
-        == expected
+        == sans
     )
+
+
+@pytest.mark.parametrize(
+    "signing_cert_fixture,subject_key_fixture",
+    [
+        # this tries various kinds of certs/keys both as CA and as CSR subject
+        ("self_signed_cert", "self_signed_ec_cert"),
+        ("self_signed_ec_cert", "self_signed_ed25519_cert"),
+        ("self_signed_ed25519_cert", "self_signed_cert"),
+    ],
+)
+def test_sign_csr(
+    signing_cert_fixture: str,
+    subject_key_fixture: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    signing_certificate = request.getfixturevalue(signing_cert_fixture)
+    # re-use the keys from our self-signed certs for convenience
+    subject_key = request.getfixturevalue(subject_key_fixture).private_key
+
+    csr = CertificateSigningRequest.create(
+        subject_name=X509Name.create(common_name="csr_test", organization_name="csr_test_org"),
+        subject_private_key=subject_key,
+    )
+
+    with time_machine.travel(signing_certificate.certificate.not_valid_before):
+        new_cert = signing_certificate.sign_csr(csr, expiry=relativedelta(days=1))
+
+    assert new_cert.not_valid_before == signing_certificate.certificate.not_valid_before
+    assert (
+        new_cert.not_valid_after
+        == signing_certificate.certificate.not_valid_before + relativedelta(days=1)
+    )
+
+    new_cert.verify_is_signed_by(signing_certificate.certificate)
+    assert (
+        new_cert.public_key == subject_key.public_key
+    ), "The public key in the certificate matches the private key in the CSR"
+    assert (
+        new_cert.issuer == signing_certificate.certificate.subject
+    ), "The issuer of the new certificate is the self_signed_cert"
+
+
+def test_may_sign_certificates() -> None:
+    pem = CertificatePEM(
+        # openssl req -x509 -newkey rsa:1024 -sha256 -nodes -keyout key.pem -out cert.pem -days 365
+        """-----BEGIN CERTIFICATE-----
+MIIC3jCCAkegAwIBAgIUFfy37IHOcIANa5IVx93DEmYO0zowDQYJKoZIhvcNAQEL
+BQAwgYAxCzAJBgNVBAYTAkRFMRAwDgYDVQQIDAdCYXZhcmlhMSEwHwYDVQQKDBhJ
+bnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQxGDAWBgNVBAMMD2NoZWNrbWtfdGVzdF9j
+YTEiMCAGCSqGSIb3DQEJARYTdGVzdGluZ0BleGFtcGxlLmNvbTAeFw0yMzExMTcx
+NTIxMjhaFw0yNDExMTYxNTIxMjhaMIGAMQswCQYDVQQGEwJERTEQMA4GA1UECAwH
+QmF2YXJpYTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMRgwFgYD
+VQQDDA9jaGVja21rX3Rlc3RfY2ExIjAgBgkqhkiG9w0BCQEWE3Rlc3RpbmdAZXhh
+bXBsZS5jb20wgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBANR+1oqFEX52v9ZJ
+xyEh93DnV5Zp9H3scxeFnnjpK0epFFCM/J6yiggws845+MYv7tvVM2rQHO8ud/2i
+fpe5yuqcWtFfgm9UDHqsndiANyFKjkJ6PDfPLeyWmmXZuoHMPK3He/5usP6ovxYb
+5OfqM2ZwleMoMSrVmjGHv5rfvYdXAgMBAAGjUzBRMB0GA1UdDgQWBBSQSbT3kTAg
+QKpT/KrKFerYoxe17DAfBgNVHSMEGDAWgBSQSbT3kTAgQKpT/KrKFerYoxe17DAP
+BgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4GBABmlbyhZeb7sx3BH3C0h
+JPEGQcTEa+Xvh3EFz2mMldkkZP1hXqkiFMTHZGJ2Q3HXrUJ/jFUGUKRnWAmxUfu/
+/pUPP2kOchlsjMPP6JCeZLsB6N/3fIRqHhamI5jr6KyBB0eJnR7QgB3sG8liPFbQ
+JxDm8nhVOD3txg6wadiqhhdB
+-----END CERTIFICATE-----
+"""
+    )
+    cert = Certificate.load_pem(pem)
+    with pytest.raises(x509.ExtensionNotFound):
+        # The tested cert does not set the key usage extension at all,
+        # this should not prevent certificate signing.
+        # Only if the extension is there but the key_cert_sign bit is missing the cert should not be
+        # used for signing.
+        # This is a regression test.
+        cert._cert.extensions.get_extension_for_class(x509.KeyUsage)
+
+    assert cert.may_sign_certificates()

@@ -5,7 +5,8 @@
 
 import time
 from collections.abc import Mapping
-from typing import NamedTuple
+
+from cmk.plugins.lib import memory
 
 from .agent_based_api.v1 import (
     Attributes,
@@ -19,16 +20,13 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult
-from .utils import memory
 
 
-class MemBytes(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "MemBytes", [("bytes", int), ("kb", float), ("mb", float)]
-    )
-):
-    def __new__(cls, value: float | int):  # type: ignore[no-untyped-def]
-        return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
+class MemBytes:
+    def __init__(self, value: float | int) -> None:
+        self.bytes = int(value * 1024)
+        self.kb = float(value)
+        self.mb = value / 1024.0
 
     def render(self) -> str:
         return render.bytes(self.bytes)

@@ -10,13 +10,13 @@ checkname = "netscaler_mem"
 
 info = [["4.2", "23"]]
 
-discovery = {"": [(None, (80.0, 90.0))]}
+discovery = {"": [(None, {})]}
 
 checks = {
     "": [
         (
             None,
-            (80.0, 90.0),
+            {"levels": (80.0, 90.0)},
             [
                 (
                     0,

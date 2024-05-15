@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.plugins.agent_based.utils import postgres
+from cmk.plugins.lib import postgres
 
 from .agent_based_api.v1 import (
     check_levels,

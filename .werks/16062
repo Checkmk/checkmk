@@ -1,0 +1,10 @@
+Title: cisco_webex_teams: Fix failed notification on response code 204
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1697549543
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The notification script produced a failed notification, even if the processing was successful.

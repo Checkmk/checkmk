@@ -1,0 +1,10 @@
+Title: reporting: Default values of the "Horizontal Rule" element were filled incorrectly
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1697632406
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+Before this Werk the colour values for the "Horizontal Rule" element were greater than 255. This Werk solves the problem, providing valid values between 0 and 255.

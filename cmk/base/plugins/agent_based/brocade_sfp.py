@@ -4,17 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypedDict
 
-from typing_extensions import TypedDict
-
-from cmk.base.plugins.agent_based.utils.brocade import (
+from cmk.plugins.lib.brocade import (
     brocade_fcport_getitem,
     brocade_fcport_inventory_this_port,
     DETECT,
     DISCOVERY_DEFAULT_PARAMETERS,
 )
-from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamDict
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 from .agent_based_api.v1 import (
     check_levels,

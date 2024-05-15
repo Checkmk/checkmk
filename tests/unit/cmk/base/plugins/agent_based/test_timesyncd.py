@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+# pylint: disable=protected-access
 
-from tests.testlib import on_time
+import datetime
+from zoneinfo import ZoneInfo
+
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based import timesyncd
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -206,10 +210,12 @@ def test_check_timesyncd_freeze(
     params: timesyncd.CheckParams,
     result: CheckResult,
 ) -> None:
-    server_time = 1569922392.37 + 60 * 60 * 22 + 60, "UTC"
+    server_time = 1569922392.37 + 60 * 60 * 22 + 60
     section = timesyncd.parse_timesyncd(string_table)
     section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)
-    with on_time(*server_time):
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(server_time, tz=ZoneInfo("UTC")), tick=False
+    ):
         assert list(timesyncd.check_timesyncd(params, section, section_ntpmessage)) == result
 
 
@@ -237,10 +243,12 @@ def test_check_timesyncd_negative_time(
     params: timesyncd.CheckParams,
     result: CheckResult,
 ) -> None:
-    wrong_server_time = 1569922392.37 - 60, "UTC"
+    wrong_server_time = 1569922392.37 - 60
     section = timesyncd.parse_timesyncd(string_table)
     section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)
-    with on_time(*wrong_server_time):
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(wrong_server_time, tz=ZoneInfo("UTC")), tick=False
+    ):
         assert list(timesyncd.check_timesyncd(params, section, section_ntpmessage)) == result
 
 

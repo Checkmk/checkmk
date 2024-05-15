@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 from cmk.base.plugins.agent_based.printer_pages import parse_printer_pages
 from cmk.base.plugins.agent_based.printer_pages_canon import parse_printer_pages_canon
 from cmk.base.plugins.agent_based.printer_pages_ricoh import parse_printer_pages_ricoh
-from cmk.base.plugins.agent_based.utils.printer import check_printer_pages_types, Section
+
+from cmk.plugins.lib.printer import check_printer_pages_types, Section
 
 
 @pytest.mark.parametrize(

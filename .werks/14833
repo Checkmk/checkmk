@@ -11,5 +11,5 @@ Version: 2.2.0b1
 During the check plugin migration the detection of Aruba devices changed which
 was not correct.
 
-If the related hosts in Checkmk were discovered via {{Full Scan}} and maybe
+If the related hosts in Checkmk were discovered via "Full Scan" and maybe
 vanished then you have to rediscover these hosts.

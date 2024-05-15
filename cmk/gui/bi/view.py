@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import typing
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any, Literal
@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
 
-from cmk.gui.bi.bi_manager import BIManager
+from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
 from cmk.gui.bi.foldable_tree_renderer import (
     ABCFoldableTreeRenderer,
     FoldableTreeRendererBottomUp,
@@ -27,9 +27,9 @@ from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _, _l, ungettext
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
@@ -158,7 +158,7 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("BI Hostname Aggregations")
+        return _("BI host name aggregations")
 
     @property
     def table(self) -> RowTable:
@@ -413,7 +413,7 @@ class PainterAggrIcons(Painter):
     def ident(self) -> str:
         return "aggr_icons"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Links")
 
     @property
@@ -421,7 +421,7 @@ class PainterAggrIcons(Painter):
         return ["aggr_group", "aggr_name", "aggr_effective_state", "aggr_compiled_aggregation"]
 
     @property
-    def printable(self):
+    def printable(self) -> bool:
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -436,12 +436,28 @@ class PainterAggrIcons(Painter):
             ]
         )
 
-        bi_frozen_diff_url = "view.py?" + urlencode_vars([("view_name", "aggr_frozen_diff")])
+        bi_frozen_diff_url = "view.py?" + urlencode_vars(
+            [("aggr_name", row["aggr_name"]), ("view_name", "aggr_frozen_diff")]
+        )
 
         frozen_info = row["aggr_compiled_aggregation"].frozen_info
         with output_funnel.plugged():
             if frozen_info is not None:
-                html.icon_button(bi_frozen_diff_url, _("This aggregation is frozen"), "bi_freeze")
+                compiled_branch = load_compiled_branch(
+                    frozen_info.based_on_aggregation_id, frozen_info.based_on_branch_title
+                )
+                frozen_elements = row["aggr_compiled_aggregation"].branches[0].required_elements()
+                live_elements = compiled_branch.required_elements()
+                if frozen_elements.symmetric_difference(live_elements):
+                    html.icon_button(
+                        bi_frozen_diff_url,
+                        _("This aggregation is frozen. The live version has changes."),
+                        {"icon": "bi_freeze", "emblem": "warning"},
+                    )
+                else:
+                    html.icon_button(
+                        bi_frozen_diff_url, _("This aggregation is frozen"), "bi_freeze"
+                    )
             html.icon_button(bi_map_url, _("Visualize this aggregation"), "aggr")
             html.icon_button(single_url, _("Show only this aggregation"), "showbi")
             html.icon_button(
@@ -470,7 +486,7 @@ class PainterAggrInDowntime(Painter):
     def ident(self) -> str:
         return "aggr_in_downtime"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("In Downtime")
 
     @property
@@ -486,7 +502,7 @@ class PainterAggrAcknowledged(Painter):
     def ident(self) -> str:
         return "aggr_acknowledged"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Acknowledged")
 
     @property
@@ -512,10 +528,10 @@ class PainterAggrState(Painter):
     def ident(self) -> str:
         return "aggr_state"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregated state")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("State")
 
     @property
@@ -552,10 +568,10 @@ class PainterAggrRealState(Painter):
     def ident(self) -> str:
         return "aggr_real_state"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregated real state (never assumed)")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("R.State")
 
     @property
@@ -571,10 +587,10 @@ class PainterAggrAssumedState(Painter):
     def ident(self) -> str:
         return "aggr_assumed_state"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregated assumed state")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Assumed")
 
     @property
@@ -590,10 +606,10 @@ class PainterAggrGroup(Painter):
     def ident(self) -> str:
         return "aggr_group"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregation group")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Group")
 
     @property
@@ -609,10 +625,10 @@ class PainterAggrName(Painter):
     def ident(self) -> str:
         return "aggr_name"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregation name")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Aggregation")
 
     @property
@@ -628,10 +644,10 @@ class PainterAggrOutput(Painter):
     def ident(self) -> str:
         return "aggr_output"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregation status output")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Output")
 
     @property
@@ -642,7 +658,9 @@ class PainterAggrOutput(Painter):
         return ("", row["aggr_output"])
 
 
-def paint_aggr_hosts(row, link_to_view):
+def paint_aggr_hosts(
+    row: Row, link_to_view: str, *, request: Request  # pylint: disable=redefined-outer-name
+) -> CellSpec:
     h = []
     for site, host in row["aggr_hosts"]:
         url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
@@ -655,10 +673,10 @@ class PainterAggrHosts(Painter):
     def ident(self) -> str:
         return "aggr_hosts"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregation: affected hosts")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Hosts")
 
     @property
@@ -666,7 +684,7 @@ class PainterAggrHosts(Painter):
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggr_hosts(row, "aggr_host")
+        return paint_aggr_hosts(row, "aggr_host", request=self.request)
 
 
 class PainterAggrHostsServices(Painter):
@@ -674,10 +692,10 @@ class PainterAggrHostsServices(Painter):
     def ident(self) -> str:
         return "aggr_hosts_services"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregation: affected hosts (link to host page)")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Hosts")
 
     @property
@@ -685,7 +703,7 @@ class PainterAggrHostsServices(Painter):
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggr_hosts(row, "host")
+        return paint_aggr_hosts(row, "host", request=self.request)
 
 
 class PainterOptionAggrExpand(PainterOption):
@@ -764,10 +782,11 @@ class PainterOptionAggrWrap(PainterOption):
 
 def paint_aggregated_tree_state(
     row: Row,
+    *,
+    painter_options: PainterOptions,
     force_renderer_cls: type[ABCFoldableTreeRenderer] | None = None,
     show_frozen_difference: bool = False,
 ) -> CellSpec:
-    painter_options = PainterOptions.get_instance()
     treetype = painter_options.get("aggr_treetype")
     expansion_level = int(painter_options.get("aggr_expand"))
     only_problems = painter_options.get("aggr_onlyproblems") == "1"
@@ -808,10 +827,10 @@ class PainterAggrTreestate(Painter):
     def ident(self) -> str:
         return "aggr_treestate"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Complete tree")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Tree")
 
     @property
@@ -819,20 +838,20 @@ class PainterAggrTreestate(Painter):
         return ["aggr_treestate", "aggr_hosts"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggregated_tree_state(row)
+        return paint_aggregated_tree_state(row, painter_options=self._painter_options)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
 class PainterAggrTreestateFrozenDiff(Painter):
@@ -840,10 +859,10 @@ class PainterAggrTreestateFrozenDiff(Painter):
     def ident(self) -> str:
         return "aggr_treestate_frozen_diff"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Difference between frozen and live aggregation")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Difference between frozen and live aggregation")
 
     @property
@@ -851,7 +870,7 @@ class PainterAggrTreestateFrozenDiff(Painter):
         return ["aggr_treestate", "aggr_hosts", "aggr_compiled_aggregation"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -859,20 +878,22 @@ class PainterAggrTreestateFrozenDiff(Painter):
         if frozen_info is None:
             return "", _("Aggregation not configured to be frozen")
 
-        return paint_aggregated_tree_state(row, show_frozen_difference=True)
+        return paint_aggregated_tree_state(
+            row, painter_options=self._painter_options, show_frozen_difference=True
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
 @request_memoize()
-def _get_cached_bi_manager():
+def _get_cached_bi_manager() -> BIManager:
     return BIManager()
 
 
@@ -963,10 +984,10 @@ class PainterAggrTreestateBoxed(Painter):
     def ident(self) -> str:
         return "aggr_treestate_boxed"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregation: simplistic boxed layout")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Tree")
 
     @property
@@ -974,19 +995,28 @@ class PainterAggrTreestateBoxed(Painter):
         return ["aggr_treestate", "aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggregated_tree_state(row, force_renderer_cls=FoldableTreeRendererBoxes)
+        return paint_aggregated_tree_state(
+            row,
+            painter_options=self._painter_options,
+            force_renderer_cls=FoldableTreeRendererBoxes,
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
-def render_tree_json(row) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+def render_tree_json(  # pylint: disable=redefined-outer-name
+    row: typing.Mapping[str, typing.Any],
+    *,
+    user: LoggedInUser,
+    request: Request,
+) -> dict[str, Any]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     if expansion_level != user.bi_expansion_level:
@@ -1126,7 +1156,7 @@ class CommandFreezeAggregation(Command):
         return CommandGroupAggregations
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["aggr"]
 
     @property
@@ -1134,7 +1164,7 @@ class CommandFreezeAggregation(Command):
         """View name to show a view exclusive command for"""
         return "aggr_frozen_diff"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button(self._button_name, _("Freeze selected"), cssclass="hot")
         html.button("_cancel", _("Cancel"))

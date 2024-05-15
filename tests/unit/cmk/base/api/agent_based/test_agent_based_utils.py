@@ -2,31 +2,53 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import re
-from collections.abc import Sequence
+from collections.abc import Callable, Iterable, Sequence
 
 import pytest
 
-import cmk.base.api.agent_based.utils as utils
-from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
-from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
+# not ideal, but for now access this member.
+# TODO: find out if it's ok for the fetcher to have the API as
+# a dependency, b/c that is where this function belongs.
+from cmk.fetchers._snmpscan import _evaluate_snmp_detection
+
+from cmk.agent_based.v1 import (
+    all_of,
+    any_of,
+    contains,
+    endswith,
+    exists,
+    matches,
+    not_contains,
+    not_endswith,
+    not_exists,
+    not_startswith,
+    startswith,
+)
+
+_SpecCreator = Callable[[str, str], list[list[tuple[str, str, bool]]]]
 
 
-def _test_atomic_relation(relation_name, value, testcases):
-    spec = getattr(utils, relation_name)(".1.2.3", value)
-    _validate_detect_spec(spec)
-    assert len(spec) == 1
-    assert len(spec[0]) == 1
-    expr = spec[0][0][1]
+def _make_oid_getter(return_value: str) -> Callable[[str], str]:
+    def getter(_oid: str) -> str:
+        return return_value
 
-    inv_spec = getattr(utils, "not_%s" % relation_name)(".1.2.3", value)
-    _validate_detect_spec(inv_spec)
-    assert len(inv_spec) == 1
-    assert len(inv_spec[0]) == 1
-    assert inv_spec[0][0] == (spec[0][0][0], spec[0][0][1], not spec[0][0][2])
+    return getter
 
+
+def _test_atomic_relation(
+    relation: _SpecCreator, inverse: _SpecCreator, value: str, testcases: Iterable[tuple[str, bool]]
+) -> None:
+    spec = relation(".1.2.3", value)
+    inv_spec = inverse(".1.2.3", value)
     for test, result in testcases:
-        assert result is bool(re.fullmatch(expr, test))
+        assert (
+            _evaluate_snmp_detection(detect_spec=spec, oid_value_getter=_make_oid_getter(test))
+            is result
+        )
+        assert (
+            _evaluate_snmp_detection(detect_spec=inv_spec, oid_value_getter=_make_oid_getter(test))
+            is not result
+        )
 
 
 @pytest.mark.parametrize(
@@ -56,7 +78,7 @@ def _test_atomic_relation(relation_name, value, testcases):
     ],
 )
 def test_contains(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
-    _test_atomic_relation("contains", value, testcases)
+    _test_atomic_relation(contains, not_contains, value, testcases)
 
 
 @pytest.mark.parametrize(
@@ -86,7 +108,7 @@ def test_contains(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
     ],
 )
 def test_startswith(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
-    _test_atomic_relation("startswith", value, testcases)
+    _test_atomic_relation(startswith, not_startswith, value, testcases)
 
 
 @pytest.mark.parametrize(
@@ -116,11 +138,11 @@ def test_startswith(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
     ],
 )
 def test_endswith(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
-    _test_atomic_relation("endswith", value, testcases)
+    _test_atomic_relation(endswith, not_endswith, value, testcases)
 
 
 @pytest.mark.parametrize(
-    "testcases",
+    "test, result",
     [
         ("", True),
         ("foo", True),
@@ -131,91 +153,49 @@ def test_endswith(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
         ("fürwahr", True),
     ],
 )
-def test_exists(testcases: tuple[str, bool]) -> None:
-    spec = utils.exists(".1.2.3")
-    _validate_detect_spec(spec)
-    assert len(spec) == 1
-    assert len(spec[0]) == 1
-    expr = spec[0][0][1]
-    test, result = testcases
-    assert result is bool(re.match(expr, test))
-
-
-def test_all_of() -> None:
-    spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
-    spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
-    spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
-
-    assert utils.all_of(spec1, spec2, spec3) == SNMPDetectSpecification(
-        [
-            [
-                (".1", "1?", True),
-                (".2", "2?", True),
-                (".3", "3?", True),
-            ]
-        ]
+def test_exists(test: str, result: bool) -> None:
+    assert (
+        _evaluate_snmp_detection(
+            detect_spec=exists(".1.2.3"), oid_value_getter=_make_oid_getter(test)
+        )
+        is result
     )
-
-    spec12 = utils.all_of(spec1, spec2)
-    assert utils.all_of(spec1, spec2, spec3) == utils.all_of(spec12, spec3)
-
-
-def test_any_of() -> None:
-    spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
-    spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
-    spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
-
-    spec123 = utils.any_of(spec1, spec2, spec3)
-
-    _validate_detect_spec(spec123)
-    assert spec123 == [
-        [(".1", "1?", True)],
-        [(".2", "2?", True)],
-        [(".3", "3?", True)],
-    ]
-
-    spec12 = utils.any_of(spec1, spec2)
-
-    assert spec123 == utils.any_of(spec12, spec3)
-
-
-def test_any_of_all_of() -> None:
-    spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
-    spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
-    spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
-    spec4 = SNMPDetectSpecification([[(".4", "4?", True)]])
-
-    spec12 = utils.all_of(spec1, spec2)
-    spec34 = utils.all_of(spec3, spec4)
-
-    _validate_detect_spec(spec12)
-    _validate_detect_spec(spec34)
-
-    spec1234 = utils.any_of(spec12, spec34)
-    _validate_detect_spec(spec1234)
-
-    assert spec1234 == SNMPDetectSpecification(
-        [
-            [(".1", "1?", True), (".2", "2?", True)],
-            [(".3", "3?", True), (".4", "4?", True)],
-        ]
+    assert (
+        _evaluate_snmp_detection(
+            detect_spec=not_exists(".1.2.3"), oid_value_getter=_make_oid_getter(test)
+        )
+        is not result
     )
 
 
-def test_all_of_any_of() -> None:
-    spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
-    spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
-    spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
-    spec4 = SNMPDetectSpecification([[(".4", "4?", True)]])
+def test_all_of_associative() -> None:
+    spec1 = matches(".1", "1?")
+    spec2 = matches(".2", "2?")
+    spec3 = matches(".3", "3?")
 
-    spec12 = utils.any_of(spec1, spec2)
-    spec34 = utils.any_of(spec3, spec4)
+    assert all_of(spec1, spec2, spec3) == all_of(all_of(spec1, spec2), spec3)
 
-    assert utils.all_of(spec12, spec34) == SNMPDetectSpecification(
-        [
-            [(".1", "1?", True), (".3", "3?", True)],
-            [(".1", "1?", True), (".4", "4?", True)],
-            [(".2", "2?", True), (".3", "3?", True)],
-            [(".2", "2?", True), (".4", "4?", True)],
-        ]
+
+def test_any_of_assotiative() -> None:
+    spec1 = matches(".1", "1?")
+    spec2 = matches(".2", "2?")
+    spec3 = matches(".3", "3?")
+
+    assert any_of(spec1, spec2, spec3) == any_of(any_of(spec1, spec2), spec3)
+
+
+def test_any_of_all_of_distibutive() -> None:
+    spec1 = matches(".1", "1?")
+    spec2 = matches(".2", "2?")
+    spec3 = matches(".3", "3?")
+    spec4 = matches(".4", "4?")
+
+    assert all_of(
+        any_of(spec1, spec2),
+        any_of(spec3, spec4),
+    ) == any_of(
+        all_of(spec1, spec3),
+        all_of(spec1, spec4),
+        all_of(spec2, spec3),
+        all_of(spec2, spec4),
     )

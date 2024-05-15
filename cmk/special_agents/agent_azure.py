@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
+
+Resources and resourcegroups are all treated lowercase because of:
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
 
 from __future__ import annotations
@@ -11,6 +14,7 @@ from __future__ import annotations
 import abc
 import argparse
 import datetime
+import enum
 import json
 import logging
 import re
@@ -22,14 +26,14 @@ from multiprocessing import Lock, Process, Queue
 from queue import Empty as QueueEmpty
 from typing import Any, Literal, NamedTuple
 
-import adal  # type: ignore[import] # pylint: disable=import-error
+import msal  # type: ignore[import-untyped]
 import requests
 
 from cmk.utils import password_store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, vcrtrace
+from cmk.special_agents.v0_unstable.misc import DataCache, vcrtrace
 
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
@@ -172,6 +176,14 @@ ALL_METRICS: dict[str, list[tuple]] = {
 }
 
 
+class TagsImportPatternOption(enum.Enum):
+    ignore_all = "IGNORE_ALL"
+    import_all = "IMPORT_ALL"
+
+
+TagsOption = str | Literal[TagsImportPatternOption.ignore_all, TagsImportPatternOption.import_all]
+
+
 def parse_arguments(argv: Sequence[str]) -> Args:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -273,6 +285,26 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         required=True,
         help="Authority to be used",
     )
+
+    group_import_tags = parser.add_mutually_exclusive_group()
+    group_import_tags.add_argument(
+        "--ignore-all-tags",
+        action="store_const",
+        const=TagsImportPatternOption.ignore_all,
+        dest="tag_key_pattern",
+        help="By default, all Azure tags are written to the agent output, validated to meet the "
+        "Checkmk label requirements and added as host labels to their respective piggyback host "
+        "and/or as service labels to the respective service using the syntax "
+        "'cmk/azure/tag/{key}:{value}'. With this option you can disable the import of Azure "
+        "tags.",
+    )
+    group_import_tags.add_argument(
+        "--import-matching-tags-as-labels",
+        dest="tag_key_pattern",
+        help="You can restrict the imported tags by specifying a pattern which the agent searches "
+        "for in the key of the tag.",
+    )
+    group_import_tags.set_defaults(tag_key_pattern=TagsImportPatternOption.import_all)
     args = parser.parse_args(argv)
 
     if args.vcrtrace:
@@ -394,14 +426,17 @@ class BaseApiClient(abc.ABC):
         self._http_proxy_config = http_proxy_config
 
     def login(self, tenant, client, secret):
-        context = adal.AuthenticationContext(
+        client_app = msal.ConfidentialClientApplication(
+            client,
+            secret,
             f"{self._login_url}/{tenant}",
             proxies=self._http_proxy_config.to_requests_proxies(),
         )
-        token = context.acquire_token_with_client_credentials(self._resource_url, client, secret)
+        token = client_app.acquire_token_for_client([self._resource_url + "/.default"])
+
         self._headers.update(
             {
-                "Authorization": "Bearer %s" % token["accessToken"],
+                "Authorization": "Bearer %s" % token["access_token"],
                 "Content-Type": "application/json",
             }
         )
@@ -419,8 +454,20 @@ class BaseApiClient(abc.ABC):
             return
         self._ratelimit = min(self._ratelimit, new_value)
 
-    def _get(self, uri_end, key=None, params=None):
-        return self._request(method="GET", uri_end=uri_end, key=key, params=params)
+    def _get(
+        self,
+        uri_end,
+        key=None,
+        params=None,
+        next_page_key="nextLink",
+    ):
+        return self._request(
+            method="GET",
+            uri_end=uri_end,
+            key=key,
+            params=params,
+            next_page_key=next_page_key,
+        )
 
     def _query(self, uri_end, body, params=None):
         json_data = self._request_json_from_url(
@@ -455,7 +502,31 @@ class BaseApiClient(abc.ABC):
             processed_query.append(processed_row)
         return processed_query
 
-    def _request(self, method, uri_end, body=None, key=None, params=None):
+    def _get_paginated_data(
+        self,
+        next_link,
+        next_page_key,
+        method,
+        body,
+        key,
+    ):
+        data = []
+        while next_link:
+            new_json_data = self._request_json_from_url(method, next_link, body=body)
+            data += self._lookup(new_json_data, key)
+            next_link = new_json_data.get(next_page_key)
+
+        return data
+
+    def _request(
+        self,
+        method,
+        uri_end,
+        body=None,
+        key=None,
+        params=None,
+        next_page_key="nextLink",
+    ):
         json_data = self._request_json_from_url(
             method, self._base_url + uri_end, body=body, params=params
         )
@@ -467,12 +538,14 @@ class BaseApiClient(abc.ABC):
 
         # The API will not send more than 1000 recources at once.
         # See if we must fetch another page:
-        next_link = json_data.get("nextLink")
-        while next_link is not None:
-            json_data = self._request_json_from_url(method, next_link, body=body)
-            # we only know of lists. Let exception happen otherwise
-            data += self._lookup(json_data, key)
-            next_link = json_data.get("nextLink")
+        if next_link := json_data.get(next_page_key):
+            return data + self._get_paginated_data(
+                next_link=next_link,
+                next_page_key=next_page_key,
+                method=method,
+                body=body,
+                key=key,
+            )
 
         return data
 
@@ -524,14 +597,15 @@ class GraphApiClient(BaseApiClient):
         return self._get("organization", key="value")
 
     def applications(self):
-        apps = self._get("applications", key="value")
+        applications = self._get("applications", key="value", next_page_key="@odata.nextLink")
+        return self._filter_out_applications(applications)
 
+    @staticmethod
+    def _filter_out_applications(applications: list[dict[str, Any]]) -> list[dict[str, Any]]:
         key_subset = {"id", "appId", "displayName", "passwordCredentials"}
-        apps_selected = [
-            {k: app[k] for k in key_subset} for app in apps if app["passwordCredentials"]
+        return [
+            {k: app[k] for k in key_subset} for app in applications if app["passwordCredentials"]
         ]
-
-        return apps_selected
 
 
 class MgmtApiClient(BaseApiClient):
@@ -815,7 +889,7 @@ class AzureSection(Section):
 
 class LabelsSection(Section):
     def __init__(self, piggytarget) -> None:  # type: ignore[no-untyped-def]
-        super().__init__("labels", [piggytarget], separator=0, options=[])
+        super().__init__("azure_labels", [piggytarget], separator=0, options=[])
 
 
 class IssueCollecter:
@@ -888,17 +962,21 @@ def get_attrs_from_uri(uri):
 
 
 class AzureResource:
-    def __init__(self, info) -> None:  # type: ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
+        self,
+        info,
+        tag_key_pattern: TagsOption,
+    ) -> None:
         super().__init__()
-        self.info = info
+        self.tags = self._filter_tags(info.get("tags", {}), tag_key_pattern)
+        self.info = {**info, "tags": self.tags}
         self.info.update(get_attrs_from_uri(info["id"]))
-        self.tags = self.info.get("tags", {})
 
         self.section = info["type"].split("/")[-1].lower()
         self.piggytargets = []
-        group = self.info.get("group")
-        if group:
-            self.piggytargets.append(group)
+        if group := self.info.get("group"):
+            self.info["group"] = group.lower()
+            self.piggytargets.append(group.lower())
         self.metrics: list = []
 
     def dumpinfo(self):
@@ -908,6 +986,13 @@ class AzureResource:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
         return lines
+
+    def _filter_tags(self, tags: dict[str, str], tag_key_pattern: TagsOption) -> dict[str, str]:
+        if tag_key_pattern == TagsImportPatternOption.import_all:
+            return tags
+        if tag_key_pattern == TagsImportPatternOption.ignore_all:
+            return {}
+        return {key: value for key, value in tags.items() if re.search(tag_key_pattern, key)}
 
 
 def filter_keys(mapping: Mapping, keys: Iterable[str]) -> Mapping:
@@ -1046,10 +1131,11 @@ def get_inbound_nat_rules(
             ip_config_id = inbound_nat_rule["properties"]["backendIPConfiguration"]["id"]
             nic_config = get_network_interface_config(mgmt_client, ip_config_id)
 
-            nat_rule_data["backend_ip_config"] = {
-                "name": nic_config["name"],
-                **filter_keys(nic_config["properties"], nic_config_keys),
-            }
+            if "name" in nic_config and "properties" in nic_config:
+                nat_rule_data["backend_ip_config"] = {
+                    "name": nic_config["name"],
+                    **filter_keys(nic_config["properties"], nic_config_keys),
+                }
 
         inbound_nat_rules.append(nat_rule_data)
 
@@ -1064,18 +1150,19 @@ def get_backend_address_pools(
 
     for backend_pool in load_balancer["properties"]["backendAddressPools"]:
         backend_addresses = []
-        for backend_address in backend_pool["properties"]["loadBalancerBackendAddresses"]:
+        for backend_address in backend_pool["properties"].get("loadBalancerBackendAddresses", []):
             if "networkInterfaceIPConfiguration" in backend_address.get("properties"):
                 ip_config_id = backend_address["properties"]["networkInterfaceIPConfiguration"][
                     "id"
                 ]
                 nic_config = get_network_interface_config(mgmt_client, ip_config_id)
 
-                backend_address_data = {
-                    "name": nic_config["name"],
-                    **filter_keys(nic_config["properties"], backend_address_keys),
-                }
-                backend_addresses.append(backend_address_data)
+                if "name" in nic_config and "properties" in nic_config:
+                    backend_address_data = {
+                        "name": nic_config["name"],
+                        **filter_keys(nic_config["properties"], backend_address_keys),
+                    }
+                    backend_addresses.append(backend_address_data)
 
         backend_pools.append(
             {"id": backend_pool["id"], "name": backend_pool["name"], "addresses": backend_addresses}
@@ -1098,7 +1185,7 @@ def process_load_balancer(mgmt_client: MgmtApiClient, resource: AzureResource) -
     outbound_rule_keys = ("protocol", "idleTimeoutInMinutes", "backendAddressPool")
     outbound_rules = [
         {"name": r["name"], **filter_keys(r["properties"], outbound_rule_keys)}
-        for r in load_balancer["properties"]["outboundRules"]
+        for r in load_balancer["properties"].get("outboundRules", [])
     ]
     resource.info["properties"]["outbound_rules"] = outbound_rules
 
@@ -1297,9 +1384,8 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
         if tag_name not in vm.tags:
             vm_labels[tag_name] = tag_value
 
-    vm_labels["cmk/azure/vm"] = "instance"
-
     labels_section = LabelsSection(vm.info["name"])
+    labels_section.add((json.dumps({"group_name": vm.info["group"], "vm_instance": True}),))
     labels_section.add((json.dumps(vm_labels),))
     return labels_section
 
@@ -1348,14 +1434,27 @@ def process_resource(
     return sections
 
 
-def get_group_labels(mgmt_client: MgmtApiClient, monitored_groups: Sequence[str]) -> GroupLabels:
+def get_group_labels(
+    mgmt_client: MgmtApiClient,
+    monitored_groups: Sequence[str],
+    tag_key_pattern: TagsOption,
+) -> GroupLabels:
     group_labels: dict[str, dict[str, str]] = {}
 
     for group in mgmt_client.resourcegroups():
-        name = group["name"]
-        tags = group.get("tags", {})
+        name = group["name"].lower()
+
+        if tag_key_pattern == TagsImportPatternOption.ignore_all:
+            tags = {}
+        else:
+            tags = group.get("tags", {})
+            if tag_key_pattern != TagsImportPatternOption.import_all:
+                tags = {
+                    key: value for key, value in tags.items() if re.search(tag_key_pattern, key)
+                }
+
         if name in monitored_groups:
-            group_labels[name] = {**tags, **{"cmk/azure/resource_group": name}}
+            group_labels[name] = tags
 
     return group_labels
 
@@ -1367,6 +1466,7 @@ def write_group_info(
 ) -> None:
     for group_name, tags in group_labels.items():
         labels_section = LabelsSection(group_name)
+        labels_section.add((json.dumps({"group_name": group_name}),))
         labels_section.add((json.dumps(tags),))
         labels_section.write()
 
@@ -1519,12 +1619,13 @@ def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[object]:
 def write_usage_section(
     usage_data: Sequence[object],
     monitored_groups: list[str],
+    tag_key_pattern: TagsOption,
 ) -> None:
     if not usage_data:
         AzureSection("usagedetails", monitored_groups + [""]).write(write_empty=True)
 
     for usage in usage_data:
-        usage_resource = AzureResource(usage)
+        usage_resource = AzureResource(usage, tag_key_pattern)
         piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [""]
 
         section = AzureSection(usage_resource.section, piggytargets)
@@ -1544,7 +1645,7 @@ def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args:
             )
             return
 
-        write_usage_section(usage_section, monitored_groups)
+        write_usage_section(usage_section, monitored_groups, args.tag_key_pattern)
 
     except NoConsumptionAPIError:
         LOGGER.debug("Azure offer doesn't support querying the cost API")
@@ -1555,20 +1656,20 @@ def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args:
             raise
         LOGGER.warning("%s", exc)
         write_exception_to_agent_info_section(exc, "Usage client")
-        write_usage_section([], monitored_groups)
+        write_usage_section([], monitored_groups, args.tag_key_pattern)
 
 
-def _is_monitored(
+def _get_monitored_resource(
     resource_id: str,
     monitored_resources: Sequence[AzureResource],
     args: Args,
-) -> bool:
+) -> AzureResource | None:
     for resource in monitored_resources:
         # different endpoints deliver ids in different case
         if resource_id.lower() == resource.info["id"].lower():
-            return resource.info["type"] in args.services
+            return resource if resource.info["type"] in args.services else None
 
-    return False
+    return None
 
 
 def process_resource_health(
@@ -1589,7 +1690,7 @@ def process_resource_health(
         _, group = get_params_from_azure_id(health_id)
         resource_id = "/".join(health_id.split("/")[:-4])
 
-        if not _is_monitored(resource_id, monitored_resources, args):
+        if (resource := _get_monitored_resource(resource_id, monitored_resources, args)) is None:
             continue
 
         health_data = {
@@ -1598,12 +1699,13 @@ def process_resource_health(
             **filter_keys(
                 health["properties"], ("availabilityState", "summary", "reasonType", "occuredTime")
             ),
+            "tags": resource.tags,
         }
 
         health_section[group].append(json.dumps(health_data))
 
     for group, values in health_section.items():
-        section = AzureSection("resource_health", [group])
+        section = AzureSection("resource_health", [group.lower()])
         for value in values:
             section.add([value])
         yield section
@@ -1618,7 +1720,7 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
 
-        all_resources = (AzureResource(r) for r in mgmt_client.resources())
+        all_resources = (AzureResource(r, args.tag_key_pattern) for r in mgmt_client.resources())
 
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
 
@@ -1629,7 +1731,7 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
         write_exception_to_agent_info_section(exc, "Management client")
         return
 
-    group_labels = get_group_labels(mgmt_client, monitored_groups)
+    group_labels = get_group_labels(mgmt_client, monitored_groups, args.tag_key_pattern)
     write_group_info(monitored_groups, monitored_resources, group_labels)
 
     usage_details(mgmt_client, monitored_groups, args)

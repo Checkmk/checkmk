@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
 from itertools import chain
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     all_of,
     any_of,
     equals,
@@ -17,6 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     not_exists,
     OIDEnd,
     SNMPTree,
+    StringTable,
 )
 
 
@@ -36,7 +39,12 @@ def check_akcp_daisy_temp(item, params, info):
     return None
 
 
+def parse_akcp_daisy_temp(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
+    parse_function=parse_akcp_daisy_temp,
     detect=all_of(
         any_of(
             equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1.2.2.1.1"),

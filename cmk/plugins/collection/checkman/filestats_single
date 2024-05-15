@@ -1,0 +1,26 @@
+title: Age and Size of File (mk_filestats)
+agents: windows, linux, freebsd, macosx, solaris, aix
+catalog: os/files
+license: GPLv2
+distribution: check_mk
+description:
+  This check monitors the size and age of a single file
+  in the target host's filesystem. If the globbing pattern
+  matches multiple files, one service per matching file is created.
+  You can set lower and upper limits on the age and filesize.
+
+  The required python plug-in mk_filestats is configured
+  via {filestats.cfg} located in the {$MK_CONFDIR}
+  (usually {/etc/check_mk/filestats.cfg}).
+  To add single file(s) to the check, add one
+  configuration section to the file. The subcheck is triggered, if
+  {output:} is set to {single_file}.
+
+  For an extensive documentation of the available options,
+  please refer to "mk_filestats.py --help".
+
+item:
+  The matched file.
+
+discovery:
+  One service is created for each matched file.

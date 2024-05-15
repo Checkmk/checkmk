@@ -3,13 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import abc
 import copy
+import dataclasses
 import enum
 import logging
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Literal, NamedTuple
+from dataclasses import dataclass
+from typing import Any, Literal, NamedTuple, Protocol, Self
 
+from cmk.utils.exceptions import MKSNMPError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
@@ -20,6 +25,11 @@ OIDRange = tuple[int, int]
 RangeLimit = tuple[Literal["first", "last"], int] | tuple[Literal["mid"], OIDRange]
 SNMPRawValue = bytes
 SNMPRowInfo = list[tuple[OID, SNMPRawValue]]
+
+
+class SNMPContextTimeout(MKSNMPError):
+    pass
+
 
 # TODO: Be more specific about the possible tuples
 # if the credentials are a string, we use that as community,
@@ -51,7 +61,20 @@ class SNMPBackendEnum(enum.Enum):
         return self.name
 
     @classmethod
-    def deserialize(cls, name: str) -> "SNMPBackendEnum":
+    def deserialize(cls, name: str) -> Self:
+        return cls[name]
+
+
+class SNMPVersion(enum.Enum):
+    V1 = enum.auto()
+    V2C = enum.auto()
+    V3 = enum.auto()
+
+    def serialize(self) -> str:
+        return self.name
+
+    @classmethod
+    def deserialize(cls, name: str) -> Self:
         return cls[name]
 
 
@@ -66,58 +89,73 @@ def ensure_str(value: str | bytes, *, encoding: str | None) -> str:
         return value.decode("latin1")
 
 
+@dataclass(frozen=True, kw_only=True)
+class SNMPContextConfig:
+    section: SectionName | None
+    contexts: Sequence[SNMPContext]
+    timeout_policy: Literal["stop", "continue"]
+
+    @classmethod
+    def default(cls) -> Self:
+        return cls(section=None, contexts=[""], timeout_policy="stop")
+
+
 # Wraps the configuration of a host into a single object for the SNMP code
-class SNMPHostConfig(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class SNMPHostConfig:
     is_ipv6_primary: bool
     hostname: HostName
     ipaddress: HostAddress
     credentials: SNMPCredentials
     port: int
-    is_bulkwalk_host: bool
-    is_snmpv2or3_without_bulkwalk_host: bool
+    snmp_version: SNMPVersion
+    bulkwalk_enabled: bool
     bulk_walk_size_of: int
     timing: SNMPTiming
     oid_range_limits: Mapping[SectionName, Sequence[RangeLimit]]
-    snmpv3_contexts: Sequence[tuple[SectionName | None, Sequence[SNMPContext]]]
+    snmpv3_contexts: Sequence[SNMPContextConfig]
     character_encoding: str | None
     snmp_backend: SNMPBackendEnum
 
     @property
-    def is_snmpv3_host(self) -> bool:
-        return isinstance(self.credentials, tuple)
+    def use_bulkwalk(self) -> bool:
+        return self.bulkwalk_enabled and self.snmp_version is not SNMPVersion.V1
 
     def snmpv3_contexts_of(
         self,
         section_name: SectionName | None,
-    ) -> Sequence[SNMPContext]:
-        if not section_name or not self.is_snmpv3_host:
-            return [""]
-        for sn, contexts in self.snmpv3_contexts:
-            if sn is None or sn == section_name:
-                return contexts
-        return [""]
+    ) -> SNMPContextConfig:
+        if not section_name or self.snmp_version is not SNMPVersion.V3:
+            return SNMPContextConfig.default()
+        for ctx in self.snmpv3_contexts:
+            if ctx.section is None or ctx.section == section_name:
+                return ctx
+        return SNMPContextConfig.default()
 
-    def serialize(self):
-        serialized = self._asdict()
+    def serialize(self) -> Mapping[str, object]:
+        serialized = dataclasses.asdict(self)
         serialized["snmp_backend"] = serialized["snmp_backend"].serialize()
+        serialized["snmp_version"] = serialized["snmp_version"].serialize()
         serialized["oid_range_limits"] = {
             str(sn): rl for sn, rl in serialized["oid_range_limits"].items()
         }
         serialized["snmpv3_contexts"] = [
-            (str(sn) if sn is not None else None, rl) for sn, rl in serialized["snmpv3_contexts"]
+            (str(sn) if sn is not None else None, rl, eh)
+            for sn, rl, eh in serialized["snmpv3_contexts"]
         ]
         return serialized
 
     @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPHostConfig":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> Self:
         serialized_ = copy.deepcopy(dict(serialized))
         serialized_["snmp_backend"] = SNMPBackendEnum.deserialize(serialized_["snmp_backend"])
+        serialized_["snmp_version"] = SNMPVersion.deserialize(serialized_["snmp_version"])
         serialized_["oid_range_limits"] = {
             SectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
         }
         serialized_["snmpv3_contexts"] = [
-            (SectionName(sn) if sn is not None else None, rl)
-            for sn, rl in serialized_["snmpv3_contexts"]
+            (SectionName(sn) if sn is not None else None, rl, eh)
+            for sn, rl, eh in serialized_["snmpv3_contexts"]
         ]
         return cls(**serialized_)
 
@@ -142,7 +180,7 @@ class SNMPBackend(abc.ABC):
 
     @port.setter
     def port(self, new_port: int) -> None:
-        self.config = self.config._replace(port=new_port)
+        self.config = dataclasses.replace(self.config, port=new_port)
 
     @abc.abstractmethod
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
@@ -174,6 +212,17 @@ class SpecialColumn(enum.IntEnum):
     END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 
+class OIDSpecLike(Protocol):
+    @property
+    def column(self) -> int | str: ...
+
+    @property
+    def encoding(self) -> Literal["string", "binary"]: ...
+
+    @property
+    def save_to_cache(self) -> bool: ...
+
+
 class BackendOIDSpec(NamedTuple):
     column: str | SpecialColumn
     encoding: SNMPValueEncoding
@@ -190,7 +239,7 @@ class BackendOIDSpec(NamedTuple):
         column: str | int,
         encoding: SNMPValueEncoding,
         save_to_cache: bool,
-    ) -> "BackendOIDSpec":
+    ) -> Self:
         return cls(
             SpecialColumn(column) if isinstance(column, int) else column, encoding, save_to_cache
         )
@@ -211,11 +260,14 @@ class BackendSNMPTree(NamedTuple):
         cls,
         *,
         base: str,
-        oids: Iterable[tuple[str | int, SNMPValueEncoding, bool]],
-    ) -> "BackendSNMPTree":
+        oids: Iterable[OIDSpecLike],
+    ) -> Self:
         return cls(
             base=base,
-            oids=[BackendOIDSpec.deserialize(*oid) for oid in oids],
+            oids=[
+                BackendOIDSpec.deserialize(oid.column, oid.encoding, oid.save_to_cache)
+                for oid in oids
+            ],
         )
 
     def to_json(self) -> Mapping[str, Any]:
@@ -225,7 +277,7 @@ class BackendSNMPTree(NamedTuple):
         }
 
     @classmethod
-    def from_json(cls, serialized: Mapping[str, Any]) -> "BackendSNMPTree":
+    def from_json(cls, serialized: Mapping[str, Any]) -> Self:
         return cls(
             base=serialized["base"],
             oids=[BackendOIDSpec.deserialize(*oid) for oid in serialized["oids"]],

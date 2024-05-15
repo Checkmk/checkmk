@@ -13,12 +13,13 @@ PACKAGE_FREETDS_DESTDIR := $(FREETDS_INSTALL_DIR)/build
 PACKAGE_FREETDS_LDFLAGS := -L$(PACKAGE_FREETDS_DESTDIR)/lib
 
 
+.PHONY: $(FREETDS_BUILD)
 $(FREETDS_BUILD): packages/freetds/BUILD.freetds.bazel packages/freetds/freetds.make
 	$(BAZEL_BUILD) @freetds//:freetds
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@
 
 
+.PHONY: $(FREETDS_INTERMEDIATE_INSTALL)
 $(FREETDS_INTERMEDIATE_INSTALL): $(FREETDS_BUILD)
 	# Package python-modules needs some stuff during the build.
 	$(MKDIR) $(PACKAGE_FREETDS_DESTDIR)
@@ -31,13 +32,12 @@ $(FREETDS_INTERMEDIATE_INSTALL): $(FREETDS_BUILD)
 	    "$(FREETDS_INSTALL_DIR)/runtime/lib/libsybdb.so" \
 	    "$(FREETDS_INSTALL_DIR)/runtime/lib/libsybdb.so.5" \
 	    "$(FREETDS_INSTALL_DIR)/runtime/lib/libsybdb.so.5.1.0"
-	$(TOUCH) $@
 
 
+.PHONY: $(FREETDS_CACHE_PKG_PROCESS)
 $(FREETDS_CACHE_PKG_PROCESS): $(FREETDS_INTERMEDIATE_INSTALL)
-	$(TOUCH) $@
 
 
+.PHONY: $(FREETDS_INSTALL)
 $(FREETDS_INSTALL): $(FREETDS_CACHE_PKG_PROCESS)
 	$(RSYNC) $(FREETDS_INSTALL_DIR)/runtime/ $(DESTDIR)$(OMD_ROOT)/
-	$(TOUCH) $@

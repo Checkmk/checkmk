@@ -7,20 +7,15 @@ from __future__ import annotations
 
 import enum
 import hashlib
-import sys
+import hmac
 import zlib
-from collections.abc import Callable, Iterator
+from collections.abc import Buffer, Callable, Iterator
 from enum import Enum
 from typing import assert_never, Final, Self
 
 from cmk.utils.crypto.deprecated import AesCbcCipher
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.serializertype import Deserializer, Serializer
-
-if sys.version_info < (3, 12):
-    from typing_extensions import Buffer
-else:
-    from collections.abc import Buffer
 
 OPENSSL_SALTED_MARKER = "Salted__"
 
@@ -36,6 +31,8 @@ class TransportProtocol(Enum):
     MD5 = b"00"
     SHA256 = b"02"
     PBKDF2 = b"03"
+    SHA256_MAC = b"04"
+    PBKDF2_MAC = b"05"
     TLS = b"16"
     NONE = b"99"
 
@@ -189,6 +186,18 @@ def decrypt_by_agent_protocol(
         "99" for real-time check data means "unencrypted"!
     """
 
+    if protocol is TransportProtocol.PBKDF2_MAC:
+        return _decrypt_aes_256_cbc_pbkdf2_mac(
+            cipherblob=memoryview(encrypted_pkg),
+            password=password,
+        )
+
+    if protocol is TransportProtocol.SHA256_MAC:
+        return _decrypt_aes_256_cbc_sha256_mac(
+            cipherblob=memoryview(encrypted_pkg),
+            password=password,
+        )
+
     if protocol is TransportProtocol.PBKDF2:
         return _decrypt_aes_256_cbc_pbkdf2(
             ciphertext=memoryview(encrypted_pkg)[len(OPENSSL_SALTED_MARKER) :],
@@ -209,25 +218,107 @@ def decrypt_by_agent_protocol(
     )
 
 
+def _check_mac_and_decrypt(
+    key: bytes, iv: bytes, ciphertext: Buffer, expected_mac: Buffer
+) -> bytes:
+    """
+    Check the MAC and decrypt.
+
+    The MAC is calculated based on IV+ciphertext. If it matches the expected_mac, AES-256-CBC is
+    used to decrypt the ciphertext with the given key and IV.
+    Finally, PKCS#7 padding is removed.
+    """
+    check = hmac.HMAC(key, digestmod=hashlib.sha256)
+    check.update(iv)
+    check.update(ciphertext)
+    if not hmac.compare_digest(check.digest(), expected_mac):
+        raise ValueError("Decryption failed: MAC mismatch")
+
+    cipher = AesCbcCipher("decrypt", key, iv)
+    decrypted = cipher.update(bytes(ciphertext)) + cipher.finalize()
+
+    return AesCbcCipher.unpad_block(decrypted)
+
+
+def _unpack_cipher_blob(blob: Buffer) -> tuple[memoryview, memoryview, memoryview]:
+    """
+    Split the cipher package used by PBKDF2_MAC and SHA256_MAC.
+
+    The package is expected to have the form [ salt : mac : ciphertext ].
+    A tuple of the three components is returned.
+    """
+    SALT_LENGTH = 8
+    MAC_LENGTH = 32
+    salt = memoryview(blob)[:SALT_LENGTH]
+    mac = memoryview(blob)[SALT_LENGTH : SALT_LENGTH + MAC_LENGTH]
+    ciphertext = memoryview(blob)[SALT_LENGTH + MAC_LENGTH :]
+
+    return (salt, mac, ciphertext)
+
+
+def _decrypt_aes_256_cbc_pbkdf2_mac(cipherblob: Buffer, password: str) -> bytes:
+    """
+    Decrypt version 05, PBKDF2_MAC.
+
+    Decryption scheme:
+      [salt:mac:ciphertext], password <- args
+      key, IV <- pbkdf2( salt, password, cycles=600000 )
+      validate_hmac_sha256( key, iv+ciphertext, mac )
+      result <- aes_256_cbc_decrypt( key, IV, ciphertext )
+
+    """
+    salt, mac, ciphertext = _unpack_cipher_blob(cipherblob)
+    key, iv = _derive_key_and_iv_pbkdf2(
+        password.encode("utf-8"),
+        salt,
+        cycles=600_000,
+        key_length=32,
+        iv_length=16,
+    )
+
+    return _check_mac_and_decrypt(key, iv, ciphertext, mac)
+
+
+def _decrypt_aes_256_cbc_sha256_mac(
+    cipherblob: Buffer,
+    password: str,
+) -> bytes:
+    """
+    Decrypt version 04, SHA256_MAC.
+
+    See _decrypt_aes_256_cbc_pbkdf2. The only differenc is that _derive_openssl_key_and_iv
+    (aka EVP_BytesToKey) is used for key derivation.
+    """
+    salt, mac, ciphertext = _unpack_cipher_blob(cipherblob)
+    key, iv = _derive_openssl_key_and_iv(
+        password.encode("utf-8"),
+        hashlib.sha256,
+        key_length=32,
+        iv_length=16,
+        salt=bytes(salt),
+    )
+
+    return _check_mac_and_decrypt(key, iv, ciphertext, mac)
+
+
 def _decrypt_aes_256_cbc_pbkdf2(ciphertext: Buffer, password: str) -> bytes:
     """Decrypt an openssl encrypted bytestring:
     Cipher: AES256-CBC
     Salted: yes
-    Key Derivation: PKBDF2, with SHA256 digest, 10000 cycles
+    Key Derivation: PBKDF2, with SHA256 digest, 10000 cycles
     """
     SALT_LENGTH = 8
     KEY_LENGTH = 32
     IV_LENGTH = 16
     PBKDF2_CYCLES = 10_000
 
-    key_iv = hashlib.pbkdf2_hmac(
-        "sha256",
+    key, iv = _derive_key_and_iv_pbkdf2(
         password.encode("utf-8"),
         memoryview(ciphertext)[:SALT_LENGTH],
-        PBKDF2_CYCLES,
-        KEY_LENGTH + IV_LENGTH,
+        cycles=PBKDF2_CYCLES,
+        key_length=KEY_LENGTH,
+        iv_length=IV_LENGTH,
     )
-    key, iv = key_iv[:KEY_LENGTH], key_iv[KEY_LENGTH:]
 
     cipher = AesCbcCipher("decrypt", key, iv)
     decrypted = cipher.update(bytes(memoryview(ciphertext)[SALT_LENGTH:])) + cipher.finalize()
@@ -248,7 +339,12 @@ def _decrypt_aes_256_cbc_legacy(
     KEY_LENGTH = 32
     IV_LENGTH = 16
 
-    key, iv = _derive_openssl_key_and_iv(password.encode("utf-8"), digest, KEY_LENGTH, IV_LENGTH)
+    key, iv = _derive_openssl_key_and_iv(
+        password.encode("utf-8"),
+        digest,
+        key_length=KEY_LENGTH,
+        iv_length=IV_LENGTH,
+    )
 
     cipher = AesCbcCipher("decrypt", key, iv)
     decrypted = cipher.update(bytes(ciphertext)) + cipher.finalize()
@@ -256,16 +352,40 @@ def _decrypt_aes_256_cbc_legacy(
     return AesCbcCipher.unpad_block(decrypted)
 
 
-def _derive_openssl_key_and_iv(
+def _derive_key_and_iv_pbkdf2(
     password: bytes,
-    digest: Callable[..., hashlib._Hash],
+    salt: Buffer,
+    *,
+    cycles: int,
     key_length: int,
     iv_length: int,
 ) -> tuple[bytes, bytes]:
-    """Simple and completely insecure OpenSSL Key derivation function"""
+    key_iv = hashlib.pbkdf2_hmac(
+        "sha256",
+        password,
+        salt,
+        cycles,
+        key_length + iv_length,
+    )
+    return (key_iv[:key_length], key_iv[key_length:])
+
+
+def _derive_openssl_key_and_iv(
+    password: bytes,
+    digest: Callable[..., hashlib._Hash],
+    *,
+    key_length: int,
+    iv_length: int,
+    salt: bytes = b"",
+) -> tuple[bytes, bytes]:
+    """
+    Simple and completely insecure OpenSSL Key derivation function.
+
+    See EVP_BytesToKey.
+    """
     d, d_i = bytearray(b""), b""
     while len(d) < key_length + iv_length:
-        d_i = digest(d_i + password).digest()
+        d_i = digest(d_i + password + salt).digest()
         d += d_i
     return bytes(memoryview(d)[:key_length]), bytes(
         memoryview(d)[key_length : key_length + iv_length]

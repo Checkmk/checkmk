@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Optional, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Age, Dictionary, Migrate, TextInput
 
 
 def _item_spec_db2_backup():
@@ -19,22 +20,21 @@ def _item_spec_db2_backup():
 
 
 def _parameter_valuespec_db2_backup():
-    return Optional(
-        valuespec=Tuple(
+    return Migrate(
+        valuespec=Dictionary(
             elements=[
-                Age(
-                    title=_("Warning at"),
-                    display=["days", "hours", "minutes"],
-                    default_value=86400 * 14,
-                ),
-                Age(
-                    title=_("Critical at"),
-                    display=["days", "hours", "minutes"],
-                    default_value=86400 * 28,
+                (
+                    "levels",
+                    SimpleLevels(
+                        title=_("Levels on time since last successful backup"),
+                        spec=Age,
+                        default_levels=(86400 * 14, 86400 * 28),
+                    ),
                 ),
             ],
+            optional_keys=[],
         ),
-        title=_("Specify time since last successful backup"),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

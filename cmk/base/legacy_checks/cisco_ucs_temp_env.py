@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree
 
 # comNET GmbH, Fabian Binder - 2018-05-30
 
@@ -19,13 +20,16 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def parse_cisco_ucs_temp_env(string_table):
-    new_info = {
-        "Ambient": string_table[0][0],
-        "Front": string_table[0][1],
-        "IO-Hub": string_table[0][2],
-        "Rear": string_table[0][3],
-    }
-    return new_info
+    return (
+        {
+            "Ambient": string_table[0][0],
+            "Front": string_table[0][1],
+            "IO-Hub": string_table[0][2],
+            "Rear": string_table[0][3],
+        }
+        if string_table
+        else None
+    )
 
 
 def inventory_cisco_ucs_temp_env(info):

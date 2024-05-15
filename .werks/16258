@@ -1,0 +1,12 @@
+Title: jolokia_metrics_app_sess: incorrectly applied lower levels
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1699617831
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The plugin <i>Java Virtual Machine: Number of Sessions</i> (<tt>jolokia_metrics_app_sess</tt>) applied the configured levels incorrectly.
+This werk is only incompatible for users that adjusted there configuration to compensate this bug.
+If this is the case for you, please adjust your "lower levels" in the ruleset <i>JVM session count</i>.

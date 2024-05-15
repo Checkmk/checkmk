@@ -3,13 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+# pylint: disable=protected-access
+
+from collections.abc import Mapping
 from typing import Any
 
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.graphing import PerfometerSpec
+from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import painters
@@ -21,15 +24,14 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.type_defs import Perfdata, TranslatedMetrics, VisualLinkSpec
+from cmk.gui.type_defs import Perfdata, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import icon, inventory
-from .builtin_views import builtin_views
 from .command import register_legacy_command
 from .icon import Icon, icon_and_action_registry
-from .inventory import register_table_views_and_columns, update_paint_functions
+from .inventory import register_inv_paint_functions, register_table_views_and_columns
 from .sorter import register_sorter, register_sorters, sorter_registry
 from .store import multisite_builtin_views
 from .view_choices import format_view_title
@@ -46,7 +48,7 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
-    update_paint_functions(globals())
+    register_inv_paint_functions(globals())
 
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
@@ -57,9 +59,7 @@ def load_plugins() -> None:
     for cmd_spec in multisite_commands:
         register_legacy_command(cmd_spec)
 
-    multisite_builtin_views.update(builtin_views)
-
-    # Needs to be executed after all plugins (built-in and local) are loaded
+    # Needs to be executed after all plug-ins (built-in and local) are loaded
     register_table_views_and_columns()
 
     # TODO: Kept for compatibility with pre 1.6 plugins
@@ -91,26 +91,25 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
     """
-    # Needs to be a local import to not influence the regular plugin loading order
+    # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.data_source as data_source
     import cmk.gui.exporter as exporter
     import cmk.gui.painter.v0.base as painter_base
     import cmk.gui.painter.v0.helpers as painter_helpers
     import cmk.gui.painter.v1.helpers as painter_v1_helpers
     import cmk.gui.painter_options as painter_options
-    import cmk.gui.plugins.views as api_module
+    import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
-    from cmk.gui.plugins.views.icons import utils as icon_utils
-    from cmk.gui.views.perfometer.legacy_perfometers import utils as legacy_perfometers_utils
+    from cmk.gui.plugins.views import icons  # pylint: disable=cmk-module-layer-violation
 
     from . import command, layout, sorter, store
 
@@ -233,7 +232,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
             "Perfdata": Perfdata,
             "PerfometerSpec": PerfometerSpec,
             "VisualLinkSpec": VisualLinkSpec,
-            "TranslatedMetrics": TranslatedMetrics,
+            "TranslatedMetrics": Mapping[str, TranslatedMetric],
             "get_labels": get_labels,
             "render_labels": render_labels,
             "render_tag_groups": render_tag_groups,
@@ -245,13 +244,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "Icon",
         "IconRegistry",
     ):
-        icon_utils.__dict__[name] = icon.__dict__[name]
-
-    globals().update(
-        {
-            "perfometers": legacy_perfometers_utils.perfometers,
-        }
-    )
+        icons.__dict__[name] = icon.__dict__[name]
 
 
 # Transform pre 1.6 icon plugins. Deprecate this one day.

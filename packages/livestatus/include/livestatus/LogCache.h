@@ -79,7 +79,7 @@ public:
     // Call the given function with a locked and updated LogCache, keeping the
     // lock and the update function local. Used by
     // TableStateHistory::answerQuery()
-    template <class F>
+    template <typename F>
     inline auto apply(F f) {
         std::lock_guard<std::mutex> lg(_lock);
         update();

@@ -9,7 +9,8 @@
 import cmk.base.plugins.agent_based.kernel
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+from cmk.agent_based.v2 import get_rate, get_value_store
 
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |
@@ -50,7 +51,7 @@ def check_kernel(item, params, parsed):
 
     counter, value = item_values[0]
     per_sec = get_rate(get_value_store(), "counter", timestamp, value)
-    return check_levels(per_sec, counter, params, unit="/s", boundaries=(0, None))
+    return check_levels(per_sec, counter, params["levels"], unit="/s", boundaries=(0, None))
 
 
 # This check is deprecated. Please have a look at werk #8969.
@@ -58,6 +59,7 @@ check_info["kernel"] = LegacyCheckDefinition(
     service_name="Kernel %s",
     check_function=check_kernel,
     check_ruleset_name="vm_counter",
+    check_default_parameters={"levels": None},
 )
 
 # .

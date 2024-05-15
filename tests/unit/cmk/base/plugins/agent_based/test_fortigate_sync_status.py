@@ -7,13 +7,14 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.fortigate_sync_status import (
     check_fortigate_sync_status,
     discover_fortigate_sync_status,
     parse_fortigate_sync_status,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [[["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "0"]]]
 

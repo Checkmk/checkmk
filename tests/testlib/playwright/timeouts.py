@@ -9,7 +9,10 @@ from types import TracebackType
 
 from playwright.sync_api import Page
 
-TIMEOUT_ACTIVATE_CHANGES_MS = 15000
+# timeout for playwright assertions (millseconds
+TIMEOUT_ACTIVATE_CHANGES_MS = 15_000
+# timeout for playwright interactions (millseconds)
+TIMEOUT_ASSERTIONS = TIMEOUT_NAVIGATION = 2 * TIMEOUT_ACTIVATE_CHANGES_MS
 
 
 class TemporaryTimeout:
@@ -17,7 +20,7 @@ class TemporaryTimeout:
     Use this context manager if you want to use custom timeouts.
     """
 
-    default_timeout_ms = 30000
+    default_timeout_ms = TIMEOUT_NAVIGATION
 
     def __init__(self, page: Page, temporary_timeout_ms: int) -> None:
         self.page = page

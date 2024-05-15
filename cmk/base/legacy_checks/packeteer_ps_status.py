@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 
 def inventory_packeteer_ps_status(info):
@@ -23,7 +24,12 @@ def check_packeteer_ps_status(_no_item, _no_params, info):
             yield 2, "Power Supply %d not okay" % nr
 
 
+def parse_packeteer_ps_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["packeteer_ps_status"] = LegacyCheckDefinition(
+    parse_function=parse_packeteer_ps_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2334.2.1.5",

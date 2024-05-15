@@ -22,18 +22,21 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     parse_kube_strategy,
     Replicas,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
-    ControllerSpec,
-    DaemonSetReplicas,
-    DeploymentReplicas,
+
+from cmk.plugins.kube.schemata.api import (
     OnDelete,
     Recreate,
     RollingUpdate,
-    StatefulSetReplicas,
     StatefulSetRollingUpdate,
-    UpdateStrategy,
-    VSResultAge,
 )
+from cmk.plugins.kube.schemata.section import (
+    ControllerSpec,
+    DaemonSetReplicas,
+    DeploymentReplicas,
+    StatefulSetReplicas,
+    UpdateStrategy,
+)
+from cmk.plugins.lib.kube import VSResultAge
 
 
 def test_parse_kube_deployment_replicas() -> None:

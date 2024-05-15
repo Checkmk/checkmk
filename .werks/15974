@@ -1,0 +1,14 @@
+Title: azure_vault: Fix last backup status "Healthy" mislabeled as critical status
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696592659
+Edition: cce
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The Azure/Recovery Services Vault service currently classifies a "Healthy" last backup status incorrectly and will become critical because of it.
+This has been fixed with this werk.
+
+

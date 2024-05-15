@@ -21,24 +21,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["major_page_faults"] = {
-    "title": _l("Major page faults"),
-    "unit": "1/s",
-    "color": "#20ff80",
-}
-
-metric_info["page_swap_in"] = {
-    "title": _l("Page Swap In"),
-    "unit": "1/s",
-    "color": "33/a",
-}
-
-metric_info["page_swap_out"] = {
-    "title": _l("Page Swap Out"),
-    "unit": "1/s",
-    "color": "36/a",
-}
-
 metric_info["uncommitted"] = {
     "title": _l("Uncommitted"),
     "unit": "bytes",
@@ -165,36 +147,6 @@ metric_info["messages_outbound"] = {
     "color": "36/a",
 }
 
-metric_info["licenses"] = {
-    "title": _l("Used licenses"),
-    "unit": "count",
-    "color": "#ff6234",
-}
-
-metric_info["license_percentage"] = {
-    "title": _l("Used licenses"),
-    "unit": "%",
-    "color": "16/a",
-}
-
-metric_info["licenses_total"] = {
-    "title": _l("Total licenses"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["license_size"] = {
-    "title": _l("Size of license"),
-    "unit": "bytes",
-    "color": "11/a",
-}
-
-metric_info["license_usage"] = {
-    "title": _l("License usage"),
-    "unit": "%",
-    "color": "13/a",
-}
-
 metric_info["database_apply_lag"] = {
     "title": _l("Database apply lag"),
     "help": _l(
@@ -226,7 +178,7 @@ metric_info["jvm_garbage_collection_time"] = {
 metric_info["registered_desktops"] = {
     "title": _l("Registered desktops"),
     "unit": "count",
-    "color": "16/d",
+    "color": "16/a",
 }
 
 metric_info["time_in_GC"] = {
@@ -721,20 +673,6 @@ graph_info["deadlocks_and_waits"] = {
     "metrics": [
         ("deadlocks", "area"),
         ("lockwaits", "stack"),
-    ],
-}
-
-graph_info["licenses"] = {
-    "title": _l("Licenses"),
-    "metrics": [
-        (
-            "licenses_total",
-            "area",
-        ),
-        (
-            "licenses",
-            "area",
-        ),
     ],
 }
 

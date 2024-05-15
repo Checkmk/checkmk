@@ -5,6 +5,8 @@
 
 #include "livestatus/TableEventConsoleStatus.h"
 
+#include <memory>
+
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/IntColumn.h"
@@ -12,8 +14,7 @@
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 
-TableEventConsoleStatus::TableEventConsoleStatus(ICore *mc)
-    : TableEventConsole{mc} {
+TableEventConsoleStatus::TableEventConsoleStatus() {
     const ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "status_config_load_time",
@@ -126,4 +127,6 @@ std::string TableEventConsoleStatus::namePrefix() const {
     return "eventconsolestatus_";
 }
 
-Row TableEventConsoleStatus::getDefault() const { return Row{this}; }
+Row TableEventConsoleStatus::getDefault(const ICore & /*core*/) const {
+    return Row{this};
+}

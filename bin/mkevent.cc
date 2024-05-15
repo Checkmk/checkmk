@@ -168,9 +168,10 @@ int main(int argc, char **argv) {
         servaddr.sin_family = AF_INET;
         servaddr.sin_addr.s_addr = inet_addr(remote);
         servaddr.sin_port = htons(514);
-        sendto(fd, message, strlen(message), 0,
-               reinterpret_cast<struct sockaddr *>(&servaddr),
-               sizeof(servaddr));
+        ::sendto(fd, message, strlen(message), 0,
+                 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                 reinterpret_cast<struct sockaddr *>(&servaddr),
+                 sizeof(servaddr));
     } else {
         fd = open(path_to_pipe.c_str(), O_WRONLY);
         if (fd < 0) {

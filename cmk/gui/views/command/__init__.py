@@ -8,8 +8,7 @@ from .commands import (
     CommandGroupVarious,
     PermissionActionDowntimes,
     PermissionSectionAction,
-    register_command_groups,
-    register_commands,
+    register,
 )
 from .form import core_command, do_actions, get_command_groups, should_show_command_form
 from .group import (
@@ -38,6 +37,5 @@ __all__ = [
     "core_command",
     "PermissionSectionAction",
     "PermissionActionDowntimes",
-    "register_command_groups",
-    "register_commands",
+    "register",
 ]

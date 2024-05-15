@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+
+from cmk.agent_based.v2 import render
+from cmk.plugins.lib.couchbase import parse_couchbase_lines
 
 
 def discover_couchbase_nodes_size(section):
@@ -29,7 +31,7 @@ def get_couchbase_check_by_keys(key_disk, key_size):
                 on_disk,
                 "size_on_disk",
                 params.get("size_on_disk"),
-                human_readable_func=get_bytes_human_readable,
+                human_readable_func=render.bytes,
                 infoname="Size on disk",
             )
 
@@ -39,7 +41,7 @@ def get_couchbase_check_by_keys(key_disk, key_size):
                 size,
                 "data_size",
                 params.get("size"),
-                human_readable_func=get_bytes_human_readable,
+                human_readable_func=render.bytes,
                 infoname="Data size",
             )
 

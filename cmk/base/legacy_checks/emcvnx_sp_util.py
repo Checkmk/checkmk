@@ -14,11 +14,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
-emcvnx_sp_util_default_levels = (50.0, 60.0)
+from cmk.agent_based.v2 import get_rate, get_value_store, render
 
 
 def parse_emcvnx_sp_util(string_table):
@@ -33,16 +32,14 @@ def parse_emcvnx_sp_util(string_table):
 
 def inventory_emcvnx_sp_util(parsed):
     if "idle" in parsed and "busy" in parsed:
-        return [(None, emcvnx_sp_util_default_levels)]
-    return []
+        yield None, {}
 
 
 def check_emcvnx_sp_util(item, params, parsed):
     if not ("idle" in parsed and "busy" in parsed):
-        return None
+        return
 
     now = time.time()
-    warn, crit = params
     busy_ticks_rate = get_rate(
         get_value_store(), "emcvnx_sp_util.busy_ticks", now, parsed["busy"], raise_overflow=True
     )
@@ -55,18 +52,14 @@ def check_emcvnx_sp_util(item, params, parsed):
         sp_util = 100 * (
             busy_ticks_rate / (busy_ticks_rate + idle_ticks_rate)
         )  # fixed: true-division
-    infotext = "%.1f%%" % sp_util
-    if sp_util >= crit:
-        state = 2
-    elif sp_util >= warn:
-        state = 1
-    else:
-        state = 0
 
-    if state > 0:
-        infotext += f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
-
-    return state, infotext, [("storage_processor_util", sp_util, warn, crit, 0, 100.0)]
+    yield check_levels(
+        sp_util,
+        "storage_processor_util",
+        params,
+        human_readable_func=render.percent,
+        boundaries=(0, 100),
+    )
 
 
 check_info["emcvnx_sp_util"] = LegacyCheckDefinition(
@@ -75,4 +68,7 @@ check_info["emcvnx_sp_util"] = LegacyCheckDefinition(
     discovery_function=inventory_emcvnx_sp_util,
     check_function=check_emcvnx_sp_util,
     check_ruleset_name="sp_util",
+    check_default_parameters={
+        "levels": (50.0, 60.0),
+    },
 )

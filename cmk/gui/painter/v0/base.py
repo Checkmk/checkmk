@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import abc
@@ -17,17 +19,17 @@ from typing import Any, Literal
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.prediction import TimeRange
 
 from cmk.gui import visuals
+from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
-from cmk.gui.graphing._graph_specification import GraphMetric
-from cmk.gui.graphing._utils import CombinedSingleMetricSpec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -44,14 +46,15 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
+from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
-from ..v1.painter_lib import experimental_painter_registry
+from ..v1.painter_lib import experimental_painter_registry, Formatters
 from ..v1.painter_lib import Painter as V1Painter
 from ..v1.painter_lib import PainterConfiguration
+from .helpers import RenderLink
 
 ExportCellContent = str | dict[str, Any]
 PDFCellContent = str | tuple[Literal["icon"], str]
@@ -74,6 +77,61 @@ class Painter(abc.ABC):
     make use of more than one data columns. One example is the current
     service state. It uses the columns "service_state" and "has_been_checked".
     """
+
+    def __init__(  # pylint: disable=redefined-outer-name
+        self,
+        *,
+        user: LoggedInUser,
+        config: Config,
+        request: Request,
+        painter_options: PainterOptions,
+        theme: Theme,
+        url_renderer: RenderLink,
+    ):
+        self.user = user
+        self.config = config
+        self.request = request
+        self._painter_options = painter_options
+        self.theme = theme
+        self.url_renderer = url_renderer
+
+    def to_v1_painter(self) -> V1Painter[object]:
+        """Convert an instance of an old painter to a v1 Painter."""
+
+        def get_row(rows: Rows, config: PainterConfiguration) -> Sequence[Any]:
+            return rows
+
+        # Needed because of old calling conventions. Doesn't have any effect.
+        empty_cell = EmptyCell(None, None)
+
+        def format_html(row: Row, _painter_configuration: PainterConfiguration) -> CellSpec:
+            return self.render(row, empty_cell)
+
+        def format_json(row: Row, _painter_configuration: PainterConfiguration) -> object:
+            return self.export_for_json(row, empty_cell)
+
+        def format_csv(row: Row, _painter_configuration: PainterConfiguration) -> str:
+            result = self.export_for_csv(row, empty_cell)
+            if isinstance(result, HTML):
+                # ??? Typing doesn't fit.
+                return str(result)
+            return result
+
+        return V1Painter[Any](
+            ident=self.ident,
+            computer=get_row,
+            formatters=Formatters[Any](
+                html=format_html,
+                json=format_json,
+                csv=format_csv,
+            ),
+            title=self.title(empty_cell),
+            short_title=self.short_title(empty_cell),
+            columns=self.columns,
+            list_title=self.list_title(empty_cell),
+            painter_options=self.painter_options,
+            title_classes=self.title_classes(),
+        )
 
     @staticmethod
     def uuid_col(cell: Cell) -> str:
@@ -249,23 +307,22 @@ class Painter(abc.ABC):
         return self._compute_data(row, cell)
 
 
-class Painter2(Painter):
-    # Poor man's composition:  Renderer differs between CRE and non-CRE.
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ] | None = None
-
-
 class PainterRegistry(Registry[type[Painter]]):
     def plugin_name(self, instance: type[Painter]) -> str:
-        return instance().ident
+        return instance(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+        ).ident
 
 
 painter_registry = PainterRegistry()
 
 
-# Kept for pre 1.6 compatibility. But also the inventory.py uses this to
-# register some painters dynamically
+# Kept for pre 1.6 compatibility.
 def register_painter(ident: str, spec: dict[str, Any]) -> None:
     paint_function = spec["paint"]
     cls = type(
@@ -281,19 +338,25 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: paint_function(row),
             "export_for_python": (
-                lambda self, row, cell: spec["export_for_python"](row, cell)
-                if "export_for_python" in spec
-                else paint_function(row)[1]
+                lambda self, row, cell: (
+                    spec["export_for_python"](row, cell)
+                    if "export_for_python" in spec
+                    else paint_function(row)[1]
+                )
             ),
             "export_for_csv": (
-                lambda self, row, cell: spec["export_for_csv"](row, cell)
-                if "export_for_csv" in spec
-                else paint_function(row)[1]
+                lambda self, row, cell: (
+                    spec["export_for_csv"](row, cell)
+                    if "export_for_csv" in spec
+                    else paint_function(row)[1]
+                )
             ),
             "export_for_json": (
-                lambda self, row, cell: spec["export_for_json"](row, cell)
-                if "export_for_json" in spec
-                else paint_function(row)[1]
+                lambda self, row, cell: (
+                    spec["export_for_json"](row, cell)
+                    if "export_for_json" in spec
+                    else paint_function(row)[1]
+                )
             ),
             "group_by": lambda self, row, cell: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
@@ -390,10 +453,26 @@ class Cell:
             return None
 
     def painter(self) -> Painter:
+        painter_options_inst = PainterOptions.get_instance()
         try:
-            return PainterAdapter(experimental_painter_registry[self.painter_name()])
+            return PainterAdapter(
+                experimental_painter_registry[self.painter_name()],
+                user=user,
+                config=active_config,
+                request=request,
+                painter_options=painter_options_inst,
+                theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
+            )
         except KeyError:
-            return painter_registry[self.painter_name()]()
+            return painter_registry[self.painter_name()](
+                user=user,
+                config=active_config,
+                request=request,
+                painter_options=painter_options_inst,
+                theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
+            )
 
     def painter_name(self) -> PainterName:
         assert self._painter_name is not None
@@ -456,7 +535,14 @@ class Cell:
 
     def tooltip_painter(self) -> Painter:
         assert self._tooltip_painter_name is not None
-        return painter_registry[self._tooltip_painter_name]()
+        return painter_registry[self._tooltip_painter_name](
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+        )
 
     def paint_as_header(self) -> None:
         # Optional: Sort link in title cell
@@ -525,7 +611,7 @@ class Cell:
 
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
-    def render_for_pdf(self, row: Row, time_range: TimeRange) -> PDFCellSpec:
+    def render_for_pdf(self, row: Row, time_range: tuple[int, int]) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             themes = theme.icon_themes()
@@ -705,7 +791,35 @@ class EmptyCell(Cell):
 
 
 class PainterAdapter(Painter):
-    def __init__(self, painter: V1Painter):
+    """Adapt a "new" Painter to work in code expecting an "old" one.
+
+    "new" means Painters deriving from cmk.gui.painter.v1.painter_lib.Painter
+    "old" means Painters deriving from cmk.gui.painter.v0.base.Painter
+
+    Args:
+        painter: a "new" Painter instance
+
+    """
+
+    def __init__(  # pylint: disable=redefined-outer-name
+        self,
+        painter: V1Painter,
+        *,
+        user: LoggedInUser,
+        config: Config,
+        request: Request,
+        painter_options: PainterOptions,
+        theme: Theme,
+        url_renderer: RenderLink,
+    ):
+        super().__init__(
+            user=user,
+            config=config,
+            request=request,
+            painter_options=painter_options,
+            theme=theme,
+            url_renderer=url_renderer,
+        )
         self._painter = painter
 
     @property

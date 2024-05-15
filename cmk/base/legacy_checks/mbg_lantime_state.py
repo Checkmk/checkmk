@@ -10,7 +10,8 @@ from cmk.base.check_legacy_includes.mbg_lantime import (
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, equals, not_exists, SNMPTree
+
+from cmk.agent_based.v2 import all_of, equals, not_exists, SNMPTree, StringTable
 
 
 def inventory_mbg_lantime_state(info):
@@ -31,7 +32,12 @@ def check_mbg_lantime_state(_no_item, params, info):
     return check_mbg_lantime_state_common(states, _no_item, params, info)
 
 
+def parse_mbg_lantime_state(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mbg_lantime_state"] = LegacyCheckDefinition(
+    parse_function=parse_mbg_lantime_state,
     detect=all_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
         not_exists(".1.3.6.1.4.1.5597.30.0.2.*"),

@@ -14,7 +14,6 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
-import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
 from cmk.utils.store._file import (
@@ -129,7 +128,9 @@ def load_mk_file(
         acquire_lock(path)
 
     try:
-        exec(path.read_bytes(), globals(), default)  # nosec B102 # BNS:aee528
+        exec(
+            compile(path.read_bytes(), path, "exec"), globals(), default
+        )  # nosec B102 # BNS:aee528
     except FileNotFoundError:
         pass
     except (MKTerminate, MKTimeout):
@@ -248,14 +249,6 @@ def _write(path: Path, serializer: Serializer, content: Any) -> None:
         store.write_obj(content)
 
 
-def _default_temp_dir() -> Path:
-    return cmk.utils.paths.tmp_dir
-
-
-def _default_root_dir() -> Path:
-    return cmk.utils.paths.omd_root
-
-
 def _pickled_files_cache_dir(temp_dir: Path) -> Path:
     return temp_dir / "pickled_files_cache"
 
@@ -268,8 +261,8 @@ def try_load_file_from_pickle_cache(
     *,
     default: Any,
     lock: bool = False,
-    temp_dir: Path = _default_temp_dir(),
-    root_dir: Path = _default_root_dir(),
+    temp_dir: Path,
+    root_dir: Path,
 ) -> Any:
     """Try to load a pickled version of the requested file from cache, otherwise load `path`
 
@@ -323,6 +316,6 @@ def try_load_file_from_pickle_cache(
     return data
 
 
-def clear_pickled_files_cache(temp_dir: Path = _default_temp_dir()) -> None:
+def clear_pickled_files_cache(temp_dir: Path) -> None:
     """Remove all cached pickle files"""
     shutil.rmtree(_pickled_files_cache_dir(temp_dir), ignore_errors=True)

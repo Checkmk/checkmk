@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-The main purpose of this plugin is to ensure the regular execution of the Datadog special agent in
+The main purpose of this plug-in is to ensure the regular execution of the Datadog special agent in
 the case where only events are fetched. Without this plugin, no services would be detected in this
 case and the agent would not be executed regularly in the background.
 """

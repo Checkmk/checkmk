@@ -20,7 +20,7 @@ def ibm_mq_version():
             Tuple(
                 title=_("Check for correct version"),
                 help=_(
-                    "You can make sure that the plugin is running"
+                    "You can make sure that the plug-in is running"
                     " with a specific or a minimal version."
                 ),
                 elements=[

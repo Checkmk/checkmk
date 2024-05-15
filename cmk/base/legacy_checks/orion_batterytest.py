@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 
 def inventory_orion_batterytest(info):
@@ -35,7 +36,12 @@ def check_orion_batterytest(item, params, info):
     return 0, "No test result available"
 
 
+def parse_orion_batterytest(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["orion_batterytest"] = LegacyCheckDefinition(
+    parse_function=parse_orion_batterytest,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20246"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20246.2.3.1.1.1.2.5.2.2",

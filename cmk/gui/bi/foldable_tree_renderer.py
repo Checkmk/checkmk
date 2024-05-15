@@ -374,7 +374,9 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                 html.close_span()
 
             output: HTML = cmk.gui.view_utils.format_plugin_output(
-                effective_state["output"], shall_escape=active_config.escape_plugin_output
+                effective_state["output"],
+                request=request,
+                shall_escape=active_config.escape_plugin_output,
             )
 
             if output:
@@ -526,8 +528,7 @@ def _status_tree_depth(tree):
     return maxdepth + 1
 
 
-class FoldableTreeRendererBottomUp(ABCFoldableTreeRendererTable):
-    ...
+class FoldableTreeRendererBottomUp(ABCFoldableTreeRendererTable): ...
 
 
 class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):

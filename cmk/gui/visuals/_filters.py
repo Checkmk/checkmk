@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import json
 import re
 from collections.abc import Callable, Container, Iterable, Mapping
@@ -11,8 +13,8 @@ from typing import Literal
 
 import livestatus
 
-import cmk.gui.sites as sites
 from cmk.gui import query_filters
+from cmk.gui import sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
@@ -125,10 +127,10 @@ class PageValidateFilter(AjaxPage):
 def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         RegexAjaxDropdownFilter(
-            title=_l("Hostname (regex)"),
+            title=_l("Host name (regex)"),
             sort_index=100,
             info="host",
-            autocompleter=AutocompleterConfig(ident="monitored_hostname"),
+            autocompleter=AutocompleterConfig(ident="monitored_hostname", escape_regex=True),
             query_filter=query_filters.TextQuery(
                 ident="hostregex",
                 column="host_name",
@@ -142,7 +144,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Hostname (exact match)"),
+            title=_l("Host name (exact match)"),
             sort_index=101,
             info="host",
             autocompleter=AutocompleterConfig(ident="monitored_hostname", strict=True),
@@ -175,7 +177,9 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             title=_l("Service (regex)"),
             sort_index=200,
             info="service",
-            autocompleter=AutocompleterConfig(ident="monitored_service_description"),
+            autocompleter=AutocompleterConfig(
+                ident="monitored_service_description", escape_regex=True
+            ),
             query_filter=query_filters.TextQuery(
                 ident="serviceregex",
                 column="service_description",
@@ -234,7 +238,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Hostname or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
+            title=_l("Host name or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
             sort_index=102,
             info="host",
             description=_l("Search field allowing regular expressions and partial matches"),
@@ -989,7 +993,11 @@ class SiteFilter(Filter):
 
 def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
-    return get_site_config(livestatus.SiteId(current_value))["alias"] if current_value else None
+    return (
+        get_site_config(active_config, livestatus.SiteId(current_value))["alias"]
+        if current_value
+        else None
+    )
 
 
 class MultipleSitesFilter(SiteFilter):
@@ -1031,7 +1039,7 @@ def register_site_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         MultipleSitesFilter(
-            title=_l("Multiple Sites"),
+            title=_l("Multiple sites"),
             sort_index=502,
             query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
             description=_l("Associative selection of multiple sites"),
@@ -1223,7 +1231,7 @@ def register_log_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Log: plugin output (regex)"),
+            title=_l("Log: plug-in output (regex)"),
             sort_index=202,
             info="log",
             query_filter=query_filters.TextQuery(
@@ -1385,8 +1393,15 @@ class TagFilter(Filter):
         ]
 
         html.open_table()
-        for num in range(self.query_filter.count):
+        # Show at least three rows of tag filters (hard coded self.query_filter.count) and add more
+        # rows if respective values are given via the URL.
+        # E.g. links from the virtual host tree snap-in may contain multiple tag filter values
+        num = 0
+        while num < self.query_filter.count or value.get(
+            "%s_%d_grp" % (self.query_filter.var_prefix, num)
+        ):
             prefix = "%s_%d" % (self.query_filter.var_prefix, num)
+            num += 1
             html.open_tr()
             html.open_td()
             grp_value = value.get(prefix + "_grp", "")
@@ -1441,6 +1456,11 @@ class TagFilter(Filter):
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
+
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the HTML
+        var context. This can be used to persist the filter settings."""
+        return dict(request.itervars(self.query_filter.var_prefix))
 
 
 class _FilterHostAuxTags(Filter):
@@ -1521,7 +1541,7 @@ def register_tag_and_label_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         TagFilter(
-            title=_l("Tags"),
+            title=_l("Service tags"),
             query_filter=query_filters.TagsQuery(object_type="service"),
             is_show_more=True,
         )
@@ -1824,20 +1844,24 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             if len(connected_sites) == 1:
                 raise MKMissingDataError(
                     _(
-                        "As soon as you add your Checkmk server to the monitoring, a graph showing "
-                        "the history of your host problems will appear here.\n"
-                        "Please also be aware that you might see this message might appear as a result of a filtered dashboard."
-                        "This dashlet currently only supports filtering for sites."
+                        "As soon as you add your Checkmk server to the "
+                        "monitoring, a graph showing the history of your host "
+                        "problems will appear here.\n Please also be aware that "
+                        "this message might appear as a result of a filtered "
+                        "dashboard. This dashlet currently only supports "
+                        "filtering for sites."
                     )
                     + doc_ref
                 )
             raise MKMissingDataError(
                 _(
-                    "As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
-                    "the history of your host problems will appear here. Currently the following "
-                    "Checkmk sites are not monitored: %s.\n"
-                    "Please also be aware that you might see this message might appear as a result of a filtered dashboard."
-                    "This dashlet currently only supports filtering for sites."
+                    "As soon as you add your Checkmk server(s) to the "
+                    "monitoring, a graph showing the history of your host "
+                    "problems will appear here. Currently, the following Checkmk "
+                    "sites are not monitored: %s\n Please also be aware that "
+                    "this message might appear as a result of a filtered "
+                    "dashboard. This dashlet currently only supports filtering "
+                    "for sites."
                 )
                 % ", ".join(connected_sites - unique_sites_from_services)
                 + doc_ref

@@ -5,18 +5,18 @@
 
 from collections.abc import Iterable, Mapping
 
-import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+import cmk.plugins.lib.pulse_secure as pulse_secure
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 
 Section = Mapping[str, int]
 
 METRIC_PULSE_SECURE_DISK = "disk_utilization"
 
 
-def parse_pulse_secure_disk_util(string_table: StringTable) -> Section:
+def parse_pulse_secure_disk_util(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, METRIC_PULSE_SECURE_DISK)
 
 

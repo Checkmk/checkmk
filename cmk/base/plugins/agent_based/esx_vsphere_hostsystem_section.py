@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.plugins.lib.esx_vsphere import Section
+
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
-from .utils.esx_vsphere import Section
 
 
 def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:
@@ -37,7 +38,7 @@ def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:
 def host_label_function(section: Section) -> HostLabelGenerator:
     """
     For some reason all docs for the same host label have to be identical.
-    Here we only set this to server because this plugin is executed on
+    Here we only set this to server because this plug-in is executed on
     ESXi piggy back data.
 
     Labels:

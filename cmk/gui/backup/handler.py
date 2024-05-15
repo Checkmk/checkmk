@@ -45,6 +45,8 @@ from cmk.utils.backup.targets.remote_interface import (
 )
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.certs import CertManagementEvent
+from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import omd_root
@@ -101,6 +103,13 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 from cmk.gui.wato import IndividualOrStoredPassword
+
+
+def register() -> None:
+    target_type_registry.register(BackupTargetLocal)
+    target_type_registry.register(BackupTargetAWSS3Bucket)
+    target_type_registry.register(BackupTargetAzureBlobStorage)
+
 
 # .
 #   .--Config--------------------------------------------------------------.
@@ -251,8 +260,7 @@ class MKBackupJob(abc.ABC):
         }[state]
 
     @abc.abstractmethod
-    def state_file_path(self) -> Path:
-        ...
+    def state_file_path(self) -> Path: ...
 
     def cleanup(self) -> None:
         self.state_file_path().unlink(missing_ok=True)
@@ -309,8 +317,7 @@ class MKBackupJob(abc.ABC):
             raise MKGeneralException(_("Failed to start the job: %s") % completed_process.stdout)
 
     @abc.abstractmethod
-    def _start_command(self) -> Sequence[str | Path]:
-        ...
+    def _start_command(self) -> Sequence[str | Path]: ...
 
     def stop(self) -> None:
         state = self.state()
@@ -722,7 +729,7 @@ class PageEditBackupJob:
 
     def vs_backup_job(self, config: Config) -> Dictionary:
         if self._new:
-            ident_attr = [
+            ident_attr: list[tuple[str, TextInput | FixedValue]] = [
                 (
                     "ident",
                     ID(
@@ -765,8 +772,7 @@ class PageEditBackupJob:
                     "target",
                     DropdownChoice(
                         title=_("Target"),
-                        # TODO: understand why mypy complains
-                        choices=self.backup_target_choices(config),  # type: ignore[misc]
+                        choices=self.backup_target_choices(config),
                         validate=lambda target_id, varprefix: self._validate_target(
                             config,
                             target_id,
@@ -886,17 +892,16 @@ class PageEditBackupJob:
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def page(self) -> None:
-        html.begin_form("edit_job", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit_job", method="POST"):
+            html.prevent_password_auto_completion()
 
-        vs = self.vs_backup_job(Config.load())
+            vs = self.vs_backup_job(Config.load())
 
-        vs.render_input("edit_job", dict(self._job_cfg))
-        vs.set_focus("edit_job")
-        forms.end()
+            vs.render_input("edit_job", dict(self._job_cfg))
+            vs.set_focus("edit_job")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 _TBackupJob = TypeVar("_TBackupJob", bound=MKBackupJob)
@@ -905,13 +910,11 @@ _TBackupJob = TypeVar("_TBackupJob", bound=MKBackupJob)
 class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
     @property
     @abc.abstractmethod
-    def ident(self) -> str:
-        ...
+    def ident(self) -> str: ...
 
     @property
     @abc.abstractmethod
-    def job(self) -> _TBackupJob:
-        ...
+    def job(self) -> _TBackupJob: ...
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
@@ -1022,28 +1025,23 @@ class PageBackupJobState(PageAbstractMKBackupJobState[Job]):
 
 class ABCBackupTargetType(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, params: Mapping[str, object]) -> None:
-        ...
+    def __init__(self, params: Mapping[str, object]) -> None: ...
 
     @property
     @abc.abstractmethod
-    def parameters(self) -> Mapping[str, object]:
-        ...
+    def parameters(self) -> Mapping[str, object]: ...
 
     @property
     @abc.abstractmethod
-    def target(self) -> TargetProtocol:
-        ...
+    def target(self) -> TargetProtocol: ...
 
     @staticmethod
     @abc.abstractmethod
-    def ident() -> str:
-        ...
+    def ident() -> str: ...
 
     @staticmethod
     @abc.abstractmethod
-    def title() -> str:
-        ...
+    def title() -> str: ...
 
     @classmethod
     def valuespec(cls) -> Dictionary:
@@ -1055,20 +1053,17 @@ class ABCBackupTargetType(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def dictionary_elements(cls) -> DictionaryElements:
-        ...
+    def dictionary_elements(cls) -> DictionaryElements: ...
 
     @abc.abstractmethod
-    def validate(self, varprefix: str) -> None:
-        ...
+    def validate(self, varprefix: str) -> None: ...
 
     def backups(self) -> Mapping[str, SiteBackupInfo]:
         _check_if_target_ready(self.target)
         return dict(self.target.list_backups())
 
     @abc.abstractmethod
-    def remove_backup(self, backup_ident: str) -> None:
-        ...
+    def remove_backup(self, backup_ident: str) -> None: ...
 
     def render(self) -> ValueSpecText:
         return self.valuespec().value_to_html(dict(self.parameters))
@@ -1082,7 +1077,6 @@ class TargetTypeRegistry(Registry[type[ABCBackupTargetType]]):
 target_type_registry = TargetTypeRegistry()
 
 
-@target_type_registry.register
 class BackupTargetLocal(ABCBackupTargetType):
     def __init__(self, params: LocalTargetParams) -> None:
         self._params = params
@@ -1182,16 +1176,13 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
     @abc.abstractmethod
     def _instantiate_target(
         params: RemoteTargetParams,
-    ) -> RemoteTarget[TRemoteParams, TRemoteStorage]:
-        ...
+    ) -> RemoteTarget[TRemoteParams, TRemoteStorage]: ...
 
     @classmethod
     @abc.abstractmethod
-    def _remote_dictionary_elements(cls) -> DictionaryElements:
-        ...
+    def _remote_dictionary_elements(cls) -> DictionaryElements: ...
 
 
-@target_type_registry.register
 class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
     @staticmethod
     def ident() -> str:
@@ -1235,7 +1226,6 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
         )
 
 
-@target_type_registry.register
 class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, BlobStorage]):
     @staticmethod
     def ident() -> str:
@@ -1691,7 +1681,7 @@ class PageEditBackupTarget:
 
     def vs_backup_target(self, config: Config) -> Dictionary:
         if self._new:
-            ident_attr = [
+            ident_attr: list[tuple[str, TextInput | FixedValue]] = [
                 (
                     "ident",
                     ID(
@@ -1783,17 +1773,16 @@ class PageEditBackupTarget:
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def page(self) -> None:
-        html.begin_form("edit_target", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit_target", method="POST"):
+            html.prevent_password_auto_completion()
 
-        vs = self.vs_backup_target(Config.load())
+            vs = self.vs_backup_target(Config.load())
 
-        vs.render_input("edit_target", dict(self._target_cfg))
-        vs.set_focus("edit_target")
-        forms.end()
+            vs.render_input("edit_target", dict(self._target_cfg))
+            vs.set_focus("edit_target")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 # .
@@ -1846,6 +1835,10 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     def _delete_confirm_title(self, nr: int) -> str:
         return _("Delete backup key #%d") % nr
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
+
 
 class PageBackupEditKey(key_mgmt.PageEditKey):
     back_mode = "backup_keys"
@@ -1861,6 +1854,10 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
             "encrypt a backup, you will need the private key part together with the "
             "passphrase to decrypt the backup."
         )
+
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
 
 
 class PageBackupUploadKey(key_mgmt.PageUploadKey):
@@ -1878,6 +1875,10 @@ class PageBackupUploadKey(key_mgmt.PageUploadKey):
             "passphrase to decrypt the backup."
         )
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
+
 
 class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
     back_mode = "backup_keys"
@@ -1887,7 +1888,7 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
 
     def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
         super()._send_download(keys, key_id)
-        keys[key_id].not_downloaded = True
+        keys[key_id].not_downloaded = False
         self.key_store.save(keys)
 
     def _file_name(self, key_id: int, key: Key) -> str:
@@ -1938,7 +1939,7 @@ class RestoreJob(MKBackupJob):
         return _("Restore")
 
     def state_file_path(self) -> Path:
-        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])
+        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])  # nosec B108 # BNS:13b2c8
 
     def complete(self) -> None:
         self.cleanup()
@@ -2117,8 +2118,8 @@ class PageBackupRestore:
                     # Validate the passphrase
                     try:
                         key.to_certificate_with_private_key(passphrase)
-                    except ValueError:
-                        raise MKUserError("_key_p_passphrase", _("Invalid pass phrase"))
+                    except (ValueError, WrongPasswordError):
+                        raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
                     transactions.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
@@ -2139,15 +2140,14 @@ class PageBackupRestore:
                 "passphrase of the encryption key."
             )
         )
-        html.begin_form("key", method="GET")
-        html.hidden_field("_action", "start")
-        html.hidden_field("_backup", backup_ident)
-        html.prevent_password_auto_completion()
-        self._vs_key().render_input("_key", {})
-        html.button("upload", _("Start restore"))
-        self._vs_key().set_focus("_key")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("key", method="GET"):
+            html.hidden_field("_action", "start")
+            html.hidden_field("_backup", backup_ident)
+            html.prevent_password_auto_completion()
+            self._vs_key().render_input("_key", {})
+            html.button("upload", _("Start restore"))
+            self._vs_key().set_focus("_key")
+            html.hidden_fields()
         html.footer()
         return FinalizeRequest(code=200)
 

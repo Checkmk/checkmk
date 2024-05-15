@@ -5,15 +5,19 @@
 
 import sys
 
-from opsgenie_sdk.api.alert import AlertApi  # type: ignore[import]
-from opsgenie_sdk.api.alert.acknowledge_alert_payload import (  # type: ignore[import]
+from opsgenie_sdk.api.alert import AlertApi  # type: ignore[import-untyped]
+from opsgenie_sdk.api.alert.acknowledge_alert_payload import (  # type: ignore[import-untyped]
     AcknowledgeAlertPayload,
 )
-from opsgenie_sdk.api.alert.close_alert_payload import CloseAlertPayload  # type: ignore[import]
-from opsgenie_sdk.api.alert.create_alert_payload import CreateAlertPayload  # type: ignore[import]
-from opsgenie_sdk.api_client import ApiClient  # type: ignore[import]
-from opsgenie_sdk.configuration import Configuration  # type: ignore[import]
-from opsgenie_sdk.rest import ApiException  # type: ignore[import]
+from opsgenie_sdk.api.alert.close_alert_payload import (  # type: ignore[import-untyped]
+    CloseAlertPayload,
+)
+from opsgenie_sdk.api.alert.create_alert_payload import (  # type: ignore[import-untyped]
+    CreateAlertPayload,
+)
+from opsgenie_sdk.api_client import ApiClient  # type: ignore[import-untyped]
+from opsgenie_sdk.configuration import Configuration  # type: ignore[import-untyped]
+from opsgenie_sdk.rest import ApiException  # type: ignore[import-untyped]
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
@@ -159,7 +163,11 @@ $LONGHOSTOUTPUT$
 """
         desc = context.get("PARAMETER_HOST_DESC") or tmpl_host_desc
         msg = context.get("PARAMETER_HOST_MSG") or tmpl_host_msg
-        alias = "HOST_PROBLEM_ID: %s" % context["HOSTPROBLEMID"]
+        alias = (
+            f'HOST_PROBLEM_ID: {context["LASTHOSTPROBLEMID"]}'
+            if context["HOSTPROBLEMID"] == "0"
+            else f'HOST_PROBLEM_ID: {context["HOSTPROBLEMID"]}'
+        )
         ack_author = context["HOSTACKAUTHOR"]
         ack_comment = context["HOSTACKCOMMENT"]
     else:
@@ -173,7 +181,11 @@ $LONGSERVICEOUTPUT$
 """
         desc = context.get("PARAMETER_SVC_DESC") or tmpl_svc_desc
         msg = context.get("PARAMETER_SVC_MSG") or tmpl_svc_msg
-        alias = "SVC_PROBLEM_ID: %s" % context["SERVICEPROBLEMID"]
+        alias = (
+            f'SVC_PROBLEM_ID: {context["LASTSERVICEPROBLEMID"]}'
+            if context["SERVICEPROBLEMID"] == "0"
+            else f'SVC_PROBLEM_ID: {context["SERVICEPROBLEMID"]}'
+        )
         ack_author = context["SERVICEACKAUTHOR"]
         ack_comment = context["SERVICEACKCOMMENT"]
 

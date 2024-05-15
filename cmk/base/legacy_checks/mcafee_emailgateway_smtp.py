@@ -4,26 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
-# TODO params?
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
+
+
+def parse_mcafee_emailgateway_smtp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
+def inventory_mcafee_gateway_generic(info):
+    return [(None, {})]
 
 
 def check_mcafee_emailgateway_smtp(item, params, info):
     total_connections, total_bytes, kernel_mode_blocked, kernel_mode_active = map(int, info[0])
     return 0, "Total connections: {} ({}), Kernel blocked: {}, Kernel active: {}".format(
         total_connections,
-        get_bytes_human_readable(total_bytes),
+        render.bytes(total_bytes),
         kernel_mode_blocked,
         kernel_mode_active,
     )
 
 
 check_info["mcafee_emailgateway_smtp"] = LegacyCheckDefinition(
+    parse_function=parse_mcafee_emailgateway_smtp,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.4.1.2.3.3",

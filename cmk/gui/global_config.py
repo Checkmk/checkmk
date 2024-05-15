@@ -38,7 +38,8 @@ class GlobalConfig(BaseModel):
 def load_global_config() -> GlobalConfig:
     path = cse_config_dir / "global-config.json"
     try:
-        return GlobalConfig.parse_file(path)
+        with open(path, encoding="utf-8") as file:
+            return GlobalConfig.model_validate_json(file.read())
     except Exception as e:
         LOGGER.debug("Failed to load config from %s: %s", path, e)
         return GlobalConfig(

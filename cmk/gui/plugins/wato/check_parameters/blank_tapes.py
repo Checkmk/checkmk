@@ -9,15 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate
 
 
 def _parameter_valuespec_blank_tapes():
-    return Tuple(
-        elements=[
-            Integer(title=_("Warning below"), default_value=5),
-            Integer(title=_("Critical below"), default_value=1),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels_lower",
+                    SimpleLevels(
+                        spec=Integer,
+                        default_levels=(5, 1),
+                        direction="lower",
+                    ),
+                )
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
     )
 
 

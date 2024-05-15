@@ -16,8 +16,6 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 
-from cmk.base.api.agent_based.checking_classes import DiscoveryResult
-from cmk.base.api.agent_based.inventory_classes import InventoryResult
 from cmk.base.api.agent_based.register import (
     _config,
     export,
@@ -27,9 +25,9 @@ from cmk.base.api.agent_based.register import (
     is_registered_snmp_section_plugin,
     is_stored_ruleset,
 )
-from cmk.base.api.agent_based.section_classes import SNMPTree
-from cmk.base.api.agent_based.type_defs import HostLabelGenerator
-from cmk.base.api.agent_based.utils import startswith
+
+from cmk.agent_based.v1 import SNMPTree, startswith
+from cmk.agent_based.v1.type_defs import DiscoveryResult, HostLabelGenerator, InventoryResult
 
 from .test_check_plugins import dummy_function_ips
 from .test_section_plugins import parse_dummy
@@ -60,7 +58,7 @@ def dummy_inventory_function(
 
 @pytest.fixture(name="valid_plugin_module_name")
 def fixture_valid_plugin_module_name() -> Iterator[None]:
-    with patch.object(export, "get_validated_plugin_module_name") as mocked_method:
+    with patch.object(export, "get_validated_plugin_location") as mocked_method:
         mocked_method.side_effect = lambda: None
         yield
 

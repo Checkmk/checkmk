@@ -16,6 +16,7 @@ from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
 from cmk.utils.version import __version__, Version
@@ -27,6 +28,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
+from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
 
@@ -115,6 +117,9 @@ class LoggedInUser:
 
     def reset_language(self) -> None:
         self._unset_attribute("language")
+
+    def is_automation_user(self) -> bool:
+        return AutomationUserSecret(self.ident).exists()
 
     @property
     def show_mode(self) -> str:
@@ -374,9 +379,14 @@ class LoggedInUser:
         hooks.call("permission-checked", pname)
         return they_may
 
-    def need_permission(self, pname: str) -> None:
-        if not self.may(pname):
-            perm = permissions.permission_registry[pname]
+    def need_permission(self, permission: str | BasePerm) -> None:
+        if isinstance(permission, BasePerm):
+            for p in permission.iter_perms():
+                self.need_permission(p.name)
+            return
+
+        if not self.may(permission):
+            perm = permissions.permission_registry[permission]
             raise MKAuthException(
                 _(
                     "We are sorry, but you lack the permission "
@@ -428,7 +438,7 @@ class LoggedInUser:
 class LoggedInSuperUser(LoggedInUser):
     def __init__(self) -> None:
         super().__init__(None)
-        self.alias = "Superuser for unauthenticated pages"
+        self.alias = "Superuser for internal use"
         self.email = "admin"
 
     def _gather_roles(self, _user_id: UserId | None) -> list[str]:

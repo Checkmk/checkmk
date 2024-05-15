@@ -1,4 +1,4 @@
-Title: `md` check: crashes with IndexError (list index out of range) on invalid input
+Title: md check: crashes with IndexError (list index out of range) on invalid input
 Class: fix
 Compatible: compat
 Component: checks

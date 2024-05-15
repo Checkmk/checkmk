@@ -4,32 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.fortigate_sessions import fortigate_sessions
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    exists,
-    not_exists,
-    SNMPTree,
-)
 
-fortigate_sessions_default_levels = (100000, 150000)
+from cmk.agent_based.v2 import all_of, contains, exists, not_exists, SNMPTree, StringTable
 
 
 def inventory_fortigate_sessions(info):
-    return [(None, fortigate_sessions_default_levels)]
+    return [(None, {})]
 
 
 def check_fortigate_sessions(item, params, info):
     try:
-        return fortigate_sessions(int(info[0][0]), params)
+        sessions = int(info[0][0])
     except (IndexError, ValueError):
-        return None
+        return
+
+    yield check_levels(
+        sessions, "session", params["levels"], human_readable_func=str, infoname="Sessions"
+    )
+
+
+def parse_fortigate_sessions(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["fortigate_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_fortigate_sessions,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
         exists(".1.3.6.1.4.1.12356.1.10.0"),
@@ -44,4 +45,5 @@ check_info["fortigate_sessions"] = LegacyCheckDefinition(
     discovery_function=inventory_fortigate_sessions,
     check_function=check_fortigate_sessions,
     check_ruleset_name="fortigate_sessions",
+    check_default_parameters={"levels": (100000, 150000)},
 )

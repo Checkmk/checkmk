@@ -1,0 +1,21 @@
+Title: discovery: Fix missing datasource error for cluster hosts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696495573
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Previously, a missing datasource error would be shown in a discovery
+page of a cluster host if the cluster host had 'No IP' configured
+but had nodes with an agent datasource.
+
+Services of a cluster host would also become vanished.
+
+Checkmk now supports the described setup, there is no error in the
+discovery page and clustered services are discovered.
+
+

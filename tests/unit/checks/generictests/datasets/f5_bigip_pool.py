@@ -28,18 +28,18 @@ info = [
 
 discovery = {
     "": [
-        ("/Common/ad_hubservice-pool", (2, 1)),
-        ("/Common/ad_testch-pool", (2, 1)),
-        ("/Common/ldap_testch-pool", (2, 1)),
-        ("/Common/ldap_testhk-pool", (2, 1)),
+        ("/Common/ad_hubservice-pool", {}),
+        ("/Common/ad_testch-pool", {}),
+        ("/Common/ldap_testch-pool", {}),
+        ("/Common/ldap_testhk-pool", {}),
     ]
 }
 
 checks = {
     "": [
-        ("/Common/ad_hubservice-pool", (2, 1), [(0, "2 of 2 members are up", [])]),
-        ("/Common/ad_testch-pool", (2, 1), [(0, "2 of 2 members are up", [])]),
-        ("/Common/ldap_testch-pool", (2, 1), [(0, "2 of 2 members are up", [])]),
-        ("/Common/ldap_testhk-pool", (2, 1), [(0, "2 of 2 members are up", [])]),
+        ("/Common/ad_hubservice-pool", {"levels_lower": (2, 1)}, [(0, "2 of 2 members are up", [])]),
+        ("/Common/ad_testch-pool", {"levels_lower": (2, 1)}, [(0, "2 of 2 members are up", [])]),
+        ("/Common/ldap_testch-pool", {"levels_lower": (2, 1)}, [(0, "2 of 2 members are up", [])]),
+        ("/Common/ldap_testhk-pool", {"levels_lower": (2, 1)}, [(0, "2 of 2 members are up", [])]),
     ]
 }

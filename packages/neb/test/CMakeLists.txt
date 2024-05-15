@@ -19,16 +19,8 @@ include(ExternalProject)
 # <test> target
 enable_testing()
 
-add_executable(
-  test
-  DummyNagios.cc
-  TableQueryHelper.cc
-  TableQueryHelper.h
-  test_CrashReport.cc
-  test_DictFilter.cc
-  test_MacroExpander.cc
-  test_utilities.cc
-  test_utilities.h)
+add_executable(test DummyNagios.cc test_CrashReport.cc test_DictFilter.cc
+                    test_MacroExpander.cc test_utilities.cc test_utilities.h)
 
 add_executable(NagiosMockup NagiosMockup.cc)
 target_include_directories(NagiosMockup PRIVATE ../include)
@@ -37,7 +29,6 @@ target_link_libraries(NagiosMockup PRIVATE neb pthread stdc++)
 add_dependencies(test NagiosMockup)
 
 target_include_directories(test PUBLIC ../include ${googletest_ext_include})
-target_compile_features(test PRIVATE cxx_std_17)
 target_link_options(test PRIVATE -rdynamic -static-libstdc++)
 target_link_libraries(test PRIVATE neb pthread stdc++ GTest::gtest_main)
 

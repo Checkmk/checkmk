@@ -5,9 +5,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.mobileiron import Section
+
 from .agent_based_api.v1 import check_levels, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mobileiron import Section
 
 
 def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> CheckResult:

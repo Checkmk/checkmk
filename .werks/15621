@@ -1,4 +1,4 @@
-Title: <tt>check_http</tt>: Fix Option <tt>Enforce IPv4</tt>
+Title: check_http: Fix Option Enforce IPv4
 Class: fix
 Compatible: compat
 Component: checks

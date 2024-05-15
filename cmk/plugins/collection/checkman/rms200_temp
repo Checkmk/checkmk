@@ -1,0 +1,15 @@
+title: RMS200 Unit: Temperatures
+agents: snmp
+catalog: hw/environment/infratec_plus
+license: GPLv2
+distribution: check_mk
+description:
+ This plug-in polls the temperature of all connected sensors.
+ It is possible to define levels for warning and critical temperature. The plug-in return
+ {CRIT} or {WARN} if the current temperatue is higher then one of the levels.
+
+item:
+ ID of the sensor
+
+discovery:
+ One service is created for each device.

@@ -169,7 +169,7 @@ class ABCMainModule(MenuItem, abc.ABC):
         yield  # pylint: disable=unreachable
 
     @classmethod
-    def additional_matches_setup_search(cls) -> Sequence[str]:
+    def megamenu_search_terms(cls) -> Sequence[str]:
         """This class method allows adding additional match texts for the search"""
         return []
 

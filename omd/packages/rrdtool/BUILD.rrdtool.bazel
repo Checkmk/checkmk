@@ -1,0 +1,90 @@
+load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "RRDLIB_MAJOR", "RRDLIB_MAJOR_DOT_MINOR")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+MAKE_PARALLEL = "-j4"
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+)
+
+configure_make(
+    name = "rrdtool",
+    args = ["%s" % MAKE_PARALLEL],
+    build_data = [
+        "@omd_packages//omd/packages/perl-modules:perl-modules.tar",
+        "@omd_packages//omd/packages/python3-modules:python3-modules.tar",
+    ],
+    configure_in_place = True,
+    configure_options = [
+        "--verbose",
+        "--disable-ruby",
+        "--disable-libwrap",
+        "--enable-perl-site-install",
+        "--disable-tcl",
+        "--disable-lua",
+        "--disable-rrdcgi",
+        "--disable-libdbi",
+        "--with-systemdsystemunitdir=no",
+        "--with-perl-options='LIB=$(execpath @omd_packages//omd/packages/perl-modules:perl-modules)/lib/perl5/lib/perl5'",
+        "CFLAGS='-Dredacted=\"redacted\"'",
+    ],
+    copts = [
+        "-I$BUILD_TMPDIR/include",
+        "-Wno-stringop-overflow",
+    ],
+    env = {
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+        "RANLIB": "ranlib",
+        "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
+        "PERL_DIR": "$$(cd $$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar)); tar xf perl-modules.tar;)$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
+        "HOME": "/home/\\$$\\$${USER}/",
+        "CFLAGS": "'-Dredacted=\"redacted\"' -I$$EXT_BUILD_DEPS/python/include/python%s" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHONPATH": "$$(cd $$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)); tar xf python3-modules.tar;)$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/python3-modules/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHON_3_VERSION": "%s" % PYTHON_MAJOR_DOT_MINOR,
+        "PATH": "$$EXT_BUILD_DEPS/python/bin/:$$PATH",
+        "top_builddir": ".",
+    },
+    install_prefix = "$INSTALLDIR",
+    lib_source = ":all_srcs",
+    out_binaries = [
+        "rrdcached",
+        "rrdcreate",
+        "rrdinfo",
+        "rrdtool",
+        "rrdupdate",
+    ],
+    out_data_dirs = [
+        "share",
+        "lib/perl5/lib/perl5/",
+        "lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "lib/pkgconfig",
+    ],
+    out_shared_libs = [
+        "librrd.so",
+        "librrd.so.%s" % RRDLIB_MAJOR,
+        "librrd.so.%s" % RRDLIB_MAJOR_DOT_MINOR,
+    ],
+    out_static_libs = [
+        "librrd.a",
+    ],
+    targets = [
+        "-C po all",
+        "-C src all",
+        "-C tests all",
+        "-C etc all",
+        "-C bindings all",
+        "-C po install",
+        "-C src install",
+        "-C tests install",
+        "-C etc install",
+        # DESTDIR for Perl, since the prefix is not honored
+        "DESTDIR=$INSTALLDIR -C bindings install",
+        # DESTDIR for Python, since INSTALLDIR is in prefix
+        "DESTDIR=/ -C bindings install",
+    ],
+    deps = ["@python"],
+)

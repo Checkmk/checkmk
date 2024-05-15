@@ -1,0 +1,20 @@
+Title: host_config: bulk delete hosts requires at least 1 entry
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1696225078
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue found by our QA team when bulk deleting hosts
+via the following endpoint.
+
+/domain-types/host_config/actions/bulk-delete/invoke
+
+The body for this endpoint requires that the entries fields is given a
+list of host names that the client wants to delete. However, when
+passing in an empty list, this was causing problems. To get around
+this, we've set a mininum value of items for the entries field to 1.
+

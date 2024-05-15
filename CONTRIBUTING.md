@@ -17,12 +17,11 @@ Here are the links to major sections of this document:
 * [Style Guide](#style-guide)
 
 If you have questions, please create a post at the [Checkmk Forum](https://forum.checkmk.com).
-For bug reports, please send an e-mail to feedback@checkmk.com.
 
 We are interested in all feature extensions, which fit to the product and extend it reasonably.
 Occasionally, we have to decline a change, if e.g. it breaks other functionality, collides with our product roadmap or affects non-functional requirements of the product.
 Any contribution must also comply with the coding requirements detailed out below.
-For feature requests, please share your idea via the [Checkmk feature portal](https://features.checkmk.com).
+For feature requests, please share your idea via the [Checkmk ideas portal](https://ideas.checkmk.com).
 
 ## Contributing code
 
@@ -464,23 +463,6 @@ def worst_service_state(*states: int, default: int) -> int:
 * We use Black for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
 * We use isort for automatic sorting of imports in Python code.
-* Multi line imports: Use braces instead of continuation character
-
-    ```python
-    from germany import bmw, \
-        mercedes, \
-        audi
-    ```
-
-    vs.
-
-    ```python
-    from germany import (
-        bmw,
-        mercedes,
-        audi,
-    )
-    ```
 
 ### Automatic formatting with black and isort
 

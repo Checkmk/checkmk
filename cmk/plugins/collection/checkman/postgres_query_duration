@@ -1,0 +1,19 @@
+title: PostgreSQL: Query Duration
+agents: linux
+catalog: app/postgresql
+license: GPLv2
+distribution: check_mk
+description:
+ This check outputs the longest running query on the postgres server.
+ It is always OK.
+
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
+
+item:
+ Name of the category and the name of the database
+
+discovery:
+ One service is created for each database.
+
+cluster:
+  On a cluster all queries corresponding to the same item are aggregated.

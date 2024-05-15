@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 from copy import deepcopy
 from os import environ, getenv
 
@@ -13,9 +15,6 @@ allow_redirects = False
 # generic issues that affect testing as a whole and should always be suppressed
 suppressed_issues = {
     "CMK-11886",  # no real fix possible
-    "UNDEFINED-HTTP400",  # see CMK-11924
-    "UNDEFINED-HTTP404",  # see CMK-11924
-    "UNDEFINED-HTTP500",  # ignore this; an ISE is always a problem anyway!
     "INVALID-JSON",
 }
 if "TEST_OPENAPI_SUPPRESS" in environ:
@@ -24,26 +23,19 @@ else:
     suppressed_issues.update(
         {
             "CMK-12182",  # mostly done, but fixing InputPassword was apparently overlooked
-            # "CMK-12421",  # NOTE: problem with redirects in Schemathesis, need to investigate!
             "CMK-13216",
-            "CMK-14100",
-            "CMK-14101",
-            "CMK-14110",
-            "CMK-14256",
-            "CMK-14259",
-            "CMK-14261",
-            "CMK-14263",
             "CMK-14273",
-            "CMK-14291",
-            "CMK-14314",  # follow-up of CMK-12235
-            "CMK-14366",  # follow-up of CMK-12261
             # "CMK-14375",
             # "CMK-14375.1",
             # "CMK-14375.2",
             "CMK-14381",
-            "CMK-14403",
-            "CMK-14416",
             "CMK-TODO",
+            # "CMK-14991",
+            "CMK-14995",
+            "CMK-15035",
+            "CMK-15166",
+            "CMK-15167",
+            "CMK-15515",
         }
     )
 for issue in set(getenv("TEST_OPENAPI_ALLOW", "").upper().split(",")):

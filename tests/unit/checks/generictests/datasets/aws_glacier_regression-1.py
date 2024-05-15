@@ -142,7 +142,7 @@ checks = {
             [
                 (
                     0,
-                    "Vault size: 21.0 GiB",
+                    "Vault size: 22.5 GB",
                     [("aws_glacier_vault_size", 22548578304, None, None, None, None)],
                 ),
                 (
@@ -158,7 +158,7 @@ checks = {
             [
                 (
                     0,
-                    "Vault size: 112 MiB",
+                    "Vault size: 117 MB",
                     [("aws_glacier_vault_size", 117440512, None, None, None, None)],
                 ),
                 (
@@ -176,12 +176,12 @@ checks = {
             [
                 (
                     0,
-                    "Total size: 21.1 GiB",
+                    "Total size: 22.7 GB",
                     [("aws_glacier_total_vault_size", 22666018816, None, None, None, None)],
                 ),
                 (
                     0,
-                    "Largest vault: fake_vault_1 (21.0 GiB)",
+                    "Largest vault: fake_vault_1 (22.5 GB)",
                     [("aws_glacier_largest_vault_size", 22548578304, None, None, None, None)],
                 ),
             ],

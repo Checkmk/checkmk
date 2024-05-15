@@ -48,15 +48,12 @@
 # cvsDualActiveDetectionNotifEnable.0    .1.5.1.0 2
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    any_of,
-    contains,
-    exists,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import all_of, any_of, contains, exists, SNMPTree, StringTable
 
 cisco_vss_role_names = {
     "1": "standalone",
@@ -105,7 +102,12 @@ def check_cisco_vss(item, params, info):
         yield state, f"{op_portcount}/{conf_portcount} ports operational"
 
 
+def parse_cisco_vss(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["cisco_vss"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_vss,
     detect=all_of(
         any_of(
             contains(".1.3.6.1.2.1.1.1.0", "Catalyst 45"),

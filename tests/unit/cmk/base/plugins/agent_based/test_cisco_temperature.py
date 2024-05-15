@@ -5,10 +5,10 @@
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import CheckResult
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import cisco_temperature as ct
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+
+from cmk.agent_based.v1 import Metric, Result, Service, State
+from cmk.agent_based.v1.type_defs import CheckResult, StringTable
 
 
 @pytest.mark.parametrize(
@@ -28,7 +28,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
             ],
             {
                 "8": {
-                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
                         "dev_levels_lower": None,
                         "dev_levels_upper": (46.0, 56.0),
@@ -39,6 +38,32 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
                 }
             },
             id="Both upper thresholds",
+        ),
+        pytest.param(
+            [
+                [["2008", "Switch 2 - Temp Sensor 2"]],
+                [["2008", "8", "9", "0", "37", "1"]],
+                [
+                    ["2008.1", "20", "4", "125"],
+                    ["2008.2", "10", "4", "105"],
+                    ["2008.3", "10", "2", "105"],
+                    ["2008.4", "20", "2", "-10"],
+                ],
+                [["2008", "Switch 2 - Temp Sensor 2, GREEN", "37", "125", "1"]],
+                [["description", "1"]],
+            ],
+            {
+                "8": {
+                    "Switch 2 - Temp Sensor 2": {
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": (105.0, 125.0),
+                        "dev_state": (0, "normal"),
+                        "raw_env_mon_state": "1",
+                        "reading": 37,
+                    },
+                }
+            },
+            id="Temp sensors with cisco_sensor_item(statustext, ...) == sensor_id",
         ),
         pytest.param(
             [
@@ -54,7 +79,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
             ],
             {
                 "8": {
-                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
                         "dev_levels_lower": None,
                         "dev_levels_upper": (56.0, 56.0),
@@ -103,7 +127,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
             ],
             {
                 "8": {
-                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
                         "dev_levels_lower": None,
                         "dev_levels_upper": (56.0, 56.0),
@@ -132,7 +155,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
             ],
             {
                 "8": {
-                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
                         "dev_levels_lower": (-5.0, -15.0),
                         "dev_levels_upper": (66.0, 76.0),
@@ -159,7 +181,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
             ],
             {
                 "8": {
-                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
                         "dev_levels_lower": None,
                         "dev_levels_upper": (66.0, 76.0),
@@ -186,7 +207,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
             ],
             {
                 "8": {
-                    "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
                         "dev_levels_lower": None,
                         "dev_levels_upper": (56.0, 56.0),

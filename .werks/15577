@@ -1,4 +1,4 @@
-Title: elasticsearch_nodes: Check plugin didn't consider the values from `Expected cpu usage` ruleset
+Title: elasticsearch_nodes: Check plugin didn't consider the values from 'Expected cpu usage' ruleset
 Class: fix
 Compatible: compat
 Component: checks

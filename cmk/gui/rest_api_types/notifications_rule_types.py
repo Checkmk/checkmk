@@ -1,55 +1,38 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Literal, TypedDict
 
 from cmk.utils.notify_types import (
+    BuiltInPluginNames,
     BulkOutsideTimePeriodType,
     ConditionEventConsoleAlertsType,
+    CustomPluginName,
     EmailBodyElementsType,
     EventConsoleOption,
     FromOrToType,
     GroupbyType,
     HostEventType,
-    HostTagAgentOrSpecialAgentType,
-    HostTagAgentType,
-    HostTagCheckMkAgentType,
-    HostTagCriticalType,
-    HostTagIpAddressFamilyType,
-    HostTagIpV4Type,
-    HostTagIpV6Type,
-    HostTagMonitorSNMPType,
-    HostTagNetworkType,
-    HostTagPiggyBackType,
-    HostTagPingType,
-    HostTagSNMPType,
-    HostTagTypes,
     IlertAPIKey,
     MatchRegex,
     MgmntPriorityType,
     MgmntUrgencyType,
-    NotificationPluginNameStr,
     NotifyBulkType,
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
     PasswordType,
-    PluginOption,
+    PluginOptions,
     ProxyUrl,
     PushOverPriorityNumType,
     PushOverPriorityStringType,
     RegexModes,
     RoutingKeyType,
     ServiceEventType,
-    ServiceLevels,
-    ServiceLevelsStr,
-    ServiceLevelsType,
     SortOrder,
     SoundType,
     SysLogFacilityIntType,
@@ -60,10 +43,7 @@ from cmk.utils.notify_types import (
     WebHookUrl,
 )
 
-from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
-    SyslogFacility,
-    SyslogPriority,
-)
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 CheckboxState = Literal["enabled", "disabled"]
 
@@ -160,11 +140,39 @@ class CheckboxWithBoolValue:
         r: CheckboxStateType = {"state": state}
         return r
 
-    def to_mk_file_format(self) -> bool | None:
+    def to_mk_file_format(self) -> bool:
         return self.value
 
 
 # ----------------------------------------------------------------
+@dataclass
+class CheckboxTrueOrNone:
+    value: Literal[True] | None = None
+
+    @classmethod
+    def from_mk_file_format(cls, data: Literal[True] | None) -> CheckboxTrueOrNone:
+        if data is None:
+            return cls()
+        return cls(value=data)
+
+    @classmethod
+    def from_api_request(cls, data: CheckboxStateType) -> CheckboxTrueOrNone:
+        if data["state"] == "disabled":
+            return cls()
+        return cls(value=True)
+
+    def api_response(self) -> CheckboxStateType:
+        state: CheckboxState = "disabled" if not self.value else "enabled"
+        r: CheckboxStateType = {"state": state}
+        return r
+
+    def to_mk_file_format(self) -> Literal[True] | None:
+        return self.value
+
+
+# ----------------------------------------------------------------
+
+
 class CheckboxIntAPIType(CheckboxStateType, total=False):
     value: int
 
@@ -604,17 +612,9 @@ class CheckboxOpsGeniePriority:
 
 
 # ----------------------------------------------------------------
-SERVICE_LEVELS: Mapping[ServiceLevels, ServiceLevelsStr] = {
-    0: "no_service_level",
-    10: "silver",
-    20: "gold",
-    30: "platinum",
-}
-
-
 class MatchServiceFromToLevels(TypedDict):
-    from_level: ServiceLevelsStr
-    to_level: ServiceLevelsStr
+    from_level: int
+    to_level: int
 
 
 class MatchServiceLevelsAPIValueType(CheckboxStateType, total=False):
@@ -623,10 +623,10 @@ class MatchServiceLevelsAPIValueType(CheckboxStateType, total=False):
 
 @dataclass
 class MatchServiceLevels:
-    value: ServiceLevelsType | None = None
+    value: tuple[int, int] | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: ServiceLevelsType | None) -> MatchServiceLevels:
+    def from_mk_file_format(cls, data: tuple[int, int] | None) -> MatchServiceLevels:
         return cls(value=data)
 
     @classmethod
@@ -634,11 +634,8 @@ class MatchServiceLevels:
         if data["state"] == "disabled":
             return cls()
 
-        value = data["value"]
-
-        sls: Mapping[ServiceLevelsStr, ServiceLevels] = {v: k for k, v in SERVICE_LEVELS.items()}
         return cls(
-            value=(sls[value["from_level"]], sls[value["to_level"]]),
+            value=(data["value"]["from_level"], data["value"]["to_level"]),
         )
 
     def api_response(self) -> MatchServiceLevelsAPIValueType:
@@ -646,12 +643,12 @@ class MatchServiceLevels:
         r: MatchServiceLevelsAPIValueType = {"state": state}
         if self.value is not None:
             r["value"] = {
-                "from_level": SERVICE_LEVELS[self.value[0]],
-                "to_level": SERVICE_LEVELS[self.value[1]],
+                "from_level": self.value[0],
+                "to_level": self.value[1],
             }
         return r
 
-    def to_mk_file_format(self) -> ServiceLevelsType | None:
+    def to_mk_file_format(self) -> tuple[int, int] | None:
         return self.value
 
     def disable(self) -> None:
@@ -781,44 +778,19 @@ class FromAndToEmailFields:
         self.value = None
 
 
-# ----------------------------------------------------------------
-class MatchHostTagAPIMap(TypedDict):
-    ip_address_family: HostTagIpAddressFamilyType
-    ip_v4: HostTagIpV4Type
-    ip_v6: HostTagIpV6Type
-    checkmk_agent_api_integration: HostTagCheckMkAgentType
-    piggyback: HostTagPiggyBackType
-    snmp: HostTagSNMPType
-    monitor_via_snmp: HostTagMonitorSNMPType
-    monitor_via_checkmkagent_or_specialagent: HostTagAgentOrSpecialAgentType
-    monitor_via_checkmkagent: HostTagAgentType
-    only_ping_this_device: HostTagPingType
-    criticality: HostTagCriticalType
-    networking_segment: HostTagNetworkType
+# ---------------------------------------------------------------
 
 
 class MatchHostTagsAPIValueType(CheckboxStateType, total=False):
-    value: MatchHostTagAPIMap
+    value: list
 
 
 @dataclass
 class CheckboxMatchHostTags:
-    value: HostTagTypes | None = None
-    _ip_address_family: HostTagIpAddressFamilyType = "ignore"
-    _ip_v4: HostTagIpV4Type = "ignore"
-    _ip_v6: HostTagIpV6Type = "ignore"
-    _checkmk_agent_api_integration: HostTagCheckMkAgentType = "ignore"
-    _piggyback: HostTagPiggyBackType = "ignore"
-    _snmp: HostTagSNMPType = "ignore"
-    _monitor_via_snmp: HostTagMonitorSNMPType = "ignore"
-    _monitor_via_checkmkagent_or_specialagent: HostTagAgentOrSpecialAgentType = "ignore"
-    _monitor_via_checkmkagent: HostTagAgentType = "ignore"
-    _only_ping_this_device: HostTagPingType = "ignore"
-    _criticality: HostTagCriticalType = "ignore"
-    _networking_segment: HostTagNetworkType = "ignore"
+    value: list[str] | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: HostTagTypes | None) -> CheckboxMatchHostTags:
+    def from_mk_file_format(cls, data: list[str] | None) -> CheckboxMatchHostTags:
         return cls(value=data)
 
     @classmethod
@@ -826,196 +798,31 @@ class CheckboxMatchHostTags:
         if data["state"] == "disabled":
             return cls()
 
-        return cls(value=cast(HostTagTypes, list(data["value"].values())))
+        tagids: list[str] = []
+        for value in data["value"]:
+            if "is_not" in value["operator"]:
+                tagids.append(
+                    f"!{value['tag_id']}",
+                )
+            else:
+                tagids.append(value["tag_id"])
+
+        return cls(value=tagids)
 
     def api_response(self) -> MatchHostTagsAPIValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
-        r: MatchHostTagsAPIValueType = {"state": state}
-        if self.value is not None:
-            r["value"] = {
-                "ip_address_family": self.ip_address_family,
-                "ip_v4": self.ip_v4,
-                "ip_v6": self.ip_v6,
-                "checkmk_agent_api_integration": self.checkmk_agent_api_integration,
-                "piggyback": self.piggyback,
-                "snmp": self.snmp,
-                "monitor_via_snmp": self.monitor_via_snmp,
-                "monitor_via_checkmkagent_or_specialagent": self.monitor_via_checkmkagent_or_specialagent,
-                "monitor_via_checkmkagent": self.monitor_via_checkmkagent,
-                "only_ping_this_device": self.only_ping_this_device,
-                "criticality": self.criticality,
-                "networking_segment": self.networking_segment,
-            }
-        return r
+        resp: MatchHostTagsAPIValueType = {"state": state}
+        if self.value is None:
+            return resp
 
-    def to_mk_file_format(self) -> HostTagTypes | None:
+        resp["value"] = self.value
+        return resp
+
+    def to_mk_file_format(self) -> list[str] | None:
         return self.value
 
     def disable(self) -> None:
         self.value = None
-
-    @property
-    def ip_address_family(self) -> HostTagIpAddressFamilyType:
-        if self.value is None:
-            return self._ip_address_family
-
-        if set_intersection := set(self.value) & {
-            "ip-v4-only",
-            "ip-v6-only",
-            "ip-v4v6",
-            "no-ip",
-            "!ip-v4-only",
-            "!ip-v6-only",
-            "!ip-v4v6",
-            "!no-ip",
-        }:
-            self._ip_address_family = cast(HostTagIpAddressFamilyType, set_intersection.pop())
-
-        return self._ip_address_family
-
-    @property
-    def ip_v4(self) -> HostTagIpV4Type:
-        if self.value is None:
-            return self._ip_v4
-
-        if set_intersection := set(self.value) & {"ip-v4", "!ip-v4"}:
-            self._ip_v4 = cast(HostTagIpV4Type, set_intersection.pop())
-        return self._ip_v4
-
-    @property
-    def ip_v6(self) -> HostTagIpV6Type:
-        if self.value is None:
-            return self._ip_v6
-
-        if set_intersection := set(self.value) & {"ip-v6", "!ip-v6"}:
-            self._ip_v6 = cast(HostTagIpV6Type, set_intersection.pop())
-        return self._ip_v6
-
-    @property
-    def checkmk_agent_api_integration(self) -> HostTagCheckMkAgentType:
-        if self.value is None:
-            return self._checkmk_agent_api_integration
-
-        if set_intersection := set(self.value) & {
-            "cmk-agent",
-            "!cmk-agent",
-            "all-agents",
-            "!all-agnts",
-            "special-agents",
-            "!special-agents",
-            "no-agent",
-            "!no-agent",
-        }:
-            self._checkmk_agent_api_integration = cast(
-                HostTagCheckMkAgentType, set_intersection.pop()
-            )
-        return self._checkmk_agent_api_integration
-
-    @property
-    def piggyback(self) -> HostTagPiggyBackType:
-        if self.value is None:
-            return self._piggyback
-
-        if set_intersection := set(self.value) & {
-            "auto-piggyback",
-            "!auto-piggyback",
-            "piggyback",
-            "!piggyback",
-            "no-piggyback",
-            "!no-piggyback",
-        }:
-            self._piggyback = cast(HostTagPiggyBackType, set_intersection.pop())
-
-        return self._piggyback
-
-    @property
-    def snmp(self) -> HostTagSNMPType:
-        if self.value is None:
-            return self._snmp
-
-        if set_intersection := set(self.value) & {
-            "no-snmp",
-            "!no-snmp",
-            "snmp-v1",
-            "!snmp-v1",
-            "snmp-v2",
-            "!snmp-v2",
-        }:
-            self._snmp = cast(HostTagSNMPType, set_intersection.pop())
-        return self._snmp
-
-    @property
-    def monitor_via_snmp(self) -> HostTagMonitorSNMPType:
-        if self.value is None:
-            return self._monitor_via_snmp
-
-        if set_intersection := set(self.value) & {"snmp", "!snmp"}:
-            self._monitor_via_snmp = cast(HostTagMonitorSNMPType, set_intersection.pop())
-        return self._monitor_via_snmp
-
-    @property
-    def monitor_via_checkmkagent_or_specialagent(self) -> HostTagAgentOrSpecialAgentType:
-        if self.value is None:
-            return self._monitor_via_checkmkagent_or_specialagent
-
-        set_intersection = set(self.value) & {"tcp", "!tcp"}
-        if set_intersection:
-            self._monitor_via_checkmkagent_or_specialagent = cast(
-                HostTagAgentOrSpecialAgentType, set_intersection.pop()
-            )
-        return self._monitor_via_checkmkagent_or_specialagent
-
-    @property
-    def monitor_via_checkmkagent(self) -> HostTagAgentType:
-        if self.value is None:
-            return self._monitor_via_checkmkagent
-
-        if set_intersection := set(self.value) & {"checkmk-agent", "!checkmk-agent"}:
-            self._monitor_via_checkmkagent = cast(HostTagAgentType, set_intersection.pop())
-        return self._monitor_via_checkmkagent
-
-    @property
-    def only_ping_this_device(self) -> HostTagPingType:
-        if self.value is None:
-            return self._only_ping_this_device
-
-        if set_intersection := set(self.value) & {"ping", "!ping"}:
-            self._only_ping_this_device = cast(HostTagPingType, set_intersection.pop())
-        return self._only_ping_this_device
-
-    @property
-    def criticality(self) -> HostTagCriticalType:
-        if self.value is None:
-            return self._criticality
-
-        if set_intersection := set(self.value) & {
-            "prod",
-            "critical",
-            "test",
-            "offline",
-            "!prod",
-            "!critical",
-            "!test",
-            "!offline",
-        }:
-            self._criticality = cast(HostTagCriticalType, set_intersection.pop())
-        return self._criticality
-
-    @property
-    def networking_segment(self) -> HostTagNetworkType:
-        if self.value is None:
-            return self._networking_segment
-
-        if set_intersection := set(self.value) & {
-            "lan",
-            "wan",
-            "dmz",
-            "!lan",
-            "!wan",
-            "!dmz",
-        }:
-            self._networking_segment = cast(HostTagNetworkType, set_intersection.pop())
-        return self._networking_segment
 
 
 # ----------------------------------------------------------------
@@ -1232,7 +1039,7 @@ class CheckboxThrottlePeriodicNotifications:
 # ----------------------------------------------------------------
 FACILITIES = cast(
     Mapping[SysLogFacilityIntType, SysLogFacilityStrType],
-    SyslogFacility.NAMES,
+    ec.SyslogFacility.NAMES,
 )
 
 
@@ -1265,7 +1072,7 @@ class CheckboxSysLogFacility:
 
 
 # ----------------------------------------------------------------
-PRIORITIES = cast(Mapping[SyslogPriorityIntType, SysLogPriorityStrType], SyslogPriority.NAMES)
+PRIORITIES = cast(Mapping[SyslogPriorityIntType, SysLogPriorityStrType], ec.SyslogPriority.NAMES)
 
 
 @dataclass
@@ -1435,6 +1242,7 @@ CASE_STATE_TYPE = Literal[
     "closed",
     "open",
     "awaiting_info",
+    "resolved",
 ]
 
 
@@ -2485,7 +2293,7 @@ class WebhookURLOption:
 
 
 class APINotifyPluginParams(TypedDict):
-    plugin_name: NotificationPluginNameStr
+    plugin_name: BuiltInPluginNames
 
 
 class API_AsciiMailData(APINotifyPluginParams, total=False):
@@ -2656,10 +2464,17 @@ class API_MSTeamsData(APINotifyPluginParams, total=False):
     affected_host_groups: CheckboxStateType
 
 
-class API_CustomPlugin(APINotifyPluginParams, total=False):
-    attr1: str
-    attr2: str
-    attr3: str
+class APIPluginDict(TypedDict, total=False):
+    """Users can create their own plugins"""
+
+    plugin_name: CustomPluginName
+
+
+class APIPluginList(TypedDict, total=False):
+    """Users can create their own plugins"""
+
+    plugin_name: CustomPluginName
+    params: list[str]
 
 
 PluginType = (
@@ -2680,10 +2495,9 @@ PluginType = (
     | API_VictorOpsData
     | API_MSTeamsData
     | API_SmsData
-    | API_CustomPlugin
+    | APIPluginDict
+    | APIPluginList
 )
-
-# ----------------------------------------------------------------
 
 
 class APIRuleProperties(TypedDict, total=False):
@@ -2696,8 +2510,8 @@ class APIRuleProperties(TypedDict, total=False):
     rule_id: str
 
 
-class APINotifyPlugin(TypedDict, total=False):
-    option: PluginOption
+class APINotifyPlugin(TypedDict):
+    option: PluginOptions | str  # str only required for the openapi docs example
     plugin_params: PluginType
 
 

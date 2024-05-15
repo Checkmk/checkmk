@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.df import (
+
+from cmk.plugins.lib.df import (
     Bytes,
     check_filesystem_levels,
     FILESYSTEM_DEFAULT_LEVELS,

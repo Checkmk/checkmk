@@ -264,10 +264,6 @@ known_results = {
     ): _expected_clustered(),
     (
         DiscoveryState.CLUSTERED_IGNORED,
-        DiscoveryState.CLUSTERED_OLD,
-    ): _expected_clustered(),
-    (
-        DiscoveryState.CLUSTERED_IGNORED,
         DiscoveryState.CLUSTERED_IGNORED,
     ): _expected_clustered(),
     (
@@ -298,6 +294,50 @@ known_results = {
         DiscoveryState.CLUSTERED_VANISHED,
         DiscoveryState.CUSTOM_IGNORED,
     ): _expected_clustered(),
+    (DiscoveryState.MONITORED, DiscoveryState.CHANGED): _expected_monitored_standard(),
+    (DiscoveryState.CHANGED, DiscoveryState.VANISHED): _expected_monitored_standard(),
+    (DiscoveryState.CHANGED, DiscoveryState.REMOVED): _expected_monitored_standard(),
+    (DiscoveryState.CHANGED, DiscoveryState.MANUAL): _expected_monitored_standard(),
+    (DiscoveryState.CHANGED, DiscoveryState.ACTIVE): _expected_monitored_standard(),
+    (DiscoveryState.CHANGED, DiscoveryState.CUSTOM): _expected_monitored_standard(),
+    (
+        DiscoveryState.CHANGED,
+        DiscoveryState.CLUSTERED_OLD,
+    ): _expected_monitored_standard(),
+    (
+        DiscoveryState.CHANGED,
+        DiscoveryState.CLUSTERED_NEW,
+    ): _expected_monitored_standard(),
+    (
+        DiscoveryState.CHANGED,
+        DiscoveryState.CLUSTERED_VANISHED,
+    ): _expected_monitored_standard(),
+    (
+        DiscoveryState.CHANGED,
+        DiscoveryState.CLUSTERED_IGNORED,
+    ): _expected_monitored_standard(),
+    (
+        DiscoveryState.CHANGED,
+        DiscoveryState.ACTIVE_IGNORED,
+    ): _expected_monitored_standard(),
+    (
+        DiscoveryState.CHANGED,
+        DiscoveryState.CUSTOM_IGNORED,
+    ): _expected_monitored_standard(),
+    # If we want to keep the service in DiscoveryState.CHANGED the old values have to be written
+    # to the new result
+    (DiscoveryState.CHANGED, DiscoveryState.CHANGED): (
+        {MOCK_KEY: MOCK_VALUE},
+        {MOCK_DESC},
+        set(),
+        set(),
+    ),
+    (DiscoveryState.CHANGED, DiscoveryState.IGNORED): (
+        {MOCK_KEY: MOCK_VALUE},
+        set(),
+        {MOCK_DESC},
+        set(),
+    ),
 }
 
 empty_result: RESULT = (

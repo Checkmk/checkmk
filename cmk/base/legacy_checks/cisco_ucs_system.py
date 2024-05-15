@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 # comNET GmbH, Fabian Binder - 2018-05-07
 
@@ -26,7 +27,12 @@ def check_cisco_ucs_system(_no_item, _no_params, info):
     return state, f"Status: {state_readable}, Model: {model}, SN: {serial}"
 
 
+def parse_cisco_ucs_system(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
 check_info["cisco_ucs_system"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_ucs_system,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.9.35.1",

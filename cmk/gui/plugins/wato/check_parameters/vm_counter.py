@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate
 
 
 def _item_spec_vm_counter():
@@ -25,17 +25,28 @@ def _item_spec_vm_counter():
 
 
 def _parameter_valuespec_vm_counter():
-    return Levels(
-        help=_(
-            "This ruleset applies to several similar checks measing various kernel "
-            "events like context switches, process creations and major page faults. "
-            "Please create separate rules for each type of kernel counter you "
-            "want to set levels for."
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    Levels(
+                        help=_(
+                            "This ruleset applies to several similar checks measing various kernel "
+                            "events like context switches, process creations and major page faults. "
+                            "Please create separate rules for each type of kernel counter you "
+                            "want to set levels for."
+                        ),
+                        unit=_("events per second"),
+                        default_levels=(1000, 5000),
+                        default_difference=(500.0, 1000.0),
+                        default_value=None,
+                    ),
+                )
+            ],
+            optional_keys=[],
         ),
-        unit=_("events per second"),
-        default_levels=(1000, 5000),
-        default_difference=(500.0, 1000.0),
-        default_value=None,
+        migrate=lambda p: p if isinstance(p, dict) and "levels" in p else {"levels": p},
     )
 
 

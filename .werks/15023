@@ -1,0 +1,11 @@
+Title: Added an agent-registration automation user
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1697699352
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+We added a new agent-registration user with the role *agent-registration*.  We recommend
+to use this user for automated agent registration.

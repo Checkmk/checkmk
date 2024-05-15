@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import Check
+from .checktestlib import Check
 
 
 @pytest.mark.parametrize(
@@ -92,9 +92,10 @@ from tests.testlib import Check
     ],
 )
 def test_f5_bigip_vserver_parsing(
-    info: Sequence[Sequence[str]],
+    info: list[Sequence[str]],
     item: str,
     expected_item_data: Mapping[str, str | Sequence[float]],
 ) -> None:
-    check = Check("f5_bigip_vserver")
-    assert sorted(check.run_parse(info)[item].items()) == sorted(expected_item_data.items())
+    parsed = Check("f5_bigip_vserver").run_parse(info)
+    assert isinstance(parsed, dict)
+    assert sorted(parsed[item].items()) == sorted(expected_item_data.items())

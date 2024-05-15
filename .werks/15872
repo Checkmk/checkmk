@@ -1,0 +1,15 @@
+Title: This Werk fixes misbehaved metrics after an upgrade
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1697611822
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+After an upgrade various plugins metrics would misbehave, until eventually settling again.
+More specificly: All averaged metrics would forget the previously recorded values.
+As a result, the "averaged" metric follows the original one very closely.
+After a few values are recorded the desired smoothing effect of the averaging will start to show.
+The time it takes for the metric to stabilise depends on the configured or implemented weights (<i>"Backlog in minutes"</i>).
+

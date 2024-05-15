@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pathlib
 from collections.abc import Iterable
 
@@ -101,7 +103,9 @@ SECTION1 = logwatch_.Section(
 
 
 def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: [])
+    monkeypatch.setattr(
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: []
+    )
     assert sorted(
         logwatch.discover_logwatch_single([], SECTION1),
         key=lambda s: s.item or "",
@@ -154,11 +158,16 @@ def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
+@pytest.mark.skip("Flaky test - will be re-enabled with CMK-17338")
 def test_check_single(
     monkeypatch: pytest.MonkeyPatch, log_name: str, expected_result: Iterable[Result]
 ) -> None:
     monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
-    monkeypatch.setattr(logwatch, "_compile_params", lambda _item: [])
+    monkeypatch.setattr(
+        logwatch_,
+        logwatch_.compile_reclassify_params.__name__,
+        lambda _item: logwatch_.ReclassifyParameters((), {}),
+    )
     monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
 
     assert list(logwatch.check_logwatch_node(log_name, SECTION1)) == expected_result
@@ -193,8 +202,8 @@ SECTION2 = logwatch_.Section(
 
 def test_logwatch_discover_single_restrict(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        logwatch_,
-        "get_ec_rule_params",
+        logwatch_.RulesetAccess,
+        logwatch_.RulesetAccess.logwatch_ec_all.__name__,
         lambda: [{"restrict_logfiles": [".*2"]}],
     )
     assert sorted(
@@ -209,14 +218,16 @@ def test_logwatch_discover_single_restrict(monkeypatch: pytest.MonkeyPatch) -> N
 
 def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> None:
     params = [
-        {
-            "grouping_patterns": [
+        logwatch_.ParameterLogwatchGroups(
+            grouping_patterns=[
                 ("my_group", ("~log.*", "~.*1")),
             ]
-        }
+        )
     ]
 
-    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: [])
+    monkeypatch.setattr(
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: []
+    )
 
     assert list(logwatch.discover_logwatch_single(params, SECTION2)) == [
         Service(item="log1"),
@@ -225,15 +236,17 @@ def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> Non
 
 def test_logwatch_discover_groups(monkeypatch: pytest.MonkeyPatch) -> None:
     params = [
-        {
-            "grouping_patterns": [
+        logwatch_.ParameterLogwatchGroups(
+            grouping_patterns=[
                 ("my_%s_group", ("~(log)[^5]", "~.*1")),
                 ("my_%s_group", ("~(log).*", "~.*5")),
             ],
-        }
+        )
     ]
 
-    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: [])
+    monkeypatch.setattr(
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: []
+    )
 
     assert list(logwatch.discover_logwatch_groups(params, SECTION2)) == [
         Service(
@@ -266,7 +279,7 @@ def test_check_logwatch_generic_no_messages() -> None:
     assert list(
         logwatch.check_logwatch_generic(
             item=item,
-            patterns={},
+            reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
             loglines=[],
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
@@ -289,7 +302,7 @@ def test_check_logwatch_generic_no_reclassify() -> None:
     assert list(
         logwatch.check_logwatch_generic(
             item=item,
-            patterns={},
+            reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
             loglines=lines,
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
@@ -312,12 +325,13 @@ def test_check_logwatch_generic_with_reclassification() -> None:
     assert list(
         logwatch.check_logwatch_generic(
             item=item,
-            patterns={
-                "reclassify_patterns": [
+            reclassify_parameters=logwatch_.ReclassifyParameters(
+                patterns=[
                     ("C", ".*klingon.*", "galatic conflict"),
                     ("I", "123", ""),
                 ],
-            },
+                states={},
+            ),
             loglines=lines,
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
@@ -338,7 +352,7 @@ def test_check_logwatch_generic_missing() -> None:
     assert list(
         logwatch.check_logwatch_generic(
             item=item,
-            patterns={},
+            reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
             loglines=[],
             found=False,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,

@@ -4,40 +4,59 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.pages import PageRegistry
+from cmk.gui.valuespec import AutocompleterRegistry
+from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
-from ._explicit_graphs import ExplicitGraphRecipeBuilder
-from ._graph_recipe_builder import graph_recipe_builder_registry
-from ._graph_templates import TemplateGraphRecipeBuilder
+from . import _perfometer
+from ._autocompleter import graph_templates_autocompleter, metrics_autocompleter
+from ._explicit_graphs import ExplicitGraphSpecification
+from ._graph_specification import (
+    graph_specification_registry,
+    metric_operation_registry,
+    MetricOpConstant,
+    MetricOpConstantNA,
+    MetricOpOperator,
+    MetricOpRRDSource,
+)
+from ._graph_templates import TemplateGraphSpecification
 from ._perfometer import (
-    DualPerfometerSpec,
     get_first_matching_perfometer,
-    LegacyPerfometer,
-    LinearPerfometerSpec,
     LogarithmicPerfometerSpec,
+    MetricometerRendererLegacyLogarithmic,
+    parse_perfometer,
     perfometer_info,
     PerfometerSpec,
-    StackedPerfometerSpec,
+    renderer_registry,
 )
-from ._timeseries import register_time_series_expressions
-from ._utils import time_series_expression_registry
+from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import PageVsAutocomplete
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    config_variable_registry: ConfigVariableRegistry,
+    autocompleter_registry: AutocompleterRegistry,
+) -> None:
     page_registry.register_page("ajax_vs_unit_resolver")(PageVsAutocomplete)
-    graph_recipe_builder_registry.register(ExplicitGraphRecipeBuilder())
-    graph_recipe_builder_registry.register(TemplateGraphRecipeBuilder())
-    register_time_series_expressions(time_series_expression_registry)
+    metric_operation_registry.register(MetricOpConstant)
+    metric_operation_registry.register(MetricOpConstantNA)
+    metric_operation_registry.register(MetricOpOperator)
+    metric_operation_registry.register(MetricOpRRDSource)
+    graph_specification_registry.register(ExplicitGraphSpecification)
+    graph_specification_registry.register(TemplateGraphSpecification)
+    config_variable_registry.register(ConfigVariableGraphTimeranges)
+    _perfometer.register()
+    autocompleter_registry.register_autocompleter("monitored_metrics", metrics_autocompleter)
+    autocompleter_registry.register_autocompleter("available_graphs", graph_templates_autocompleter)
 
 
 __all__ = [
     "register",
-    "DualPerfometerSpec",
     "get_first_matching_perfometer",
-    "LegacyPerfometer",
-    "LinearPerfometerSpec",
     "LogarithmicPerfometerSpec",
+    "MetricometerRendererLegacyLogarithmic",
+    "parse_perfometer",
     "perfometer_info",
     "PerfometerSpec",
-    "StackedPerfometerSpec",
+    "renderer_registry",
 ]

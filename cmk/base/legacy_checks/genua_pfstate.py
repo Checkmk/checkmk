@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
+from collections.abc import Sequence
+
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
+
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.plugins.lib.genua import DETECT_GENUA
 
 # Example Agent Output:
 # GENUA-MIB:
@@ -15,19 +18,12 @@ from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
 # .1.3.6.1.4.1.3717.2.1.1.6.3 = INTEGER: 1
 
 
-genua_pfstate_default_levels = {"used": (None, None)}
-
-
-def inventory_genua_pfstate(info):
+def discover_genua_pfstate(string_table: StringTable) -> DiscoveryResult:
     # remove empty elements due to alternative enterprise id in snmp_info
-    info = [_f for _f in info if _f]
+    string_table = [_f for _f in string_table if _f]
 
-    if not info or not info[0]:
-        return []
-
-    if len(info[0][0]) == 3:
-        return [(None, genua_pfstate_default_levels)]
-    return []
+    if string_table and string_table[0] and len(string_table[0][0]) == 3:
+        yield Service()
 
 
 def pfstate(st):
@@ -43,45 +39,38 @@ def check_genua_pfstate(item, params, info):
     # remove empty elements due to alternative enterprise id in snmp_info
     info = [_f for _f in info if _f]
 
-    if info[0]:
-        if len(info[0][0]) == 3:
-            pfstateMax = saveint(info[0][0][0])
-            pfstateUsed = saveint(info[0][0][1])
-            pfstateStatus = info[0][0][2]
+    if info[0] and len(info[0][0]) == 3:
+        pfstateMax = saveint(info[0][0][0])
+        pfstateUsed = saveint(info[0][0][1])
+        pfstateStatus = info[0][0][2]
     else:
-        return (3, "Invalid Output from Agent")
-
-    warn, crit = params.get("used")
-    if crit is None:
-        crit = pfstateMax
-
-    state = 0
-    usedsym = ""
-    statussym = ""
-    if pfstateStatus != "1":
-        state = 1
-        statussym = "(!)"
-
-    if crit and pfstateUsed > crit:
-        state = 2
-        usedsym = "(!!)"
-    elif warn and pfstateUsed > warn:
-        state = 1
-        usedsym = "(!)"
+        yield 3, "Invalid Output from Agent"
+        return
 
     pfstatus = pfstate(str(pfstateStatus))
-    infotext = "PF State: %s%s States used: %d%s States max: %d" % (
-        pfstatus,
-        statussym,
-        pfstateUsed,
-        usedsym,
-        pfstateMax,
+    yield (
+        0 if pfstateStatus == "1" else 1,
+        f"PF State: {pfstatus}",
     )
-    perfdata = [("statesused", pfstateUsed, None, pfstateMax)]
-    return (state, infotext, perfdata)
+
+    yield check_levels(
+        pfstateUsed,
+        "statesused",
+        params["used"],
+        human_readable_func=str,
+        infoname="States used",
+        boundaries=(0, pfstateMax),
+    )
+
+    yield 0, f"States max: {pfstateMax}"
+
+
+def parse_genua_pfstate(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
 
 
 check_info["genua_pfstate"] = LegacyCheckDefinition(
+    parse_function=parse_genua_pfstate,
     detect=DETECT_GENUA,
     fetch=[
         SNMPTree(
@@ -94,7 +83,8 @@ check_info["genua_pfstate"] = LegacyCheckDefinition(
         ),
     ],
     service_name="Paketfilter Status",
-    discovery_function=inventory_genua_pfstate,
+    discovery_function=discover_genua_pfstate,
     check_function=check_genua_pfstate,
     check_ruleset_name="pf_used_states",
+    check_default_parameters={"used": None},
 )

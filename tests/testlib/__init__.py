@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import datetime
 import fcntl
 import importlib.machinery
 import importlib.util
@@ -13,25 +12,19 @@ import subprocess
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Collection, Iterator, Mapping
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, TracebackType
 from typing import Any, Final
 
-import freezegun
 import pytest
 import urllib3
 from psutil import Process
 
-from tests.testlib.compare_html import compare_html
-from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     add_python_paths,
-    cmc_path,
-    cme_path,
-    cmk_path,
     current_branch_name,
     get_cmk_download_credentials,
     get_standard_linux_agent_output,
@@ -42,18 +35,10 @@ from tests.testlib.utils import (
     repo_path,
     site_id,
     virtualenv_path,
+    wait_until,
 )
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.web_session import APIError, CMKWebSession
-
-from cmk.utils.hostaddress import HostName
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
-from cmk.base.plugins.commands import get_active_check
-
-from cmk.commands.v1 import ActiveService, EnvironmentConfig, HostConfig
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -124,13 +109,12 @@ def fake_version_and_paths() -> None:
         except ValueError:
             pass  # path is outside of omd_root
 
-    # these use cmk_path
-    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
-    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
+    # these use repo_path
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
 
 
 def import_module_hack(pathname: str) -> ModuleType:
@@ -145,7 +129,7 @@ def import_module_hack(pathname: str) -> ModuleType:
     See: https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
     """
     name = os.path.splitext(os.path.basename(pathname))[0]
-    location = os.path.join(cmk_path(), pathname)
+    location = os.path.join(repo_path(), pathname)
     loader = importlib.machinery.SourceFileLoader(name, location)
     spec = importlib.machinery.ModuleSpec(name, loader, origin=location)
     spec.has_location = True
@@ -153,16 +137,6 @@ def import_module_hack(pathname: str) -> ModuleType:
     sys.modules[name] = module
     loader.exec_module(module)
     return module
-
-
-def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
-    start = time.time()
-    while time.time() - start < timeout:
-        if condition():
-            return  # Success. Stop waiting...
-        time.sleep(interval)
-
-    raise Exception("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
 def wait_until_liveproxyd_ready(site: Site, site_ids: Collection[str]) -> None:
@@ -216,7 +190,12 @@ class WatchLog:
 
         return self
 
-    def __exit__(self, *_exc_info: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         if self._tail_process is not None:
             for c in Process(self._tail_process.pid).children(recursive=True):
                 if c.name() == "tail":
@@ -227,20 +206,24 @@ class WatchLog:
     def check_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
             timeout = self._default_timeout
-        if not self._check_for_line(match_for, timeout):
+        found, lines = self._check_for_line(match_for, timeout)
+        if not found:
             raise Exception(
-                "Did not find %r in %s after %d seconds" % (match_for, self._log_path, timeout)
+                "Did not find %r in %s after %d seconds\n'%s'"
+                % (match_for, self._log_path, timeout, lines)
             )
 
     def check_not_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
             timeout = self._default_timeout
-        if self._check_for_line(match_for, timeout):
+        found, lines = self._check_for_line(match_for, timeout)
+        if found:
             raise Exception(
-                "Found %r in %s after %d seconds" % (match_for, self._log_path, timeout)
+                "Found %r in %s after %d seconds\n'%s'"
+                % (match_for, self._log_path, timeout, lines)
             )
 
-    def _check_for_line(self, match_for: str, timeout: float) -> bool:
+    def _check_for_line(self, match_for: str, timeout: float) -> tuple[bool, str]:
         if self._tail_process is None:
             raise Exception("no log file")
         timeout_at = time.time() + timeout
@@ -248,18 +231,20 @@ class WatchLog:
             "Start checking for matching line %r at %d until %d\n"
             % (match_for, time.time(), timeout_at)
         )
+        lines: list[str] = []
         while time.time() < timeout_at:
             # print("read till timeout %0.2f sec left" % (timeout_at - time.time()))
             assert self._tail_process.stdout is not None
             line = self._tail_process.stdout.readline()
+            lines += line
             if line:
                 sys.stdout.write("PROCESS LINE: %r\n" % line)
             if match_for in line:
-                return True
+                return True, "".join(lines)
             time.sleep(0.1)
 
         sys.stdout.write("Timed out at %d\n" % (time.time()))
-        return False
+        return False, "".join(lines)
 
 
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:
@@ -308,114 +293,6 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
     )
 
 
-# .
-#   .--Checks--------------------------------------------------------------.
-#   |                    ____ _               _                            |
-#   |                   / ___| |__   ___  ___| | _____                     |
-#   |                  | |   | '_ \ / _ \/ __| |/ / __|                    |
-#   |                  | |___| | | |  __/ (__|   <\__ \                    |
-#   |                   \____|_| |_|\___|\___|_|\_\___/                    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Testing of Checkmk checks                                           |
-#   '----------------------------------------------------------------------'
-
-
-class MissingCheckInfoError(KeyError):
-    pass
-
-
-class BaseCheck(abc.ABC):
-    """Abstract base class for Check and ActiveCheck"""
-
-    def __init__(self, name: str) -> None:
-        self.name = name
-        # we cant use the current_host context, b/c some tests rely on a persistent
-        # item state across several calls to run_check
-        import cmk.base.api.agent_based.plugin_contexts  # pylint: disable=import-outside-toplevel
-
-        cmk.base.api.agent_based.plugin_contexts._hostname = HostName("non-existent-testhost")
-
-
-class Check(BaseCheck):
-    def __init__(self, name: str) -> None:
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
-
-        super().__init__(name)
-        if self.name not in config.check_info:
-            raise MissingCheckInfoError(self.name)
-        self.info: LegacyCheckDefinition = config.check_info[self.name]
-        self._migrated_plugin = register.get_check_plugin(
-            CheckPluginName(self.name.replace(".", "_"))
-        )
-
-    def default_parameters(self) -> Mapping[str, Any]:
-        if self._migrated_plugin:
-            return self._migrated_plugin.check_default_parameters or {}
-        return {}
-
-    def run_parse(self, info):  # type: ignore[no-untyped-def]
-        parse_func = self.info.get("parse_function")
-        if not parse_func:
-            raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
-        return parse_func(info)
-
-    def run_discovery(self, info):  # type: ignore[no-untyped-def]
-        disco_func = self.info.get("discovery_function")
-        if not disco_func:
-            raise MissingCheckInfoError(
-                "Check '%s' " % self.name + "has no discovery function defined"
-            )
-        return disco_func(info)
-
-    def run_check(self, item, params, info):  # type: ignore[no-untyped-def]
-        check_func = self.info.get("check_function")
-        if not check_func:
-            raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
-        return check_func(item, params, info)
-
-
-class ActiveCheck(BaseCheck):
-    def __init__(self, name: str) -> None:
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-
-        super().__init__(name)
-        self.info = config.active_check_info.get(self.name[len("check_") :])
-        self.command = get_active_check(self.name)
-
-    def run_argument_function(self, params):  # type: ignore[no-untyped-def]
-        assert self.info, "Active check has to be implemented in the legacy API"
-        return self.info["argument_function"](params)
-
-    def run_service_description(self, params):  # type: ignore[no-untyped-def]
-        assert self.info, "Active check has to be implemented in the legacy API"
-        return self.info["service_description"](params)
-
-    def run_generate_icmp_services(self, host_config, params):  # type: ignore[no-untyped-def]
-        assert self.info, "Active check has to be implemented in the legacy API"
-        yield from self.info["service_generator"](host_config, params)
-
-    def run_service_function(
-        self, host_config: HostConfig, env_config: EnvironmentConfig, params: Mapping[str, object]
-    ) -> Iterator[ActiveService]:
-        assert self.command, "Active check has to be implemented in the new API"
-        parsed_params = self.command.parameter_parser(params)
-        yield from self.command.service_function(parsed_params, host_config, env_config)
-
-
-class SpecialAgent:
-    def __init__(self, name: str) -> None:
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-
-        super().__init__()
-        self.name = name
-        assert self.name.startswith(
-            "agent_"
-        ), "Specify the full name of the active check, e.g. agent_3par"
-        self.argument_func = config.special_agent_info[self.name[len("agent_") :]]
-
-
 def _set_tz(timezone: str | None) -> str | None:
     old_tz = os.environ.get("TZ")
     if timezone is None:
@@ -435,41 +312,21 @@ def set_timezone(timezone: str) -> Iterator[None]:
         _set_tz(old_tz)
 
 
-@contextmanager
-def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> Iterator[None]:
-    """Set the time and timezone for the test"""
-    if isinstance(utctime, (int, float)):
-        utctime = datetime.datetime.fromtimestamp(utctime, tz=datetime.UTC)
-
-    with set_timezone(timezone), freezegun.freeze_time(utctime):
-        yield
-
-
 __all__ = [
-    "cmc_path",
-    "cme_path",
-    "cmk_path",
+    "repo_path",
     "add_python_paths",
     "create_linux_test_host",
     "fake_version_and_paths",
     "skip_unwanted_test_types",
     "wait_until_liveproxyd_ready",
-    "wait_until",
-    "on_time",
     "set_timezone",
     "Site",
     "SiteFactory",
-    "Check",
-    "MissingCheckInfoError",
-    "CMKEventConsole",
-    "CMKEventConsoleStatus",
     "import_module_hack",
     "APIError",
     "CMKWebSession",
-    "compare_html",
     "current_branch_name",
     "get_cmk_download_credentials",
-    "repo_path",
     "site_id",
     "virtualenv_path",
 ]

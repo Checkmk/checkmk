@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
+
+from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree, StringTable
 
 
 def inventory_bdtms_tape_module(info):
@@ -29,7 +30,12 @@ def check_bdtms_tape_module(item, _no_params, info):
         yield state(power_status), "Power supply: %s" % power_status.lower()
 
 
+def parse_bdtms_tape_module(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bdtms_tape_module"] = LegacyCheckDefinition(
+    parse_function=parse_bdtms_tape_module,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20884.77.83.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20884.2.4.1",

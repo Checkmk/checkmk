@@ -10,6 +10,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 #   .--Example output from agent-------------------------------------------.
 # <<<libelle_business_shadow:sep(58)>>>
 #   DBShadow Oracle                           Libelle AG
@@ -215,6 +217,15 @@ from cmk.base.config import check_info
 #
 
 # .
+
+
+def parse_libelle_business_shadow(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["libelle_business_shadow"] = LegacyCheckDefinition(
+    parse_function=parse_libelle_business_shadow,
+)
 
 
 def check_libelle_business_shadow_to_mb(size):

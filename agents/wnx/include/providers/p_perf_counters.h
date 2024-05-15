@@ -44,6 +44,14 @@ protected:
     std::string makeBody() override;
 };
 
+namespace winperf {
+constexpr std::wstring_view if_section_name = L"if";
+constexpr std::wstring_view if_state_pseudo_counter = L"2002";
+constexpr std::wstring_view if_state_pseudo_counter_type = L"text";
+constexpr std::wstring_view if_mac_pseudo_counter = L"2006";
+constexpr std::wstring_view if_mac_pseudo_counter_type = L"text";
+}  // namespace winperf
+
 // probably should go in another namespace(used also by skype)
 namespace details {
 // low level registry scanners

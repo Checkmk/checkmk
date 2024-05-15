@@ -17,7 +17,7 @@ _Section = Mapping[str, object]
 
 # Unlike the other options, port can be defined multiple times
 def _parse_ports(string_table: StringTable) -> list[int]:
-    # lower to stay compatible with older plugin versions
+    # lower to stay compatible with older plug-in versions
     return [int(line[1]) for line in string_table if line[0].lower() == "port"]
 
 
@@ -51,7 +51,7 @@ def parse_sshd_config(string_table: StringTable) -> _Section:
         **{
             key: _RELEVANT_SINGULAR_OPTIONS_PARSER[key](" ".join(line[1:]))
             for line in string_table
-            # lower to stay compatible with older plugin versions
+            # lower to stay compatible with older plug-in versions
             if (key := line[0].lower()) in _RELEVANT_SINGULAR_OPTIONS_PARSER
         },
     }

@@ -11,14 +11,11 @@
 
 import json
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.mongodb import parse_date
+
+from cmk.agent_based.v2 import render
+from cmk.plugins.lib.mongodb import parse_date
 
 
 def parse_mongodb_collections(string_table):
@@ -77,7 +74,7 @@ def check_mongodb_collections(item, params, databases_dict):
 
         perfdata = _mongodb_collections_get_perfdata_key(key)
         yield check_levels(
-            value, perfdata, levels, human_readable_func=get_bytes_human_readable, infoname=label
+            value, perfdata, levels, human_readable_func=render.bytes, infoname=label
         )
 
     # check number of indexes per collection (max is 64 indexes)
@@ -199,14 +196,14 @@ def _mongodb_collections_sort_second(tup):
 
 def _mongodb_collections_bytes_human_readable(data, key):
     try:
-        return get_bytes_human_readable(int(data.get(key)))
+        return render.bytes(int(data.get(key)))
     except (TypeError, ValueError):
         return "n/a"
 
 
 def _mongodb_collections_timestamp_human_readable(value):
     try:
-        return get_timestamp_human_readable(int(value))
+        return render.datetime(int(value))
     except (TypeError, ValueError):
         return "n/a"
 

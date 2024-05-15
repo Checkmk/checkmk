@@ -9,8 +9,7 @@
 #include <atomic>
 #include <cstdlib>
 #include <iterator>
-#include <list>
-#include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <system_error>
 
@@ -92,7 +91,7 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
                  std::chrono::system_clock::time_point state_file_created)
     : _downtimes{downtimes}
     , _comments{comments}
-    , _logger_livestatus(Logger::getLogger("cmk.livestatus"))
+    , _logger(Logger::getLogger("cmk.livestatus"))
     , _paths(std::move(paths))
     , _limits(limits)
     , _authorization(authorization)
@@ -145,12 +144,14 @@ const IHostGroup *NebCore::ihostgroup(const ::hostgroup *handle) const {
 
 const IHost *NebCore::find_host(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto *handle = ::find_host(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : ihost(handle);
 }
 
 const IHostGroup *NebCore::find_hostgroup(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto *handle = ::find_hostgroup(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : ihostgroup(handle);
 }
@@ -191,27 +192,34 @@ const IServiceGroup *NebCore::iservicegroup(
 const IService *NebCore::find_service(
     const std::string &host_name,
     const std::string &service_description) const {
-    // Older Nagios headers are not const-correct... :-P
-    const auto *handle =
-        ::find_service(const_cast<char *>(host_name.c_str()),
-                       const_cast<char *>(service_description.c_str()));
+    const auto *handle = ::find_service(
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        const_cast<char *>(host_name.c_str()),
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        const_cast<char *>(service_description.c_str()));
     return handle == nullptr ? nullptr : iservice(handle);
 }
 
 const IContactGroup *NebCore::find_contactgroup(const std::string &name) const {
-    // Older Nagios headers are not const-correct... :-P
     auto it = icontactgroups_.find(
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         ::find_contactgroup(const_cast<char *>(name.c_str())));
     return it == icontactgroups_.end() ? nullptr : it->second.get();
 }
 
 const IServiceGroup *NebCore::find_servicegroup(const std::string &name) const {
+    // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto *handle = ::find_servicegroup(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : iservicegroup(handle);
 }
 
 const IContact *NebCore::find_contact(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     auto it = icontacts_.find(::find_contact(const_cast<char *>(name.c_str())));
     return it == icontacts_.end() ? nullptr : it->second.get();
 }
@@ -249,6 +257,7 @@ size_t NebCore::maxLinesPerLogFile() const {
 
 Command NebCore::find_command(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
         return Command{._name = cmd->name, ._command_line = cmd->command_line};
     }
@@ -414,6 +423,7 @@ std::chrono::system_clock::time_point NebCore::lastCommandCheckTime() const {
         nagios_compat_last_command_check());
 }
 int32_t NebCore::intervalLength() const { return interval_length; }
+int32_t NebCore::maxLongOutputSize() const { return 0; }
 int32_t NebCore::numHosts() const { return g_num_hosts; }
 int32_t NebCore::numServices() const { return g_num_services; }
 std::string NebCore::programVersion() const { return get_program_version(); }
@@ -466,9 +476,9 @@ size_t NebCore::maxCachedMessages() const {
     return _limits._max_cached_messages;
 }
 
-Logger *NebCore::loggerCore() const { return _logger_livestatus; }
-Logger *NebCore::loggerLivestatus() const { return _logger_livestatus; }
-Logger *NebCore::loggerRRD() const { return _logger_livestatus; }
+Logger *NebCore::loggerCore() const { return _logger; }
+Logger *NebCore::loggerLivestatus() const { return _logger; }
+Logger *NebCore::loggerRRD() const { return _logger; }
 
 Triggers &NebCore::triggers() { return _triggers; }
 
@@ -501,31 +511,29 @@ bool NebCore::isPnpGraphPresent(const IService &s) const {
                             s.description()) != 0;
 }
 
-std::vector<std::string> NebCore::metrics(const IHost &h,
-                                          Logger *logger) const {
-    std::vector<std::string> metrics;
-    if (!h.name().empty()) {
-        auto names = scan_rrd(paths()->rrd_multiple_directory() / h.name(),
-                              dummy_service_description(), logger);
-        std::transform(std::begin(names), std::end(names),
-                       std::back_inserter(metrics),
-                       [](auto &&m) { return m.string(); });
+namespace {
+std::vector<std::string> toMetrics(const std::string &host_name,
+                                   const std::string &description,
+                                   const IPaths &paths, Logger *logger) {
+    if (host_name.empty() || description.empty()) {
+        return {};
     }
-    return metrics;
-}
-
-std::vector<std::string> NebCore::metrics(const IService &s,
-                                          Logger *logger) const {
     std::vector<std::string> metrics;
-    if (s.host_name().empty() || s.description().empty()) {
-        return metrics;
-    }
-    auto names = scan_rrd(paths()->rrd_multiple_directory() / s.host_name(),
-                          s.description(), logger);
+    auto names = scan_rrd(paths.rrd_multiple_directory() / host_name,
+                          description, logger);
     std::transform(std::begin(names), std::end(names),
                    std::back_inserter(metrics),
                    [](auto &&m) { return m.string(); });
     return metrics;
+}
+}  // namespace
+
+std::vector<std::string> NebCore::metrics(const IHost &h) const {
+    return toMetrics(h.name(), dummy_service_description(), *paths(), _logger);
+}
+
+std::vector<std::string> NebCore::metrics(const IService &s) const {
+    return toMetrics(s.host_name(), s.description(), *paths(), _logger);
 }
 
 namespace {
@@ -609,23 +617,11 @@ bool NebCore::pnp4nagiosEnabled() const {
     return true;  // TODO(sp) ???
 }
 
-namespace {
-std::list<std::string> getLines(InputBuffer &input) {
-    std::list<std::string> lines;
-    while (!input.empty()) {
-        lines.push_back(input.nextLine());
-        if (lines.back().empty()) {
-            break;
-        }
-    }
-    return lines;
-}
-
-void logRequest(Logger *logger, const std::string &line,
-                const std::list<std::string> &lines) {
-    Informational log(logger);
+void NebCore::logRequest(const std::string &line,
+                         const std::vector<std::string> &lines) {
+    Informational log(_logger);
     log << "request: " << line;
-    if (logger->isLoggable(LogLevel::debug)) {
+    if (_logger->isLoggable(LogLevel::debug)) {
         for (const auto &l : lines) {
             log << R"(\n)" << l;
         }
@@ -638,15 +634,13 @@ void logRequest(Logger *logger, const std::string &line,
     }
 }
 
-}  // namespace
-
 bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     // Precondition: output has been reset
-    InputBuffer::Result const res = input.readRequest();
+    const InputBuffer::Result res = input.readRequest();
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
             std::ostringstream os;
-            os << "client connection terminated: " << res;
+            os << "terminating client connection: " << res;
             output.setError(OutputBuffer::ResponseCode::incomplete_request,
                             os.str());
         }
@@ -654,42 +648,34 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     }
     const std::string line = input.nextLine();
     if (line.starts_with("GET ")) {
-        auto lines = getLines(input);
-        logRequest(_logger_livestatus, line, lines);
-        return _store.answerGetRequest(lines, output,
-                                       mk::lstrip(line.substr(4)));
+        return handleGet(input, output, line, mk::lstrip(line.substr(4)));
     }
     if (line.starts_with("GET")) {
-        // only to get error message
-        auto lines = getLines(input);
-        logRequest(_logger_livestatus, line, lines);
-        return _store.answerGetRequest(lines, output, "");
+        return handleGet(input, output, line, "");  // only to get error message
     }
     if (line.starts_with("COMMAND ")) {
-        logRequest(_logger_livestatus, line, {});
+        logRequest(line, {});
         try {
             answerCommandRequest(ExternalCommand(mk::lstrip(line.substr(8))));
         } catch (const std::invalid_argument &err) {
-            Warning(_logger_livestatus) << err.what();
+            Warning(_logger) << err.what();
         }
         return true;
     }
-    if (line.starts_with("LOGROTATE")) {
-        logRequest(_logger_livestatus, line, {});
-        Informational(_logger_livestatus) << "Forcing logfile rotation";
-        rotate_log_file(std::chrono::system_clock::to_time_t(
-            std::chrono::system_clock::now()));
-        schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
-                           0, 0,
-                           reinterpret_cast<void *>(get_next_log_rotation_time),
-                           1, nullptr, nullptr, 0);
-        return false;
-    }
-    logRequest(_logger_livestatus, line, {});
-    Warning(_logger_livestatus) << "Invalid request '" << line << "'";
+    logRequest(line, {});
+    Warning(_logger) << "terminating client connection: invalid request '"
+                     << line << "'";
     output.setError(OutputBuffer::ResponseCode::invalid_request,
-                    "Invalid request method");
+                    "terminating client connection: invalid request method");
     return false;
+}
+
+bool NebCore::handleGet(InputBuffer &input, OutputBuffer &output,
+                        const std::string &line,
+                        const std::string &table_name) {
+    auto lines = input.getLines();
+    logRequest(line, lines);
+    return _store.answerGetRequest(lines, output, table_name);
 }
 
 void NebCore::answerCommandRequest(const ExternalCommand &command) {
@@ -717,22 +703,21 @@ void NebCore::answerCommandMkLogwatchAcknowledge(
     // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
     auto args = command.args();
     if (args.size() != 2) {
-        Warning(_logger_livestatus)
-            << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
+        Warning(_logger) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
         return;
     }
-    mk_logwatch_acknowledge(_logger_livestatus, _paths.logwatch_directory,
-                            args[0], args[1]);
+    mk_logwatch_acknowledge(_logger, _paths.logwatch_directory, args[0],
+                            args[1]);
 }
 
 void NebCore::answerCommandDelCrashReport(const ExternalCommand &command) {
     auto args = command.args();
     if (args.size() != 1) {
-        Warning(_logger_livestatus) << "DEL_CRASH_REPORT expects 1 argument";
+        Warning(_logger) << "DEL_CRASH_REPORT expects 1 argument";
         return;
     }
     mk::crash_report::delete_id(_paths.crash_reports_directory, args[0],
-                                _logger_livestatus);
+                                _logger);
 }
 
 namespace {
@@ -751,8 +736,8 @@ private:
 
 void NebCore::answerCommandEventConsole(const std::string &command) {
     if (!mkeventdEnabled()) {
-        Notice(_logger_livestatus)
-            << "event console disabled, ignoring command '" << command << "'";
+        Notice(_logger) << "event console disabled, ignoring command '"
+                        << command << "'";
         return;
     }
     try {
@@ -760,7 +745,7 @@ void NebCore::answerCommandEventConsole(const std::string &command) {
                           _paths.event_console_status_socket, command)
             .run();
     } catch (const std::runtime_error &err) {
-        Alert(_logger_livestatus) << err.what();
+        Alert(_logger) << err.what();
     }
 }
 

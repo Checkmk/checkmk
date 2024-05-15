@@ -13,13 +13,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-)
+
+from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render
 
 
 def parse_postgres_stat_database(string_table):
@@ -58,6 +55,13 @@ def parse_postgres_stat_database(string_table):
 # one commit in their live.
 def inventory_postgres_stat_database(parsed):
     return [(k, {}) for k in parsed if parsed[k]["xact_commit"] > 0]
+
+
+def inventory_postgres_stat_database_size(parsed):
+    # https://www.postgresql.org/docs/current/monitoring-stats.html#MONITORING-PG-STAT-DATABASE-VIEW
+    # > datid: OID of this database, or 0 for objects belonging to a shared relation
+    # shared relations don't have a size, so we don't want to discover them.
+    return [(k, {}) for k in parsed if parsed[k]["xact_commit"] > 0 and parsed[k]["datid"] != "0"]
 
 
 def check_postgres_stat_database(item, params, parsed):
@@ -126,7 +130,7 @@ def check_postgres_stat_database_size(item, params, parsed):
         size,
         "size",
         levels,
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.bytes,
         infoname="Size",
     )
 
@@ -134,7 +138,7 @@ def check_postgres_stat_database_size(item, params, parsed):
 check_info["postgres_stat_database.size"] = LegacyCheckDefinition(
     service_name="PostgreSQL DB %s Size",
     sections=["postgres_stat_database"],
-    discovery_function=inventory_postgres_stat_database,
+    discovery_function=inventory_postgres_stat_database_size,
     check_function=check_postgres_stat_database_size,
     check_ruleset_name="postgres_stat_database",
 )

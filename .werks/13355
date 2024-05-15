@@ -1,4 +1,4 @@
-Title: OpenWRT agent: Make <tt>df</tt> section work with BusyBox
+Title: OpenWRT agent: Make df section work with BusyBox
 Class: fix
 Compatible: compat
 Component: checks

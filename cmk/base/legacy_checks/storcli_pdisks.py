@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils import megaraid
+
+from cmk.plugins.lib import megaraid
 
 
 def parse_storcli_pdisks(string_table):

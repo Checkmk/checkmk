@@ -71,7 +71,7 @@ def check_winperf_msx_queues(
         yield from check_levels(
             length,
             levels_upper=params.get("levels"),
-            metric_name="length",
+            metric_name="queue_length",
             render_func=str,
             label="Length",
         )

@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.plugins.lib.checkmk import CachedPlugin, CachedPluginsSection, CachedPluginType
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.checkmk import CachedPlugin, CachedPluginsSection, CachedPluginType
 
 
 def _split_plugin_descr(plugin_descr: str) -> tuple[CachedPluginType | None, str]:
@@ -17,6 +18,8 @@ def _split_plugin_descr(plugin_descr: str) -> tuple[CachedPluginType | None, str
 
 
 def parse_checkmk_cached_plugins(string_table: StringTable) -> CachedPluginsSection:
+    # "killfailed" has been removed from the agent in 2.4
+    # Currently it is still used by mk_oracle
     fail_types = ("timeout", "killfailed")
     temp_section: dict[str, list[CachedPlugin]] = {
         fail_type: [

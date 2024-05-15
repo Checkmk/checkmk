@@ -175,12 +175,6 @@ metric_info["hops"] = {
     "color": "51/a",
 }
 
-metric_info["uptime"] = {
-    "title": _("Uptime"),
-    "unit": "s",
-    "color": "#80f000",
-}
-
 metric_info["time_difference"] = {
     "title": _("Time difference"),
     "unit": "s",
@@ -224,7 +218,7 @@ metric_info["latencies_99"] = {
 metric_info["availability"] = {
     "title": _("Availability"),
     "unit": "%",
-    "color": "31",
+    "color": "31/a",
 }
 
 # TODO: Metric names with preceeding numbers seems not to be capable
@@ -295,30 +289,6 @@ metric_info["connections_failed_rate"] = {
     "color": "14/a",
 }
 
-metric_info["open_network_sockets"] = {
-    "title": _("Open network sockets"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["connections"] = {
-    "title": _("Connections"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
-metric_info["idle_connections"] = {
-    "title": _("Idle connections"),
-    "unit": "count",
-    "color": "#a080f0",
-}
-
-metric_info["active_connections"] = {
-    "title": _("Active connections"),
-    "unit": "count",
-    "color": "#a020c0",
-}
-
 metric_info["failed_connections"] = {
     "title": _("Failed connections"),
     "unit": "count",
@@ -335,24 +305,6 @@ metric_info["connections_ssl_vpn"] = {
     "title": _("SSL/VPN connections"),
     "unit": "count",
     "color": "13/a",
-}
-
-metric_info["connections_async_writing"] = {
-    "title": _("Asynchronous writing connections"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["connections_async_keepalive"] = {
-    "title": _("Asynchronous keep alive connections"),
-    "unit": "count",
-    "color": "22/a",
-}
-
-metric_info["connections_async_closing"] = {
-    "title": _("Asynchronous closing connections"),
-    "unit": "count",
-    "color": "24/a",
 }
 
 metric_info["connections_rate"] = {
@@ -383,48 +335,6 @@ metric_info["packet_velocity_asic"] = {
     "title": _("Packet velocity asic"),
     "unit": "1/s",
     "color": "26/a",
-}
-
-metric_info["requests_per_second"] = {
-    "title": _("Requests per second"),
-    "unit": "1/s",
-    "color": "#4080a0",
-}
-
-metric_info["busy_workers"] = {
-    "title": _("Busy workers"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
-metric_info["idle_workers"] = {
-    "title": _("Idle workers"),
-    "unit": "count",
-    "color": "43/b",
-}
-
-metric_info["busy_servers"] = {
-    "title": _("Busy servers"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
-metric_info["idle_servers"] = {
-    "title": _("Idle servers"),
-    "unit": "count",
-    "color": "43/b",
-}
-
-metric_info["open_slots"] = {
-    "title": _("Open slots"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["total_slots"] = {
-    "title": _("Total slots"),
-    "unit": "count",
-    "color": "33/b",
 }
 
 metric_info["total_sessions"] = {
@@ -493,12 +403,6 @@ metric_info["relay_log_space"] = {
     "color": "#ffb080",
 }
 
-metric_info["mail_latency"] = {
-    "title": _("Mail latency"),
-    "unit": "s",
-    "color": "#ffb080",
-}
-
 metric_info["p2s_bandwidth"] = {
     "title": _("Point-to-site bandwidth"),
     "unit": "bytes/s",
@@ -550,84 +454,6 @@ metric_info["multicast_packets"] = {
     "color": "14/a",
 }
 
-metric_info["tcp_listen"] = {
-    "title": _("State %s") % "LISTEN",
-    "unit": "count",
-    "color": "44/a",
-}
-
-metric_info["tcp_established"] = {
-    "title": _("State %s") % "ESTABLISHED",
-    "unit": "count",
-    "color": "#00f040",
-}
-
-metric_info["tcp_syn_sent"] = {
-    "title": _("State %s") % "SYN_SENT",
-    "unit": "count",
-    "color": "#a00000",
-}
-
-metric_info["tcp_syn_recv"] = {
-    "title": _("State %s") % "SYN_RECV",
-    "unit": "count",
-    "color": "#ff4000",
-}
-
-metric_info["tcp_last_ack"] = {
-    "title": _("State %s") % "LAST_ACK",
-    "unit": "count",
-    "color": "#c060ff",
-}
-
-metric_info["tcp_close_wait"] = {
-    "title": _("State %s") % "CLOSE_WAIT",
-    "unit": "count",
-    "color": "#f000f0",
-}
-
-metric_info["tcp_time_wait"] = {
-    "title": _("State %s") % "TIME_WAIT",
-    "unit": "count",
-    "color": "#00b0b0",
-}
-
-metric_info["tcp_closed"] = {
-    "title": _("State %s") % "CLOSED",
-    "unit": "count",
-    "color": "#ffc000",
-}
-
-metric_info["tcp_closing"] = {
-    "title": _("State %s") % "CLOSING",
-    "unit": "count",
-    "color": "#ffc080",
-}
-
-metric_info["tcp_fin_wait1"] = {
-    "title": _("State %s") % "FIN_WAIT1",
-    "unit": "count",
-    "color": "#cccccc",
-}
-
-metric_info["tcp_fin_wait2"] = {
-    "title": _("State %s") % "FIN_WAIT2",
-    "unit": "count",
-    "color": "#888888",
-}
-
-metric_info["tcp_bound"] = {
-    "title": _("State %s") % "BOUND",
-    "unit": "count",
-    "color": "#4060a0",
-}
-
-metric_info["tcp_idle"] = {
-    "title": _("State %s") % "IDLE",
-    "unit": "count",
-    "color": "41/a",
-}
-
 metric_info["fw_connections_active"] = {
     "title": _("Active connections"),
     "unit": "count",
@@ -658,52 +484,10 @@ metric_info["fw_connections_passthrough"] = {
     "color": "34/a",
 }
 
-metric_info["average_message_rate"] = {
-    "title": _("Incoming messages"),
-    "unit": "1/s",
-    "color": "23/a",
-}
-
-metric_info["average_drop_rate"] = {
-    "title": _("Dropped messages"),
-    "unit": "1/s",
-    "color": "21/b",
-}
-
 metric_info["average_sync_time"] = {
     "title": _("Average slave sync time"),
     "unit": "s",
     "color": "46/a",
-}
-
-metric_info["average_rule_trie_rate"] = {
-    "title": _("Rule tries"),
-    "unit": "1/s",
-    "color": "33/a",
-}
-
-metric_info["average_rule_hit_rate"] = {
-    "title": _("Rule hits"),
-    "unit": "1/s",
-    "color": "34/b",
-}
-
-metric_info["average_event_rate"] = {
-    "title": _("Event creations"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["average_connect_rate"] = {
-    "title": _("Client connects"),
-    "unit": "1/s",
-    "color": "15/a",
-}
-
-metric_info["average_request_time"] = {
-    "title": _("Average request response time"),
-    "unit": "s",
-    "color": "14/a",
 }
 
 metric_info["average_processing_time"] = {
@@ -751,37 +535,37 @@ metric_info["net_data_sent"] = {
 metric_info["total_modems"] = {
     "title": _("Total number of modems"),
     "unit": "count",
-    "color": "12/c",
+    "color": "12/a",
 }
 
 metric_info["active_modems"] = {
     "title": _("Active modems"),
     "unit": "count",
-    "color": "14/c",
+    "color": "14/a",
 }
 
 metric_info["registered_modems"] = {
     "title": _("Registered modems"),
     "unit": "count",
-    "color": "16/c",
+    "color": "16/a",
 }
 
 metric_info["channel_utilization"] = {
     "title": _("Channel utilization"),
     "unit": "%",
-    "color": "24/c",
+    "color": "24/a",
 }
 
 metric_info["channel_utilization_24ghz"] = {
     "title": _("Channel utilization for 2,4GHz Band"),
     "unit": "%",
-    "color": "25/c",
+    "color": "25/a",
 }
 
 metric_info["channel_utilization_5ghz"] = {
     "title": _("Channel utilization for 5GHz Band"),
     "unit": "%",
-    "color": "26/c",
+    "color": "26/a",
 }
 
 metric_info["connector_outlets"] = {
@@ -822,6 +606,21 @@ metric_info["time_firstbyte"] = {
 
 metric_info["time_transfer"] = {
     "title": _("Time to receive full response"),
+    "unit": "s",
+    "color": "41/a",
+}
+
+# time_http_headers/time_http_body come from check_httpv2 and correspond
+# to time_headers/time_transfer from the old check_http.
+# We keep the old metrics as long as the old check_http is still in use.
+metric_info["time_http_headers"] = {
+    "title": _("Time to fetch HTTP headers"),
+    "unit": "s",
+    "color": "15/a",
+}
+
+metric_info["time_http_body"] = {
+    "title": _("Time to fetch page content"),
     "unit": "s",
     "color": "41/a",
 }
@@ -1039,7 +838,7 @@ metric_info["http_5xx"] = {
 }
 
 metric_info["sip_message_processing_time"] = {
-    "title": _("SIP - Average Incoming Message Processing Time"),
+    "title": _("SIP - Average incoming message processing time"),
     "unit": "s",
     "color": "42/a",
 }
@@ -1129,7 +928,7 @@ metric_info["usrv_allocation_latency"] = {
 }
 
 metric_info["sip_avg_holding_time_incoming_messages"] = {
-    "title": _("SIP - Average Holding Time For Incoming Messages"),
+    "title": _("SIP - Average holding time For incoming messages"),
     "unit": "s",
     "color": "42/a",
 }
@@ -1189,13 +988,13 @@ metric_info["avauth_failed_requests"] = {
 }
 
 metric_info["edge_udp_failed_auth"] = {
-    "title": _("UDP Authentication Failures"),
+    "title": _("UDP Authentication failures"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["edge_tcp_failed_auth"] = {
-    "title": _("A/V Edge - TCP Authentication Failures"),
+    "title": _("A/V Edge - TCP Authentication failures"),
     "unit": "1/s",
     "color": "42/a",
 }
@@ -1419,13 +1218,13 @@ metric_info["connections_max"] = {
 metric_info["connections_conn_threads"] = {
     "title": _("Currently open connections"),
     "unit": "count",
-    "color": "31/c",
+    "color": "31/a",
 }
 
 metric_info["connections_perc_conn_threads"] = {
     "title": _("Open connections load"),
     "unit": "%",
-    "color": "31/c",
+    "color": "31/a",
 }
 
 metric_info["connections_perc_used"] = {
@@ -1483,13 +1282,19 @@ metric_info["read_retrans"] = {
     "color": "#90ee90",
 }
 
-metric_info["read_avg_rtt_ms"] = {
+metric_info["write_retrans"] = {
+    "title": _("Write retransmission"),
+    "unit": "%",
+    "color": "#90ee90",
+}
+
+metric_info["read_avg_rtt_s"] = {
     "title": _("Read average rtt"),
     "unit": "s",
     "color": "#90ee90",
 }
 
-metric_info["read_avg_exe_ms"] = {
+metric_info["read_avg_exe_s"] = {
     "title": _("Read average exe"),
     "unit": "s",
     "color": "#90ee90",
@@ -1514,13 +1319,13 @@ metric_info["write_b_op"] = {
     "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
 }
 
-metric_info["write_avg_rtt_ms"] = {
+metric_info["write_avg_rtt_s"] = {
     "title": _("Write average rtt"),
     "unit": "s",
     "color": "#90ee90",
 }
 
-metric_info["write_avg_exe_ms"] = {
+metric_info["write_avg_exe_s"] = {
     "title": _("Write average exe"),
     "unit": "s",
     "color": "#90ee90",
@@ -1726,7 +1531,7 @@ graph_info["if_errors"] = {
 }
 
 graph_info["bm_packets"] = {
-    "title": _("Broad-/Multicast"),
+    "title": _("Broadcast/Multicast"),
     "metrics": [
         ("if_in_mcast", "line"),
         ("if_in_bcast", "line"),
@@ -1780,49 +1585,6 @@ graph_info["wlan_errors"] = {
     ],
 }
 
-graph_info["busy_and_idle_workers"] = {
-    "title": _("Busy and idle workers"),
-    "metrics": [
-        ("busy_workers", "area"),
-        ("idle_workers", "stack"),
-    ],
-}
-
-graph_info["busy_and_idle_servers"] = {
-    "title": _("Busy and idle servers"),
-    "metrics": [
-        ("busy_servers", "area"),
-        ("idle_servers", "stack"),
-    ],
-}
-
-graph_info["total_and_open_slots"] = {
-    "title": _("Total and open slots"),
-    "metrics": [
-        ("total_slots", "area"),
-        ("open_slots", "area"),
-    ],
-}
-
-graph_info["connections"] = {
-    "title": _("Connections"),
-    "metrics": [
-        ("connections", "area"),
-        ("connections_async_writing", "area"),
-        ("connections_async_keepalive", "stack"),
-        ("connections_async_closing", "stack"),
-    ],
-    "optional_metrics": [
-        "connections_async_writing",
-        "connections_async_keepalive",
-        "connections_async_closing",
-    ],
-    "scalars": [
-        "connections:warn",
-        "connections:crit",
-    ],
-}
-
 graph_info["time_offset"] = {
     "title": _("Time offset"),
     "metrics": [("time_offset", "area"), ("jitter", "line")],
@@ -1867,35 +1629,6 @@ graph_info["number_of_total_and_running_sessions"] = {
     ],
 }
 
-graph_info["tcp_connection_states"] = {
-    "title": _("TCP Connection States"),
-    "metrics": [
-        ("tcp_listen", "stack"),
-        ("tcp_syn_sent", "stack"),
-        ("tcp_syn_recv", "stack"),
-        ("tcp_established", "stack"),
-        ("tcp_time_wait", "stack"),
-        ("tcp_last_ack", "stack"),
-        ("tcp_close_wait", "stack"),
-        ("tcp_closed", "stack"),
-        ("tcp_closing", "stack"),
-        ("tcp_fin_wait1", "stack"),
-        ("tcp_fin_wait2", "stack"),
-        ("tcp_bound", "stack"),
-        ("tcp_idle", "stack"),
-    ],
-    "omit_zero_metrics": True,
-    "optional_metrics": ["tcp_bound", "tcp_idle"],
-}
-
-graph_info["db_connections"] = {
-    "title": _("DB Connections"),
-    "metrics": [("active_connections", "area"), ("idle_connections", "area")],
-    "scalars": [
-        ("active_connections:warn", _("Warning (active connections)")),
-        ("active_connections:crit", _("Critical (active connections)")),
-    ],
-}
 
 graph_info["cluster_hosts"] = {
     "title": _("Hosts"),
@@ -1930,8 +1663,8 @@ graph_info["access_point_statistics"] = {
     "title": _("Access point statistics"),
     "metrics": [
         ("ap_devices_total", "area"),
-        ("ap_devices_drifted", "area"),
-        ("ap_devices_not_responding", "stack"),
+        ("ap_devices_drifted", "line"),
+        ("ap_devices_not_responding", "line"),
     ],
 }
 
@@ -1951,8 +1684,8 @@ graph_info["wifi_connections"] = {
 graph_info["round_trip_average"] = {
     "title": _("Round trip average"),
     "metrics": [
-        ("rtmax", "area"),
-        ("rtmin", "area"),
+        ("rtmax", "line"),
+        ("rtmin", "line"),
         ("rta", "line"),
     ],
     "scalars": [
@@ -1978,8 +1711,8 @@ def register_hop_graphs():
         graph_info["hop_%d_round_trip_average" % idx] = {
             "title": _("Hop %d Round trip average") % idx,
             "metrics": [
-                ("hop_%d_rtmax" % idx, "area"),
-                ("hop_%d_rtmin" % idx, "area"),
+                ("hop_%d_rtmax" % idx, "line"),
+                ("hop_%d_rtmin" % idx, "line"),
                 ("hop_%d_rta" % idx, "line"),
                 ("hop_%d_rtstddev" % idx, "line"),
             ],
@@ -2033,29 +1766,35 @@ graph_info["page_activity"] = {
 }
 
 graph_info["authentication_failures"] = {
-    "title": _("Authentication Failures"),
-    "metrics": [("udp_failed_auth", "line"), ("tcp_failed_auth", "line")],
+    "title": _("Authentication failures"),
+    "metrics": [
+        ("edge_udp_failed_auth", "line"),
+        ("edge_tcp_failed_auth", "line"),
+    ],
 }
 
 graph_info["allocate_requests_exceeding_port_limit"] = {
     "title": _("Allocate Requests Exceeding Port Limit"),
     "metrics": [
-        ("udp_allocate_requests_exceeding_port_limit", "line"),
-        ("tcp_allocate_requests_exceeding_port_limit", "line"),
+        ("edge_udp_allocate_requests_exceeding_port_limit", "line"),
+        ("edge_tcp_allocate_requests_exceeding_port_limit", "line"),
     ],
 }
 
 graph_info["packets_dropped"] = {
     "title": _("Packets Dropped"),
     "metrics": [
-        ("udp_packets_dropped", "line"),
-        ("tcp_packets_dropped", "line"),
+        ("edge_udp_packets_dropped", "line"),
+        ("edge_tcp_packets_dropped", "line"),
     ],
 }
 
 graph_info["streams"] = {
     "title": _("Streams"),
-    "metrics": [("failed_inbound_streams", "area"), ("failed_outbound_streams", "-area")],
+    "metrics": [
+        ("xmpp_failed_inbound_streams", "area"),
+        ("xmpp_failed_outbound_streams", "-area"),
+    ],
 }
 
 graph_info["dhcp_statistics_received"] = {
@@ -2121,28 +1860,12 @@ graph_info["web_gateway_statistics"] = {
     ],
 }
 
-graph_info["web_gateway_miscellaneous_statistics"] = {
-    "title": _("Web gateway miscellaneous statistics"),
-    "metrics": [
-        ("open_network_sockets", "stack"),
-        ("connections", "stack"),
-    ],
-}
-
 graph_info["DB_connections"] = {
     "title": _("Parallel connections"),
     "metrics": [
-        ("connections_max_used", "area"),
-        ("connections_conn_threads", "area"),
+        ("connections_max_used", "line"),
+        ("connections_conn_threads", "line"),
         ("connections_max", "line"),
-    ],
-}
-
-graph_info["http_errors"] = {
-    "title": _("HTTP Errors"),
-    "metrics": [
-        ("http_5xx_rate", "area"),
-        ("http_4xx_rate", "area"),
     ],
 }
 
@@ -2163,7 +1886,7 @@ graph_info["nodes_by_type"] = {
     "title": _("Running nodes by nodes type"),
     "metrics": [
         ("number_of_nodes", "area"),
-        ("number_of_data_nodes", "area"),
+        ("number_of_data_nodes", "line"),
     ],
 }
 graph_info["channel_utilization_24ghz"] = {

@@ -132,6 +132,8 @@ const char *const kLogWatchEventTimeout = "timeout";                // int
 const char *const kLogWatchEventMaxLineLength = "max_line_length";  // int
 const char *const kLogWatchEventLogFile = "logfile";                // string
 
+constexpr uint32_t kExtensionDefaultCheckPeriod = 60;  // seconds
+
 // Key Words in logwatch.logfile section of the YAML config file
 // example:
 // logfile:

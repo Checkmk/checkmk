@@ -13,8 +13,19 @@
 # 0.00 0.00 15.00
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import StringTable
+
+
+def parse_vms_system(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["vms_system"] = LegacyCheckDefinition(
+    parse_function=parse_vms_system,
+)
 
 
 def inventory_vms_system(info):
@@ -42,17 +53,15 @@ check_info["vms_system.ios"] = LegacyCheckDefinition(
 
 def check_vms_system_procs(_no_item, params, info):
     procs = int(float(info[0][2]))
-    perfdata = [("procs", procs, None, None, 0)]
 
-    if params:
-        warn, crit = params
-        perfdata = [("procs", procs, warn, crit, 0)]
-        if procs >= crit:
-            return (2, "%d processes (critical at %d)" % (procs, crit), perfdata)
-        if procs >= warn:
-            return (1, "%d processes (warning at %d)" % (procs, warn), perfdata)
-
-    return (0, "%d processes" % (procs,), perfdata)
+    yield check_levels(
+        procs,
+        "procs",
+        params["levels_upper"],
+        human_readable_func=str,
+        infoname="Processes",
+        boundaries=(0, None),
+    )
 
 
 check_info["vms_system.procs"] = LegacyCheckDefinition(
@@ -61,4 +70,5 @@ check_info["vms_system.procs"] = LegacyCheckDefinition(
     discovery_function=inventory_vms_system,
     check_function=check_vms_system_procs,
     check_ruleset_name="vms_procs",
+    check_default_parameters={"levels_upper": None},
 )

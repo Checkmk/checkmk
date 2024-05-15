@@ -5,15 +5,14 @@
 
 
 from collections.abc import Iterable, Mapping
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_CPS
+
+from cmk.agent_based.v2 import SNMPTree
+from cmk.plugins.lib.ups import DETECT_UPS_CPS
 
 
 class Phase(TypedDict):
@@ -26,15 +25,19 @@ class Phase(TypedDict):
 Section = Mapping[Literal["1"], Phase]
 
 
-def parse_ups_cps_outphase(string_table: list[str]) -> Section:
-    return {
-        "1": Phase(
-            voltage=float(string_table[0][0]) / 10,
-            frequency=float(string_table[0][1]) / 10,
-            output_load=float(string_table[0][2]),
-            current=float(string_table[0][3]) / 10,
-        )
-    }
+def parse_ups_cps_outphase(string_table: list[str]) -> Section | None:
+    return (
+        {
+            "1": Phase(
+                voltage=float(string_table[0][0]) / 10,
+                frequency=float(string_table[0][1]) / 10,
+                output_load=float(string_table[0][2]),
+                current=float(string_table[0][3]) / 10,
+            )
+        }
+        if string_table
+        else None
+    )
 
 
 def inventory_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:

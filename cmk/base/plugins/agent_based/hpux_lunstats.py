@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib.diskstat import Section
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.diskstat import Section
 
 # <<<hpux_lunstats>>>
 # WWID:  0x600508b1001cf7f0d25c51941cf5e2d7

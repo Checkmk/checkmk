@@ -10,13 +10,13 @@ Version: 2.1.0b1
 
 This only affects users which process raw trees from HW/SW Inventory system via
 <ul>
-<li>files {{var/check_mk/inventory/HOSTNAME}} or</li>
-<li>export hooks, similar to the ruleset {{Export List of Software packages as CSV file}} or</li>
+<li>files "var/check_mk/inventory/HOSTNAME" or</li>
+<li>export hooks, similar to the ruleset "Export List of Software packages as CSV file" or</li>
 <li>(Web-)API, see also werk 3585.</li>
 </ul>
 
-Other functionalities like {{HW/SW Inventory History}} or using single values
-or tables from {{HW/SW Inventory}} trees in views are not affected.
+Other functionalities like "HW/SW Inventory History" or using single values
+or tables from "HW/SW Inventory" trees in views are not affected.
 
 Old raw trees are migrated on-the-fly and the new structure is used.
 
@@ -24,7 +24,7 @@ Summa summarum: If a user does not access raw trees from above topics then it
 seems that nothing has changed.
 
 Details:
-The previous raw tree structure of the {{HW/SW Inventory Tree}} had some
+The previous raw tree structure of the "HW/SW Inventory Tree" had some
 disadvantages, ie. Python dicts or lists were used for two different entities:
 <ul>
 <li>single values or categories resp.</li>
@@ -133,7 +133,7 @@ Beside other improvements like easier understanding of the raw tree structure
 the de/serializing process is less error-prone. Also the role of paths is
 clearer than before.
 
-Example: On a Linux machine with installed {{mk_inventory}} and 16000 entries
+Example: On a Linux machine with installed "mk_inventory" and 16000 entries
 the raw tree file increases from 347977 bytes to 349904 bytes, ie. 1927 bytes.
 
 The file size of small raw trees strikingly increase but for medium or large

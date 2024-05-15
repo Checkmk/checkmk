@@ -9,9 +9,9 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import CheckResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
+from cmk.agent_based.v1 import Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.plugins.lib.esx_vsphere import Section
 
 
 @pytest.mark.parametrize(
@@ -74,4 +74,7 @@ def test_check_esx_vsphere_hostsystem_multipath(
     fix_register: FixRegister, section: Section, item: str, check_results: CheckResult
 ) -> None:
     check = fix_register.check_plugins[CheckPluginName("esx_vsphere_hostsystem_multipath")]
-    assert list(check.check_function(item=item, params={}, section=section)) == check_results
+    assert (
+        list(check.check_function(item=item, params={"levels_map": {}}, section=section))
+        == check_results
+    )

@@ -6,13 +6,16 @@
 import os
 import re
 import sys
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from email.utils import formataddr
 from http.client import responses as http_responses
 from quopri import encodestring
 from typing import Any, NamedTuple, NoReturn
 
 import requests
+from requests import JSONDecodeError
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -103,18 +106,27 @@ def html_escape_context(context: PluginNotificationContext) -> PluginNotificatio
     if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
 
-    def _escape_or_not_escape(varname: str, value: str) -> str:
+    def _escape_or_not_escape(context: PluginNotificationContext, varname: str, value: str) -> str:
         """currently we escape by default with a large list of exceptions.
 
         Next step is permissive escaping for certain fields..."""
 
         if varname in unescaped_variables:
+            # HACK for HTML output of ps check
+            if (
+                varname == "LONGSERVICEOUTPUT"
+                and context.get("SERVICECHECKCOMMAND") == "check_mk-ps"
+            ):
+                return value.replace("&bsol;", "\\")
             return value
         if varname in permissive_variables:
             return escape_permissive(value, escape_links=False)
         return escape(value)
 
-    return {variable: _escape_or_not_escape(variable, value) for variable, value in context.items()}
+    return {
+        variable: _escape_or_not_escape(context, variable, value)
+        for variable, value in context.items()
+    }
 
 
 def add_debug_output(template: str, context: PluginNotificationContext) -> str:
@@ -286,30 +298,80 @@ class StateInfo(NamedTuple):
 
 
 StatusCodeRange = tuple[int, int]
+JsonOrText = dict | str
 
 
-def process_by_result_map(
-    response: requests.Response, result_map: dict[StatusCodeRange, StateInfo]
+class ResponseMatcher(ABC):
+    __slots__ = ()
+
+    @abstractmethod
+    def matches(self, response: requests.Response, body: JsonOrText) -> bool: ...
+
+    def and_(self, other: "ResponseMatcher") -> "CombinedMatcher":
+        return CombinedMatcher(matchers=[self, other])
+
+
+@dataclass(frozen=True, slots=True)
+class CombinedMatcher(ResponseMatcher):
+    matchers: list[ResponseMatcher]
+
+    def matches(self, response: requests.Response, body: JsonOrText) -> bool:
+        return all(matcher.matches(response, body) for matcher in self.matchers)
+
+    def and_(self, other: "ResponseMatcher") -> "CombinedMatcher":
+        return CombinedMatcher(matchers=[*self.matchers, other])
+
+
+@dataclass(frozen=True, slots=True)
+class StatusCodeMatcher(ResponseMatcher):
+    range: StatusCodeRange
+
+    def __post_init__(self) -> None:
+        if self.range[0] > self.range[1]:
+            raise ValueError(f"Invalid range: {self.range[0]} - {self.range[1]}")
+
+    def matches(self, response: requests.Response, body: JsonOrText) -> bool:
+        return self.range[0] <= response.status_code <= self.range[1]
+
+
+@dataclass(frozen=True, slots=True)
+class JsonFieldMatcher(ResponseMatcher):
+    field: str
+    value: Any
+
+    def matches(self, response: requests.Response, body: JsonOrText) -> bool:
+        return isinstance(body, dict) and _get_details_from_json(body, self.field) == self.value
+
+
+def _get_details_from_json(json_response: dict[str, Any], key: str) -> Any:
+    if key in json_response:
+        return json_response[key]
+
+    for value in json_response.values():
+        if isinstance(value, dict) and (result := _get_details_from_json(value, key)):
+            return result
+    return None
+
+
+def process_by_matchers(
+    response: requests.Response,
+    matchers: Iterable[tuple[ResponseMatcher | StatusCodeRange, StateInfo]],
 ) -> NoReturn:
-    def get_details_from_json(json_response: dict[str, Any], what: str) -> Any:
-        if what in json_response:
-            return json_response[what]
-
-        for value in json_response.values():
-            if isinstance(value, dict):
-                result = get_details_from_json(value, what)
-                if result:
-                    return result
-        return None
-
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"
     details = ""
 
-    for status_code_range, state_info in result_map.items():
-        if status_code_range[0] <= status_code <= status_code_range[1]:
+    try:
+        body = response.json()
+    except JSONDecodeError:
+        body = response.text
+
+    for matcher, state_info in matchers:
+        if not isinstance(matcher, ResponseMatcher):
+            matcher = StatusCodeMatcher(range=matcher)
+        if matcher.matches(response, body):
             if state_info.type == "json":
-                details = get_details_from_json(response.json(), state_info.title)
+                details = _get_details_from_json(body, state_info.title)
             elif state_info.type == "str":
                 details = response.text
 

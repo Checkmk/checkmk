@@ -1,0 +1,10 @@
+Title: "+" is now an allowed character in user ids
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1698053634
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+"+" has been added as an allowed character in user ids. For example now "user+checkmk@company.com" is an allowed user id.

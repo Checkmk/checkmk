@@ -7,9 +7,10 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
+
 from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
 
 
 class NodeState(NamedTuple):

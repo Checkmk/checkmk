@@ -2,6 +2,8 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 import ast
 import json
@@ -21,8 +23,9 @@ from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 import cmk.utils.version as version
+from cmk.utils.config_validation_layer.groups import GroupName, GroupType
 from cmk.utils.exceptions import MKException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
@@ -33,25 +36,22 @@ from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.config import builtin_role_ids
+from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType, tree_to_expr
-from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import configured_sites
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
+from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 
 from cmk.fields import base, DateTime, validators
-
-if version.edition() is version.Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-
 
 _logger = logging.getLogger(__name__)
 
@@ -130,6 +130,7 @@ class FolderField(base.String):
 
     def __init__(
         self,
+        pattern=FOLDER_PATTERN,
         **kwargs,
     ):
         if "description" not in kwargs:
@@ -139,7 +140,7 @@ class FolderField(base.String):
             "\n\nPath delimiters can be either `~`, `/` or `\\`. Please use the one most "
             "appropriate for your quoting/escaping needs. A good default choice is `~`."
         )
-        super().__init__(pattern=FOLDER_PATTERN, **kwargs)
+        super().__init__(pattern=pattern, **kwargs)
 
     @classmethod
     def _normalize_folder(cls, folder_id):
@@ -364,8 +365,8 @@ class _ExprNested(base.Nested):
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
-def query_field(  # type: ignore[no-untyped-def]
-    table: type[Table], required: bool = False, example=None
+def query_field(
+    table: type[Table], required: bool = False, example: str | None = None
 ) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
@@ -415,6 +416,7 @@ def column_field(
     example: list[str],
     required: bool = False,
     mandatory: list[ColumnTypes] | None = None,
+    default: list[Column] | None = None,
 ) -> "_ListOfColumns":
     column_names: list[str] = []
     if mandatory is not None:
@@ -423,13 +425,15 @@ def column_field(
                 column_names.append(col.name)
             else:
                 column_names.append(col)
+    if default is None:
+        default = [getattr(table, col) for col in column_names]
 
     return _ListOfColumns(
         _LiveStatusColumn(table=table, required=required),
         table=table,
         required=required,
         mandatory=column_names,
-        load_default=[getattr(table, col) for col in column_names],
+        load_default=default,
         description=f"The desired columns of the `{table.__tablename__}` table. If left empty, a "
         "default set of columns is used.",
         example=example,
@@ -585,6 +589,19 @@ class HostField(base.String):
                 host._user_needs_permission("write")
 
         return
+
+    def _deserialize(
+        self,
+        value: Any,
+        attr: str | None,
+        data: typing.Mapping[str, Any] | None,
+        **kwargs: Any,
+    ) -> HostAddress:
+        value = super()._deserialize(value, attr, data)
+        try:
+            return HostAddress(value)
+        except ValueError as e:
+            raise ValidationError(str(e)) from e
 
     def _validate(self, value):
         super()._validate(value)
@@ -981,7 +998,7 @@ def host_attributes_field(
 
     return MultiNested(
         [
-            attr_openapi_schema(object_type, object_context),
+            lambda: attr_openapi_schema(object_type, object_context),
             CustomHostAttributes,
             TagGroupAttributes,
         ],
@@ -1006,7 +1023,7 @@ class SiteField(base.String):
     def __init__(
         self,
         presence: Literal[
-            "should_exist", "should_not_exist", "might_not_exist", "ignore"
+            "should_exist", "should_not_exist", "might_not_exist_on_view", "ignore"
         ] = "should_exist",
         allow_all_value: bool = False,
         **kwargs: Any,
@@ -1019,10 +1036,10 @@ class SiteField(base.String):
         if self.allow_all_value and value == "all":
             return
 
-        if self.presence == "might_not_exist":
+        if self.presence == "might_not_exist_on_view" and self.context["object_context"] == "view":
             return
 
-        if self.presence == "should_exist":
+        if self.presence in ["should_exist", "might_not_exist_on_view"]:
             if value not in configured_sites().keys():
                 raise self.make_error("should_exist", site=value)
 
@@ -1031,7 +1048,7 @@ class SiteField(base.String):
                 raise self.make_error("should_not_exist", site=value)
 
     def _serialize(self, value, attr, obj, **kwargs):
-        if self.presence == "might_not_exist" and value not in configured_sites().keys():
+        if self.presence == "might_not_exist_on_view" and value not in configured_sites().keys():
             return "Unknown Site: " + value
         return super()._serialize(value, attr, obj, **kwargs)
 
@@ -1075,12 +1092,12 @@ class _CustomerField(base.String):
     def _validate(self, value):
         super()._validate(value)
         if value == "global":
-            value = managed.SCOPE_GLOBAL
+            value = SCOPE_GLOBAL
 
         if not self._allow_global and value is None:
             raise self.make_error("invalid_global")
 
-        included = value in managed.customer_collection()
+        included = value in customer_api().customer_collection()
         if self._should_exist and not included:
             raise self.make_error("should_exist", customer=value)
         if not self._should_exist and included:
@@ -1106,6 +1123,7 @@ class GroupField(base.String):
         "Activate the configuration?",
         "should_not_be_monitored": "Group {host_name!r} exists, but should not be monitored. "
         "Activate the configuration?",
+        "invalid_name": "The provided name {name!r} is invalid",
     }
 
     def __init__(  # type: ignore[no-untyped-def]
@@ -1326,6 +1344,8 @@ class X509ReqPEMFieldUUID(base.String):
             raise self.make_error("invalid")
         try:
             cn = value.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+            if isinstance(cn, bytes):
+                cn = cn.decode()
         except IndexError:
             raise self.make_error("no_cn")
         try:

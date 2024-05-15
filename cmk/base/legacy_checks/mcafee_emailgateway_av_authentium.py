@@ -6,14 +6,14 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
+
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 
-def inventory_mcafee_emailgateway_av_authentium(info):
-    if info[0][0] == "1":
-        return [(None, {})]
-    return []
+def discover_mcafee_emailgateway_av_authentium(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0] == "1":
+        yield Service()
 
 
 def check_mcafee_emailgateway_av_authentium(item, params, info):
@@ -31,13 +31,18 @@ def check_mcafee_emailgateway_av_authentium(item, params, info):
     )
 
 
+def parse_mcafee_emailgateway_av_authentium(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mcafee_emailgateway_av_authentium"] = LegacyCheckDefinition(
+    parse_function=parse_mcafee_emailgateway_av_authentium,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.4.1.2.3.6",
         oids=["4", "5", "6"],
     ),
     service_name="AV Authentium",
-    discovery_function=inventory_mcafee_emailgateway_av_authentium,
+    discovery_function=discover_mcafee_emailgateway_av_authentium,
     check_function=check_mcafee_emailgateway_av_authentium,
 )

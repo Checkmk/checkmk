@@ -32,9 +32,12 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from collections.abc import Sequence
+
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 
 def item_name_oracle_diva_csm(name, element_id):
@@ -74,7 +77,20 @@ def check_oracle_diva_csm_status(name, idx, item, params, info):
     return None
 
 
+def parse_oracle_diva_csm(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
+def discover_oracle_diva_csm(info):
+    return inventory_oracle_diva_csm_status("Library", 0, info)
+
+
+def check_oracle_diva_csm(item, params, info):
+    return check_oracle_diva_csm_status("Library", 0, item, params, info)
+
+
 check_info["oracle_diva_csm"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_diva_csm,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
     fetch=[
         SNMPTree(
@@ -103,37 +119,56 @@ check_info["oracle_diva_csm"] = LegacyCheckDefinition(
         ),
     ],
     service_name="DIVA Status %s",
-    discovery_function=lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
-    check_function=lambda item, params, info: check_oracle_diva_csm_status(
-        "Library", 0, item, params, info
-    ),
+    discovery_function=discover_oracle_diva_csm,
+    check_function=check_oracle_diva_csm,
 )
+
+
+def discover_oracle_diva_csm_drive(info):
+    return inventory_oracle_diva_csm_status("Drive", 1, info)
+
+
+def check_oracle_diva_csm_drive(item, params, info):
+    return check_oracle_diva_csm_status("Drive", 1, item, params, info)
+
 
 check_info["oracle_diva_csm.drive"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
-    discovery_function=lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
-    check_function=lambda item, params, info: check_oracle_diva_csm_status(
-        "Drive", 1, item, params, info
-    ),
+    discovery_function=discover_oracle_diva_csm_drive,
+    check_function=check_oracle_diva_csm_drive,
 )
+
+
+def discover_oracle_diva_csm_actor(info):
+    return inventory_oracle_diva_csm_status("Actor", 2, info)
+
+
+def check_oracle_diva_csm_actor(item, params, info):
+    return check_oracle_diva_csm_status("Actor", 2, item, params, info)
+
 
 check_info["oracle_diva_csm.actor"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
-    discovery_function=lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
-    check_function=lambda item, params, info: check_oracle_diva_csm_status(
-        "Actor", 2, item, params, info
-    ),
+    discovery_function=discover_oracle_diva_csm_actor,
+    check_function=check_oracle_diva_csm_actor,
 )
+
+
+def discover_oracle_diva_csm_archive(info):
+    return inventory_oracle_diva_csm_status("Manager", 3, info)
+
+
+def check_oracle_diva_csm_archive(item, params, info):
+    return check_oracle_diva_csm_status("Manager", 3, item, params, info)
+
 
 check_info["oracle_diva_csm.archive"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
-    discovery_function=lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
-    check_function=lambda item, params, info: check_oracle_diva_csm_status(
-        "Manager", 3, item, params, info
-    ),
+    discovery_function=discover_oracle_diva_csm_archive,
+    check_function=check_oracle_diva_csm_archive,
 )
 
 # .
@@ -204,26 +239,25 @@ check_info["oracle_diva_csm.objects"] = LegacyCheckDefinition(
 #   |                               |_|                                    |
 #   '----------------------------------------------------------------------'
 
-oracle_diva_csm_tapes_default_levels = (5, 1)  # number of remaining blank tapes. invented levels
-
 
 def inventory_oracle_diva_csm_tapes(info):
     if len(info) > 5 and len(info[5]) > 0 and len(info[5][0]) > 0:
-        yield None, oracle_diva_csm_tapes_default_levels
+        yield None, {}
 
 
 def check_oracle_diva_csm_tapes(item, params, info):
-    if len(info) > 5 and len(info[5]) > 0 and len(info[5][0]) > 0:
+    try:
         blank_tapes = int(info[5][0][0])
-        warn, crit = params
-        state = blank_tapes <= crit and 2 or blank_tapes <= warn and 1 or 0
+    except IndexError:
+        return
 
-        infotext = "blank tapes %d" % blank_tapes
-        if state > 0:
-            infotext += " (warn/crit at %d/%d)" % (warn, crit)
-
-        return state, infotext, [("tapes_free", blank_tapes)]
-    return None
+    yield check_levels(
+        blank_tapes,
+        "tapes_free",
+        (None, None) + (params["levels_lower"] or (None, None)),
+        human_readable_func=str,
+        infoname="Blank tapes",
+    )
 
 
 check_info["oracle_diva_csm.tapes"] = LegacyCheckDefinition(
@@ -232,4 +266,5 @@ check_info["oracle_diva_csm.tapes"] = LegacyCheckDefinition(
     discovery_function=inventory_oracle_diva_csm_tapes,
     check_function=check_oracle_diva_csm_tapes,
     check_ruleset_name="blank_tapes",
+    check_default_parameters={"levels_lower": (5, 1)},
 )

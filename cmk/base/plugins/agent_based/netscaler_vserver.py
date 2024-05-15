@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
+from typing import Any, TypedDict
 
-from typing_extensions import TypedDict
+from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -18,7 +18,6 @@ from .agent_based_api.v1 import (
     State,
     type_defs,
 )
-from .utils.netscaler import SNMP_DETECT
 
 netscaler_vserver_states = {
     "0": (1, "unknown"),
@@ -348,8 +347,7 @@ def cluster_check_netscaler_vserver(
         params,
         [
             {
-                # mypy unfortunately only accepts string literals as valid keys for TypedDicts
-                **node_section[item],  # type: ignore[misc]
+                **node_section[item],
                 "node": node_name,
             }
             for node_name, node_section in section.items()

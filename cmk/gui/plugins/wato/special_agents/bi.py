@@ -2,13 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
 from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -16,12 +16,13 @@ from cmk.gui.valuespec import (
     FixedValue,
     HTTPUrl,
     ListOf,
+    Migrate,
     MonitoringState,
     RegExp,
     TextInput,
     Tuple,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
@@ -65,7 +66,7 @@ class MultisiteBiDatasource:
                             Tuple(
                                 elements=[
                                     TextInput(
-                                        title=_("Automation Username"),
+                                        title=_("Automation user name"),
                                         allow_empty=True,
                                     ),
                                     MigrateToIndividualOrStoredPassword(
@@ -190,13 +191,29 @@ class MultisiteBiDatasource:
 
 
 def _valuespec_special_agents_bi():
-    return ListOf(
-        valuespec=MultisiteBiDatasource().get_valuespec(),
-        title=_("BI Aggregations"),
-        help=_(
-            "This rule allows you to check multiple BI aggregations from multiple sites at once. "
-            "You can also assign aggregations to specific hosts through the piggyback mechanism."
+    _AgentBIOptions = dict[Literal["options"], Sequence[Mapping[str, object]]]
+
+    def to_valuespec(x: Sequence[Mapping[str, object]] | _AgentBIOptions) -> _AgentBIOptions:
+        return {"options": x} if isinstance(x, Sequence) else x
+
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("BI Aggregations"),
+            elements=[
+                (
+                    "options",
+                    ListOf(
+                        valuespec=MultisiteBiDatasource().get_valuespec(),
+                        help=_(
+                            "This rule allows you to check multiple BI aggregations from multiple sites at once. "
+                            "You can also assign aggregations to specific hosts through the piggyback mechanism."
+                        ),
+                    ),
+                )
+            ],
+            optional_keys=False,
         ),
+        migrate=to_valuespec,
     )
 
 

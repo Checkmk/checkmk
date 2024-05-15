@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 # This plugin was sponsored by BenV. Thanks!
 # https://notes.benv.junerules.com/mtr/
@@ -20,7 +20,7 @@ __version__ = "2.3.0b1"
 try:
     import configparser
 except ImportError:  # Python 2
-    import ConfigParser as configparser  # type: ignore[import,no-redef]
+    import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
 
 import glob
 import os

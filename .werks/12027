@@ -1,4 +1,4 @@
-Title: Rittal CMC-III checks: <tt>ValueError("invalid literal for int() with base 10: ''",)</tt>
+Title: Rittal CMC-III checks: ValueError("invalid literal for int() with base 10: ''",)
 Class: fix
 Compatible: compat
 Component: checks

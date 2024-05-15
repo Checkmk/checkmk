@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_float_human_readable,
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
+from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 
 def parse_aws_dynamodb_table(string_table):
@@ -161,34 +162,59 @@ def check_aws_dynamodb_latency(item, params, parsed):
                     metric_name,
                     levels,
                     infoname=f"{statistic} latency {operation}",
-                    human_readable_func=get_age_human_readable,
+                    human_readable_func=render.timespan,
                 )
 
     if go_stale:
         raise IgnoreResultsError("Currently no data from AWS")
 
 
+def discover_aws_dynamodb_table_read_capacity(p):
+    return inventory_aws_generic_single(p, ["Sum_ConsumedReadCapacityUnits"])
+
+
 check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Read Capacity",
     sections=["aws_dynamodb_table"],
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["Sum_ConsumedReadCapacityUnits"]),
+    discovery_function=discover_aws_dynamodb_table_read_capacity,
     check_function=check_aws_dynamodb_read_capacity,
     check_ruleset_name="aws_dynamodb_capacity",
     check_default_parameters={
-        "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
+        "levels_read": {
+            "levels_average": {
+                "levels_upper": (80.0, 90.0),
+            },
+        },
+        "levels_write": {
+            "levels_average": {
+                "levels_upper": (80.0, 90.0),
+            },
+        },
     },
 )
+
+
+def discover_aws_dynamodb_table_write_capacity(p):
+    return inventory_aws_generic_single(p, ["Sum_ConsumedWriteCapacityUnits"])
+
 
 check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Write Capacity",
     sections=["aws_dynamodb_table"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, ["Sum_ConsumedWriteCapacityUnits"]
-    ),
+    discovery_function=discover_aws_dynamodb_table_write_capacity,
     check_function=check_aws_dynamodb_write_capacity,
     check_ruleset_name="aws_dynamodb_capacity",
     check_default_parameters={
-        "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
+        "levels_read": {
+            "levels_average": {
+                "levels_upper": (80.0, 90.0),
+            },
+        },
+        "levels_write": {
+            "levels_average": {
+                "levels_upper": (80.0, 90.0),
+            },
+        },
     },
 )
 

@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import hitachi_hnas_volume
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.hitachi_hnas_volume import (
     parse_hitachi_hnas_volume,
     Section,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 LAST_TIME_EPOCH = (
     datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
@@ -122,12 +123,12 @@ def value_store_fixture(monkeypatch):
                     levels=(80.0, 90.00000000000001),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="Used: 70.32% - 1.78 TiB of 2.53 TiB"),
+                Result(state=State.OK, summary="Used: 70.32% - 1.96 TB of 2.78 TB"),
                 Metric("fs_size", 2652768.0, boundaries=(0.0, None)),
                 Metric("growth", -1495.9370633802703),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: -1.46 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: -1.57 GB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.06%"),
-                Metric("trend", -1495.9370633802703, boundaries=(0.0, 110532.0)),
+                Metric("trend", -1495.9370633802703),
                 Result(state=State.OK, summary="Status: mounted"),
                 Result(state=State.OK, summary="assigned to EVS 9"),
             ),
@@ -142,8 +143,7 @@ def test_check_hitachi_hnas_volume(
     expected: CheckResult,
 ) -> None:
     """Hitachi volume check function returns expected results for different volume params"""
-
-    with on_time("2021-07-22 12:00", "CET"):
+    with time_machine.travel(datetime(2021, 7, 22, 12, tzinfo=ZoneInfo("UTC")), tick=False):
         results = list(check_hitachi_hnas_volume(item, params, section))
 
     assert [r for r in results if isinstance(r, Result)] == [

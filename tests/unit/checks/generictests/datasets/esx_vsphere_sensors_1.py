@@ -45,13 +45,13 @@ info = [
     ["Dummy sensor", "", "", "", "", "", "green", "all is good", "the sun is shining"],
 ]
 
-discovery = {"": [(None, [])]}
+discovery = {"": [(None, {})]}
 
 checks = {
     "": [
         (
             None,
-            {},
+            {"rules": []},
             [
                 (
                     2,

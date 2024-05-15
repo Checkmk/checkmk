@@ -9,16 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate
 
 
-def _parameter_valuespec_fan_failures():
-    return Tuple(
-        title=_("Number of fan failures"),
-        elements=[
-            Integer(title="Warning at", default_value=1),
-            Integer(title="Critical at", default_value=2),
-        ],
+def _parameter_valuespec_fan_failures() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Number of fan failures"),
+                        default_levels=(1, 2),
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

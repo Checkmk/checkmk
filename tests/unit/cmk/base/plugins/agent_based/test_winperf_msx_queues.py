@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Mapping
 
 import pytest
@@ -104,7 +106,7 @@ def test_discovery(section: ParsedSection, services: DiscoveryResult) -> None:
             },
             [
                 Result(state=State.CRIT, summary="Length: 2100 (warn/crit at 500/2000)"),
-                Metric("length", 2100.0, levels=winperf_msx_queues._DEFAULT_LEVELS),
+                Metric("queue_length", 2100.0, levels=winperf_msx_queues._DEFAULT_LEVELS),
             ],
         ),
         (
@@ -115,7 +117,7 @@ def test_discovery(section: ParsedSection, services: DiscoveryResult) -> None:
             },
             [
                 Result(state=State.OK, summary="Length: 0"),
-                Metric("length", 0.0, levels=winperf_msx_queues._DEFAULT_LEVELS),
+                Metric("queue_length", 0.0, levels=winperf_msx_queues._DEFAULT_LEVELS),
             ],
         ),
     ],

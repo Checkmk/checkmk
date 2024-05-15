@@ -13,8 +13,8 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.plugin_contexts import current_host
-from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import SectionPlugin, SNMPSectionPlugin
+from cmk.base.plugin_contexts import current_host
 
 
 def _section_permutations(
@@ -43,17 +43,17 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.
 
-    From version 2.0 on, the parse function will be called allways.
+    From version 2.0 on, the parse function will be called always.
     In case no further processing is desired, the parse functions should return `None`.
 
     (Returning something falsey usually means nothing will be discovered!)
 
-    Since this was the behaviour for *almost* every plugin we maintain this test
+    Since this was the behaviour for *almost* every plug-in we maintain this test
     with a list of known exceptions, to ensure the old behaviour is not changed.
 
     However: There is nothing wrong with not returning None, in principle.
     If you whish to do that (see one of the listed exceptions for examples),
-    just add an exception below. If maintaining this test becvomes too tedious,
+    just add an exception below. If maintaining this test becomes too tedious,
     we can probably just remove it.
     """
     plugins_expected_to_discover_upon_empty = {
@@ -64,7 +64,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
     }
 
     plugins_discovering_upon_empty = set()
-    for plugin in fix_register.check_plugins.values():
+    for _name, plugin in sorted(fix_register.check_plugins.items()):
         for sections in _section_permutations(plugin.sections):
             kwargs = {str(section.name): _get_empty_parsed_result(section) for section in sections}
             if all(v is None for v in kwargs.values()):
@@ -93,8 +93,8 @@ def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
     """
     This is a sanity test for registered inventory and check plugins. It ensures that plugins
     have a non trivial section. Trivial sections may be created accidentally e.g. if a typo
-    is introduced in the section or plugin name during the migration to the new API. If a
-    trivial section without a parse_function is sufficient for your plugin you have to add it
+    is introduced in the section or plug-in name during the migration to the new API. If a
+    trivial section without a parse_function is sufficient for your plug-in you have to add it
     to the known exceptions below.
     """
     known_exceptions: set[ParsedSectionName] = set()  # currently no exceptions!
@@ -135,7 +135,7 @@ def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
         f"{plugin}: {', '.join(str(s) for s in sections)}"
         for plugin, sections in plugins_with_trivial_sections.items()
     )
-    assert 0, f"""Found new plugins with trivial sections:
+    assert 0, f"""Found new plug-ins with trivial sections:
 PLUGIN - TRIVIAL SECTIONS'
 ----------------
 {msg}"""

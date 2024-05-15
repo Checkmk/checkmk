@@ -94,9 +94,9 @@ This is the data we can extract
 """
 
 from collections.abc import Mapping, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 
-from typing_extensions import TypedDict
+from cmk.plugins.lib.ip_format import clean_v4_address, clean_v6_address
 
 from .agent_based_api.v1 import (
     all_of,
@@ -114,7 +114,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringByteTable
-from .utils.ip_format import clean_v4_address, clean_v6_address
 
 
 class BGPData(NamedTuple):
@@ -148,6 +147,7 @@ DEFAULT_ADMIN_STATE_MAPPING: AdminStateMapping = {
 
 DEFAULT_PEER_STATE_MAPPING: PeerStateMapping = {
     "idle": 0,
+    "connect": 0,
     "active": 0,
     "opensent": 0,
     "openconfirm": 0,
@@ -189,9 +189,11 @@ def _create_item_data(entry: list[str | list[int]]) -> BGPData:
         }.get(entry[5] if isinstance(entry[5], str) else "0", "unknown(%r)" % entry[5]),
         last_received_error=entry[6] if isinstance(entry[6], str) else "unknown(%r)" % entry[6],
         established_time=int(entry[7]) if isinstance(entry[7], str) else 0,
-        description=(entry[-2] if isinstance(entry[-2], str) else "unknown(%r)" % entry[-2])
-        if len(entry) > len(BGPData.__annotations__) - 1
-        else "n/a",
+        description=(
+            (entry[-2] if isinstance(entry[-2], str) else "unknown(%r)" % entry[-2])
+            if len(entry) > len(BGPData.__annotations__) - 1
+            else "n/a"
+        ),
         bgp_version=4,
     )
 

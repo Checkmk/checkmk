@@ -12,7 +12,8 @@ from cmk.base.check_legacy_includes.raritan import (
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
+
+from cmk.agent_based.v2 import any_of, equals, SNMPTree
 
 
 def parse_raritan_emx(string_table):
@@ -134,12 +135,21 @@ def check_raritan_emx_fan(item, _no_params, parsed):
     return None
 
 
+def discover_raritan_emx_fan(parsed):
+    return inventory_raritan_emx(parsed, "fanspeed")
+
+
 check_info["raritan_emx.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
     sections=["raritan_emx"],
-    discovery_function=lambda parsed: inventory_raritan_emx(parsed, "fanspeed"),
+    discovery_function=discover_raritan_emx_fan,
     check_function=check_raritan_emx_fan,
 )
+
+
+def discover_raritan_emx_binary(parsed):
+    return inventory_raritan_emx(parsed, "binary")
+
 
 # .
 #   .--binary--------------------------------------------------------------.
@@ -154,6 +164,6 @@ check_info["raritan_emx.fan"] = LegacyCheckDefinition(
 check_info["raritan_emx.binary"] = LegacyCheckDefinition(
     service_name="Door %s",
     sections=["raritan_emx"],
-    discovery_function=lambda parsed: inventory_raritan_emx(parsed, "binary"),
+    discovery_function=discover_raritan_emx_binary,
     check_function=check_raritan_sensors_binary,
 )

@@ -26,8 +26,11 @@ False
 """
 
 from collections.abc import Mapping, MutableMapping, Sequence
-from contextlib import suppress
+from dataclasses import dataclass
 from typing import Any
+
+from cmk.plugins.lib.cisco import DETECT_CISCO
+from cmk.plugins.lib.cisco_mem import check_cisco_mem_sub
 
 from .agent_based_api.v1 import (
     all_of,
@@ -40,10 +43,15 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cisco import DETECT_CISCO
-from .utils.cisco_mem import check_cisco_mem_sub
 
-Section = dict[str, Sequence[str]]
+
+@dataclass(frozen=True)
+class MemEntry:
+    used: int
+    free: int
+
+
+Section = Mapping[str, MemEntry]
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"
 CISCO_ASA_PRE_V9_PATTERN = r"^[Cc]isco [Aa]daptive [Ss]ecurity.*Version [0-8]\..*"
 
@@ -52,29 +60,19 @@ CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
+def _parse_mem_entry(values: Sequence[str]) -> MemEntry | None:
+    try:
+        return MemEntry(int(values[0]), int(values[1]))
+    except ValueError:
+        return None
+
+
 def parse_cisco_mem(string_table: list[StringTable]) -> Section | None:
-    """
-    >>> for item, values in parse_cisco_mem([
-    ...         [['System memory', '319075344', '754665920', '731194056']],
-    ...         [['MEMPOOL_DMA', '41493248', '11754752', '11743928']]]).items():
-    ...     print(item, values)
-    System memory ['319075344', '754665920', '731194056']
-    MEMPOOL_DMA ['41493248', '11754752', '11743928']
-    >>> for item, values in parse_cisco_mem([[
-    ...         ['System memory', '1251166290', '3043801006'],
-    ...         ['MEMPOOL_DMA', '0', '0'],
-    ...         ['MEMPOOL_GLOBAL_SHARED', '0', '0']]]).items():
-    ...     print(item, values)
-    System memory ['1251166290', '3043801006']
-    MEMPOOL_DMA ['0', '0']
-    MEMPOOL_GLOBAL_SHARED ['0', '0']
-    """
     return {
-        item: values  #
-        for row in string_table
-        for entry in row  #
-        if entry
-        for item, *values in (entry,)
+        row[0]: mem_entry
+        for tree in string_table
+        for row in tree
+        if (values := row[1:]) and (mem_entry := _parse_mem_entry(values))
     }
 
 
@@ -173,19 +171,17 @@ register.snmp_section(
 def discovery_cisco_mem(section: Section) -> DiscoveryResult:
     """
     >>> for elem in discovery_cisco_mem({
-    ...         'System memory':         ['1251166290', '3043801006'],
-    ...         'MEMPOOL_DMA':           ['0', '0'],
-    ...         'MEMPOOL_GLOBAL_SHARED': ['0', '0']}):
+    ...         'System memory': MemEntry(1251166290, 3043801006),
+    ...         'MEMPOOL_DMA': MemEntry(0, 0),
+    ...         'MEMPOOL_GLOBAL_SHARED': MemEntry(0, 0)}):
     ...     print(elem)
     Service(item='System memory')
-    Service(item='MEMPOOL_DMA')
-    Service(item='MEMPOOL_GLOBAL_SHARED')
     """
-    yield from (Service(item=item) for item in section if item != "Driver text")
-
-
-def check_cisco_mem(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    yield from _idem_check_cisco_mem(get_value_store(), item, params, section)
+    yield from (
+        Service(item=item)
+        for item, mem_entry in section.items()
+        if item and item != "Driver text" and mem_entry.used and mem_entry.free
+    )
 
 
 def _idem_check_cisco_mem(
@@ -204,34 +200,28 @@ def _idem_check_cisco_mem(
     ...             'trend_range': 24,
     ...             'trend_showtimeleft': True,
     ...             'trend_timeleft': (12, 6)},
-    ...         {'System memory': ['3848263744', '8765044672'],
-    ...          'MEMPOOL_MSGLYR': ['123040', '8265568'],
-    ...          'MEMPOOL_DMA': ['429262192', '378092176'],
-    ...          'MEMPOOL_GLOBAL_SHARED': ['1092814800', '95541296']}):
+    ...         {'System memory': MemEntry(3848263744, 8765044672),
+    ...          'MEMPOOL_MSGLYR': MemEntry(123040, 8265568),
+    ...          'MEMPOOL_DMA': MemEntry(429262192, 378092176),
+    ...          'MEMPOOL_GLOBAL_SHARED': MemEntry(1092814800, 95541296)}):
     ...     print(result)
     Result(state=<State.OK: 0>, summary='Usage: 53.17% - 409 MiB of 770 MiB')
     Metric('mem_used_percent', 53.16899356888102, boundaries=(0.0, None))
     """
-    if item not in section:
+    if not (mem_entry := section.get(item)):
         return
-    values = section[item]
-    # We've seen SNMP outputs containing empty entries for free or used memory.
-    # Assumption: In this case these values are zero.
-    mem_free, mem_used = 0, 0
-
-    with suppress(ValueError):
-        mem_free = int(values[1])
-    with suppress(ValueError):
-        mem_used = int(values[0])
-
-    mem_total = mem_free + mem_used
+    mem_total = mem_entry.free + mem_entry.used
     yield from check_cisco_mem_sub(
         value_store,
         item,
         params,
-        mem_used,
+        mem_entry.used,
         mem_total,
     )
+
+
+def check_cisco_mem(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _idem_check_cisco_mem(get_value_store(), item, params, section)
 
 
 register.check_plugin(

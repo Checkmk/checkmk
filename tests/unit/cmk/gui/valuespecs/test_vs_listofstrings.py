@@ -38,7 +38,7 @@ class TestListOfStrings:
         assert vs.ListOfStrings().value_to_html([]) == ""
         assert vs.ListOfStrings(empty_text="smth").value_to_html([]) == "smth"
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(l_0="a", l_4="b", l_9="", l_9999="z", l_smth="smth"):
             assert vs.ListOfStrings().from_html_vars("l") == ["a", "b", "z"]
 

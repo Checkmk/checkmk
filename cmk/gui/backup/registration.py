@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.backup import pages as backup
-from cmk.gui.backup.wato import MainModuleBackup
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
+
+from . import handler
+from . import pages as backup_pages
+from .wato import MainModuleBackup
 
 
 def backup_register(
@@ -15,5 +17,6 @@ def backup_register(
     mode_registry: ModeRegistry,
     main_module_registry: MainModuleRegistry,
 ) -> None:
-    backup.register(page_registry, mode_registry)
+    backup_pages.register(page_registry, mode_registry)
     main_module_registry.register(MainModuleBackup)
+    handler.register()

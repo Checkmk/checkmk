@@ -8,13 +8,14 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import CheckResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_node_info import (
     check_proxmox_ve_node_info,
     parse_proxmox_ve_node_info,
     Section,
 )
+
+from cmk.agent_based.v1 import Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 NODE_DATA = parse_proxmox_ve_node_info(
     [
@@ -99,12 +100,12 @@ if __name__ == "__main__":
     # Just run this file from your IDE and dive into the code.
     import os
 
-    from tests.testlib.utils import cmk_path
+    from tests.testlib.utils import repo_path
 
     assert not pytest.main(
         [
             "--doctest-modules",
-            os.path.join(cmk_path(), "cmk/base/plugins/agent_based/proxmox_ve_node_info.py"),
+            os.path.join(repo_path(), "cmk/base/plugins/agent_based/proxmox_ve_node_info.py"),
         ]
     )
     pytest.main(["-T=unit", "-vvsx", __file__])

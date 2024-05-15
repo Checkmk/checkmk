@@ -1,0 +1,25 @@
+title: MySQL: Maximum Connection Usage since Startup
+agents: linux
+catalog: app/mysql
+license: GPLv2
+distribution: check_mk
+description:
+ This check allows the tracking of connection usage for a MySQL database.
+ Therefore it queries the maximum number of connections that have been
+ in use simultaneously since the server started and
+ the maximum number of possible parallel connections.
+ From these both it calculates the
+ maximum usage level of these connections in percent
+ and matches the specified {WARN} and {CRIT} thresholds against it.
+
+ This check needs the agent plug-in {mk_mysql} to be installed.
+ Further details about this plug-in and monitoring of MySQL can be
+ found in the Checkmk online documentation in the article
+ "Monitoring MySQL with Checkmk".
+
+item:
+ Current amount of connections
+
+discovery:
+ One service is created on each host where the agent plug-in {mk_mysql}
+ is installed and the MySQL daemon is running.

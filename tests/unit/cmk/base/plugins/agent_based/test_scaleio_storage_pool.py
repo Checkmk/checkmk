@@ -21,8 +21,9 @@ from cmk.base.plugins.agent_based.scaleio_storage_pool import (
     ScaleioStoragePoolSection,
     StoragePool,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.plugins.agent_based.utils.scaleio import DiskReadWrite, StorageConversionError
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.scaleio import DiskReadWrite, StorageConversionError
 
 SECTION = {
     "4e9a44c700000000": StoragePool(
@@ -207,7 +208,7 @@ def test_check_scaleio_storage_pool() -> None:
             value_store={"4e9a44c700000000.delta": (1660684225.0453863, 12792627.2)},
         )
     )
-    assert check_result[3] == Result(state=State.OK, summary="Used: 43.73% - 12.2 TiB of 27.9 TiB")
+    assert check_result[3] == Result(state=State.OK, summary="Used: 43.73% - 13.4 TB of 30.7 TB")
 
 
 def test_check_scaleio_storage_pool_totalrw_rebalancerw_item_not_found() -> None:

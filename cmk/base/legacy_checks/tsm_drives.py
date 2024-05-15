@@ -35,6 +35,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_tsm_drives(info):
     inventory = []
@@ -77,7 +79,12 @@ def check_tsm_drives(item, params, info):
     return (3, "drive not found")
 
 
+def parse_tsm_drives(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["tsm_drives"] = LegacyCheckDefinition(
+    parse_function=parse_tsm_drives,
     service_name="TSM Drive %s",
     discovery_function=inventory_tsm_drives,
     check_function=check_tsm_drives,

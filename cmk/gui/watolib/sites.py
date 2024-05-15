@@ -6,12 +6,14 @@
 import os
 import re
 import time
+from pathlib import Path
 from typing import Any, cast, NamedTuple
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.config_validation_layer.site_management import validate_sites
 from cmk.utils.site import omd_site
 
 import cmk.gui.hooks as hooks
@@ -47,6 +49,7 @@ from cmk.gui.valuespec import (
     MigrateNotUpdated,
     TextInput,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import (
@@ -56,7 +59,42 @@ from cmk.gui.watolib.config_domains import (
 )
 from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.utils import ldap_connections_are_configurable, multisite_dir
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
+from cmk.gui.watolib.utils import ldap_connections_are_configurable
+
+
+class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"),
+            config_variable="sites",
+        )
+
+    def _load_file(self, lock: bool) -> SiteConfigurations:
+        if not self._config_file_path.exists():
+            return default_single_site_configuration()
+
+        sites_from_file = store.load_from_mk_file(
+            self._config_file_path,
+            key=self._config_variable,
+            default={},
+            lock=lock,
+        )
+
+        if not sites_from_file:
+            return default_single_site_configuration()
+
+        sites = prepare_raw_site_config(sites_from_file)
+        validate_sites(sites)
+        return sites
+
+    def save(self, cfg: SiteConfigurations) -> None:
+        validate_sites(cfg)
+        super().save(cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(SitesConfigFile())
 
 
 class SiteManagement:
@@ -210,13 +248,13 @@ class SiteManagement:
                     ),
                 ),
             ],
-            default_value="all" if site_is_local(site_id) else None,
+            default_value="all" if site_is_local(active_config, site_id) else None,
             help=_(
                 "By default the users are synchronized automatically in the interval configured "
                 "in the connection. For example the LDAP connector synchronizes the users every "
                 "five minutes by default. The interval can be changed for each connection "
                 'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
-                "Please note that the synchronization is only performed on the master site in "
+                "Please note that the synchronization is only performed on the central site in "
                 "distributed setups by default.<br>"
                 "The remote sites don't perform automatic user synchronizations with the "
                 "configured connections. But you can configure each site to either "
@@ -308,27 +346,14 @@ class SiteManagement:
 
     @classmethod
     def load_sites(cls) -> SiteConfigurations:
-        if not os.path.exists(cls._sites_mk()):
-            return default_single_site_configuration()
-
-        raw_sites = store.load_from_mk_file(cls._sites_mk(), "sites", {})
-        if not raw_sites:
-            return default_single_site_configuration()
-
-        sites = prepare_raw_site_config(raw_sites)
-        for site in sites.values():
-            if site.get("proxy") is not None:
-                site["proxy"] = cls.transform_old_connection_params(site["proxy"])
-
-        return sites
+        return SitesConfigFile().load_for_reading()
 
     @classmethod
     def save_sites(cls, sites: SiteConfigurations, activate: bool = True) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-        store.mkdir(multisite_dir())
-        store.save_to_mk_file(cls._sites_mk(), "sites", sites)
+        SitesConfigFile().save(sites)
 
         # Do not activate when just the site's global settings have
         # been edited
@@ -338,21 +363,19 @@ class SiteManagement:
             folder_tree().invalidate_caches()
             cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-            _create_nagvis_backends(sites)
+            if cmk_version.edition_supports_nagvis():
+                _create_nagvis_backends(sites)
 
             # Call the sites saved hook
             hooks.call("sites-saved", sites)
-
-    @classmethod
-    def _sites_mk(cls):
-        return cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"
 
     @classmethod
     def delete_site(cls, site_id):
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-        all_sites = cls.load_sites()
+        sites_config_file = SitesConfigFile()
+        all_sites = sites_config_file.load_for_modification()
         if site_id not in all_sites:
             raise MKUserError(None, _("Unable to delete unknown site id: %s") % site_id)
 
@@ -383,7 +406,7 @@ class SiteManagement:
         domains = cls._affected_config_domains()
 
         del all_sites[site_id]
-        cls.save_sites(all_sites)
+        sites_config_file.save(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change(
             "edit-sites", _("Deleted site %s") % site_id, domains=domains, sites=[omd_site()]
@@ -392,10 +415,6 @@ class SiteManagement:
     @classmethod
     def _affected_config_domains(cls):
         return [ConfigDomainGUI]
-
-    @classmethod
-    def transform_old_connection_params(cls, value):
-        return value
 
 
 class SiteManagementFactory:
@@ -415,7 +434,7 @@ class CRESiteManagement(SiteManagement):
 
 # TODO: This has been moved directly into watolib because it was not easily possible
 # to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
-# As soon as we have untied this we should re-establish a watolib plugin hierarchy and
+# As soon as we have untied this we should re-establish a watolib plug-in hierarchy and
 # move this to a CEE/CME specific watolib plugin
 class CEESiteManagement(SiteManagement):
     @classmethod
@@ -454,21 +473,7 @@ class CEESiteManagement(SiteManagement):
                                     ],
                                 ),
                             ),
-                            (
-                                "tcp",
-                                LivestatusViaTCP(
-                                    title=_("Allow access via TCP"),
-                                    help=_(
-                                        "This option can be useful to build a cascading distributed setup. "
-                                        "The Livestatus Proxy of this site connects to the site configured "
-                                        "here via Livestatus and opens up a TCP port for clients. The "
-                                        "requests of the clients are forwarded to the destination site. "
-                                        "You need to configure a TCP port here that is not used on the "
-                                        "local system yet."
-                                    ),
-                                    tcp_port=6560,
-                                ),
-                            ),
+                            ("tcp", _liveproxyd_via_tcp()),
                         ],
                     ),
                     migrate=cls.migrate_old_connection_params,
@@ -523,7 +528,6 @@ class CEESiteManagement(SiteManagement):
                             unit=_("sec"),
                             minvalue=0.1,
                             default_value=defaults["heartbeat"][1],
-                            display_format="%.1f",
                         ),
                     ],
                 ),
@@ -633,17 +637,78 @@ class CEESiteManagement(SiteManagement):
         return domains
 
 
-# TODO: Change to factory
-class LivestatusViaTCP(Dictionary):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs["elements"] = [
+def _liveproxyd_via_tcp() -> Dictionary:
+    return Dictionary(
+        title=_("Allow access via TCP"),
+        help=_(
+            "This option can be useful to build a cascading distributed setup. "
+            "The Livestatus Proxy of this site connects to the site configured "
+            "here via Livestatus and opens up a TCP port for clients. The "
+            "requests of the clients are forwarded to the destination site. "
+            "You need to configure a TCP port here that is not used on the "
+            "local system yet."
+        ),
+        elements=[
             (
                 "port",
                 Integer(
                     title=_("TCP port"),
                     minvalue=1,
                     maxvalue=65535,
-                    default_value=kwargs.pop("tcp_port", 6557),
+                    default_value=6560,
+                ),
+            ),
+            (
+                "only_from",
+                ListOfStrings(
+                    title=_("Restrict access to IP addresses"),
+                    help=_(
+                        "The access to the Livestatus Proxy via TCP will only be allowed from the "
+                        "configured source IP addresses. For an IP address to be allowed it must "
+                        "exactly match one of the specified values."
+                    ),
+                    valuespec=IPNetwork(),  # TODO: This is nonsense.
+                    orientation="horizontal",
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "tls",
+                FixedValue(
+                    value=True,
+                    title=_("Encrypt communication"),
+                    totext=_("Encrypt TCP Livestatus connections"),
+                    help=_(
+                        "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus "
+                        "connections using SSL. This is enabled by default for sites that "
+                        "enable Livestatus via TCP with 1.6 or newer. Sites that already "
+                        "have this option enabled keep the communication unencrypted for "
+                        "compatibility reasons. However, it is highly recommended to "
+                        "migrate to an encrypted communication."
+                    ),
+                ),
+            ),
+        ],
+        optional_keys=["only_from", "tls"],
+    )
+
+
+# Don't use or change this ValueSpec, it is out-of-date. It can't be removed due to CMK-12228.
+class LivestatusViaTCP(Dictionary):
+    def __init__(
+        self,
+        title: str | None = None,
+        help: str | None = None,  # pylint: disable=redefined-builtin
+        tcp_port: int = 6557,
+    ) -> None:
+        elements: list[tuple[str, ValueSpec]] = [
+            (
+                "port",
+                Integer(
+                    title=_("TCP port"),
+                    minvalue=1,
+                    maxvalue=65535,
+                    default_value=tcp_port,
                 ),
             ),
             (
@@ -678,8 +743,12 @@ class LivestatusViaTCP(Dictionary):
                 ),
             ),
         ]
-        kwargs["optional_keys"] = ["only_from", "tls"]
-        super().__init__(**kwargs)
+        super().__init__(
+            title=title,
+            help=help,
+            elements=elements,
+            optional_keys=["only_from", "tls"],
+        )
 
 
 def _create_nagvis_backends(sites_config):
@@ -731,7 +800,7 @@ def _update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
-        if site_is_local(siteid):
+        if site_is_local(active_config, siteid):
             create_distributed_wato_files(
                 base_dir=cmk.utils.paths.omd_root,
                 site_id=siteid,
@@ -755,7 +824,7 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
     )
 
 
-def site_globals_editable(site_id, site) -> bool:  # type: ignore[no-untyped-def]
+def site_globals_editable(site_id: SiteId, site: SiteConfiguration) -> bool:
     # Site is a remote site of another site. Allow to edit probably pushed site
     # specific globals when remote Setup is enabled
     if is_wato_slave_site():
@@ -765,7 +834,7 @@ def site_globals_editable(site_id, site) -> bool:  # type: ignore[no-untyped-def
     if not has_wato_slave_sites():
         return False
 
-    return site["replication"] or site_is_local(site_id)
+    return bool(site["replication"]) or site_is_local(active_config, site_id)
 
 
 def _delete_distributed_wato_file():

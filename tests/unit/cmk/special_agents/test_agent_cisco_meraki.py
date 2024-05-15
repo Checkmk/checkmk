@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Mapping, Sequence
 
 import pytest
+
+from cmk.utils import password_store
 
 from cmk.special_agents import agent_cisco_meraki
 
@@ -17,12 +21,12 @@ _ORGANISATIONS = [
 
 
 class FakeGetOrganisationsByIDCache:
-    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+    def get_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
         return _ORGANISATIONS
 
 
 class FakeGetOrganisationsCache:
-    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+    def get_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
         return _ORGANISATIONS
 
 
@@ -220,12 +224,17 @@ def test_agent_cisco_meraki_main(
         "GetOrganisationsCache",
         lambda *args, **kwargs: FakeGetOrganisationsCache(),
     )
+    monkeypatch.setattr(
+        password_store,
+        "lookup",
+        lambda f, k: {("/file", "my-api-key-id"): "my-api-key"}[(str(f), k)],
+    )
 
     agent_cisco_meraki.agent_cisco_meraki_main(
         agent_cisco_meraki.parse_arguments(
             [
                 "testhost",
-                "my-api-key",
+                "my-api-key-id:/file",
             ]
             + list(orgs)
             + list(args)

@@ -13,6 +13,9 @@ from cmk.base.check_legacy_includes.azure import (
 )
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import Service
+from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
+
 _AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag
     ("total_CpuTime", "cpu_time_percent", "CPU time", True),
     ("total_AverageResponseTime", "avg_response_time", "Average response time", False),
@@ -20,8 +23,8 @@ _AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag
 )
 
 
-@get_data_or_go_stale
-def check_azure_sites(_item, params, resource):
+def check_azure_sites(item, params, section):
+    resource = get_data_or_go_stale(item, section)
     for key, cmk_key, displ, use_rate in _AZURE_SITES_METRICS:
         levels = params.get("%s_levels" % cmk_key, (None, None))
         mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels, use_rate=use_rate)
@@ -33,7 +36,10 @@ def check_azure_sites(_item, params, resource):
 
 
 def discover_azure_sites(section):
-    yield from ((item, {}) for item in section)
+    yield from (
+        Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
+        for item, resource in section.items()
+    )
 
 
 check_info["azure_sites"] = LegacyCheckDefinition(

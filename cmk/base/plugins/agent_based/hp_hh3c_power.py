@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import all_of, any_of, contains, register, SNMPTree, startswith
-from .utils.hp_hh3c import (
+from cmk.plugins.lib.hp_hh3c import (
     check_hp_hh3c_device,
     discover_hp_hh3c_device,
     OID_SysDesc,
     OID_SysObjectID,
     parse_hp_hh3c_device,
 )
+
+from .agent_based_api.v1 import all_of, any_of, contains, register, SNMPTree, startswith
 
 register.snmp_section(
     name="hp_hh3c_power",

@@ -23,7 +23,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import edition, Edition, edition_has_enforced_licensing
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -65,7 +65,7 @@ from cmk.gui.watolib.activate_changes import (
     is_foreign_change,
     prevent_discard_changes,
 )
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
@@ -75,11 +75,16 @@ from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from .sites import sort_sites
 
 
-def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    mode_registry: ModeRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
     page_registry.register_page("ajax_start_activation")(PageAjaxStartActivation)
     page_registry.register_page("ajax_activation_state")(PageAjaxActivationState)
     mode_registry.register(ModeActivateChanges)
     mode_registry.register(ModeRevertChanges)
+    automation_command_registry.register(AutomationActivateChanges)
 
 
 class ActivationState(enum.Enum):
@@ -280,15 +285,31 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
             request,
             [("mode", ModeActivateChanges.name())],
         )
+        message = html.render_div(
+            (
+                html.render_span(_("Info:"), class_="underline")
+                + _(
+                    " This also includes any changes made since the last activation that did not "
+                    "require manual activation (marked with "
+                )
+                + html.render_icon("info_circle")
+                + ")"
+            ),
+            class_="confirm_info",
+        )
 
         show_confirm_cancel_dialog(
-            _("Do you really want revert the following changes?"), confirm_url, cancel_url
+            _("Revert changes?"),
+            confirm_url,
+            cancel_url,
+            message,
+            confirm_text=_("Revert changes"),
         )
 
         _change_table(self._all_changes, _("Revert changes"))
 
 
-def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
+def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
     with table_element(
         "changes",
         title=title,
@@ -305,8 +326,6 @@ def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
                 css.append("foreign")
             if not user.may("wato.activateforeign"):
                 css.append("not_permitted")
-            if has_been_activated(change):
-                css.append("has_been_activated")
 
             table.row(css=[" ".join(css)])
 
@@ -316,7 +335,7 @@ def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
                 html.write_html(rendered)
 
             if has_been_activated(change):
-                html.icon("info", _("This change is already activated"))
+                html.icon("info_circle", _("This change is already activated"))
 
             table.cell(_("Time"), render.date_and_time(change["time"]), css=["narrow nobr"])
             table.cell(_("User"), css=["narrow nobr"])
@@ -436,6 +455,11 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 disabled_tooltip = _(
                     "Blocked due to non-revertible change. Activate those changes to unblock reverting."
                 )
+            elif any(
+                (change["user_id"] != user.id for _, change in self._pending_changes)
+            ) and not user.may("wato.discardforeign"):
+                enabled = False
+                disabled_tooltip = _("This user doesn't have permission to revert these changes")
             else:
                 enabled = True
 
@@ -486,7 +510,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return True
 
     def _license_allows_activation(self):
-        if edition() is Edition.CCE:
+        if edition() in (Edition.CME, Edition.CCE):
             # TODO: move to CCE handler to avoid is_cloud_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
@@ -550,42 +574,41 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         valuespec = _vs_activation(self.title(), self.has_foreign_changes())
 
-        html.begin_form("activate", method="POST", action="")
-        html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
+        with html.form_context("activate", method="POST", action=""):
+            html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
 
-        if valuespec:
-            title = valuespec.title()
-            assert title is not None
-            forms.header(title)
-            valuespec.render_input("activate", self._value)
-            valuespec.set_focus("activate")
-            html.help(valuespec.help())
+            if valuespec:
+                title = valuespec.title()
+                assert title is not None
+                forms.header(title)
+                valuespec.render_input("activate", self._value)
+                valuespec.set_focus("activate")
+                html.help(valuespec.help())
 
-        if self.has_foreign_changes():
-            if user.may("wato.activateforeign"):
-                html.show_warning(
-                    _(
-                        "There are some changes made by your colleagues that you will "
-                        "activate if you proceed. You need to enable the checkbox above "
-                        "to confirm the activation of these changes."
+            if self.has_foreign_changes():
+                if user.may("wato.activateforeign"):
+                    html.show_warning(
+                        _(
+                            "There are some changes made by your colleagues that you will "
+                            "activate if you proceed. You need to enable the checkbox above "
+                            "to confirm the activation of these changes."
+                        )
                     )
-                )
-            else:
-                html.show_warning(
-                    _(
-                        "There are some changes made by your colleagues that you can not "
-                        "activate because you are not permitted to. You can only activate "
-                        "the changes on the sites that are not affected by these changes. "
-                        "<br>"
-                        "If you need to activate your changes on all sites, please contact "
-                        "a permitted user to do it for you."
+                else:
+                    html.show_warning(
+                        _(
+                            "There are some changes made by your colleagues that you can not "
+                            "activate because you are not permitted to. You can only activate "
+                            "the changes on the sites that are not affected by these changes. "
+                            "<br>"
+                            "If you need to activate your changes on all sites, please contact "
+                            "a permitted user to do it for you."
+                        )
                     )
-                )
 
-        forms.end()
-        html.hidden_field("selection_id", weblib.selection_id())
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_fields()
         init_rowselect(self.name())
 
     def _show_license_validity(self) -> None:
@@ -599,7 +622,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         ).block:
             errors.append(block_effect.message_html)
 
-        if edition() is Edition.CCE:
+        if edition_has_enforced_licensing():
             # TODO move to CCE handler to avoid is_cloud_edition check
             if (
                 self._license_usage_report_validity
@@ -625,7 +648,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if warnings:
             _show_activation_state_messages("", warnings, ActivationState.WARNING)
 
-    def _activation_status(self):
+    def _activation_status(self) -> None:
         with table_element(
             "site-status",
             title=_("Activation status"),
@@ -963,6 +986,7 @@ class PageAjaxStartActivation(AjaxPage):
             activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
             comment=comment,
             activate_foreign=activate_foreign,
+            source="GUI",
         )
 
         return {
@@ -992,7 +1016,6 @@ class ActivateChangesRequest(NamedTuple):
     domains: DomainRequests
 
 
-@automation_command_registry.register
 class AutomationActivateChanges(AutomationCommand):
     def command_name(self):
         return "activate-changes"

@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, NewType
-
-from typing_extensions import TypedDict
+from enum import StrEnum
+from typing import Any, Literal, NewType, TypedDict
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.timeperiod import TimeperiodName
@@ -35,6 +34,7 @@ __all__ = [
     "DisabledNotificationsOptions",
     "Contact",
     "EventContext",
+    "EnrichedEventContext",
     "ECEventContext",
 ]
 
@@ -49,11 +49,11 @@ NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
 NotifyBulkParameters = dict[str, Any]  # TODO: Improve this
 NotifyBulkType = tuple[Literal["always", "timeperiod"], NotifyBulkParameters]
 
-PluginOption = Literal[
-    "cancel_previous_notifications",
-    "create_notification_with_the_following_parameters",
-    "create_notification_with_the_following_custom_parameters",
-]
+
+class PluginOptions(StrEnum):
+    CANCEL = "cancel_previous_notifications"
+    WITH_PARAMS = "create_notification_with_the_following_parameters"
+    WITH_CUSTOM_PARAMS = "create_notification_with_custom_parameters"
 
 
 NotificationType = Literal[
@@ -90,7 +90,7 @@ BuiltInPluginNames = Literal[
 ]
 CustomPluginName = NewType("CustomPluginName", str)
 
-NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
+NotificationPluginNameStr = BuiltInPluginNames
 
 MgmntPriorityType = Literal[
     "low",
@@ -179,112 +179,6 @@ ServiceEventType = Literal[
     "as",
     "af",
 ]
-HostTagIpAddressFamilyType = Literal[
-    "ip-v4-only",
-    "ip-v6-only",
-    "ip-v4v6",
-    "no-ip",
-    "!ip-v4-only",
-    "!ip-v6-only",
-    "!ip-v4v6",
-    "!no-ip",
-    "ignore",
-]
-HostTagIpV4Type = Literal[
-    "ip-v4",
-    "!ip-v4",
-    "ignore",
-]
-HostTagIpV6Type = Literal[
-    "ip-v6",
-    "!ip-v6",
-    "ignore",
-]
-HostTagCheckMkAgentType = Literal[
-    "cmk-agent",
-    "!cmk-agent",
-    "all-agents",
-    "!all-agents",
-    "special-agents",
-    "!special-agents",
-    "no-agent",
-    "!no-agent",
-    "ignore",
-]
-HostTagPiggyBackType = Literal[
-    "auto-piggyback",
-    "!auto-piggyback",
-    "piggyback",
-    "!piggyback",
-    "no-piggyback",
-    "!no-piggyback",
-    "ignore",
-]
-HostTagSNMPType = Literal[
-    "no-snmp",
-    "!no-snmp",
-    "snmp-v1",
-    "!snmp-v1",
-    "snmp-v2",
-    "!snmp-v2",
-    "ignore",
-]
-HostTagMonitorSNMPType = Literal[
-    "snmp",
-    "!snmp",
-    "ignore",
-]
-HostTagAgentOrSpecialAgentType = Literal[
-    "tcp",
-    "!tcp",
-    "ignore",
-]
-HostTagAgentType = Literal[
-    "checkmk-agent",
-    "!checkmk-agent",
-    "ignore",
-]
-HostTagPingType = Literal[
-    "ping",
-    "!ping",
-    "ignore",
-]
-HostTagCriticalType = Literal[
-    "prod",
-    "critical",
-    "test",
-    "offline",
-    "!prod",
-    "!critical",
-    "!test",
-    "!offline",
-    "ignore",
-]
-HostTagNetworkType = Literal[
-    "lan",
-    "wan",
-    "dmz",
-    "ignore",
-    "!lan",
-    "!wan",
-    "!dmz",
-]
-
-HostTagTypes = list[
-    HostTagIpAddressFamilyType
-    | HostTagIpV4Type
-    | HostTagIpV6Type
-    | HostTagCheckMkAgentType
-    | HostTagPiggyBackType
-    | HostTagSNMPType
-    | HostTagMonitorSNMPType
-    | HostTagAgentOrSpecialAgentType
-    | HostTagAgentType
-    | HostTagPingType
-    | HostTagCriticalType
-    | HostTagNetworkType
-]
-
 SysLogFacilityIntType = Literal[
     0,
     1,
@@ -441,26 +335,6 @@ RoutingKeyType = tuple[
     Literal["routing_key", "store"],
     str,
 ]
-ServiceLevels = Literal[
-    0,
-    10,
-    20,
-    30,
-]
-ServiceLevelsType = tuple[
-    ServiceLevels,
-    ServiceLevels,
-]
-ServiceLevelsStr = Literal[
-    "no_service_level",
-    "silver",
-    "gold",
-    "platinum",
-]
-ServiceLevelsMap = Mapping[
-    ServiceLevels,
-    ServiceLevelsStr,
-]
 RegexModes = Literal[
     "match_id",
     "match_alias",
@@ -567,7 +441,7 @@ class EventRule(_EventRuleMandatory, total=False):
     match_hostgroups: list[str]
     match_hostlabels: dict[str, str]
     match_hosts: list[str]
-    match_hosttags: HostTagTypes
+    match_hosttags: list[str]
     match_notification_comment: str
     match_plugin_output: str
     match_service_event: Sequence[ServiceEventType]
@@ -576,11 +450,11 @@ class EventRule(_EventRuleMandatory, total=False):
     match_servicelabels: dict[str, str]
     match_services: list[str]
     match_site: list[str]
-    match_sl: ServiceLevelsType
+    match_sl: tuple[int, int]
     match_timeperiod: TimeperiodName
     notify_method: NotifyPluginParams
     bulk: NotifyBulkType
-    match_service_level: ServiceLevelsType
+    match_service_level: tuple[int, int]
     match_only_during_timeperiod: str
     notification_method: NotificationPluginNameStr
 
@@ -628,25 +502,19 @@ class EventContext(TypedDict, total=False):
     EC_RULE_ID: str
     HOSTATTEMPT: str
     HOSTCONTACTGROUPNAMES: str
-    HOSTFORURL: str
     HOSTGROUPNAMES: str
     HOSTNAME: HostName
     HOSTNOTIFICATIONNUMBER: str
     HOSTOUTPUT: str
     HOSTSTATE: Literal["UP", "DOWN", "UNREACHABLE"]
     HOSTTAGS: str
-    HOSTURL: str
     HOST_SL: str
     LASTHOSTSTATE: str
     LASTHOSTSTATECHANGE: str
-    LASTHOSTSTATECHANGE_REL: str
     LASTHOSTUP: str
-    LASTHOSTUP_REL: str
     LASTSERVICEOK: str
-    LASTSERVICEOK_REL: str
     LASTSERVICESTATE: str
     LASTSERVICESTATECHANGE: str
-    LASTSERVICESTATECHANGE_REL: str
     LOGDIR: str
     LONGDATETIME: str
     LONGSERVICEOUTPUT: str
@@ -667,12 +535,14 @@ class EventContext(TypedDict, total=False):
     SERVICENOTIFICATIONNUMBER: str
     SERVICEOUTPUT: str
     SERVICESTATE: str
-    SERVICEURL: str
     SHORTDATETIME: str
     SVC_SL: str
     WHAT: Literal["SERVICE", "HOST"]
 
+
+class EnrichedEventContext(EventContext, total=False):
     # Dynamically added:
+    # FOOSHORTSTATE: str
     # HOSTLABEL_*: str
     # SERVICELABEL_*: str
 
@@ -682,12 +552,19 @@ class EventContext(TypedDict, total=False):
     #     if key.endswith("STATE"):
     #         raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
     # We know of:
+    HOSTFORURL: str
+    HOSTURL: str
     HOSTSHORTSTATE: str
     LASTHOSTSHORTSTATE: str
+    LASTHOSTSTATECHANGE_REL: str
+    LASTHOSTUP_REL: str
     LASTSERVICESHORTSTATE: str
+    LASTSERVICESTATECHANGE_REL: str
+    LASTSERVICEOK_REL: str
     PREVIOUSHOSTHARDSHORTSTATE: str
     PREVIOUSSERVICEHARDSHORTSTATE: str
     SERVICESHORTSTATE: str
+    SERVICEURL: str
 
 
 class ECEventContext(EventContext, total=False):

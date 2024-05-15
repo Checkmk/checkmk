@@ -5,14 +5,13 @@
 
 import pytest
 
-from tests.testlib import Check
-
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.agent_based.v1.type_defs import StringTable
 
 from .checktestlib import (
     assertCheckResultsEqual,
     assertDiscoveryResultsEqual,
     BasicCheckResult,
+    Check,
     CheckResult,
     DiscoveryResult,
 )
@@ -68,10 +67,10 @@ def test_check_mbg_lantime_ng_refclock(
 @pytest.mark.parametrize(
     "info,expected",
     [
-        (meinberg_lantime_1, DiscoveryResult([("1", (3, 3))])),
+        (meinberg_lantime_1, DiscoveryResult([("1", {})])),
         (meinberg_lantime_2, DiscoveryResult([])),  # don't discover GPS clocks
-        (meinberg_lantime_5, DiscoveryResult([("1", (3, 3))])),
-        (meinberg_lantime_6, DiscoveryResult([("1", (3, 3))])),
+        (meinberg_lantime_5, DiscoveryResult([("1", {})])),
+        (meinberg_lantime_6, DiscoveryResult([("1", {})])),
     ],
 )
 def test_discovery_mbg_lantime_ng_refclock_gps(
@@ -88,7 +87,7 @@ def test_discovery_mbg_lantime_ng_refclock_gps(
         (
             meinberg_lantime_1,
             "1",
-            (3, 3),
+            {"levels_lower": (3, 3)},
             CheckResult(
                 [
                     BasicCheckResult(
@@ -104,7 +103,7 @@ def test_discovery_mbg_lantime_ng_refclock_gps(
         (
             meinberg_lantime_5,
             "1",
-            (3, 3),
+            {"levels_lower": (3, 3)},
             CheckResult(
                 [
                     BasicCheckResult(

@@ -26,12 +26,12 @@ import requests
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
-from cmk.special_agents.utils.agent_common import (
+from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 LOGGER = logging.getLogger("agent_mobileiron")
 
@@ -92,7 +92,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--username", "-u", type=str, help="username for connection")
     parser.add_argument("--password", "-p", type=str, help="password for connection")
-    parser.add_argument("--key-fields", action="append", help="field for hostname generation")
+    parser.add_argument("--key-fields", action="append", help="field for host name generation")
     parser.add_argument(
         "--partition",
         nargs="+",
@@ -294,9 +294,10 @@ def agent_mobileiron_main(args: Args) -> int:
                 with SectionWriter("mobileiron_statistics") as writer:
                     writer.append_json(all_devices[device])
             else:
-                with ConditionalPiggybackSection(device), SectionWriter(
-                    "mobileiron_section"
-                ) as writer:
+                with (
+                    ConditionalPiggybackSection(device),
+                    SectionWriter("mobileiron_section") as writer,
+                ):
                     writer.append_json(all_devices[device])
                 if uptime := all_devices[device]["uptime"]:
                     with ConditionalPiggybackSection(device), SectionWriter("uptime") as writer:

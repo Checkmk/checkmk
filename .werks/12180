@@ -18,7 +18,7 @@ page.
 
 They are now treated as regular services, with the service
 description "Unimplemented check &lt;name&gt;".
-They will always be in {{UNKNOWN}} state.
+They will always be in "UNKNOWN" state.
 
 This situation can occur for instance if you uninstall an MKP, or
 modify a plugin locally and make a mistake.

@@ -6,7 +6,7 @@
 import abc
 import collections
 import json
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -22,6 +22,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request
@@ -40,15 +41,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import toggle_page_menu_entries
-from cmk.gui.page_menu_utils import (
-    collect_context_links,
-    get_context_page_menu_dropdowns,
-    get_ntop_page_menu_dropdown,
-)
+from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
@@ -57,9 +53,6 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
-
-if cmk_version.edition() is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
 
 
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:
@@ -101,18 +94,22 @@ class ABCViewRenderer(abc.ABC):
 
 
 class GUIViewRenderer(ABCViewRenderer):
+    page_menu_dropdowns_hook: Callable[[View, Rows, list[PageMenuDropdown]], None] = (
+        lambda v, r, p: None
+    )
+
     def __init__(self, view: View, show_buttons: bool) -> None:
         super().__init__(view)
         self._show_buttons = show_buttons
 
-    def render(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def render(  # pylint: disable=too-many-branches
         self,
         rows: Rows,
         show_checkboxes: bool,
         num_columns: int,
         show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
-    ):
+    ) -> None:
         view_spec = self.view.spec
 
         if transactions.transaction_valid() and html.do_actions():
@@ -237,6 +234,8 @@ class GUIViewRenderer(ABCViewRenderer):
         for message in self.view.warning_messages:
             html.show_warning(message)
 
+        call_hooks("view_banner", self.view.name)
+
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")
             if display_options.enabled(display_options.W):
@@ -334,7 +333,8 @@ class GUIViewRenderer(ABCViewRenderer):
             PageMenuDropdown(
                 name="export",
                 title=_("Export"),
-                topics=[
+                topics=self._page_menu_topic_add_to()
+                + [
                     PageMenuTopic(
                         title=_("Data"),
                         entries=list(self._page_menu_entries_export_data()),
@@ -350,22 +350,10 @@ class GUIViewRenderer(ABCViewRenderer):
         page_menu_dropdowns = (
             self._page_menu_dropdown_commands()
             + self._page_menu_dropdowns_context(rows)
-            + self._page_menu_dropdown_add_to()
             + export_dropdown
         )
 
-        if rows:
-            host_address = rows[0].get("host_address")
-            if is_ntop_configured():
-                ntop_connection = get_ntop_connection()
-                assert ntop_connection
-                ntop_instance = ntop_connection["hostaddress"]
-                if (
-                    host_address is not None
-                    and get_cache().is_instance_up(ntop_instance)
-                    and get_cache().is_ntop_host(host_address)
-                ):
-                    page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
+        GUIViewRenderer.page_menu_dropdowns_hook(self.view, rows, page_menu_dropdowns)
 
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,
@@ -415,7 +403,20 @@ class GUIViewRenderer(ABCViewRenderer):
                 yield PageMenuEntry(
                     title=command.title,
                     icon_name=command.icon_name,
-                    item=PageMenuPopup(self._render_command_form(info_name, command)),
+                    item=(
+                        PageMenuPopup(self._render_command_form(info_name, command))
+                        if command.show_command_form
+                        else make_simple_link(
+                            makeuri(
+                                request,
+                                [
+                                    ("_transid", str(transactions.get())),
+                                    ("_do_actions", "yes"),
+                                    (f"_{command.ident}", True),
+                                ],
+                            )
+                        )
+                    ),
                     name="command_%s" % command.ident,
                     is_enabled=should_show_command_form(self.view.datasource),
                     is_show_more=command.is_show_more,
@@ -426,9 +427,6 @@ class GUIViewRenderer(ABCViewRenderer):
 
     def _page_menu_dropdowns_context(self, rows: Rows) -> list[PageMenuDropdown]:
         return get_context_page_menu_dropdowns(self.view, rows, mobile=False)
-
-    def _page_menu_dropdowns_ntop(self, host_address) -> PageMenuDropdown:  # type: ignore[no-untyped-def]
-        return get_ntop_page_menu_dropdown(self.view, host_address)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
         if not user.may("general.csv_export"):
@@ -493,7 +491,10 @@ class GUIViewRenderer(ABCViewRenderer):
             ),
         )
 
-        if display_options.enabled(display_options.F):
+        # Only render the filter page menu popup if there are filters available for the given infos
+        if display_options.enabled(display_options.F) and visuals.filters_exist_for_infos(
+            self.view.datasource.infos
+        ):
             display_dropdown.topics.insert(
                 0,
                 PageMenuTopic(
@@ -587,11 +588,13 @@ class GUIViewRenderer(ABCViewRenderer):
                     ),
                 )
 
-    def _page_menu_dropdown_add_to(self) -> list[PageMenuDropdown]:
-        return visuals.page_menu_dropdown_add_to_visual(add_type="view", name=self.view.name)
+    def _page_menu_topic_add_to(self) -> list[PageMenuTopic]:
+        return visuals.page_menu_topic_add_to(
+            visual_type="view", name=self.view.name, source_type="view"
+        )
 
     def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
-        if not display_options.enabled(display_options.F) or not show_filters:
+        if not display_options.enabled(display_options.F):
             return HTML()
 
         with output_funnel.plugged():
@@ -611,15 +614,14 @@ class GUIViewRenderer(ABCViewRenderer):
 
             # TODO: Make unique form names (object IDs), investigate whether or not something
             # depends on the form name "actions"
-            html.begin_form("actions")
-            # TODO: Are these variables still needed
-            html.hidden_field("_do_actions", "yes")
-            html.hidden_field("actions", "yes")
+            with html.form_context("actions"):
+                # TODO: Are these variables still needed
+                html.hidden_field("_do_actions", "yes")
+                html.hidden_field("actions", "yes")
 
-            command.render(info_name)
+                command.render(info_name)
 
-            html.hidden_fields()
-            html.end_form()
+                html.hidden_fields()
 
             return HTML(output_funnel.drain())
 

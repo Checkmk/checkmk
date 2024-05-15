@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+
+import time
 
 import pytest
-from pytest_mock import MockerFixture
 
-from cmk.utils.hostaddress import HostName
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -20,7 +18,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     State,
 )
-from cmk.base.plugins.agent_based.utils.multipath import Group
+
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    PredictionInfo,
+    PredictionParameters,
+)
+from cmk.plugins.lib.multipath import Group
 
 
 def test_parse_diskstat_minimum() -> None:
@@ -32,7 +36,7 @@ def test_parse_diskstat_minimum() -> None:
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
+def test_parse_diskstat_predictive() -> None:
     # SUP-5924
     DATA = [
         ["1617784511"],
@@ -130,70 +134,78 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
         ["buntu--vg-root", "253:1", "ubuntu-vg", "root"],
     ]
 
+    prep_u = PredictionParameters(
+        period="wday", horizon=90, levels=("relative", (10.0, 20.0)), bound=(10.0, 15.0)
+    )
+    meta_u = PredictionInfo.make(
+        metric="disk_read_throughput", direction="upper", params=prep_u, now=time.time()
+    )
+
     PARAMS = {
         "average": 300,
-        "latency": (80.0, 160.0),
-        "read": {
-            "horizon": 90,
-            "levels_lower": ("absolute", (2.0, 4.0)),
-            "levels_upper": ("relative", (10.0, 20.0)),
-            "levels_upper_min": (10.0, 15.0),
-            "period": "wday",
+        "latency": (0.08, 0.16),
+        "read_throughput": {
+            "period": prep_u.period,
+            "horizon": prep_u.horizon,
+            "levels_upper": prep_u.levels,
+            "levels_upper_min": prep_u.bound,
+            "__injected__": InjectedParameters(
+                meta_file_path_template="",  # should not be used
+                predictions={
+                    hash(meta_u): (0.1, (-1.0, 2.0))
+                },  # funny levels just to see something in the output
+            ).model_dump(),
         },
         "read_ios": (400.0, 600.0),
-        "read_latency": (80.0, 160.0),
-        "read_wait": (30.0, 50.0),
-        "utilization": (80.0, 90.0),
-        "write": (50.0, 100.0),
+        "read_latency": (0.08, 0.16),
+        "average_read_wait": (0.03, 0.05),
+        "utilization": (0.8, 0.9),
+        "write_throughput": (50000000.0, 100000000.0),
         "write_ios": (300.0, 400.0),
-        "write_latency": (80.0, 160.0),
-        "write_wait": (30.0, 50.0),
+        "write_latency": (0.08, 0.16),
+        "average_write_wait": (0.03, 0.05),
     }
 
-    mocker.patch(
-        "cmk.base.api.agent_based.utils.get_predictive_levels",
-        return_value=(None, (2.1, 4.1, None, None)),
-    )
-    with plugin_contexts.current_host(HostName("unittest-hn")), plugin_contexts.current_service(
-        CheckPluginName("unittest_sd"),
-        "unittest_sd_description",
-    ):
-        with pytest.raises(IgnoreResultsError):
-            list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))
-        DATA[0][0] = "1617784512"
-        assert list(
-            diskstat.check_diskstat(
-                "nvme0n1",
-                PARAMS,
-                diskstat.parse_diskstat(DATA),
-                None,
-            )
-        ) == [
-            Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds"),
-            Result(state=State.OK, notice="Utilization: 0%"),
-            Metric("disk_utilization", 0.0, levels=(0.8, 0.9)),
-            Result(state=State.OK, summary="Read: 0.00 B/s (no reference for prediction yet)"),
-            Metric("disk_read_throughput", 0.0, levels=(2.1, 4.1)),  # fake levels are quite low
-            Result(state=State.OK, summary="Write: 0.00 B/s"),
-            Metric("disk_write_throughput", 0.0, levels=(50000000.0, 100000000.0)),
-            Result(state=State.OK, notice="Average wait: 0 seconds"),
-            Metric("disk_average_wait", 0.0),
-            Result(state=State.OK, notice="Average read wait: 0 seconds"),
-            Metric("disk_average_read_wait", 0.0, levels=(0.03, 0.05)),
-            Result(state=State.OK, notice="Average write wait: 0 seconds"),
-            Metric("disk_average_write_wait", 0.0, levels=(0.03, 0.05)),
-            Result(state=State.OK, notice="Average queue length: 0.00"),
-            Metric("disk_queue_length", 0.0),
-            Result(state=State.OK, notice="Read operations: 0.00/s"),
-            Metric("disk_read_ios", 0.0, levels=(400.0, 600.0)),
-            Result(state=State.OK, notice="Write operations: 0.00/s"),
-            Metric("disk_write_ios", 0.0, levels=(300.0, 400.0)),
-            Result(state=State.OK, summary="Latency: 0 seconds"),
-            Metric("disk_latency", 0.0, levels=(0.08, 0.16)),
-            Metric("disk_average_read_request_size", 0.0),
-            Metric("disk_average_request_size", 0.0),
-            Metric("disk_average_write_request_size", 0.0),
-        ]
+    with pytest.raises(IgnoreResultsError):
+        list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))
+    DATA[0][0] = "1617784512"
+    assert list(
+        diskstat.check_diskstat(
+            "nvme0n1",
+            PARAMS,
+            diskstat.parse_diskstat(DATA),
+            None,
+        )
+    ) == [
+        Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds"),
+        Result(state=State.OK, notice="Utilization: 0%"),
+        Metric("disk_utilization", 0.0, levels=(0.8, 0.9)),
+        Result(
+            state=State.WARN,
+            summary="Read: 0.00 B/s (predicted reference: 0.10 B/s) (warn/crit at -1.00 B/s/2.00 B/s)",
+        ),
+        Metric("disk_read_throughput", 0.0, levels=(-1.0, 2.0)),
+        Metric("predict_disk_read_throughput", 0.1),
+        Result(state=State.OK, summary="Write: 0.00 B/s"),
+        Metric("disk_write_throughput", 0.0, levels=(50000000.0, 100000000.0)),
+        Result(state=State.OK, notice="Average wait: 0 seconds"),
+        Metric("disk_average_wait", 0.0),
+        Result(state=State.OK, notice="Average read wait: 0 seconds"),
+        Metric("disk_average_read_wait", 0.0, levels=(0.03, 0.05)),
+        Result(state=State.OK, notice="Average write wait: 0 seconds"),
+        Metric("disk_average_write_wait", 0.0, levels=(0.03, 0.05)),
+        Result(state=State.OK, notice="Average queue length: 0.00"),
+        Metric("disk_queue_length", 0.0),
+        Result(state=State.OK, notice="Read operations: 0.00/s"),
+        Metric("disk_read_ios", 0.0, levels=(400.0, 600.0)),
+        Result(state=State.OK, notice="Write operations: 0.00/s"),
+        Metric("disk_write_ios", 0.0, levels=(300.0, 400.0)),
+        Result(state=State.OK, summary="Latency: 0 seconds"),
+        Metric("disk_latency", 0.0, levels=(0.08, 0.16)),
+        Metric("disk_average_read_request_size", 0.0),
+        Metric("disk_average_request_size", 0.0),
+        Metric("disk_average_write_request_size", 0.0),
+    ]
 
 
 def test_parse_diskstat_simple() -> None:
@@ -1598,7 +1610,7 @@ def test_check_latency_calculation() -> None:
     results_summary = list(
         diskstat.check_diskstat(
             "SUMMARY",
-            {"latency": (3, 5)},
+            {"latency": (0.003, 0.005)},
             {
                 "disk1": {
                     "timestamp": 10000000,
@@ -1619,4 +1631,5 @@ def test_check_latency_calculation() -> None:
             state=State.WARN,
             notice="Latency: 4 milliseconds (warn/crit at 3 milliseconds/5 milliseconds)",
         ),
+        Metric("disk_latency", 0.004, levels=(0.003, 0.005)),
     ]

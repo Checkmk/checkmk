@@ -53,18 +53,18 @@ from cmk.base.config import check_info
 
 def parse_emcvnx_info(string_table):
     parsed = {
-        "string_table": [],
+        "info": [],
         "storage": [],
         "link": [],
         "config": [],
         "io": [],
     }
     key_to_subcheck = {
-        "System Fault LED": "string_table",
-        "Server IP Address": "string_table",
-        "System Date": "string_table",
-        "System Time": "string_table",
-        "Serial Number For The SP": "string_table",
+        "System Fault LED": "info",
+        "Server IP Address": "info",
+        "System Date": "info",
+        "System Time": "info",
+        "Serial Number For The SP": "info",
         "Storage Processor": "storage",
         "Storage Processor Network Name": "storage",
         "Storage Processor IP Address": "storage",
@@ -140,10 +140,14 @@ def check_emcvnx_info(item, _no_params, parsed):
         yield status, f"{key}: {value}"
 
 
+def discover_emcvnx_info(x):
+    return inventory_emcvnx_info(x, "info")
+
+
 check_info["emcvnx_info"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_info,
     service_name="EMC VNX Info",
-    discovery_function=lambda x: inventory_emcvnx_info(x, "info"),
+    discovery_function=discover_emcvnx_info,
     check_function=check_emcvnx_info,
 )
 
@@ -163,10 +167,14 @@ def check_emcvnx_storage(item, params, parsed):
         yield 0, f"{key}: {value}"
 
 
+def discover_emcvnx_info_storage(x):
+    return inventory_emcvnx_info(x, "storage")
+
+
 check_info["emcvnx_info.storage"] = LegacyCheckDefinition(
     service_name="EMC VNX Storage Processor",
     sections=["emcvnx_info"],
-    discovery_function=lambda x: inventory_emcvnx_info(x, "storage"),
+    discovery_function=discover_emcvnx_info_storage,
     check_function=check_emcvnx_storage,
 )
 
@@ -189,10 +197,14 @@ def check_emcvnx_link(item, params, parsed):
         yield status, f"{key}: {value}"
 
 
+def discover_emcvnx_info_link(x):
+    return inventory_emcvnx_info(x, "link")
+
+
 check_info["emcvnx_info.link"] = LegacyCheckDefinition(
     service_name="EMC VNX Link",
     sections=["emcvnx_info"],
-    discovery_function=lambda x: inventory_emcvnx_info(x, "link"),
+    discovery_function=discover_emcvnx_info_link,
     check_function=check_emcvnx_link,
 )
 
@@ -212,10 +224,14 @@ def check_emcvnx_config(item, params, parsed):
         yield 0, f"{key}: {value}"
 
 
+def discover_emcvnx_info_config(x):
+    return inventory_emcvnx_info(x, "config")
+
+
 check_info["emcvnx_info.config"] = LegacyCheckDefinition(
     service_name="EMC VNX Config",
     sections=["emcvnx_info"],
-    discovery_function=lambda x: inventory_emcvnx_info(x, "config"),
+    discovery_function=discover_emcvnx_info_config,
     check_function=check_emcvnx_config,
 )
 
@@ -238,9 +254,13 @@ def check_emcvnx_io(item, params, parsed):
         yield status, f"{key}: {value}"
 
 
+def discover_emcvnx_info_io(x):
+    return inventory_emcvnx_info(x, "io")
+
+
 check_info["emcvnx_info.io"] = LegacyCheckDefinition(
     service_name="EMC VNX IO",
     sections=["emcvnx_info"],
-    discovery_function=lambda x: inventory_emcvnx_info(x, "io"),
+    discovery_function=discover_emcvnx_info_io,
     check_function=check_emcvnx_io,
 )

@@ -7,6 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_plesk_domains(info):
     if info and info[0]:
@@ -20,7 +22,12 @@ def check_plesk_domains(_no_item, _no_params, info):
     return (0, "%s" % ",<br>".join([i[0] for i in info]))
 
 
+def parse_plesk_domains(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["plesk_domains"] = LegacyCheckDefinition(
+    parse_function=parse_plesk_domains,
     service_name="Plesk Domains",
     discovery_function=inventory_plesk_domains,
     check_function=check_plesk_domains,

@@ -18,6 +18,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
+
 
 def inventory_msoffice_serviceplans(info):
     for line in info:
@@ -50,7 +52,12 @@ def check_msoffice_serviceplans(item, params, info):
         yield 0, "Pending Services: %s" % ", ".join(pending_list)
 
 
+def parse_msoffice_serviceplans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["msoffice_serviceplans"] = LegacyCheckDefinition(
+    parse_function=parse_msoffice_serviceplans,
     service_name="MS Office Serviceplans %s",
     discovery_function=inventory_msoffice_serviceplans,
     check_function=check_msoffice_serviceplans,

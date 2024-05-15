@@ -1291,6 +1291,7 @@ a.create_rule {
 }
 
 tr.condition div.label_groups,
+form.biaggr div.label_groups,
 form.birule div.label_groups {
   @include label-groups-mixin; // from _main.scss
 

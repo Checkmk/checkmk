@@ -10,7 +10,7 @@ from pathlib import Path
 
 import omdlib
 from omdlib.contexts import SiteContext
-from omdlib.version import default_version
+from omdlib.version import default_version, version_from_site_dir
 
 import cmk.utils.tty as tty
 
@@ -32,7 +32,7 @@ def main_sites(
             sys.stdout.write("%s\n" % site.name)
         else:
             disabled = site.is_disabled()
-            v = site.version
+            v = version_from_site_dir(Path(site.dir))
             if v is None:
                 v = "(none)"
                 tags.append("empty site dir")

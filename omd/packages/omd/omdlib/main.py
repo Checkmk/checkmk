@@ -115,6 +115,7 @@ from omdlib.version import (
     main_versions,
     omd_versions,
     version_exists,
+    version_from_site_dir,
 )
 from omdlib.version_info import VersionInfo
 
@@ -2590,7 +2591,7 @@ def main_diff(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    from_version = site.version
+    from_version = version_from_site_dir(Path(site.dir))
     if from_version is None:
         bail_out("Failed to determine site version")
     from_skelroot = site.version_skel_dir
@@ -2768,7 +2769,7 @@ def main_update(  # pylint: disable=too-many-branches
     unmount_tmpfs(site)
 
     # Source version: the version of the site we deal with
-    from_version = site.version
+    from_version = version_from_site_dir(Path(site.dir))
     if from_version is None:
         bail_out("Failed to determine site version")
 
@@ -3086,7 +3087,7 @@ def main_umount(
             # Set global vars for the current site
             site = SiteContext(site_id)
 
-            if only_version and site.version != only_version:
+            if only_version and version_from_site_dir(Path(site.dir)) != only_version:
                 continue
 
             # Skip the site even when it is partly running
@@ -3150,11 +3151,12 @@ def main_init_action(  # pylint: disable=too-many-branches
     exit_states, processes = [], []
     for sitename in all_sites():
         site = SiteContext(sitename)
+        version = version_from_site_dir(Path(site.dir))
 
-        if site.version is None:  # skip partially created sites
+        if version is None:  # skip partially created sites
             continue
 
-        if only_version and site.version != only_version:
+        if only_version and version != only_version:
             continue
 
         # Skip disabled sites completely
@@ -3747,7 +3749,9 @@ def main_cleanup(
             )
             continue
 
-        site_ids = [s for s in all_sites() if SiteContext(s).version == version]
+        site_ids = [
+            s for s in all_sites() if version_from_site_dir(Path("/omd/sites/") / s) == version
+        ]
         if site_ids:
             sys.stdout.write(
                 "%s%-20s%s In use (by %s). Keeping this version.\n"
@@ -4682,7 +4686,7 @@ def main() -> None:  # pylint: disable=too-many-branches
         if not isinstance(site, SiteContext):
             raise Exception("site must be of type SiteContext")
 
-        v = site.version
+        v = version_from_site_dir(Path(site.dir))
         if v is None:  # Site has no home directory or version link
             if command.command == "rm":
                 sys.stdout.write(

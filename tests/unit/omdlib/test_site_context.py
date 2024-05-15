@@ -30,12 +30,6 @@ def test_site_context() -> None:
     assert site.is_site_context()
 
 
-def test_site_context_version(monkeypatch: pytest.MonkeyPatch) -> None:
-    site = SiteContext("dingeling")
-    monkeypatch.setattr(os, "readlink", lambda x: "../2018.08.11.cee")
-    assert site.version == "2018.08.11.cee"
-
-
 def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(os, "readlink", lambda x: "../2018.08.11.cee")
     site = SiteContext("dingeling")

@@ -19,6 +19,7 @@ from omdlib.skel_permissions import (
     skel_permissions_file_path,
 )
 from omdlib.type_defs import Config, Replacements
+from omdlib.version import version_from_site_dir
 
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.version import Edition
@@ -104,24 +105,14 @@ class SiteContext(AbstractSiteContext):
         return "%s/tmp" % self.real_dir
 
     @property
-    def version(self) -> str | None:
-        """The version of a site is solely determined by the link ~SITE/version
-        In case the version of a site can not be determined, it reports None."""
-        version_link = self.dir + "/version"
-        try:
-            return os.readlink(version_link).split("/")[-1]
-        except Exception:
-            return None
-
-    @property
     def hook_dir(self) -> str | None:
-        if self.version is None:
+        if version_from_site_dir(Path(self.dir)) is None:
             return None
-        return "/omd/versions/%s/lib/omd/hooks/" % self.version
+        return "/omd/versions/%s/lib/omd/hooks/" % version_from_site_dir(Path(self.dir))
 
     def replacements(self) -> Replacements:
         """Dictionary of key/value for replacing macros in skel files"""
-        version = self.version
+        version = version_from_site_dir(Path(self.dir))
         if version is None:
             raise RuntimeError("Failed to determine site version")
         return {
@@ -186,9 +177,10 @@ class SiteContext(AbstractSiteContext):
         """Returns the skeleton permissions. Load either from version meta directory
         or from the original version skel.permissions file"""
         if not self._has_version_meta_data():
-            if self.version is None:
+            version = version_from_site_dir(Path(self.dir))
+            if version is None:
                 raise MKTerminate("Failed to determine site version")
-            return load_skel_permissions_from(skel_permissions_file_path(self.version))
+            return load_skel_permissions_from(skel_permissions_file_path(version))
 
         return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")
 
@@ -198,14 +190,14 @@ class SiteContext(AbstractSiteContext):
         available and fits the sites version use that one instead of the version
         skel directory."""
         if not self._has_version_meta_data():
-            return "/omd/versions/%s/skel" % self.version
+            return "/omd/versions/%s/skel" % version_from_site_dir(Path(self.dir))
         return self.version_meta_dir + "/skel"
 
     def _has_version_meta_data(self) -> bool:
         if not os.path.exists(self.version_meta_dir):
             return False
 
-        if self._version_meta_data_version() != self.version:
+        if self._version_meta_data_version() != version_from_site_dir(Path(self.dir)):
             return False
 
         return True

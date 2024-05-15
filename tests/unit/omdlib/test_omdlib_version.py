@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from omdlib.version import (
     main_versions,
     omd_versions,
     version_exists,
+    version_from_site_dir,
 )
 
 
@@ -30,30 +32,27 @@ def test_main_version_of_omd_tool(
 
 def test_main_version_root_not_existing_site(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match="No such site: testsite"):
-        main_version(object(), object(), object(), ["testsite"], {})
+        main_version(object(), object(), object(), ["testsite"], {}, tmp_path / "omd")
 
 
-@pytest.mark.usefixtures("omd_base_path")
 def test_main_version_root_specific_site_broken_version(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     with pytest.raises(SystemExit, match="Failed to determine site version"):
-        main_version(object(), object(), object(), ["testsite"], {})
+        main_version(object(), object(), object(), ["testsite"], {}, tmp_path / "omd")
 
 
-@pytest.mark.usefixtures("omd_base_path")
 def test_main_version_root_specific_site(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
-    main_version(object(), object(), object(), ["testsite"], {})
+    main_version(object(), object(), object(), ["testsite"], {}, tmp_path / "omd")
 
     stdout = capsys.readouterr()[0]
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
-@pytest.mark.usefixtures("omd_base_path")
 def test_main_version_root_specific_site_bare(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -61,7 +60,7 @@ def test_main_version_root_specific_site_bare(
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
-    main_version(object(), object(), object(), ["testsite"], {"bare": None})
+    main_version(object(), object(), object(), ["testsite"], {"bare": None}, tmp_path / "omd")
 
     stdout = capsys.readouterr()[0]
     assert stdout == "1.2.3p4\n"
@@ -118,3 +117,9 @@ def test_version_exists(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/versions/1.6.0p7").mkdir(parents=True)
     assert version_exists("1.6.0p7", tmp_path / "omd/versions") is True
     assert version_exists("1.6.0p6", tmp_path / "omd/versions") is False
+
+
+def test_site_context_version(tmp_path: Path) -> None:
+    version = "2018.08.11.cee"
+    os.symlink(f"../../versions/{version}", tmp_path / "version")
+    assert version_from_site_dir(tmp_path) == "2018.08.11.cee"

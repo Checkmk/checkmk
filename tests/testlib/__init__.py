@@ -34,7 +34,6 @@ from tests.testlib.utils import (
     repo_path,
     site_id,
     virtualenv_path,
-    wait_until,
 )
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.web_session import APIError, CMKWebSession
@@ -138,28 +137,6 @@ def import_module_hack(pathname: str) -> ModuleType:
     return module
 
 
-def wait_until_liveproxyd_ready(site: Site, site_ids: Collection[str]) -> None:
-    def _config_available() -> bool:
-        return site.file_exists("etc/check_mk/liveproxyd.mk")
-
-    wait_until(_config_available, timeout=60, interval=0.5)
-
-    # First wait for the site sockets to appear
-    def _all_sockets_opened() -> bool:
-        return all(site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids)
-
-    wait_until(_all_sockets_opened, timeout=60, interval=0.5)
-
-    # Then wait for the sites to be ready
-    def _all_sites_ready() -> bool:
-        content = site.read_file("var/log/liveproxyd.state")
-        num_ready = content.count("State:                   ready")
-        print("%d sites are ready. Waiting for %d sites to be ready." % (num_ready, len(site_ids)))
-        return len(site_ids) == num_ready
-
-    wait_until(_all_sites_ready, timeout=60, interval=0.5)
-
-
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:
     def get_data_source_cache_files(name: str) -> list[str]:
         p = site.execute(
@@ -212,7 +189,6 @@ __all__ = [
     "create_linux_test_host",
     "fake_version_and_paths",
     "skip_unwanted_test_types",
-    "wait_until_liveproxyd_ready",
     "Site",
     "SiteFactory",
     "import_module_hack",

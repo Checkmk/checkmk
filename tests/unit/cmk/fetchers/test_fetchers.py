@@ -567,9 +567,6 @@ class TestSNMPFetcherFetch:
         table = [["1"]]
         monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: table)
         monkeypatch.setattr(
-            SNMPFetcher, "disabled_sections", property(lambda self: {SectionName("pam")})
-        )
-        monkeypatch.setattr(
             SNMPFetcher,
             "inventory_sections",
             property(lambda self: {SectionName("pim"), SectionName("pam")}),
@@ -580,7 +577,18 @@ class TestSNMPFetcherFetch:
         self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
-        fetcher = self.create_fetcher(path=tmp_path, do_status_data_inventory=True)
+        fetcher = self.create_fetcher(
+            path=tmp_path,
+            sections={
+                SectionName("pam"): SNMPSectionMeta(
+                    checking=False,
+                    disabled=True,
+                    redetect=False,
+                    fetch_interval=None,
+                )
+            },
+            do_status_data_inventory=True,
+        )
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",
@@ -601,7 +609,17 @@ class TestSNMPFetcherFetch:
         self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
-        fetcher = self.create_fetcher(path=tmp_path)
+        fetcher = self.create_fetcher(
+            path=tmp_path,
+            sections={
+                SectionName("pam"): SNMPSectionMeta(
+                    checking=False,
+                    disabled=True,
+                    redetect=False,
+                    fetch_interval=None,
+                )
+            },
+        )
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",
@@ -622,7 +640,18 @@ class TestSNMPFetcherFetch:
         self, set_sections: list[list[str]], tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
-        fetcher = self.create_fetcher(path=tmp_path, do_status_data_inventory=True)
+        fetcher = self.create_fetcher(
+            path=tmp_path,
+            sections={
+                SectionName("pam"): SNMPSectionMeta(
+                    checking=False,
+                    disabled=True,
+                    redetect=False,
+                    fetch_interval=None,
+                )
+            },
+            do_status_data_inventory=True,
+        )
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",

@@ -120,7 +120,7 @@ check_plugin_ceph_status = CheckPlugin(
     discovery_function=discovery_ceph_status,
     check_function=check_ceph_status,
     check_default_parameters={
-        "epoch": (1, 3, 30),
+        "epoch": (1.0, 3.0, 30),
     },
 )
 
@@ -182,7 +182,7 @@ check_plugin_ceph_status_osds = CheckPlugin(
     check_function=check_ceph_status_osds,
     check_ruleset_name="ceph_osds",
     check_default_parameters={
-        "epoch": (50, 100, 15),
+        "epoch": (50.0, 100.0, 15),
         "num_out_osds": (5.0, 7.0),
         "num_down_osds": (5.0, 7.0),
     },
@@ -294,6 +294,6 @@ check_plugin_ceph_status_mgrs = CheckPlugin(
     check_function=check_ceph_status_mgrs,
     check_ruleset_name="ceph_mgrs",
     check_default_parameters={
-        "epoch": (1, 2, 5),
+        "epoch": (1.0, 2.0, 5),
     },
 )

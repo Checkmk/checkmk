@@ -9,7 +9,6 @@ import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import TypeVar
 
-from cmk.utils.config_validation_layer.groups import GroupSpecs
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.store.host_storage import ContactgroupName
@@ -21,6 +20,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import GroupSpecs
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request

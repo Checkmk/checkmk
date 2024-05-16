@@ -5,12 +5,11 @@
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Callable, Generic, TypeVar
+from typing import Callable, cast, Generic, Mapping, TypeVar
 
-from pydantic import BaseModel, ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 import cmk.utils.store as store
-from cmk.utils.config_validation_layer.type_defs import Omitted, remove_omitted
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
@@ -21,7 +20,7 @@ from cmk.gui.watolib.utils import format_config_value
 
 _G = TypeVar("_G")
 _T = TypeVar("_T")
-_P = TypeVar("_P", bound=BaseModel)
+_D = TypeVar("_D", bound=Mapping[str, object])
 
 
 class WatoConfigFile(ABC, Generic[_G]):
@@ -114,24 +113,26 @@ class WatoSimpleConfigFile(WatoSingleConfigFile[dict[str, _T]], Generic[_T]):
         return entries
 
 
-class WatoPydanticConfigFile(WatoConfigFile[_P], Generic[_P]):
-    """Manage .mk config file based on a pydantic model."""
+class WatoMultiConfigFile(WatoConfigFile[_D], Generic[_D]):
+    """Manage .mk config file with multiple keys.
+
+    Use a typed dict to specify different types per field."""
 
     def __init__(
         self,
         config_file_path: Path,
-        model_class: type[_P],
-        load_default: Callable[[], _P] | None = None,
+        model_class: type[_D],
+        load_default: Callable[[], _D],
     ) -> None:
         super().__init__(
             config_file_path=config_file_path,
         )
-        self.model_class = model_class
-        self.load_default: Callable[[], _P] = model_class if load_default is None else load_default  # type: ignore[assignment]
+        self.validator = TypeAdapter(model_class)
+        self.load_default = load_default
 
-    def _validate(self, raw: dict[str, Any]) -> _P:
+    def _validate(self, raw: Mapping[str, object]) -> _D:
         try:
-            return self.model_class.model_validate(raw)
+            return self.validator.validate_python(raw)
         except ValidationError as exc:
             raise ConfigValidationError(
                 which_file=self.name,
@@ -139,30 +140,33 @@ class WatoPydanticConfigFile(WatoConfigFile[_P], Generic[_P]):
                 original_data=raw,
             ) from exc
 
-    def _load_file(self, lock: bool = False) -> _P:
+    def _load_file(self, lock: bool = False) -> _D:
         cfg = store.load_mk_file(
             self._config_file_path,
-            default=self.load_default().model_dump(),
+            default=self.load_default(),
             lock=lock,
         )
-        return self._validate(dict(cfg))
+        return cast(_D, cfg)
 
-    def save(self, cfg: _P) -> None:
+    def save(self, cfg: _D) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         output = wato_fileheader()
-        for field, value in cfg.model_dump().items():
-            if isinstance(value, Omitted):
-                continue  # completely skip omitted values
-            value = remove_omitted(value)  # remove nested omitted values
+        for field, value in cfg.items():
             output += "{} = \\\n{}\n\n".format(
                 field,
                 format_config_value(value),
             )
         store.save_mk_file(self._config_file_path, output, add_header=False)
 
-    def validate_and_save(self, raw: dict[str, Any]) -> None:
-        cfg = self._validate(raw)
+    def validate_and_save(self, raw: Mapping[str, object]) -> None:
+        with_defaults = dict(self.load_default())
+        with_defaults.update(raw)
+        cfg = self._validate(with_defaults)
         self.save(cfg)
+
+    def read_file_and_validate(self) -> None:
+        cfg = self._load_file()
+        self._validate(cfg)
 
 
 class ConfigFileRegistry(Registry[WatoConfigFile]):

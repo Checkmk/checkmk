@@ -8,12 +8,12 @@ from collections.abc import Sequence
 from logging import Logger
 
 from cmk.utils import version
-from cmk.utils.config_validation_layer.groups import GroupSpec
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import GroupSpec
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.groups_io import load_contact_group_information

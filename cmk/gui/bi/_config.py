@@ -10,7 +10,6 @@ from collections.abc import Collection, Iterable
 from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
-from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
@@ -23,6 +22,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

@@ -9,13 +9,6 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 import cmk.utils.version as cmk_version
-from cmk.utils.config_validation_layer.groups import (
-    AllGroupSpecs,
-    GroupName,
-    GroupSpec,
-    GroupSpecs,
-    GroupType,
-)
 from cmk.utils.notify_types import EventRule
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
@@ -24,6 +17,7 @@ from cmk.utils.timeperiod import load_timeperiods, timeperiod_spec_alias
 import cmk.gui.hooks as hooks
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

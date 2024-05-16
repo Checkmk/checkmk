@@ -296,6 +296,7 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
         return
 
     add_text = ""
+    dg_sizefactor: int = 0
 
     if data.fail_groups:
         # => New agentformat!

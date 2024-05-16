@@ -139,13 +139,20 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
                 # There is no CRIT for older checkoint age as this is mostly not a
                 # serios issue.
                 # otherwise the standby will produca a warning or crit as well
-                if oldest_checkpoint_age >= warn:
+                if oldest_checkpoint_age >= warn:  # pylint: disable=used-before-assignment
                     infotext += "(!)"
                     state = max(1, state)
 
                 perfdata.append(("checkpoint_age", oldest_checkpoint_age, warn))
             else:
-                perfdata.append(("checkpoint_age", oldest_checkpoint_age, warn, crit))
+                perfdata.append(
+                    (
+                        "checkpoint_age",
+                        oldest_checkpoint_age,
+                        warn,
+                        crit,  # pylint: disable=used-before-assignment
+                    )
+                )
 
                 # check the checkpoint age on a non primary database!
                 if oldest_checkpoint_age >= crit:

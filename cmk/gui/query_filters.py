@@ -603,23 +603,21 @@ def ip_address_family_options() -> SitesOptions:
 
 
 def address_families(family: str) -> FilterHeader:
-    if family == "both":
-        return lq_logic("Filter: tags =", ["ip-v4 ip-v4", "ip-v6 ip-v6"], "Or")
-
-    if family[0] == "4":
-        tag = livestatus.lqencode("ip-v4")
-    elif family[0] == "6":
-        tag = livestatus.lqencode("ip-v6")
-    filt = f"Filter: tags = {tag} {tag}\n"
-
-    if family.endswith("_only"):
-        if family[0] == "4":
-            tag = livestatus.lqencode("ip-v6")
-        elif family[0] == "6":
-            tag = livestatus.lqencode("ip-v4")
-        filt += f"Filter: tags != {tag} {tag}\n"
-
-    return filt
+    v4_key_val_str = "ip-v4 ip-v4"
+    v6_key_val_str = "ip-v6 ip-v6"
+    match family:
+        case "both":
+            return lq_logic("Filter: tags =", [v4_key_val_str, v6_key_val_str], "Or")
+        case "4":
+            return f"Filter: tags = {v4_key_val_str}\n"
+        case "4_only":
+            return f"Filter: tags = {v4_key_val_str}\nFilter: tags != {v6_key_val_str}\n"
+        case "6":
+            return f"Filter: tags = {v6_key_val_str}\n"
+        case "6_only":
+            return f"Filter: tags = {v6_key_val_str}\nFilter: tags != {v4_key_val_str}\n"
+        case _:
+            raise ValueError()
 
 
 def ip_address_families_options() -> SitesOptions:

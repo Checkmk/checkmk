@@ -1151,15 +1151,8 @@ class ACTestSizeOfExtensions(ACTest):
     def is_relevant(self) -> bool:
         return has_wato_slave_sites() and self._replicates_mkps()
 
-    def _replicates_mkps(self):
-        replicates_mkps = False
-        for site in wato_slave_sites().values():
-            if site.get("replicate_mkps"):
-                replicates_mkps = True
-                break
-
-        if not replicates_mkps:
-            return
+    def _replicates_mkps(self) -> bool:
+        return any(site.get("replicate_mkps") for site in wato_slave_sites().values())
 
     def execute(self) -> Iterator[ACSingleResult]:
         size = self._size_of_extensions()

@@ -656,7 +656,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             )
             if any(r.state != 0 for r in source_results):
                 summaries = ", ".join(r.summary for r in source_results)
-                console.error(f"ERROR [{source_info.ident}]: {summaries}\n")
+                console.error(f"ERROR [{source_info.ident}]: {summaries}\n", stream=sys.stderr)
                 has_errors = True
             if raw_data.is_ok():
                 assert raw_data.ok is not None
@@ -1031,7 +1031,7 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
             options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
         )
     except Exception as e:
-        console.error(f"Error walking {backend.hostname}: {e}\n")
+        console.error(f"Error walking {backend.hostname}: {e}\n", stream=sys.stderr)
         if cmk.utils.debug.enabled():
             raise
     cmk.utils.cleanup.cleanup_globals()
@@ -1059,7 +1059,7 @@ def _execute_walks_for_dump(
             console.verbose('Walk on "%s"...\n' % oid)
             yield walk_for_export(backend.walk(oid, context=""))
         except Exception as e:
-            console.error("Error: %s\n" % e)
+            console.error(f"Error: {e}\n", stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
 
@@ -1444,7 +1444,7 @@ def mode_update() -> None:
                 ),
             )
     except Exception as e:
-        console.error("Configuration Error: %s\n" % e)
+        console.error(f"Configuration Error: {e}\n", stream=sys.stderr)
         if cmk.utils.debug.enabled():
             raise
         sys.exit(1)

@@ -487,7 +487,10 @@ def load(
             )
         ):
             # TODO: Raise an exception
-            console.error(f"Error in configuration: duplicate hosts: {', '.join(duplicates)}\n")
+            console.error(
+                f"Error in configuration: duplicate hosts: {', '.join(duplicates)}\n",
+                stream=sys.stderr,
+            )
             sys.exit(3)
 
 
@@ -647,7 +650,7 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
             if cmk.utils.debug.enabled():
                 raise
             if sys.stderr.isatty():
-                console.error(f"Cannot read in configuration file {path}: {e}\n")
+                console.error(f"Cannot read in configuration file {path}: {e}\n", stream=sys.stderr)
             sys.exit(1)
 
     # Cleanup global helper vars

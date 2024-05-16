@@ -5,6 +5,7 @@
 
 import io
 import logging
+import sys
 
 from pytest import CaptureFixture, fixture, LogCaptureFixture
 
@@ -76,5 +77,5 @@ def test_warning(stream: io.StringIO) -> None:
 
 def test_error(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
-    console.error("hello")
+    console.error("hello", stream=sys.stderr)
     assert ("", "hello") == capsys.readouterr()

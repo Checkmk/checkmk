@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypeVar
@@ -148,7 +149,10 @@ def _discover_host_labels_for_source_type(
                 if on_error is OnError.RAISE:
                     raise
                 if on_error is OnError.WARN:
-                    console.error(f"Host label discovery of '{section_name}' failed: {exc}\n")
+                    console.error(
+                        f"Host label discovery of '{section_name}' failed: {exc}\n",
+                        stream=sys.stderr,
+                    )
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

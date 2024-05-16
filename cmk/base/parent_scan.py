@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import os
 import pprint
 import socket
@@ -264,7 +265,7 @@ def scan_parents_of(
 
         if len(lines) < 2:
             if not silent:
-                console.error("{}: {}\n".format(host, " ".join(lines)))
+                console.error(f"{host}: {' '.join(lines)}\n", stream=sys.stderr)
             gateways.append(
                 GatewayResult(
                     None,
@@ -300,11 +301,14 @@ def scan_parents_of(
                 routes.append(None)  # No answer from this router
             else:
                 if not silent:
-                    console.error(f"{host}: invalid output line from traceroute: '{line}'\n")
+                    console.error(
+                        f"{host}: invalid output line from traceroute: '{line}'\n",
+                        stream=sys.stderr,
+                    )
 
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."
-            console.error(f"{host}: {error}\n")
+            console.error(f"{host}: {error}\n", stream=sys.stderr)
             gateways.append(GatewayResult(None, "garbled", 0, error))
             dot(tty.red)
             continue
@@ -347,7 +351,7 @@ def scan_parents_of(
         if not this_route:
             error = "No usable routing information"
             if not silent:
-                console.error(f"{host}: {error}\n")
+                console.error(f"{host}: {error}\n", stream=sys.stderr)
             gateways.append(GatewayResult(None, "notfound", 0, error))
             dot(tty.blue)
             continue

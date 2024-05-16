@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
+import sys
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
 import cmk.utils.debug
@@ -146,7 +147,9 @@ def discover_services(
             if on_error is OnError.RAISE:
                 raise
             if on_error is OnError.WARN:
-                console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
+                console.error(
+                    f"Discovery of '{check_plugin_name}' failed: {e}\n", stream=sys.stderr
+                )
 
     # TODO: Building a dict to discard its keys isn't efficient.
     return service_table.values()

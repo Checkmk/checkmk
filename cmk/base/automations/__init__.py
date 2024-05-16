@@ -6,6 +6,7 @@
 import abc
 import os
 import signal
+import sys
 from contextlib import redirect_stdout
 from types import FrameType
 from typing import Any, NoReturn
@@ -65,7 +66,7 @@ class Automations:
             result = automation.execute(args)
 
         except (MKAutomationError, MKTimeout) as e:
-            console.error("%s\n" % e)
+            console.error(f"{e}\n", stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
             return 1
@@ -73,7 +74,7 @@ class Automations:
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error("%s\n" % e)
+            console.error(f"{e}\n", stream=sys.stderr)
             return 2
 
         finally:

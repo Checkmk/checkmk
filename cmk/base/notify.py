@@ -199,7 +199,8 @@ Available commands:
     replay N                Uses the N'th recent notification from the backlog
                             and sends it again, counting from 0.
     send-bulks              Send out ripe bulk notifications
-"""
+""",
+        stream=sys.stderr,
     )
 
 
@@ -234,12 +235,14 @@ def do_notify(
         if args:
             notify_mode = args[0]
             if notify_mode not in ["stdin", "spoolfile", "replay", "test", "send-bulks"]:
-                console.error("ERROR: Invalid call to check_mk --notify.\n\n")
+                console.error("ERROR: Invalid call to check_mk --notify.\n\n", stream=sys.stderr)
                 notify_usage()
                 sys.exit(1)
 
             if notify_mode == "spoolfile" and len(args) != 2:
-                console.error("ERROR: need an argument to --notify spoolfile.\n\n")
+                console.error(
+                    "ERROR: need an argument to --notify spoolfile.\n\n", stream=sys.stderr
+                )
                 sys.exit(1)
 
         # If the notify_mode is set to 'spoolfile' we try to parse the given spoolfile
@@ -2120,7 +2123,7 @@ def raw_context_from_backlog(nr: int) -> EventContext:
     backlog = store.load_object_from_file(notification_logdir + "/backlog.mk", default=[])
 
     if nr < 0 or nr >= len(backlog):
-        console.error("No notification number %d in backlog.\n" % nr)
+        console.error(f"No notification number {nr} in backlog.\n", stream=sys.stderr)
         sys.exit(2)
 
     logger.info("Replaying notification %d from backlog...\n", nr)

@@ -287,6 +287,9 @@ class AutomationDiscovery(DiscoveryAutomation):
             config_cache.fetcher_factory(),
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
+            ip_address_of=config.ConfiguredIPLookup(
+                config_cache, error_handler=config.handle_ip_lookup_failure
+            ),
             mode=Mode.DISCOVERY,
             on_error=on_error,
             selected_sections=NO_SELECTION,
@@ -566,6 +569,9 @@ def _execute_discovery(
         config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=perform_scan,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
         mode=Mode.DISCOVERY,
         on_error=on_error,
         selected_sections=NO_SELECTION,
@@ -691,6 +697,9 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
         mode=Mode.DISCOVERY,
         on_error=OnError.IGNORE,
         selected_sections=NO_SELECTION,

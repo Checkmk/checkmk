@@ -64,7 +64,7 @@ class NagiosCore(core_config.MonitoringCore):
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         self._config_cache = config_cache
-        self._create_core_config(config_path, licensing_handler, passwords)
+        self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
         self._precompile_hostchecks(config_path)
 
     def _create_core_config(
@@ -72,6 +72,7 @@ class NagiosCore(core_config.MonitoringCore):
         config_path: VersionedConfigPath,
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
+        ip_address_of: config.IPLookup,
     ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
@@ -97,6 +98,7 @@ class NagiosCore(core_config.MonitoringCore):
             ),
             licensing_handler=licensing_handler,
             passwords=passwords,
+            ip_address_of=ip_address_of,
         )
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
@@ -154,6 +156,7 @@ def create_config(
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
     passwords: Mapping[str, str],
+    ip_address_of: config.IPLookup,
 ) -> None:
     cfg = NagiosConfig(outfile, hostnames)
 
@@ -163,7 +166,7 @@ def create_config(
     all_host_labels: dict[HostName, CollectedHostLabels] = {}
     for hostname in hostnames:
         all_host_labels[hostname] = _create_nagios_config_host(
-            cfg, config_cache, hostname, passwords, licensing_counter
+            cfg, config_cache, hostname, passwords, licensing_counter, ip_address_of
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
@@ -198,14 +201,11 @@ def _create_nagios_config_host(
     hostname: HostName,
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
+    ip_address_of: config.IPLookup,
 ) -> CollectedHostLabels:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
-
-    ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
-    )
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
     if config.generate_hostconf:

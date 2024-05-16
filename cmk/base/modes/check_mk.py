@@ -1316,6 +1316,9 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         passwords=cmk.utils.password_store.load(
             cmk.utils.password_store.pending_password_store_path()
         ),
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
     )
 
 
@@ -1733,6 +1736,9 @@ def mode_check_discovery(
         config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
         mode=FetchMode.DISCOVERY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
@@ -2062,6 +2068,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
         mode=FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
         on_error=on_error,
         selected_sections=selected_sections,
@@ -2223,6 +2232,9 @@ def mode_check(
         config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
         mode=FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
         on_error=OnError.RAISE,
         selected_sections=selected_sections,
@@ -2462,6 +2474,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
         mode=FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
         on_error=OnError.RAISE,
         selected_sections=selected_sections,
@@ -2711,6 +2726,9 @@ def mode_inventory_as_check(
         config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
@@ -2872,6 +2890,9 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

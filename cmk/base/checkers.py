@@ -77,9 +77,8 @@ from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAP
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import (
     ConfigCache,
-    ConfiguredIPLookup,
     get_plugin_parameters,
-    handle_ip_lookup_failure,
+    IPLookup,
     lookup_ip_address,
     lookup_mgmt_board_ip_address,
 )
@@ -276,6 +275,7 @@ class CMKFetcher:
         # alphabetically sorted
         file_cache_options: FileCacheOptions,
         force_snmp_cache_refresh: bool,
+        ip_address_of: IPLookup,
         mode: Mode,
         on_error: OnError,
         password_store_file: Path,
@@ -288,6 +288,7 @@ class CMKFetcher:
         self.factory: Final = factory
         self.file_cache_options: Final = file_cache_options
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
+        self.ip_address_of: Final = ip_address_of
         self.mode: Final = mode
         self.on_error: Final = on_error
         self.password_store_file: Final = password_store_file
@@ -393,9 +394,7 @@ class CMKFetcher:
                         current_ip_address,
                         passwords,
                         self.password_store_file,
-                        ip_address_of=ConfiguredIPLookup(
-                            self.config_cache, error_handler=handle_ip_lookup_failure
-                        ),
+                        ip_address_of=self.ip_address_of,
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(
                         current_host_name

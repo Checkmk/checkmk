@@ -1344,6 +1344,9 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             config_cache.fetcher_factory(),
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=False,
+            ip_address_of=config.ConfiguredIPLookup(
+                config_cache, error_handler=config.handle_ip_lookup_failure
+            ),
             mode=Mode.DISCOVERY,
             on_error=OnError.RAISE,
             selected_sections=NO_SELECTION,

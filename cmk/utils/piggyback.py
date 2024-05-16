@@ -254,24 +254,14 @@ def _get_piggyback_processed_file_info(
     validity_state = settings.validity_state(source_hostname, piggybacked_hostname)
 
     status_file_path = _get_source_status_file_path(source_hostname)
-    if not status_file_path.exists():
-        valid_msg = _validity_period_message(file_age, validity_period)
-        return PiggybackFileInfo(
-            source_hostname,
-            piggyback_file_path,
-            bool(valid_msg),
-            f"Source '{source_hostname}' not sending piggyback data{valid_msg}",
-            validity_state if valid_msg else 0,
-        )
-
     if _is_piggybacked_host_abandoned(status_file_path, piggyback_file_path):
         valid_msg = _validity_period_message(file_age, validity_period)
         return PiggybackFileInfo(
-            source_hostname,
-            piggyback_file_path,
-            bool(valid_msg),
-            f"Piggyback file not updated by source '{source_hostname}'{valid_msg}",
-            validity_state if valid_msg else 0,
+            source_hostname=source_hostname,
+            file_path=piggyback_file_path,
+            successfully_processed=bool(valid_msg),
+            message=(f"Piggyback data not updated by source '{source_hostname}'{valid_msg}"),
+            status=validity_state if valid_msg else 0,
         )
 
     return PiggybackFileInfo(

@@ -179,7 +179,7 @@ def test_get_piggyback_raw_data_not_updated() -> None:
     assert raw_data.info.source_hostname == HostName("source1")
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message == "Piggyback file not updated by source 'source1'"
+    assert raw_data.info.message == "Piggyback data not updated by source 'source1'"
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -199,7 +199,7 @@ def test_get_piggyback_raw_data_not_sending() -> None:
     assert raw_data.info.source_hostname == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message == "Source 'source1' not sending piggyback data"
+    assert raw_data.info.message == "Piggyback data not updated by source 'source1'"
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -408,7 +408,7 @@ def test_get_source_and_piggyback_hosts() -> None:
                 ("source1", "validity_period", 1000),
             ],
             True,
-            "Source 'source1' not sending piggyback data (still valid",
+            "Piggyback data not updated by source 'source1' (still valid",
             0,
         ),
         (
@@ -418,7 +418,7 @@ def test_get_source_and_piggyback_hosts() -> None:
                 ("source1", "validity_state", 1),
             ],
             True,
-            "Source 'source1' not sending piggyback data (still valid",
+            "Piggyback data not updated by source 'source1' (still valid",
             1,
         ),
     ],
@@ -453,7 +453,7 @@ def test_get_piggyback_raw_data_source_validity(
                 ("source1", "validity_period", -1),
             ],
             False,
-            "Source 'source1' not sending piggyback data",
+            "Piggyback data not updated by source 'source1'",
             0,
         ),
     ],
@@ -489,7 +489,7 @@ def test_get_piggyback_raw_data_source_validity2(
                 ("test-host", "validity_period", 1000),
             ],
             True,
-            "Piggyback file not updated by source 'source1' (still valid",
+            "Piggyback data not updated by source 'source1' (still valid",
             0,
         ),
         (
@@ -501,7 +501,7 @@ def test_get_piggyback_raw_data_source_validity2(
                 ("test-host", "validity_state", 1),
             ],
             True,
-            "Piggyback file not updated by source 'source1' (still valid",
+            "Piggyback data not updated by source 'source1' (still valid",
             1,
         ),
     ],
@@ -541,7 +541,7 @@ def test_get_piggyback_raw_data_piggybacked_host_validity(
                 ("test-host", "validity_state", 1),
             ],
             False,
-            "Piggyback file not updated by source 'source1'",
+            "Piggyback data not updated by source 'source1'",
             0,
         ),
     ],

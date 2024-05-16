@@ -312,14 +312,9 @@ class UsersConfigFile(WatoSingleConfigFile[dict]):
             config_file_path=Path(multisite_dir()) / "users.mk", config_variable="multisite_users"
         )
 
-    def _load_file(self, lock: bool) -> dict:
-        users = super()._load_file(lock)
-        validate_users(users)
-        return users
-
-    def save(self, cfg: dict) -> None:
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
         validate_users(cfg)
-        super().save(cfg)
 
 
 class ContactsConfigFile(WatoSingleConfigFile[dict]):
@@ -330,14 +325,9 @@ class ContactsConfigFile(WatoSingleConfigFile[dict]):
             config_file_path=Path(wato_root_dir()) / "contacts.mk", config_variable="contacts"
         )
 
-    def _load_file(self, lock: bool) -> dict:
-        users = super()._load_file(lock)
-        validate_contacts(users)
-        return users
-
-    def save(self, cfg: dict) -> None:
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
         validate_contacts(cfg)
-        super().save(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

@@ -84,13 +84,11 @@ class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
         if not sites_from_file:
             return default_single_site_configuration()
 
-        sites = prepare_raw_site_config(sites_from_file)
-        validate_sites(sites)
-        return sites
+        return prepare_raw_site_config(sites_from_file)
 
-    def save(self, cfg: SiteConfigurations) -> None:
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
         validate_sites(cfg)
-        super().save(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

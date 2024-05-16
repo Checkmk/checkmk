@@ -51,11 +51,9 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
         if not cfg:
             cfg = {"tag_groups": [], "aux_tags": []}
 
-        validate_tags(cfg)
         return cfg
 
     def save(self, cfg: TagConfigSpec) -> None:
-        validate_tags(cfg)
         self._save_gui_config(cfg)
         self._save_base_config(cfg)
         _export_hosttags_to_php(cfg)
@@ -66,6 +64,10 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
     def _save_base_config(self, cfg: TagConfigSpec) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg)
+
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
+        validate_tags(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

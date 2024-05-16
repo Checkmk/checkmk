@@ -99,12 +99,11 @@ class NotificationRuleConfigFile(WatoSingleConfigFile[list[EventRule]]):
                 del rule["notify_method"]
                 rule["notify_plugin"] = (plugin, method)
 
-        validate_notification_rules(notification_rules)
         return notification_rules
 
-    def save(self, cfg: list[EventRule]) -> None:
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
         validate_notification_rules(cfg)
-        super().save(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

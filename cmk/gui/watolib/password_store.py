@@ -60,18 +60,20 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
             ),
             password_store.load(password_store.password_store_path()),
         )
-        validate_passwords(cfg)
         return cfg
 
     def save(self, cfg: Mapping[str, Password]) -> None:
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
-        validate_passwords(cfg)
         meta_data, passwords = split_password_specs(cfg)
         super().save(meta_data)
         password_store.save(passwords, password_store.password_store_path())
         update_passwords_merged_file()
+
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
+        validate_passwords(cfg)
 
 
 def update_passwords_merged_file() -> None:

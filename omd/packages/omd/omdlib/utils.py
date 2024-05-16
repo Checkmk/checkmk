@@ -46,10 +46,6 @@ def delete_directory_contents(d: str) -> None:
         delete_user_file(d + "/" + f)
 
 
-def omd_base_path() -> str:
-    return "/"
-
-
 def get_editor() -> str:
     alternative = os.environ.get("EDITOR", "/usr/bin/vi")
     editor = os.environ.get("VISUAL", alternative)

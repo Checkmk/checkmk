@@ -10,8 +10,6 @@ import sys
 from pathlib import Path
 from typing import cast
 
-import omdlib
-import omdlib.utils
 from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import (
     load_skel_permissions_from,
@@ -90,7 +88,7 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def dir(self) -> str:
-        return os.path.join(omdlib.utils.omd_base_path(), "omd/sites", cast(str, self._sitename))
+        return os.path.join("/omd/sites", cast(str, self._sitename))
 
     @property
     def tmp_dir(self) -> str:

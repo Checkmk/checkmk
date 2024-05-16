@@ -25,11 +25,11 @@ from cmk.utils.hostaddress import HostAddress, HostName
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PiggybackFileInfo:
-    source_hostname: HostName
+    source: HostName
     file_path: Path
-    successfully_processed: bool
+    valid: bool
     message: str
     status: int
 
@@ -102,10 +102,10 @@ def get_piggyback_raw_data(
         except OSError as exc:
             piggyback_raw_data = PiggybackRawDataInfo(
                 PiggybackFileInfo(
-                    source_hostname=file_info.source_hostname,
+                    source=file_info.source,
                     file_path=file_info.file_path,
-                    successfully_processed=False,
-                    message=f"Cannot read piggyback raw data from source '{file_info.source_hostname}': {exc}",
+                    valid=False,
+                    message=f"Cannot read piggyback raw data from source '{file_info.source}': {exc}",
                     status=0,
                 ),
                 raw_data=AgentRawData(b""),
@@ -128,9 +128,9 @@ def get_source_and_piggyback_hosts(
             HostName(piggybacked_host_folder.name),
             time_settings,
         ):
-            if not file_info.successfully_processed:
+            if not file_info.valid:
                 continue
-            yield HostName(file_info.source_hostname), HostName(piggybacked_host_folder.name)
+            yield HostName(file_info.source), HostName(piggybacked_host_folder.name)
 
 
 def has_piggyback_raw_data(
@@ -138,8 +138,7 @@ def has_piggyback_raw_data(
     time_settings: PiggybackTimeSettings,
 ) -> bool:
     return any(
-        fi.successfully_processed
-        for fi in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
+        fi.valid for fi in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
     )
 
 
@@ -238,16 +237,20 @@ def _get_piggyback_processed_file_info(
         file_age = _time_since_last_modification(piggyback_file_path)
     except FileNotFoundError:
         return PiggybackFileInfo(
-            source_hostname, piggyback_file_path, False, "Piggyback file is missing", 0
+            source=source_hostname,
+            file_path=piggyback_file_path,
+            valid=False,
+            message="Piggyback file is missing",
+            status=0,
         )
 
     if file_age > (allowed := settings.max_cache_age(source_hostname, piggybacked_hostname)):
         return PiggybackFileInfo(
-            source_hostname,
-            piggyback_file_path,
-            False,
-            f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
-            0,
+            source=source_hostname,
+            file_path=piggyback_file_path,
+            valid=False,
+            message=f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
+            status=0,
         )
 
     validity_period = settings.validity_period(source_hostname, piggybacked_hostname)
@@ -257,19 +260,19 @@ def _get_piggyback_processed_file_info(
     if _is_piggybacked_host_abandoned(status_file_path, piggyback_file_path):
         valid_msg = _validity_period_message(file_age, validity_period)
         return PiggybackFileInfo(
-            source_hostname=source_hostname,
+            source=source_hostname,
             file_path=piggyback_file_path,
-            successfully_processed=bool(valid_msg),
+            valid=bool(valid_msg),
             message=(f"Piggyback data not updated by source '{source_hostname}'{valid_msg}"),
             status=validity_state if valid_msg else 0,
         )
 
     return PiggybackFileInfo(
-        source_hostname,
-        piggyback_file_path,
-        True,
-        f"Successfully processed from source '{source_hostname}'",
-        0,
+        source=source_hostname,
+        file_path=piggyback_file_path,
+        valid=True,
+        message=f"Successfully processed from source '{source_hostname}'",
+        status=0,
     )
 
 

@@ -1742,6 +1742,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         ),
         get_http_proxy=config.get_http_proxy,
         ensure_nagios=ensure_nagios,
+        logging_level=ConfigCache.notification_logging_level(),
     )
 
 

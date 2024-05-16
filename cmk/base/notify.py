@@ -164,8 +164,8 @@ $LONGSERVICEOUTPUT$
 #   '----------------------------------------------------------------------'
 
 
-def _initialize_logging() -> None:
-    log.logger.setLevel(config.notification_logging)
+def _initialize_logging(logging_level: int) -> None:
+    log.logger.setLevel(logging_level)
     log.setup_watched_file_logging_handler(notification_log)
 
 
@@ -214,6 +214,7 @@ def do_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
+    logging_level: int,
 ) -> int | None:
     # pylint: disable=too-many-branches
     global _log_to_stdout, notify_mode
@@ -223,7 +224,7 @@ def do_notify(
         os.makedirs(notification_logdir)
     if not os.path.exists(notification_spooldir):
         os.makedirs(notification_spooldir)
-    _initialize_logging()
+    _initialize_logging(logging_level)
 
     if keepalive and "keepalive" in options:
         keepalive.enable()
@@ -253,7 +254,7 @@ def do_notify(
             return handle_spoolfile(filename, host_parameters_cb, get_http_proxy)
 
         if keepalive and keepalive.enabled():
-            notify_keepalive(host_parameters_cb, get_http_proxy, ensure_nagios)
+            notify_keepalive(host_parameters_cb, get_http_proxy, ensure_nagios, logging_level)
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
@@ -264,16 +265,24 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                logging_level=logging_level,
             )
         elif notify_mode == "test":
             assert isinstance(args[0], dict)
-            notify_notify(EventContext(args[0]), host_parameters_cb, get_http_proxy, ensure_nagios)
+            notify_notify(
+                EventContext(args[0]),
+                host_parameters_cb,
+                get_http_proxy,
+                ensure_nagios,
+                logging_level=logging_level,
+            )
         elif notify_mode == "stdin":
             notify_notify(
                 events.raw_context_from_string(sys.stdin.read()),
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                logging_level=logging_level,
             )
         elif notify_mode == "send-bulks":
             send_ripe_bulks(get_http_proxy)
@@ -283,6 +292,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                logging_level=logging_level,
             )
 
     except Exception:
@@ -310,14 +320,6 @@ def convert_legacy_configuration() -> None:
         else:
             config.notification_spooling = "remote"
 
-    # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
-    # which agree with the values used in cmk/utils/log.py.
-    # The decprecated value 0 is transformed to the default logging value.
-    if config.notification_logging in [0, 1]:
-        config.notification_logging = 20
-    elif config.notification_logging == 2:
-        config.notification_logging = 10
-
 
 def notify_notify(
     raw_context: EventContext,
@@ -325,6 +327,7 @@ def notify_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    logging_level: int,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
@@ -341,7 +344,7 @@ def notify_notify(
     enriched_context = events.complete_raw_context(
         raw_context,
         ensure_nagios,
-        with_dump=config.notification_logging <= 10,
+        with_dump=logging_level <= 10,
         contacts_needed=True,
     )
 
@@ -410,12 +413,20 @@ def notification_replay_backlog(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     nr: int,
+    *,
+    logging_level: int,
 ) -> None:
     global notify_mode
     notify_mode = "replay"
-    _initialize_logging()
+    _initialize_logging(logging_level)
     raw_context = raw_context_from_backlog(nr)
-    notify_notify(raw_context, host_parameters_cb, get_http_proxy, ensure_nagios)
+    notify_notify(
+        raw_context,
+        host_parameters_cb,
+        get_http_proxy,
+        ensure_nagios,
+        logging_level=logging_level,
+    )
 
 
 def notification_analyse_backlog(
@@ -423,16 +434,19 @@ def notification_analyse_backlog(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     nr: int,
+    *,
+    logging_level: int,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
-    _initialize_logging()
+    _initialize_logging(logging_level)
     raw_context = raw_context_from_backlog(nr)
     return notify_notify(
         raw_context,
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        logging_level=logging_level,
         analyse=True,
     )
 
@@ -443,11 +457,12 @@ def notification_test(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    logging_level: int,
     dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "test"
-    _initialize_logging()
+    _initialize_logging(logging_level)
     contacts = events.livestatus_fetch_contacts(
         HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
     )
@@ -459,6 +474,7 @@ def notification_test(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        logging_level=logging_level,
         analyse=True,
         dispatch=dispatch,
     )
@@ -483,6 +499,7 @@ def notify_keepalive(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
+    logging_level: int,
 ) -> None:
     cmk.base.utils.register_sigint_handler()
     events.event_keepalive(
@@ -491,6 +508,7 @@ def notify_keepalive(
             host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
+            logging_level=logging_level,
         ),
         call_every_loop=partial(send_ripe_bulks, get_http_proxy),
         loop_interval=config.notification_bulk_interval,

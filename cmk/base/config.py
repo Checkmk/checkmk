@@ -2921,6 +2921,17 @@ class ConfigCache:
     def checkmk_check_parameters(self, host_name: HostName) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self.is_ping_host(host_name))
 
+    @staticmethod
+    def notification_logging_level() -> int:
+        # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
+        # which agree with the values used in cmk/utils/log.py.
+        # The deprecated value 0 is transformed to the default logging value.
+        if notification_logging in (0, 1):
+            return 20
+        if notification_logging == 2:
+            return 10
+        return notification_logging
+
     def notification_plugin_parameters(
         self,
         host_name: HostName,

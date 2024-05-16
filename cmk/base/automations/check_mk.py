@@ -2666,6 +2666,7 @@ class AutomationNotificationReplay(Automation):
             config.get_http_proxy,
             ensure_nagios,
             int(nr),
+            logging_level=ConfigCache.notification_logging_level(),
         )
         return NotificationReplayResult()
 
@@ -2692,6 +2693,7 @@ class AutomationNotificationAnalyse(Automation):
                 config.get_http_proxy,
                 ensure_nagios,
                 int(nr),
+                logging_level=ConfigCache.notification_logging_level(),
             )
         )
 
@@ -2719,6 +2721,7 @@ class AutomationNotificationTest(Automation):
                 ),
                 config.get_http_proxy,
                 ensure_nagios,
+                logging_level=ConfigCache.notification_logging_level(),
                 dispatch=dispatch == "True",
             )
         )

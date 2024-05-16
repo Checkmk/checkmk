@@ -22,8 +22,12 @@ import isort
 import pytest
 from pipfile import Pipfile  # type: ignore[import-untyped]
 
-from tests.testlib import repo_path
-from tests.testlib.utils import branch_from_env, current_base_branch_name, is_enterprise_repo
+from tests.testlib.utils import (
+    branch_from_env,
+    current_base_branch_name,
+    is_enterprise_repo,
+    repo_path,
+)
 
 IGNORED_LIBS = {
     "agent_receiver",

@@ -8,7 +8,7 @@ import os
 import re
 from collections.abc import Sequence
 
-from tests.testlib import repo_path
+from tests.testlib.utils import repo_path
 
 LOGGER = logging.getLogger()
 

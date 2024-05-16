@@ -52,7 +52,6 @@ pytest.register_assert_rewrite(
 
 pytest_plugins = ("tests.testlib.playwright.plugin",)
 
-import tests.testlib as testlib
 from tests.testlib.utils import (
     add_python_paths,
     current_base_branch_name,
@@ -61,6 +60,7 @@ from tests.testlib.utils import (
     is_managed_repo,
     is_saas_repo,
     repo_path,
+    virtualenv_path,
 )
 
 collect_ignore: list[str] = []
@@ -223,7 +223,7 @@ def pytest_cmdline_main(config):
 
 
 def verify_virtualenv():
-    if not testlib.virtualenv_path():
+    if not virtualenv_path():
         raise SystemExit(
             "ERROR: Please load virtual environment first "
             '(Use "pipenv shell" or configure direnv)'

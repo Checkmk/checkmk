@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib import CMKWebSession
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
+from tests.testlib.web_session import CMKWebSession
 
 
 @skip_if_saas_edition

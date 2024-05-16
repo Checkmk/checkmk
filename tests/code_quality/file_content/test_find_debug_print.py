@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.utils import repo_path
 
 from ..conftest import ChangedFiles
 

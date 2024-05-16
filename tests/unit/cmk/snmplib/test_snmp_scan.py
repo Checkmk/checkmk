@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access, redefined-outer-name
 
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -198,7 +199,7 @@ def test_snmp_scan_prefetch_description_object__success(backend: SNMPBackend) ->
 
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_fake_description_object__success(backend: SNMPBackend) -> None:
-    snmp_scan._fake_description_object()
+    snmp_scan._fake_description_object(logging.getLogger("test"))
 
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR] == ""
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ] == ""

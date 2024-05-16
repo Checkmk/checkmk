@@ -167,6 +167,10 @@ class SNMPBackend(abc.ABC):
         self.config = snmp_config
 
     @property
+    def logger(self) -> logging.Logger:
+        return self._logger
+
+    @property
     def hostname(self) -> HostName:
         return self.config.hostname
 

@@ -470,6 +470,11 @@ check_plugin_brocade_optical = CheckPlugin(
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_brocade_optical,
     check_ruleset_name="brocade_optical",
-    check_default_parameters={},
+    check_default_parameters={
+        "temp": False,
+        "tx_light": False,
+        "rx_light": False,
+        "lanes": False,
+    },
     check_function=check_brocade_optical,
 )

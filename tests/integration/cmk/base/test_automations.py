@@ -474,8 +474,10 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
     if site.file_exists(cache_path):
         site.delete_file(cache_path)
 
+    # use .internal. FQDN to avoid false positives in name resolution
+    unknown_host = "update-dns-cache-host.internal."
     try:
-        clients.HostConfig.create(host_name="update-dns-cache-host")
+        clients.HostConfig.create(host_name=unknown_host)
         clients.HostConfig.create(host_name="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
@@ -484,7 +486,9 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert isinstance(result, results.UpdateDNSCacheResult)
 
         assert result.n_updated > 0
-        assert result.failed_hosts == ["update-dns-cache-host"]
+        assert result.failed_hosts == [
+            unknown_host
+        ], f'Successfully resolved unknown host "{unknown_host}"!'
 
         assert site.file_exists(cache_path)
 
@@ -494,7 +498,7 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert ("bla", 4) not in cache
     finally:
         clients.HostConfig.delete("localhost")
-        clients.HostConfig.delete("update-dns-cache-host")
+        clients.HostConfig.delete(unknown_host)
         clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
 
 

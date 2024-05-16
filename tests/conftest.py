@@ -9,6 +9,7 @@
 import logging
 import os
 import shutil
+import sys
 import tempfile
 from collections.abc import Iterator
 from pathlib import Path
@@ -60,7 +61,6 @@ from tests.testlib.utils import (
     is_managed_repo,
     is_saas_repo,
     repo_path,
-    virtualenv_path,
 )
 
 collect_ignore: list[str] = []
@@ -223,7 +223,7 @@ def pytest_cmdline_main(config):
 
 
 def verify_virtualenv():
-    if not virtualenv_path():
+    if sys.prefix != str(repo_path() / ".venv"):
         raise SystemExit(
             "ERROR: Please load virtual environment first "
             '(Use "pipenv shell" or configure direnv)'

@@ -8,8 +8,6 @@ import sys
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
-import omdlib
-from omdlib.contexts import SiteContext
 from omdlib.version import default_version, version_from_site_dir
 
 import cmk.utils.tty as tty
@@ -25,13 +23,13 @@ def main_sites(
 ) -> None:
     if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
-    for sitename in all_sites():
-        site = SiteContext(sitename)
+    for sitename in all_sites(omd_path):
+        site_dir = omd_path / f"sites/{sitename}"
         tags = []
         if "bare" in options:
-            sys.stdout.write("%s\n" % site.name)
+            sys.stdout.write("%s\n" % sitename)
         else:
-            v = version_from_site_dir(Path(site.dir))
+            v = version_from_site_dir(Path(site_dir))
             if v is None:
                 v = "(none)"
                 tags.append("empty site dir")
@@ -39,12 +37,12 @@ def main_sites(
                 tags.append("default version")
             if is_disabled(omd_path / f"apache/{sitename}.conf"):
                 tags.append(tty.bold + tty.red + "disabled" + tty.normal)
-            sys.stdout.write("%-16s %-16s %s " % (site.name, v, ", ".join(tags)))
+            sys.stdout.write("%-16s %-16s %s " % (sitename, v, ", ".join(tags)))
             sys.stdout.write("\n")
 
 
-def all_sites() -> Iterable[str]:
-    basedir = os.path.join(omdlib.utils.omd_base_path(), "omd/sites")
+def all_sites(omd_path: Path) -> Iterable[str]:
+    basedir = omd_path / "sites"
     return sorted([s for s in os.listdir(basedir) if os.path.isdir(os.path.join(basedir, s))])
 
 

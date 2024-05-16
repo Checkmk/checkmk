@@ -3083,7 +3083,7 @@ def main_umount(
     # if no site is selected, all sites are affected
     exit_status = 0
     if not site.is_site_context():
-        for site_id in all_sites():
+        for site_id in all_sites(Path("/omd/")):
             # Set global vars for the current site
             site = SiteContext(site_id)
 
@@ -3143,13 +3143,13 @@ def main_init_action(  # pylint: disable=too-many-branches
     bare = "bare" in options
     parallel = "parallel" in options
 
-    max_site_len = max([8] + [len(site_id) for site_id in all_sites()])
+    max_site_len = max([8] + [len(site_id) for site_id in all_sites(Path("/omd/"))])
 
     def parallel_output(site_id: str, line: str) -> None:
         sys.stdout.write(("%-" + str(max_site_len) + "s - %s") % (site_id, line))
 
     exit_states, processes = [], []
-    for sitename in all_sites():
+    for sitename in all_sites(Path("/omd/")):
         site = SiteContext(sitename)
         version = version_from_site_dir(Path(site.dir))
 
@@ -3750,7 +3750,9 @@ def main_cleanup(
             continue
 
         site_ids = [
-            s for s in all_sites() if version_from_site_dir(Path("/omd/sites/") / s) == version
+            s
+            for s in all_sites(Path("/omd/"))
+            if version_from_site_dir(Path("/omd/sites/") / s) == version
         ]
         if site_ids:
             sys.stdout.write(

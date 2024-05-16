@@ -305,27 +305,12 @@ class ErrorReporter:
             "apc_symmetra_temp",
             RuleGroup.CheckgroupParameters("temperature"),
         ),
-        (
-            "check",
-            "brocade_optical",
-            RuleGroup.CheckgroupParameters("brocade_optical"),
-        ),
         ("check", "bvip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
         ("check", "bvip_poe", RuleGroup.CheckgroupParameters("epower_single")),
         (
             "check",
             "casa_cpu_mem",
             RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "ceph_status_mgrs",
-            RuleGroup.CheckgroupParameters("ceph_mgrs"),
-        ),
-        (
-            "check",
-            "ceph_status_osds",
-            RuleGroup.CheckgroupParameters("ceph_osds"),
         ),
         (
             "check",

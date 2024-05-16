@@ -24,13 +24,13 @@ def read(stream: io.StringIO) -> str:
 
 def test_verbose_on(stream: io.StringIO, caplog: LogCaptureFixture) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
-    console.verbose("hello", stream=stream)
+    console.verbose("hello", file=stream)
     assert read(stream) == "hello"
 
 
 def test_verbose_off(stream: io.StringIO, caplog: LogCaptureFixture) -> None:
     caplog.set_level(console.VERBOSE + 1, logger="cmk.base")
-    console.verbose("hello", stream=stream)
+    console.verbose("hello", file=stream)
     assert not read(stream)
 
 
@@ -71,11 +71,11 @@ def test_info_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> Non
 
 
 def test_warning(stream: io.StringIO) -> None:
-    console.warning("  hello  ", stream=stream)
+    console.warning("  hello  ", file=stream)
     assert read(stream) == "  hello  "
 
 
 def test_error(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
-    console.error("hello", stream=sys.stderr)
+    console.error("hello", file=sys.stderr)
     assert ("", "hello") == capsys.readouterr()

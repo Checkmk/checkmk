@@ -17,30 +17,30 @@ def format_warning(text: str) -> str:
     return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}"
 
 
-def debug(text: str, *, stream: TextIO | None = None) -> None:
-    _print(logging.DEBUG, text, stream=stream)
+def debug(text: str, *, file: TextIO | None = None) -> None:
+    _print(logging.DEBUG, text, file=file)
 
 
-def verbose(text: str, *, stream: TextIO | None = None) -> None:
-    _print(VERBOSE, text, stream=stream)
+def verbose(text: str, *, file: TextIO | None = None) -> None:
+    _print(VERBOSE, text, file=file)
 
 
-def info(text: str, *, stream: TextIO | None = None) -> None:
-    _print(logging.INFO, text, stream=stream)
+def info(text: str, *, file: TextIO | None = None) -> None:
+    _print(logging.INFO, text, file=file)
 
 
-def warning(text: str, *, stream: TextIO | None = None) -> None:
-    _print(logging.WARNING, text, stream=stream)
+def warning(text: str, *, file: TextIO | None = None) -> None:
+    _print(logging.WARNING, text, file=file)
 
 
-def error(text: str, *, stream: TextIO | None = None) -> None:
-    _print(logging.ERROR, text, stream=stream)
+def error(text: str, *, file: TextIO | None = None) -> None:
+    _print(logging.ERROR, text, file=file)
 
 
 # NOTE: We abuse the log level of this logger as a global variable!
 _console = logging.getLogger("cmk.base.console")
 
 
-def _print(level: int, text: str, *, stream: TextIO | None = None) -> None:
+def _print(level: int, text: str, *, file: TextIO | None = None) -> None:
     if _console.isEnabledFor(level):
-        print(text, end="", file=stream, flush=True)
+        print(text, end="", file=file, flush=True)

@@ -66,7 +66,7 @@ class Automations:
             result = automation.execute(args)
 
         except (MKAutomationError, MKTimeout) as e:
-            console.error(f"{e}\n", stream=sys.stderr)
+            console.error(f"{e}\n", file=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
             return 1
@@ -74,7 +74,7 @@ class Automations:
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error(f"{e}\n", stream=sys.stderr)
+            console.error(f"{e}\n", file=sys.stderr)
             return 2
 
         finally:

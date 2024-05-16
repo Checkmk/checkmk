@@ -84,7 +84,7 @@ class HostCheckStore:
             )
             os.chmod(compiled_filename, 0o750)  # nosec B103 # BNS:c29b0e
 
-        console.verbose(f" ==> {compiled_filename}.\n", stream=sys.stderr)
+        console.verbose(f" ==> {compiled_filename}.\n", file=sys.stderr)
 
 
 def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: ConfigCache) -> None:
@@ -103,7 +103,7 @@ def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: Config
         if config_cache.is_active(hn) and config_cache.is_online(hn)
     }:
         try:
-            console.verbose(f"{tty.bold}{tty.blue}{hostname:<16}{tty.normal}:", stream=sys.stderr)
+            console.verbose(f"{tty.bold}{tty.blue}{hostname:<16}{tty.normal}:", file=sys.stderr)
             host_check = dump_precompiled_hostcheck(
                 config_cache,
                 config_path,
@@ -117,9 +117,7 @@ def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: Config
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error(
-                f"Error precompiling checks for host {hostname}: {e}\n", stream=sys.stderr
-            )
+            console.error(f"Error precompiling checks for host {hostname}: {e}\n", file=sys.stderr)
             sys.exit(5)
 
 
@@ -174,7 +172,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     checks_to_load = sorted(_get_legacy_check_file_names_to_load(needed_legacy_check_plugin_names))
 
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
-        console.verbose(f" {tty.green}{check_plugin_name}{tty.normal}", stream=sys.stderr)
+        console.verbose(f" {tty.green}{check_plugin_name}{tty.normal}", file=sys.stderr)
 
     # IP addresses
     # FIXME:

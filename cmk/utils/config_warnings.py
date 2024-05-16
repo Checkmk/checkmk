@@ -20,7 +20,7 @@ def initialize() -> None:
 
 def warn(text: str) -> None:
     g_configuration_warnings.append(text)
-    console.warning(console.format_warning(f"\n{text}\n"), stream=sys.stdout)
+    console.warning(console.format_warning(f"\n{text}\n"), file=sys.stdout)
 
 
 def get_configuration() -> ConfigurationWarnings:

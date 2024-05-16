@@ -250,7 +250,7 @@ def scan_parents_of(
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
             message = lines[0][6:].strip()
-            console.verbose(f"{host}: {message}\n", stream=sys.stderr)
+            console.verbose(f"{host}: {message}\n", file=sys.stderr)
             dot(tty.red, "D")
             gateways.append(GatewayResult(None, "dnserror", 0, message))
             continue
@@ -265,7 +265,7 @@ def scan_parents_of(
 
         if len(lines) < 2:
             if not silent:
-                console.error(f"{host}: {' '.join(lines)}\n", stream=sys.stderr)
+                console.error(f"{host}: {' '.join(lines)}\n", file=sys.stderr)
             gateways.append(
                 GatewayResult(
                     None,
@@ -303,12 +303,12 @@ def scan_parents_of(
                 if not silent:
                     console.error(
                         f"{host}: invalid output line from traceroute: '{line}'\n",
-                        stream=sys.stderr,
+                        file=sys.stderr,
                     )
 
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."
-            console.error(f"{host}: {error}\n", stream=sys.stderr)
+            console.error(f"{host}: {error}\n", file=sys.stderr)
             gateways.append(GatewayResult(None, "garbled", 0, error))
             dot(tty.red)
             continue
@@ -343,7 +343,7 @@ def scan_parents_of(
             # gateway can be monitored via the standard host check
             if ping_probes:
                 if not gateway_reachable_via_ping(r, ping_probes):
-                    console.verbose(f"(not using {r}, not reachable)\n", stream=sys.stderr)
+                    console.verbose(f"(not using {r}, not reachable)\n", file=sys.stderr)
                     skipped_gateways += 1
                     continue
             this_route = r
@@ -351,7 +351,7 @@ def scan_parents_of(
         if not this_route:
             error = "No usable routing information"
             if not silent:
-                console.error(f"{host}: {error}\n", stream=sys.stderr)
+                console.error(f"{host}: {error}\n", file=sys.stderr)
             gateways.append(GatewayResult(None, "notfound", 0, error))
             dot(tty.blue)
             continue

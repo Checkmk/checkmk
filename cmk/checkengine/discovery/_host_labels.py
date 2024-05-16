@@ -151,7 +151,7 @@ def _discover_host_labels_for_source_type(
                 if on_error is OnError.WARN:
                     console.error(
                         f"Host label discovery of '{section_name}' failed: {exc}\n",
-                        stream=sys.stderr,
+                        file=sys.stderr,
                     )
 
     except KeyboardInterrupt:

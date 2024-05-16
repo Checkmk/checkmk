@@ -69,12 +69,3 @@ def test_site_context_is_autostart() -> None:
 
     site._config = {"AUTOSTART": "off"}
     assert not site.is_autostart()
-
-
-def test_site_context_is_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/apache/dingeling.conf")
-    site = SiteContext("dingeling")
-    assert not site.is_disabled()
-
-    site = SiteContext("dingelang")
-    assert site.is_disabled()

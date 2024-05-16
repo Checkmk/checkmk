@@ -159,11 +159,6 @@ class SiteContext(AbstractSiteContext):
         """Determines whether a specific site is set to autostart."""
         return self.conf.get("AUTOSTART", "on") == "on"
 
-    def is_disabled(self) -> bool:
-        """Whether or not this site has been disabled with 'omd disable'"""
-        apache_conf = os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % self.name)
-        return not os.path.exists(apache_conf)
-
     def is_stopped(self) -> bool:
         """Check if site is completely stopped"""
         return check_status(self.dir, display=False) == 1

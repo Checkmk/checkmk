@@ -62,7 +62,7 @@ from omdlib.dialog import (
 )
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.site_name import sitename_must_be_valid
-from omdlib.sites import all_sites, main_sites
+from omdlib.sites import all_sites, is_disabled, main_sites
 from omdlib.skel_permissions import (
     get_skel_permissions,
     load_skel_permissions_from,
@@ -1723,7 +1723,7 @@ def init_action(
     args: Arguments,
     options: CommandOptions,
 ) -> int:
-    if site.is_disabled():
+    if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
         bail_out("This site is disabled.")
 
     if command in ["start", "restart"]:
@@ -2153,7 +2153,7 @@ def main_init(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if not site.is_disabled():
+    if not is_disabled(Path(f"/omd/apache/{site.name}.conf")):
         bail_out(
             "Cannot initialize site that is not disabled.\n"
             "Please call 'omd disable %s' first." % site.name
@@ -2385,7 +2385,7 @@ def main_disable(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if site.is_disabled():
+    if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
@@ -2407,7 +2407,7 @@ def main_enable(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if not site.is_disabled():
+    if not is_disabled(Path(f"/omd/apache/{site.name}.conf")):
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
@@ -3160,7 +3160,7 @@ def main_init_action(  # pylint: disable=too-many-branches
             continue
 
         # Skip disabled sites completely
-        if site.is_disabled():
+        if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
             continue
 
         site.load_config(load_defaults(site))

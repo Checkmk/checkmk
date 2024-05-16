@@ -21,7 +21,7 @@ def main_sites(
     _global_opts: object,
     _args: object,
     options: Mapping[str, str | None],
-    versions_path: Path = Path("/omd/versions"),
+    omd_path: Path = Path("/omd/"),
 ) -> None:
     if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
@@ -31,14 +31,13 @@ def main_sites(
         if "bare" in options:
             sys.stdout.write("%s\n" % site.name)
         else:
-            disabled = site.is_disabled()
             v = version_from_site_dir(Path(site.dir))
             if v is None:
                 v = "(none)"
                 tags.append("empty site dir")
-            elif v == default_version(versions_path):
+            elif v == default_version(omd_path / "versions"):
                 tags.append("default version")
-            if disabled:
+            if is_disabled(omd_path / f"apache/{sitename}.conf"):
                 tags.append(tty.bold + tty.red + "disabled" + tty.normal)
             sys.stdout.write("%-16s %-16s %s " % (site.name, v, ", ".join(tags)))
             sys.stdout.write("\n")
@@ -47,3 +46,8 @@ def main_sites(
 def all_sites() -> Iterable[str]:
     basedir = os.path.join(omdlib.utils.omd_base_path(), "omd/sites")
     return sorted([s for s in os.listdir(basedir) if os.path.isdir(os.path.join(basedir, s))])
+
+
+def is_disabled(apache_conf: Path) -> bool:
+    """Whether or not this site has been disabled with 'omd disable'"""
+    return not os.path.exists(apache_conf)

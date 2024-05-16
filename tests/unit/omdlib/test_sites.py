@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from omdlib.sites import main_sites
+from omdlib.sites import is_disabled, main_sites
 
 
 def _strip_ansi(s: str) -> str:
@@ -47,7 +47,7 @@ def test_main_sites(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     tmp_path.joinpath("omd/sites/disabled").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/disabled/version").symlink_to("../../versions/1.6.0p4")
 
-    main_sites(object(), object(), object(), [], {}, tmp_path / "omd/versions")
+    main_sites(object(), object(), object(), [], {}, tmp_path / "omd/")
 
     stdout = _strip_ansi(capsys.readouterr()[0])
     assert (
@@ -57,3 +57,11 @@ def test_main_sites(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         "empty            (none)           empty site dir \n"
         "xyz              1.2.3p4           \n"
     )
+
+
+def test_is_disabled(tmp_path: Path) -> None:
+    apache_config_existing = tmp_path / "dingeling.conf"
+    apache_config_existing.touch()
+    assert not is_disabled(apache_config_existing)
+
+    assert is_disabled(tmp_path / "dingelang.conf")

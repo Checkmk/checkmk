@@ -331,6 +331,12 @@ def store_piggyback_raw_data(
     source_hostname: HostName,
     piggybacked_raw_data: Mapping[HostName, Sequence[bytes]],
 ) -> None:
+    if not piggybacked_raw_data:
+        # Cleanup the status file when no piggyback data was sent this turn.
+        logger.debug("Received no piggyback data")
+        remove_source_status_file(source_hostname)
+        return
+
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
@@ -343,16 +349,10 @@ def store_piggyback_raw_data(
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
     # We use the mtime of this file later for comparison.
-    # Only do this for hosts that sent piggyback data this turn, cleanup the status file when no
-    # piggyback data was sent this turn.
-    if piggybacked_raw_data:
-        logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
-
-        status_file_path = _get_source_status_file_path(source_hostname)
-        _store_status_file_of(status_file_path, piggyback_file_paths)
-    else:
-        logger.debug("Received no piggyback data")
-        remove_source_status_file(source_hostname)
+    # Only do this for hosts that sent piggyback data this turn.
+    logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
+    status_file_path = _get_source_status_file_path(source_hostname)
+    _store_status_file_of(status_file_path, piggyback_file_paths)
 
 
 def _store_status_file_of(

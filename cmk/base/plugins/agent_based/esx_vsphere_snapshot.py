@@ -5,7 +5,7 @@
 
 import datetime
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, Optional, Sequence
 from typing import Any, NamedTuple
 
 from cmk.plugins.lib import esx_vsphere
@@ -18,7 +18,7 @@ class Snapshot(NamedTuple):
     time: int
     state: str
     name: str
-    vm: str
+    vm: Optional[str] = None
 
 
 Section = Sequence[Snapshot]

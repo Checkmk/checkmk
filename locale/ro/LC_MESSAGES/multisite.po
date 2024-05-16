@@ -58040,16 +58040,17 @@ msgstr ""
 "Nivelurile privind costurile vor fi considerate ca fiind în moneda "
 "corespunzătoare datelor raportate."
 
-msgid "The license usage history is older than five days."
-msgstr "Istoricul de utilizare a licenței este mai vechi de cinci zile."
-
 msgid ""
-"The license usage history was updated at least three days ago.<br>Note: If "
-"it cannot be updated within five days activate changes will be blocked."
+"The license usage history is older than five days. In order to have a "
+"reliable average of the number of services the license usage report must "
+"contain a significant number of license usage samples. Please execute the "
+"following command as site user 'cmk-update-license-usage --force' in order "
+"to solve this situation."
 msgstr ""
-"Istoricul de utilizare a licenței a fost actualizat cu cel puțin trei zile "
-"în urmă.<br>Notă: Dacă nu poate fi actualizat în termen de cinci zile, "
-"modificările activate vor fi blocate."
+
+#, fuzzy
+msgid "The license usage history was updated at least three days ago."
+msgstr "Istoricul de utilizare a licenței este mai vechi de cinci zile."
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Limita pentru decalajul de transport în <tt>v$dataguard_stats</tt>."
@@ -68507,9 +68508,6 @@ msgstr "Tipul valorii"
 msgid "Type of tree layout"
 msgstr "Tipul de dispunere a arborilor"
 
-msgid "Type selection"
-msgstr "Selecție de tip"
-
 #, python-format
 msgid "Type: %s"
 msgstr "Tip: %s."
@@ -70195,11 +70193,15 @@ msgid "Usage levels"
 msgstr "Niveluri de utilizare"
 
 #, fuzzy
-msgid "Use \"CERT as prefix\""
+msgid "Use \"CERT\" as service name prefix"
 msgstr "Utilizați un prefix de spațiu de nume"
 
 msgid "Use \"Checkmk Automation\" user"
 msgstr "Utilizați \"Checkmk Automation\" utilizator"
+
+#, fuzzy
+msgid "Use \"HTTP(S)\" as service name prefix"
+msgstr "Utilizați numele portului ca nume de serviciu"
 
 msgid ""
 "Use <tt>127.0.0.1</tt> should be correct in almost every situation. It is "
@@ -70596,9 +70598,6 @@ msgstr ""
 
 msgid "Use procedure call instead of SQL statement"
 msgstr "Utilizați apelul de procedură în locul declarației SQL"
-
-msgid "Use protocol name: HTTP(S)"
-msgstr "Utilizați numele protocolului: HTTP(S)"
 
 msgid "Use proxy"
 msgstr "Utilizați proxy"
@@ -78849,6 +78848,20 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid ""
+#~ "The license usage history was updated at least three days ago.<br>Note: "
+#~ "If it cannot be updated within five days activate changes will be blocked."
+#~ msgstr ""
+#~ "Istoricul de utilizare a licenței a fost actualizat cu cel puțin trei "
+#~ "zile în urmă.<br>Notă: Dacă nu poate fi actualizat în termen de cinci "
+#~ "zile, modificările activate vor fi blocate."
+
+#~ msgid "Type selection"
+#~ msgstr "Selecție de tip"
+
+#~ msgid "Use protocol name: HTTP(S)"
+#~ msgstr "Utilizați numele protocolului: HTTP(S)"
 
 #~ msgid "DNS Hostname or IP address"
 #~ msgstr "Numele de gazdă DNS sau adresa IP"

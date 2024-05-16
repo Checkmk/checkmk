@@ -58541,17 +58541,18 @@ msgstr ""
 "Les niveaux sur les coûts seront considérés comme étant dans la devise "
 "correspondant aux données rapportées."
 
-msgid "The license usage history is older than five days."
+msgid ""
+"The license usage history is older than five days. In order to have a "
+"reliable average of the number of services the license usage report must "
+"contain a significant number of license usage samples. Please execute the "
+"following command as site user 'cmk-update-license-usage --force' in order "
+"to solve this situation."
+msgstr ""
+
+#, fuzzy
+msgid "The license usage history was updated at least three days ago."
 msgstr ""
 "L'historique de l'utilisation de la licence date de plus de cinq jours."
-
-msgid ""
-"The license usage history was updated at least three days ago.<br>Note: If "
-"it cannot be updated within five days activate changes will be blocked."
-msgstr ""
-"L'historique d'utilisation de la licence a été mis à jour il y a au moins "
-"trois jours.<br>Note : S'il ne peut être mis à jour dans les cinq jours, "
-"l'activation des changements sera bloquée."
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "La limite pour le retard de transport dans <tt>v$dataguard_stats</tt>"
@@ -69105,10 +69106,6 @@ msgstr "Type de la valeur"
 msgid "Type of tree layout"
 msgstr "Type de disposition des arbres"
 
-#, fuzzy
-msgid "Type selection"
-msgstr "Sélection des dossiers"
-
 #, python-format
 msgid "Type: %s"
 msgstr "Type : %s"
@@ -70821,11 +70818,15 @@ msgid "Usage levels"
 msgstr "Niveaux d'utilisation"
 
 #, fuzzy
-msgid "Use \"CERT as prefix\""
+msgid "Use \"CERT\" as service name prefix"
 msgstr "Utiliser un préfixe d'espace de nom"
 
 msgid "Use \"Checkmk Automation\" user"
 msgstr "Utilisez l'utilisateur \"Checkmk Automation\""
+
+#, fuzzy
+msgid "Use \"HTTP(S)\" as service name prefix"
+msgstr "Utiliser le nom du port comme nom de service"
 
 msgid ""
 "Use <tt>127.0.0.1</tt> should be correct in almost every situation. It is "
@@ -71230,9 +71231,6 @@ msgstr ""
 
 msgid "Use procedure call instead of SQL statement"
 msgstr "Utiliser un appel de procédure au lieu d'une déclaration SQL"
-
-msgid "Use protocol name: HTTP(S)"
-msgstr ""
 
 msgid "Use proxy"
 msgstr "Utiliser un proxy"
@@ -79596,6 +79594,19 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid ""
+#~ "The license usage history was updated at least three days ago.<br>Note: "
+#~ "If it cannot be updated within five days activate changes will be blocked."
+#~ msgstr ""
+#~ "L'historique d'utilisation de la licence a été mis à jour il y a au moins "
+#~ "trois jours.<br>Note : S'il ne peut être mis à jour dans les cinq jours, "
+#~ "l'activation des changements sera bloquée."
+
+#, fuzzy
+#~| msgid "Folder Selection"
+#~ msgid "Type selection"
+#~ msgstr "Sélection des dossiers"
 
 #~ msgid "DNS Hostname or IP address"
 #~ msgstr "Nom d'hôte DNS ou adresse IP"

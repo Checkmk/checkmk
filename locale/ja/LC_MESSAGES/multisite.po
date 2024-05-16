@@ -56648,15 +56648,17 @@ msgid ""
 "to the reported data."
 msgstr "コストのレベルは、報告されたデータに対応する通貨であると見なされます。"
 
-msgid "The license usage history is older than five days."
-msgstr "ライセンスの使用履歴が5日以上経過しています。"
-
 msgid ""
-"The license usage history was updated at least three days ago.<br>Note: If "
-"it cannot be updated within five days activate changes will be blocked."
+"The license usage history is older than five days. In order to have a "
+"reliable average of the number of services the license usage report must "
+"contain a significant number of license usage samples. Please execute the "
+"following command as site user 'cmk-update-license-usage --force' in order "
+"to solve this situation."
 msgstr ""
-"ライセンス使用履歴は3日以上前に更新されています。<br>注意：5日以内に更新でき"
-"ない場合、アクティベーションの変更がブロックされます。"
+
+#, fuzzy
+msgid "The license usage history was updated at least three days ago."
+msgstr "ライセンスの使用履歴が5日以上経過しています。"
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "<tt>v$dataguard_stats </tt>でのトランスポートラグの制限"
@@ -66761,10 +66763,6 @@ msgstr "値のタイプ"
 msgid "Type of tree layout"
 msgstr "ツリーレイアウトのタイプ"
 
-#, fuzzy
-msgid "Type selection"
-msgstr "フォルダの選択"
-
 #, python-format
 msgid "Type: %s"
 msgstr "タイプ: %s"
@@ -68413,11 +68411,15 @@ msgid "Usage levels"
 msgstr "使用レベル"
 
 #, fuzzy
-msgid "Use \"CERT as prefix\""
+msgid "Use \"CERT\" as service name prefix"
 msgstr "名前空間プレフィックスを使用する"
 
 msgid "Use \"Checkmk Automation\" user"
 msgstr "\"Checkmk Automation\" ユーザーを使用する"
+
+#, fuzzy
+msgid "Use \"HTTP(S)\" as service name prefix"
+msgstr "サービス名としてポート名を使用する"
 
 msgid ""
 "Use <tt>127.0.0.1</tt> should be correct in almost every situation. It is "
@@ -68807,9 +68809,6 @@ msgstr "事前定義された条件を使用して、ルールセットの条件
 
 msgid "Use procedure call instead of SQL statement"
 msgstr "SQLステートメントの代わりにプロシージャコールを使用する"
-
-msgid "Use protocol name: HTTP(S)"
-msgstr ""
 
 msgid "Use proxy"
 msgstr "プロキシを使う"
@@ -76763,6 +76762,18 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "The license usage history was updated at least three days ago.<br>Note: "
+#~ "If it cannot be updated within five days activate changes will be blocked."
+#~ msgstr ""
+#~ "ライセンス使用履歴は3日以上前に更新されています。<br>注意：5日以内に更新で"
+#~ "きない場合、アクティベーションの変更がブロックされます。"
+
+#, fuzzy
+#~| msgid "Folder Selection"
+#~ msgid "Type selection"
+#~ msgstr "フォルダの選択"
 
 #~ msgid "DNS Hostname or IP address"
 #~ msgstr "DNSホスト名またはIPアドレス"

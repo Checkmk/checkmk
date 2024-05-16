@@ -8,6 +8,7 @@ from __future__ import annotations
 import textwrap
 from collections.abc import Callable, Sequence
 
+from cmk.utils import tty
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.hostaddress import HostName, Hosts
 from cmk.utils.log import console
@@ -404,7 +405,7 @@ class Mode(Option):
 
                 if option.is_deprecated_option(o):
                     console.warning(
-                        console.format_warning(
+                        tty.format_warning(
                             f"{o!r} is deprecated in favour of option {option.name()!r}\n"
                         )
                     )

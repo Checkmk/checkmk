@@ -8,6 +8,7 @@ import sys
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
 import cmk.utils.debug
+from cmk.utils import tty
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
@@ -164,9 +165,7 @@ def _discover_plugins_services(
     try:
         plugin = plugins[check_plugin_name]
     except KeyError:
-        console.warning(
-            console.format_warning(f"  Missing check plugin: '{check_plugin_name}'\n\n")
-        )
+        console.warning(tty.format_warning(f"  Missing check plugin: '{check_plugin_name}'\n\n"))
         return
 
     try:
@@ -176,7 +175,7 @@ def _discover_plugins_services(
             raise
         if on_error is OnError.WARN:
             console.warning(
-                console.format_warning(f"  Exception while parsing agent section: {exc}\n\n")
+                tty.format_warning(f"  Exception while parsing agent section: {exc}\n\n")
             )
         return
 
@@ -194,7 +193,7 @@ def _discover_plugins_services(
             raise
         if on_error is OnError.WARN:
             console.warning(
-                console.format_warning(
+                tty.format_warning(
                     f"  Exception in discovery function of check plug-in '{check_plugin_name}': {e}\n"
                 )
             )

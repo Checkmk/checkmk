@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.utils import tty
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
@@ -150,7 +151,7 @@ def get_check_preview(
         itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
     ):
         for line in result.details:
-            console.warning(console.format_warning(f"{line}\n"))
+            console.warning(tty.format_warning(f"{line}\n"))
 
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,

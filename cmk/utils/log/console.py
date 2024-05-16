@@ -6,16 +6,7 @@
 import logging
 from typing import TextIO
 
-import cmk.utils.tty as tty
-
 from ._level import VERBOSE as VERBOSE
-
-
-def format_warning(text: str) -> str:
-    stripped = text.lstrip()
-    indent = text[: len(text) - len(stripped)]
-    return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}"
-
 
 # NOTE: We abuse the log level of this logger as a global variable!
 _console = logging.getLogger("cmk.base.console")

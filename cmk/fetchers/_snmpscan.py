@@ -12,9 +12,9 @@ from pathlib import Path
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
-from cmk.utils.log.console import format_warning
 from cmk.utils.regex import regex
 from cmk.utils.sectionname import SectionName
+from cmk.utils.tty import format_warning
 
 from cmk.snmplib import get_single_oid, SNMPBackend, SNMPDetectAtom, SNMPDetectBaseType
 

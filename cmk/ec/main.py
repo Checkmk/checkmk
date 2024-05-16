@@ -3219,6 +3219,7 @@ def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
     repl_settings = config["replication"]
     if repl_settings is None:
         raise ValueError("no replication settings")
+    response_text = b""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(repl_settings["connect_timeout"])
@@ -3228,7 +3229,6 @@ def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
         )
         sock.shutdown(socket.SHUT_WR)
 
-        response_text = b""
         while True:
             chunk = sock.recv(8192)
             response_text += chunk

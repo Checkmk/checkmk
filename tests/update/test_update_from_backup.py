@@ -5,6 +5,7 @@
 
 import json
 import logging
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -78,6 +79,9 @@ def _base_site_demo(site_factory_demo):
 
 
 @pytest.mark.cee
+@pytest.mark.skipif(
+    os.getenv("DISTRO") == "ubuntu-24.04", reason="Checkmk 2.3 is not available for this system"
+)
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_2.3.0_backup.tar.gz")
     assert backup_path.exists()

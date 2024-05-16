@@ -20,7 +20,14 @@ from cmk.gui.inventory import (
     LoadStructuredDataError,
 )
 from cmk.gui.page_menu import PageMenuEntry
-from cmk.gui.type_defs import HTTPVariables, PermittedViewSpecs, VisualContext
+from cmk.gui.type_defs import (
+    HTTPVariables,
+    PermittedViewSpecs,
+    Rows,
+    SingleInfos,
+    Visual,
+    VisualContext,
+)
 from cmk.gui.valuespec import Hostname
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals.type import VisualType
@@ -72,13 +79,19 @@ class VisualTypeViews(VisualType):
     def permitted_visuals(self) -> PermittedViewSpecs:
         return get_permitted_views()
 
-    def link_from(  # type: ignore[no-untyped-def]
-        self, linking_view, linking_view_rows, visual, context_vars: HTTPVariables
+    def link_from(
+        self,
+        linking_view_single_infos: SingleInfos,
+        linking_view_rows: Rows,
+        visual: Visual,
+        context_vars: HTTPVariables,
     ) -> bool:
         """This has been implemented for HW/SW inventory views which are often useless when a host
         has no such information available. For example the "Oracle Tablespaces" inventory view is
         useless on hosts that don't host Oracle databases."""
-        result = super().link_from(linking_view, linking_view_rows, visual, context_vars)
+        result = super().link_from(
+            linking_view_single_infos, linking_view_rows, visual, context_vars
+        )
         if result is False:
             return False
 

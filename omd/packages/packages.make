@@ -16,7 +16,7 @@ TAR_GZ := $(shell which tar) xzf
 TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
-BAZEL_BUILD := "../scripts/run-bazel-build.sh"
+BAZEL_BUILD := $(if $(CI),../scripts/run-bazel-build.sh,bazel build)
 
 # Bazel paths
 BAZEL_BIN := "$(REPO_PATH)/bazel-bin"

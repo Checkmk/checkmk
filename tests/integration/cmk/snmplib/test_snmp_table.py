@@ -68,7 +68,9 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = dataclasses.replace(default_config(backend_type), ipaddress=HostAddress("bla.local"))
+    config = dataclasses.replace(
+        default_config(backend_type), ipaddress=HostAddress("unknown_host.internal.")
+    )
 
     # TODO: Unify different error messages
     if config.snmp_backend is SNMPBackendEnum.INLINE:

@@ -79,6 +79,8 @@ tests/.hypothesis/
 /results
 /buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 /bazel-*
+/MODULE.bazel
+/MODULE.bazel.lock
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode

@@ -264,7 +264,7 @@ def _get_piggyback_processed_file_info(
             validity_state if valid_msg else 0,
         )
 
-    if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
+    if _is_piggybacked_host_abandoned(status_file_path, piggyback_file_path):
         valid_msg = _validity_period_message(file_age, validity_period)
         return PiggybackFileInfo(
             source_hostname,
@@ -292,14 +292,14 @@ def _validity_period_message(
     return f" (still valid, {_render_time(time_left)} left)"
 
 
-def _is_piggyback_file_outdated(
+def _is_piggybacked_host_abandoned(
     status_file_path: Path,
     piggyback_file_path: Path,
 ) -> bool:
     """Return True if the status file is missing or it is newer than the payload file
 
     It will return True if the payload file is "abandoned", i.e. the source host is
-    still sending data, but no longer has data for this target ( = piggybacked) host.
+    still sending data, but no longer has data for this piggybacked ( = target) host.
     """
     try:
         # TODO use Path.stat() but be aware of:

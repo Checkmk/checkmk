@@ -224,7 +224,6 @@ def _get_piggyback_processed_file_infos(
             settings=expanded_time_settings,
         )
         for source_hostname in source_hostnames
-        if not source_hostname.startswith(".")
     ]
 
 

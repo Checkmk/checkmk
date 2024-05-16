@@ -388,6 +388,7 @@ def test_dependencies_are_declared() -> None:
     undeclared_dependencies = list(get_undeclared_dependencies())
     undeclared_dependencies_str = {d.name for d in undeclared_dependencies}
     known_undeclared_dependencies = {
+        "buildscripts",  # used in build helper scripts in buildscripts/scripts
         "netsnmp",  # We ship it with omd/packages
         "pymongo",  # Optional except ImportError...
         "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py

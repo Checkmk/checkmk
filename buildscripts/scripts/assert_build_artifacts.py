@@ -7,7 +7,7 @@ import sys
 import urllib.parse
 from argparse import ArgumentParser
 from argparse import Namespace as Args
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 from os import environ
@@ -17,6 +17,9 @@ from typing import NamedTuple
 import docker  # type: ignore
 import requests
 import yaml
+
+sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
+from buildscripts.scripts.lib.common import flatten, load_editions_file
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from tests.testlib.utils import get_cmk_download_credentials
@@ -256,12 +259,6 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     # TODO
 
 
-def flatten(list_to_flatten: Iterable[Iterable[str] | str]) -> Iterable[str]:
-    # This is a workaround the fact that yaml cannot "extend" a predefined node which is a list:
-    # https://stackoverflow.com/questions/19502522/extend-an-array-in-yaml
-    return [h for elem in list_to_flatten for h in ([elem] if isinstance(elem, str) else elem)]
-
-
 def parse_arguments() -> Args:
     parser = ArgumentParser()
 
@@ -278,8 +275,7 @@ def parse_arguments() -> Args:
 
 def main() -> None:
     args = parse_arguments()
-    with open(args.editions_file) as editions_file:
-        args.func(args, yaml.load(editions_file, Loader=yaml.FullLoader))
+    args.func(args, load_editions_file(args.editions_file))
 
 
 if __name__ == "__main__":

@@ -44,8 +44,8 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import tarfile
-from contextlib import contextmanager
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -53,24 +53,8 @@ from typing import Iterator, Union
 
 import docker  # type: ignore
 
-
-def strtobool(val: str | bool) -> bool:
-    """Convert a string representation of truth to true (1) or false (0).
-    Raises ArgumentTypeError if 'val' is anything else.
-
-    distutils.util.strtobool() no longer part of the standard library in 3.12
-
-    https://github.com/python/cpython/blob/v3.11.2/Lib/distutils/util.py#L308
-    """
-    if isinstance(val, bool):
-        return val
-    val = val.lower()
-    if val in ("y", "yes", "t", "true", "on", "1"):
-        return True
-    elif val in ("n", "no", "f", "false", "off", "0"):
-        return False
-    else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
+sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
+from buildscripts.scripts.lib.common import cwd, strtobool
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -157,16 +141,6 @@ def run_cmd(
         LOG.debug(completed_process.stdout.strip())
 
     return completed_process
-
-
-@contextmanager
-def cwd(path: Union[str, Path]) -> Iterator[None]:
-    oldpwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(oldpwd)
 
 
 logging.basicConfig(

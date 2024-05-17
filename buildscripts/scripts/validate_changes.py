@@ -21,12 +21,12 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from distutils.util import strtobool
 from functools import reduce
 from pathlib import Path
 from typing import Any
 
 import yaml
+from distutils.util import strtobool
 from typing_extensions import TypedDict
 
 LOG = logging.getLogger("validate_changes")
@@ -413,14 +413,12 @@ def main() -> None:
             print(f"  {file}")
 
     if args.write_file:
-        json.dump(
-            obj={
-                "VARIABLES": variables,
-                "STAGES": stages,
-            },
-            fp=sys.stdout if args.write_file == "-" else open(args.write_file, "w"),
-            indent=2,
-        )
+        obj = {"VARIABLES": variables, "STAGES": stages}
+        if args.write_file == "-":
+            json.dump(obj=obj, fp=sys.stdout, indent=2)
+        else:
+            with open(Path(args.write_file), "w", encoding="UTF-8") as f:
+                json.dump(obj=obj, fp=f, indent=2)
     else:
         print(f"Found {len(stages)} stage commands to run locally")
         loop = asyncio.get_event_loop()

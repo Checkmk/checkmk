@@ -103,27 +103,14 @@ def get_piggyback_raw_data(
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            piggyback_raw_data = PiggybackRawDataInfo(
-                info=file_info,
-                raw_data=AgentRawData(store.load_bytes_from_file(file_info.file_path)),
-            )
+            content = store.load_bytes_from_file(file_info.file_path)
 
-        except OSError as exc:
-            piggyback_raw_data = PiggybackRawDataInfo(
-                PiggybackFileInfo(
-                    source=file_info.source,
-                    file_path=file_info.file_path,
-                    valid=False,
-                    message=f"Cannot read piggyback raw data from source '{file_info.source}': {exc}",
-                    status=0,
-                ),
-                raw_data=AgentRawData(b""),
-            )
+        except FileNotFoundError:
+            # race condition: file was removed between listing and reading
+            continue
 
-        logger.debug(
-            "Piggyback file '%s': %s", file_info.file_path, piggyback_raw_data.info.message
-        )
-        piggyback_data.append(piggyback_raw_data)
+        logger.debug("Piggyback file '%s': %s", file_info.file_path, file_info.message)
+        piggyback_data.append(PiggybackRawDataInfo(info=file_info, raw_data=AgentRawData(content)))
     return piggyback_data
 
 

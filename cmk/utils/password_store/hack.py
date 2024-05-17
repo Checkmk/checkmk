@@ -21,6 +21,7 @@ HACK_AGENTS = {
     # if we have to apply the password store hack.
     # Make sure to have *all* special agent plugins listed here, so we
     # can test for it
+    "aws_dev_internal": True,
     "azure_status": False,  # needs no secret
     "bazel_cache": True,
     "bi": False,  # needs no secret

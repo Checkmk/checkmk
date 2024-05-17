@@ -28,7 +28,7 @@ def warn_about_network_ports(old_site_id: SiteId, new_site_id: SiteId, logger: L
             "with the same configuration may cause network port conflicts. "
             "For example if you enabled livestatus to listen via TCP or enabled the Event Console "
             "to listen for incoming Syslog messages or SNMP traps, you may have to update the "
-            "configuration in one of the sites to resolve the conflicts.\n\n"
+            "configuration in one of the sites to resolve the conflicts.\n"
         )
     )
 

@@ -358,7 +358,7 @@ def _collect_inventory_plugin_items(
 
                 console.warning(
                     tty.format_warning(
-                        f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}\n"
+                        f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}"
                     )
                 )
                 continue

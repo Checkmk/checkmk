@@ -406,7 +406,7 @@ class Mode(Option):
                 if option.is_deprecated_option(o):
                     console.warning(
                         tty.format_warning(
-                            f"{o!r} is deprecated in favour of option {option.name()!r}\n"
+                            f"{o!r} is deprecated in favour of option {option.name()!r}"
                         )
                     )
 

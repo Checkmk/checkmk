@@ -70,9 +70,9 @@ def test_info_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> Non
     assert ("", "") == capsys.readouterr()
 
 
-def test_warning(stream: io.StringIO) -> None:
-    console.warning("  hello  ", file=stream)
-    assert read(stream) == "  hello  "
+def test_warning(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
+    console.warning("  hello  ", file=sys.stderr)
+    assert ("", "  hello  \n") == capsys.readouterr()
 
 
 def test_error(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:

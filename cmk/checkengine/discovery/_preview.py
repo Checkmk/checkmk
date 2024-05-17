@@ -151,7 +151,7 @@ def get_check_preview(
         itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
     ):
         for line in result.details:
-            console.warning(tty.format_warning(f"{line}\n"))
+            console.warning(tty.format_warning(f"{line}"))
 
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,

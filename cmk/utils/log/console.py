@@ -19,7 +19,7 @@ def error(text: str, *, file: TextIO | None = None) -> None:
 
 def warning(text: str, *, file: TextIO | None = None) -> None:
     if _console.isEnabledFor(logging.WARNING):
-        print(text, end="", file=file, flush=True)
+        print(text, file=file, flush=True)
 
 
 def info(text: str, *, file: TextIO | None = None) -> None:

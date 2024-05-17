@@ -165,7 +165,7 @@ def _discover_plugins_services(
     try:
         plugin = plugins[check_plugin_name]
     except KeyError:
-        console.warning(tty.format_warning(f"  Missing check plugin: '{check_plugin_name}'\n\n"))
+        console.warning(tty.format_warning(f"  Missing check plugin: '{check_plugin_name}'\n"))
         return
 
     try:
@@ -174,9 +174,7 @@ def _discover_plugins_services(
         if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
-            console.warning(
-                tty.format_warning(f"  Exception while parsing agent section: {exc}\n\n")
-            )
+            console.warning(tty.format_warning(f"  Exception while parsing agent section: {exc}\n"))
         return
 
     if not kwargs:
@@ -194,7 +192,7 @@ def _discover_plugins_services(
         if on_error is OnError.WARN:
             console.warning(
                 tty.format_warning(
-                    f"  Exception in discovery function of check plug-in '{check_plugin_name}': {e}\n"
+                    f"  Exception in discovery function of check plug-in '{check_plugin_name}': {e}"
                 )
             )
 

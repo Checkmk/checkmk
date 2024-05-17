@@ -566,10 +566,10 @@ def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
 #   '----------------------------------------------------------------------'
 
 
-def check_for_valid_hostname(hostname: str) -> None:
+def _check_for_valid_hostname(hostname: str) -> None:
     """test hostname for invalid chars, raises MKUserError if invalid chars are found
-    >>> check_for_valid_hostname("klappspaten")
-    >>> check_for_valid_hostname("../../etc/passwd")
+    >>> _check_for_valid_hostname("klappspaten")
+    >>> _check_for_valid_hostname("../../etc/passwd")
     Traceback (most recent call last):
     cmk.gui.exceptions.MKUserError: You need to provide a valid "host name". Only letters, digits, dash, underscore and dot are allowed.
     """
@@ -600,8 +600,8 @@ def page_host_inv_api() -> None:
 
         result: dict[str, SDRawTree] = {}
         for a_host_name in hosts:
-            check_for_valid_hostname(a_host_name)
-            result[a_host_name] = inventory_of_host(a_host_name, api_request)
+            _check_for_valid_hostname(a_host_name)
+            result[a_host_name] = _inventory_of_host(a_host_name, api_request)
 
         resp = {"result_code": 0, "result": result}
 
@@ -642,7 +642,7 @@ def _make_filter_choices_from_api_request_paths(
     return [_make_filter_choice(parse_inventory_path(raw_path)) for raw_path in api_request_paths]
 
 
-def inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRawTree:
+def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRawTree:
     raw_site = api_request.get("site")
     site = livestatus.SiteId(raw_site) if raw_site is not None else None
     verify_permission(host_name, site)

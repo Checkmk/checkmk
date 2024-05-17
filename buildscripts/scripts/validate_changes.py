@@ -26,7 +26,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from distutils.util import strtobool
 from typing_extensions import TypedDict
 
 LOG = logging.getLogger("validate_changes")
@@ -237,7 +236,15 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Mapping[str, str]
             )
 
         LOG.debug("evaluate %r run command %r", e["NAME"], cmd)
-        cmd_result = run_shell_command(cmd, bool(strtobool(e.get("REPLACE_NEWLINES", "false"))))
+        replace_newlines = e.get("REPLACE_NEWLINES", "false") in (
+            "y",
+            "yes",
+            "t",
+            "true",
+            "on",
+            "1",
+        )
+        cmd_result = run_shell_command(cmd, replace_newlines)
         LOG.debug("set to %r", cmd_result)
         result[e["NAME"]] = cmd_result
 

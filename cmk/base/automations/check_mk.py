@@ -2743,7 +2743,9 @@ class AutomationGetBulks(Automation):
 
     def execute(self, args: list[str]) -> NotificationGetBulksResult:
         only_ripe = args[0] == "1"
-        return NotificationGetBulksResult(notify.find_bulks(only_ripe))
+        return NotificationGetBulksResult(
+            notify.find_bulks(only_ripe, bulk_interval=config.notification_bulk_interval)
+        )
 
 
 automations.register(AutomationGetBulks())

@@ -215,6 +215,7 @@ def do_notify(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
     fallback_email: str,
+    bulk_interval: int,
     spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> int | None:
@@ -264,6 +265,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                bulk_interval=bulk_interval,
                 fallback_email=fallback_email,
                 spooling=spooling,
                 logging_level=logging_level,
@@ -304,7 +306,7 @@ def do_notify(
                 logging_level=logging_level,
             )
         elif notify_mode == "send-bulks":
-            send_ripe_bulks(get_http_proxy)
+            send_ripe_bulks(get_http_proxy, bulk_interval=bulk_interval)
         else:
             notify_notify(
                 raw_context_from_env(os.environ),
@@ -535,6 +537,7 @@ def notify_keepalive(
     ensure_nagios: Callable[[str], object],
     *,
     fallback_email: str,
+    bulk_interval: int,
     spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> None:
@@ -549,8 +552,8 @@ def notify_keepalive(
             spooling=spooling,
             logging_level=logging_level,
         ),
-        call_every_loop=partial(send_ripe_bulks, get_http_proxy),
-        loop_interval=config.notification_bulk_interval,
+        call_every_loop=partial(send_ripe_bulks, get_http_proxy, bulk_interval=bulk_interval),
+        loop_interval=bulk_interval,
     )
 
 
@@ -1930,7 +1933,8 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: float | None = N
             logger.info("    -> Error removing it: %s", e)
 
 
-def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-branches
+def find_bulks(only_ripe: bool, *, bulk_interval: int) -> NotifyBulks:
+    # pylint: disable=too-many-branches
     if not os.path.exists(notification_bulkdir):
         return []
 
@@ -1991,7 +1995,7 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                     if active is True and len(uuids) < count:
                         # Only add a log entry every 10 minutes since timeperiods
                         # can be very long (The default would be 10s).
-                        if now % 600 <= config.notification_bulk_interval:
+                        if now % 600 <= bulk_interval:
                             logger.info(
                                 "Bulk %s is not ripe yet (time period %s: active, count: %d)",
                                 bulk_dir,
@@ -2018,8 +2022,10 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
     return bulks
 
 
-def send_ripe_bulks(get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig]) -> None:
-    ripe = find_bulks(True)
+def send_ripe_bulks(
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig], *, bulk_interval: int
+) -> None:
+    ripe = find_bulks(True, bulk_interval=bulk_interval)
     if ripe:
         logger.info("Sending out %d ripe bulk notifications", len(ripe))
         for bulk in ripe:

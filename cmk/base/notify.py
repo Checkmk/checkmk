@@ -214,6 +214,7 @@ def do_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
+    spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> int | None:
     # pylint: disable=too-many-branches
@@ -228,8 +229,6 @@ def do_notify(
 
     if keepalive and "keepalive" in options:
         keepalive.enable()
-
-    convert_legacy_configuration()
 
     try:
         notify_mode = "notify"
@@ -251,10 +250,21 @@ def do_notify(
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
             filename = args[1]
-            return handle_spoolfile(filename, host_parameters_cb, get_http_proxy)
+            return handle_spoolfile(
+                filename,
+                host_parameters_cb,
+                get_http_proxy,
+                spooling=spooling,
+            )
 
         if keepalive and keepalive.enabled():
-            notify_keepalive(host_parameters_cb, get_http_proxy, ensure_nagios, logging_level)
+            notify_keepalive(
+                host_parameters_cb,
+                get_http_proxy,
+                ensure_nagios,
+                spooling=spooling,
+                logging_level=logging_level,
+            )
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
@@ -265,6 +275,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                spooling=spooling,
                 logging_level=logging_level,
             )
         elif notify_mode == "test":
@@ -274,6 +285,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                spooling=spooling,
                 logging_level=logging_level,
             )
         elif notify_mode == "stdin":
@@ -282,6 +294,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                spooling=spooling,
                 logging_level=logging_level,
             )
         elif notify_mode == "send-bulks":
@@ -292,6 +305,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                spooling=spooling,
                 logging_level=logging_level,
             )
 
@@ -306,27 +320,13 @@ def do_notify(
     return None
 
 
-def convert_legacy_configuration() -> None:
-    # Convert legacy spooling configuration to new one (see above)
-    if isinstance(config.notification_spooling, bool):
-        if config.notification_spool_to:
-            also_local = config.notification_spool_to[2]
-            if also_local:
-                config.notification_spooling = "both"
-            else:
-                config.notification_spooling = "remote"
-        elif config.notification_spooling:
-            config.notification_spooling = "local"
-        else:
-            config.notification_spooling = "remote"
-
-
 def notify_notify(
     raw_context: EventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    spooling: Literal["local", "remote", "both"],
     logging_level: int,
     analyse: bool = False,
     dispatch: bool = False,
@@ -372,16 +372,21 @@ def notify_notify(
     enriched_context["LOGDIR"] = notification_logdir
 
     # Spool notification to remote host, if this is enabled
-    if config.notification_spooling in ("remote", "both"):
+    if spooling in ("remote", "both"):
         create_spoolfile(
             logger,
             Path(notification_spooldir),
             NotificationForward({"context": enriched_context, "forward": True}),
         )
 
-    if config.notification_spooling != "remote":
+    if spooling != "remote":
         return locally_deliver_raw_context(
-            enriched_context, host_parameters_cb, get_http_proxy, analyse=analyse, dispatch=dispatch
+            enriched_context,
+            host_parameters_cb,
+            get_http_proxy,
+            spooling=spooling,
+            analyse=analyse,
+            dispatch=dispatch,
         )
     return None
 
@@ -391,13 +396,19 @@ def locally_deliver_raw_context(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    spooling: Literal["local", "remote", "both"],
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
         return notify_rulebased(
-            enriched_context, host_parameters_cb, get_http_proxy, analyse=analyse, dispatch=dispatch
+            enriched_context,
+            host_parameters_cb,
+            get_http_proxy,
+            spooling=spooling,
+            analyse=analyse,
+            dispatch=dispatch,
         )
 
     except Exception:
@@ -414,6 +425,7 @@ def notification_replay_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
+    spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> None:
     global notify_mode
@@ -425,6 +437,7 @@ def notification_replay_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        spooling=spooling,
         logging_level=logging_level,
     )
 
@@ -435,6 +448,7 @@ def notification_analyse_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
+    spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
@@ -446,6 +460,7 @@ def notification_analyse_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        spooling=spooling,
         logging_level=logging_level,
         analyse=True,
     )
@@ -457,6 +472,7 @@ def notification_test(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    spooling: Literal["local", "remote", "both"],
     logging_level: int,
     dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
@@ -474,6 +490,7 @@ def notification_test(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        spooling=spooling,
         logging_level=logging_level,
         analyse=True,
         dispatch=dispatch,
@@ -499,6 +516,8 @@ def notify_keepalive(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
+    *,
+    spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> None:
     cmk.base.utils.register_sigint_handler()
@@ -508,6 +527,7 @@ def notify_keepalive(
             host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
+            spooling=spooling,
             logging_level=logging_level,
         ),
         call_every_loop=partial(send_ripe_bulks, get_http_proxy),
@@ -533,6 +553,7 @@ def notify_rulebased(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    spooling: Literal["local", "remote", "both"],
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo:
@@ -578,6 +599,7 @@ def notify_rulebased(
         num_rule_matches,
         host_parameters_cb,
         get_http_proxy,
+        spooling=spooling,
         analyse=analyse,
         dispatch=dispatch,
     )
@@ -670,6 +692,7 @@ def _process_notifications(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    spooling: Literal["local", "remote", "both"],
     analyse: bool,
     dispatch: bool = False,
 ) -> list[NotifyPluginInfo]:
@@ -744,7 +767,7 @@ def _process_notifications(
                         continue
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
-                    elif config.notification_spooling in ("local", "both"):
+                    elif spooling in ("local", "both"):
                         create_spoolfile(
                             logger,
                             Path(notification_spooldir),
@@ -1612,6 +1635,7 @@ def handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    spooling: Literal["local", "remote", "both"],
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
@@ -1648,7 +1672,12 @@ def handle_spoolfile(
         )
 
         store_notification_backlog(raw_context)
-        locally_deliver_raw_context(raw_context, host_parameters_cb, get_http_proxy)
+        locally_deliver_raw_context(
+            raw_context,
+            host_parameters_cb,
+            get_http_proxy,
+            spooling=spooling,
+        )
         # TODO: It is a bug that we don't transport result information and monitoring history
         # entries back to the origin site. The intermediate or final results should be sent back to
         # the origin site. Also log_to_history calls should not log the entries to the local

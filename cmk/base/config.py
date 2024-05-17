@@ -2932,6 +2932,16 @@ class ConfigCache:
             return 10
         return notification_logging
 
+    @staticmethod
+    def notification_spooling() -> Literal["local", "remote", "both"]:
+        if notification_spool_to:
+            if notification_spool_to[2]:
+                return "both"
+            return "remote"
+        if notification_spooling:
+            return "local"
+        return "remote"
+
     def notification_plugin_parameters(
         self,
         host_name: HostName,

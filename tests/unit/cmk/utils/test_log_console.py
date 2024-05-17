@@ -61,7 +61,7 @@ def test_debug_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> No
 def test_info_on(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(logging.INFO, logger="cmk.base")
     console.info("hello")
-    assert ("hello", "") == capsys.readouterr()
+    assert ("hello\n", "") == capsys.readouterr()
 
 
 def test_info_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:

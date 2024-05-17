@@ -88,9 +88,9 @@ def create_diagnostics_dump(parameters: DiagnosticsOptionalParameters | None) ->
 
     section.section_step("Creating diagnostics dump", verbose=False)
     if dump.tarfile_created:
-        console.info(f"{_format_filepath(dump.tarfile_path)}\n")
+        console.info(f"{_format_filepath(dump.tarfile_path)}")
     else:
-        console.info(f"{_GAP}No dump\n")
+        console.info(f"{_GAP}No dump")
 
 
 #   .--format helper-------------------------------------------------------.
@@ -236,19 +236,19 @@ class DiagnosticsDump:
 
         filepaths = []
         for element in self.elements:
-            console.info(f"{_format_title(element.title)}\n")
-            console.info(f"{_format_description(element.description)}\n")
+            console.info(f"{_format_title(element.title)}")
+            console.info(f"{_format_description(element.description)}")
 
             try:
                 for filepath in element.add_or_get_files(tmp_dump_folder):
                     filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
-                console.info(f"{_format_error(str(e))}\n")
+                console.info(f"{_format_error(str(e))}")
                 continue
 
             except Exception:
-                console.info(f"{_format_error(traceback.format_exc())}\n")
+                console.info(f"{_format_error(traceback.format_exc())}")
                 continue
 
         return filepaths
@@ -1071,7 +1071,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 )
 
             except subprocess.CalledProcessError as e:
-                console.info(f"{_format_error(str(e))}\n")
+                console.info(f"{_format_error(str(e))}")
                 continue
 
             filepath = tmpdir.joinpath(f"{self.ident}{suffix}")

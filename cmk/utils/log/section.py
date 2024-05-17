@@ -22,7 +22,7 @@ def section_error(text: str, verbose: bool = True) -> None:
     if verbose:
         console.verbose(f"{tty.error} - {text}\n")
     else:
-        console.info(f"{tty.error} - {text}\n")
+        console.info(f"{tty.error} - {text}")
 
 
 def section_step(text: str, add_info: str = "", verbose: bool = True) -> None:
@@ -31,4 +31,4 @@ def section_step(text: str, add_info: str = "", verbose: bool = True) -> None:
     if verbose:
         console.verbose(f"{tty.yellow}+{tty.normal} {text.upper()}{add_info}\n")
     else:
-        console.info(f"{tty.yellow}+{tty.normal} {text.upper()}{add_info}\n")
+        console.info(f"{tty.yellow}+{tty.normal} {text.upper()}{add_info}")

@@ -74,7 +74,7 @@ def _get_view_macros(view_spec: ViewSpec) -> Sequence[tuple[str, str]] | None:
 
 
 def _add_inventory_data(rows: Rows) -> None:
-    corrupted_inventory_files = []
+    corrupted_inventory_files = set()
     for row in rows:
         if "host_name" not in row:
             continue
@@ -86,18 +86,16 @@ def _add_inventory_data(rows: Rows) -> None:
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.
             row["host_inventory"] = ImmutableTree()
-            corrupted_inventory_files.append(str(get_short_inventory_filepath(row["host_name"])))
+            corrupted_inventory_files.add(str(get_short_inventory_filepath(row["host_name"])))
 
-            if corrupted_inventory_files:
-                user_errors.add(
-                    MKUserError(
-                        "load_structured_data_tree",
-                        _(
-                            "Cannot load HW/SW inventory trees %s. Please remove the corrupted files."
-                        )
-                        % ", ".join(sorted(corrupted_inventory_files)),
-                    )
-                )
+    if corrupted_inventory_files:
+        user_errors.add(
+            MKUserError(
+                "load_structured_data_tree",
+                _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.")
+                % ", ".join(sorted(corrupted_inventory_files)),
+            )
+        )
 
 
 def _join_inventory_rows(

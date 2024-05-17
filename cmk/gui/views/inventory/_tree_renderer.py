@@ -233,43 +233,6 @@ def _show_delta_value(
         raise NotImplementedError()
 
 
-class _LoadTreeError(Exception):
-    pass
-
-
-def _load_delta_tree(site_id: SiteId, host_name: HostName, tree_id: str) -> ImmutableDeltaTree:
-    tree, corrupted_history_files = inventory.load_delta_tree(host_name, int(tree_id))
-    if corrupted_history_files:
-        user_errors.add(
-            MKUserError(
-                "load_inventory_delta_tree",
-                _(
-                    "Cannot load HW/SW inventory history entries %s."
-                    " Please remove the corrupted files."
-                )
-                % ", ".join(corrupted_history_files),
-            )
-        )
-        raise _LoadTreeError()
-    return tree
-
-
-def _load_inventory_tree(site_id: SiteId, host_name: HostName) -> ImmutableTree:
-    row = inventory.get_status_data_via_livestatus(site_id, host_name)
-    try:
-        tree = inventory.load_filtered_and_merged_tree(row)
-    except inventory.LoadStructuredDataError:
-        user_errors.add(
-            MKUserError(
-                "load_inventory_tree",
-                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
-                % inventory.get_short_inventory_filepath(host_name),
-            )
-        )
-        raise _LoadTreeError()
-    return tree
-
-
 # Ajax call for fetching parts of the tree
 def ajax_inv_render_tree() -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
@@ -278,16 +241,35 @@ def ajax_inv_render_tree() -> None:
 
     raw_path = request.get_ascii_input_mandatory("raw_path")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
-    tree_id = request.get_ascii_input_mandatory("tree_id", "")
 
     tree: ImmutableTree | ImmutableDeltaTree
-    try:
-        if tree_id:
-            tree = _load_delta_tree(site_id, host_name, tree_id)
-        else:
-            tree = _load_inventory_tree(site_id, host_name)
-    except _LoadTreeError:
-        return
+    if tree_id := request.get_ascii_input_mandatory("tree_id", ""):
+        tree, corrupted_history_files = inventory.load_delta_tree(host_name, int(tree_id))
+        if corrupted_history_files:
+            user_errors.add(
+                MKUserError(
+                    "load_inventory_delta_tree",
+                    _(
+                        "Cannot load HW/SW inventory history entries %s."
+                        " Please remove the corrupted files."
+                    )
+                    % ", ".join(corrupted_history_files),
+                )
+            )
+            return
+    else:
+        row = inventory.get_status_data_via_livestatus(site_id, host_name)
+        try:
+            tree = inventory.load_filtered_and_merged_tree(row)
+        except inventory.LoadStructuredDataError:
+            user_errors.add(
+                MKUserError(
+                    "load_inventory_tree",
+                    _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
+                    % inventory.get_short_inventory_filepath(host_name),
+                )
+            )
+            return
 
     inventory_path = inventory.parse_inventory_path(raw_path or "")
     if not (tree := tree.get_tree(inventory_path.path)):

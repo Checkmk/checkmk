@@ -3458,10 +3458,10 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def _process_uploaded_zip_file(self, filename: str, content: bytes) -> str:
         with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
             messages = []
+            success, fail = 0, 0
             for entry in zip_obj.infolist():
-                success, fail = 0, 0
+                mib_file_name = entry.filename
                 try:
-                    mib_file_name = entry.filename
                     if mib_file_name[-1] == "/":
                         continue  # silently skip directories
                     self._validate_mib_file_name(mib_file_name)
@@ -5483,6 +5483,7 @@ def replication_mode() -> str:
 
 # Only use this for master/slave replication. For status queries use livestatus
 def query_ec_directly(query: bytes) -> dict[str, Any]:
+    response_text = b""
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(active_config.mkeventd_connect_timeout)
@@ -5490,7 +5491,6 @@ def query_ec_directly(query: bytes) -> dict[str, Any]:
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
 
-        response_text = b""
         while True:
             chunk = sock.recv(8192)
             response_text += chunk

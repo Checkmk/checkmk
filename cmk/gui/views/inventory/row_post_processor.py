@@ -80,9 +80,7 @@ def _add_inventory_data(rows: Rows) -> None:
             continue
 
         try:
-            row["host_inventory"] = (
-                ImmutableTree() if (tree := load_filtered_and_merged_tree(row)) is None else tree
-            )
+            row["host_inventory"] = load_filtered_and_merged_tree(row)
         except LoadStructuredDataError:
             # The inventory row may be joined with other rows (perf-o-meter, ...).
             # Therefore we initialize the corrupt inventory tree with an empty tree

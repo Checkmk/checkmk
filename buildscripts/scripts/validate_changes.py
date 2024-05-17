@@ -421,7 +421,8 @@ def main() -> None:
                 json.dump(obj=obj, fp=f, indent=2)
     else:
         print(f"Found {len(stages)} stage commands to run locally")
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         loop.run_until_complete(
             run_locally(stages, args.exitfirst, args.filter_substring, args.verbose)
         )

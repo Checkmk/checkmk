@@ -321,13 +321,18 @@ async def run_locally(
     results = {}
     for stage in stages:
         name = stage["NAME"]
-        if filter_substring and not any(map(lambda s: s.lower() in name.lower(), filter_substring)):
-            results[name] = f"SKIPPED Reason: none of {filter_substring!r} in name"
-            print(f"Stage {name!r}: {results[name]}")
-            continue
-
-        if "SKIPPED" in stage:
-            results[name] = f"SKIPPED {stage['SKIPPED']}"
+        filtered = filter_substring and not any(
+            map(
+                lambda s: s.lower() in name.lower(),
+                filter_substring,
+            )
+        )
+        if "SKIPPED" in stage or filtered:
+            results[name] = (
+                f"SKIPPED Reason: none of {filter_substring!r} in name"
+                if filtered
+                else f"SKIPPED {stage['SKIPPED']}"
+            )
             print(f"Stage {name!r}: {results[name]}")
             continue
 

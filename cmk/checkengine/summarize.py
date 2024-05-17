@@ -34,7 +34,7 @@ class SummaryConfig:
 
     exit_spec: ExitSpec
     time_settings: PiggybackTimeSettings
-    is_piggyback_host: bool
+    expect_data: bool
 
 
 class SummarizerFunction(Protocol):
@@ -50,7 +50,6 @@ def summarize(
     host_sections: result.Result[HostSections, Exception],
     config: SummaryConfig,
     *,
-    # TODO(ml): Check if this is redundant with SummaryConfig.is_piggyback
     fetcher_type: FetcherType,
 ) -> Sequence[ActiveCheckResult]:
     if fetcher_type is FetcherType.PIGGYBACK:
@@ -59,7 +58,7 @@ def summarize(
                 hostname=hostname,
                 ipaddress=ipaddress,
                 time_settings=config.time_settings,
-                is_piggyback=config.is_piggyback_host,
+                expect_data=config.expect_data,
             ),
             error=lambda exc: summarize_failure(config.exit_spec, exc),
         )
@@ -104,8 +103,7 @@ def summarize_piggyback(
     hostname: HostName,
     ipaddress: HostAddress | None,
     time_settings: PiggybackTimeSettings,
-    # Tag: 'Always use and expect piggback data'
-    is_piggyback: bool,
+    expect_data: bool,
 ) -> Sequence[ActiveCheckResult]:
     if sources := [
         source
@@ -118,6 +116,6 @@ def summarize_piggyback(
     ]:
         return [ActiveCheckResult(src.info.status, src.info.message) for src in sources]
 
-    if is_piggyback:
+    if expect_data:
         return [ActiveCheckResult(1, "Missing data")]
     return [ActiveCheckResult(0, "Success (but no data found for this host)")]

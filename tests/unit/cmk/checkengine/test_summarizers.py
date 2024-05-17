@@ -45,7 +45,7 @@ class TestPiggybackSummarizer:
             hostname=HostName("hostname"),
             ipaddress=HostAddress("1.2.3.4"),
             time_settings=[("", "", 0)],
-            is_piggyback=False,
+            expect_data=False,
         ) == [ActiveCheckResult(0, "Success (but no data found for this host)")]
 
     def test_summarize_missing_data_with_is_piggyback_option(self) -> None:
@@ -53,7 +53,7 @@ class TestPiggybackSummarizer:
             hostname=HostName("hostname"),
             ipaddress=HostAddress("1.2.3.4"),
             time_settings=[("", "", 0)],
-            is_piggyback=True,
+            expect_data=True,
         ) == [ActiveCheckResult(1, "Missing data")]
 
     @pytest.mark.skip("requires patching cmk.utils.piggyback :(")
@@ -62,5 +62,5 @@ class TestPiggybackSummarizer:
             hostname=HostName("hostname"),
             ipaddress=HostAddress("1.2.3.4"),
             time_settings=[("", "", 0)],
-            is_piggyback=True,
+            expect_data=True,
         ) == [ActiveCheckResult(0, "success"), ActiveCheckResult(0, "success")]

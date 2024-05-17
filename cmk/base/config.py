@@ -1958,7 +1958,7 @@ class ConfigCache:
         return SummaryConfig(
             exit_spec=self.exit_code_spec(host_name, source_id),
             time_settings=self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name),
-            is_piggyback_host=self.is_piggyback_host(host_name),
+            expect_data=self.is_piggyback_host(host_name),
         )
 
     def make_parent_scan_config(self, host_name: HostName) -> ParentScanConfig:

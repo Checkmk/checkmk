@@ -49,7 +49,6 @@ from tests.testlib.web_session import CMKWebSession
 import livestatus
 
 from cmk.utils.crypto.secrets import Secret
-from cmk.utils.paths import counters_dir, piggyback_dir, piggyback_source_dir
 from cmk.utils.version import Edition, Version
 
 logger = logging.getLogger(__name__)
@@ -1551,9 +1550,9 @@ class SiteFactory:
             or Version.from_str("2.3.0b1") <= from_version
         ):
             # tmpfs should have been restored:
-            assert os.path.exists(site.path(counters_dir))
-            assert os.path.exists(site.path(str(piggyback_dir)))
-            assert os.path.exists(site.path(str(piggyback_source_dir)))
+            assert os.path.exists(site.path("tmp/check_mk/counters"))
+            assert os.path.exists(site.path("tmp/check_mk/piggyback"))
+            assert os.path.exists(site.path("tmp/check_mk/piggyback_sources"))
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)

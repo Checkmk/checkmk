@@ -17,6 +17,7 @@
 
 import datetime
 import io
+import itertools
 import logging
 import os
 import re
@@ -25,7 +26,7 @@ import sys
 import time
 import traceback
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
@@ -78,7 +79,7 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, load_timeperiods, timeperiod_active
 
 import cmk.base.utils
-from cmk.base import config, events
+from cmk.base import events
 
 try:
     from cmk.base.cee import keepalive
@@ -212,6 +213,7 @@ def do_notify(
     options: dict[str, bool],
     args: list[str],
     *,
+    rules: Iterable[EventRule],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
@@ -261,6 +263,7 @@ def do_notify(
                 filename,
                 host_parameters_cb,
                 get_http_proxy,
+                rules=rules,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -274,6 +277,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                rules=rules,
                 bulk_interval=bulk_interval,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -293,6 +297,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                rules=rules,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -308,6 +313,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                rules=rules,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -322,6 +328,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                rules=rules,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -340,6 +347,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                rules=rules,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -366,6 +374,7 @@ def notify_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    rules: Iterable[EventRule],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -429,6 +438,7 @@ def notify_notify(
             enriched_context,
             host_parameters_cb,
             get_http_proxy,
+            rules=rules,
             spooling=spooling,
             config_contacts=config_contacts,
             fallback_email=fallback_email,
@@ -445,6 +455,7 @@ def locally_deliver_raw_context(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    rules: Iterable[EventRule],
     spooling: Literal["local", "remote", "both", "off"],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -464,6 +475,7 @@ def locally_deliver_raw_context(
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             plugin_timeout=plugin_timeout,
+            rules=rules,
             analyse=analyse,
             dispatch=dispatch,
         )
@@ -482,6 +494,7 @@ def notification_replay_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
+    rules: Iterable[EventRule],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -499,6 +512,7 @@ def notification_replay_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        rules=rules,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
@@ -515,6 +529,7 @@ def notification_analyse_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
+    rules: Iterable[EventRule],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -532,6 +547,7 @@ def notification_analyse_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        rules=rules,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
@@ -549,6 +565,7 @@ def notification_test(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    rules: Iterable[EventRule],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -572,6 +589,7 @@ def notification_test(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        rules=rules,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
@@ -604,6 +622,7 @@ def notify_keepalive(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    rules: Iterable[EventRule],
     fallback_email: str,
     fallback_format: _FallbackFormat,
     config_contacts: ConfigContacts,
@@ -620,6 +639,7 @@ def notify_keepalive(
             host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
+            rules=rules,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             config_contacts=config_contacts,
@@ -656,6 +676,7 @@ def notify_rulebased(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    rules: Iterable[EventRule],
     spooling: Literal["local", "remote", "both", "off"],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -679,9 +700,7 @@ def notify_rulebased(
     num_rule_matches = 0
     rule_info = []
 
-    for rule in config.notification_rules + user_notification_rules(
-        config_contacts=config_contacts
-    ):
+    for rule in itertools.chain(rules, user_notification_rules(config_contacts=config_contacts)):
         contact_info = _get_contact_info_text(rule)
 
         why_not = rbn_match_rule(rule, enriched_context, analyse)
@@ -1796,6 +1815,7 @@ def handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    rules: Iterable[EventRule],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -1843,6 +1863,7 @@ def handle_spoolfile(
             raw_context,
             host_parameters_cb,
             get_http_proxy,
+            rules=rules,
             config_contacts=config_contacts,
             plugin_timeout=plugin_timeout,
             fallback_email=fallback_email,

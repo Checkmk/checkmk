@@ -35,12 +35,14 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
         section_store: SectionStore[SNMPRawDataSection],
         *,
         check_intervals: Mapping[SectionName, int | None],
+        host_check_interval: float,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
         self.check_intervals: Final = check_intervals
+        self.host_check_interval: Final = host_check_interval
         self.section_store: Final = section_store
         self.keep_outdated: Final = keep_outdated
         self._logger = logger
@@ -66,6 +68,10 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
             sections,
             cache_info,
             lookup_persist,
+            # persisted section is considered valid for one host check interval after fetch
+            # interval expires to ensure there is data available if the fetch interval
+            # expires during checking
+            lambda valid_until, now: valid_until + self.host_check_interval < now,
             now=now,
             keep_outdated=self.keep_outdated,
         )

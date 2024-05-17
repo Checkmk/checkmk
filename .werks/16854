@@ -1,0 +1,14 @@
+Title: SNMP: Fix missing data error when using 'Fetch intervals for SNMP sections'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1715661196
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+Users using the <code>Fetch intervals for SNMP sections</code> rule, would occasionally
+get a missing data error, after which the monitoring would return back to normal.
+
+The cause was SNMP section becoming expired during the checking. The problem is
+fixed by using the last fetched section data instead.

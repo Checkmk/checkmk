@@ -829,6 +829,7 @@ class TestSNMPParser:
                 logger=logging.Logger("test"),
             ),
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logging.Logger("test"),
         )
@@ -1184,6 +1185,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1209,6 +1211,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1233,6 +1236,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1259,6 +1263,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1294,6 +1299,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )
@@ -1323,6 +1329,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=False,
             logger=logger,
         )
@@ -1348,6 +1355,7 @@ class TestSNMPPersistedSectionHandling:
             HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
+            host_check_interval=60,
             keep_outdated=True,
             logger=logger,
         )

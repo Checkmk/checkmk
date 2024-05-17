@@ -226,7 +226,7 @@ def verify_virtualenv():
     if sys.prefix != str(repo_path() / ".venv"):
         raise SystemExit(
             "ERROR: Please load virtual environment first "
-            '(Use "pipenv shell" or configure direnv)'
+            f'(Use "pipenv shell" or configure direnv) ({sys.prefix})'
         )
 
 

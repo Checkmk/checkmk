@@ -2713,6 +2713,7 @@ class AutomationNotificationReplay(Automation):
             config_contacts=config.contacts,
             fallback_email=config.notification_fallback_email,
             fallback_format=config.notification_fallback_format,
+            plugin_timeout=config.notification_plugin_timeout,
             spooling=ConfigCache.notification_spooling(),
             logging_level=ConfigCache.notification_logging_level(),
         )
@@ -2744,6 +2745,7 @@ class AutomationNotificationAnalyse(Automation):
                 config_contacts=config.contacts,
                 fallback_email=config.notification_fallback_email,
                 fallback_format=config.notification_fallback_format,
+                plugin_timeout=config.notification_plugin_timeout,
                 spooling=ConfigCache.notification_spooling(),
                 logging_level=ConfigCache.notification_logging_level(),
             )
@@ -2776,6 +2778,7 @@ class AutomationNotificationTest(Automation):
                 config_contacts=config.contacts,
                 fallback_email=config.notification_fallback_email,
                 fallback_format=config.notification_fallback_format,
+                plugin_timeout=config.notification_plugin_timeout,
                 spooling=ConfigCache.notification_spooling(),
                 logging_level=ConfigCache.notification_logging_level(),
                 dispatch=dispatch == "True",

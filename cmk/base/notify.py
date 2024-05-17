@@ -219,6 +219,7 @@ def do_notify(
     fallback_email: str,
     fallback_format: _FallbackFormat,
     bulk_interval: int,
+    plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
 ) -> int | None:
@@ -262,6 +263,7 @@ def do_notify(
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
+                plugin_timeout=plugin_timeout,
                 spooling=spooling,
             )
 
@@ -273,6 +275,7 @@ def do_notify(
                 bulk_interval=bulk_interval,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
+                plugin_timeout=plugin_timeout,
                 config_contacts=config_contacts,
                 spooling=spooling,
                 logging_level=logging_level,
@@ -290,6 +293,7 @@ def do_notify(
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
+                plugin_timeout=plugin_timeout,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -303,6 +307,7 @@ def do_notify(
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
+                plugin_timeout=plugin_timeout,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -315,11 +320,14 @@ def do_notify(
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
+                plugin_timeout=plugin_timeout,
                 spooling=spooling,
                 logging_level=logging_level,
             )
         elif notify_mode == "send-bulks":
-            send_ripe_bulks(get_http_proxy, bulk_interval=bulk_interval)
+            send_ripe_bulks(
+                get_http_proxy, bulk_interval=bulk_interval, plugin_timeout=plugin_timeout
+            )
         else:
             notify_notify(
                 raw_context_from_env(os.environ),
@@ -329,6 +337,7 @@ def do_notify(
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
+                plugin_timeout=plugin_timeout,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -354,6 +363,7 @@ def notify_notify(
     fallback_email: str,
     fallback_format: _FallbackFormat,
     spooling: Literal["local", "remote", "both", "off"],
+    plugin_timeout: int,
     logging_level: int,
     analyse: bool = False,
     dispatch: bool = False,
@@ -415,6 +425,7 @@ def notify_notify(
             config_contacts=config_contacts,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
+            plugin_timeout=plugin_timeout,
             analyse=analyse,
             dispatch=dispatch,
         )
@@ -430,6 +441,7 @@ def locally_deliver_raw_context(
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
+    plugin_timeout: int,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
@@ -443,6 +455,7 @@ def locally_deliver_raw_context(
             config_contacts=config_contacts,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
+            plugin_timeout=plugin_timeout,
             analyse=analyse,
             dispatch=dispatch,
         )
@@ -464,6 +477,7 @@ def notification_replay_backlog(
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
+    plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
 ) -> None:
@@ -479,6 +493,7 @@ def notification_replay_backlog(
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
+        plugin_timeout=plugin_timeout,
         spooling=spooling,
         logging_level=logging_level,
     )
@@ -493,6 +508,7 @@ def notification_analyse_backlog(
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
+    plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
 ) -> NotifyAnalysisInfo | None:
@@ -508,6 +524,7 @@ def notification_analyse_backlog(
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
+        plugin_timeout=plugin_timeout,
         spooling=spooling,
         logging_level=logging_level,
         analyse=True,
@@ -523,6 +540,7 @@ def notification_test(
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
+    plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
     dispatch: bool,
@@ -544,6 +562,7 @@ def notification_test(
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
+        plugin_timeout=plugin_timeout,
         spooling=spooling,
         logging_level=logging_level,
         analyse=True,
@@ -574,6 +593,7 @@ def notify_keepalive(
     fallback_email: str,
     fallback_format: _FallbackFormat,
     config_contacts: ConfigContacts,
+    plugin_timeout: int,
     bulk_interval: int,
     spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
@@ -588,10 +608,16 @@ def notify_keepalive(
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             config_contacts=config_contacts,
+            plugin_timeout=plugin_timeout,
             spooling=spooling,
             logging_level=logging_level,
         ),
-        call_every_loop=partial(send_ripe_bulks, get_http_proxy, bulk_interval=bulk_interval),
+        call_every_loop=partial(
+            send_ripe_bulks,
+            get_http_proxy,
+            bulk_interval=bulk_interval,
+            plugin_timeout=plugin_timeout,
+        ),
         loop_interval=bulk_interval,
     )
 
@@ -618,6 +644,7 @@ def notify_rulebased(
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
+    plugin_timeout: int,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo:
@@ -670,6 +697,7 @@ def notify_rulebased(
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
+        plugin_timeout=plugin_timeout,
         spooling=spooling,
         analyse=analyse,
         dispatch=dispatch,
@@ -774,6 +802,7 @@ def _process_notifications(
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
+    plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
     analyse: bool,
     dispatch: bool = False,
@@ -807,7 +836,7 @@ def _process_notifications(
                     else rbn_split_plugin_context(plugin_context)
                 )
                 for context in plugin_contexts:
-                    call_notification_script(plugin_name, context)
+                    call_notification_script(plugin_name, context, plugin_timeout=plugin_timeout)
             else:
                 logger.info("No rule matched, would notify fallback contacts, but none configured")
     else:
@@ -857,7 +886,9 @@ def _process_notifications(
                             NotificationViaPlugin({"context": context, "plugin": plugin_name}),
                         )
                     else:
-                        call_notification_script(plugin_name, context)
+                        call_notification_script(
+                            plugin_name, context, plugin_timeout=plugin_timeout
+                        )
 
             except Exception as e:
                 if cmk.utils.debug.enabled():
@@ -1625,6 +1656,8 @@ def path_to_notification_script(plugin_name: NotificationPluginNameStr) -> str |
 def call_notification_script(
     plugin_name: NotificationPluginNameStr,
     plugin_context: NotificationContext,
+    *,
+    plugin_timeout: int,
     is_spoolfile: bool = False,
 ) -> int:
     log_to_history(
@@ -1656,7 +1689,7 @@ def call_notification_script(
         assert p.stdout is not None
 
         with Timeout(
-            config.notification_plugin_timeout,
+            plugin_timeout,
             message="Notification plug-in timed out",
         ) as timeout_guard:
             try:
@@ -1674,7 +1707,7 @@ def call_notification_script(
             except MKTimeout:
                 plugin_log(
                     "Notification plug-in did not finish within %d seconds. Terminating."
-                    % config.notification_plugin_timeout
+                    % plugin_timeout
                 )
                 p.kill()
 
@@ -1750,6 +1783,7 @@ def handle_spoolfile(
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
+    plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
@@ -1773,6 +1807,7 @@ def handle_spoolfile(
             return call_notification_script(
                 plugin_name=plugin_name,
                 plugin_context=plugin_context,
+                plugin_timeout=plugin_timeout,
                 is_spoolfile=True,
             )
 
@@ -1792,6 +1827,7 @@ def handle_spoolfile(
             host_parameters_cb,
             get_http_proxy,
             config_contacts=config_contacts,
+            plugin_timeout=plugin_timeout,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             spooling=spooling,
@@ -2106,14 +2142,17 @@ def find_bulks(only_ripe: bool, *, bulk_interval: int) -> NotifyBulks:
 
 
 def send_ripe_bulks(
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig], *, bulk_interval: int
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    *,
+    bulk_interval: int,
+    plugin_timeout: int,
 ) -> None:
     ripe = find_bulks(True, bulk_interval=bulk_interval)
     if ripe:
         logger.info("Sending out %d ripe bulk notifications", len(ripe))
         for bulk in ripe:
             try:
-                notify_bulk(bulk[0], bulk[-1], get_http_proxy)
+                notify_bulk(bulk[0], bulk[-1], get_http_proxy, plugin_timeout=plugin_timeout)
             except Exception:
                 if cmk.utils.debug.enabled():
                     raise
@@ -2124,6 +2163,8 @@ def notify_bulk(
     dirname: str,
     uuids: UUIDs,
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    *,
+    plugin_timeout: int,
 ) -> None:
     # pylint: disable=too-many-branches
     parts = dirname.split("/")
@@ -2180,7 +2221,9 @@ def notify_bulk(
                 line = "{}={}\n".format(varname, value.replace("\r", "").replace("\n", "\1"))
                 context_lines.append(line)
 
-        exitcode, output_lines = call_bulk_notification_script(plugin_name, context_lines)
+        exitcode, output_lines = call_bulk_notification_script(
+            plugin_name, context_lines, plugin_timeout=plugin_timeout
+        )
 
         for context in bulk_context:
             log_to_history(
@@ -2200,7 +2243,7 @@ def notify_bulk(
 
     # Repeat with unhandled uuids (due to different parameters)
     if unhandled_uuids:
-        notify_bulk(dirname, unhandled_uuids, get_http_proxy)
+        notify_bulk(dirname, unhandled_uuids, get_http_proxy, plugin_timeout=plugin_timeout)
 
     # Remove directory. Not necessary if emtpy
     try:
@@ -2211,7 +2254,7 @@ def notify_bulk(
 
 
 def call_bulk_notification_script(
-    plugin_name: NotificationPluginNameStr, context_lines: list[str]
+    plugin_name: NotificationPluginNameStr, context_lines: list[str], *, plugin_timeout: int
 ) -> tuple[NotificationResultCode, list[str]]:
     path = path_to_notification_script(plugin_name)
     if not path:
@@ -2232,12 +2275,12 @@ def call_bulk_notification_script(
         try:
             stdout, stderr = p.communicate(
                 input="".join(context_lines),
-                timeout=config.notification_plugin_timeout,
+                timeout=plugin_timeout,
             )
         except subprocess.TimeoutExpired:
             logger.info(
                 "Notification plug-in did not finish within %d seconds. Terminating.",
-                config.notification_plugin_timeout,
+                plugin_timeout,
             )
             p.kill()
             stdout, stderr = p.communicate()

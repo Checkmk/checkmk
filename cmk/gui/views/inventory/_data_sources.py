@@ -120,7 +120,9 @@ class RowTableInventory(ABCRowTable):
                 .get_tree(self._inventory_path.path)
                 .table.rows_with_retentions
             )
-        except inventory.LoadStructuredDataError:
+        except Exception as e:
+            if active_config.debug:
+                html.show_warning("%s" % e)
             user_errors.add(
                 MKUserError(
                     "load_inventory_tree",

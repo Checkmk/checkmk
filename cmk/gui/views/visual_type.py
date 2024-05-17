@@ -10,14 +10,15 @@ from livestatus import SiteId
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDPath
 
+from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.inventory import (
     get_status_data_via_livestatus,
     load_filtered_and_merged_tree,
     load_latest_delta_tree,
-    LoadStructuredDataError,
 )
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import (
@@ -146,7 +147,9 @@ def _has_inventory_tree(
     # do we really need to load the whole tree?
     try:
         inventory_tree = _get_inventory_tree(is_history, hostname, site_id)
-    except LoadStructuredDataError:
+    except Exception as e:
+        if active_config.debug:
+            html.show_warning("%s" % e)
         return False
 
     return bool(inventory_tree.get_tree(path))

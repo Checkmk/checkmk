@@ -487,10 +487,6 @@ class _CachedDeltaTreeLoader:
 #   '----------------------------------------------------------------------'
 
 
-class LoadStructuredDataError(MKException):
-    pass
-
-
 @request_memoize(maxsize=None)
 def _load_tree_from_file(
     *, tree_type: Literal["inventory", "status_data"], host_name: HostName | None
@@ -498,24 +494,17 @@ def _load_tree_from_file(
     """Load data of a host, cache it in the current HTTP request"""
     if not host_name:
         return ImmutableTree()
-
     if "/" in host_name:
         # just for security reasons
         return ImmutableTree()
-
-    try:
-        return load_tree(
-            Path(
-                cmk.utils.paths.inventory_output_dir
-                if tree_type == "inventory"
-                else cmk.utils.paths.status_data_dir
-            )
-            / host_name
+    return load_tree(
+        Path(
+            cmk.utils.paths.inventory_output_dir
+            if tree_type == "inventory"
+            else cmk.utils.paths.status_data_dir
         )
-    except Exception as e:
-        if active_config.debug:
-            html.show_warning("%s" % e)
-        raise LoadStructuredDataError()
+        / host_name
+    )
 
 
 @request_memoize()

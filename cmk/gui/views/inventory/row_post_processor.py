@@ -10,13 +10,11 @@ from typing import NamedTuple
 
 from cmk.utils.structured_data import ImmutableTree, SDKey, SDPath, SDValue
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.inventory import (
-    get_short_inventory_filepath,
-    load_filtered_and_merged_tree,
-    LoadStructuredDataError,
-)
+from cmk.gui.inventory import get_short_inventory_filepath, load_filtered_and_merged_tree
 from cmk.gui.painter.v0.base import Cell, JoinCell
 from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
@@ -81,7 +79,9 @@ def _add_inventory_data(rows: Rows) -> None:
 
         try:
             row["host_inventory"] = load_filtered_and_merged_tree(row)
-        except LoadStructuredDataError:
+        except Exception as e:
+            if active_config.debug:
+                html.show_warning("%s" % e)
             # The inventory row may be joined with other rows (perf-o-meter, ...).
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.

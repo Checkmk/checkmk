@@ -28,6 +28,7 @@ from cmk.utils.structured_data import (
 )
 
 import cmk.gui.inventory as inventory
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -261,7 +262,9 @@ def ajax_inv_render_tree() -> None:
         row = inventory.get_status_data_via_livestatus(site_id, host_name)
         try:
             tree = inventory.load_filtered_and_merged_tree(row)
-        except inventory.LoadStructuredDataError:
+        except Exception as e:
+            if active_config.debug:
+                html.show_warning("%s" % e)
             user_errors.add(
                 MKUserError(
                     "load_inventory_tree",

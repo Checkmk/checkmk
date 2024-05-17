@@ -2355,7 +2355,7 @@ def mode_check(
             ValueStoreManager(hostname), store_changes=not dry_run
         ) as value_store_manager,
     ):
-        console.debug(f"Checkmk version {cmk_version.__version__}\n")
+        console.debug(f"Checkmk version {cmk_version.__version__}")
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_plugins = CheckPluginMapper(
             config_cache,
@@ -2363,7 +2363,7 @@ def mode_check(
             clusters=hosts_config.clusters,
             rtc_package=None,
         )
-        with CPUTracker(lambda msg: console.debug(msg + "\n")) as tracker:
+        with CPUTracker(console.debug) as tracker:
             checks_result = execute_checkmk_checks(
                 hostname=hostname,
                 fetched=((f[0], f[1]) for f in fetched),

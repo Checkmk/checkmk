@@ -201,7 +201,7 @@ def scan_parents_of(
                 "-n",
                 ip,
             ]
-            console.debug("Running '%s'\n" % subprocess.list2cmdline(command))
+            console.debug(f"Running '{subprocess.list2cmdline(command)}'")
 
             procs.append(
                 (

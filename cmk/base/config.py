@@ -1506,7 +1506,7 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
 
     do_compile = not _is_plugin_precompiled(path, precompiled_path)
     if do_compile:
-        console.debug(f"Precompile {path} to {precompiled_path}\n")
+        console.debug(f"Precompile {path} to {precompiled_path}")
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
         # The original file is from the version so the calculated mode is world readable...

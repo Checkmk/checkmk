@@ -34,4 +34,4 @@ def verbose(text: str, *, file: TextIO | None = None) -> None:
 
 def debug(text: str, *, file: TextIO | None = None) -> None:
     if _console.isEnabledFor(logging.DEBUG):
-        print(text, end="", file=file, flush=True)
+        print(text, file=file, flush=True)

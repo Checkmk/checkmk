@@ -159,7 +159,7 @@ def automation_discovery(
 
         host_sections_by_host = group_by_host(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-            lambda msg: console.debug(msg + "\n"),
+            console.debug,
         )
         store_piggybacked_sections(host_sections_by_host)
         providers = make_providers(
@@ -667,12 +667,12 @@ def _get_services_result(
     skip = {plugin_name for plugin_name in candidates if ignore_plugin(host_name, plugin_name)}
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
-    console.debug("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
+    console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
     # The host name must be set for the host_name() calls commonly used to determine the
     # host name for get_host_values{_merged,} calls in the legacy checks.
 
     for plugin_name in skip:
-        console.debug(f"  Skip ignored check plug-in name {plugin_name!r}\n")
+        console.debug(f"  Skip ignored check plug-in name {plugin_name!r}")
 
     autocheck_store = AutochecksStore(host_name)
     try:

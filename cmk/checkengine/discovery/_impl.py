@@ -103,7 +103,7 @@ def execute_check_discovery(
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-        lambda msg: console.debug(msg + "\n"),
+        console.debug,
     )
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(

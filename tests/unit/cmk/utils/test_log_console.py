@@ -49,7 +49,7 @@ def test_verbose_default_stream_off(caplog: LogCaptureFixture, capsys: CaptureFi
 def test_debug_on(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(logging.DEBUG, logger="cmk.base")
     console.debug("hello")
-    assert ("hello", "") == capsys.readouterr()
+    assert ("hello\n", "") == capsys.readouterr()
 
 
 def test_debug_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:

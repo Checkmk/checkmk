@@ -5,10 +5,10 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.diskstat_io import _check_diskstat_io
 from cmk.base.plugins.agent_based.hpux_lunstats import parse_hpux_lunstats
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.collection.agent_based.diskstat_io import _check_diskstat_io
 from cmk.plugins.lib.diskstat import discovery_diskstat_generic, Section
 
 STRING_TABLE = [

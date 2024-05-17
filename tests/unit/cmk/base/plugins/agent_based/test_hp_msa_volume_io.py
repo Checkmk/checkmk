@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.diskstat_io import check_hp_msa_volume_io
+
+from cmk.plugins.collection.agent_based.diskstat_io import check_hp_msa_volume_io
 
 _SECTION = {
     "VMFS_01": {

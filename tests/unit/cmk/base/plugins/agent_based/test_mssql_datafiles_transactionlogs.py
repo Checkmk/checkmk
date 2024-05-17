@@ -9,8 +9,8 @@ import pytest
 
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.df_section import parse_df
 
+from cmk.plugins.collection.agent_based.df_section import parse_df
 from cmk.plugins.lib.df import BlocksSubsection, DfBlock, InodesSubsection
 
 SECTION_MSSQL = msdt.parse_mssql_datafiles(

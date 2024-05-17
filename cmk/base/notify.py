@@ -27,7 +27,7 @@ import traceback
 import uuid
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
-from functools import cache, partial
+from functools import partial
 from pathlib import Path
 from typing import Any, Callable, cast, Literal, overload, TypeAlias
 
@@ -215,6 +215,7 @@ def do_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     bulk_interval: int,
@@ -258,6 +259,7 @@ def do_notify(
                 filename,
                 host_parameters_cb,
                 get_http_proxy,
+                config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
                 spooling=spooling,
@@ -271,6 +273,7 @@ def do_notify(
                 bulk_interval=bulk_interval,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
+                config_contacts=config_contacts,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -284,6 +287,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
                 spooling=spooling,
@@ -296,6 +300,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
                 spooling=spooling,
@@ -307,6 +312,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
                 spooling=spooling,
@@ -320,6 +326,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
                 spooling=spooling,
@@ -343,6 +350,7 @@ def notify_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     spooling: Literal["local", "remote", "both", "off"],
@@ -404,6 +412,7 @@ def notify_notify(
             host_parameters_cb,
             get_http_proxy,
             spooling=spooling,
+            config_contacts=config_contacts,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             analyse=analyse,
@@ -418,6 +427,7 @@ def locally_deliver_raw_context(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     spooling: Literal["local", "remote", "both", "off"],
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     analyse: bool = False,
@@ -430,6 +440,7 @@ def locally_deliver_raw_context(
             host_parameters_cb,
             get_http_proxy,
             spooling=spooling,
+            config_contacts=config_contacts,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             analyse=analyse,
@@ -450,6 +461,7 @@ def notification_replay_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     spooling: Literal["local", "remote", "both", "off"],
@@ -464,6 +476,7 @@ def notification_replay_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
         spooling=spooling,
@@ -477,6 +490,7 @@ def notification_analyse_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     spooling: Literal["local", "remote", "both", "off"],
@@ -491,6 +505,7 @@ def notification_analyse_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
         spooling=spooling,
@@ -505,6 +520,7 @@ def notification_test(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     spooling: Literal["local", "remote", "both", "off"],
@@ -525,6 +541,7 @@ def notification_test(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
         spooling=spooling,
@@ -556,6 +573,7 @@ def notify_keepalive(
     *,
     fallback_email: str,
     fallback_format: _FallbackFormat,
+    config_contacts: ConfigContacts,
     bulk_interval: int,
     spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
@@ -569,6 +587,7 @@ def notify_keepalive(
             ensure_nagios=ensure_nagios,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
+            config_contacts=config_contacts,
             spooling=spooling,
             logging_level=logging_level,
         ),
@@ -596,6 +615,7 @@ def notify_rulebased(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     spooling: Literal["local", "remote", "both", "off"],
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     analyse: bool = False,
@@ -616,7 +636,9 @@ def notify_rulebased(
     num_rule_matches = 0
     rule_info = []
 
-    for rule in config.notification_rules + user_notification_rules():
+    for rule in config.notification_rules + user_notification_rules(
+        config_contacts=config_contacts
+    ):
         contact_info = _get_contact_info_text(rule)
 
         why_not = rbn_match_rule(rule, enriched_context, analyse)
@@ -635,6 +657,7 @@ def notify_rulebased(
                 notifications,
                 rule_info,
                 host_parameters_cb,
+                config_contacts=config_contacts,
                 fallback_email=fallback_email,
             )
 
@@ -644,6 +667,7 @@ def notify_rulebased(
         num_rule_matches,
         host_parameters_cb,
         get_http_proxy,
+        config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
         spooling=spooling,
@@ -667,9 +691,15 @@ def _create_notifications(
     rule_info: list[NotifyRuleInfo],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     *,
+    config_contacts: ConfigContacts,
     fallback_email: str,
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
-    contacts = rbn_rule_contacts(rule, enriched_context, fallback_email=fallback_email)
+    contacts = rbn_rule_contacts(
+        rule,
+        enriched_context,
+        config_contacts=config_contacts,
+        fallback_email=fallback_email,
+    )
     contactstxt = ", ".join(contacts)
 
     plugin_name, plugin_parameters = rule["notify_plugin"]
@@ -741,6 +771,7 @@ def _process_notifications(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     spooling: Literal["local", "remote", "both", "off"],
@@ -754,7 +785,9 @@ def _process_notifications(
         if num_rule_matches:
             logger.info("%d rules matched, but no notification has been created.", num_rule_matches)
         elif not analyse:
-            fallback_contacts = rbn_fallback_contacts(fallback_email=fallback_email)
+            fallback_contacts = rbn_fallback_contacts(
+                config_contacts=config_contacts, fallback_email=fallback_email
+            )
             if fallback_contacts:
                 logger.info("No rule matched, notifying fallback contacts")
                 fallback_emails = [fc["email"] for fc in fallback_contacts]
@@ -767,7 +800,7 @@ def _process_notifications(
                 plugin_context = create_plugin_context(
                     enriched_context, fallback_params, get_http_proxy
                 )
-                rbn_add_contact_information(plugin_context, fallback_contacts)
+                rbn_add_contact_information(plugin_context, fallback_contacts, config_contacts)
                 plugin_contexts = (
                     [plugin_context]
                     if fallback_params.get("disable_multiplexing")
@@ -797,7 +830,7 @@ def _process_notifications(
 
             try:
                 plugin_context = create_plugin_context(enriched_context, params, get_http_proxy)
-                rbn_add_contact_information(plugin_context, contacts)
+                rbn_add_contact_information(plugin_context, contacts, config_contacts)
 
                 # params can be a list (e.g. for custom notificatios)
                 split_contexts = (
@@ -842,13 +875,12 @@ def _process_notifications(
     return plugin_info
 
 
-def rbn_fallback_contacts(*, fallback_email: str) -> Contacts:
+def rbn_fallback_contacts(*, config_contacts: ConfigContacts, fallback_email: str) -> Contacts:
     fallback_contacts: Contacts = []
     if fallback_email:
         fallback_contacts.append(rbn_fake_email_contact(fallback_email))
 
-    contacts = cast(ConfigContacts, config.contacts)
-    for contact_name, contact in contacts.items():
+    for contact_name, contact in config_contacts.items():
         if contact.get("fallback_contact", False) and contact.get("email"):
             fallback_contact: Contact = {
                 "name": contact_name,
@@ -902,11 +934,10 @@ def rbn_finalize_plugin_parameters(
 # Create a table of all user specific notification rules. Important:
 # create deterministic order, so that rule analyses can depend on
 # rule indices
-def user_notification_rules() -> list[EventRule]:
+def user_notification_rules(config_contacts: ConfigContacts) -> list[EventRule]:
     user_rules = []
-    contactnames = sorted(config.contacts)
-    for contactname in contactnames:
-        contact = config.contacts[contactname]
+    for contactname in sorted(config_contacts):
+        contact = config_contacts[contactname]
         for rule in contact.get("notification_rules", []):
             # User notification rules always use allow_disable
             # This line here is for legacy reasons. Newer versions
@@ -922,7 +953,7 @@ def user_notification_rules() -> list[EventRule]:
             # WATO-only feature anyway...
             user_rules.append(rule)
 
-            authorized_sites = config.contacts[contactname].get("authorized_sites")
+            authorized_sites = contact.get("authorized_sites")
             if authorized_sites is not None and "match_site" not in rule:
                 rule["match_site"] = authorized_sites
 
@@ -940,7 +971,9 @@ def rbn_fake_email_contact(email: str) -> Contact:
 
 
 def rbn_add_contact_information(
-    plugin_context: NotificationContext, contacts: Contacts | ContactNames
+    plugin_context: NotificationContext,
+    contacts: Contacts | ContactNames,
+    config_contacts: ConfigContacts,
 ) -> None:
     # TODO tb: Make contacts a reliable type. Righ now contacts can be
     # a list of dicts or a frozenset of strings.
@@ -958,7 +991,7 @@ def rbn_add_contact_information(
                 "pager": "",
             }
         else:
-            contact_dict = config.contacts.get(contact, {"alias": contact})
+            contact_dict = config_contacts.get(contact, {"alias": contact})
             contact_dict["name"] = contact
 
         contact_dicts.append(contact_dict)
@@ -1224,19 +1257,26 @@ def rbn_rule_contacts(
     context: EventContext,
     *,
     fallback_email: str,
+    config_contacts: ConfigContacts,
 ) -> ContactNames:
     # pylint: disable=too-many-branches
     the_contacts = set()
     if rule.get("contact_object"):
-        the_contacts.update(rbn_object_contact_names(context, fallback_email=fallback_email))
+        the_contacts.update(
+            rbn_object_contact_names(
+                context, config_contacts=config_contacts, fallback_email=fallback_email
+            )
+        )
     if rule.get("contact_all"):
-        the_contacts.update(rbn_all_contacts())
+        the_contacts.update(rbn_all_contacts(config_contacts=config_contacts))
     if rule.get("contact_all_with_email"):
-        the_contacts.update(rbn_all_contacts(with_email=True))
+        the_contacts.update(rbn_all_contacts(config_contacts=config_contacts, with_email=True))
     if "contact_users" in rule:
         the_contacts.update(rule["contact_users"])
     if "contact_groups" in rule:
-        the_contacts.update(rbn_groups_contacts(rule["contact_groups"]))
+        the_contacts.update(
+            rbn_groups_contacts(rule["contact_groups"], config_contacts=config_contacts)
+        )
     if "contact_emails" in rule:
         the_contacts.update(rbn_emails_contacts(rule["contact_emails"]))
 
@@ -1245,7 +1285,7 @@ def rbn_rule_contacts(
         if contactname == fallback_email:
             contact: Contact | None = rbn_fake_email_contact(fallback_email)
         else:
-            contact = config.contacts.get(contactname)
+            contact = config_contacts.get(contactname)
 
         if contact:
             disable_notifications_opts = contact.get("disable_notifications", {})
@@ -1446,7 +1486,12 @@ def rbn_match_event_console(
     return None
 
 
-def rbn_object_contact_names(context: EventContext, *, fallback_email: str) -> list[ContactName]:
+def rbn_object_contact_names(
+    context: EventContext,
+    *,
+    config_contacts: ConfigContacts,
+    fallback_email: str,
+) -> list[ContactName]:
     commasepped = context.get("CONTACTS")
     if commasepped == "?":
         logger.info(
@@ -1454,7 +1499,10 @@ def rbn_object_contact_names(context: EventContext, *, fallback_email: str) -> l
             events.find_host_service_in_context(context),
         )
         return [
-            str(contact["name"]) for contact in rbn_fallback_contacts(fallback_email=fallback_email)
+            str(contact["name"])
+            for contact in rbn_fallback_contacts(
+                config_contacts=config_contacts, fallback_email=fallback_email
+            )
         ]
 
     if commasepped:
@@ -1463,33 +1511,37 @@ def rbn_object_contact_names(context: EventContext, *, fallback_email: str) -> l
     return []
 
 
-def rbn_all_contacts(with_email: bool = False) -> list[ContactName]:
+def rbn_all_contacts(
+    *, config_contacts: ConfigContacts, with_email: bool = False
+) -> list[ContactName]:
     if not with_email:
-        return list(config.contacts)  # We have that via our main.mk contact definitions!
+        return list(config_contacts)  # We have that via our main.mk contact definitions!
 
-    return [contact_id for (contact_id, contact) in config.contacts.items() if contact.get("email")]
+    return [contact_id for (contact_id, contact) in config_contacts.items() if contact.get("email")]
 
 
-@cache
-def _contactgroup_members() -> Mapping[ContactgroupName, set[ContactName]]:
+def _contactgroup_members(
+    *,
+    config_contacts: ConfigContacts,
+) -> Mapping[ContactgroupName, set[ContactName]]:
     """Get the members of all contact groups
 
     Is computed once  for the process lifetime since it's either a short lived process or in case of
     the Micro Core notify helper, it is restarted once a new configuration is applied to the core.
     """
     members: dict[ContactgroupName, set[ContactName]] = {}
-    for name, contact in config.contacts.items():
+    for name, contact in config_contacts.items():
         for group_name in contact.get("contactgroups", []):
             members.setdefault(group_name, set()).add(name)
     return members
 
 
-def rbn_groups_contacts(groups: list[str]) -> set[str]:
+def rbn_groups_contacts(groups: list[str], *, config_contacts: ConfigContacts) -> set[str]:
     """Return all members of the given groups"""
     if not groups:
         return set()  # optimization only
 
-    members = _contactgroup_members()
+    members = _contactgroup_members(config_contacts=config_contacts)
     return {m for group in groups for m in members.get(group, [])}
 
 
@@ -1695,6 +1747,7 @@ def handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
     spooling: Literal["local", "remote", "both", "off"],
@@ -1738,6 +1791,7 @@ def handle_spoolfile(
             raw_context,
             host_parameters_cb,
             get_http_proxy,
+            config_contacts=config_contacts,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             spooling=spooling,

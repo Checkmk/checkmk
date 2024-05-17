@@ -214,6 +214,7 @@ def do_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
+    fallback_email: str,
     spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> int | None:
@@ -254,6 +255,7 @@ def do_notify(
                 filename,
                 host_parameters_cb,
                 get_http_proxy,
+                fallback_email=fallback_email,
                 spooling=spooling,
             )
 
@@ -262,6 +264,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                fallback_email=fallback_email,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -275,6 +278,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                fallback_email=fallback_email,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -285,6 +289,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                fallback_email=fallback_email,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -294,6 +299,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                fallback_email=fallback_email,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -305,6 +311,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                fallback_email=fallback_email,
                 spooling=spooling,
                 logging_level=logging_level,
             )
@@ -326,6 +333,7 @@ def notify_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    fallback_email: str,
     spooling: Literal["local", "remote", "both"],
     logging_level: int,
     analyse: bool = False,
@@ -385,6 +393,7 @@ def notify_notify(
             host_parameters_cb,
             get_http_proxy,
             spooling=spooling,
+            fallback_email=fallback_email,
             analyse=analyse,
             dispatch=dispatch,
         )
@@ -397,6 +406,7 @@ def locally_deliver_raw_context(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     spooling: Literal["local", "remote", "both"],
+    fallback_email: str,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
@@ -407,6 +417,7 @@ def locally_deliver_raw_context(
             host_parameters_cb,
             get_http_proxy,
             spooling=spooling,
+            fallback_email=fallback_email,
             analyse=analyse,
             dispatch=dispatch,
         )
@@ -425,6 +436,7 @@ def notification_replay_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
+    fallback_email: str,
     spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> None:
@@ -437,6 +449,7 @@ def notification_replay_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        fallback_email=fallback_email,
         spooling=spooling,
         logging_level=logging_level,
     )
@@ -448,6 +461,7 @@ def notification_analyse_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
+    fallback_email: str,
     spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> NotifyAnalysisInfo | None:
@@ -460,6 +474,7 @@ def notification_analyse_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        fallback_email=fallback_email,
         spooling=spooling,
         logging_level=logging_level,
         analyse=True,
@@ -472,6 +487,7 @@ def notification_test(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    fallback_email: str,
     spooling: Literal["local", "remote", "both"],
     logging_level: int,
     dispatch: bool,
@@ -490,6 +506,7 @@ def notification_test(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        fallback_email=fallback_email,
         spooling=spooling,
         logging_level=logging_level,
         analyse=True,
@@ -517,6 +534,7 @@ def notify_keepalive(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    fallback_email: str,
     spooling: Literal["local", "remote", "both"],
     logging_level: int,
 ) -> None:
@@ -527,6 +545,7 @@ def notify_keepalive(
             host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
+            fallback_email=fallback_email,
             spooling=spooling,
             logging_level=logging_level,
         ),
@@ -554,6 +573,7 @@ def notify_rulebased(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     spooling: Literal["local", "remote", "both"],
+    fallback_email: str,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo:
@@ -591,6 +611,7 @@ def notify_rulebased(
                 notifications,
                 rule_info,
                 host_parameters_cb,
+                fallback_email=fallback_email,
             )
 
     plugin_info = _process_notifications(
@@ -599,6 +620,7 @@ def notify_rulebased(
         num_rule_matches,
         host_parameters_cb,
         get_http_proxy,
+        fallback_email=fallback_email,
         spooling=spooling,
         analyse=analyse,
         dispatch=dispatch,
@@ -619,8 +641,10 @@ def _create_notifications(
     notifications: Notifications,
     rule_info: list[NotifyRuleInfo],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    *,
+    fallback_email: str,
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
-    contacts = rbn_rule_contacts(rule, enriched_context)
+    contacts = rbn_rule_contacts(rule, enriched_context, fallback_email=fallback_email)
     contactstxt = ", ".join(contacts)
 
     plugin_name, plugin_parameters = rule["notify_plugin"]
@@ -692,6 +716,7 @@ def _process_notifications(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    fallback_email: str,
     spooling: Literal["local", "remote", "both"],
     analyse: bool,
     dispatch: bool = False,
@@ -703,7 +728,7 @@ def _process_notifications(
         if num_rule_matches:
             logger.info("%d rules matched, but no notification has been created.", num_rule_matches)
         elif not analyse:
-            fallback_contacts = rbn_fallback_contacts()
+            fallback_contacts = rbn_fallback_contacts(fallback_email=fallback_email)
             if fallback_contacts:
                 logger.info("No rule matched, notifying fallback contacts")
                 fallback_emails = [fc["email"] for fc in fallback_contacts]
@@ -792,10 +817,10 @@ def _process_notifications(
     return plugin_info
 
 
-def rbn_fallback_contacts() -> Contacts:
+def rbn_fallback_contacts(*, fallback_email: str) -> Contacts:
     fallback_contacts: Contacts = []
-    if config.notification_fallback_email:
-        fallback_contacts.append(rbn_fake_email_contact(config.notification_fallback_email))
+    if fallback_email:
+        fallback_contacts.append(rbn_fake_email_contact(fallback_email))
 
     contacts = cast(ConfigContacts, config.contacts)
     for contact_name, contact in contacts.items():
@@ -1165,13 +1190,16 @@ def rbn_match_event(
     )
 
 
-def rbn_rule_contacts(  # pylint: disable=too-many-branches
+def rbn_rule_contacts(
     rule: EventRule,
     context: EventContext,
+    *,
+    fallback_email: str,
 ) -> ContactNames:
+    # pylint: disable=too-many-branches
     the_contacts = set()
     if rule.get("contact_object"):
-        the_contacts.update(rbn_object_contact_names(context))
+        the_contacts.update(rbn_object_contact_names(context, fallback_email=fallback_email))
     if rule.get("contact_all"):
         the_contacts.update(rbn_all_contacts())
     if rule.get("contact_all_with_email"):
@@ -1185,8 +1213,8 @@ def rbn_rule_contacts(  # pylint: disable=too-many-branches
 
     all_enabled = []
     for contactname in the_contacts:
-        if contactname == config.notification_fallback_email:
-            contact: Contact | None = rbn_fake_email_contact(config.notification_fallback_email)
+        if contactname == fallback_email:
+            contact: Contact | None = rbn_fake_email_contact(fallback_email)
         else:
             contact = config.contacts.get(contactname)
 
@@ -1389,14 +1417,16 @@ def rbn_match_event_console(
     return None
 
 
-def rbn_object_contact_names(context: EventContext) -> list[ContactName]:
+def rbn_object_contact_names(context: EventContext, *, fallback_email: str) -> list[ContactName]:
     commasepped = context.get("CONTACTS")
     if commasepped == "?":
         logger.info(
             "Warning: Contacts of %s cannot be determined. Using fallback contacts",
             events.find_host_service_in_context(context),
         )
-        return [str(contact["name"]) for contact in rbn_fallback_contacts()]
+        return [
+            str(contact["name"]) for contact in rbn_fallback_contacts(fallback_email=fallback_email)
+        ]
 
     if commasepped:
         return commasepped.split(",")
@@ -1635,6 +1665,7 @@ def handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    fallback_email: str,
     spooling: Literal["local", "remote", "both"],
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
@@ -1676,6 +1707,7 @@ def handle_spoolfile(
             raw_context,
             host_parameters_cb,
             get_http_proxy,
+            fallback_email=fallback_email,
             spooling=spooling,
         )
         # TODO: It is a bug that we don't transport result information and monitoring history

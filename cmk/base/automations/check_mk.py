@@ -2666,6 +2666,7 @@ class AutomationNotificationReplay(Automation):
             config.get_http_proxy,
             ensure_nagios,
             int(nr),
+            fallback_email=config.notification_fallback_email,
             spooling=ConfigCache.notification_spooling(),
             logging_level=ConfigCache.notification_logging_level(),
         )
@@ -2694,6 +2695,7 @@ class AutomationNotificationAnalyse(Automation):
                 config.get_http_proxy,
                 ensure_nagios,
                 int(nr),
+                fallback_email=config.notification_fallback_email,
                 spooling=ConfigCache.notification_spooling(),
                 logging_level=ConfigCache.notification_logging_level(),
             )
@@ -2723,6 +2725,7 @@ class AutomationNotificationTest(Automation):
                 ),
                 config.get_http_proxy,
                 ensure_nagios,
+                fallback_email=config.notification_fallback_email,
                 spooling=ConfigCache.notification_spooling(),
                 logging_level=ConfigCache.notification_logging_level(),
                 dispatch=dispatch == "True",

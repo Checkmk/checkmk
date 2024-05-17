@@ -17,6 +17,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     FixedValue,
     Integer,
+    migrate_to_password,
     Password,
     String,
     validators,
@@ -89,7 +90,9 @@ def smtp() -> Dictionary:
                         ),
                         "password": DictElement(
                             required=True,
-                            parameter_form=Password(title=Title("Password")),
+                            parameter_form=Password(
+                                title=Title("Password"), migrate=migrate_to_password
+                            ),
                         ),
                     },
                     migrate=_tuple_do_dict_with_keys("username", "password"),
@@ -116,7 +119,9 @@ def _oauth2_options() -> tuple[Sequence[CascadingSingleChoiceElement], Mapping[s
                         ),
                         "client_secret": DictElement(
                             required=True,
-                            parameter_form=Password(title=Title("Client Secret")),
+                            parameter_form=Password(
+                                title=Title("Client Secret"), migrate=migrate_to_password
+                            ),
                         ),
                         "tenant_id": DictElement(
                             required=True,
@@ -210,7 +215,9 @@ def common(protocol: str, port_defaults: str) -> Dictionary:
                                     ),
                                     "password": DictElement(
                                         required=True,
-                                        parameter_form=Password(title=Title("Password")),
+                                        parameter_form=Password(
+                                            title=Title("Password"), migrate=migrate_to_password
+                                        ),
                                     ),
                                 },
                                 migrate=_tuple_do_dict_with_keys("username", "password"),

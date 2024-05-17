@@ -1744,6 +1744,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         ensure_nagios=ensure_nagios,
         bulk_interval=config.notification_bulk_interval,
         fallback_email=config.notification_fallback_email,
+        fallback_format=config.notification_fallback_format,
         spooling=ConfigCache.notification_spooling(),
         logging_level=ConfigCache.notification_logging_level(),
     )

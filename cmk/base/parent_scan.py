@@ -265,7 +265,7 @@ def scan_parents_of(
 
         if len(lines) < 2:
             if not silent:
-                console.error(f"{host}: {' '.join(lines)}\n", file=sys.stderr)
+                console.error(f"{host}: {' '.join(lines)}", file=sys.stderr)
             gateways.append(
                 GatewayResult(
                     None,
@@ -302,13 +302,13 @@ def scan_parents_of(
             else:
                 if not silent:
                     console.error(
-                        f"{host}: invalid output line from traceroute: '{line}'\n",
+                        f"{host}: invalid output line from traceroute: '{line}'",
                         file=sys.stderr,
                     )
 
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."
-            console.error(f"{host}: {error}\n", file=sys.stderr)
+            console.error(f"{host}: {error}", file=sys.stderr)
             gateways.append(GatewayResult(None, "garbled", 0, error))
             dot(tty.red)
             continue
@@ -351,7 +351,7 @@ def scan_parents_of(
         if not this_route:
             error = "No usable routing information"
             if not silent:
-                console.error(f"{host}: {error}\n", file=sys.stderr)
+                console.error(f"{host}: {error}", file=sys.stderr)
             gateways.append(GatewayResult(None, "notfound", 0, error))
             dot(tty.blue)
             continue

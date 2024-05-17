@@ -488,7 +488,7 @@ def load(
         ):
             # TODO: Raise an exception
             console.error(
-                f"Error in configuration: duplicate hosts: {', '.join(duplicates)}\n",
+                f"Error in configuration: duplicate hosts: {', '.join(duplicates)}",
                 file=sys.stderr,
             )
             sys.exit(3)
@@ -650,7 +650,7 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
             if cmk.utils.debug.enabled():
                 raise
             if sys.stderr.isatty():
-                console.error(f"Cannot read in configuration file {path}: {e}\n", file=sys.stderr)
+                console.error(f"Cannot read in configuration file {path}: {e}", file=sys.stderr)
             sys.exit(1)
 
     # Cleanup global helper vars
@@ -1411,7 +1411,7 @@ def load_checks(
 
         except Exception as e:
             ignored_plugins_errors.append(
-                f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!\n"
+                f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!"
             )
             if cmk.utils.debug.enabled():
                 raise
@@ -1431,7 +1431,7 @@ def load_checks(
             continue
         ignored_plugins_errors.append(
             f"Ignoring outdated plug-in {k!r}: Format no longer supported"
-            " -- this API is deprecated!\n"
+            " -- this API is deprecated!"
         )
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
@@ -1547,7 +1547,7 @@ def _precompiled_plugin_path(path: str) -> str:
 
 AUTO_MIGRATION_ERR_MSG = (
     "Failed to auto-migrate legacy plug-in to %s: %s\n"
-    "Please refer to Werk 10601 for more information.\n"
+    "Please refer to Werk 10601 for more information."
 )
 
 

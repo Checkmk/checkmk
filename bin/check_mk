@@ -68,7 +68,7 @@ class CrashReport(ABCCrashReport):
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
 except getopt.GetoptError as err:
-    console.error(f"ERROR: {err}\n\n", file=sys.stderr)
+    console.error(f"ERROR: {err}\n", file=sys.stderr)
     if help_function is None:
         raise TypeError()
     help_function()

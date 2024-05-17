@@ -150,7 +150,7 @@ def _discover_host_labels_for_source_type(
                     raise
                 if on_error is OnError.WARN:
                     console.error(
-                        f"Host label discovery of '{section_name}' failed: {exc}\n",
+                        f"Host label discovery of '{section_name}' failed: {exc}",
                         file=sys.stderr,
                     )
 

@@ -14,7 +14,7 @@ _console = logging.getLogger("cmk.base.console")
 
 def error(text: str, *, file: TextIO | None = None) -> None:
     if _console.isEnabledFor(logging.ERROR):
-        print(text, end="", file=file, flush=True)
+        print(text, file=file, flush=True)
 
 
 def warning(text: str, *, file: TextIO | None = None) -> None:

@@ -42,7 +42,7 @@ _ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | Inve
 def load_all_plugins() -> list[str]:
     errors = []
     for plugin, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
-        errors.append(f"Error in agent based plug-in {plugin}: {exception}\n")
+        errors.append(f"Error in agent based plug-in {plugin}: {exception}")
         if cmk.utils.debug.enabled():
             raise exception
 

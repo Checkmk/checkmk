@@ -117,7 +117,7 @@ def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: Config
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error(f"Error precompiling checks for host {hostname}: {e}\n", file=sys.stderr)
+            console.error(f"Error precompiling checks for host {hostname}: {e}", file=sys.stderr)
             sys.exit(5)
 
 

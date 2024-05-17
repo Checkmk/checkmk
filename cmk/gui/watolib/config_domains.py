@@ -192,7 +192,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         return config_domain_name.LIVEPROXY
 
     @classmethod
-    def enabled(cls):
+    def enabled(cls) -> bool:
         return (
             cmk_version.edition() is not cmk_version.Edition.CRE
             and active_config.liveproxyd_enabled

@@ -11,7 +11,7 @@ import pprint
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
@@ -84,7 +84,7 @@ class ABCConfigDomain(abc.ABC):
         return config_domain_registry[ident]
 
     @classmethod
-    def enabled(cls) -> Literal[True]:
+    def enabled(cls) -> bool:
         return True
 
     @classmethod

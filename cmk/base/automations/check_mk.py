@@ -2715,6 +2715,7 @@ class AutomationNotificationReplay(Automation):
             fallback_format=config.notification_fallback_format,
             plugin_timeout=config.notification_plugin_timeout,
             spooling=ConfigCache.notification_spooling(),
+            backlog_size=config.notification_backlog,
             logging_level=ConfigCache.notification_logging_level(),
         )
         return NotificationReplayResult()
@@ -2747,6 +2748,7 @@ class AutomationNotificationAnalyse(Automation):
                 fallback_format=config.notification_fallback_format,
                 plugin_timeout=config.notification_plugin_timeout,
                 spooling=ConfigCache.notification_spooling(),
+                backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
             )
         )
@@ -2780,6 +2782,7 @@ class AutomationNotificationTest(Automation):
                 fallback_format=config.notification_fallback_format,
                 plugin_timeout=config.notification_plugin_timeout,
                 spooling=ConfigCache.notification_spooling(),
+                backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
                 dispatch=dispatch == "True",
             )

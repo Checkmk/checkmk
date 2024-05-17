@@ -221,6 +221,7 @@ def do_notify(
     bulk_interval: int,
     plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
+    backlog_size: int,
     logging_level: int,
 ) -> int | None:
     # pylint: disable=too-many-branches
@@ -265,6 +266,7 @@ def do_notify(
                 fallback_format=fallback_format,
                 plugin_timeout=plugin_timeout,
                 spooling=spooling,
+                backlog_size=backlog_size,
             )
 
         if keepalive and keepalive.enabled():
@@ -278,6 +280,7 @@ def do_notify(
                 plugin_timeout=plugin_timeout,
                 config_contacts=config_contacts,
                 spooling=spooling,
+                backlog_size=backlog_size,
                 logging_level=logging_level,
             )
         elif notify_mode == "replay":
@@ -295,6 +298,7 @@ def do_notify(
                 fallback_format=fallback_format,
                 plugin_timeout=plugin_timeout,
                 spooling=spooling,
+                backlog_size=backlog_size,
                 logging_level=logging_level,
             )
         elif notify_mode == "test":
@@ -309,6 +313,7 @@ def do_notify(
                 fallback_format=fallback_format,
                 plugin_timeout=plugin_timeout,
                 spooling=spooling,
+                backlog_size=backlog_size,
                 logging_level=logging_level,
             )
         elif notify_mode == "stdin":
@@ -322,6 +327,7 @@ def do_notify(
                 fallback_format=fallback_format,
                 plugin_timeout=plugin_timeout,
                 spooling=spooling,
+                backlog_size=backlog_size,
                 logging_level=logging_level,
             )
         elif notify_mode == "send-bulks":
@@ -339,6 +345,7 @@ def do_notify(
                 fallback_format=fallback_format,
                 plugin_timeout=plugin_timeout,
                 spooling=spooling,
+                backlog_size=backlog_size,
                 logging_level=logging_level,
             )
 
@@ -364,6 +371,7 @@ def notify_notify(
     fallback_format: _FallbackFormat,
     spooling: Literal["local", "remote", "both", "off"],
     plugin_timeout: int,
+    backlog_size: int,
     logging_level: int,
     analyse: bool = False,
     dispatch: bool = False,
@@ -386,7 +394,7 @@ def notify_notify(
     )
 
     if not analyse:
-        store_notification_backlog(raw_context)
+        store_notification_backlog(raw_context, backlog_size=backlog_size)
 
     logger.info("----------------------------------------------------------------------")
     if analyse:
@@ -479,6 +487,7 @@ def notification_replay_backlog(
     fallback_format: _FallbackFormat,
     plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
+    backlog_size: int,
     logging_level: int,
 ) -> None:
     global notify_mode
@@ -495,6 +504,7 @@ def notification_replay_backlog(
         fallback_format=fallback_format,
         plugin_timeout=plugin_timeout,
         spooling=spooling,
+        backlog_size=backlog_size,
         logging_level=logging_level,
     )
 
@@ -510,6 +520,7 @@ def notification_analyse_backlog(
     fallback_format: _FallbackFormat,
     plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
+    backlog_size: int,
     logging_level: int,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
@@ -526,6 +537,7 @@ def notification_analyse_backlog(
         fallback_format=fallback_format,
         plugin_timeout=plugin_timeout,
         spooling=spooling,
+        backlog_size=backlog_size,
         logging_level=logging_level,
         analyse=True,
     )
@@ -542,6 +554,7 @@ def notification_test(
     fallback_format: _FallbackFormat,
     plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
+    backlog_size: int,
     logging_level: int,
     dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
@@ -564,6 +577,7 @@ def notification_test(
         fallback_format=fallback_format,
         plugin_timeout=plugin_timeout,
         spooling=spooling,
+        backlog_size=backlog_size,
         logging_level=logging_level,
         analyse=True,
         dispatch=dispatch,
@@ -596,6 +610,7 @@ def notify_keepalive(
     plugin_timeout: int,
     bulk_interval: int,
     spooling: Literal["local", "remote", "both", "off"],
+    backlog_size: int,
     logging_level: int,
 ) -> None:
     cmk.base.utils.register_sigint_handler()
@@ -610,6 +625,7 @@ def notify_keepalive(
             config_contacts=config_contacts,
             plugin_timeout=plugin_timeout,
             spooling=spooling,
+            backlog_size=backlog_size,
             logging_level=logging_level,
         ),
         call_every_loop=partial(
@@ -1785,6 +1801,7 @@ def handle_spoolfile(
     fallback_format: _FallbackFormat,
     plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
+    backlog_size: int,
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
@@ -1821,7 +1838,7 @@ def handle_spoolfile(
             events.find_host_service_in_context(raw_context),
         )
 
-        store_notification_backlog(raw_context)
+        store_notification_backlog(raw_context, backlog_size=backlog_size)
         locally_deliver_raw_context(
             raw_context,
             host_parameters_cb,
@@ -2313,9 +2330,9 @@ def call_bulk_notification_script(
 #   '----------------------------------------------------------------------'
 
 
-def store_notification_backlog(raw_context: EventContext) -> None:
+def store_notification_backlog(raw_context: EventContext, *, backlog_size: int) -> None:
     path = notification_logdir + "/backlog.mk"
-    if not config.notification_backlog:
+    if not backlog_size:
         if os.path.exists(path):
             os.remove(path)
         return
@@ -2324,7 +2341,7 @@ def store_notification_backlog(raw_context: EventContext) -> None:
         path,
         default=[],
         lock=True,
-    )[: config.notification_backlog - 1]
+    )[: backlog_size - 1]
     store.save_object_to_file(path, [raw_context] + backlog, pretty=False)
 
 

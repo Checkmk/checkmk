@@ -1681,6 +1681,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         fallback_email=config.notification_fallback_email,
         fallback_format=config.notification_fallback_format,
         spooling=ConfigCache.notification_spooling(),
+        backlog_size=config.notification_backlog,
         logging_level=ConfigCache.notification_logging_level(),
     )
 

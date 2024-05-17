@@ -62,6 +62,17 @@ class HeaderNotification:
 
 
 @dataclass
+class HeaderNotificationSingleLine:
+    roles: Sequence[str]
+    subject: str
+    message: str
+
+    @property
+    def message_html(self) -> str:
+        return f"<b>{self.subject}</b> {self.message}"
+
+
+@dataclass
 class ActivationBlock:
     subject: str
     message_lines: Sequence[str]
@@ -79,7 +90,7 @@ class ActivationBlock:
 
 @dataclass
 class UserEffect:
-    header: HeaderNotification | None
+    header: HeaderNotification | HeaderNotificationSingleLine | None
     email: EmailNotification | None
     block: ActivationBlock | None
 

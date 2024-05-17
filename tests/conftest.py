@@ -223,7 +223,7 @@ def pytest_cmdline_main(config):
 
 
 def verify_virtualenv():
-    if sys.prefix != str(repo_path() / ".venv"):
+    if not sys.prefix.endswith("/.venv"):
         raise SystemExit(
             "ERROR: Please load virtual environment first "
             f'(Use "pipenv shell" or configure direnv) ({sys.prefix})'

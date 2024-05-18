@@ -14,7 +14,7 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
 from typing import NamedTuple
 
 from cmk.agent_based.v1.type_defs import StringTable
@@ -49,7 +49,7 @@ class FjdaryeItem(NamedTuple):
 SectionFjdaryeItem = Mapping[str, FjdaryeItem]
 
 
-def parse_fjdarye_item(string_table: list[StringTable]) -> SectionFjdaryeItem:
+def parse_fjdarye_item(string_table: Sequence[StringTable]) -> SectionFjdaryeItem:
     fjdarye_items: MutableMapping[str, FjdaryeItem] = {}
 
     for device in string_table:

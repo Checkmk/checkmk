@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import logging
 import sys
 from collections.abc import Sequence
+
+import requests
 
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
@@ -13,7 +16,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.v0_unstable.request_helper import HTTPSAuthRequester, Requester
 
 LOGGING = logging.getLogger("agent_prism")
 
@@ -40,127 +42,120 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def output_containers(requester: Requester) -> None:
-    LOGGING.debug("do request..")
-    obj = requester.get("containers")
-    LOGGING.debug("got %d containers", len(obj["entities"]))
+def output_containers(session: requests.Session, url: str) -> None:
+    obj = session.get(url + "/containers", verify=False, timeout=5)
     with SectionWriter("prism_containers") as w:
-        w.append_json(obj)
+        w.append_json(obj.json())
 
 
-def output_alerts(requester: Requester) -> None:
-    LOGGING.debug("do request..")
-    obj = requester.get(
-        "alerts",
-        parameters={"resolved": "false", "acknowledged": "false"},
+def output_alerts(session: requests.Session, url: str) -> None:
+    obj = session.get(
+        url + "/alerts",
+        params={"resolved": "false", "acknowledged": "false"},
+        verify=False,
+        timeout=5,
     )
-    LOGGING.debug("got %d alerts", len(obj["entities"]))
     with SectionWriter("prism_alerts") as w:
-        w.append_json(obj)
+        w.append_json(obj.json())
 
 
-def output_cluster(requester: Requester) -> None:
-    LOGGING.debug("do request..")
-    obj = requester.get("cluster")
-    LOGGING.debug("got %d keys", len(obj.keys()))
+def output_cluster(session: requests.Session, url: str) -> None:
+    obj = session.get(url + "/cluster", verify=False, timeout=5)
     with SectionWriter("prism_info") as w:
-        w.append_json(obj)
+        w.append_json(obj.json())
 
 
-def output_storage_pools(requester: Requester) -> None:
-    LOGGING.debug("do request..")
-    obj = requester.get("storage_pools")
-    LOGGING.debug("got %d entities", len(obj["entities"]))
+def output_storage_pools(session: requests.Session, url: str) -> None:
+    obj = session.get(url + "/storage_pools", verify=False, timeout=5)
     with SectionWriter("prism_storage_pools") as w:
-        w.append_json(obj)
+        w.append_json(obj.json())
 
 
-def output_vms(requester: Requester) -> None:
-    obj = requester.get("vms")
+def output_vms(session: requests.Session, url: str) -> None:
+    obj = session.get(url + "/vms", verify=False, timeout=5)
     with SectionWriter("prism_vms") as w:
-        w.append_json(obj)
-    for element in obj.get("entities"):
+        w.append_json(obj.json())
+    for element in obj.json().get("entities"):
         with ConditionalPiggybackSection(element.get("vmName")):
             with SectionWriter("prism_vm") as w:
                 w.append_json(element)
 
 
-def output_hosts(requester: Requester) -> None:
-    obj = requester.get("hosts")
+def output_hosts(session: requests.Session, url: str) -> None:
+    obj = session.get(url + "/hosts", verify=False, timeout=5)
     with SectionWriter("prism_hosts") as w:
-        w.append_json(obj)
-    for element in obj.get("entities"):
+        w.append_json(obj.json())
+    for element in obj.json().get("entities"):
         with ConditionalPiggybackSection(element.get("name")):
             with SectionWriter("prism_host") as w:
                 w.append_json(element)
-            networks = requester.get("hosts/%s/host_nics" % element.get("uuid"))
+            networks = session.get(
+                url + f"/hosts/{element.get("uuid")}/host_nics", verify=False, timeout=5
+            )
             with SectionWriter("prism_host_networks") as w:
-                w.append_json(networks)
+                w.append_json(networks.json())
 
 
-def output_protection(requester: Requester) -> None:
-    obj = requester.get("protection_domains")
+def output_protection(session: requests.Session, url: str) -> None:
+    obj = session.get(url + "/protection_domains", verify=False, timeout=5)
     with SectionWriter("prism_protection_domains") as w:
-        w.append_json(obj)
+        w.append_json(obj.json())
 
 
-def output_support(requester: Requester) -> None:
-    obj = requester.get("cluster/remote_support")
+def output_support(session: requests.Session, url: str) -> None:
+    obj = session.get(url + "/cluster/remote_support", verify=False, timeout=5)
     with SectionWriter("prism_remote_support") as w:
-        w.append_json(obj)
+        w.append_json(obj.json())
 
 
-def output_ha(requester: Requester) -> None:
-    obj = requester.get("ha")
+def output_ha(session: requests.Session, url: str) -> None:
+    obj = session.get(url + "/ha", verify=False, timeout=5)
     with SectionWriter("prism_ha") as w:
-        w.append_json(obj)
+        w.append_json(obj.json())
 
 
 def agent_prism_main(args: Args) -> int:
     """Establish a connection to a Prism server and process containers, alerts, clusters and
     storage_pools"""
     LOGGING.info("setup HTTPS connection..")
-    requester_v1 = HTTPSAuthRequester(
-        args.server,
-        args.port,
-        "PrismGateway/services/rest/v1",
-        args.username,
-        args.password,
-    )
-    requester_v2 = HTTPSAuthRequester(
-        args.server,
-        args.port,
-        "PrismGateway/services/rest/v2.0",
-        args.username,
-        args.password,
-    )
+    headers = {
+        "Authorization": "Basic "
+        + base64.encodebytes((f"{args.username}:{args.password}").encode())
+        .strip()
+        .decode()
+        .replace("\n", "")
+    }
+    base_url_v1 = f"https://{args.server}:{args.port}/PrismGateway/services/rest/v1"
+    base_url_v2 = f"https://{args.server}:{args.port}/PrismGateway/services/rest/v2.0"
+    s = requests.session()
+    s.headers.update(headers)
 
     LOGGING.info("fetch and write container info..")
-    output_containers(requester_v1)
+    output_containers(s, base_url_v1)
 
     LOGGING.info("fetch and write alerts..")
-    output_alerts(requester_v2)
+    output_alerts(s, base_url_v2)
 
     LOGGING.info("fetch and write cluster info..")
-    output_cluster(requester_v2)
+    output_cluster(s, base_url_v2)
 
     LOGGING.info("fetch and write storage_pools..")
-    output_storage_pools(requester_v1)
+    output_storage_pools(s, base_url_v1)
 
     LOGGING.info("fetch and write vm info..")
-    output_vms(requester_v1)
+    output_vms(s, base_url_v1)
 
     LOGGING.info("fetch and write hosts info..")
-    output_hosts(requester_v2)
+    output_hosts(s, base_url_v2)
 
     LOGGING.info("fetch and write protection domain info..")
-    output_protection(requester_v2)
+    output_protection(s, base_url_v2)
 
     LOGGING.info("fetch and write support info..")
-    output_support(requester_v2)
+    output_support(s, base_url_v2)
 
     LOGGING.info("fetch and write ha state..")
-    output_ha(requester_v2)
+    output_ha(s, base_url_v2)
 
     LOGGING.info("all done. bye.")
 

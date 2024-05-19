@@ -16,19 +16,30 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self, Sequence
+from typing import Self
 
-IMPORTS = (
+IMPORT_REPLACEMENTS = (
     ("from .agent_based_api.v1 import check_levels\n", "\n"),
     ("from cmk.base.plugins.agent_based_api.v1 import check_levels\n", "\n"),
-    ("check_levels, ", ""),
+    ("check_levels,", ""),
     (", check_levels", ""),
     ("cmk.base.plugins.agent_based.agent_based_api.v1", "cmk.agent_based.v2"),
     (".agent_based_api.v1", "cmk.agent_based.v2"),
     ("cmk.base.plugins.agent_based.utils", ".utils"),
     ("cmk.agent_based.v2.type_defs", "cmk.agent_based.v2"),
+    ("register,", ""),
+    (", register", ""),
+    ("type_defs,", ""),
+    (", type_defs", ""),
 )
 
+
+IMPORTS_ADDED = (
+    "from collections.abc import Sequence\n"
+    "from cmk.agent_based.v1 import check_levels\n"
+    "from cmk.agent_based.v2 import AgentSection, SNMPSection,"
+    " SimpleSNMPSection, CheckPlugin, InventoryPlugin, RuleSetType\n\n"
+)
 
 REGISTRATION_REGEXES = (
     (
@@ -58,21 +69,16 @@ REGISTRATION_REGEXES = (
     ),
 )
 
+BODY_REPLACEMENTS = (("list[StringTable]", "Sequence[StringTable]"),)
+
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
 
-    parser.add_argument(
-        "-i", "--inplace", action="store_true", help="Modify the passed files in place."
-    )
-    parser.add_argument(
-        "file_name",
-        type=Path,
-        nargs="+",
-        help="The file(s) to operate on.",
-    )
+    parser.add_argument("-d", "--debug", action="store_true", help="Raise exceptions.")
+    parser.add_argument("files", type=Path, nargs="+", help="The file(s) to operate on.")
 
     return parser.parse_args(argv)
 
@@ -109,47 +115,51 @@ class PyFile:
         return cls("".join(header), "".join(imports), "".join(body))
 
 
-def _transform(file_name: Path, inplace: bool) -> None:
+def _transform(file_name: Path) -> None:
     py_file = PyFile.from_content(file_name.read_text())
 
     py_file.imports = _transform_imports(py_file.imports)
     py_file.body = _transform_body(py_file.body)
 
-    if inplace:
-        file_name.write_text(str(py_file))
-    else:
-        sys.stdout.write(str(py_file))
+    file_name.write_text(str(py_file))
 
 
 def _transform_imports(imports: str) -> str:
-    for old, new in IMPORTS:
+    for old, new in IMPORT_REPLACEMENTS:
         imports = imports.replace(old, new)
-    imports += (
-        "from cmk.agent_based.v1 import check_levels\n"
-        "from cmk.agent_based.v2 import AgentSection, SNMPSection,"
-        " SimpleSNMPSection, CheckPlugin, InventoryPlugin\n\n"
-    )
-    return imports
+    return imports + IMPORTS_ADDED
 
 
 def _transform_body(body: str) -> str:
     for prefix, plugin, regex in REGISTRATION_REGEXES:
         while (m := next(regex.finditer(body), None)) is not None:
             body = body.replace(m.group(0), f"{prefix}_{m.group(2)} = {plugin}{m.group(1)}")
+
+    for old, new in BODY_REPLACEMENTS:
+        body = body.replace(old, new)
     return body
 
 
-def _autoflake(file_names: Sequence[str]) -> None:
-    subprocess.check_call(["autoflake", "-i", "--remove-all-unused-imports", *file_names])
+def _try_to_run(*command_items: object) -> None:
+    try:
+        subprocess.check_call([str(o) for o in command_items])
+    except subprocess.CalledProcessError as exc:
+        print(f"tried to run {command_items[0]!r}, but: {exc}", file=sys.stderr)
 
 
 def main(argv: list[str]) -> int:
     args = parse_arguments(argv)
-    for file_name in args.file_name:
-        _transform(file_name, args.inplace)
+    for file_name in args.files:
+        try:
+            _transform(file_name)
+        except Exception as e:
+            if args.debug:
+                raise
+            sys.stderr.write(f"ERROR {file_name}: {e}\n")
 
-    if args.inplace:
-        _autoflake(args.file_name)
+    _try_to_run("scripts/run-isort", *args.files)
+    _try_to_run("autoflake", "-i", "--remove-all-unused-imports", *args.files)
+    _try_to_run("scripts/run-black", *args.files)
 
     return 0
 

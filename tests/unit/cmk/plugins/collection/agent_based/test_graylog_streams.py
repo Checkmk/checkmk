@@ -7,8 +7,8 @@ from typing import Final
 
 import pytest
 
-import cmk.base.plugins.agent_based.graylog_streams as gs
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+import cmk.plugins.collection.agent_based.graylog_streams as gs
+from cmk.agent_based.v2 import Metric, Result, State
 
 STRING_TABLE_NO_STREAMS: Final = [['{"total": 5, "streams": []}']]
 

@@ -8,8 +8,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from .agent_based_api.v1 import check_levels, register, render, Service
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    StringTable,
+)
 
 # <<<graylog_alerts>>>
 # {"alerts": {"num_of_alerts": 0, "has_since_argument": false, "alerts_since": null, "num_of_alerts_in_range": 0}}
@@ -41,7 +49,7 @@ def parse_graylog_alerts(string_table: StringTable) -> AlertsInfo | None:
     )
 
 
-register.agent_section(
+agent_section_graylog_alerts = AgentSection(
     name="graylog_alerts",
     parse_function=parse_graylog_alerts,
 )
@@ -71,7 +79,7 @@ def check_graylog_alerts(params: Mapping[str, Any], section: AlertsInfo) -> Chec
         )
 
 
-register.check_plugin(
+check_plugin_graylog_alerts = CheckPlugin(
     name="graylog_alerts",
     check_function=check_graylog_alerts,
     discovery_function=discover_graylog_alerts,

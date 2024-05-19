@@ -6,8 +6,17 @@
 import json
 from collections.abc import Mapping
 
-from .agent_based_api.v1 import check_levels, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 # <<<graylog_streams:sep(0)>>>
 # {"total": 5, "streams": [{"remove_matches_from_default_stream": false,
@@ -106,13 +115,13 @@ def check_graylog_streams(params: Mapping, section: Section) -> CheckResult:
             yield Result(state=State.OK, notice=f"Stream: {stream}")
 
 
-register.agent_section(
+agent_section_graylog_streams = AgentSection(
     name="graylog_streams",
     parse_function=parse_graylog_streams,
 )
 
 
-register.check_plugin(
+check_plugin_graylog_streams = CheckPlugin(
     name="graylog_streams",
     service_name="Graylog Streams",
     discovery_function=discovery_graylog_streams,

@@ -8,10 +8,19 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 
 from pydantic import BaseModel, Field
 
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.graylog import deserialize_and_merge_json
-
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class FailureMessage(BaseModel):
@@ -76,7 +85,7 @@ def parse(string_table: StringTable) -> Section:
     return Section.model_validate(deserialize_and_merge_json(string_table))
 
 
-register.agent_section(
+agent_section_graylog_failures = AgentSection(
     name="graylog_failures",
     parse_function=parse,
 )
@@ -141,7 +150,7 @@ def check(
     yield from _failure_results(section.failures)
 
 
-register.check_plugin(
+check_plugin_graylog_failures = CheckPlugin(
     name="graylog_failures",
     service_name="Graylog Index Failures",
     discovery_function=discover,

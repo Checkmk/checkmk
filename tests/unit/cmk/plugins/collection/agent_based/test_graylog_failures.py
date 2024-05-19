@@ -7,13 +7,16 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based import graylog_failures
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
     StringTable,
 )
+from cmk.plugins.collection.agent_based import graylog_failures
 
 _STRING_TABLE_NO_FAILURES = [['{"count": 0, "ds_param_since": 1800, "total": 131346}']]
 

@@ -7,10 +7,11 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.graylog_events import check_graylog_events, parse_graylog_events
-
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.plugins.collection.agent_based.graylog_events import (
+    check_graylog_events,
+    parse_graylog_events,
+)
 
 
 @pytest.mark.parametrize(

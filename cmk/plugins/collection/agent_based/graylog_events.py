@@ -8,8 +8,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from .agent_based_api.v1 import check_levels, register, render, Service
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    StringTable,
+)
 
 # <<<graylog_events>>>
 # {"events": {"num_of_events": 3, "has_since_argument": false, "events_since": null, "num_of_events_in_range": 0}}
@@ -45,7 +53,7 @@ def parse_graylog_events(string_table: StringTable) -> EventsInfoSection:
     )
 
 
-register.agent_section(
+agent_section_graylog_events = AgentSection(
     name="graylog_events",
     parse_function=parse_graylog_events,
 )
@@ -78,7 +86,7 @@ def check_graylog_events(params: Mapping[str, Any], section: EventsInfoSection) 
         )
 
 
-register.check_plugin(
+check_plugin_graylog_events = CheckPlugin(
     name="graylog_events",
     check_function=check_graylog_events,
     discovery_function=discover_graylog_events,

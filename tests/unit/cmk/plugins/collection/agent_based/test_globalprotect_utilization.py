@@ -8,9 +8,8 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.globalprotect_utilization import (
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based.globalprotect_utilization import (
     check_globalprotect_utilization,
     discover_globalprotect_utilization,
     parse_globalprotect_utilization,

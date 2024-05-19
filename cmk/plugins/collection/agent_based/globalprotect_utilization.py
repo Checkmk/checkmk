@@ -6,20 +6,22 @@
 from collections.abc import Callable, Mapping
 from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import (
+from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v2 import (
     all_of,
-    check_levels,
-    check_levels_predictive,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     exists,
-    register,
     render,
     Result,
     Service,
+    SimpleSNMPSection,
     SNMPTree,
     startswith,
     State,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Section(NamedTuple):
@@ -39,7 +41,7 @@ def parse_globalprotect_utilization(string_table: StringTable) -> Section | None
     )
 
 
-register.snmp_section(
+snmp_section_globalprotect_utilization = SimpleSNMPSection(
     name="globalprotect_utilization",
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "Palo Alto"),
@@ -110,7 +112,7 @@ def check_globalprotect_utilization(params: Mapping[str, Any], section: Section)
     yield Result(state=State.OK, summary=f"Max sessions: {section.max_tunnels}")
 
 
-register.check_plugin(
+check_plugin_globalprotect_utilization = CheckPlugin(
     name="globalprotect_utilization",
     service_name="GlobalProtect Gateway Utilization",
     discovery_function=discover_globalprotect_utilization,

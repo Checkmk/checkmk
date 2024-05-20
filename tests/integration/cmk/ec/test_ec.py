@@ -113,6 +113,15 @@ def _generate_message_via_events_pipe(site: Site, message: str) -> None:
         _validate_process_return_code(process, "Failed to generate EC message via Unix socket.")
 
 
+def _generate_message_via_syslog(site: Site, message: str, udp: bool = True) -> None:
+    """Generate EC message via syslog"""
+    cmd = f"sudo su -l {site.id} -c 'echo {message} | nc -w 0 {'-u' if udp else ''} 127.0.0.1 514'"
+    with subprocess.Popen(
+        cmd, encoding="utf-8", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    ) as process:
+        _validate_process_return_code(process, "Failed to generate EC message via Syslog.")
+
+
 def _wait_for_queried_column(
     site: Site, query: str, sleep_time: float = 1, max_count: int = 20
 ) -> list[str]:

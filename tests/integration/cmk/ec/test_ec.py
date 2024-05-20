@@ -103,7 +103,7 @@ def _activate_ec_changes(site: Site) -> None:
     site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 
-def _generate_event_message(site: Site, message: str) -> None:
+def _generate_message_via_events_pipe(site: Site, message: str) -> None:
     """Generate EC message via Unix socket"""
     events_path = site.path("tmp/run/mkeventd/events")
     cmd = f"sudo su -l {site.id} -c 'echo {message} > {events_path}'"
@@ -237,7 +237,7 @@ def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
     match, rule_id, rule_state = setup_ec
 
     event_message = f"some {match} status"
-    _generate_event_message(site, event_message)
+    _generate_message_via_events_pipe(site, event_message)
 
     # retrieve id of matching rule via livestatus query
     queried_rule_ids = _wait_for_queried_column(site, "GET eventconsolerules\nColumns: rule_id\n")
@@ -265,7 +265,7 @@ def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
     event_message = "some other status"
     assert match not in event_message
 
-    _generate_event_message(site, event_message)
+    _generate_message_via_events_pipe(site, event_message)
 
     queried_event_states = site.live.query_column("GET eventconsoleevents\nColumns: event_state\n")
     assert not queried_event_states

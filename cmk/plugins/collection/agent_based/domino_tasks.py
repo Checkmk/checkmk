@@ -127,7 +127,14 @@ check_plugin_domino_tasks = CheckPlugin(
     discovery_function=discover_domino_tasks,
     discovery_ruleset_name="inv_domino_tasks_rules",
     discovery_ruleset_type=RuleSetType.ALL,
-    discovery_default_parameters={},
+    discovery_default_parameters={
+        # This is skipped in the plugin.
+        "descr": "Example service - unused",
+        "match": None,
+        "default_params": {
+            "levels": (1, 2, 3, 4),
+        },
+    },
     check_function=check_domino_tasks,
     # Note: domino_tasks is a ManualCheckParameterRulespec.
     # If the user specifies an already discovered item, the enforced service will shadow the

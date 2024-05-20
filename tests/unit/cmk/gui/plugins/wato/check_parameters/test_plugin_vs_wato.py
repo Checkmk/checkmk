@@ -496,14 +496,6 @@ class ErrorReporter:
             "tplink_poe_summary",
             RuleGroup.CheckgroupParameters("epower_single"),
         ),
-        ("discovery", "domino_tasks", "inv_domino_tasks_rules"),
-        ("discovery", "mssql_counters_cache_hits", "inventory_mssql_counters_rules"),
-        ("discovery", "mssql_datafiles", "mssql_transactionlogs_discovery"),
-        ("discovery", "mssql_transactionlogs", "mssql_transactionlogs_discovery"),
-        ("discovery", "ps", "inventory_processes_rules"),
-        ("discovery", "vnx_quotas", "discovery_rules_vnx_quotas"),
-        ("discovery", "hitachi_hnas_volume", "filesystem_groups"),
-        ("discovery", "hitachi_hnas_volume_virtual", "filesystem_groups"),
     }
 
     def __init__(self) -> None:

@@ -97,7 +97,12 @@ register.check_plugin(
     sections=["ps", "mem", "mem_used", "cpu"],
     discovery_function=ps.discover_ps,
     discovery_ruleset_name="inventory_processes_rules",
-    discovery_default_parameters={},
+    discovery_default_parameters={
+        "descr": "Example service - unused",
+        "default_params": {
+            "cpu_rescale_max": True,
+        },
+    },
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_ps,
     check_default_parameters={

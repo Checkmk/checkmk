@@ -344,7 +344,10 @@ register.check_plugin(
     discovery_function=discover_mssql_datafiles,
     discovery_ruleset_name="mssql_transactionlogs_discovery",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters={},
+    discovery_default_parameters={
+        "summarize_datafiles": False,
+        "summarize_transactionlogs": False,
+    },
     check_function=check_mssql_datafiles,
     check_default_parameters={"used_levels": (80.0, 90.0)},
     check_ruleset_name="mssql_datafiles",
@@ -357,7 +360,10 @@ register.check_plugin(
     discovery_function=discover_mssql_transactionlogs,
     discovery_ruleset_name="mssql_transactionlogs_discovery",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters={},
+    discovery_default_parameters={
+        "summarize_datafiles": False,
+        "summarize_transactionlogs": False,
+    },
     check_function=check_mssql_transactionlogs,
     check_default_parameters={"used_levels": (80.0, 90.0)},
     check_ruleset_name="mssql_transactionlogs",

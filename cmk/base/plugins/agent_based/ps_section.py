@@ -205,7 +205,12 @@ register.agent_section(
     parse_function=parse_ps,
     host_label_function=ps.host_labels_ps,
     host_label_ruleset_name="inventory_processes_rules",
-    host_label_default_parameters={},
+    host_label_default_parameters={
+        "descr": "Example service - unused",
+        "default_params": {
+            "cpu_rescale_max": True,
+        },
+    },
     host_label_ruleset_type=register.RuleSetType.ALL,
 )
 

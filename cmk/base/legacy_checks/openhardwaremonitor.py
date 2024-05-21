@@ -282,10 +282,7 @@ check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
     discovery_function=discover_openhardwaremonitor_fan,
     check_function=check_openhardwaremonitor_fan,
     check_ruleset_name="hw_fans",
-    check_default_parameters={
-        "lower": (None, None),
-        "upper": (None, None),
-    },
+    check_default_parameters={},
 )
 
 # .

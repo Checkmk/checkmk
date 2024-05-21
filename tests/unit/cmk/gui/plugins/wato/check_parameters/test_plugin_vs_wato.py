@@ -340,42 +340,6 @@ class ErrorReporter:
             "huawei_osn_laser",
         ),
         (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "bvip_fans",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "dell_idrac_fans",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "dell_om_fans",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "netapp_api_environment_fan_faults",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "netapp_api_environment_fans",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "netscaler_health_fan",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "openhardwaremonitor_fan",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "qnap_fans",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("hw_fans"),
-            "quanta_fan",
-        ),
-        (
             RuleGroup.CheckgroupParameters("inotify"),
             "inotify",
         ),

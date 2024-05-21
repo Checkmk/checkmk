@@ -79,7 +79,6 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (3500, 3000),
-        "upper": (None, None),
     },
 )
 # .

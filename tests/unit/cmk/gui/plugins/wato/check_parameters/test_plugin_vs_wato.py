@@ -320,14 +320,6 @@ class ErrorReporter:
             "mq_queues",
         ),
         (
-            RuleGroup.CheckgroupParameters("msx_info_store"),
-            "msexch_isclienttype",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("msx_info_store"),
-            "msexch_isstore",
-        ),
-        (
             RuleGroup.CheckgroupParameters("mysql_slave"),
             "mysql_slave",
         ),

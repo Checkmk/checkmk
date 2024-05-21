@@ -1163,9 +1163,6 @@ class Site:
             crash = json.loads(self.read_file(crash_file))
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
-            if re.search("check_icmp: No hosts to check", crash_detail):
-                logger.warning("Ignored crash report due to CMK-17285!")
-                continue
             if re.search(r"invalid literal for .* with base 16: 'xx'", crash_detail):
                 logger.warning("Ignored crash report due to CMK-17291!")
                 continue

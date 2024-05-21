@@ -300,18 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("fortigate_antivirus"),
-            "fortigate_antivirus",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("fortigate_ips"),
-            "fortigate_ips",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
-            "fortimail_cpu_load",
-        ),
-        (
             RuleGroup.CheckgroupParameters("hivemanager_devices"),
             "hivemanager_devices",
         ),

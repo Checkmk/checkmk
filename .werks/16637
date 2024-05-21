@@ -1,0 +1,12 @@
+Title: Dashboard element "Average scatterplot": Fix topmost rendering
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1716275773
+Edition: cee
+Level: 1
+Version: 2.2.0p27
+
+The dashboard element "Average scatterplot" was rendered topmost at all times after being hovered once. This resulted in other dashboard elements' tooltips to be rendered behind the "Average scatterplot" element.
+
+This behavior is fixed. After hovering the "Average scatterplot", i.e. when moving the mouse outside of its graph area, its topmost rendering is reset, making other tooltips visible again.

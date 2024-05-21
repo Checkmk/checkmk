@@ -316,10 +316,6 @@ class ErrorReporter:
             "tplink_mem",
         ),
         (
-            RuleGroup.CheckgroupParameters("mongodb_collections"),
-            "mongodb_collections",
-        ),
-        (
             RuleGroup.CheckgroupParameters("mq_queues"),
             "mq_queues",
         ),

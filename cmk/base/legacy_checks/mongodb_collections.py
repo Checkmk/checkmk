@@ -82,7 +82,7 @@ def check_mongodb_collections(item, params, databases_dict):
         yield check_levels(
             int(collection_stats.get("nindexes")),
             None,
-            params.get("levels_nindexes"),
+            (62, 65),
             human_readable_func=lambda v: "%d" % v,
             infoname="Number of indexes",
         )
@@ -221,5 +221,5 @@ check_info["mongodb_collections"] = LegacyCheckDefinition(
     discovery_function=inventory_mongodb_collections,
     check_function=check_mongodb_collections,
     check_ruleset_name="mongodb_collections",
-    check_default_parameters={"levels_nindexes": (62, 65)},
+    check_default_parameters={},
 )

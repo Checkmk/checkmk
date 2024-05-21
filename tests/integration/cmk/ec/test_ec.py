@@ -208,32 +208,36 @@ def _restart_site(site: Site) -> Iterator[None]:
     site.start()
 
 
-@pytest.fixture(name="enable_snmp_trap_receiver", scope="module")
-def _enable_snmp_trap_receiver(site: Site, restart_site: None) -> Iterator[None]:
-    p_out, _ = _execute_cmd_and_validate_return_code(
-        site,
-        ["omd", "config", "show", "MKEVENTD_SNMPTRAP"],
-        "Failed to retrieve SNMP trap receiver status.",
-    )
-    initial_config = p_out.strip()
+@pytest.fixture(name="enable_receivers", scope="module")
+def _enable_snmp_receivers(site: Site, restart_site: None) -> Iterator[None]:
+    initial_config: dict = {}
+    for receiver in ["MKEVENTD_SNMPTRAP", "MKEVENTD_SYSLOG", "MKEVENTD_SYSLOG_TCP"]:
+        p_out, _ = _execute_cmd_and_validate_return_code(
+            site,
+            ["omd", "config", "show", receiver],
+            f"Failed to retrieve {receiver} receiver status.",
+        )
+        initial_config[receiver] = p_out.strip()
 
-    logger.info("Setting SNMP trap receiver to 'on'...")
-    _ = _execute_cmd_and_validate_return_code(
-        site,
-        ["omd", "config", "set", "MKEVENTD_SNMPTRAP", "on"],
-        "Failed to change SNMP trap receivers.",
-    )
+        logger.info("Setting %s receiver to 'on'...", receiver)
+        _ = _execute_cmd_and_validate_return_code(
+            site,
+            ["omd", "config", "set", receiver, "on"],
+            f"Failed to change {receiver} receiver.",
+        )
+
     site.start()
 
     yield
 
     site.stop()
-    logger.info("Setting SNMP trap receiver to '%s'...", initial_config)
-    _ = _execute_cmd_and_validate_return_code(
-        site,
-        ["omd", "config", "set", "MKEVENTD_SNMPTRAP", f"{initial_config}"],
-        "Failed to change SNMP trap receivers.",
-    )
+    for receiver in ["MKEVENTD_SNMPTRAP", "MKEVENTD_SYSLOG", "MKEVENTD_SYSLOG_TCP"]:
+        logger.info("Setting %s receiver to '%s'...", receiver, initial_config[receiver])
+        _ = _execute_cmd_and_validate_return_code(
+            site,
+            ["omd", "config", "set", receiver, initial_config[receiver]],
+            f"Failed to change {receiver} receiver.",
+        )
 
 
 @pytest.fixture(name="enable_snmp_trap_translation", scope="function")
@@ -294,9 +298,7 @@ def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_ec_rule_match_snmp_trap(
-    site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
-) -> None:
+def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
     event_message = f"some {match} status"
@@ -328,9 +330,7 @@ def test_ec_rule_match_snmp_trap(
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_ec_rule_no_match_snmp_trap(
-    site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
-) -> None:
+def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap not matching any EC rule and assert no event is created"""
     match, _, _ = setup_ec
     event_message = "some other status"
@@ -350,10 +350,7 @@ def test_ec_rule_no_match_snmp_trap(
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
 def test_ec_global_settings(
-    site: Site,
-    setup_ec: Iterator,
-    enable_snmp_trap_receiver: None,
-    enable_snmp_trap_translation: None,
+    site: Site, setup_ec: Iterator, enable_receivers: None, enable_snmp_trap_translation: None
 ) -> None:
     """Assert that global settings of the EC are applied to the EC
 

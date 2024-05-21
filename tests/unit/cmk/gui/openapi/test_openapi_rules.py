@@ -21,9 +21,6 @@ from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.store import load_mk_file
 
-import cmk.gui.watolib.check_mk_automations
-import cmk.gui.watolib.rulespecs
-
 DEFAULT_VALUE_RAW = """{
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
     "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
@@ -248,28 +245,6 @@ def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
         conditions={},
     )
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
-
-
-def test_openapi_list_rules_with_hyphens(
-    clients: ClientRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        cmk.gui.watolib.rulespecs.CheckTypeGroupSelection,
-        "get_elements",
-        lambda x: {"fileinfo_groups": "some title"},
-    )
-    STATIC_CHECKS_FILEINFO_GROUPS = RuleGroup.StaticChecks("fileinfo-groups")
-    _, result = _create_rule(
-        clients,
-        "/",
-        ruleset=STATIC_CHECKS_FILEINFO_GROUPS,
-        value_raw="('fileinfo_groups', '', {'group_patterns': []})",
-    )
-    assert result["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
-    resp2 = clients.Rule.list(ruleset=STATIC_CHECKS_FILEINFO_GROUPS)
-    assert len(resp2.json["value"]) == 1
-    assert resp2.json["value"][0]["extensions"]["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
 
 
 def test_openapi_list_rules(

@@ -246,7 +246,6 @@ class ErrorReporter:
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
         ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
-        ("check", RuleGroup.CheckgroupParameters("fileinfo-groups")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),
         ("check", RuleGroup.CheckgroupParameters("mssql_blocked_sessions")),
         ("check", RuleGroup.CheckgroupParameters("postgres_sessions")),

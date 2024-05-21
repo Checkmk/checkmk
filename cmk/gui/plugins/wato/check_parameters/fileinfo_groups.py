@@ -335,20 +335,6 @@ rulespec_registry.register(
 )
 
 
-# can be dropped in 2.4
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="fileinfo-groups",
-        group=RulespecGroupCheckParametersStorage,
-        item_spec=_item_spec_fileinfo_groups,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_fileinfo_groups,
-        title=lambda: _("Size, age and count of file groups"),
-        is_deprecated=True,
-    )
-)
-
-
 def _manual_parameter_valuespec_fileinfo_groups() -> Dictionary:
     return Dictionary(
         required_keys=["group_patterns"],
@@ -382,17 +368,5 @@ rulespec_registry.register(
         item_spec=_item_spec_fileinfo_groups,
         parameter_valuespec=_manual_parameter_valuespec_fileinfo_groups,
         title=lambda: _("Size, age and count of file groups"),
-    )
-)
-
-# can be dropped in 2.4
-rulespec_registry.register(
-    ManualCheckParameterRulespec(
-        check_group_name="fileinfo-groups",
-        group=RulespecGroupEnforcedServicesStorage,
-        item_spec=_item_spec_fileinfo_groups,
-        parameter_valuespec=_manual_parameter_valuespec_fileinfo_groups,
-        title=lambda: _("Size, age and count of file groups"),
-        is_deprecated=True,
     )
 )

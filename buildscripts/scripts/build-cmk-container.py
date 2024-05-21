@@ -131,7 +131,9 @@ def run_cmd(
     raise_exception: bool = True,
     print_stdout: bool = True,
 ) -> subprocess.CompletedProcess:
-    completed_process = subprocess.run(cmd, encoding="utf-8", capture_output=True, shell=shell)
+    completed_process = subprocess.run(
+        cmd, encoding="utf-8", capture_output=True, shell=shell, check=False
+    )
     if raise_exception and completed_process.returncode != 0:
         raise Exception(
             f"Failed to execute command '{' '.join(cmd)}' with: {completed_process.stdout}, {completed_process.stderr}"

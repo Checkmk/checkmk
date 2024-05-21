@@ -44,6 +44,19 @@ def _validate_process_return_code(process: subprocess.Popen, assert_msg: str) ->
         raise AssertionError("\n".join(msg))
 
 
+def _execute_cmd_and_validate_return_code(
+    site: Site, cmd: list[str], assert_msg: str
+) -> tuple[str, str]:
+    with site.execute(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as process:
+        _validate_process_return_code(process, assert_msg)
+        p_out, p_err = process.communicate()
+    return p_out, p_err
+
+
 def _get_ec_rule_packs(rule_id: str, title: str, state: State, match: str) -> list[ECRulePackSpec]:
     """EC rule to inject in the test-site"""
     rule = Rule(
@@ -197,33 +210,30 @@ def _restart_site(site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="enable_snmp_trap_receiver", scope="module")
 def _enable_snmp_trap_receiver(site: Site, restart_site: None) -> Iterator[None]:
-    with site.execute(
+    p_out, _ = _execute_cmd_and_validate_return_code(
+        site,
         ["omd", "config", "show", "MKEVENTD_SNMPTRAP"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
-        _validate_process_return_code(process, "Failed to retrieve SNMP trap receiver status.")
-        initial_config = process.communicate()[0].strip()
+        "Failed to retrieve SNMP trap receiver status.",
+    )
+    initial_config = p_out.strip()
 
     logger.info("Setting SNMP trap receiver to 'on'...")
-    with site.execute(
+    _ = _execute_cmd_and_validate_return_code(
+        site,
         ["omd", "config", "set", "MKEVENTD_SNMPTRAP", "on"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
-        _validate_process_return_code(process, "Failed to change SNMP trap receivers.")
+        "Failed to change SNMP trap receivers.",
+    )
     site.start()
 
     yield
 
     site.stop()
     logger.info("Setting SNMP trap receiver to '%s'...", initial_config)
-    with site.execute(
+    _ = _execute_cmd_and_validate_return_code(
+        site,
         ["omd", "config", "set", "MKEVENTD_SNMPTRAP", f"{initial_config}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
-        _validate_process_return_code(process, "Failed to change SNMP trap receivers.")
+        "Failed to change SNMP trap receivers.",
+    )
 
 
 @pytest.fixture(name="enable_snmp_trap_translation", scope="function")

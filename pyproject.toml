@@ -182,25 +182,14 @@ warn_untyped_fields = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = [
-    # Live logs initially look like a good idea to pin down problems in the tests
-    # quickly, but with the current state of our tests it's simply too much noise.
-    # Even in a successful unit test run, you get more than 70 log messages
-    # cluttering up the output and making it hard to use: saml2.client logs already
-    # at load time, tons of our own tests emit warnings up to ERROR even when
-    # successful, etc. etc. We might reconsinder lowering the live log level when we
-    # have cleaned up things...
-    "--log-cli-level=CRITICAL",
-    "--log-cli-format=\"%(asctime)s %(levelname)s %(message)s\"",
-    # Show summary of skipped tests
-    "-rs",
-    # Show N slowest setup/test durations
-    "--durations=20",
-    # Disable a few plugins which slow down the pytest startup even when not used
-    "-p no:faker",
-    "-p no:schemathesis",
-    "-p no:hypothesispytest",
-]
+# Live logs initially look like a good idea to pin down problems in the tests
+# quickly, but with the current state of our tests it's simply too much noise.
+# Even in a successful unit test run, you get more than 70 log messages
+# cluttering up the output and making it hard to use: saml2.client logs already
+# at load time, tons of our own tests emit warnings up to ERROR even when
+# successful, etc. etc. We might reconsinder lowering the live log level when we
+# have cleaned up things...
+addopts = "--log-cli-level=CRITICAL --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
 markers = [
   "checks: Run all existing test cases for checks.",
   "slow: Run tests which take relatively larger time to execute.",

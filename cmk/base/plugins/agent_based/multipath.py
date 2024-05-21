@@ -196,7 +196,7 @@ def check_multipath(  # pylint: disable=too-many-branches
 
     num_active_procent = 0
     if num_paths != 0:
-         num_active_procent = num_active / num_paths * 100.0
+        num_active_procent = num_active / num_paths * 100.0
 
     yield from check_levels(
         num_active_procent,

@@ -255,8 +255,8 @@ def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
-    """Generate a message matching an EC rule and assert an event is created"""
+def test_ec_rule_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
+    """Generate a message via the events pipe matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
 
     event_message = f"some {match} status"
@@ -282,8 +282,10 @@ def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
-    """Generate a message not matching any EC rule and assert no event is created"""
+def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
+    """Generate a message via the events pipe not matching any EC rule.
+
+    Assert no event is created."""
     match, _, _ = setup_ec
     event_message = "some other status"
     assert match not in event_message
@@ -379,7 +381,7 @@ def test_ec_global_settings(
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
 @pytest.mark.parametrize("udp_enabled", [True, False], ids=["udp", "tcp"])
-def test_ec_rule_syslog(
+def test_ec_rule_match_syslog(
     site: Site,
     setup_ec: Iterator,
     enable_receivers: None,

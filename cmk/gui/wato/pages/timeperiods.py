@@ -44,6 +44,7 @@ from cmk.gui.valuespec import (
     FileUpload,
     FileUploadModel,
     FixedValue,
+    Integer,
     ListChoice,
     ListOf,
     ListOfTimeRanges,
@@ -367,21 +368,20 @@ class ModeTimeperiodImportICal(WatoMode):
                         validate=self._validate_ical_file,
                     ),
                 ),
-                # TODO: Should be added back once CMK-14051 is completed.
-                # (
-                #     "horizon",
-                #     Integer(
-                #         title=_("Time horizon for repeated events"),
-                #         help=_(
-                #             "When the iCalendar file contains definitions of repeating events, these repeating "
-                #             "events will be resolved to single events for the number of years you specify here."
-                #         ),
-                #         minvalue=0,
-                #         maxvalue=50,
-                #         default_value=10,
-                #         unit=_("years"),
-                #     ),
-                # ),
+                (
+                    "horizon",
+                    Integer(
+                        title=_("Time horizon for repeated events"),
+                        help=_(
+                            "When the iCalendar file contains definitions of repeating events, these repeating "
+                            "events will be resolved to single events for the number of years you specify here."
+                        ),
+                        minvalue=0,
+                        maxvalue=50,
+                        default_value=10,
+                        unit=_("years"),
+                    ),
+                ),
             ],
         )
 
@@ -434,14 +434,10 @@ class ModeTimeperiodImportICal(WatoMode):
         filename, _ty, content = ical["file"]
         cal_obj: Calendar = Calendar.from_ical(content)
 
-        # TODO: The time horizon should be taken into account for recurring events,
-        # but currently more than 75 events is too many and causes an ISE. See CMK-14051.
-        # For now, we are limiting events to only the current calendar year.
-
         exception_map: dict[str, list[TimeperiodUsage]] = {}
-
+        now = datetime.now()
         for e in recurring_ical_events.of(cal_obj).between(
-            date.today(), date(date.today().year + 1, 1, 1)
+            now, now + timedelta(days=365 * ical["horizon"])
         ):
             ice = ICalEvent(e)
             if ice.dtstart_dt is None:

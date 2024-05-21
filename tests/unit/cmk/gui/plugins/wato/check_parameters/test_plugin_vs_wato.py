@@ -300,10 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("docsis_channels_upstream"),
-            "docsis_channels_upstream",
-        ),
-        (
             RuleGroup.CheckgroupParameters("epower_single"),
             "bvip_poe",
         ),

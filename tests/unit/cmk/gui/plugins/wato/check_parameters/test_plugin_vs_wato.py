@@ -300,10 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("cisco_prime_wifi_connections"),
-            "cisco_prime_wifi_connections",
-        ),
-        (
             RuleGroup.CheckgroupParameters("docsis_channels_upstream"),
             "docsis_channels_upstream",
         ),

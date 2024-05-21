@@ -502,10 +502,6 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 self.value_store_manager,
                 clusters=self.clusters,
             )
-            # Whatch out. The CMC has to agree on the path.
-            prediction_store = PredictionStore(
-                cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
-            )
             return get_aggregated_result(
                 host_name,
                 host_name in self.clusters,
@@ -517,29 +513,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 rtc_package=self.rtc_package,
                 get_effective_host=self.config_cache.effective_host,
                 snmp_backend=self.config_cache.get_snmp_backend(host_name),
-                # In the past the creation of predictions (and the livestatus query needed)
-                # was performed inside the check plugins context.
-                # We should consider moving this side effect even further up the stack
-                injected_p=InjectedParameters(
-                    meta_file_path_template=prediction_store.meta_file_path_template,
-                    predictions=make_updated_predictions(
-                        prediction_store,
-                        partial(
-                            livestatus.get_rrd_data,
-                            livestatus.LocalConnection(),
-                            host_name,
-                            service.description,
-                        ),
-                        time.time(),
-                    ),
-                ),
-                # Most of the following are only needed for individual plugins, actually.
-                # once we have all of them in this place, we might want to consider how
-                # to optimize these computations.
-                only_from=self.config_cache.only_from(host_name),
-                service_level=self.config_cache.effective_service_level(
-                    host_name, service.description
-                ),
+                parameters=_compute_final_check_parameters(host_name, service, self.config_cache),
             )
 
         return CheckPlugin(
@@ -555,6 +529,39 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
 
     def __len__(self) -> int:
         return len(_api.registered_check_plugins)
+
+
+def _compute_final_check_parameters(
+    host_name: HostName, service: ConfiguredService, config_cache: ConfigCache
+) -> Parameters:
+    # Whatch out. The CMC has to agree on the path.
+    prediction_store = PredictionStore(
+        cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
+    )
+    # In the past the creation of predictions (and the livestatus query needed)
+    # was performed inside the check plugins context.
+    # We should consider moving this side effect even further up the stack
+    injected_p = InjectedParameters(
+        meta_file_path_template=prediction_store.meta_file_path_template,
+        predictions=make_updated_predictions(
+            prediction_store,
+            partial(
+                livestatus.get_rrd_data,
+                livestatus.LocalConnection(),
+                host_name,
+                service.description,
+            ),
+            time.time(),
+        ),
+    )
+    # Most of the following are only needed for individual plugins, actually.
+    # once we have all of them in this place, we might want to consider how
+    # to optimize these computations.
+    only_from = config_cache.only_from(host_name)
+    service_level = config_cache.effective_service_level(host_name, service.description)
+    return _final_read_only_check_parameters(
+        service.parameters, injected_p, only_from, service_level
+    )
 
 
 def _get_check_function(
@@ -745,12 +752,10 @@ def get_aggregated_result(
     plugin: CheckPluginAPI,
     check_function: Callable[..., ServiceCheckResult],
     *,
-    injected_p: InjectedParameters,
+    parameters: Mapping[str, object],
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     snmp_backend: SNMPBackendEnum,
-    only_from: None | str | list[str],
-    service_level: int,
 ) -> AggregatedResult:
     # Mostly API-specific error-handling around the check function.
     #
@@ -808,15 +813,7 @@ def get_aggregated_result(
         )
 
     item_kw = {} if service.item is None else {"item": service.item}
-    params_kw = (
-        {}
-        if plugin.check_default_parameters is None
-        else {
-            "params": _final_read_only_check_parameters(
-                service.parameters, injected_p, only_from, service_level
-            )
-        }
-    )
+    params_kw = {} if plugin.check_default_parameters is None else {"params": parameters}
 
     try:
         check_result = check_function(**item_kw, **params_kw, **section_kws)

@@ -12,6 +12,7 @@ import itertools
 import logging
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from typing import Final, Literal
@@ -58,7 +59,6 @@ from cmk.checkengine.checkresults import (
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
@@ -537,37 +537,37 @@ def _compute_final_check_parameters(
     if not _needs_postprocessing(params):
         return Parameters(params)
 
-    # Whatch out. The CMC has to agree on the path.
-    prediction_store = PredictionStore(
-        cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
-    )
-    # In the past the creation of predictions (and the livestatus query needed)
-    # was performed inside the check plugins context.
-    # We should consider moving this side effect even further up the stack
-    injected_p = InjectedParameters(
-        meta_file_path_template=prediction_store.meta_file_path_template,
-        predictions=make_updated_predictions(
-            prediction_store,
-            partial(
-                livestatus.get_rrd_data,
-                livestatus.LocalConnection(),
-                host_name,
-                service.description,
-            ),
-            time.time(),
-        ),
-    )
     # Most of the following are only needed for individual plugins, actually.
-    # once we have all of them in this place, we might want to consider how
-    # to optimize these computations.
-    only_from = config_cache.only_from(host_name)
-    service_level = config_cache.effective_service_level(host_name, service.description)
-    return Parameters(
-        {
-            k: postprocess_configuration(v, injected_p, only_from, service_level)
-            for k, v in params.items()
-        }
+    # We delay every computation until needed.
+
+    def make_prediction():
+        # Whatch out. The CMC has to agree on the path.
+        prediction_store = PredictionStore(
+            cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
+        )
+        # In the past the creation of predictions (and the livestatus query needed)
+        # was performed inside the check plugins context.
+        # We should consider moving this side effect even further up the stack
+        return InjectedParameters(
+            meta_file_path_template=prediction_store.meta_file_path_template,
+            predictions=make_updated_predictions(
+                prediction_store,
+                partial(
+                    livestatus.get_rrd_data,
+                    livestatus.LocalConnection(),
+                    host_name,
+                    service.description,
+                ),
+                time.time(),
+            ),
+        )
+
+    config = PostprocessingConfig(
+        only_from=lambda: config_cache.only_from(host_name),
+        prediction=make_prediction,
+        service_level=lambda: config_cache.effective_service_level(host_name, service.description),
     )
+    return Parameters({k: postprocess_configuration(v, config) for k, v in params.items()})
 
 
 def _get_check_function(
@@ -879,12 +879,17 @@ def _needs_postprocessing(params: object) -> bool:
     return False
 
 
+@dataclass
+class PostprocessingConfig:
+    only_from: Callable[[], None | str | list[str]]
+    prediction: Callable[[], InjectedParameters]
+    service_level: Callable[[], int]
+
+
 def postprocess_configuration(
-    params: LegacyCheckParameters | Mapping[str, object],
-    injected_p: InjectedParameters,
-    only_from: None | str | list[str],
-    service_level: int,
-) -> LegacyCheckParameters | Mapping[str, object]:
+    params: object,
+    postprocessing_config: PostprocessingConfig,
+) -> object:
     """Postprocess configuration parameters.
 
     Parameters consisting of a 3-tuple with the first element being
@@ -901,25 +906,21 @@ def postprocess_configuration(
     """
     match params:
         case tuple(("cmk_postprocessed", "predictive_levels", value)):
-            return _postprocess_predictive_levels(value, injected_p)
+            return _postprocess_predictive_levels(value, postprocessing_config.prediction())
         case tuple(("cmk_postprocessed", "only_from", _)):
-            return only_from
+            return postprocessing_config.only_from()
         case tuple(("cmk_postprocessed", "service_level", _)):
-            return service_level
+            return postprocessing_config.service_level()
         case tuple():
-            return tuple(
-                postprocess_configuration(v, injected_p, only_from, service_level) for v in params
-            )
+            return tuple(postprocess_configuration(v, postprocessing_config) for v in params)
         case list():
-            return list(
-                postprocess_configuration(v, injected_p, only_from, service_level) for v in params
-            )
+            return list(postprocess_configuration(v, postprocessing_config) for v in params)
         case dict():  # check for legacy predictive levels :-(
             return {
                 k: (
-                    injected_p.model_dump()
+                    postprocessing_config.prediction().model_dump()
                     if k == "__injected__"
-                    else postprocess_configuration(v, injected_p, only_from, service_level)
+                    else postprocess_configuration(v, postprocessing_config)
                 )
                 for k, v in params.items()
             }

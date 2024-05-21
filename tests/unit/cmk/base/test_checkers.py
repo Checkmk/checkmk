@@ -188,13 +188,18 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
 
 
 def test_only_from_injection() -> None:
-    inject = InjectedParameters(meta_file_path_template="", predictions={})
+
+    p_config = checkers.PostprocessingConfig(
+        only_from=lambda: ["1.2.3.4"],
+        prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
+        service_level=lambda: 42,
+    )
     p: dict[str, object] = {
         "outer": {
             "inner": ("cmk_postprocessed", "only_from", None),
         },
     }
-    assert checkers.postprocess_configuration(p, inject, ["1.2.3.4"], 42) == {
+    assert checkers.postprocess_configuration(p, p_config) == {
         "outer": {
             "inner": ["1.2.3.4"],
         },
@@ -202,7 +207,11 @@ def test_only_from_injection() -> None:
 
 
 def test_prediction_injection_legacy() -> None:
-    inject = InjectedParameters(meta_file_path_template="", predictions={})
+    p_config = checkers.PostprocessingConfig(
+        only_from=lambda: ["1.2.3.4"],
+        prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
+        service_level=lambda: 42,
+    )
     p: dict[str, object] = {
         "pagefile": (
             "predictive",
@@ -214,11 +223,11 @@ def test_prediction_injection_legacy() -> None:
             },
         )
     }
-    assert checkers.postprocess_configuration(p, inject, [], 42) == {
+    assert checkers.postprocess_configuration(p, p_config) == {
         "pagefile": (
             "predictive",
             {
-                "__injected__": inject.model_dump(),
+                "__injected__": p_config.prediction().model_dump(),
                 "period": "day",
                 "horizon": 60,
                 "levels_upper": ("absolute", (0.5, 1.0)),
@@ -238,8 +247,13 @@ def test_prediction_injection() -> None:
     metric = "my_reference_metric"
     prediction = (42.0, (50.0, 60.0))
 
-    inject = InjectedParameters(
-        meta_file_path_template="", predictions={_make_hash(params, "upper", metric): prediction}
+    p_config = checkers.PostprocessingConfig(
+        only_from=lambda: [],
+        prediction=lambda: InjectedParameters(
+            meta_file_path_template="",
+            predictions={_make_hash(params, "upper", metric): prediction},
+        ),
+        service_level=lambda: 42,
     )
     p: dict[str, object] = {
         "levels_upper": (
@@ -254,7 +268,7 @@ def test_prediction_injection() -> None:
             },
         ),
     }
-    assert checkers.postprocess_configuration(p, inject, [], 42) == {
+    assert checkers.postprocess_configuration(p, p_config) == {
         "levels_upper": (
             "predictive",
             ("my_reference_metric", *prediction),

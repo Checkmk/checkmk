@@ -1557,6 +1557,15 @@ pub async fn find_all_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let found = find_detectable_instance_builders(ms_sql).await;
+    log::info!(
+        "Found {} instances by discovery: [ {} ]",
+        found.len(),
+        found
+            .iter()
+            .map(|i| format!("{}", i.get_name()))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 
     let detected = if ms_sql.discovery().detect() {
         found

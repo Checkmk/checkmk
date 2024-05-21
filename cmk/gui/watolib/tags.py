@@ -13,7 +13,6 @@ from typing import Any, TypeVar
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tags
-from cmk.utils.config_validation_layer.tags import validate_tags
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
@@ -65,10 +64,6 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
     def _save_base_config(self, cfg: TagConfigSpec) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg)
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_tags(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

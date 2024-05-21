@@ -320,10 +320,6 @@ class ErrorReporter:
             "mq_queues",
         ),
         (
-            RuleGroup.CheckgroupParameters("plesk_backups"),
-            "plesk_backups",
-        ),
-        (
             RuleGroup.CheckgroupParameters("ps"),
             "ps",
         ),

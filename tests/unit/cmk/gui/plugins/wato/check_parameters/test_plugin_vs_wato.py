@@ -300,14 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("inotify"),
-            "inotify",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("ipsecvpn"),
-            "fortigate_ipsecvpn",
-        ),
-        (
             RuleGroup.CheckgroupParameters("keepalived"),
             "keepalived",
         ),

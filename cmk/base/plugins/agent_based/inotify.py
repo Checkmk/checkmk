@@ -89,7 +89,7 @@ def _check_inotify(
 
     last_status.update(section.stats.get(path, {}))
 
-    levels = {mode: (warn, crit) for mode, warn, crit in params.get("age_last_operation", [])}
+    levels = {mode: (warn, crit) for mode, warn, crit in params["age_last_operation"]}
 
     for mode, timestamp in sorted(last_status.items()):
         yield from check_levels(
@@ -124,5 +124,5 @@ register.check_plugin(
     discovery_function=discover_inotify,
     check_function=check_inotify,
     check_ruleset_name="inotify",
-    check_default_parameters={},
+    check_default_parameters={"age_last_operation": []},
 )

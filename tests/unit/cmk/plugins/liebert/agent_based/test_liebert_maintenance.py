@@ -42,5 +42,5 @@ def test_check() -> None:
 
     assert result == [
         Result(state=State.OK, summary="Next maintenance: 9/2019"),
-        Result(state=State.OK, summary="2 years 21 days"),
+        Result(state=State.OK, summary="751 days"),
     ]

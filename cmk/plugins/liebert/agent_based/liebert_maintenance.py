@@ -15,7 +15,6 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    render,
     Result,
     Service,
     SimpleSNMPSection,
@@ -65,7 +64,9 @@ def check_liebert_maintenance(params: Mapping[str, Any], section: Section) -> Ch
     yield from check_levels(
         time_left_seconds,
         levels_lower=(warn_days * 86400, crit_days * 86400),
-        render_func=render.timespan,
+        render_func=lambda s: (
+            f"{int(s // 86400)} days" if s > 0 else f"{int(-s // 86400)} days overdue"
+        ),
     )
 
 

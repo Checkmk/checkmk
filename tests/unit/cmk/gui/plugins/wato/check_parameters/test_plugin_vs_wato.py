@@ -300,10 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("lsnat"),
-            "enterasys_lsnat",
-        ),
-        (
             RuleGroup.CheckgroupParameters("memory_multiitem"),
             "casa_cpu_mem",
         ),

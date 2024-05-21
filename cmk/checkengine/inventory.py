@@ -384,7 +384,7 @@ def _collect_inventory_plugin_items(
                 ),
             )
 
-            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok\n")
+            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok")
 
 
 _TV = TypeVar("_TV", bound=Attributes | TableRow)

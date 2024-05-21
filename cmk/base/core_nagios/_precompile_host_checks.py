@@ -84,16 +84,16 @@ class HostCheckStore:
             )
             os.chmod(compiled_filename, 0o750)  # nosec B103 # BNS:c29b0e
 
-        console.verbose(f" ==> {compiled_filename}.\n", file=sys.stderr)
+        console.verbose(f" ==> {compiled_filename}.", file=sys.stderr)
 
 
 def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: ConfigCache) -> None:
-    console.verbose("Creating precompiled host check config...\n")
+    console.verbose("Creating precompiled host check config...")
     hosts_config = config_cache.hosts_config
 
     config.save_packed_config(config_path, config_cache)
 
-    console.verbose("Precompiling host checks...\n")
+    console.verbose("Precompiling host checks...")
 
     host_check_store = HostCheckStore()
     for hostname in {
@@ -103,14 +103,16 @@ def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: Config
         if config_cache.is_active(hn) and config_cache.is_online(hn)
     }:
         try:
-            console.verbose(f"{tty.bold}{tty.blue}{hostname:<16}{tty.normal}:", file=sys.stderr)
+            console.verbose_no_lf(
+                f"{tty.bold}{tty.blue}{hostname:<16}{tty.normal}:", file=sys.stderr
+            )
             host_check = dump_precompiled_hostcheck(
                 config_cache,
                 config_path,
                 hostname,
             )
             if host_check is None:
-                console.verbose("(no Checkmk checks)\n")
+                console.verbose("(no Checkmk checks)")
                 continue
 
             host_check_store.write(config_path, hostname, host_check)
@@ -172,7 +174,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     checks_to_load = sorted(_get_legacy_check_file_names_to_load(needed_legacy_check_plugin_names))
 
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
-        console.verbose(f" {tty.green}{check_plugin_name}{tty.normal}", file=sys.stderr)
+        console.verbose_no_lf(f" {tty.green}{check_plugin_name}{tty.normal}", file=sys.stderr)
 
     # IP addresses
     # FIXME:

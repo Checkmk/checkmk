@@ -698,14 +698,14 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     )
     for host_name in autodiscovery_queue:
         if host_name not in all_hosts:
-            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
+            console.verbose(f"  Removing mark '{host_name}' (host not configured")
             (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 
     if (oldest_queued := autodiscovery_queue.oldest()) is None:
-        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
+        console.verbose("Autodiscovery: No hosts marked by discovery check")
         return {}, False
 
-    console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
+    console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:")
     try:
         response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
         process_hosts: Container[HostName] = {
@@ -747,10 +747,10 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     )
 
                 hosts_processed.add(host_name)
-                console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
+                console.verbose(f"{tty.bold}{host_name}{tty.normal}:")
                 params = config_cache.discovery_check_parameters(host_name)
                 if params.commandline_only:
-                    console.verbose("  failed: discovery check disabled\n")
+                    console.verbose("  failed: discovery check disabled")
                     discovery_result, activate_host = None, False
                 else:
                     with plugin_contexts.current_host(host_name):
@@ -796,7 +796,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     activation_required |= activate_host
 
     except (MKTimeout, TimeoutError) as exc:
-        console.verbose(str(exc))
+        console.verbose_no_lf(str(exc))
 
     if not activation_required:
         return discovery_results, False

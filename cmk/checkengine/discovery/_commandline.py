@@ -173,7 +173,7 @@ def _commandline_discovery_on_host(
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):
-        console.verbose("%s%3d%s %s\n" % (tty.green + tty.bold, count, tty.normal, name))
+        console.verbose(f"{tty.green}{tty.bold}{count:>3}{tty.normal} {name}")
 
     count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} services")

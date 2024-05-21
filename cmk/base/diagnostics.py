@@ -218,7 +218,7 @@ class DiagnosticsDump:
 
     def _create_dump_folder(self) -> None:
         section.section_step("Create dump folder")
-        console.verbose(f"{_format_filepath(self.dump_folder)}\n")
+        console.verbose(f"{_format_filepath(self.dump_folder)}")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self) -> None:
@@ -267,7 +267,7 @@ class DiagnosticsDump:
             "Cleanup dump folder", add_info="keep last %d dumps" % self._keep_num_dumps
         )
         for _mtime, filepath in dumps:
-            console.verbose(f"{_format_filepath(filepath)}\n")
+            console.verbose(f"{_format_filepath(filepath)}")
             self._remove_file(filepath)
 
     def _remove_file(self, filepath: Path) -> None:

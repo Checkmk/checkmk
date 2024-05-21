@@ -127,7 +127,7 @@ def _fetch_all(
         Snapshot,
     ]
 ]:
-    console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA\n")
+    console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA")
     return [
         _do_fetch(
             source.source_info(),

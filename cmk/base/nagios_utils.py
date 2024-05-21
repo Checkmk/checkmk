@@ -16,7 +16,7 @@ import cmk.base.obsolete_output as out
 def do_check_nagiosconfig() -> bool:
     """Execute nagios config verification to ensure the created check_mk_objects.cfg is valid"""
     command = [cmk.utils.paths.nagios_binary, "-vp", cmk.utils.paths.nagios_config_file]
-    console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
+    console.verbose(f"Running '{subprocess.list2cmdline(command)}'")
     out.output("Validating Nagios configuration...")
 
     completed_process = subprocess.run(

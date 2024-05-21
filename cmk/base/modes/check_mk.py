@@ -1038,7 +1038,7 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
 
 
 def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: str, *, backend: SNMPBackend) -> None:
-    console.verbose("%s:\n" % backend.hostname)
+    console.verbose(f"{backend.hostname}:")
 
     oids = oids_to_walk(options)
 
@@ -1046,9 +1046,9 @@ def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: str, *, backend: SNMPBa
         for rows in _execute_walks_for_dump(oids, backend=backend):
             for oid, value in rows:
                 file.write(f"{oid} {value}\n")
-            console.verbose("%d variables.\n" % len(rows))
+            console.verbose(f"{len(rows)} variables.")
 
-    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.\n")
+    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.")
 
 
 def _execute_walks_for_dump(
@@ -1056,7 +1056,7 @@ def _execute_walks_for_dump(
 ) -> Iterable[list[tuple[OID, str]]]:
     for oid in oids:
         try:
-            console.verbose('Walk on "%s"...\n' % oid)
+            console.verbose(f'Walk on "{oid}"...')
             yield walk_for_export(backend.walk(oid, context=""))
         except Exception as e:
             console.error(f"Error: {e}", file=sys.stderr)
@@ -1877,7 +1877,7 @@ def mode_check_discovery(
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(check_result.as_text())
+        console.verbose_no_lf(check_result.as_text())
     else:
         with suppress(IOError):
             sys.stdout.write(check_result.as_text() + "\n")
@@ -2072,30 +2072,21 @@ def _preprocess_hostnames(
     only_host_labels: bool,
 ) -> set[HostName]:
     """Default to all hosts and expand cluster names to their nodes"""
+    svc = "" if only_host_labels else "services and "
     if not arg_host_names:
-        console.verbose(
-            "Discovering %shost labels on all hosts\n"
-            % ("services and " if not only_host_labels else "")
-        )
+        console.verbose(f"Discovering {svc}host labels on all hosts")
         hosts_config = config_cache.hosts_config
         return {
             hn
             for hn in hosts_config.hosts
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         }
-
     node_names = {
         node_name
         for host_name in arg_host_names
         for node_name in (resolve_nodes(host_name) if is_cluster(host_name) else (host_name,))
     }
-
-    console.verbose(
-        "Discovering {}host labels on: {}\n".format(
-            "services and " if not only_host_labels else "", ", ".join(sorted(node_names))
-        )
-    )
-
+    console.verbose(f"Discovering {svc}host labels on: {', '.join(sorted(node_names))}")
     return node_names
 
 
@@ -2411,7 +2402,7 @@ def mode_check(
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(check_result.as_text())
+        console.verbose_no_lf(check_result.as_text())
     else:
         with suppress(IOError):
             sys.stdout.write(check_result.as_text() + "\n")
@@ -2515,7 +2506,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     if args:
         hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
-        console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
+        console.verbose(f"Doing HW/SW inventory on: {', '.join(hostnames)}")
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(
@@ -2525,7 +2516,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                 if config_cache.is_active(hn) and config_cache.is_online(hn)
             }
         )
-        console.verbose("Doing HW/SW inventory on all hosts\n")
+        console.verbose("Doing HW/SW inventory on all hosts")
 
     if "force" in options:
         file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
@@ -2721,10 +2712,10 @@ def _execute_active_check_inventory(
         )
         # The order of archive or save is important:
         if save_tree_actions.do_archive:
-            console.verbose("Archive current inventory tree.\n")
+            console.verbose("Archive current inventory tree.")
             tree_or_archive_store.archive(host_name=host_name)
         if save_tree_actions.do_save:
-            console.verbose("Save new inventory tree.\n")
+            console.verbose("Save new inventory tree.")
             tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
 
     return result.check_result
@@ -2743,18 +2734,18 @@ def _get_save_tree_actions(
 ) -> _SaveTreeActions:
     if not inventory_tree:
         # Archive current inventory tree file if it exists. Important for host inventory icon
-        console.verbose("No inventory tree.\n")
+        console.verbose("No inventory tree.")
         return _SaveTreeActions(do_archive=True, do_save=False)
 
     if not previous_tree:
-        console.verbose("New inventory tree.\n")
+        console.verbose("New inventory tree.")
         return _SaveTreeActions(do_archive=False, do_save=True)
 
     if has_changed := previous_tree != inventory_tree:
-        console.verbose("Inventory tree has changed.\n")
+        console.verbose("Inventory tree has changed.")
 
     if update_result.save_tree:
-        console.verbose(str(update_result))
+        console.verbose_no_lf(str(update_result))
 
     return _SaveTreeActions(
         do_archive=has_changed,
@@ -2836,7 +2827,7 @@ def mode_inventory_as_check(
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(check_result.as_text())
+        console.verbose_no_lf(check_result.as_text())
     else:
         with suppress(IOError):
             sys.stdout.write(check_result.as_text() + "\n")
@@ -2927,7 +2918,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     if not (queue := AutoQueue(cmk.utils.paths.autoinventory_dir)):
-        console.verbose("Autoinventory: No hosts marked by inventory check\n")
+        console.verbose("Autoinventory: No hosts marked by inventory check")
         return
 
     config.load()
@@ -2967,14 +2958,14 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
     for host_name in queue:
         if host_name not in all_hosts:
-            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
+            console.verbose(f"  Removing mark '{host_name}' (host not configured")
             (queue.path / str(host_name)).unlink(missing_ok=True)
 
     if queue.oldest() is None:
-        console.verbose("Autoinventory: No hosts marked by inventory check\n")
+        console.verbose("Autoinventory: No hosts marked by inventory check")
         return
 
-    console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:\n")
+    console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:")
     try:
         response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
         process_hosts: Container[HostName] = {
@@ -3013,7 +3004,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
                     raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
                 )
     except (MKTimeout, TimeoutError) as exc:
-        console.verbose(str(exc))
+        console.verbose_no_lf(str(exc))
 
 
 modes.register(

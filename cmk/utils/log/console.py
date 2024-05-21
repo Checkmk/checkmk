@@ -27,9 +27,16 @@ def info(text: str, *, file: TextIO | None = None) -> None:
         print(text, file=file, flush=True)
 
 
-def verbose(text: str, *, file: TextIO | None = None) -> None:
+# TODO: Figure out where this is used for a "real" console vs. some internal protocol.
+# The latter should really be disentangled from this file here.
+def verbose_no_lf(text: str, *, file: TextIO | None = None) -> None:
     if _console.isEnabledFor(VERBOSE):
         print(text, end="", file=file, flush=True)
+
+
+def verbose(text: str, *, file: TextIO | None = None) -> None:
+    if _console.isEnabledFor(VERBOSE):
+        print(text, file=file, flush=True)
 
 
 def debug(text: str, *, file: TextIO | None = None) -> None:

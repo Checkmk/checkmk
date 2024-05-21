@@ -128,7 +128,7 @@ def automation_discovery(
     on_error: OnError,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> DiscoveryResult:
-    console.verbose("  Doing discovery with '%r'...\n" % settings)
+    console.verbose("  Doing discovery with '{settings!r}'...")
     results = {
         host_name: DiscoveryResult(),
         **{node: DiscoveryResult() for node in cluster_nodes},
@@ -450,7 +450,7 @@ def autodiscovery(
         oldest_queued=oldest_queued,
     )
     if reason:
-        console.verbose(f"  skipped: {reason}\n")
+        console.verbose(f"  skipped: {reason}")
         return None, False
 
     result = automation_discovery(
@@ -481,7 +481,7 @@ def autodiscovery(
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain
         # compatible with the automation code
-        console.verbose(f"  failed: {result.error_text or 'host is offline'}\n")
+        console.verbose(f"  failed: {result.error_text or 'host is offline'}")
         # delete the file even in error case, otherwise we might be causing the same error
         # every time the cron job runs
         (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
@@ -498,10 +498,10 @@ def autodiscovery(
     )
 
     if not something_changed:
-        console.verbose("  nothing changed.\n")
+        console.verbose("  nothing changed.")
         activation_required = False
     else:
-        console.verbose(
+        console.verbose_no_lf(
             f"  {result.self_new} new, {result.self_removed} removed, "
             f"{result.self_kept} kept, {result.self_changed} changed, "
             f"{result.self_total} total services "

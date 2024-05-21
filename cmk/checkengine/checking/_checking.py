@@ -221,5 +221,5 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
     if check_timeperiod(period):
         console.debug(f"Service {description}: time period {period} is currently active.")
         return False
-    console.verbose(f"Skipping service {description}: currently not in time period {period}.\n")
+    console.verbose(f"Skipping service {description}: currently not in time period {period}.")
     return True

@@ -861,16 +861,12 @@ def get_aggregated_result(
 
 
 def _final_read_only_check_parameters(
-    entries: TimespecificParameters | LegacyCheckParameters,
+    entries: TimespecificParameters,
     injected_p: InjectedParameters,
     only_from: None | str | list[str],
     service_level: int,
 ) -> Parameters:
-    params = (
-        entries.evaluate(timeperiod_active)
-        if isinstance(entries, TimespecificParameters)
-        else entries
-    )
+    params = entries.evaluate(timeperiod_active)
     return Parameters(
         # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
         # wrap_parameters is a no-op for dictionaries.

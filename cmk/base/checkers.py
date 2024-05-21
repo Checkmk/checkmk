@@ -533,6 +533,10 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
 def _compute_final_check_parameters(
     host_name: HostName, service: ConfiguredService, config_cache: ConfigCache
 ) -> Parameters:
+    params = service.parameters.evaluate(timeperiod_active)
+    if not _needs_postprocessing(params):
+        return Parameters(params)
+
     # Whatch out. The CMC has to agree on the path.
     prediction_store = PredictionStore(
         cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
@@ -558,14 +562,11 @@ def _compute_final_check_parameters(
     # to optimize these computations.
     only_from = config_cache.only_from(host_name)
     service_level = config_cache.effective_service_level(host_name, service.description)
-    params = service.parameters.evaluate(timeperiod_active)
     return Parameters(
         {
             k: postprocess_configuration(v, injected_p, only_from, service_level)
             for k, v in params.items()
         }
-        if _needs_postprocessing(params)
-        else params
     )
 
 

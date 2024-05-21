@@ -24,7 +24,6 @@ import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
 from cmk.utils import password_store
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -868,17 +867,12 @@ def _final_read_only_check_parameters(
 ) -> Parameters:
     params = entries.evaluate(timeperiod_active)
     return Parameters(
-        # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
-        # wrap_parameters is a no-op for dictionaries.
-        # For auto-migrated plugins expecting tuples, they will be
-        # unwrapped by a decorator of the original check_function.
-        wrap_parameters(
-            (
-                postprocess_configuration(params, injected_p, only_from, service_level)
-                if _needs_postprocessing(params)
-                else params
-            ),
-        )
+        {
+            k: postprocess_configuration(v, injected_p, only_from, service_level)
+            for k, v in params.items()
+        }
+        if _needs_postprocessing(params)
+        else params
     )
 
 
@@ -987,7 +981,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
                 AutocheckEntry(
                     check_plugin_name=check_plugin_name,
                     item=service.item,
-                    parameters=unwrap_parameters(service.parameters),
+                    parameters=service.parameters,
                     service_labels={label.name: label.value for label in service.labels},
                 )
                 for service in plugin.discovery_function(*args, **kw)

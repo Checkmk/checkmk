@@ -14,7 +14,7 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from typing import Any
 
-from cmk.utils.check_utils import maincheckify, unwrap_parameters
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 
 from cmk.checkengine.parameters import Parameters
@@ -115,7 +115,7 @@ def _create_check_function(
             # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
             # call sites to introduce this into legacy code, so use the plain dict.
             parameters = copy.deepcopy(parameters._data)
-        kwargs["params"] = unwrap_parameters(parameters)
+        kwargs["params"] = parameters
 
         if not requires_item:
             # this handles a very weird case, in which check plugins do not have an '%s'

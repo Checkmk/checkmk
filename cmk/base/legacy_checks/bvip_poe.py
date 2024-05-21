@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -20,15 +20,8 @@ def inventory_bvip_poe(info):
 
 
 def check_bvip_poe(_no_item, params, info):
-    warn, crit = params["levels"]
     watt = float(info[0][0]) / 10
-    if watt >= crit:
-        state = 2
-    elif watt >= warn:
-        state = 1
-    else:
-        state = 0
-    return state, "%.3f W" % watt, [("power", watt)]
+    return check_levels(watt, "power", params.get("levels"), unit="W")
 
 
 def parse_bvip_poe(string_table: StringTable) -> StringTable:
@@ -46,5 +39,5 @@ check_info["bvip_poe"] = LegacyCheckDefinition(
     discovery_function=inventory_bvip_poe,
     check_function=check_bvip_poe,
     check_ruleset_name="epower_single",
-    check_default_parameters={"levels": (50.0, 60.0)},
+    check_default_parameters={"levels": (50, 60)},
 )

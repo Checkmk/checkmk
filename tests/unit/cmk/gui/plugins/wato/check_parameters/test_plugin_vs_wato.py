@@ -300,18 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("epower_single"),
-            "bvip_poe",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("epower_single"),
-            "tplink_poe_summary",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("esx_vsphere_objects_count"),
-            "esx_vsphere_objects_count",
-        ),
-        (
             RuleGroup.CheckgroupParameters("fortigate_antivirus"),
             "fortigate_antivirus",
         ),

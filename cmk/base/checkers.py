@@ -59,7 +59,7 @@ from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabel
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import Parameters, TimespecificParameters
+from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
 from cmk.checkengine.sectionparserutils import (
@@ -558,8 +558,14 @@ def _compute_final_check_parameters(
     # to optimize these computations.
     only_from = config_cache.only_from(host_name)
     service_level = config_cache.effective_service_level(host_name, service.description)
-    return _final_read_only_check_parameters(
-        service.parameters, injected_p, only_from, service_level
+    params = service.parameters.evaluate(timeperiod_active)
+    return Parameters(
+        {
+            k: postprocess_configuration(v, injected_p, only_from, service_level)
+            for k, v in params.items()
+        }
+        if _needs_postprocessing(params)
+        else params
     )
 
 
@@ -856,23 +862,6 @@ def get_aggregated_result(
                 if (cache_info := resolved.cache_info) is not None
             )
         ),
-    )
-
-
-def _final_read_only_check_parameters(
-    entries: TimespecificParameters,
-    injected_p: InjectedParameters,
-    only_from: None | str | list[str],
-    service_level: int,
-) -> Parameters:
-    params = entries.evaluate(timeperiod_active)
-    return Parameters(
-        {
-            k: postprocess_configuration(v, injected_p, only_from, service_level)
-            for k, v in params.items()
-        }
-        if _needs_postprocessing(params)
-        else params
     )
 
 

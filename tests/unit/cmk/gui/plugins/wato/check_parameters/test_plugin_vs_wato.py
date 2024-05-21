@@ -300,14 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("hivemanager_devices"),
-            "hivemanager_devices",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("huawei_osn_laser"),
-            "huawei_osn_laser",
-        ),
-        (
             RuleGroup.CheckgroupParameters("inotify"),
             "inotify",
         ),

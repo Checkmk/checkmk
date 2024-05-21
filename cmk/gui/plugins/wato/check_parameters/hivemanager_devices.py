@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Age, Dictionary, FixedValue, Integer, ListChoice, TextInput, Tuple
+from cmk.gui.valuespec import Age, Checkbox, Dictionary, Integer, ListChoice, TextInput, Tuple
 
 hivemanger_states = [
     ("Critical", "Critical"),
@@ -45,10 +45,9 @@ def _parameter_valuespec_hivemanager_devices():
             ),
             (
                 "alert_on_loss",
-                FixedValue(
-                    value=False,
-                    totext="",
-                    title=_("Do not alert on connection loss"),
+                Checkbox(
+                    label=_("Alert on connection loss"),
+                    title=_("Configure alerting on connection loss"),
                 ),
             ),
             (

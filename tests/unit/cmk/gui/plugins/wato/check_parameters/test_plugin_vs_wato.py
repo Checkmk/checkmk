@@ -299,202 +299,195 @@ class ErrorReporter:
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
-        # type # plug-in # wato
+        # ruleset name # plug-in
         (
-            "check",
-            "apc_symmetra_temp",
-            RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        ("check", "bvip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        ("check", "bvip_poe", RuleGroup.CheckgroupParameters("epower_single")),
-        (
-            "check",
-            "casa_cpu_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "cisco_prime_wifi_connections",
             RuleGroup.CheckgroupParameters("cisco_prime_wifi_connections"),
+            "cisco_prime_wifi_connections",
         ),
         (
-            "check",
-            "couchbase_buckets_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "ddn_s2a_stats_io",
-            RuleGroup.CheckgroupParameters("storage_iops"),
-        ),
-        (
-            "check",
-            "dell_idrac_fans",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        ("check", "dell_om_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        (
-            "check",
-            "docsis_channels_upstream",
             RuleGroup.CheckgroupParameters("docsis_channels_upstream"),
-        ),
-        ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
-        (
-            "check",
-            "esx_vsphere_objects_count",
-            RuleGroup.CheckgroupParameters("esx_vsphere_objects_count"),
+            "docsis_channels_upstream",
         ),
         (
-            "check",
-            "esx_vsphere_vm_guest_tools",
-            RuleGroup.CheckgroupParameters("vm_guest_tools"),
-        ),
-        (
-            "check",
-            "esx_vsphere_vm_heartbeat",
-            RuleGroup.CheckgroupParameters("vm_heartbeat"),
-        ),
-        (
-            "check",
-            "fortigate_antivirus",
-            RuleGroup.CheckgroupParameters("fortigate_antivirus"),
-        ),
-        (
-            "check",
-            "fortigate_ips",
-            RuleGroup.CheckgroupParameters("fortigate_ips"),
-        ),
-        (
-            "check",
-            "fortigate_ipsecvpn",
-            RuleGroup.CheckgroupParameters("ipsecvpn"),
-        ),
-        (
-            "check",
-            "fortimail_cpu_load",
-            RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
-        ),
-        (
-            "check",
-            "hivemanager_devices",
-            RuleGroup.CheckgroupParameters("hivemanager_devices"),
-        ),
-        (
-            "check",
-            "huawei_osn_laser",
-            RuleGroup.CheckgroupParameters("huawei_osn_laser"),
-        ),
-        ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
-        ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
-        ("check", "lvm_vgs", RuleGroup.CheckgroupParameters("volume_groups")),
-        (
-            "check",
-            "mongodb_collections",
-            RuleGroup.CheckgroupParameters("mongodb_collections"),
-        ),
-        ("check", "mq_queues", RuleGroup.CheckgroupParameters("mq_queues")),
-        (
-            "check",
-            "msexch_isclienttype",
-            RuleGroup.CheckgroupParameters("msx_info_store"),
-        ),
-        (
-            "check",
-            "msexch_isstore",
-            RuleGroup.CheckgroupParameters("msx_info_store"),
-        ),
-        (
-            "check",
-            "mssql_connections",
-            RuleGroup.CheckgroupParameters("mssql_connections"),
-        ),
-        (
-            "check",
-            "mysql_slave",
-            RuleGroup.CheckgroupParameters("mysql_slave"),
-        ),
-        (
-            "check",
-            "netapp_api_environment_fan_faults",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "netapp_api_environment_fans",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "netscaler_health_fan",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "openhardwaremonitor_fan",
-            RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "openhardwaremonitor_temperature",
-            RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        (
-            "check",
-            "plesk_backups",
-            RuleGroup.CheckgroupParameters("plesk_backups"),
-        ),
-        (
-            "check",
-            "prometheus_custom",
-            RuleGroup.CheckgroupParameters("prometheus_custom"),
-        ),
-        ("check", "ps", RuleGroup.CheckgroupParameters("ps")),
-        (
-            "check",
-            "pulse_secure_mem_util",
-            RuleGroup.CheckgroupParameters("pulse_secure_mem_util"),
-        ),
-        (
-            "check",
-            "pulse_secure_users",
-            RuleGroup.CheckgroupParameters("pulse_secure_users"),
-        ),
-        ("check", "qnap_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        ("check", "quanta_fan", RuleGroup.CheckgroupParameters("hw_fans")),
-        (
-            "check",
-            "ra32e_switch",
-            RuleGroup.CheckgroupParameters("switch_contact"),
-        ),
-        (
-            "check",
-            "rabbitmq_nodes_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "redis_info_persistence",
-            RuleGroup.CheckgroupParameters("redis_info_persistence"),
-        ),
-        (
-            "check",
-            "skype_conferencing",
-            RuleGroup.CheckgroupParameters("skype_conferencing"),
-        ),
-        (
-            "check",
-            "skype_sip_stack",
-            RuleGroup.CheckgroupParameters("skype_sip"),
-        ),
-        (
-            "check",
-            "tplink_mem",
-            RuleGroup.CheckgroupParameters("memory_percentage_used"),
-        ),
-        (
-            "check",
-            "tplink_poe_summary",
             RuleGroup.CheckgroupParameters("epower_single"),
+            "bvip_poe",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("epower_single"),
+            "tplink_poe_summary",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("esx_vsphere_objects_count"),
+            "esx_vsphere_objects_count",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("fortigate_antivirus"),
+            "fortigate_antivirus",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("fortigate_ips"),
+            "fortigate_ips",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
+            "fortimail_cpu_load",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hivemanager_devices"),
+            "hivemanager_devices",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("huawei_osn_laser"),
+            "huawei_osn_laser",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "bvip_fans",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "dell_idrac_fans",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "dell_om_fans",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "netapp_api_environment_fan_faults",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "netapp_api_environment_fans",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "netscaler_health_fan",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "openhardwaremonitor_fan",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "qnap_fans",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("hw_fans"),
+            "quanta_fan",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("inotify"),
+            "inotify",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("ipsecvpn"),
+            "fortigate_ipsecvpn",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("keepalived"),
+            "keepalived",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("lsnat"),
+            "enterasys_lsnat",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("memory_multiitem"),
+            "casa_cpu_mem",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("memory_multiitem"),
+            "couchbase_buckets_mem",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("memory_multiitem"),
+            "rabbitmq_nodes_mem",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("memory_percentage_used"),
+            "tplink_mem",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("mongodb_collections"),
+            "mongodb_collections",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("mq_queues"),
+            "mq_queues",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("mssql_connections"),
+            "mssql_connections",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("msx_info_store"),
+            "msexch_isclienttype",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("msx_info_store"),
+            "msexch_isstore",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("mysql_slave"),
+            "mysql_slave",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("plesk_backups"),
+            "plesk_backups",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("prometheus_custom"),
+            "prometheus_custom",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("ps"),
+            "ps",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("pulse_secure_mem_util"),
+            "pulse_secure_mem_util",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("pulse_secure_users"),
+            "pulse_secure_users",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("redis_info_persistence"),
+            "redis_info_persistence",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("skype_conferencing"),
+            "skype_conferencing",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("skype_sip"),
+            "skype_sip_stack",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("storage_iops"),
+            "ddn_s2a_stats_io",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("switch_contact"),
+            "ra32e_switch",
+        ),
+        (RuleGroup.CheckgroupParameters("temperature"), "apc_symmetra_temp"),
+        (
+            RuleGroup.CheckgroupParameters("temperature"),
+            "openhardwaremonitor_temperature",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("vm_guest_tools"),
+            "esx_vsphere_vm_guest_tools",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("vm_heartbeat"),
+            "esx_vsphere_vm_heartbeat",
+        ),
+        (
+            RuleGroup.CheckgroupParameters("volume_groups"),
+            "lvm_vgs",
         ),
     }
 
@@ -503,7 +496,12 @@ class ErrorReporter:
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
         self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
-        self._known_error_loading_defaults = self.KNOWN_ERROR_LOADING_DEFAULTS.copy()
+        self._known_error_loading_defaults = {
+            # I'm too lazy to adjust the rest of the code. Rather invest
+            # the time to fix stuff
+            ("check", plugin, wato)
+            for wato, plugin in self.KNOWN_ERROR_LOADING_DEFAULTS
+        }
 
     def failed(self) -> bool:
         return self._failed

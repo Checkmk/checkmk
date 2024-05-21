@@ -65,7 +65,6 @@ def _parameter_valuespec_prometheus_custom():
                     ),
                     title=_("Metric levels"),
                     add_label=_("Add metric level"),
-                    allow_empty=False,
                     help=_(
                         "Specify upper and/or lower levels for a queried PromQL value. The matching happens "
                         "on a 2-level basis: First on the service description level where the regular "

@@ -344,10 +344,6 @@ class ErrorReporter:
             "plesk_backups",
         ),
         (
-            RuleGroup.CheckgroupParameters("prometheus_custom"),
-            "prometheus_custom",
-        ),
-        (
             RuleGroup.CheckgroupParameters("ps"),
             "ps",
         ),

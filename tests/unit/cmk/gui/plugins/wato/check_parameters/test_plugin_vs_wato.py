@@ -320,10 +320,6 @@ class ErrorReporter:
             "mq_queues",
         ),
         (
-            RuleGroup.CheckgroupParameters("mysql_slave"),
-            "mysql_slave",
-        ),
-        (
             RuleGroup.CheckgroupParameters("plesk_backups"),
             "plesk_backups",
         ),

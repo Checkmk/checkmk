@@ -1698,7 +1698,7 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
     """Handles reading and writing rules.mk files"""
 
     def __init__(self, config_file_path: Path) -> None:
-        super().__init__(config_file_path=config_file_path)
+        super().__init__(config_file_path=config_file_path, spec_class=Mapping[RulesetName, Any])
 
     @property
     def folder(self) -> Folder:

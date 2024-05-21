@@ -24,6 +24,7 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "passwords.mk",
             config_variable="stored_passwords",
+            spec_class=Password,
         )
 
     def filter_usable_entries(self, entries: dict[str, Password]) -> dict[str, Password]:

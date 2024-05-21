@@ -8,10 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
-from pydantic import TypeAdapter, ValidationError
-
 from cmk.utils import store
-from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 from cmk.gui import hooks
 from cmk.gui.config import active_config, builtin_role_ids
@@ -72,6 +69,7 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
         super().__init__(
             config_file_path=Path(multisite_dir()) / "roles.mk",
             config_variable="roles",
+            spec_class=dict[RoleName, CustomUserRole | BuiltInUserRole],
         )
 
     def _load_file(self, lock: bool = False) -> Roles:
@@ -96,17 +94,6 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
         active_config.roles.update(cfg)
         hooks.call("roles-saved", cfg)
         super().save(cfg)
-
-    def read_file_and_validate(self) -> None:
-        userroles = self.load_for_reading()
-        try:
-            TypeAdapter(dict[RoleName, CustomUserRole | BuiltInUserRole]).validate_python(userroles)
-        except ValidationError as exc:
-            raise ConfigValidationError(
-                which_file="roles.mk",
-                pydantic_error=exc,
-                original_data=userroles,
-            )
 
 
 def load_roles() -> Roles:

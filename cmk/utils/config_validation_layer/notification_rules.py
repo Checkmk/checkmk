@@ -7,9 +7,8 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import Annotated, Any, Literal, NotRequired, Sequence, TypedDict
 from uuid import UUID
 
-from pydantic import PlainValidator, TypeAdapter, ValidationError, ValidationInfo
+from pydantic import PlainValidator, TypeAdapter, ValidationInfo
 
-from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.timeperiod import TimeperiodName
 
 
@@ -576,14 +575,3 @@ class EventRule(TypedDict):
     bulk: NotRequired[NotifyBulkType]
     match_service_level: NotRequired[tuple[int, int]]
     match_only_during_timeperiod: NotRequired[str]
-
-
-def validate_notification_rules(rules: list) -> None:
-    try:
-        TypeAdapter(list[EventRule]).validate_python(rules, strict=True)
-    except ValidationError as exc:
-        raise ConfigValidationError(
-            which_file="notifications.mk",
-            pydantic_error=exc,
-            original_data=rules,
-        )

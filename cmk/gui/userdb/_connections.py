@@ -9,11 +9,7 @@ from pathlib import Path
 from typing import Any, cast, Literal, NotRequired, TypedDict
 
 import cmk.utils.store as store
-from cmk.utils.config_validation_layer.user_connections import (
-    PrivateKeyPath,
-    PublicKeyPath,
-    validate_user_connections,
-)
+from cmk.utils.config_validation_layer.user_connections import PrivateKeyPath, PublicKeyPath
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
@@ -326,7 +322,7 @@ def load_connection_config(lock: bool = False) -> UserConnections:
     return UserConnectionConfigFile().load_for_reading()
 
 
-def save_connection_config(connections: Sequence[ConfigurableUserConnectionSpec]) -> None:
+def save_connection_config(connections: list[ConfigurableUserConnectionSpec]) -> None:
     """Save the connections for the Setup
 
     Note:
@@ -358,25 +354,10 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         super().__init__(
             config_file_path=Path(multisite_dir() + "user_connections.mk"),
             config_variable="user_connections",
+            spec_class=ConfigurableUserConnectionSpec,
         )
 
-    def load_for_reading(self) -> Sequence[ConfigurableUserConnectionSpec]:
-        cfg = self._load_file(lock=False)
-        return cfg
-
-    def load_for_modification(self) -> list[ConfigurableUserConnectionSpec]:
-        cfg = self._load_file(lock=True)
-        return cfg
-
-    def _load_file(self, lock: bool) -> list[ConfigurableUserConnectionSpec]:
-        return store.load_from_mk_file(
-            self._config_file_path,
-            key=self._config_variable,
-            default=[],
-            lock=lock,
-        )
-
-    def save(self, cfg: Sequence) -> None:
+    def save(self, cfg: list[ConfigurableUserConnectionSpec]) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             str(self._config_file_path),
@@ -389,19 +370,6 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
             connector_class.config_changed()
 
         clear_user_connection_cache()
-
-    def load_without_validation(self, lock: bool = False) -> list[ConfigurableUserConnectionSpec]:
-        """Only use this directly for update config actions"""
-        return self._load_file(lock=True)
-
-    def save_without_validation(self, cfg: list) -> None:
-        """Only use this directly for update config actions"""
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        self.save(cfg)
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_user_connections(cfg)
 
 
 def register_config_file(config_file_registry: ConfigFileRegistry) -> None:

@@ -68,6 +68,7 @@ class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
         super().__init__(
             config_file_path=Path(cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"),
             config_variable="sites",
+            spec_class=SiteConfigurations,
         )
 
     def _load_file(self, lock: bool) -> SiteConfigurations:

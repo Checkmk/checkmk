@@ -309,7 +309,9 @@ class UsersConfigFile(WatoSingleConfigFile[dict]):
 
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(multisite_dir()) / "users.mk", config_variable="multisite_users"
+            config_file_path=Path(multisite_dir()) / "users.mk",
+            config_variable="multisite_users",
+            spec_class=dict,
         )
 
     def read_file_and_validate(self) -> None:
@@ -322,7 +324,9 @@ class ContactsConfigFile(WatoSingleConfigFile[dict]):
 
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(wato_root_dir()) / "contacts.mk", config_variable="contacts"
+            config_file_path=Path(wato_root_dir()) / "contacts.mk",
+            config_variable="contacts",
+            spec_class=dict,
         )
 
     def read_file_and_validate(self) -> None:

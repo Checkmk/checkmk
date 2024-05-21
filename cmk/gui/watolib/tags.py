@@ -39,6 +39,7 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
         super().__init__(
             config_file_path=Path(multisite_dir()) / "tags.mk",
             config_variable="wato_tags",
+            spec_class=TagConfigSpec,
         )
 
     def _load_file(self, lock: bool = False) -> TagConfigSpec:

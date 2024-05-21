@@ -110,7 +110,7 @@ class GroupAliasConfigFile(WatoMultiConfigFile[GroupAliases]):
             config_dir = Path(paths.default_config_dir)
         super().__init__(
             config_file_path=config_dir / "conf.d" / "wato" / "groups.mk",
-            model_class=GroupAliases,
+            spec_class=GroupAliases,
             load_default=lambda: GroupAliases(
                 define_hostgroups={}, define_servicegroups={}, define_contactgroups={}
             ),
@@ -134,7 +134,7 @@ class GroupsConfigFile(WatoMultiConfigFile[GroupConfigs]):
             config_dir = Path(paths.default_config_dir)
         super().__init__(
             config_file_path=config_dir / "multisite.d" / "wato" / "groups.mk",
-            model_class=GroupConfigs,
+            spec_class=GroupConfigs,
             load_default=lambda: GroupConfigs(
                 multisite_hostgroups={}, multisite_servicegroups={}, multisite_contactgroups={}
             ),

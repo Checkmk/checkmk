@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import cmk.utils.store as store
-from cmk.utils.config_validation_layer.notification_rules import validate_notification_rules
+from cmk.utils.config_validation_layer.notification_rules import EventRule as EventRuleValidation
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EventRule,
@@ -70,18 +70,20 @@ from cmk.gui.rest_api_types.notifications_types import (
     NotificationPlugin,
 )
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 
 logger = logging.getLogger(__name__)
 
 
-class NotificationRuleConfigFile(WatoSingleConfigFile[list[EventRule]]):
+class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
+
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir() + "notifications.mk"),
             config_variable="notification_rules",
+            spec_class=EventRuleValidation,
         )
 
     def _load_file(self, lock: bool) -> list[EventRule]:
@@ -100,10 +102,6 @@ class NotificationRuleConfigFile(WatoSingleConfigFile[list[EventRule]]):
                 rule["notify_plugin"] = (plugin, method)
 
         return notification_rules
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_notification_rules(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

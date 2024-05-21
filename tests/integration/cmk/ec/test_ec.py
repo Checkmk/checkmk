@@ -167,7 +167,7 @@ def _get_snmp_trap_cmd(event_message: str) -> list:
 
 
 @pytest.fixture(name="setup_ec", scope="function")
-def _setup_ec(site: Site) -> Iterator:
+def _setup_ec(site: Site) -> Iterator[tuple[str, str, State]]:
     match = "dummy"
     rule_id = f"test {match}"
     rule_state: State = 1
@@ -209,7 +209,7 @@ def _restart_site(site: Site) -> Iterator[None]:
 
 
 @pytest.fixture(name="enable_receivers", scope="module")
-def _enable_snmp_receivers(site: Site, restart_site: None) -> Iterator[None]:
+def _enable_receivers(site: Site, restart_site: None) -> Iterator[None]:
     initial_config: dict = {}
     for receiver in ["MKEVENTD_SNMPTRAP", "MKEVENTD_SYSLOG", "MKEVENTD_SYSLOG_TCP"]:
         p_out, _ = _execute_cmd_and_validate_return_code(
@@ -375,3 +375,35 @@ def test_ec_global_settings(
     assert re.compile(pattern).search(
         queried_event_messages[0]
     ), f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
+
+
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.parametrize("udp_enabled", [True, False], ids=["udp", "tcp"])
+def test_ec_rule_syslog(
+    site: Site,
+    setup_ec: Iterator,
+    enable_receivers: None,
+    udp_enabled: bool,
+) -> None:
+    """Generate a message via Syslog matching an EC rule and assert an event is created"""
+    match, rule_id, rule_state = setup_ec
+    event_message = f"some {match} status"
+    _generate_message_via_syslog(site, event_message, udp=udp_enabled)
+
+    # retrieve id of matching rule via livestatus query
+    queried_rule_ids = _wait_for_queried_column(site, "GET eventconsolerules\nColumns: rule_id\n")
+    assert rule_id in queried_rule_ids
+
+    # retrieve matching event state via livestatus query
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n"
+    )
+    assert len(queried_event_states) == 1
+    assert queried_event_states[0] == rule_state
+
+    # retrieve matching event message via livestatus query
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
+    assert len(queried_event_messages) == 1
+    assert queried_event_messages[0] == event_message

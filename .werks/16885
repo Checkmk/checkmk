@@ -1,0 +1,13 @@
+Title: Crash: liebert_maintenance: ValueError("Cannot render negative timespan") when time is overdue
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1716279854
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+<code>liebert_maintenance</code> check would crash with <code>ValueError("Cannot render negative timespan")</code> if the
+value for "Next maintenance" is in the past.
+This change now renders positive and negative values differently (also only printing days) adding
+<code>'overdue'</code> if date for next maintenance is located in the past.

@@ -25,7 +25,7 @@ checks = {
             {"levels": (10, 5)},
             [
                 (0, "Next maintenance: 9/2019", []),
-                (1, "7 days 11 hours (warn/crit below 10 days 0 hours/5 days 0 hours)", []),
+                (1, "7 days (warn/crit below 10 days/5 days)", []),
             ],
         ),
     ],

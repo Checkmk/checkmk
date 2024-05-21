@@ -39,7 +39,14 @@ def check_liebert_maintenance(_no_item, params, parsed):
 
     warn_days, crit_days = params["levels"]
     levels = (None, None, warn_days * 86400, crit_days * 86400)
-    yield check_levels(time_left_seconds, None, levels, human_readable_func=get_age_human_readable)
+    yield check_levels(
+        time_left_seconds,
+        None,
+        levels,
+        human_readable_func=lambda s: (
+            f"{int(s // 86400)} days" if s > 0 else f"{int(-s // 86400)} days overdue"
+        ),
+    )
 
 
 check_info["liebert_maintenance"] = {

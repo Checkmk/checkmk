@@ -1,14 +1,12 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-#
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-05-15 15:01+0000\n"
-"Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
+"PO-Revision-Date: 2024-05-17 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -4820,7 +4818,7 @@ msgid "Agent plug-ins: versions"
 msgstr "Agenten-Plugins: Versionen"
 
 msgid "Agent receiver port"
-msgstr "Agent Receiver Schnittstelle"
+msgstr "Agent Receiver-Schnittstelle"
 
 msgid "Agent registration"
 msgstr "Agentenregistrierung"
@@ -9142,7 +9140,7 @@ msgid ""
 msgstr ""
 "Standardmäßig ignoriert der Controller die auf dem Zielsystem konfigurierten "
 "Proxy-Server und stellt eine direkte Verbindung her (z. B. bei der Abfrage "
-"des Agenten-Empfängerports über die Checkmk REST-API)."
+"des Agent Receiver Ports über die Checkmk REST-API)."
 
 msgid ""
 "By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
@@ -12547,8 +12545,8 @@ msgid ""
 "Configure TLS certificate validation for querying the agent receiver port "
 "from the Checkmk REST API"
 msgstr ""
-"Konfigurieren Sie die TLS-Zertifikatsvalidierung für die Abfrage des Agenten-"
-"Empfängerports von der Checkmk REST-API"
+"Konfigurieren Sie die TLS-Zertifikatsvalidierung für die Abfrage des Agent "
+"Receiver Ports von der Checkmk REST-API"
 
 msgid "Configure Windows Firewall to allow host monitoring"
 msgstr "Konfiguriere Windows Firewall so, dass Host-Monitoring erlaubt ist"
@@ -27307,7 +27305,7 @@ msgid ""
 "calling Support Diagnostics from command line (see inline help)."
 msgstr ""
 "Bei Überschreitung erscheint eine Exception. In Ausnahmefällen können Sie "
-"die Support-Diagnose über die Befehlszeile aufrufen (siehe Inline-Hilfe)."
+"die Support Diagnostics über die Befehlszeile aufrufen (siehe Inline-Hilfe)."
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
@@ -53722,7 +53720,7 @@ msgid "Support"
 msgstr "Support"
 
 msgid "Support diagnostics"
-msgstr "Support-Diagnose"
+msgstr "Support Diagnostics"
 
 msgid "Suppress not available sensors"
 msgstr "Unterdrücke nicht verfügbare Sensoren"
@@ -57150,10 +57148,16 @@ msgid ""
 "following command as site user 'cmk-update-license-usage --force' in order "
 "to solve this situation."
 msgstr ""
+"Die History der Lizenznutzung ist älter als fünf Tage. Um einen "
+"zuverlässigen Durchschnittswert für die Anzahl der Services zu erhalten, "
+"muss der Lizenznutzungsbericht eine erhebliche Anzahl von Beispielen für die "
+"Lizenznutzung enthalten. Bitte führen Sie den folgenden Befehl als "
+"Instanzbenutzer aus 'cmk-update-license-usage --force', um diese Situation "
+"zu lösen."
 
-#, fuzzy
 msgid "The license usage history was updated at least three days ago."
-msgstr "Die History der Lizenznutzung ist älter als fünf Tage."
+msgstr ""
+"Die History der Lizenznutzung wurde vor mindestens drei Tagen aktualisiert."
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Die Grenze für das Transport-Lag in <tt>v$dataguard_stats</tt>"
@@ -59060,9 +59064,9 @@ msgid ""
 "'cmk --create-diagnostics-dump' with  appropriate parameters in the context "
 "of the affected site."
 msgstr ""
-"Der Timeout in Sekunden beim Sammeln der Support-Diagnosedaten. Der "
+"Der Timeout in Sekunden beim Sammeln der Support Diagnostics Daten. Der "
 "Standardwert ist 110 Sekunden. Wenn sehr große Dateien gesammelt werden, ist "
-"es auch möglich, die Support-Diagnose von der Kommandozeile aus mit dem "
+"es auch möglich, die Support Diagnostics von der Kommandozeile aus mit dem "
 "Befehl 'cmk --create-diagnostics-dump' mit den entsprechenden Parametern im "
 "Kontext der betroffenen Instanz aufzurufen."
 
@@ -68782,16 +68786,14 @@ msgstr "Details zur Verwendung"
 msgid "Usage levels"
 msgstr "Auslastungslevel"
 
-#, fuzzy
 msgid "Use \"CERT\" as service name prefix"
-msgstr "\"CERT als Präfix\" verwenden"
+msgstr "\"CERT\" als Service-Namens-Präfix verwenden"
 
 msgid "Use \"Checkmk Automation\" user"
 msgstr "Benutzer \"Checkmk Automation\" verwenden"
 
-#, fuzzy
 msgid "Use \"HTTP(S)\" as service name prefix"
-msgstr "Portnamen als Service-Namen verwenden"
+msgstr "\"HTTP(S)\" als Service-Namens-Präfix verwenden"
 
 msgid ""
 "Use <tt>127.0.0.1</tt> should be correct in almost every situation. It is "

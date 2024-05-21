@@ -300,10 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("keepalived"),
-            "keepalived",
-        ),
-        (
             RuleGroup.CheckgroupParameters("lsnat"),
             "enterasys_lsnat",
         ),

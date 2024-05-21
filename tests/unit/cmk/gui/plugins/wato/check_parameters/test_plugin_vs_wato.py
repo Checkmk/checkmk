@@ -270,7 +270,6 @@ class ErrorReporter:
         ("check", "3ware_units", "raid"),
         ("check", "brocade_tm", "brocade_tm"),
         ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
-        ("check", "domino_tasks", "domino_tasks"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
         ("check", "lsi_array", "raid"),
         ("check", "md", "raid"),

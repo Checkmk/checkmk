@@ -5,9 +5,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
     HostRulespec,
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupEnforcedServicesApplications,
 )
@@ -160,7 +162,7 @@ def _item_spec_domino_tasks():
     )
 
 
-def _parameter_valuespec_domino_tasks() -> Dictionary:
+def _parameter_valuespec_enforced_domino_tasks() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -210,6 +212,31 @@ rulespec_registry.register(
         check_group_name="domino_tasks",
         group=RulespecGroupEnforcedServicesApplications,
         item_spec=_item_spec_domino_tasks,
+        parameter_valuespec=_parameter_valuespec_enforced_domino_tasks,
+        title=lambda: _("Lotus Domino Tasks"),
+    )
+)
+
+
+def _parameter_valuespec_domino_tasks() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                _vs_levels(
+                    _("Specify levels on the minimum and maximum number of tasks."),
+                ),
+            ),
+        ],
+        optional_keys=False,
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="domino_tasks",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextInput(title=_("Name of service")),
         parameter_valuespec=_parameter_valuespec_domino_tasks,
         title=lambda: _("Lotus Domino Tasks"),
     )

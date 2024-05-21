@@ -300,18 +300,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-            "casa_cpu_mem",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-            "couchbase_buckets_mem",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-            "rabbitmq_nodes_mem",
-        ),
-        (
             RuleGroup.CheckgroupParameters("memory_percentage_used"),
             "tplink_mem",
         ),

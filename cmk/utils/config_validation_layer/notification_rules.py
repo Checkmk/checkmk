@@ -5,7 +5,6 @@
 
 from ipaddress import IPv4Address, IPv6Address
 from typing import Annotated, Any, Literal, NotRequired, Sequence, TypedDict
-from uuid import UUID
 
 from pydantic import PlainValidator, TypeAdapter, ValidationInfo
 
@@ -527,7 +526,7 @@ HandlerParameters = dict[str, Any]
 
 
 class EventRule(TypedDict):
-    rule_id: UUID
+    rule_id: str
     allow_disable: bool
     contact_all: bool
     contact_all_with_email: bool
@@ -538,7 +537,7 @@ class EventRule(TypedDict):
     user_id: NotRequired[str | None]
     comment: NotRequired[str]
     docu_url: NotRequired[str]
-    alert_handler: tuple[HandlerName, HandlerParameters]
+    alert_handler: NotRequired[tuple[HandlerName, HandlerParameters]]
     contact: NotRequired[str]
     contact_emails: NotRequired[list[str]]
     contact_groups: NotRequired[list[str]]

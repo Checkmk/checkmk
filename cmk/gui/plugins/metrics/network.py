@@ -1840,7 +1840,7 @@ graph_info["connection_durations"] = {
 }
 
 graph_info["http_timings"] = {
-    "title": _("HTTP Timings"),
+    "title": _("HTTP timings"),
     "metrics": [
         ("time_connect", "area", _("Connect")),
         ("time_ssl", "stack", _("Negotiate SSL")),

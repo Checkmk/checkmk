@@ -13,7 +13,7 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _item_spec_hp_msa_psu_voltage():
-    return TextInput(title=_("Power Supply name"), help=_("The identifier of the power supply."))
+    return TextInput(title=_("Power supply name"), help=_("The identifier of the power supply."))
 
 
 def _parameter_valuespec_hp_msa_psu_voltage():
@@ -91,6 +91,6 @@ rulespec_registry.register(
         item_spec=_item_spec_hp_msa_psu_voltage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hp_msa_psu_voltage,
-        title=lambda: _("HP MSA Power Supply Voltage Levels"),
+        title=lambda: _("HP MSA power supply voltage levels"),
     )
 )

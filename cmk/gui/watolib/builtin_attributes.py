@@ -181,7 +181,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
 
     def valuespec(self) -> ValueSpec:
         return HostAddress(
-            title=_("IPv6 Address"),
+            title=_("IPv6 address"),
             help=_(
                 "Specify an explicit IPv6 address or resolvable DNS name here, if "
                 "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
@@ -665,7 +665,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         options: list[tuple[str, str, ValueSpec[Any]]] = [
             (
                 "ip_range",
-                _("IP-Range"),
+                _("IP range"),
                 Tuple(
                     elements=[
                         IPv4Address(
@@ -680,7 +680,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             ),
             (
                 "ip_network",
-                _("IP Network"),
+                _("IP network"),
                 Tuple(
                     elements=[
                         IPv4Address(
@@ -703,7 +703,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             ),
             (
                 "ip_list",
-                _("Explicit List of IP Addresses"),
+                _("Explicit list of IP addresses"),
                 ListOfStrings(
                     valuespec=IPv4Address(),
                     orientation="horizontal",

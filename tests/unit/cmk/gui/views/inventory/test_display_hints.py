@@ -436,9 +436,9 @@ def test_make_node_displayhint_from_hint(
             ("networking", "interfaces"),
             "oper_status",
             ColumnDisplayHint(
-                title="Operational Status",
-                short_title="Operational Status",
-                long_title="Network interfaces ➤ Operational Status",
+                title="Operational status",
+                short_title="Operational status",
+                long_title="Network interfaces ➤ Operational status",
                 paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
@@ -497,9 +497,9 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.package_version",
             ColumnDisplayHint(
-                title="Package Version",
-                short_title="Package Version",
-                long_title="Software packages ➤ Package Version",
+                title="Package version",
+                short_title="Package version",
+                long_title="Software packages ➤ Package version",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(cmp_version),
                 filter_class=FilterInvtableText,
@@ -530,9 +530,9 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.oper_status",
             ColumnDisplayHint(
-                title="Operational Status",
-                short_title="Operational Status",
-                long_title="Network interfaces ➤ Operational Status",
+                title="Operational status",
+                short_title="Operational status",
+                long_title="Network interfaces ➤ Operational status",
                 paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
@@ -575,7 +575,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             AttributeDisplayHint(
                 title="Size",
                 short_title="Size",
-                long_title="Block Devices ➤ Size",
+                long_title="Block devices ➤ Size",
                 paint_function=inv_paint_size,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 data_type="size",
@@ -626,9 +626,9 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".hardware.cpu.arch",
             AttributeDisplayHint(
-                title="CPU Architecture",
-                short_title="CPU Architecture",
-                long_title="Processor ➤ CPU Architecture",
+                title="CPU architecture",
+                short_title="CPU architecture",
+                long_title="Processor ➤ CPU architecture",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 data_type="str",

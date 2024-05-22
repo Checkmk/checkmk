@@ -618,7 +618,7 @@ def test_automation_active_check_icmp_all_ipv4(site: Site) -> None:
         result = _execute_automation(
             site,
             "active-check",
-            args=[host, "icmp", "PING all IPv4 Addresses"],
+            args=[host, "icmp", "PING all IPv4 addresses"],
         )
         assert isinstance(result, results.ActiveCheckResult)
         assert result.state == 0

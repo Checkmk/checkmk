@@ -123,8 +123,8 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     HTTPUrl(
                         title=_("Monitoring URL"),
                         help=_(
-                            "Configure the base URL for the Monitoring Web-GUI here. Include the site name. "
-                            "Used for link to Checkmk out of jira."
+                            "Configure the base URL for the monitoring web-GUI here. Include the site name. "
+                            "Used for link to Checkmk out of Jira."
                         ),
                     ),
                 ),

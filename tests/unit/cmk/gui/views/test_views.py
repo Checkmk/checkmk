@@ -282,7 +282,7 @@ def test_registered_commands() -> None:
                 "edit_downtimes": {
                     "permission": "action.downtimes",
                     "tables": ["downtime"],
-                    "title": "Edit Downtimes",
+                    "title": "Edit downtimes",
                 },
             }
         )

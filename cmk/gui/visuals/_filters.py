@@ -1050,7 +1050,7 @@ def register_site_filters(filter_registry: FilterRegistry) -> None:
 def register_host_and_service_detail_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Current Host Notification Number"),
+            title=_l("Current host notification number"),
             sort_index=232,
             info="host",
             query_filter=query_filters.NumberRangeQuery(
@@ -1061,7 +1061,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
 
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Current Service Notification Number"),
+            title=_l("Current service notification number"),
             sort_index=232,
             info="service",
             query_filter=query_filters.NumberRangeQuery(
@@ -1072,7 +1072,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
 
     filter_registry.register(
         FilterNumberRange(
-            title=_l("Number of Services of the Host"),
+            title=_l("Number of services of the host"),
             sort_index=234,
             info="host",
             query_filter=query_filters.NumberRangeQuery(

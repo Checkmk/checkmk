@@ -711,7 +711,7 @@ class PainterSvcMetrics(Painter):
         return "svc_metrics"
 
     def title(self, cell: Cell) -> str:
-        return _("Service Metrics")
+        return _("Service metrics")
 
     def short_title(self, cell: Cell) -> str:
         return _("Metrics")
@@ -2535,7 +2535,7 @@ class PainterHostBlack(Painter):
         return "host_black"
 
     def title(self, cell: Cell) -> str:
-        return _("Host name, red background if down or unreachable (Deprecated)")
+        return _("Host name, red background if down or unreachable (deprecated)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Host")
@@ -2561,7 +2561,7 @@ class PainterHostWithState(Painter):
         return "host_with_state"
 
     def title(self, cell: Cell) -> str:
-        return _("Host name, marked red if down (Deprecated)")
+        return _("Host name, marked red if down (deprecated)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Host")

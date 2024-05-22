@@ -4022,7 +4022,7 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("Housekeeping Interval"),
+            title=_("Housekeeping interval"),
             help=_(
                 "From time to time the eventd checks for messages that are expected to "
                 "be seen on a regular base, for events that time out and yet for "
@@ -4044,7 +4044,7 @@ class ConfigVariableEventConsoleSqliteHousekeepingInterval(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("Event Console Housekeeping Interval"),
+            title=_("Event Console housekeeping interval"),
             help=_(
                 "From time to time the Event Console history requires maintenance. "
                 "For example, it needs to clean up old data, optimize the storage and "
@@ -5522,7 +5522,7 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
                 (
                     "facility",
                     DropdownChoice(
-                        title=_("Syslog Facility to use"),
+                        title=_("Syslog facility to use"),
                         help=_(
                             "The notifications will be converted into syslog messages with "
                             "the facility that you choose here. In the Event Console you can "
@@ -5534,7 +5534,7 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
                 (
                     "remote",
                     IPv4Address(
-                        title=_("IP Address of remote Event Console"),
+                        title=_("IP address of remote Event Console"),
                         help=_(
                             "If you set this parameter then the notifications will be sent via "
                             "syslog/UDP (port 514) to a remote Event Console or syslog server."

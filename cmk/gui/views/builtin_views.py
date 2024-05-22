@@ -722,7 +722,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Services of Host"),
+            "title": _l("Services of host"),
             "topic": "monitoring",
             "user_sortable": True,
             "single_infos": ["host"],
@@ -766,7 +766,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("Services of Host"),
+            "title": _l("Services of host"),
             "owner": UserId.builtin(),
             "name": "host_export",
             "user_sortable": True,
@@ -810,7 +810,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Services of Hosts"),
+            "title": _l("Services of hosts"),
             "user_sortable": True,
             "single_infos": [],
             "context": {"hostregex": {"host_regex": ""}, "svcstate": {}, "siteopt": {}},
@@ -845,7 +845,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("OK Services of host"),
+            "title": _l("OK services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -883,7 +883,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("WARN Services of host"),
+            "title": _l("WARN services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -959,7 +959,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("UNKNOWN Services of host"),
+            "title": _l("UNKNOWN services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -997,7 +997,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("PENDING Services of host"),
+            "title": _l("PENDING services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -2924,7 +2924,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("OK Services of Site"),
+            "title": _l("OK services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -2982,7 +2982,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("WARN Services of Site"),
+            "title": _l("WARN services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -3098,7 +3098,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("UNKNOWN Services of Site"),
+            "title": _l("UNKNOWN services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -3156,7 +3156,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Pending Services of Site"),
+            "title": _l("Pending services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -3214,7 +3214,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Services of Site"),
+            "title": _l("Services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {
@@ -3490,7 +3490,7 @@ builtin_views.update(
                 "service_labels": {},
             },
             "datasource": "services",
-            "description": _l("A Matrix of performance data values, grouped by hosts and services"),
+            "description": _l("A matrix of performance data values, grouped by hosts and services"),
             "group_painters": [
                 ColumnSpec(
                     name="host",

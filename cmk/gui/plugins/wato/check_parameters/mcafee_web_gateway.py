@@ -25,7 +25,7 @@ def _parameter_valuespec_mcafee_web_gateway():
                     title=_("Upper levels for infections"),
                     help=_(
                         "Here you can specify upper levels for the number of "
-                        "infections detected by Antimalware Engine."
+                        "infections detected by anti-malware engine."
                     ),
                     elements=[
                         Float(title=_("Warning at")),

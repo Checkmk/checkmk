@@ -140,9 +140,9 @@ def test_diagnostics_element_general_content(
 def test_diagnostics_element_perfdata() -> None:
     diagnostics_element = diagnostics.PerfDataDiagnosticsElement()
     assert diagnostics_element.ident == "perfdata"
-    assert diagnostics_element.title == "Performance Data"
+    assert diagnostics_element.title == "Performance data"
     assert diagnostics_element.description == (
-        "Performance Data related to sizing, e.g. number of helpers, hosts, services"
+        "Performance data related to sizing, e.g. number of helpers, hosts, services"
     )
 
 

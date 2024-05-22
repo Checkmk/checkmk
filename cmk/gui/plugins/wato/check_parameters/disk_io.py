@@ -125,7 +125,7 @@ def _parameter_valuespec_disk_io():
                 (
                     "latency_perfdata",
                     Checkbox(
-                        title=_("Performance Data for Latency"),
+                        title=_("Performance data for latency"),
                         label=_("Collect performance data for disk latency"),
                         help=_(
                             "Note: enabling performance data for the latency might "
@@ -157,7 +157,7 @@ def _parameter_valuespec_disk_io():
                 (
                     "ql_perfdata",
                     Checkbox(
-                        title=_("Performance Data for Queue Length"),
+                        title=_("Performance data for queue length"),
                         label=_("Collect performance data for disk latency"),
                         help=_(
                             "Note: enabling performance data for the latency might "

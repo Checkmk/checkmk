@@ -442,11 +442,11 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     @property
     def title(self) -> str:
-        return _("Performance Data")
+        return _("Performance data")
 
     @property
     def description(self) -> str:
-        return _("Performance Data related to sizing, e.g. number of helpers, hosts, services")
+        return _("Performance data related to sizing, e.g. number of helpers, hosts, services")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Get the runtime performance data from livestatus

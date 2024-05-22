@@ -3123,6 +3123,8 @@ modes.register(
 
 
 def mode_create_diagnostics_dump(options: DiagnosticsModesParameters) -> None:
+    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+    log.logger.setLevel(logging.INFO)
     cmk.base.diagnostics.create_diagnostics_dump(
         cmk.utils.diagnostics.deserialize_modes_parameters(options)
     )

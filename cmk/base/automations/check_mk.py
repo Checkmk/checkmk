@@ -2799,6 +2799,8 @@ class AutomationCreateDiagnosticsDump(Automation):
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
+            # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+            log.logger.setLevel(logging.INFO)
             dump = DiagnosticsDump(deserialize_cl_parameters(args))
             dump.create()
             return CreateDiagnosticsDumpResult(

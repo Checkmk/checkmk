@@ -29,11 +29,6 @@ def clear_console_logging() -> None:
     logger.setLevel(logging.INFO)
 
 
-# Set default logging handler to avoid "No handler found" warnings.
-# Python 2.7+
-clear_console_logging()
-
-
 def setup_console_logging() -> None:
     """This method enables all log messages to be written to the console
     without any additional information like date/time, logger-name. Just

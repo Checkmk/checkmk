@@ -331,8 +331,8 @@ class RulespecGroupIntegrateOtherServices(RulespecGroup):
     @property
     def help(self):
         return _(
-            "This services are provided by so called active checks. "
-            "You can also integrate custom nagios plugins."
+            "These services are provided by so called active checks. "
+            "You can also integrate custom Nagios plug-ins."
         )
 
 

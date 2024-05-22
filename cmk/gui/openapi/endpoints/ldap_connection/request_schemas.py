@@ -782,8 +782,8 @@ class LDAPSyncPluginsRequest(BaseSchema):
     )
     visibility_of_hosts_or_services = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,
-        description="When this option is checked, then the status GUI will only display hosts and "
-        "services that the user is a contact for - even if he has the permission for seeing all objects.",
+        description="When this option is checked, the status GUI will only display hosts and "
+        "services that the user is a contact for - even they have the permission for seeing all objects.",
         load_default={"state": "disabled"},
     )
     contact_group_membership = fields.Nested(

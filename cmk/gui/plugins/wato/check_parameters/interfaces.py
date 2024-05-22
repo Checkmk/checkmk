@@ -130,7 +130,7 @@ def _vs_grouping():
         help=_(
             "Normally, the interface checks create a single service for each interface. By defining "
             "interface groups, multiple interfaces can be combined together. For each group, a "
-            "single service is created. This services reports the total traffic amount summed over "
+            "single service is created. These services report the total traffic amount summed over "
             "all group members."
         ),
         choices=[

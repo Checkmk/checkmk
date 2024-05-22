@@ -545,10 +545,10 @@ def _valuespec_content() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Search for header"),
                     help_text=Help(
-                        "The provided header key and value need to be exact as in the "
+                        "The provided header key and value need to match exactly with the "
                         "actual header of the response. Please note that the service will "
-                        "get WARN if any, the key or the value, is not matching. If looking"
-                        "for a regular expression the first match will considered as success."
+                        "get a WARN if any, the key or the value, is not matching. If searching "
+                        "for a regular expression, the first match is considered a success."
                     ),
                     prefill=DefaultValue("string"),
                     elements=[
@@ -660,7 +660,7 @@ def _valuespec_endpoints() -> List:
                                 parameter_form=SingleChoice(
                                     title=Title("Prefix"),
                                     help_text=Help(
-                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option."
+                                        "The prefix is automatically added to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(

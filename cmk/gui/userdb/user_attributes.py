@@ -110,9 +110,9 @@ class ForceAuthUserUserAttribute(UserAttribute):
             title=_("Visibility of hosts/services"),
             label=_("Only show hosts and services the user is a contact for"),
             help=_(
-                "When this option is checked, then the status GUI will only "
+                "When this option is checked, the status GUI will only "
                 "display hosts and services that the user is a contact for - "
-                "even if he has the permission for seeing all objects."
+                "even they have the permission for seeing all objects."
             ),
         )
 

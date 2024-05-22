@@ -299,14 +299,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("pulse_secure_mem_util"),
-            "pulse_secure_mem_util",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("pulse_secure_users"),
-            "pulse_secure_users",
-        ),
-        (
             RuleGroup.CheckgroupParameters("redis_info_persistence"),
             "redis_info_persistence",
         ),

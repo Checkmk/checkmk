@@ -56,7 +56,7 @@ def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> Che
     yield from check_levels(
         section["n_users"],
         metric_name="current_users",
-        levels_upper=params.get("upper_number_of_users"),
+        levels_upper=params["upper_number_of_users"],
         label="Pulse Secure users",
         render_func=lambda u: str(int(u)),
     )
@@ -76,7 +76,7 @@ def cluster_check_pulse_secure_users(
         yield from clusterize.make_node_notice_results(
             node_name,
             check_pulse_secure_users(
-                {},
+                {"upper_number_of_users": None},
                 section_node,
             ),
         )
@@ -84,7 +84,7 @@ def cluster_check_pulse_secure_users(
     yield from check_levels(
         n_users_total,
         metric_name="current_users",
-        levels_upper=params.get("upper_number_of_users"),
+        levels_upper=params["upper_number_of_users"],
         label="Pulse Secure users across cluster",
         render_func=lambda u: str(int(u)),
     )
@@ -94,7 +94,9 @@ register.check_plugin(
     name="pulse_secure_users",
     service_name="Pulse Secure users",
     discovery_function=discover_pulse_secure_users,
-    check_default_parameters={},
+    check_default_parameters={
+        "upper_number_of_users": None,
+    },
     check_ruleset_name="pulse_secure_users",
     check_function=check_pulse_secure_users,
     cluster_check_function=cluster_check_pulse_secure_users,

@@ -19,6 +19,7 @@ import pathlib
 import time
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from re import Match
 from typing import IO, Literal
 
@@ -42,12 +43,6 @@ DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPatt
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 
 
-def _get_discovery_groups(
-    params: Sequence[logwatch.ParameterLogwatchGroups],
-) -> Sequence[list[tuple[str, GroupingPattern]]]:
-    return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
-
-
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
 #
 # logwatch_rules = [
@@ -69,41 +64,49 @@ def discover_logwatch_single(
     params: Sequence[logwatch.ParameterLogwatchGroups],
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    log_filter = logwatch.LogFileFilter(logwatch.RulesetAccess.logwatch_ec_all())
-    not_forwarded_logs = {
-        item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
-    }
-    inventory_groups = _get_discovery_groups(params)
-
-    for logfile in not_forwarded_logs:
-        if not any(
-            _groups_of_logfile(group_patterns, logfile) for group_patterns in inventory_groups
-        ):
-            yield Service(item=logfile)
+    _groups, singles = _discovery_make_groups(params, section)
+    yield from (Service(item=item) for item in singles)
 
 
 def discover_logwatch_groups(
     params: Sequence[logwatch.ParameterLogwatchGroups],
     section: logwatch.Section,
 ) -> DiscoveryResult:
+    groups, _singles = _discovery_make_groups(params, section)
+    yield from (
+        Service(item=group.name, parameters={"group_patterns": sorted(group.patterns)})
+        for group in groups
+    )
+
+
+@dataclass
+class _Group:
+    name: str
+    items: set[str]
+    patterns: set[GroupingPattern]
+
+
+def _discovery_make_groups(
+    params: Sequence[logwatch.ParameterLogwatchGroups],
+    section: logwatch.Section,
+) -> tuple[Sequence[_Group], Iterable[str]]:
     log_filter = logwatch.LogFileFilter(logwatch.RulesetAccess.logwatch_ec_all())
     not_forwarded_logs = {
         item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
     }
-    inventory_groups = _get_discovery_groups(params)
-    inventory: dict[str, set[GroupingPattern]] = {}
+    all_group_patterns = [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
-    for logfile in not_forwarded_logs:
-        for group_patterns in inventory_groups:
-            newly_found = _groups_of_logfile(group_patterns, logfile)
-            for group_name, pattern_set in newly_found.items():
-                inventory.setdefault(group_name, set()).update(pattern_set)
+    groups: dict[str, _Group] = {}
+    for item in not_forwarded_logs:
+        for group_patterns in all_group_patterns:
+            for group_name, pattern_set in _groups_of_logfile(group_patterns, item).items():
+                group = groups.setdefault(
+                    group_name, _Group(name=group_name, items=set(), patterns=set())
+                )
+                group.items.add(item)
+                group.patterns.update(pattern_set)
 
-    for group_name, patterns in inventory.items():
-        yield Service(
-            item=group_name,
-            parameters={"group_patterns": sorted(patterns)},
-        )
+    return list(groups.values()), not_forwarded_logs - {i for g in groups.values() for i in g.items}
 
 
 def check_logwatch_node(
@@ -200,7 +203,7 @@ def _instantiate_matched(match: Match, group_name: str, inclusion: str) -> tuple
 
 
 def _groups_of_logfile(
-    group_patterns: list[tuple[str, GroupingPattern]],
+    group_patterns: Iterable[tuple[str, GroupingPattern]],
     filename: str,
 ) -> dict[str, set[GroupingPattern]]:
     found_these_groups: dict[str, set[GroupingPattern]] = {}

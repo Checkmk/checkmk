@@ -1799,9 +1799,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._copy_rules_from_master()
             self._add_change(
                 "copy-rules-from-master",
-                _("Copied the event rules from the master into the local configuration"),
+                _("Copied the event rules from the central site into the local configuration"),
             )
-            flash(_("Copied rules from master"))
+            flash(_("Copied rules from central site"))
             return redirect(self.mode_url())
 
         # Move rule packs

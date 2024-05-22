@@ -61,7 +61,7 @@ from cmk.gui.i18n import _
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     # Needs to be a local import to not influence the regular plugin loading order
     from cmk.gui.plugins.metrics.translation import (  # pylint: disable=cmk-module-layer-violation,unused-import
         df_translation,
@@ -72,7 +72,7 @@ def load_plugins() -> None:
 
 
 def register_pre_21_plugin_api() -> None:
-    """Register pre 2.1 "plugin API"
+    """Register pre 2.1 "plug-in API"
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 

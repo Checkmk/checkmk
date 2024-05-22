@@ -232,5 +232,5 @@ def validate_check_ruleset_item_consistency(
         raise ValueError(
             f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
             "At least one of the checks in this group needs to be changed "
-            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins})."
+            f"(offending plug-in: {check_plugin.name}, present plug-ins: {present_plugins})."
         )

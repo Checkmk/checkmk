@@ -244,7 +244,7 @@ register.agent_section(
 
 def discover_smart_stats(section: Section) -> DiscoveryResult:
     for disk_name, disk in section.items():
-        # Temperature attribute is handled in the "smart.temp" check plugin
+        # Temperature attribute is handled in the "smart.temp" check plug-in
         # If Temperature is the only attribute, we don't want to create an empty service for it here
         if not disk or (len(disk) == 1 and DiskAttribute.TEMPERATURE.name in disk):
             continue

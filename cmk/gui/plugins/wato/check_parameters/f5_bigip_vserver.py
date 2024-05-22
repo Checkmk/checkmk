@@ -160,7 +160,7 @@ def _parameter_valuespec_f5_bigip_vserver():
                         ),
                         (
                             "children_pool_members_down_if_not_available",
-                            # Special handling, see check plugin
+                            # Special handling, see check plug-in
                             MonitoringState(
                                 title=_(
                                     "The children pool member(s) are down if VServer is not available"

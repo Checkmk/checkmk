@@ -1627,7 +1627,7 @@ def _extract_agent_and_snmp_sections(
                 )
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
-            # NOTE: missing section pugins may lead to missing data for a check plugin
+            # NOTE: missing section plug-ins may lead to missing data for a check plug-in
             #       *or* to more obscure errors, when a check/inventory plugin will be
             #       passed un-parsed data unexpectedly.
             if cmk.utils.debug.enabled():
@@ -1662,13 +1662,13 @@ def _extract_check_plugins(
                 CheckPluginName(maincheckify(check_plugin_name))
             )
             if present_plugin is not None and present_plugin.location is not None:
-                # module is not None => it's a new plugin
+                # module is not None => it's a new plug-in
                 # (allow loading multiple times, e.g. update-config)
                 # implemented here instead of the agent based register so that new API code does not
                 # need to include any handling of legacy cases
                 raise ValueError(
                     f"Legacy check plugin still exists for check plugin {check_plugin_name}. "
-                    "Please remove legacy plugin."
+                    "Please remove legacy plug-in."
                 )
             agent_based_register.add_check_plugin(
                 create_check_plugin_from_legacy(
@@ -1678,7 +1678,7 @@ def _extract_check_plugins(
                 )
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
-            # NOTE: as a result of a missing check plugin, the corresponding services
+            # NOTE: as a result of a missing check plug-in, the corresponding services
             #       will be silently droppend on most (all?) occasions.
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(exc) from exc
@@ -1712,7 +1712,7 @@ def compute_check_parameters(
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
     check_plugin = agent_based_register.get_check_plugin(plugin_name)
-    if check_plugin is None:  # handle vanished check plugin
+    if check_plugin is None:  # handle vanished check plug-in
         return TimespecificParameters()
 
     if configured_parameters is None:

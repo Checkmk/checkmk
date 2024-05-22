@@ -23,7 +23,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Inventor
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
-# These Types of Tablespaces are ignored in this plugin.
+# These Types of Tablespaces are ignored in this plug-in.
 # This restriction is only working with newer agents, because we need an
 # additional parameter at end if each datafile
 

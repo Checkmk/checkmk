@@ -17,7 +17,7 @@ from cmk.plugins.lib.interfaces import (
 from cmk.plugins.lib.lnx_if import Section
 
 # To understand why this section exists, please read the comments in the
-# correpsonding agent plugin.
+# correpsonding agent plug-in.
 
 # Parsing logic derived from Linux kernel documentation at
 # https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-net

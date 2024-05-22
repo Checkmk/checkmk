@@ -2898,7 +2898,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
     registered_plugin = CheckPluginAPI(
         name=CheckPluginName("duplicate_plugin"),
         sections=[],
-        service_name="Duplicate Plugin",
+        service_name="Duplicate Plug-in",
         discovery_function=lambda: [],
         discovery_default_parameters=None,
         discovery_ruleset_name=None,

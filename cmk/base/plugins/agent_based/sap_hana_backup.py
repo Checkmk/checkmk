@@ -83,7 +83,7 @@ def _parse_sap_hana_backup(string_table: StringTable, timezone_info: tzinfo | No
 
 def parse_sap_hana_backup(string_table: StringTable) -> Section:
     # This is maintained for pre-fix compatibility reasons, to avoid
-    # forcing users to roll out the agent plugin. The implementation
+    # forcing users to roll out the agent plug-in. The implementation
     # works in cases when the monitoring server and SAP Hana server are
     # in the same timezone.
     return _parse_sap_hana_backup(string_table, LOCAL_TIMEZONE)

@@ -16,7 +16,7 @@ a) Adding arguments for the command line. This job is done for active checks plu
    `cmk.base.core_config._prepare_check_command` and `cmk.base.check_api.passwordstore_get_cmdline`.
 
 b) Extracting arguments from the command line. This is done by `password_store.replace_passwords`
-   for python plugins and for C monitoring plugins by the patches which can be found at
+   for python plugins and for C monitoring plug-ins by the patches which can be found at
    `omd/packages/monitoring-plugins/patches/0003-cmk-password-store.dif`.
 
    The most interesting part is, that the password store arguments are replaced before the existing

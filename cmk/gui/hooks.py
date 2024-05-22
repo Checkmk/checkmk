@@ -21,7 +21,7 @@ hooks: dict[str, list[Hook]] = {}
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     # Cleanup all plug-in hooks. They need to be renewed by load_plugins()
     # of the other modules
     unregister_plugin_hooks()

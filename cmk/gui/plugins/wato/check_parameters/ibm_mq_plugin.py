@@ -61,6 +61,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_plugin,
-        title=lambda: _("IBM MQ Plugin"),
+        title=lambda: _("IBM MQ plug-in"),
     )
 )

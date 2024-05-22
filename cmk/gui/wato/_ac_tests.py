@@ -1246,7 +1246,7 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated check plugins")
+        return _("Deprecated check plug-ins")
 
     def help(self) -> str:
         return _(
@@ -1282,7 +1282,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated HW/SW inventory plugins")
+        return _("Deprecated HW/SW inventory plug-ins")
 
     def help(self) -> str:
         return _(

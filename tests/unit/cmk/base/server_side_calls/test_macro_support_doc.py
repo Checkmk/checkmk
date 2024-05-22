@@ -156,7 +156,19 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
     resource_macros = base_config.get_resource_macros()
     macros = {**host_macros, **resource_macros}
 
-    host_config = base_config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of)
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+        host_name
+    )
+    host_config = base_config.get_ssc_host_config(
+        host_name,
+        config_cache.alias(host_name),
+        config_cache.default_address_family(host_name),
+        config_cache.ip_stack_config(host_name),
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
+        macros,
+        ip_address_of,
+    )
 
     documented = DOCUMENTED_ACTIVE_CHECK_MACROS
 
@@ -195,7 +207,19 @@ def test_special_agent_macros(
         **base_config.ConfigCache.get_host_macros_from_attributes(host_name, host_attrs),
     }
 
-    host_config = base_config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of)
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+        host_name
+    )
+    host_config = base_config.get_ssc_host_config(
+        host_name,
+        config_cache.alias(host_name),
+        config_cache.default_address_family(host_name),
+        config_cache.ip_stack_config(host_name),
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
+        macros,
+        ip_address_of,
+    )
 
     documented = DOCUMENTED_SPECIAL_AGENT_MACROS
 

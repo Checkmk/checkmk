@@ -1814,37 +1814,35 @@ def get_resource_macros() -> Mapping[str, str]:
 
 def get_ssc_host_config(
     host_name: HostName,
-    config_cache: ConfigCache,
+    host_alias: str,
+    host_primary_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    host_ip_stack_config: IPStackConfig,
+    host_additional_addresses_ipv4: Sequence[HostAddress],
+    host_additional_addresses_ipv6: Sequence[HostAddress],
     macros: Mapping[str, object],
     ip_address_of: IPLookup,
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
-    primary_family = config_cache.default_address_family(host_name)
-    ip_stack_config = config_cache.ip_stack_config(host_name)
-    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-        host_name
-    )
-
     return server_side_calls_api.HostConfig(
         name=host_name,
-        alias=config_cache.alias(host_name),
+        alias=host_alias,
         ipv4_config=(
             server_side_calls_api.IPv4Config(
                 address=ip_address_of(host_name, socket.AddressFamily.AF_INET),
-                additional_addresses=additional_addresses_ipv4,
+                additional_addresses=host_additional_addresses_ipv4,
             )
-            if ip_lookup.IPStackConfig.IPv4 in ip_stack_config
+            if ip_lookup.IPStackConfig.IPv4 in host_ip_stack_config
             else None
         ),
         ipv6_config=(
             server_side_calls_api.IPv6Config(
                 address=ip_address_of(host_name, socket.AddressFamily.AF_INET6),
-                additional_addresses=additional_addresses_ipv6,
+                additional_addresses=host_additional_addresses_ipv6,
             )
-            if ip_lookup.IPStackConfig.IPv6 in ip_stack_config
+            if ip_lookup.IPStackConfig.IPv6 in host_ip_stack_config
             else None
         ),
-        primary_family=_get_ssc_ip_family(primary_family),
+        primary_family=_get_ssc_ip_family(host_primary_family),
         macros={k: str(v) for k, v in macros.items()},
     )
 
@@ -2656,12 +2654,24 @@ class ConfigCache:
                     "<HOST>": host_name,
                     **self.get_host_macros_from_attributes(host_name, host_attrs),
                 }
+                additional_addresses_ipv4, additional_addresses_ipv6 = self.additional_ipaddresses(
+                    host_name
+                )
                 special_agent = SpecialAgent(
                     load_special_agents()[1],
                     special_agent_info,
                     host_name,
                     ip_address,
-                    get_ssc_host_config(host_name, self, macros, ip_address_of),
+                    get_ssc_host_config(
+                        host_name,
+                        self.alias(host_name),
+                        self.default_address_family(host_name),
+                        self.ip_stack_config(host_name),
+                        additional_addresses_ipv4,
+                        additional_addresses_ipv6,
+                        macros,
+                        ip_address_of,
+                    ),
                     host_attrs,
                     http_proxies,
                     passwords,

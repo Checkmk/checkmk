@@ -489,11 +489,23 @@ def _active_check_preview_rows(
     resource_macros = config.get_resource_macros()
     macros = {**host_macros, **resource_macros}
     password_store_file = cmk.utils.password_store.pending_password_store_path()
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+        host_name
+    )
     active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
-        config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
+        config.get_ssc_host_config(
+            host_name,
+            config_cache.alias(host_name),
+            config_cache.default_address_family(host_name),
+            config_cache.ip_stack_config(host_name),
+            additional_addresses_ipv4,
+            additional_addresses_ipv6,
+            macros,
+            ip_address_of,
+        ),
         host_attrs,
         config.http_proxies,
         make_final_service_name,
@@ -1396,11 +1408,23 @@ class AutomationAnalyseServices(Automation):
         resource_macros = config.get_resource_macros()
         macros = {**host_macros, **resource_macros}
         password_store_file = cmk.utils.password_store.pending_password_store_path()
+        additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+            host_name
+        )
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
+            config.get_ssc_host_config(
+                host_name,
+                config_cache.alias(host_name),
+                config_cache.default_address_family(host_name),
+                config_cache.ip_stack_config(host_name),
+                additional_addresses_ipv4,
+                additional_addresses_ipv6,
+                macros,
+                ip_address_of,
+            ),
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
@@ -2352,11 +2376,23 @@ class AutomationActiveCheck(Automation):
         translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
         macros = {**host_macros, **resource_macros}
         password_store_file = cmk.utils.password_store.pending_password_store_path()
+        additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+            host_name
+        )
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
+            config.get_ssc_host_config(
+                host_name,
+                config_cache.alias(host_name),
+                config_cache.default_address_family(host_name),
+                config_cache.ip_stack_config(host_name),
+                additional_addresses_ipv4,
+                additional_addresses_ipv6,
+                macros,
+                ip_address_of,
+            ),
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),

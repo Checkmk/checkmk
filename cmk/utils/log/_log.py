@@ -10,14 +10,11 @@ from os import PathLike
 from pathlib import Path
 from typing import IO
 
-import cmk.utils.paths
-
 from ._level import VERBOSE
 
 __all__ = [
     "clear_console_logging",
     "get_formatter",
-    "init_dedicated_logging",
     "logger",
     "modify_logging_handler",
     "open_log",
@@ -142,28 +139,3 @@ def verbosity_to_log_level(verbosity: int) -> int:
     if verbosity >= 2:
         return logging.DEBUG
     raise NotImplementedError()
-
-
-def init_dedicated_logging(
-    log_level: int | None,
-    target_logger: logging.Logger,
-    log_file_name: str,
-    formatter: logging.Formatter | None = None,
-) -> None:
-    """Initializes logging to a dedicated log_file for the given log_handler.
-    Logging won't be propagated to parent loggers of log_handler."""
-    del target_logger.handlers[:]  # Remove all previously existing handlers
-
-    if log_level is None:
-        target_logger.addHandler(logging.NullHandler())
-        target_logger.propagate = False
-        return
-
-    handler = logging.FileHandler(
-        Path(cmk.utils.paths.log_dir) / log_file_name,
-        encoding="UTF-8",
-    )
-    handler.setFormatter(formatter if formatter is not None else get_formatter())
-    target_logger.setLevel(log_level)
-    target_logger.addHandler(handler)
-    target_logger.propagate = False

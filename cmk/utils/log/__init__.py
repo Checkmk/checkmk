@@ -8,7 +8,6 @@ from ._level import VERBOSE
 from ._log import (
     clear_console_logging,
     get_formatter,
-    init_dedicated_logging,
     logger,
     modify_logging_handler,
     open_log,
@@ -23,7 +22,6 @@ __all__ = [
     "VERBOSE",
     "clear_console_logging",
     "get_formatter",
-    "init_dedicated_logging",
     "logger",
     "modify_logging_handler",
     "open_log",

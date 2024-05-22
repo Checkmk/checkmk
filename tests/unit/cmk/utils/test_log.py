@@ -17,7 +17,7 @@ import time_machine
 from pytest import CaptureFixture
 
 import cmk.utils.log as log
-import cmk.utils.log.security_event as se
+from cmk.utils.log.security_event import log_security_event, SecurityEvent
 
 
 def test_get_logger() -> None:
@@ -116,14 +116,14 @@ def queue_log_sink(logger: logging.Logger) -> Iterator[queue.Queue[logging.LogRe
 
 
 def test_security_event(tmp_path: Path) -> None:
-    event = se.SecurityEvent(
+    event = SecurityEvent(
         "test security event",
         {"a": ["serialize", "me"], "b": {"b.1": 42.23}},
-        se.SecurityEvent.Domain.auth,
+        SecurityEvent.Domain.auth,
     )
 
-    with queue_log_sink(se._root_logger()) as log_queue:
-        se.log_security_event(event)
+    with queue_log_sink(logging.getLogger("cmk_security")) as log_queue:
+        log_security_event(event)
         entry = log_queue.get_nowait()
         assert entry.name == "cmk_security.auth"
         assert (

@@ -28,8 +28,9 @@ configure_make(
         "--with-nagios-user=\\$\\$\\(id\\ -un\\)",
         "--with-nagios-group=\\$\\$\\(id\\ -gn\\)",
         "--with-rrdtool=/bin/true",
-        # The perl_lib_path seems to be obsolete (Tested by checking metrics in raw edition)
-        #        "--with-perl_lib_path=$(location @omd_packages//omd/packages/perl-modules:perl-modules)/lib/perl5/lib/perl5",
+        # The perl_lib_path is necessery for performance
+        # we use PLACEHOLDER because OMD_ROOT is not available at this point since it changes daily
+        "--with-perl_lib_path=PLACEHOLDER/lib/perl5/lib/perl5",
         "--with-base-url='/\\#\\#\\#SITE\\#\\#\\#/pnp4nagios'",
     ],
     lib_source = ":all_srcs",

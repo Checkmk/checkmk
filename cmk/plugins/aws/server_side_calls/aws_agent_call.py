@@ -145,7 +145,7 @@ def aws_arguments(
 
 
 special_agent_aws = SpecialAgentConfig(
-    name="aws_dev_internal",
+    name="aws",
     parameter_parser=AwsParams.model_validate,
     commands_function=aws_arguments,
 )

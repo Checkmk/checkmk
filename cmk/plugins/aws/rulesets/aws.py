@@ -391,8 +391,8 @@ def _formspec_aws():
 
 
 rule_spec_aws = SpecialAgent(
-    name="aws_dev_internal",
-    title=Title("(dev internal, unreleased) Amazon Web Services (AWS)"),
+    name="aws",
+    title=Title("Amazon Web Services (AWS)"),
     topic=Topic.CLOUD,
     parameter_form=_formspec_aws,
 )

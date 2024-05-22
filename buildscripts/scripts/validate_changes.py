@@ -20,7 +20,7 @@ import os
 import subprocess
 import sys
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from functools import reduce
 from pathlib import Path
 from typing import Any
@@ -273,15 +273,26 @@ async def run_cmd(
     env: Mapping[str, str],
     cwd: str | None,
     check: bool,
-    stdout_fn: Callable[[str], None],
-    stderr_fn: Callable[[str], None],
+    stdout_prefix: str = "",
+    stderr_prefix: str = "",
+    output: list[str] | None = None,
 ) -> bool:
     """Run a command while continuously capturing its stdout/stdin and printing it out in a
     predefined way for either stdout or stderr"""
 
-    async def process_lines(stream: asyncio.StreamReader, proc_fn: Callable[[str], None]) -> None:
+    async def process_lines(
+        stream: asyncio.StreamReader,
+        prefix: str = "",
+        output: list[str] | None = None,
+    ) -> None:
         async for line in stream:
-            proc_fn(line.decode().rstrip())
+            l = line.decode()
+            if l.strip():
+                msg = f"{prefix}{l}"
+                if output is not None:
+                    output.append(msg)
+                else:
+                    print(msg)
 
     process = await asyncio.create_subprocess_exec(
         # Use `bash` rather than `sh` in order to provide things like `&>`
@@ -300,7 +311,8 @@ async def run_cmd(
 
     assert process.stdout and process.stderr
     await asyncio.gather(
-        process_lines(process.stdout, stdout_fn), process_lines(process.stderr, stderr_fn)
+        process_lines(process.stdout, stdout_prefix, output),
+        process_lines(process.stderr, stderr_prefix, output),
     )
     await process.wait()
 
@@ -308,7 +320,7 @@ async def run_cmd(
 
 
 async def run_locally(
-    stages: Stages, exitfirst: bool, filter_substring: str, verbosity: int
+    stages: Stages, exitfirst: bool, filter_substring: list[str], verbosity: int
 ) -> None:
     """Not yet implementd: run all stages by executing each command"""
     col = {
@@ -321,12 +333,7 @@ async def run_locally(
     results = {}
     for stage in stages:
         name = stage["NAME"]
-        filtered = filter_substring and not any(
-            map(
-                lambda s: s.lower() in name.lower(),
-                filter_substring,
-            )
-        )
+        filtered = filter_substring and any(_ in name for _ in filter_substring)
         if "SKIPPED" in stage or filtered:
             results[name] = (
                 f"SKIPPED Reason: none of {filter_substring!r} in name"
@@ -342,23 +349,15 @@ async def run_locally(
             LOG.debug("%s: %s", key, value)
 
         output: list[str] = []
-
         t_before = time.time()
         cmd_successful = await run_cmd(
             cmd=stage["COMMAND"],
             env=dict(v.split("=", 1) for v in stage["ENV_VAR_LIST"]),
             cwd=stage["DIR"] or None,
             check=exitfirst,
-            stdout_fn=(
-                lambda l, name=name: (output.append if verbosity == 0 else print)(
-                    f"{col['bold']}{name}: {col['reset']}{l}"
-                )
-            ),
-            stderr_fn=(
-                lambda l, name=name: (output.append if verbosity == 0 else print)(
-                    f"{col['bold']}{name}: {col['purple']}stderr:{col['reset']} {l}"
-                )
-            ),
+            stdout_prefix=f"{col['bold']}{name}: {col['reset']}",
+            stderr_prefix=f"{col['bold']}{name}: {col['purple']}stderr:{col['reset']} ",
+            output=output if verbosity == 0 else None,
         )
         duration = time.time() - t_before
 

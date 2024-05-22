@@ -1213,7 +1213,7 @@ def get_final_service_description(
 def service_depends_on(
     config_cache: ConfigCache, hostname: HostName, servicedesc: ServiceName
 ) -> list[ServiceName]:
-    """Return a list of services this services depends upon"""
+    """Return a list of services this service depends upon"""
     deps = []
     for entry in service_dependencies:
         entry, rule_options = tuple_rulesets.get_rule_options(entry)
@@ -3449,7 +3449,7 @@ class ConfigCache:
     def servicegroups_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> list[ServicegroupName]:
-        """Returns the list of servicegroups of this services"""
+        """Returns the list of servicegroups of this service"""
         return self.ruleset_matcher.service_extra_conf(hostname, description, service_groups)
 
     def contactgroups_of_service(self, hostname: HostName, description: ServiceName) -> list[str]:

@@ -43,7 +43,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
             help=_(
                 "If a cluster uses multiple namespaces you need to activate this option. "
                 "Hosts for namespaced Kubernetes objects will then be prefixed with the "
-                "name of their namespace. This makes Kubernetes resources in different "
+                "names of their namespaces. This makes Kubernetes resources in different "
                 "namespaces that have the same name distinguishable, but results in "
                 "longer host names."
             ),

@@ -977,7 +977,7 @@ class PainterSvcStateAge(Painter):
         return "svc_state_age"
 
     def title(self, cell: Cell) -> str:
-        return _("The age of the current service state")
+        return _("Age of the current service state")
 
     def short_title(self, cell: Cell) -> str:
         return _("Age")

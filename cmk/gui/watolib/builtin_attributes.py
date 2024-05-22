@@ -504,7 +504,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 "try to detect new hosts in the configured IP ranges by sending pings "
                 "to each IP address to check whether or not a host is using this ip "
                 "address. Each new found host will be added to the current folder by "
-                "it's host name, when resolvable via DNS, or by it's IP address."
+                "it's host name, when resolvable via DNS, or by its IP address."
             ),
             optional_keys=["max_parallel_pings", "translate_names"],
             default_text=_("Not configured."),

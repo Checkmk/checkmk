@@ -1423,7 +1423,7 @@ def _register_builtin_views():
                 "browser_reload": 0,
                 "column_headers": "pergroup",
                 "datasource": "hosts",
-                "description": _l("Host hover menu shown in topolgoy visualization"),
+                "description": _l("Host hover menu shown in topology visualization"),
                 "hidden": True,
                 "hidebutton": True,
                 "group_painters": [],

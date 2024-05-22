@@ -354,6 +354,8 @@ check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
     check_function=check_apc_symmetra_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
+        # This is very unorthodox, and requires special handling in the
+        # wato ruleset. A dedicated service would have been the better choice.
         "levels_battery": (50, 60),
         "levels_sensors": (25, 30),
     },

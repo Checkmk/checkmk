@@ -194,14 +194,7 @@ check_info["openhardwaremonitor"] = LegacyCheckDefinition(
 
 def check_openhardwaremonitor_temperature(item, params, parsed):
     if not "levels" in params:
-        found = False
-        for key in params:
-            if key in item:
-                params = params[key]
-                found = True
-                break
-        if not found:
-            params = params["_default"]
+        params = next((v for k, v in params.items() if k in item), params["_default"])
 
     if item in parsed.get("Temperature", {}):
         data = parsed["Temperature"][item]
@@ -221,6 +214,8 @@ check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
     check_function=check_openhardwaremonitor_temperature,
     check_ruleset_name="temperature",
     check_default_parameters={
+        # This is very unorthodox, and requires special handling in the
+        # wato ruleset. Dedicated services would have been the better choice.
         "cpu": {"levels": (60, 70)},
         "hdd": {"levels": (40, 50)},
         "_default": {"levels": (70, 80)},

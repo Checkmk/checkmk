@@ -298,11 +298,6 @@ class ErrorReporter:
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
-        (RuleGroup.CheckgroupParameters("temperature"), "apc_symmetra_temp"),
-        (
-            RuleGroup.CheckgroupParameters("temperature"),
-            "openhardwaremonitor_temperature",
-        ),
         (
             RuleGroup.CheckgroupParameters("volume_groups"),
             "lvm_vgs",

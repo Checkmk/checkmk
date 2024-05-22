@@ -62,6 +62,7 @@ from omdlib.dialog import (
 )
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.site_name import sitename_must_be_valid
+from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites, is_disabled, main_sites
 from omdlib.skel_permissions import (
     get_skel_permissions,
@@ -1723,7 +1724,7 @@ def init_action(
     args: Arguments,
     options: CommandOptions,
 ) -> int:
-    if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+    if is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         bail_out("This site is disabled.")
 
     if command in ["start", "restart"]:
@@ -2153,7 +2154,7 @@ def main_init(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if not is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+    if not is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         bail_out(
             "Cannot initialize site that is not disabled.\n"
             "Please call 'omd disable %s' first." % site.name
@@ -2275,7 +2276,7 @@ def finalize_site(
     site.load_config(load_defaults(site))
     register_with_system_apache(
         version_info,
-        Path(f"/omd/apache/{site.name}.conf"),
+        SitePaths.from_site_name(site.name).apache_conf,
         site.name,
         site.dir,
         site.conf["APACHE_TCP_ADDR"],
@@ -2344,7 +2345,7 @@ def main_rm(
     # refers to a not existing site apache config.
     unregister_from_system_apache(
         version_info,
-        Path(f"/omd/apache/{site.name}.conf"),
+        SitePaths.from_site_name(site.name).apache_conf,
         apache_reload="apache-reload" in options,
         verbose=global_opts.verbose,
     )
@@ -2385,7 +2386,7 @@ def main_disable(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+    if is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
@@ -2394,7 +2395,7 @@ def main_disable(
     sys.stdout.write("Disabling Apache configuration for this site...")
     unregister_from_system_apache(
         version_info,
-        Path(f"/omd/apache/{site.name}.conf"),
+        SitePaths.from_site_name(site.name).apache_conf,
         apache_reload=False,
         verbose=global_opts.verbose,
     )
@@ -2407,13 +2408,13 @@ def main_enable(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if not is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+    if not is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
     register_with_system_apache(
         version_info,
-        Path(f"/omd/apache/{site.name}.conf"),
+        SitePaths.from_site_name(site.name).apache_conf,
         site.name,
         site.dir,
         site.conf["APACHE_TCP_ADDR"],
@@ -2434,7 +2435,7 @@ def main_update_apache_config(
     if _is_apache_enabled(site):
         register_with_system_apache(
             version_info,
-            Path(f"/omd/apache/{site.name}.conf"),
+            SitePaths.from_site_name(site.name).apache_conf,
             site.name,
             site.dir,
             site.conf["APACHE_TCP_ADDR"],
@@ -2445,7 +2446,7 @@ def main_update_apache_config(
     else:
         unregister_from_system_apache(
             version_info,
-            Path(f"/omd/apache/{site.name}.conf"),
+            SitePaths.from_site_name(site.name).apache_conf,
             apache_reload=True,
             verbose=global_opts.verbose,
         )
@@ -2524,7 +2525,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
         os.rename(old_site.dir, new_site.dir)
-        delete_apache_hook(Path(f"/omd/apache/{old_site.name}.conf"))
+        delete_apache_hook(SitePaths.from_site_name(old_site.name).apache_conf)
     else:
         # Make exact file-per-file copy with same user but already new name
         if not reuse:
@@ -2878,7 +2879,7 @@ def main_update(  # pylint: disable=too-many-branches
         bail_out("Aborted.")
 
     try:
-        hook_up_to_date = is_apache_hook_up_to_date(Path(f"/omd/apache/{site.name}.conf"))
+        hook_up_to_date = is_apache_hook_up_to_date(SitePaths.from_site_name(site.name).apache_conf)
     except PermissionError:
         # In case the hook can not be read, assume the hook needs to be updated
         hook_up_to_date = False
@@ -3160,7 +3161,7 @@ def main_init_action(  # pylint: disable=too-many-branches
             continue
 
         # Skip disabled sites completely
-        if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+        if is_disabled(SitePaths.from_site_name(site.name).apache_conf):
             continue
 
         site.load_config(load_defaults(site))

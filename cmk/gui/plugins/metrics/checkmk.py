@@ -144,11 +144,3 @@ graph_info["pending_updates"] = {
         ("security_updates", "stack"),
     ],
 }
-
-graph_info["message_processing"] = {
-    "title": _l("Message processing"),
-    "metrics": [
-        ("average_message_rate", "line"),
-        ("average_drop_rate", "line"),
-    ],
-}

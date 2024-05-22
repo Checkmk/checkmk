@@ -203,3 +203,9 @@ perfometer_op_s = perfometers.Perfometer(
     focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(1000)),
     segments=["op_s"],
 )
+
+perfometer_active_connections = perfometers.Perfometer(
+    name="active_connections",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(90)),
+    segments=["active_connections"],
+)

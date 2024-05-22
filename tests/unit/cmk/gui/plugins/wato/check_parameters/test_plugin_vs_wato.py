@@ -296,19 +296,12 @@ class ErrorReporter:
         ("inventory", "inv_if", "inv_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }
-    KNOWN_ERROR_LOADING_DEFAULTS: set[tuple[str, str]] = set()
 
     def __init__(self) -> None:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
         self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
-        self._known_error_loading_defaults = {
-            # I'm too lazy to adjust the rest of the code. Rather invest
-            # the time to fix stuff
-            ("check", plugin, wato)
-            for wato, plugin in self.KNOWN_ERROR_LOADING_DEFAULTS
-        }
 
     def failed(self) -> bool:
         return self._failed
@@ -361,10 +354,6 @@ class ErrorReporter:
         wato: WatoProtocol,
         exception: Exception,
     ) -> None:
-        element = (plugin.type, plugin.get_name(), wato.get_name())
-        if element in self._known_error_loading_defaults:
-            self._known_error_loading_defaults.remove(element)
-            return
         print(
             f"Loading the default value of {plugin.get_description()} "
             f"into {wato.get_description()} failed:\n    {exception.__class__.__name__}: {exception}"
@@ -391,10 +380,8 @@ class ErrorReporter:
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...
-        pprint(self._known_error_loading_defaults)
         pprint(self._known_wato_missing)
         pprint(self._known_wato_unused)
-        assert len(self._known_error_loading_defaults) == 0
         assert len(self._known_wato_missing) == 0
         assert len(self._known_wato_unused) == 0
 

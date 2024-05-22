@@ -60,6 +60,7 @@ RUN yum -y makecache \
     libxcrypt-compat \
     mariadb-devel \
     mpfr-devel \
+    netcat \
     ncurses-devel \
     openssh-clients \
     openssl-devel \

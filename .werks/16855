@@ -1,0 +1,12 @@
+Title: bi: Fix crash for services with special characters
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1716389565
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+Previously, the BI would crash if a service name had special characters (e.g. emoticons).
+The error was: "Internal error: ('utf-8', 'bi:aggregation_lookup..., 'surrogates not allowed')".
+The BI now handles and shows special characters correctly.

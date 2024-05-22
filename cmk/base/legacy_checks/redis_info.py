@@ -190,7 +190,7 @@ def check_redis_info_persistence(item, params, item_data):
         if value is not None:
             state = 0
             if value != "ok":
-                state = params.get("%s_state" % duration)
+                state = params["%s_state" % duration]
                 infotext += "faulty"
             else:
                 infotext += "successful"
@@ -222,8 +222,8 @@ check_info["redis_info.persistence"] = LegacyCheckDefinition(
     check_function=check_redis_info_persistence,
     check_ruleset_name="redis_info_persistence",
     check_default_parameters={
-        "rdb_last_bgsave": 1,
-        "aof_last_rewrite": 1,
+        "rdb_last_bgsave_state": 1,
+        "aof_last_rewrite_state": 1,
     },
 )
 # .

@@ -299,10 +299,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("redis_info_persistence"),
-            "redis_info_persistence",
-        ),
-        (
             RuleGroup.CheckgroupParameters("skype_conferencing"),
             "skype_conferencing",
         ),

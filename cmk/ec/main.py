@@ -32,7 +32,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from logging import DEBUG, getLogger, Logger
 from pathlib import Path
 from types import FrameType
-from typing import Any, assert_never, Literal, TypedDict
+from typing import Any, assert_never, IO, Literal, TypedDict
 
 from setproctitle import setthreadtitle
 
@@ -76,6 +76,15 @@ from .settings import create_settings, FileDescriptor, PortNumber, Settings
 from .snmp import SNMPTrapParser
 from .syslog import SyslogFacility, SyslogPriority
 from .timeperiod import TimePeriods
+
+
+def open_log(log_file_path: Path) -> None:
+    try:
+        logfile: IO[str] = log_file_path.open("a", encoding="utf-8")
+    except Exception as e:
+        getLogger("cmk.mkeventd").exception("Cannot open log file '%s': %s", log_file_path, e)
+        logfile = sys.stderr
+    log.setup_logging_handler(logfile)
 
 
 class PackedEventStatus(TypedDict):
@@ -2294,7 +2303,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_reopenlog(self) -> None:
         self._logger.info("Closing this logfile")
-        log.open_log(str(self.settings.paths.log_file.value))
+        open_log(self.settings.paths.log_file.value)
         self._logger.info("Opened new logfile")
 
     def handle_command_flush(self) -> None:
@@ -3377,7 +3386,7 @@ def main() -> None:
 
         settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
         if not settings.options.foreground:
-            log.open_log(str(settings.paths.log_file.value))
+            open_log(settings.paths.log_file.value)
 
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting", cmk_version.__version__)

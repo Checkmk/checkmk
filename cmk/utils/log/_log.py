@@ -7,7 +7,6 @@ import logging
 import sys
 from logging.handlers import WatchedFileHandler
 from os import PathLike
-from pathlib import Path
 from typing import IO
 
 from ._level import VERBOSE
@@ -16,14 +15,11 @@ __all__ = [
     "clear_console_logging",
     "get_formatter",
     "logger",
-    "open_log",
     "setup_console_logging",
     "setup_logging_handler",
     "setup_watched_file_logging_handler",
     "verbosity_to_log_level",
 ]
-
-IOLog = IO[str]
 
 logger = logging.getLogger("cmk")
 
@@ -54,23 +50,6 @@ def setup_console_logging() -> None:
     using sys.stdout.write() or print() before.
     """
     setup_logging_handler(sys.stdout, logging.Formatter("%(message)s"))
-
-
-def open_log(log_file_path: str | Path) -> IO[str]:
-    """Open logfile and fall back to stderr if this is not successfull
-    The opened file-like object is returned.
-    """
-    if not isinstance(log_file_path, Path):
-        log_file_path = Path(log_file_path)
-
-    try:
-        logfile: IO[str] = log_file_path.open("a", encoding="utf-8")
-        logfile.flush()
-    except Exception as e:
-        logger.exception("Cannot open log file '%s': %s", log_file_path, e)
-        logfile = sys.stderr
-    setup_logging_handler(logfile)
-    return logfile
 
 
 def setup_watched_file_logging_handler(

@@ -6,14 +6,11 @@
 # pylint: disable=protected-access
 
 import contextlib
-import datetime
 import logging
 import queue
 from collections.abc import Iterator
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
-import time_machine
 from pytest import CaptureFixture
 
 import cmk.utils.log as log
@@ -48,23 +45,6 @@ def test_setup_console_logging(capsys: CaptureFixture[str]) -> None:
     out, err = capsys.readouterr()
     assert out == "test123\n"
     assert err == ""
-
-
-def test_open_log(tmp_path: Path) -> None:
-    log_file = tmp_path / "test.log"
-    log.open_log(log_file)
-
-    with time_machine.travel(
-        datetime.datetime(2018, 4, 15, 18, 50, tzinfo=ZoneInfo("CET")), tick=False
-    ):
-        log.logger.warning("abc")
-        log.logger.warning("äbc")
-
-    with log_file.open("rb") as f:
-        assert f.read() == (
-            b"2018-04-15 18:50:00,000 [30] [cmk] abc\n"
-            b"2018-04-15 18:50:00,000 [30] [cmk] \xc3\xa4bc\n"
-        )
 
 
 def test_set_verbosity() -> None:

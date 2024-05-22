@@ -217,6 +217,7 @@ class Modes:
 class Option:
     def __init__(
         self,
+        *,
         long_option: str,
         short_help: str,
         short_option: str | None = None,
@@ -226,7 +227,6 @@ class Option:
         argument_optional: bool = False,
         count: bool = False,
         handler_function: OptionFunction | None = None,
-        *,
         deprecated_long_options: set[str] | None = None,
     ) -> None:
         super().__init__()
@@ -311,6 +311,7 @@ class Option:
 class Mode(Option):
     def __init__(
         self,
+        *,
         long_option: OptionName,
         handler_function: ModeFunction,
         short_help: str,
@@ -325,13 +326,13 @@ class Mode(Option):
         sub_options: list[Option] | None = None,
     ) -> None:
         super().__init__(
-            long_option,
-            short_help,
-            short_option,
-            argument,
-            argument_descr,
-            argument_conv,
-            argument_optional,
+            long_option=long_option,
+            short_help=short_help,
+            short_option=short_option,
+            argument=argument,
+            argument_descr=argument_descr,
+            argument_conv=argument_conv,
+            argument_optional=argument_optional,
             handler_function=handler_function,
         )
         self.long_help = long_help

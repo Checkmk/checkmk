@@ -32,7 +32,11 @@ class HeartBeatFactory(ModelFactory):
 )
 def testcheck_heartbeat(vm_status: str, check_state: State) -> None:
     heartbeat = HeartBeatFactory.build(status=HeartBeatStatus(vm_status.upper()), value=vm_status)
-    check_result = list(esx_vsphere_vm_heartbeat.check_heartbeat({}, _esx_vm_section(heartbeat)))
+    check_result = list(
+        esx_vsphere_vm_heartbeat.check_heartbeat(
+            esx_vsphere_vm_heartbeat.CHECK_DEFAULT_PARAMETERS, _esx_vm_section(heartbeat)
+        )
+    )
     results = [r for r in check_result if isinstance(r, Result)]
     assert len(results) == 1
     assert results[0].state == check_state
@@ -41,7 +45,11 @@ def testcheck_heartbeat(vm_status: str, check_state: State) -> None:
 
 def testcheck_heartbeat_gray() -> None:
     heartbeat = HeartBeatFactory.build(status=HeartBeatStatus.GRAY, value="gray")
-    check_result = list(esx_vsphere_vm_heartbeat.check_heartbeat({}, _esx_vm_section(heartbeat)))
+    check_result = list(
+        esx_vsphere_vm_heartbeat.check_heartbeat(
+            esx_vsphere_vm_heartbeat.CHECK_DEFAULT_PARAMETERS, _esx_vm_section(heartbeat)
+        )
+    )
     results = [r for r in check_result if isinstance(r, Result)]
     assert len(results) == 1
     assert results[0].state == State.WARN

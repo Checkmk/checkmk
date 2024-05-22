@@ -336,10 +336,6 @@ class ErrorReporter:
             "openhardwaremonitor_temperature",
         ),
         (
-            RuleGroup.CheckgroupParameters("vm_heartbeat"),
-            "esx_vsphere_vm_heartbeat",
-        ),
-        (
             RuleGroup.CheckgroupParameters("volume_groups"),
             "lvm_vgs",
         ),

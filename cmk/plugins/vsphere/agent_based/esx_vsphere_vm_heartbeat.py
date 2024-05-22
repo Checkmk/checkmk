@@ -18,6 +18,13 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import esx_vsphere
 from cmk.plugins.lib.esx_vsphere import HeartBeatStatus
 
+CHECK_DEFAULT_PARAMETERS = {
+    "heartbeat_no_tools": 1,
+    "heartbeat_ok": 0,
+    "heartbeat_missing": 2,
+    "heartbeat_intermittend": 1,
+}
+
 
 def discovery_heartbeat(section: esx_vsphere.SectionVM) -> DiscoveryResult:
     if section is None:
@@ -55,22 +62,13 @@ def check_heartbeat(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -
 
 
 def _heartbeat_state(params: Mapping[str, Any], heartbeat: esx_vsphere.HeartBeat) -> State:
-    vm_heartbeat_map = {
-        HeartBeatStatus.GRAY: State.WARN,
-        HeartBeatStatus.GREEN: State.OK,
-        HeartBeatStatus.RED: State.CRIT,
-        HeartBeatStatus.YELLOW: State.WARN,
-    }
-    if not params:
-        return vm_heartbeat_map[heartbeat.status]
-
     vm_status_lookup_mapping = {
         HeartBeatStatus.GRAY: "heartbeat_no_tools",
         HeartBeatStatus.GREEN: "heartbeat_ok",
         HeartBeatStatus.RED: "heartbeat_missing",
         HeartBeatStatus.YELLOW: "heartbeat_intermittend",
     }
-    return State(params.get(vm_status_lookup_mapping[heartbeat.status], 3))
+    return State(params[vm_status_lookup_mapping[heartbeat.status]])
 
 
 check_plugin_esx_vsphere_vm_heartbeat = CheckPlugin(
@@ -80,5 +78,5 @@ check_plugin_esx_vsphere_vm_heartbeat = CheckPlugin(
     discovery_function=discovery_heartbeat,
     check_function=check_heartbeat,
     check_ruleset_name="vm_heartbeat",
-    check_default_parameters={},
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
 )

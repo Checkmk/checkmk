@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from pathlib import Path
-from typing import Any, Literal, Mapping, NotRequired, TypedDict
+from typing import Any, Literal, Mapping, NotRequired, Sequence, TypedDict
 
 from cmk.utils import paths
 
@@ -11,17 +11,17 @@ from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs
 from cmk.gui.hooks import request_memoize
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
 
-NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], list[str]]
+NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], Sequence[str]]
 
 
-class InventoryPath(TypedDict):
+class PermittedPath(TypedDict):
     visible_raw_path: str
     attributes: NotRequired[NothingOrChoices]
     columns: NotRequired[NothingOrChoices]
     nodes: NotRequired[NothingOrChoices]
 
 
-InventoryPaths = Literal["allow_all"] | tuple[Literal["paths"], list[InventoryPath]]
+InventoryPaths = Literal["allow_all"] | tuple[Literal["paths"], list[PermittedPath]]
 
 
 class GroupAliases(TypedDict):

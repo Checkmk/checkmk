@@ -19,10 +19,10 @@ from cmk.gui.inventory import (
     _make_filter_choices_from_permitted_paths,
     InventoryPath,
     parse_inventory_path,
-    PermittedPath,
     TreeSource,
 )
 from cmk.gui.type_defs import Row
+from cmk.gui.watolib.groups_io import PermittedPath
 
 
 @pytest.mark.parametrize(

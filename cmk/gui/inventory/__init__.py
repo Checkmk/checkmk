@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 import shutil
 import time
 import xml.dom.minidom
@@ -32,7 +31,6 @@ from cmk.utils.structured_data import (
     SDFilterChoice,
     SDKey,
     SDNodeName,
-    SDPath,
     SDRawTree,
 )
 
@@ -48,24 +46,28 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import Row
-from cmk.gui.valuespec import TextInput, ValueSpec
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
+from cmk.gui.watolib.groups_io import PermittedPath
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec
 from ._icon import InventoryIcon
-from ._inventory_path import InventoryPath as InventoryPath
-from ._inventory_path import parse_inventory_path as parse_inventory_path
-from ._inventory_path import TreeSource as TreeSource
-from ._rulespec import RulespecGroupInventory as RulespecGroupInventory
-from ._store import has_inventory as has_inventory
-from ._valuespecs import (
-    vs_element_inventory_visible_raw_path as vs_element_inventory_visible_raw_path,
-)
-from ._valuespecs import vs_inventory_path_or_keys_help as vs_inventory_path_or_keys_help
+from ._inventory_path import InventoryPath, parse_inventory_path, TreeSource
+from ._rulespec import RulespecGroupInventory
+from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
+
+__all__ = [
+    "parse_inventory_path",
+    "vs_element_inventory_visible_raw_path",
+    "vs_inventory_path_or_keys_help",
+    "InventoryPath",
+    "RulespecGroupInventory",
+    "TreeSource",
+]
 
 
 def register(
@@ -137,16 +139,6 @@ def _load_tree_from_file(
         )
         / host_name
     )
-
-
-class _PermittedPath(TypedDict):
-    visible_raw_path: str
-
-
-class PermittedPath(_PermittedPath, total=False):
-    attributes: Literal["nothing"] | tuple[str, Sequence[str]]
-    columns: Literal["nothing"] | tuple[str, Sequence[str]]
-    nodes: Literal["nothing"] | tuple[str, Sequence[str]]
 
 
 @request_memoize()

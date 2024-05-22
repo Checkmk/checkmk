@@ -1603,10 +1603,10 @@ async fn find_detectable_instance_builders(
 /// find instances described in the config but not detected by the discovery
 /// may NOT work - should be approved during testing
 async fn add_custom_instance_builders(
-    builders: Vec<SqlInstanceBuilder>,
+    input_builders: Vec<SqlInstanceBuilder>,
     customizations: &HashMap<&InstanceName, &CustomInstance>,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    let reconnects = determine_reconnect(builders, customizations);
+    let reconnects = determine_reconnect(input_builders, customizations);
 
     let mut builders: Vec<SqlInstanceBuilder> = Vec::new();
     for (builder, endpoint) in reconnects.into_iter() {
@@ -1761,6 +1761,7 @@ fn to_instance_builder(
         .computer_name(Some(properties.computer_name.clone()))
         .version(&properties.version)
         .edition(&properties.edition)
+        .endpoint(endpoint)
         .port(Some(endpoint.conn().port()))
 }
 /// returns

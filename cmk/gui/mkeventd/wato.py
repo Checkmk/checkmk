@@ -327,7 +327,7 @@ MACROS_AND_VARS = [
     ("FIRST", _l("Time of the first occurrence (time stamp)")),
     ("LAST", _l("Time of the most recent occurrence")),
     ("COMMENT", _l("Event comment")),
-    ("SL", _l("Service Level")),
+    ("SL", _l("Service level")),
     ("HOST", _l("Host name (as sent by syslog)")),
     ("ORIG_HOST", _l("Original host name when host name has been rewritten, empty otherwise")),
     ("CONTACT", _l("Contact information")),
@@ -611,7 +611,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         (
             "sl",
             Dictionary(
-                title=_("Service Level"),
+                title=_("Service level"),
                 optional_keys=False,
                 elements=[
                     (
@@ -2489,7 +2489,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     html.write_text(facilities[facnr])
 
                 table.cell(
-                    _("Service Level"),
+                    _("Service level"),
                     dict(service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]),
                 )
 
@@ -5122,9 +5122,9 @@ def _sl_help() -> str:
             "views or as a criteria in rules for the Event Console. A higher service level "
             "is assumed to be more business critical. This ruleset allows to assign service "
             "levels to hosts and/or services. Note: if you assign a service level to "
-            "a host with the ruleset <i>Service Level of hosts</i>, then this level is "
+            "a host with the ruleset <i>Service level of hosts</i>, then this level is "
             "inherited to all services that do <b>not</b> have explicitly assigned a service "
-            "with the ruleset <i>Service Level of services</i>. Assigning no service level "
+            "with the ruleset <i>Service level of services</i>. Assigning no service level "
             "is equal to defining a level of 0.<br><br>The list of available service "
             "levels is configured via a <a href='%s'>global option.</a>"
         )
@@ -5134,7 +5134,7 @@ def _sl_help() -> str:
 
 def _valuespec_extra_host_conf__ec_sl() -> DropdownChoice:
     return DropdownChoice(
-        title=_("Service Level of hosts"),
+        title=_("Service level of hosts"),
         help=_sl_help(),
         choices=service_levels,
     )
@@ -5149,7 +5149,7 @@ ExtraHostConfECSLRulespec = HostRulespec(
 
 def _valuespec_extra_service_conf__ec_sl() -> DropdownChoice:
     return DropdownChoice(
-        title=_("Service Level of services"),
+        title=_("Service level of services"),
         help=_sl_help()
         + _(
             " Note: if no service level is configured for a service "

@@ -390,7 +390,7 @@ class PainterSvcServicelevel(Painter):
         return _("Service service level")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -413,7 +413,7 @@ class PainterHostServicelevel(Painter):
         return _("Host service level")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -1588,7 +1588,7 @@ class SorterServicelevel(Sorter):
 
     @property
     def title(self) -> str:
-        return _("Servicelevel")
+        return _("Service level")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

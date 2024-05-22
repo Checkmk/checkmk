@@ -889,7 +889,7 @@ class ModeFolder(WatoMode):
         permitted_groups, _folder_contact_groups, _use_for_services = subfolder.groups()
         for num, pg in enumerate(permitted_groups):
             cgalias = groups.get(pg, {"alias": pg})["alias"]
-            html.icon("contactgroups", _("Contactgroups that have permission on this folder"))
+            html.icon("contactgroups", _("Contact groups that have permission on this folder"))
             html.write_text(" %s" % cgalias)
             html.br()
             if num > 1 and len(permitted_groups) > 4:

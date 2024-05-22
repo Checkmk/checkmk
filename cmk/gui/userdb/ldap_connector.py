@@ -2141,12 +2141,12 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
 
     @property
     def title(self) -> str:
-        return _("Contactgroup Membership")
+        return _("Contact group membership")
 
     @property
     def help(self):
         return _(
-            "Adds the user to contactgroups based on the group memberships in LDAP. This "
+            "Adds the user to contact groups based on the group memberships in LDAP. This "
             "plugin adds the user only to existing contactgroups while the name of the "
             "contactgroup must match the common name (cn) of the LDAP group."
         )

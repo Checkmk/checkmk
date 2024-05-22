@@ -296,13 +296,7 @@ class ErrorReporter:
         ("inventory", "inv_if", "inv_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }
-    KNOWN_ERROR_LOADING_DEFAULTS = {
-        # ruleset name # plug-in
-        (
-            RuleGroup.CheckgroupParameters("volume_groups"),
-            "lvm_vgs",
-        ),
-    }
+    KNOWN_ERROR_LOADING_DEFAULTS: set[tuple[str, str]] = set()
 
     def __init__(self) -> None:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None

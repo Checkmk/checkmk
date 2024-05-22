@@ -434,7 +434,7 @@ def _valuespec_connection() -> Dictionary:
                         ),
                         SingleChoiceElement(
                             name="stickyport",
-                            title=Title("Follow, but stay to same IP-address and port"),
+                            title=Title("Follow, but stay to same IP address and port"),
                         ),
                     ],
                     prefill=DefaultValue("follow"),

@@ -230,20 +230,11 @@ def verify_virtualenv():
         )
 
 
-_UNPATCHED_PATHS: Final = {
-    # FIXME :-(
-    # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
-    "local_dashboards_dir",
-    "local_views_dir",
-    "local_reports_dir",
-}
-
-
 # Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
-def fake_version_and_paths() -> None:
+def _fake_version_and_paths() -> None:
     from pytest import MonkeyPatch  # pylint: disable=import-outside-toplevel
 
     monkeypatch = MonkeyPatch()
@@ -268,10 +259,18 @@ def fake_version_and_paths() -> None:
         cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
     )
 
+    unpatched_paths: Final = {
+        # FIXME :-(
+        # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
+        "local_dashboards_dir",
+        "local_views_dir",
+        "local_reports_dir",
+    }
+
     # Unit test context: load all available modules
     original_omd_root = Path(cmk.utils.paths.omd_root)
     for name, value in vars(cmk.utils.paths).items():
-        if name.startswith("_") or not isinstance(value, (str, Path)) or name in _UNPATCHED_PATHS:
+        if name.startswith("_") or not isinstance(value, (str, Path)) or name in unpatched_paths:
             continue
 
         try:
@@ -290,9 +289,10 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
 
 
-def pytest_sessionstart():
-    """Execute very first steps to setup automation testing."""
-    fake_version_and_paths()
+def pytest_sessionstart(session: pytest.Session) -> None:
+    """Execute very first steps to setup test automation."""
+    if session.config.getoption("-T") == "unit":
+        _fake_version_and_paths()
 
 
 add_python_paths()

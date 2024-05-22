@@ -229,12 +229,6 @@ metric_info["elapsed_time"] = {
     "color": "11/a",
 }
 
-metric_info["splunk_slave_usage_bytes"] = {
-    "title": _l("Slave usage bytes across all pools"),
-    "unit": "bytes",
-    "color": "11/a",
-}
-
 metric_info["fired_alerts"] = {
     "title": _l("Number of fired alerts"),
     "unit": "count",

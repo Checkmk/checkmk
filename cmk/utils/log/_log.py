@@ -29,13 +29,10 @@ IOLog = IO[str]
 logger = logging.getLogger("cmk")
 
 
-def get_formatter(
-    format_str: str = "%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s",
-) -> logging.Formatter:
+def get_formatter() -> logging.Formatter:
     """Returns a new message formater instance that uses the standard
-    Check_MK log format by default. You can also set another format
-    if you like."""
-    return logging.Formatter(format_str)
+    Check_MK log format by default."""
+    return logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
 
 
 def clear_console_logging() -> None:
@@ -57,10 +54,10 @@ def setup_console_logging() -> None:
     This can be used for existing command line applications which were
     using sys.stdout.write() or print() before.
     """
-    setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
+    setup_logging_handler(sys.stdout, logging.Formatter("%(message)s"))
 
 
-def open_log(log_file_path: str | Path) -> IOLog:
+def open_log(log_file_path: str | Path) -> IO[str]:
     """Open logfile and fall back to stderr if this is not successfull
     The opened file-like object is returned.
     """
@@ -68,7 +65,7 @@ def open_log(log_file_path: str | Path) -> IOLog:
         log_file_path = Path(log_file_path)
 
     try:
-        logfile: IOLog = log_file_path.open("a", encoding="utf-8")
+        logfile: IO[str] = log_file_path.open("a", encoding="utf-8")
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
@@ -83,32 +80,25 @@ def setup_watched_file_logging_handler(
     """Removes all previous logger handlers and set a logfile handler for the given logfile path
     This handler automatically reopens the logfile if it detects an inode change, e.g through logrotate
     """
-    if formatter is None:
-        formatter = get_default_formatter()
-
-    handler = WatchedFileHandler(logfile)
-    handler.setFormatter(formatter)
-    del logger.handlers[:]  # Remove all previously existing handlers
-    logger.addHandler(handler)
+    _set_handler(WatchedFileHandler(logfile), formatter)
 
 
-def setup_logging_handler(stream: IOLog, formatter: logging.Formatter | None = None) -> None:
+def setup_logging_handler(stream: IO[str], formatter: logging.Formatter | None = None) -> None:
     """This method enables all log messages to be written to the given
     stream file object. The messages are formatted in Check_MK standard
     logging format.
     """
-    if formatter is None:
-        formatter = get_default_formatter()
+    _set_handler(logging.StreamHandler(stream=stream), formatter)
 
-    handler = logging.StreamHandler(stream=stream)
-    handler.setFormatter(formatter)
 
+def _set_handler(handler: logging.Handler, formatter: logging.Formatter | None = None) -> None:
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
+        if formatter is None
+        else formatter
+    )
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
-
-
-def get_default_formatter() -> logging.Formatter:
-    return get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
 
 
 def modify_logging_handler(

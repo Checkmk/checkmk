@@ -6,19 +6,18 @@
 from __future__ import annotations
 
 import io
-import logging
 import multiprocessing
 import os
 import signal
 import sys
 import time
 from collections.abc import Callable
+from logging import Formatter, Logger, StreamHandler
 from pathlib import Path
 from types import FrameType
 
 from setproctitle import setthreadtitle
 
-import cmk.utils.paths
 from cmk.utils import daemon, render, store
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
@@ -37,7 +36,7 @@ class BackgroundProcess(multiprocessing.Process):
 
     def __init__(
         self,
-        logger: logging.Logger,
+        logger: Logger,
         work_dir: str,
         job_id: str,
         target: Callable[[BackgroundProcessInterface], None],
@@ -125,7 +124,7 @@ class BackgroundProcess(multiprocessing.Process):
         # installs an "atexit" callback which flushes the logs upon the process exiting. This
         # tries to write to the now closed fake stdout/err handles and triggers the RuntimeError.
         # This will happen even if sys.stdout and sys.stderr are reset to their originals because
-        # the logging.StreamHandler will still hold a reference to the mod_wsgi stdout/err handles.
+        # the StreamHandler will still hold a reference to the mod_wsgi stdout/err handles.
         # sys.stdout.close()
         # sys.stderr.close()
         daemon.closefrom(0)
@@ -179,8 +178,10 @@ class BackgroundProcess(multiprocessing.Process):
     def _enable_logging_to_stdout(self) -> None:
         """In addition to the web.log we also want to see the job specific logs
         in stdout (which results in job progress info)"""
-        handler = logging.StreamHandler(stream=sys.stdout)
-        handler.setFormatter(cmk.utils.log.get_formatter())
+        handler = StreamHandler(stream=sys.stdout)
+        handler.setFormatter(
+            Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+        )
         log.logger.addHandler(handler)
 
     def _lock_configuration(self) -> None:
@@ -190,7 +191,7 @@ class BackgroundProcess(multiprocessing.Process):
 
 
 class BackgroundProcessInterface:
-    def __init__(self, work_dir: str, job_id: str, logger: logging.Logger) -> None:
+    def __init__(self, work_dir: str, job_id: str, logger: Logger) -> None:
         self._work_dir = work_dir
         self._job_id = job_id
         self._logger = logger
@@ -201,7 +202,7 @@ class BackgroundProcessInterface:
     def get_job_id(self) -> str:
         return self._job_id
 
-    def get_logger(self) -> logging.Logger:
+    def get_logger(self) -> Logger:
         return self._logger
 
     def send_progress_update(self, info: str, with_timestamp: bool = False) -> None:

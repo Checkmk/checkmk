@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from dataclasses import dataclass
 from enum import Enum
+from logging import FileHandler, Formatter, getLogger
+from pathlib import Path
 from typing import Literal
 
 import cmk.utils.log
@@ -13,7 +14,7 @@ import cmk.utils.paths
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
-logger = logging.getLogger("cmk.web")
+logger = getLogger("cmk.web")
 
 
 class TwoFactorEventType(Enum):
@@ -27,16 +28,16 @@ class TwoFactorEventType(Enum):
 
 
 def init_logging() -> None:
-    handler = logging.FileHandler("%s/web.log" % cmk.utils.paths.log_dir, encoding="UTF-8")
-    handler.setFormatter(cmk.utils.log.get_formatter())
-    root = logging.getLogger()
+    handler = FileHandler(Path(cmk.utils.paths.log_dir, "web.log"), encoding="UTF-8")
+    handler.setFormatter(Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"))
+    root = getLogger()
     del root.handlers[:]  # Remove all previously existing handlers
     root.addHandler(handler)
 
 
 def set_log_levels(log_levels: dict[str, int]) -> None:
     for name, level in _augmented_log_levels(log_levels).items():
-        logging.getLogger(name).setLevel(level)
+        getLogger(name).setLevel(level)
 
 
 # To see log entries from libraries and non-GUI code, reuse cmk.web's level.

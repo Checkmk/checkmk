@@ -13,7 +13,6 @@ from ._level import VERBOSE
 
 __all__ = [
     "clear_console_logging",
-    "get_formatter",
     "logger",
     "setup_console_logging",
     "setup_logging_handler",
@@ -22,12 +21,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger("cmk")
-
-
-def get_formatter() -> logging.Formatter:
-    """Returns a new message formater instance that uses the standard
-    Check_MK log format by default."""
-    return logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
 
 
 def clear_console_logging() -> None:

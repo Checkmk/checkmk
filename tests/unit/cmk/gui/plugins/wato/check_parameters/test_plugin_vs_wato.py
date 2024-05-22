@@ -298,10 +298,6 @@ class ErrorReporter:
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
-        (
-            RuleGroup.CheckgroupParameters("switch_contact"),
-            "ra32e_switch",
-        ),
         (RuleGroup.CheckgroupParameters("temperature"), "apc_symmetra_temp"),
         (
             RuleGroup.CheckgroupParameters("temperature"),

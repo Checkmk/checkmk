@@ -116,19 +116,24 @@ def _activate_ec_changes(site: Site) -> None:
     site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 
-def _generate_message_via_events_pipe(site: Site, message: str) -> None:
+def _generate_message_via_events_pipe(site: Site, message: str, end_of_line: bool = True) -> None:
     """Generate EC message via Unix socket"""
     events_path = site.path("tmp/run/mkeventd/events")
-    cmd = f"sudo su -l {site.id} -c 'echo {message} > {events_path}'"
+    cmd = f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} > {events_path}'"
     with subprocess.Popen(
         cmd, encoding="utf-8", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     ) as process:
         _validate_process_return_code(process, "Failed to generate EC message via Unix socket.")
 
 
-def _generate_message_via_syslog(site: Site, message: str, udp: bool = True) -> None:
+def _generate_message_via_syslog(
+    site: Site, message: str, udp: bool = True, end_of_line: bool = True
+) -> None:
     """Generate EC message via syslog"""
-    cmd = f"sudo su -l {site.id} -c 'echo {message} | nc -w 0 {'-u' if udp else ''} 127.0.0.1 514'"
+    cmd = (
+        f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} | nc -w 0 "
+        f"{'-u' if udp else ''} 127.0.0.1 514'"
+    )
     with subprocess.Popen(
         cmd, encoding="utf-8", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     ) as process:
@@ -404,6 +409,36 @@ def test_ec_rule_match_syslog(
     assert queried_event_states[0] == rule_state
 
     # retrieve matching event message via livestatus query
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
+    assert len(queried_event_messages) == 1
+    assert queried_event_messages[0] == event_message
+
+
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+def test_ec_rule_no_eol(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
+    """Generate a message via events pipe and Syslog with no end-of-line matching an EC rule.
+
+    Assert:
+        * an event is NOT created via events pipe
+        * an event is NOT created via Syslog TCP
+        * an event is created via Syslog UDP
+    """
+    match, _, _ = setup_ec
+
+    event_message = f"some {match} status"
+    _generate_message_via_events_pipe(site, event_message, end_of_line=False)
+    _generate_message_via_syslog(site, event_message, udp=False, end_of_line=False)
+
+    queried_event_states = site.live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    assert not queried_event_states
+
+    queried_event_messages = site.live.query_column("GET eventconsoleevents\nColumns: event_text")
+    assert not queried_event_messages
+
+    _generate_message_via_syslog(site, event_message, udp=True, end_of_line=False)
+
     queried_event_messages = _wait_for_queried_column(
         site, "GET eventconsoleevents\nColumns: event_text"
     )

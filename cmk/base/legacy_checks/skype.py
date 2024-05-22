@@ -251,9 +251,9 @@ check_info["skype.conferencing"] = LegacyCheckDefinition(
     check_function=check_skype_conferencing,
     check_ruleset_name="skype_conferencing",
     check_default_parameters={
-        "incomplete_calls": {"upper": (20, 40)},
-        "create_conference_latency": {"upper": (5000, 10000)},
-        "allocation_latency": {"upper": (5000, 10000)},
+        "incomplete_calls": {"upper": (20.0, 40.0)},
+        "create_conference_latency": {"upper": (5000.0, 10000.0)},
+        "allocation_latency": {"upper": (5000.0, 10000.0)},
     },
 )
 
@@ -425,7 +425,7 @@ check_info["skype.sip_stack"] = LegacyCheckDefinition(
         "flow_controlled_connections": {"upper": (1, 2)},
         "outgoing_queue_delay": {"upper": (2.0, 4.0)},
         "timedout_sends": {"upper": (0.01, 0.02)},
-        "authentication_errors": {"upper": (1, 2)},
+        "authentication_errors": {"upper": (1.0, 2.0)},
     },
 )
 

@@ -299,14 +299,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("skype_conferencing"),
-            "skype_conferencing",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("skype_sip"),
-            "skype_sip_stack",
-        ),
-        (
             RuleGroup.CheckgroupParameters("storage_iops"),
             "ddn_s2a_stats_io",
         ),

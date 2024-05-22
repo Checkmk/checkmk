@@ -402,30 +402,6 @@ metric_info["fetched_items"] = {
     "color": "23/b",
 }
 
-metric_info["jira_count"] = {
-    "title": _l("Number of issues"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["jira_sum"] = {
-    "title": _l("Result of summed up values"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["jira_avg"] = {
-    "title": _l("Average value"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["jira_diff"] = {
-    "title": _l("Difference"),
-    "unit": "count",
-    "color": "11/a",
-}
-
 metric_info["consumers"] = {
     "title": _l("Consumers"),
     "unit": "count",

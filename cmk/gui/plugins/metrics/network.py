@@ -491,7 +491,7 @@ metric_info["fw_connections_passthrough"] = {
 }
 
 metric_info["average_sync_time"] = {
-    "title": _("Average slave sync time"),
+    "title": _("Average remote site sync time"),
     "unit": "s",
     "color": "46/a",
 }

@@ -199,7 +199,7 @@ class SiteManagement:
             title=_("Sync with LDAP connections"),
             orientation="horizontal",
             choices=[
-                (None, _("Disable automatic user synchronization (use master site users)")),
+                (None, _("Disable automatic user synchronization (use central site users)")),
                 ("all", _("Sync users with all connections")),
                 (
                     "list",

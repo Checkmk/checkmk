@@ -182,7 +182,7 @@ class AWSSpecialAgentValuespecBuilder:
                         (
                             "host_assignment",
                             CascadingDropdown(
-                                title=_("Define Host Assignment"),
+                                title=_("Define host assignment"),
                                 help=_(
                                     "Define the host to assign the discovered CloudFront services."
                                     " You can assign them to the AWS host as any other AWS service or"

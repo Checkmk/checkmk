@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput, Tu
 def _parameter_valuespec_generic_string():
     return Dictionary(
         elements=[
-            ("default_status", MonitoringState(title=_("Default Status"))),
+            ("default_status", MonitoringState(title=_("Default status"))),
             (
                 "match_strings",
                 ListOf(

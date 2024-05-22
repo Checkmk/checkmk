@@ -260,8 +260,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "levels_hosts",
                 Tuple(
-                    title=_("Levels Hosts"),
-                    help=_("Set Levels for the number of Hosts"),
+                    title=_("Levels hosts"),
+                    help=_("Set levels for the number of hosts"),
                     elements=[
                         Integer(
                             title=_("Warning at or above"),
@@ -277,8 +277,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "levels_services",
                 Tuple(
-                    title=_("Levels Services"),
-                    help=_("Set Levels for the number of Services"),
+                    title=_("Levels services"),
+                    help=_("Set levels for the number of services"),
                     elements=[
                         Integer(
                             title=_("Warning at or above"),

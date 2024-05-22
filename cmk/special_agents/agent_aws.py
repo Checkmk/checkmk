@@ -1365,7 +1365,7 @@ class EC2Limits(AWSSectionLimits):
             "",
             AWSLimit(
                 "vpc_elastic_ip_addresses",
-                "VPC Elastic IP Addresses",
+                "VPC Elastic IP addresses",
                 5,
                 vpc_addresses,
             ),
@@ -1374,7 +1374,7 @@ class EC2Limits(AWSSectionLimits):
             "",
             AWSLimit(
                 "elastic_ip_addresses",
-                "Elastic IP Addresses",
+                "Elastic IP addresses",
                 5,
                 std_addresses,
             ),

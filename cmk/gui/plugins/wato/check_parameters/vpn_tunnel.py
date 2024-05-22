@@ -19,7 +19,7 @@ def _parameter_valuespec_vpn_tunnel():
                 "tunnels",
                 ListOf(
                     valuespec=Tuple(
-                        title=("VPN Tunnel Endpoints"),
+                        title=("VPN tunnel endpoints"),
                         elements=[
                             IPv4Address(
                                 title=_("IP address or name of tunnel endpoint"),
@@ -29,7 +29,7 @@ def _parameter_valuespec_vpn_tunnel():
                                 ),
                             ),
                             TextInput(
-                                title=_("Tunnel Alias"),
+                                title=_("Tunnel alias"),
                                 help=_(
                                     "You can configure an individual alias here for the tunnel matching "
                                     "the IP address or name configured in the field above."
@@ -67,6 +67,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("IP address of tunnel endpoint")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_vpn_tunnel,
-        title=lambda: _("VPN Tunnel"),
+        title=lambda: _("VPN tunnel"),
     )
 )

@@ -26,7 +26,7 @@ def _parameter_valuespec_hivemanager_devices():
                 "max_clients",
                 Tuple(
                     title=_("Number of clients"),
-                    help=_("Number of clients connected to a Device."),
+                    help=_("Number of clients connected to a device."),
                     elements=[
                         Integer(title=_("Warning at"), unit=_("clients")),
                         Integer(title=_("Critical at"), unit=_("clients")),
@@ -36,7 +36,7 @@ def _parameter_valuespec_hivemanager_devices():
             (
                 "max_uptime",
                 Tuple(
-                    title=_("Maximum uptime of Device"),
+                    title=_("Maximum uptime of the device"),
                     elements=[
                         Age(title=_("Warning at")),
                         Age(title=_("Critical at")),
@@ -75,9 +75,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hivemanager_devices",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Host name of the Device")),
+        item_spec=lambda: TextInput(title=_("Host name of the device")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hivemanager_devices,
-        title=lambda: _("Hivemanager Devices"),
+        title=lambda: _("Hivemanager devices"),
     )
 )

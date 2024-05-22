@@ -1282,7 +1282,7 @@ class JiraPluginCreate(PluginName):
     monitoring_url = fields.String(
         required=True,
         example="",
-        description="Configure the base URL for the Monitoring Web-GUI here. Include the site name. Used for link to check_mk out of jira",
+        description="Configure the base URL for the monitoring web-GUI here. Include the site name. Used for link to Checkmk out of JIRA",
     )
     site_custom_id = fields.Nested(
         StrValueOneOfSchema,
@@ -1886,12 +1886,12 @@ class SpectrumPluginBase(PluginName):
     destination_ip = IPField(
         ip_type_allowed="ipv4",
         required=True,
-        description="IP Address of the Spectrum server receiving the SNMP trap",
+        description="IP address of the Spectrum server receiving the SNMP trap",
     )
     snmp_community = fields.String(
         required=True,
         example="",
-        description="SNMP Community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
+        description="SNMP community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
     )
     base_oid = fields.String(
         required=True,

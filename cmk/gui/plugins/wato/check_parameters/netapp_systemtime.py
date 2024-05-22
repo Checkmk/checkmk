@@ -27,7 +27,7 @@ def _parameter_valuespec_netapp_systemtime():
                 Tuple(
                     title=_("Set upper levels for the time difference"),
                     help=_(
-                        "Here you can Set upper levels for the time difference "
+                        "Here you can set upper levels for the time difference "
                         "between agent and system time."
                     ),
                     elements=[

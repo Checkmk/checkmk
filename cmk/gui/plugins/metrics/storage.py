@@ -22,19 +22,19 @@ from cmk.gui.i18n import _
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 metric_info["last_updated"] = {
-    "title": _("Last Updated"),
+    "title": _("Last updated"),
     "unit": "s",
     "color": "#80f000",
 }
 
 metric_info["deferred_age"] = {
-    "title": _("Deferred Files Age"),
+    "title": _("Deferred files age"),
     "unit": "s",
     "color": "#80f000",
 }
 
 metric_info["runtime"] = {
-    "title": _("Process Runtime"),
+    "title": _("Process runtime"),
     "unit": "s",
     "color": "#80f000",
 }
@@ -256,7 +256,7 @@ metric_info["cpu_mem_used_percent"] = {
 
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
-    "title": _("Permanent Generation Memory"),
+    "title": _("Permanent generation memory"),
     "unit": "bytes",
 }
 
@@ -297,7 +297,7 @@ metric_info["caches"] = {
 }
 
 metric_info["mem_pages_rate"] = {
-    "title": _("Memory Pages"),
+    "title": _("Memory pages"),
     "unit": "1/s",
     "color": "34/a",
 }
@@ -1013,7 +1013,7 @@ metric_info["meta_usage"] = {
 }
 
 metric_info["storage_processor_util"] = {
-    "title": _("Storage Processor Utilization"),
+    "title": _("Storage processor utilization"),
     "unit": "%",
     "color": "34/a",
 }
@@ -1283,7 +1283,7 @@ graph_info["ram_swap_used"] = {
 }
 
 graph_info["cpu_mem_used_percent"] = {
-    "title": _("Used CPU Memory"),
+    "title": _("Used CPU memory"),
     "metrics": [
         ("cpu_mem_used_percent", "area"),
     ],
@@ -1337,7 +1337,7 @@ graph_info["swap"] = {
 }
 
 graph_info["active_and_inactive_memory_anon"] = {
-    "title": _("Active and Inactive Memory"),
+    "title": _("Active and inactive memory"),
     "metrics": [
         ("mem_lnx_inactive_anon", "stack"),
         ("mem_lnx_inactive_file", "stack"),
@@ -1351,7 +1351,7 @@ graph_info["active_and_inactive_memory_anon"] = {
 # since we currently cannot state a condition on non-existing
 # metrics.
 graph_info["active_and_inactive_memory"] = {
-    "title": _("Active and Inactive Memory"),
+    "title": _("Active and inactive memory"),
     "metrics": [
         ("mem_lnx_active", "stack"),
         ("mem_lnx_inactive", "stack"),
@@ -1376,7 +1376,7 @@ graph_info["ram_used"] = {
 
 
 graph_info["filesystem_writeback"] = {
-    "title": _("Filesystem Writeback"),
+    "title": _("Filesystem writeback"),
     "metrics": [
         ("mem_lnx_dirty", "area"),
         ("mem_lnx_writeback", "stack"),
@@ -1405,7 +1405,7 @@ graph_info["memory_that_cannot_be_swapped_out"] = {
 }
 
 graph_info["huge_pages"] = {
-    "title": _("Huge Pages"),
+    "title": _("Huge pages"),
     "metrics": [
         ("mem_lnx_huge_pages_total", "line"),
         ("mem_lnx_huge_pages_free", "stack"),
@@ -1415,7 +1415,7 @@ graph_info["huge_pages"] = {
 }
 
 graph_info["vmalloc_address_space_1"] = {
-    "title": _("VMalloc Address Space"),
+    "title": _("VMalloc address space"),
     "metrics": [
         ("mem_lnx_vmalloc_total", "line"),
         ("mem_lnx_vmalloc_used", "stack"),
@@ -1426,7 +1426,7 @@ graph_info["vmalloc_address_space_1"] = {
 # TODO: Warum ohne total? Dürfte eigentlich nicht
 # vorkommen.
 graph_info["vmalloc_address_space_2"] = {
-    "title": _("VMalloc Address Space"),
+    "title": _("VMalloc address space"),
     "metrics": [
         ("mem_lnx_vmalloc_used", "area"),
         ("mem_lnx_vmalloc_chunk", "stack"),
@@ -1494,7 +1494,7 @@ graph_info["harddrive_health_statistic"] = {
 }
 
 graph_info["mem_perm_used"] = {
-    "title": _("Permanent Generation Memory"),
+    "title": _("Permanent generation memory"),
     "metrics": [("mem_perm_used", "area")],
     "scalars": [
         "mem_perm_used:warn",
@@ -1505,7 +1505,7 @@ graph_info["mem_perm_used"] = {
 }
 
 graph_info["datafile_sizes"] = {
-    "title": _("Datafile Sizes"),
+    "title": _("Datafile sizes"),
     "metrics": [("allocated_size", "line"), ("data_size", "area")],
 }
 

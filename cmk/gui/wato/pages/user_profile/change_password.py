@@ -140,7 +140,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
             html.open_div(class_="wato")
             forms.header(self._page_title())
 
-            forms.section(_("Current Password"))
+            forms.section(_("Current password"))
             html.password_input("cur_password", autocomplete="new-password")
 
             forms.section(_("New Password"))

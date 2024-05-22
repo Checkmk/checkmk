@@ -233,7 +233,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             html.help(_("The attribute is added to this section in the edit dialog."))
             html.dropdown("topic", self._topics, deflt=self._attr.get("topic", self._default_topic))
 
-            forms.section(_("Help Text") + "<sup>*</sup>")
+            forms.section(_("Help text") + "<sup>*</sup>")
             html.help(_("You might want to add some helpful description for the attribute."))
             html.text_area("help", self._attr.get("help", ""))
 

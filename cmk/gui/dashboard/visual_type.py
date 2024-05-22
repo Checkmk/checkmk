@@ -165,6 +165,6 @@ class VisualTypeDashboards(VisualType):
             )
 
         raise MKGeneralException(
-            _("Graph specification '%s' is insufficient for Dashboard.")
+            _("Graph specification '%s' is insufficient for dashboard.")
             % graph_specification.graph_type
         )

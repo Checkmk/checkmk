@@ -623,10 +623,10 @@ class ConfigVariableDebugLivestatusQueries(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Debug Livestatus queries"),
-            label=_("enable debug of Livestatus queries"),
+            title=_("Debug livestatus queries"),
+            label=_("enable debug of livestatus queries"),
             help=_(
-                "With this option turned on all Livestatus queries made by Multisite "
+                "With this option turned on all livestatus queries made by multisite "
                 "in order to render views are being displayed."
             ),
         )
@@ -2706,7 +2706,7 @@ def find_usages_of_contact_group_in_default_user_profile(
     ]:
         used_in.append(
             (
-                "%s" % (_("Default User Profile")),
+                "%s" % (_("Default user profile")),
                 folder_preserving_link(
                     [("mode", "edit_configvar"), ("varname", "default_user_profile")]
                 ),
@@ -3744,7 +3744,7 @@ def monitoring_macro_help() -> str:
 
 def _valuespec_host_check_commands():
     return CascadingDropdown(
-        title=_("Host Check Command"),
+        title=_("Host check command"),
         help=_(
             "Usually Checkmk uses a series of PING (ICMP echo request) in order to determine "
             "whether a host is up. In some cases this is not possible, however. With this rule "

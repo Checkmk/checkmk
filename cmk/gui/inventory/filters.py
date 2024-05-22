@@ -25,7 +25,7 @@ from cmk.gui.visuals.filter import (
     InputTextFilter,
 )
 
-from ._inventory_path import InventoryPath
+from ._tree import InventoryPath
 
 
 class FilterInvtableText(InputTextFilter):

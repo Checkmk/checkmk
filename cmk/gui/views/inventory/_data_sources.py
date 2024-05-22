@@ -13,13 +13,18 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import RetentionInterval, SDValue
 
 import cmk.gui.sites as sites
-from cmk.gui import inventory
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.inventory._history import get_history
+from cmk.gui.inventory._tree import (
+    get_short_inventory_filepath,
+    InventoryPath,
+    load_filtered_and_merged_tree,
+)
 from cmk.gui.painter.v0.base import Cell
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.user_errors import user_errors
@@ -34,7 +39,7 @@ class ABCDataSourceInventory(ABCDataSource):
 
     @property
     @abc.abstractmethod
-    def inventory_path(self) -> inventory.InventoryPath:
+    def inventory_path(self) -> InventoryPath:
         raise NotImplementedError()
 
 
@@ -106,7 +111,7 @@ class ABCRowTable(RowTable):
 
 
 class RowTableInventory(ABCRowTable):
-    def __init__(self, info_name: str, inventory_path: inventory.InventoryPath) -> None:
+    def __init__(self, info_name: str, inventory_path: InventoryPath) -> None:
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
@@ -116,7 +121,7 @@ class RowTableInventory(ABCRowTable):
 
         try:
             table_rows = (
-                inventory.load_filtered_and_merged_tree(hostrow)
+                load_filtered_and_merged_tree(hostrow)
                 .get_tree(self._inventory_path.path)
                 .table.rows_with_retentions
             )
@@ -127,7 +132,7 @@ class RowTableInventory(ABCRowTable):
                 MKUserError(
                     "load_inventory_tree",
                     _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
-                    % inventory.get_short_inventory_filepath(hostrow.get("host_name", "")),
+                    % get_short_inventory_filepath(hostrow.get("host_name", "")),
                 )
             )
             return
@@ -147,7 +152,7 @@ class RowTableInventoryHistory(ABCRowTable):
 
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         hostname: HostName = hostrow["host_name"]
-        history, corrupted_history_files = inventory.get_history(hostname)
+        history, corrupted_history_files = get_history(hostname)
         if corrupted_history_files:
             user_errors.add(
                 MKUserError(

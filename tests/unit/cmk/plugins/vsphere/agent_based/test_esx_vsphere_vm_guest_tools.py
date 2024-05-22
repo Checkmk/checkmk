@@ -30,7 +30,9 @@ def test_parse_esx_vsphere_guest_tools() -> None:
 )
 def test_check_guest_tools(vm_status: ESXStatus, check_state: State) -> None:
     check_result = list(
-        esx_vsphere_vm_guest_tools.check_guest_tools({}, _esx_vm_section(vm_status))
+        esx_vsphere_vm_guest_tools.check_guest_tools(
+            esx_vsphere_vm_guest_tools.CHECK_DEFAULT_PARAMETERS, _esx_vm_section(vm_status)
+        )
     )
     results = [r for r in check_result if isinstance(r, Result)]
     assert len(results) == 1

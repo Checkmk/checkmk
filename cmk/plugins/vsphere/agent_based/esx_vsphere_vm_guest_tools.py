@@ -18,6 +18,13 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import esx_vsphere
 from cmk.plugins.lib.esx_vsphere import ESXStatus
 
+CHECK_DEFAULT_PARAMETERS = {
+    ESXStatus.guestToolsCurrent.value: State.OK.value,
+    ESXStatus.guestToolsNeedUpgrade.value: State.WARN.value,
+    ESXStatus.guestToolsNotInstalled.value: State.CRIT.value,
+    ESXStatus.guestToolsUnmanaged.value: State.OK.value,
+}
+
 
 def discovery_guest_tools(section: esx_vsphere.SectionVM) -> DiscoveryResult:
     if section is None:
@@ -27,34 +34,26 @@ def discovery_guest_tools(section: esx_vsphere.SectionVM) -> DiscoveryResult:
         yield Service()
 
 
+_MAP_SUMMARY = {
+    ESXStatus.guestToolsCurrent: "VMware Tools are installed and the version is current",
+    ESXStatus.guestToolsNeedUpgrade: "VMware Tools are installed, but the version is not current",
+    ESXStatus.guestToolsNotInstalled: "VMware Tools are not installed",
+    ESXStatus.guestToolsUnmanaged: "VMware Tools are installed, but are not managed by VMware",
+}
+
+
 def check_guest_tools(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -> CheckResult:
-    if section is None:
+    if section is None:  # this never happens.
         raise IgnoreResultsError("No VM information currently available")
 
-    match section.status:
-        case ESXStatus.guestToolsCurrent:
-            state = State.OK
-            summary = "VMware Tools are installed and the version is current"
-        case ESXStatus.guestToolsNeedUpgrade:
-            state = State.WARN
-            summary = "VMware Tools are installed, but the version is not current"
-        case ESXStatus.guestToolsNotInstalled:
-            state = State.CRIT
-            summary = "VMware Tools are not installed"
-        case ESXStatus.guestToolsUnmanaged:
-            state = State.OK
-            summary = "VMware Tools are installed, but are not managed by VMware"
-        case _:
-            state = State.UNKNOWN
-            summary = "Unknown status for VMware Tools"
-
-    if (
-        section.status is not None
-        and (monitoring_value := params.get(section.status.value)) is not None
-    ):
-        state = State(monitoring_value)
-
-    yield Result(state=state, summary=summary)
+    yield (
+        Result(state=State.UNKNOWN, summary="Unknown status for VMware Tools")
+        if (status := section.status) is None
+        else Result(
+            state=State(params[status.value]),
+            summary=_MAP_SUMMARY[status],
+        )
+    )
 
 
 check_plugin_esx_vsphere_vm_guest_tools = CheckPlugin(
@@ -64,5 +63,5 @@ check_plugin_esx_vsphere_vm_guest_tools = CheckPlugin(
     discovery_function=discovery_guest_tools,
     check_function=check_guest_tools,
     check_ruleset_name="vm_guest_tools",
-    check_default_parameters={},
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
 )

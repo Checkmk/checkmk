@@ -336,10 +336,6 @@ class ErrorReporter:
             "openhardwaremonitor_temperature",
         ),
         (
-            RuleGroup.CheckgroupParameters("vm_guest_tools"),
-            "esx_vsphere_vm_guest_tools",
-        ),
-        (
             RuleGroup.CheckgroupParameters("vm_heartbeat"),
             "esx_vsphere_vm_heartbeat",
         ),

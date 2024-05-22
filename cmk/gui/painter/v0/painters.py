@@ -1068,7 +1068,7 @@ class PainterSvcNextCheck(Painter):
         return "svc_next_check"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the next scheduled service check")
+        return _("Time of the next scheduled service check")
 
     def short_title(self, cell: Cell) -> str:
         return _("Next check")
@@ -1087,7 +1087,7 @@ class PainterSvcLastTimeOk(Painter):
         return "svc_last_time_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("The last time the service was OK")
+        return _("Last time the service was OK")
 
     def short_title(self, cell: Cell) -> str:
         return _("Last OK")
@@ -1108,7 +1108,7 @@ class PainterSvcNextNotification(Painter):
         return "svc_next_notification"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the next service notification")
+        return _("Time of the next service notification")
 
     def short_title(self, cell: Cell) -> str:
         return _("Next notification")
@@ -1179,7 +1179,7 @@ class PainterSvcLastNotification(Painter):
         return "svc_last_notification"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the last service notification")
+        return _("Time of the last service notification")
 
     def short_title(self, cell: Cell) -> str:
         return _("last notification")
@@ -2099,7 +2099,7 @@ class PainterHostNextCheck(Painter):
         return "host_next_check"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the next scheduled host check")
+        return _("Time of the next scheduled host check")
 
     def short_title(self, cell: Cell) -> str:
         return _("Next check")
@@ -2118,7 +2118,7 @@ class PainterHostNextNotification(Painter):
         return "host_next_notification"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the next host notification")
+        return _("Time of the next host notification")
 
     def short_title(self, cell: Cell) -> str:
         return _("Next notification")
@@ -2156,7 +2156,7 @@ class PainterHostLastNotification(Painter):
         return "host_last_notification"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the last host notification")
+        return _("Time of the last host notification")
 
     def short_title(self, cell: Cell) -> str:
         return _("last notification")

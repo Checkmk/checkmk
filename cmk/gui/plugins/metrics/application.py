@@ -492,42 +492,6 @@ metric_info["gc_bytes_rate"] = {
     "color": "42/a",
 }
 
-metric_info["mobileiron_policyviolationcount"] = {
-    "title": _l("Policy violation count"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["mobileiron_last_build"] = {
-    "title": _l("Age of OS build version"),
-    "unit": "s",
-    "color": "#94b65a",
-}
-
-metric_info["mobileiron_last_patched"] = {
-    "title": _l("Age of security patch"),
-    "unit": "s",
-    "color": "#54b65a",
-}
-
-metric_info["mobileiron_devices_total"] = {
-    "title": _l("Total devices"),
-    "unit": "count",
-    "color": "#000000",
-}
-
-metric_info["mobileiron_non_compliant"] = {
-    "title": _l("Non-compliant devices"),
-    "unit": "count",
-    "color": "41/a",
-}
-
-metric_info["mobileiron_non_compliant_summary"] = {
-    "title": _l("Non-compliant devices"),
-    "unit": "%",
-    "color": "41/b",
-}
-
 metric_info["memory_reservation"] = {
     "title": _l("Memory reservation"),
     "unit": "%",
@@ -629,13 +593,6 @@ graph_info["firewall_users"] = {
         ("max_user", "line"),
     ],
 }
-
-
-graph_info["mobileiron_compliances"] = {
-    "title": _l("Total non-compliant devices"),
-    "metrics": [("mobileiron_non_compliant", "stack"), ("mobileiron_devices_total", "line")],
-}
-
 
 graph_info["messages"] = {
     "title": _l("Messages"),

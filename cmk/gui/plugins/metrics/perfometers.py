@@ -1381,29 +1381,12 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "linear", "segments": ["mobileiron_non_compliant_summary"], "total": 100.0}
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "mobileiron_policyviolationcount",
-        "half_value": 4.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
     {
         "type": "logarithmic",
         "metric": "requests",
         "half_value": 100.0,
         "exponent": 2,
     }
-)
-
-perfometer_info.append(
-    {"type": "logarithmic", "metric": "mobileiron_last_patched", "half_value": 45.0, "exponent": 2}
 )
 
 perfometer_info.append(

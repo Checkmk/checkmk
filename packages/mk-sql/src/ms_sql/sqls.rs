@@ -239,7 +239,7 @@ cast(DATABASEPROPERTYEX(name, 'Status') as varchar) AS Status, \
 FROM master.dbo.sysdatabases";
 
     pub const IS_CLUSTERED: &str =
-        "SELECT cast( SERVERPROPERTY('IsClustered') as varchar) AS is_clustered";
+        "SELECT cast( SERVERPROPERTY('IsClustered') as nvarchar) AS is_clustered";
     pub const CLUSTER_NODES: &str = "SELECT nodename FROM sys.dm_os_cluster_nodes";
     pub const CLUSTER_ACTIVE_NODES: &str =
         "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as varchar) AS active_node";

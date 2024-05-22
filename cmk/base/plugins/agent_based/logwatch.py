@@ -118,6 +118,13 @@ def check_logwatch_node(
     yield from check_logwatch(item, params, {None: section})
 
 
+def check_logwatch_cluster(
+    item: str, section: Mapping[str, logwatch.Section | None]
+) -> CheckResult:
+    params = logwatch.RulesetAccess.logwatch_rules_all(item)
+    yield from check_logwatch(item, params, {k: v for k, v in section.items() if v is not None})
+
+
 def check_logwatch(
     item: str,
     params: Sequence[logwatch.ParameterLogwatchRules],
@@ -148,13 +155,6 @@ def check_logwatch(
     )
 
 
-def cluster_check_logwatch(
-    item: str, section: Mapping[str, logwatch.Section | None]
-) -> CheckResult:
-    params = logwatch.RulesetAccess.logwatch_rules_all(item)
-    yield from check_logwatch(item, params, {k: v for k, v in section.items() if v is not None})
-
-
 register.check_plugin(
     name="logwatch",
     service_name="Log %s",
@@ -167,7 +167,7 @@ register.check_plugin(
     # There *are* already check parameters, they're just bypassing the official API.
     # Make sure to give the check ruleset a general name, so we can (maybe, someday)
     # incorporate those.
-    cluster_check_function=cluster_check_logwatch,
+    cluster_check_function=check_logwatch_cluster,
 )
 
 # .
@@ -263,6 +263,17 @@ def check_logwatch_groups_node(
     yield from check_logwatch_groups(item, params, params_rules, {None: section})
 
 
+def check_logwatch_groups_cluster(
+    item: str,
+    params: DiscoveredGroupParams,
+    section: Mapping[str, logwatch.Section | None],
+) -> CheckResult:
+    params_rules = logwatch.RulesetAccess.logwatch_rules_all(item)
+    yield from check_logwatch_groups(
+        item, params, params_rules, {k: v for k, v in section.items() if v is not None}
+    )
+
+
 def check_logwatch_groups(
     item: str,
     params: DiscoveredGroupParams,
@@ -307,17 +318,6 @@ def _get_matching_logfiles(
     ]
 
 
-def cluster_check_logwatch_groups(
-    item: str,
-    params: DiscoveredGroupParams,
-    section: Mapping[str, logwatch.Section | None],
-) -> CheckResult:
-    params_rules = logwatch.RulesetAccess.logwatch_rules_all(item)
-    yield from check_logwatch_groups(
-        item, params, params_rules, {k: v for k, v in section.items() if v is not None}
-    )
-
-
 register.check_plugin(
     name="logwatch_groups",
     service_name="Log %s",
@@ -328,7 +328,7 @@ register.check_plugin(
     discovery_default_parameters={},
     check_function=check_logwatch_groups_node,
     check_default_parameters={"group_patterns": []},
-    cluster_check_function=cluster_check_logwatch_groups,
+    cluster_check_function=check_logwatch_groups_cluster,
 )
 
 

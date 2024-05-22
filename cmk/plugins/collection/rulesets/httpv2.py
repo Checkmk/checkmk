@@ -665,7 +665,7 @@ def _valuespec_endpoints() -> List:
                                 parameter_form=SingleChoice(
                                     title=Title("Prefix"),
                                     help_text=Help(
-                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose to not use the prefix option."
+                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(

@@ -39,7 +39,7 @@ class StageInfo(TypedDict, total=False):
     NAME: str
     ONLY_WHEN_NOT_EMPTY: str
     DIR: str
-    ENV_VARS: Mapping[str, str]
+    ENV_VARS: Vars
     ENV_VAR_LIST: Sequence[str]
     SEC_VAR_LIST: Sequence[str]
     COMMAND: str
@@ -207,7 +207,7 @@ def run_shell_command(cmd: str, replace_newlines: bool) -> str:
     return stdout_str.replace("\n", " ") if replace_newlines else stdout_str
 
 
-def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Mapping[str, str]:
+def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
     """Evaluate receipts for variables. Make sure already evaluated variables can be used in
     later steps.
     >>> evaluate_vars([
@@ -270,7 +270,7 @@ def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> tupl
 
 async def run_cmd(
     cmd: str,
-    env: Mapping[str, str],
+    env: Vars,
     cwd: str | None,
     stdout_prefix: str = "",
     stderr_prefix: str = "",

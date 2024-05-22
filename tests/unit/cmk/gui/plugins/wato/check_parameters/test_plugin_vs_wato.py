@@ -299,10 +299,6 @@ class ErrorReporter:
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # ruleset name # plug-in
         (
-            RuleGroup.CheckgroupParameters("storage_iops"),
-            "ddn_s2a_stats_io",
-        ),
-        (
             RuleGroup.CheckgroupParameters("switch_contact"),
             "ra32e_switch",
         ),

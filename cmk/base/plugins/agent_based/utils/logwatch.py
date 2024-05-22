@@ -40,7 +40,8 @@ class Section(NamedTuple):
 SyslogConfig = tuple[Literal["tcp"], dict] | tuple[Literal["udp"], dict]
 
 
-class DictLogwatchEc(TypedDict, total=False):
+class ParameterLogwatchEc(TypedDict, total=False):
+    activation: bool
     method: Literal["", "spool:"] | str | SyslogConfig
     facility: int
     restrict_logfiles: list[str]
@@ -49,9 +50,6 @@ class DictLogwatchEc(TypedDict, total=False):
     logwatch_reclassify: bool
     monitor_logfile_access_state: Literal[0, 1, 2, 3]
     separate_checks: bool
-
-
-ParameterLogwatchEc = Literal[""] | DictLogwatchEc
 
 
 def service_extra_conf(service: str) -> list:
@@ -126,11 +124,17 @@ class LogFileFilter:
     def __init__(self, rules: Sequence[ParameterLogwatchEc]) -> None:
         self._expressions: tuple[Pattern[str], ...] = ()
         self.is_forwarded: Callable[[str], bool]
-        if not rules or not (params := rules[0]):
+        if not rules:
             # forwarding disabled
             self.is_forwarded = self._match_nothing
             return
 
+        if not next((p["activation"] for p in rules if "activation" in p), True):
+            # forwarding disabled
+            self.is_forwarded = self._match_nothing
+            return
+
+        params = rules[0]
         if "restrict_logfiles" not in params:
             # matches all logs on this host
             self.is_forwarded = self._match_all

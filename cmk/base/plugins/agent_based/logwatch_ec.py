@@ -54,7 +54,7 @@ from .utils import logwatch
 
 _MAX_SPOOL_SIZE = 1024**2
 
-CHECK_DEFAULT_PARAMETERS: logwatch.DictLogwatchEc = {
+CHECK_DEFAULT_PARAMETERS: logwatch.ParameterLogwatchEc = {
     "facility": 17,  # default to "local1"
     "method": "",  # local site
     "monitor_logfilelist": False,
@@ -201,14 +201,13 @@ def logwatch_to_prio(level: str) -> int:
 
 def _logwatch_inventory_mode_rules(
     forward_settings: Sequence[logwatch.ParameterLogwatchEc],
-) -> tuple[Literal["no", "single", "groups"], logwatch.DictLogwatchEc]:
-    merged_rules: logwatch.DictLogwatchEc = {}
+) -> tuple[Literal["no", "single", "groups"], logwatch.ParameterLogwatchEc]:
+    merged_rules: logwatch.ParameterLogwatchEc = {}
     for rule in forward_settings[-1::-1]:
-        if isinstance(rule, dict):
-            for key, value in rule.items():
-                merged_rules[key] = value  # type: ignore[literal-required]
-        elif isinstance(rule, str):
-            return "no", {}  # Configured "no forwarding"
+        merged_rules.update(rule)
+
+    if forward_settings and not merged_rules.get("activation", True):
+        return "no", {}  # Configured "activation" to be False.
 
     if merged_rules.get("separate_checks", False):
         return "single", merged_rules
@@ -238,6 +237,7 @@ def discover_logwatch_ec_common(
 
     single_log_params = {}
     for key in [
+        "activation",
         "method",
         "facility",
         "monitor_logfilelist",

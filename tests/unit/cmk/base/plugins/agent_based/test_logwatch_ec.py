@@ -452,7 +452,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
     ],
 )
 def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
-    params: logwatch_.DictLogwatchEc,
+    params: logwatch_.ParameterLogwatchEc,
     cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,
 ) -> None:

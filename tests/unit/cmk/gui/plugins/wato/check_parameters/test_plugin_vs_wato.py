@@ -557,11 +557,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "redis_info_persistence",
-            RuleGroup.CheckgroupParameters("redis_info_persistence"),
-        ),
-        (
-            "check",
             "skype_conferencing",
             RuleGroup.CheckgroupParameters("skype_conferencing"),
         ),

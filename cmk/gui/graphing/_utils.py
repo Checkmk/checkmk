@@ -974,7 +974,7 @@ def _get_extended_metric_info(
             mfa = metrics_from_api[lookup_metric_name]
             return MetricInfoExtended(
                 name=metric_name,
-                title=_("Prediction of ") + mfa["title"] + _(" (lower levels)"),
+                title=_("Prediction of ") + mfa["title"] + _(" (upper levels)"),
                 unit=mfa["unit"],
                 color=get_gray_tone(color_counter),
             )

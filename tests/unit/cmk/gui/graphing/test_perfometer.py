@@ -143,39 +143,6 @@ def test_get_first_matching_perfometer(
     [
         pytest.param(
             {
-                "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
-                "failed_notifications": {"value": 0, "unit": "", "color": "#456789"},
-            },
-            {
-                "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-                "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
-                "segments": ["delivered_notifications,failed_notifications,+,100,+"],
-                "total": 100.0,
-                "type": "linear",
-            },
-            id="second to last",
-        ),
-        pytest.param(
-            {
-                "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
-                "failed_notifications": {"value": 1, "unit": "", "color": "#456789"},
-            },
-            {
-                "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
-                "label": (
-                    "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
-                    "%",
-                ),
-                "segments": [
-                    "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
-                ],
-                "total": 100.0,
-                "type": "linear",
-            },
-            id="very last perfometer",
-        ),
-        pytest.param(
-            {
                 "fs_used": {"value": 10, "scalar": {"max": 30}, "unit": "", "color": "#123456"},
                 "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},

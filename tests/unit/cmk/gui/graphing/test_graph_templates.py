@@ -333,25 +333,6 @@ def test_conditional_perfometer() -> None:
             "total": "overprovisioned",
             "type": "linear",
         },
-        {
-            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-            "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
-            "segments": ["delivered_notifications,failed_notifications,+,100,+"],
-            "total": 100.0,
-            "type": "linear",
-        },
-        {
-            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
-            "label": (
-                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
-                "%",
-            ),
-            "segments": [
-                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
-            ],
-            "total": 100.0,
-            "type": "linear",
-        },
     ]
 
 
@@ -459,25 +440,6 @@ def test_non_trivial_perfometer_declarations() -> None:
             "metric": "messages_inbound,messages_outbound,+",
             "half_value": 100,
             "exponent": 5,
-        },
-        {
-            "type": "linear",
-            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-            "segments": ["delivered_notifications,failed_notifications,+,100,+"],
-            "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
-            "total": 100.0,
-        },
-        {
-            "type": "linear",
-            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
-            "segments": [
-                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
-            ],
-            "label": (
-                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
-                "%",
-            ),
-            "total": 100.0,
         },
     ]
 

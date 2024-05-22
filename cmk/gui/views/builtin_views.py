@@ -3461,7 +3461,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Matrix of Performance Data"),
+            "title": _l("Matrix of performance data"),
             "user_sortable": True,
             "owner": UserId.builtin(),
             "public": True,

@@ -190,7 +190,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             "perfdata": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("Performance Data"),
+                    title=Title("Performance data"),
                     help_text=Help(
                         "Store output value into RRD database in a metric with this name."
                     ),

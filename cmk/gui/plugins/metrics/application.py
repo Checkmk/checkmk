@@ -362,30 +362,6 @@ metric_info["epoch_objects"] = {
     "color": "42/a",
 }
 
-metric_info["graylog_input"] = {
-    "title": _l("Input traffic"),
-    "unit": "bytes",
-    "color": "16/b",
-}
-
-metric_info["graylog_output"] = {
-    "title": _l("Output traffic"),
-    "unit": "bytes",
-    "color": "23/a",
-}
-
-metric_info["graylog_decoded"] = {
-    "title": _l("Decoded traffic"),
-    "unit": "bytes",
-    "color": "42/a",
-}
-
-metric_info["graylog_diff"] = {
-    "title": _l("Number of messages in defined timespan"),
-    "unit": "count",
-    "color": "11/a",
-}
-
 metric_info["collectors_running"] = {
     "title": _l("Running collectors"),
     "unit": "count",

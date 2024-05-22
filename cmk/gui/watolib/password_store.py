@@ -8,7 +8,6 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cmk.utils import password_store, store
-from cmk.utils.config_validation_layer.passwords import validate_passwords
 from cmk.utils.password_store import Password
 
 import cmk.gui.userdb as userdb
@@ -71,10 +70,6 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         super().save(meta_data)
         password_store.save(passwords, password_store.password_store_path())
         update_passwords_merged_file()
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_passwords(cfg)
 
 
 def update_passwords_merged_file() -> None:

@@ -16,7 +16,6 @@ __all__ = [
     "clear_console_logging",
     "get_formatter",
     "logger",
-    "modify_logging_handler",
     "open_log",
     "setup_console_logging",
     "setup_logging_handler",
@@ -97,20 +96,6 @@ def _set_handler(handler: logging.Handler, formatter: logging.Formatter | None =
         if formatter is None
         else formatter
     )
-    del logger.handlers[:]  # Remove all previously existing handlers
-    logger.addHandler(handler)
-
-
-def modify_logging_handler(
-    handler: logging.Handler,
-    formatter: logging.Formatter | None,
-) -> None:
-    """Changes logging behavior. Normally used by fetcher to prevent
-    non-formatted output to stdout"""
-
-    if formatter is not None:
-        handler.setFormatter(formatter)
-
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
 

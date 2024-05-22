@@ -163,18 +163,6 @@ metric_info["replication_lag"] = {
     "color": "14/a",
 }
 
-metric_info["jvm_garbage_collection_count"] = {
-    "title": _l("Garbage collections"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["jvm_garbage_collection_time"] = {
-    "title": _l("Time spent collecting garbage"),
-    "unit": "%",
-    "color": "32/a",
-}
-
 metric_info["registered_desktops"] = {
     "title": _l("Registered desktops"),
     "unit": "count",

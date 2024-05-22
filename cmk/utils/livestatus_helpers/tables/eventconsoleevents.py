@@ -636,23 +636,23 @@ class Eventconsoleevents(Table):
     host_last_time_down = Column(
         'host_last_time_down',
         col_type='time',
-        description='The last time the host was DOWN (Unix timestamp)',
+        description='Last time the host was DOWN (Unix timestamp)',
     )
-    """The last time the host was DOWN (Unix timestamp)"""
+    """Last time the host was DOWN (Unix timestamp)"""
 
     host_last_time_unreachable = Column(
         'host_last_time_unreachable',
         col_type='time',
-        description='The last time the host was UNREACHABLE (Unix timestamp)',
+        description='Last time the host was UNREACHABLE (Unix timestamp)',
     )
-    """The last time the host was UNREACHABLE (Unix timestamp)"""
+    """Last time the host was UNREACHABLE (Unix timestamp)"""
 
     host_last_time_up = Column(
         'host_last_time_up',
         col_type='time',
-        description='The last time the host was UP (Unix timestamp)',
+        description='Last time the host was UP (Unix timestamp)',
     )
-    """The last time the host was UP (Unix timestamp)"""
+    """Last time the host was UP (Unix timestamp)"""
 
     host_latency = Column(
         'host_latency',

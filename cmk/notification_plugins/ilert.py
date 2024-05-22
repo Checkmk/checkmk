@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# iLert Checkmk Native Plugin
+# iLert Checkmk Native Plug-in
 
 # Copyright (c) 2013-2020, iLert GmbH
 #       iLert <support@ilert.com>

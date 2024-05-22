@@ -23,7 +23,7 @@
 #                    5    = The partners are not synchronized. Failover is not possible now.
 #                    6    = The partners are synchronized. Failover is potentially possible.
 #                    NULL = Database is inaccessible or is not mirrored. This case is
-#                           filtered out by the agent plugin, as these instances are not
+#                           filtered out by the agent plug-in, as these instances are not
 #                           relevant.
 
 # mirroring witness states:

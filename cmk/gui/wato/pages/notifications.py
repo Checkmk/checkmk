@@ -374,7 +374,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 else:
                     html.icon("checkmark", _("Create a notification"))
 
-                table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css=["narrow nowrap"])
+                table.cell(_("Plug-in"), notify_plugin or _("Plain Email"), css=["narrow nowrap"])
 
                 table.cell(_("Bulk"), css=["narrow"])
                 if "bulk" in rule or "bulk_period" in rule:
@@ -1184,7 +1184,7 @@ class ModeNotifications(ABCNotificationsMode):
     def _add_plugin_output_cells(self, table: Table, context: NotificationContext) -> None:
         output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT", ""))
         table.cell(
-            _("Plugin output"),
+            _("Plug-in output"),
             cmk.gui.view_utils.format_plugin_output(
                 output,
                 request=request,
@@ -1242,8 +1242,8 @@ class ModeNotifications(ABCNotificationsMode):
                 if contact.startswith("mailto:"):
                     contact = contact[7:]  # strip of fake-contact mailto:-prefix
                 table.cell(_("Recipient"), contact)
-                table.cell(_("Plugin"), self._vs_notification_scripts().value_to_html(plugin))
-                table.cell(_("Plugin parameters"), ", ".join(parameters))
+                table.cell(_("Plug-in"), self._vs_notification_scripts().value_to_html(plugin))
+                table.cell(_("Plug-in parameters"), ", ".join(parameters))
                 table.cell(_("Bulking"))
                 if bulk:
                     html.write_text(_("Time horizon") + ": ")
@@ -1363,7 +1363,7 @@ class ModeNotifications(ABCNotificationsMode):
                 (
                     "plugin_output",
                     TextInput(
-                        title=_("Plugin output"),
+                        title=_("Plug-in output"),
                         placeholder=_("This is a notification test"),
                         size=46,
                     ),

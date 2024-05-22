@@ -48,7 +48,7 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="f5_bigip_vcmpguests",  # name taken from pre-1.7 plugin
+    name="f5_bigip_vcmpguests",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP vCMP Guests",
     discovery_function=discovery_f5_bigip_vcmpguests,
     check_function=check_f5_bigip_vcmpguests,

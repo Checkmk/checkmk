@@ -1122,7 +1122,7 @@ class ModeEditRuleset(WatoMode):
             case "varies":
                 html.write_text(
                     _(
-                        "The match type is defined by the discovery ruleset type of the check plugin."
+                        "The match type is defined by the discovery ruleset type of the check plug-in."
                     )
                 )
             case "all" | "list":

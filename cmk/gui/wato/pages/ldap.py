@@ -604,7 +604,7 @@ class LDAPConnectionValuespec(Dictionary):
                     help=_(
                         "It is possible to fetch several attributes of users, like Email or full names, "
                         "from the LDAP directory. This is done by plug-ins which can individually enabled "
-                        "or disabled. When enabling a plugin, it is used upon the next synchonisation of "
+                        "or disabled. When enabling a plug-in, it is used upon the next synchonisation of "
                         "user accounts for gathering their attributes. The user options which get imported "
                         "into Checkmk from LDAP will be locked in Setup."
                     ),
@@ -655,7 +655,7 @@ class LDAPConnectionValuespec(Dictionary):
                         varprefix,
                         _(
                             "You need to configure the group base DN to be able to "
-                            "use the roles synchronization plugin."
+                            "use the roles synchronization plug-in."
                         ),
                     )
 
@@ -925,7 +925,7 @@ class ModeEditLDAPConnection(WatoMode):
             (_("Count Users"), self._test_user_count),
             (_("Group Base-DN"), self._test_group_base_dn),
             (_("Count Groups"), self._test_group_count),
-            (_("Sync-Plugin: Roles"), self._test_groups_to_roles),
+            (_("Sync-Plug-in: Roles"), self._test_groups_to_roles),
         ]
 
     def _test_connect(self, connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
@@ -1027,7 +1027,7 @@ class ModeEditLDAPConnection(WatoMode):
     ) -> tuple[bool, str | None]:
         active_plugins = connection.active_plugins()
         if "groups_to_roles" not in active_plugins:
-            return True, _("Skipping this test (Plugin is not enabled)")
+            return True, _("Skipping this test (plug-in is not enabled)")
 
         params = active_plugins["groups_to_roles"]
         connection.connect(enforce_new=True, enforce_server=address)

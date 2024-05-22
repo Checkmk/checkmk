@@ -8,11 +8,11 @@
 # There are two types of contexts:
 # 1. Raw contexts (purple)
 #    => These come right out of the monitoring core. They are not yet
-#       assinged to a certain plugin. In case of rule based notifictions
+#       assinged to a certain plug-in. In case of rule based notifictions
 #       they are not even assigned to a certain contact.
 #
-# 2. Plugin contexts (cyan)
-#    => These already bear all information about the contact, the plugin
+# 2. Plug-in contexts (cyan)
+#    => These already bear all information about the contact, the plug-in
 #       to call and its parameters.
 
 import datetime
@@ -249,7 +249,7 @@ def do_notify(
 
         # If the notify_mode is set to 'spoolfile' we try to parse the given spoolfile
         # This spoolfile contains a python dictionary
-        # { context: { Dictionary of environment variables }, plugin: "Plugin name" }
+        # { context: { Dictionary of environment variables }, plugin: "Plug-in name" }
         # Any problems while reading the spoolfile results in returning 2
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
@@ -1623,7 +1623,7 @@ def call_notification_script(
                 p.kill()
 
     if exitcode := 1 if timeout_guard.signaled else p.returncode:
-        plugin_log("Plugin exited with code %d" % exitcode)
+        plugin_log("Plug-in exited with code %d" % exitcode)
 
     # Result is already logged to history for spoolfiles by
     # mknotifyd.spool_handler

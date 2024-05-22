@@ -97,7 +97,7 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="f5_bigip_cluster",  # name taken from pre-1.7 plugin
+    name="f5_bigip_cluster",  # name taken from pre-1.7 plug-in
     service_name="Config Sync status",
     discovery_function=discover_f5_bigip_config_sync,
     check_function=check_f5_bigip_config_sync_pre_v11,
@@ -154,7 +154,7 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="f5_bigip_cluster_v11",  # name taken from pre-1.7 plugin
+    name="f5_bigip_cluster_v11",  # name taken from pre-1.7 plug-in
     service_name="Config Sync status",
     discovery_function=discover_f5_bigip_config_sync,
     check_function=check_f5_bigip_config_sync_v11_plus,

@@ -14,5 +14,5 @@ def test_check_plugin_header() -> None:
             shebang = handle.readline().strip()
 
         assert shebang == "#!/usr/bin/env python3", (
-            f"Plugin '{plugin.name}' has wrong shebang '{shebang}'",
+            f"Plug-in '{plugin.name}' has wrong shebang '{shebang}'",
         )

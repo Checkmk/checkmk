@@ -168,7 +168,7 @@ def pipe_decode_raw_context(raw_context: EventContext) -> None:
     cmk_base replaces all occurences of the pipe symbol in the infotext with
     the character "Light vertical bar" before a check result is submitted to
     the core. We remove this special encoding here since it may result in
-    gibberish output when deliered via a notification plugin.
+    gibberish output when deliered via a notification plug-in.
     """
 
     def _remove_pipe_encoding(value):

@@ -140,7 +140,7 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="f5_bigip_cluster_status",  # name taken from pre-1.7 plugin
+    name="f5_bigip_cluster_status",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP Cluster Status",
     discovery_function=discover_f5_bigip_cluster_status,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
@@ -175,7 +175,7 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="f5_bigip_cluster_status_v11_2",  # name taken from pre-1.7 plugin
+    name="f5_bigip_cluster_status_v11_2",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP Cluster Status",
     discovery_function=discover_f5_bigip_cluster_status,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
@@ -220,7 +220,7 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="f5_bigip_vcmpfailover",  # name taken from pre-1.7 plugin
+    name="f5_bigip_vcmpfailover",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP vCMP Guest Failover Status",
     discovery_function=discover_f5_bigip_cluster_status,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,

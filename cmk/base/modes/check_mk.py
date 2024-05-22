@@ -1898,7 +1898,7 @@ def register_mode_check_discovery(
             argument_descr="HOSTNAME",
             short_help="Check for not yet monitored services",
             long_help=[
-                "Make Check_MK behave as monitoring plugins that checks if an "
+                "Make Check_MK behave as monitoring plug-ins that checks if an "
                 "inventory would find new or vanished services for the host. "
                 "If configured to do so, this will queue those hosts for automatic "
                 "autodiscovery"
@@ -2193,7 +2193,7 @@ modes.register(
         argument_optional=True,
         short_help="Find new services",
         long_help=[
-            "Make Check_MK behave as monitoring plugins that checks if an "
+            "Make Check_MK behave as monitoring plug-ins that checks if an "
             "inventory would find new or vanished services for the host. "
             "If configured to do so, this will queue those hosts for automatic "
             "autodiscovery",

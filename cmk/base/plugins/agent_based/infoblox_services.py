@@ -177,7 +177,7 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="infoblox_services",  # name taken from pre-1.7 plugin
+    name="infoblox_services",  # name taken from pre-1.7 plug-in
     service_name="Service %s",
     discovery_function=discovery_infoblox_services,
     check_function=check_infoblox_services,
@@ -200,7 +200,7 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="infoblox_node_services",  # name taken from pre-1.7 plugin
+    name="infoblox_node_services",  # name taken from pre-1.7 plug-in
     service_name="Node service %s",
     discovery_function=discovery_infoblox_services,
     check_function=check_infoblox_services,

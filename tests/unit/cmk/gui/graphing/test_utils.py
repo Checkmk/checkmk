@@ -519,8 +519,8 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
-                    conflicting_metrics=[],
-                    optional_metrics=[],
+                    conflicting_metrics=(),
+                    optional_metrics=(),
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
@@ -528,10 +528,12 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                         MetricDefinition(
                             expression=Metric(name="messages_outbound"),
                             line_type="stack",
+                            title="Outbound messages",
                         ),
                         MetricDefinition(
                             expression=Metric(name="messages_inbound"),
                             line_type="stack",
+                            title="Inbound messages",
                         ),
                         MetricDefinition(
                             expression=Metric(name="predict_messages_outbound"),
@@ -572,8 +574,8 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
-                    conflicting_metrics=[],
-                    optional_metrics=[],
+                    conflicting_metrics=(),
+                    optional_metrics=(),
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
@@ -581,10 +583,12 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                         MetricDefinition(
                             expression=Metric(name="messages_outbound"),
                             line_type="stack",
+                            title="Outbound messages",
                         ),
                         MetricDefinition(
                             expression=Metric(name="messages_inbound"),
                             line_type="stack",
+                            title="Inbound messages",
                         ),
                     ],
                 ),

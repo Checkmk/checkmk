@@ -152,11 +152,3 @@ graph_info["message_processing"] = {
         ("average_drop_rate", "line"),
     ],
 }
-
-graph_info["inbound_and_outbound_messages"] = {
-    "title": _l("Inbound and Outbound Messages"),
-    "metrics": [
-        ("messages_outbound", "stack"),
-        ("messages_inbound", "stack"),
-    ],
-}

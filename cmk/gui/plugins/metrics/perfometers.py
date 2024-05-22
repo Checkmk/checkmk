@@ -1045,15 +1045,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "messages_inbound,messages_outbound,+",
-        "half_value": 100,
-        "exponent": 5,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["tapes_util"],
         "total": 100.0,
@@ -1226,15 +1217,6 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["quarantine"],
         "total": 100,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "messages_in_queue",
-        "half_value": 1.0,
-        "exponent": 2.0,
     }
 )
 

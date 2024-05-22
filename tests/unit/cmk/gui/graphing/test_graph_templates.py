@@ -434,13 +434,6 @@ def test_non_trivial_perfometer_declarations() -> None:
             "total": 100,
         },
         {"type": "linear", "segments": ["mem_used(%)"], "total": 100.0},
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "messages_inbound,messages_outbound,+",
-            "half_value": 100,
-            "exponent": 5,
-        },
     ]
 
 

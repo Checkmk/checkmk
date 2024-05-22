@@ -123,28 +123,10 @@ metric_info["registered_phones"] = {
     "color": "#60bbbb",
 }
 
-metric_info["messages"] = {
-    "title": _l("Messages"),
-    "unit": "count",
-    "color": "#aa44cc",
-}
-
 metric_info["call_legs"] = {
     "title": _l("Call legs"),
     "unit": "count",
     "color": "#60bbbb",
-}
-
-metric_info["messages_inbound"] = {
-    "title": _l("Inbound messages"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["messages_outbound"] = {
-    "title": _l("Outbound messages"),
-    "unit": "1/s",
-    "color": "36/a",
 }
 
 metric_info["database_apply_lag"] = {
@@ -211,12 +193,6 @@ metric_info["quarantine"] = {
     "color": "43/b",
 }
 
-metric_info["messages_in_queue"] = {
-    "title": _l("Messages in queue"),
-    "unit": "count",
-    "color": "16/a",
-}
-
 metric_info["service_costs_eur"] = {
     "title": _l("Service Costs per Day"),
     "unit": "EUR",
@@ -233,12 +209,6 @@ metric_info["fired_alerts"] = {
     "title": _l("Number of fired alerts"),
     "unit": "count",
     "color": "22/a",
-}
-
-metric_info["msgs_avg"] = {
-    "title": _l("Average number of messages"),
-    "unit": "count",
-    "color": "23/a",
 }
 
 metric_info["index_count"] = {
@@ -420,48 +390,6 @@ metric_info["queues"] = {
     "color": "31/a",
 }
 
-metric_info["messages_rate"] = {
-    "title": _l("Message Rate"),
-    "unit": "1/s",
-    "color": "42/a",
-}
-
-metric_info["messages_ready"] = {
-    "title": _l("Ready messages"),
-    "unit": "count",
-    "color": "11/a",
-}
-
-metric_info["messages_unacknowledged"] = {
-    "title": _l("Unacknowledged messages"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["messages_publish"] = {
-    "title": _l("Published messages"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["messages_publish_rate"] = {
-    "title": _l("Published message rate"),
-    "unit": "1/s",
-    "color": "21/a",
-}
-
-metric_info["messages_deliver"] = {
-    "title": _l("Delivered messages"),
-    "unit": "count",
-    "color": "26/a",
-}
-
-metric_info["messages_deliver_rate"] = {
-    "title": _l("Delivered message rate"),
-    "unit": "1/s",
-    "color": "53/a",
-}
-
 metric_info["gc_runs"] = {
     "title": _l("GC runs"),
     "unit": "count",
@@ -496,18 +424,6 @@ metric_info["memory_reservation"] = {
     "title": _l("Memory reservation"),
     "unit": "%",
     "color": "36/a",
-}
-
-metric_info["delivered_notifications"] = {
-    "title": _l("Delivered notifications"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["failed_notifications"] = {
-    "title": _l("Failed notifications"),
-    "unit": "count",
-    "color": "15/a",
 }
 
 metric_info["num_topics"] = {
@@ -591,15 +507,6 @@ graph_info["firewall_users"] = {
     "metrics": [
         ("num_user", "line"),
         ("max_user", "line"),
-    ],
-}
-
-graph_info["messages"] = {
-    "title": _l("Messages"),
-    "metrics": [
-        ("failed_notifications", "line"),
-        ("delivered_notifications", "line"),
-        ("messages_publish", "line"),
     ],
 }
 

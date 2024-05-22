@@ -18,33 +18,20 @@ from cmk.utils.log.security_event import log_security_event, SecurityEvent
 
 
 def test_get_logger() -> None:
-    l = logging.getLogger("cmk.asd")
-    assert l.parent == log.logger
+    assert logging.getLogger("cmk.asd").parent == log.logger
 
 
 def test_setup_console_logging(capsys: CaptureFixture[str]) -> None:
-    out, err = capsys.readouterr()
+    assert ("", "") == capsys.readouterr()
     log.clear_console_logging()
 
-    assert out == ""
-    assert err == ""
-
     logging.getLogger("cmk.test").info("test123")
-
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
+    assert ("", "") == capsys.readouterr()
 
     log.setup_console_logging()
-    l = logging.getLogger("cmk.test")
-    l.info("test123")
-
-    # Cleanup handler registered with log.setup_console_logging()
+    logging.getLogger("cmk.test").info("test123")
     log.logger.handlers.pop()
-
-    out, err = capsys.readouterr()
-    assert out == "test123\n"
-    assert err == ""
+    assert ("test123\n", "") == capsys.readouterr()
 
 
 def test_set_verbosity() -> None:

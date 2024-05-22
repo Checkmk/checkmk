@@ -8293,6 +8293,24 @@ msgstr "Temperatura della batteria"
 msgid "Battery time remaining"
 msgstr "Tempo rimanente della batteria"
 
+#, fuzzy
+#| msgid "Database Password"
+msgid "Bazel Cache Password"
+msgstr "Password del database"
+
+#, fuzzy
+#| msgid "Backend Port"
+msgid "Bazel Cache Port"
+msgstr "Porta backend"
+
+#, fuzzy
+#| msgid "Max Cache Age"
+msgid "Bazel Cache User"
+msgstr "Età massima della cache"
+
+msgid "Bazel Remote Cache"
+msgstr ""
+
 msgid "Beamer lamp operation time"
 msgstr "Tempo di funzionamento della lampada Beamer"
 
@@ -9560,11 +9578,25 @@ msgstr "Bytes"
 msgid "Bytes accepted"
 msgstr "Byte accettati"
 
+msgid "Bytes allocated and in use"
+msgstr ""
+
 msgid "Bytes downloaded"
 msgstr "Byte scaricati"
 
 msgid "Bytes dropped"
 msgstr "Bytes caduti"
+
+msgid "Bytes in use by stack allocator"
+msgstr ""
+
+#, fuzzy
+#| msgid "Host uses xinetd or systemd %s"
+msgid "Bytes obtained from system"
+msgstr "L'host utilizza xinetd o systemd %s"
+
+msgid "Bytes obtained from system for stack allocator"
+msgstr ""
 
 msgid "Bytes per day"
 msgstr "Bytes al giorno"
@@ -9596,7 +9628,20 @@ msgstr "Byte inviati/ricevuti"
 msgid "Bytes uploaded"
 msgstr "Byte caricati"
 
+msgid "Bytes used by profiling bucket hash table"
+msgstr ""
+
 msgid "Bytes used for cache upper levels"
+msgstr "Byte utilizzati per i livelli superiori della cache"
+
+#, fuzzy
+#| msgid "Count of garbage collections per second"
+msgid "Bytes used for garbage collection system metadata"
+msgstr "Conteggio delle garbage collection al secondo"
+
+#, fuzzy
+#| msgid "Bytes used for cache upper levels"
+msgid "Bytes used for other system allocations"
 msgstr "Byte utilizzati per i livelli superiori della cache"
 
 msgid "C"
@@ -18120,6 +18165,20 @@ msgstr "Latenza di scrittura del disco"
 msgid "Disk Writeback"
 msgstr "Scrittura del disco"
 
+msgid "Disk backend bytes evicted (full cache)"
+msgstr ""
+
+msgid "Disk backend bytes removed or overwritten"
+msgstr ""
+
+#, fuzzy
+#| msgid "ID cache size"
+msgid "Disk backend size"
+msgstr "Dimensione cache ID"
+
+msgid "Disk backend uncompressed"
+msgstr ""
+
 msgid "Disk drain rate"
 msgstr "Tasso di svuotamento del disco"
 
@@ -25122,6 +25181,12 @@ msgstr "Orari HTTP"
 msgid "HTTP accelerator statistics"
 msgstr "Statistiche dell'acceleratore HTTP"
 
+msgid "HTTP backend cache hits"
+msgstr ""
+
+msgid "HTTP backend cache missess"
+msgstr ""
+
 msgid "HTTP fixed responses"
 msgstr "Risposte fisse HTTP"
 
@@ -25391,6 +25456,18 @@ msgstr "Ospiti sani"
 
 msgid "Heap and non-heap memory"
 msgstr "Memoria heap e non heap"
+
+msgid "Heap bytes allocated and in use"
+msgstr ""
+
+msgid "Heap bytes released to OS"
+msgstr ""
+
+msgid "Heap bytes waiting to be used"
+msgstr ""
+
+msgid "Heap bytes when next garbage collection will take place"
+msgstr ""
 
 msgid "Heap memory committed"
 msgstr "Memoria heap impegnata"
@@ -28030,6 +28107,9 @@ msgstr "Server inattivi"
 msgid "Idle threads"
 msgstr "Fili inattivi"
 
+msgid "Idle time of last item in the LRU cache"
+msgstr ""
+
 msgid "Idle timeout"
 msgstr "Timeout inattivo"
 
@@ -30602,6 +30682,11 @@ msgstr "Traffico in entrata Massimo"
 
 msgid "Incoming Traffic Minimum"
 msgstr "Traffico in entrata minimo"
+
+#, fuzzy
+#| msgid "Incoming Requests Dropped"
+msgid "Incoming cache request hit"
+msgstr "Richieste in arrivo abbandonate"
 
 #, python-format
 msgid "Incoming connections on port %s communicate via plain text"
@@ -36342,6 +36427,11 @@ msgstr "Numero massimo di messaggi"
 msgid "Maximum number of nodes exceeded %d/%d"
 msgstr "Numero massimo di nodi superato %d/%d"
 
+#, fuzzy
+#| msgid "Expected number of open file descriptors"
+msgid "Maximum number of open file descriptors"
+msgstr "Numero previsto di descrittori di file aperti"
+
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numero massimo di linee analizzate per file di log"
 
@@ -36438,6 +36528,11 @@ msgstr "Tempo massimo di attività del dispositivo"
 
 msgid "Maximum used parallel connections"
 msgstr "Massimo di connessioni parallele utilizzate"
+
+#, fuzzy
+#| msgid "Commitable memory (averaged)"
+msgid "Maximum virtual memory available"
+msgstr "Memoria impegnabile (media)"
 
 msgid "Maximum wait time of all tasks in queue"
 msgstr "Tempo massimo di attesa di tutti i compiti in coda"
@@ -40030,6 +40125,11 @@ msgstr "Numero di deadlock / sec"
 msgid "Number of Documents"
 msgstr "Numero di documenti"
 
+#, fuzzy
+#| msgid "Number of retries"
+msgid "Number of Go routines"
+msgstr "Numero di tentativi"
+
 msgid "Number of ICMP sockets"
 msgstr "Numero di socket ICMP"
 
@@ -40059,6 +40159,11 @@ msgstr "Numero di OID da richiedere per massa: "
 
 msgid "Number of OK-nodes"
 msgstr "Numero di nodi OK"
+
+#, fuzzy
+#| msgid "Number of threads"
+msgid "Number of OS threads created"
+msgstr "Numero di fili"
 
 msgid "Number of PING probes"
 msgstr "Numero di sonde PING"
@@ -40235,11 +40340,21 @@ msgstr "Numero di elementi recuperati"
 msgid "Number of fibers"
 msgstr "Numero di fibre"
 
+#, fuzzy
+#| msgid "Number of fibers"
+msgid "Number of files"
+msgstr "Numero di fibre"
+
 msgid "Number of fired alerts"
 msgstr "Numero di allarmi sparati"
 
 msgid "Number of folders to create in each level"
 msgstr "Numero di cartelle da creare in ogni livello"
+
+#, fuzzy
+#| msgid "Number of retries"
+msgid "Number of goroutines"
+msgstr "Numero di tentativi"
 
 msgid "Number of handles that are currently open for input for the queue."
 msgstr ""
@@ -40387,6 +40502,11 @@ msgstr "Numero di eventi"
 
 msgid "Number of ongoing shard info requests"
 msgstr "Numero di richieste di informazioni di shard in corso"
+
+#, fuzzy
+#| msgid "Expected number of open file descriptors"
+msgid "Number of open file descriptors"
+msgstr "Numero previsto di descrittori di file aperti"
 
 msgid "Number of packets"
 msgstr "Numero di pacchetti"
@@ -47374,6 +47494,11 @@ msgstr "Richiesta"
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Richiede dati su cluster, nodi e indici di Elasticsearch."
 
+msgid ""
+"Requests data from a Bazel Remote Cache instance metrics endpoint running "
+"version v2.4.1 or higher"
+msgstr ""
+
 msgid "Requests data from a RabbitMQ instance."
 msgstr "Richiede dati da un'istanza di RabbitMQ."
 
@@ -47462,6 +47587,11 @@ msgstr "Rivenditore"
 msgid "Reserved DB instances"
 msgstr "Istanze DB riservate"
 
+#, fuzzy
+#| msgid "Reserved space"
+msgid "Reserved size"
+msgstr "Spazio riservato"
+
 msgid "Reserved space"
 msgstr "Spazio riservato"
 
@@ -47534,6 +47664,11 @@ msgstr "Rapporto articoli residenti"
 
 msgid "Resident memory averaging"
 msgstr "Media della memoria residente"
+
+#, fuzzy
+#| msgid "Resident memory usage"
+msgid "Resident memory size"
+msgstr "Utilizzo della memoria residente"
 
 msgid "Resident memory usage"
 msgstr "Utilizzo della memoria residente"
@@ -48426,6 +48561,12 @@ msgstr "Livello di potenza Rx"
 
 msgid "S."
 msgstr "S."
+
+msgid "S3 backend cache hits"
+msgstr ""
+
+msgid "S3 backend cache missess"
+msgstr ""
 
 msgid "SAML"
 msgstr "SAML"
@@ -53850,6 +53991,11 @@ msgstr "Avviare il ripristino del backup"
 
 msgid "Start restore of this backup"
 msgstr "Avviare il ripristino di questo backup"
+
+#, fuzzy
+#| msgid "Size of processes"
+msgid "Start time of process"
+msgstr "Dimensione dei processi"
 
 msgid "Start type"
 msgstr "Tipo di inizio"
@@ -59636,6 +59782,11 @@ msgstr "Password dell'utente"
 msgid "The password or API key of the user."
 msgstr "La password o la chiave API dell'utente."
 
+#, fuzzy
+#| msgid "The password used to connect to the database"
+msgid "The password used to connect to the Bazel Cache"
+msgstr "La password usata per connettersi al database"
+
 msgid "The password used to connect to the database"
 msgstr "La password usata per connettersi al database"
 
@@ -60848,6 +60999,11 @@ msgstr ""
 
 msgid "The username used for broker authentication."
 msgstr "Il nome utente utilizzato per l'autenticazione del broker."
+
+#, fuzzy
+#| msgid "The username used to connect to the database"
+msgid "The username used to connect to the Bazel Cache"
+msgstr "Il nome utente usato per connettersi al database"
 
 msgid "The username used to connect to the database"
 msgstr "Il nome utente usato per connettersi al database"
@@ -66146,6 +66302,11 @@ msgstr "Tempo dall'ultima costruzione"
 msgid "Time since last checkpoint"
 msgstr "Tempo dall'ultimo checkpoint"
 
+#, fuzzy
+#| msgid "Time since last successful completion"
+msgid "Time since last garbage collection"
+msgstr "Tempo trascorso dall'ultimo completamento con successo"
+
 msgid "Time since last successful build"
 msgstr "Tempo trascorso dall'ultima costruzione riuscita"
 
@@ -66398,6 +66559,11 @@ msgstr ""
 
 msgid "Timespan or Duration in seconds"
 msgstr "Durata in secondi"
+
+#, fuzzy
+#| msgid "Percent time spent in garbage collection"
+msgid "Timespan since last Go garbage collection cycle"
+msgstr "Percentuale di tempo speso nella garbage collection"
 
 #, python-format
 msgid "Timespecific parameters computed at %s"
@@ -67030,6 +67196,14 @@ msgstr "Numero totale di lavori falliti"
 
 msgid "Total number of hosts"
 msgstr "Numero totale di host"
+
+#, fuzzy
+#| msgid "Total number of instances"
+msgid "Total number of incoming AC get cache request hits"
+msgstr "Numero totale di istanze"
+
+msgid "Total number of incoming AC get cache request misses"
+msgstr ""
 
 msgid "Total number of indexes lower level"
 msgstr "Numero totale di indici livello inferiore"
@@ -69543,6 +69717,11 @@ msgstr "RAM totale utilizzabile"
 msgid "Total used memory"
 msgstr "Memoria totale utilizzata"
 
+#, fuzzy
+#| msgid "Total query timeout"
+msgid "Total user and system CPU time"
+msgstr "Timeout totale della query"
+
 msgid "Total virtual memory"
 msgstr "Memoria virtuale totale"
 
@@ -70380,6 +70559,11 @@ msgstr "Non classificato"
 
 msgid "Uncommitted"
 msgstr "Uncommitted"
+
+#, fuzzy
+#| msgid "Uncompressed size in memory"
+msgid "Uncompressed size"
+msgstr "Dimensione non compressa in memoria"
 
 msgid "Uncompressed size in memory"
 msgstr "Dimensione non compressa in memoria"
@@ -73502,6 +73686,11 @@ msgstr "Stato dell'heartbeat della macchina virtuale (per esempio ESX)"
 
 msgid "Virtual memory averaging"
 msgstr "Media della memoria virtuale"
+
+#, fuzzy
+#| msgid "Virtual memory usage"
+msgid "Virtual memory size"
+msgstr "Utilizzo della memoria virtuale"
 
 msgid "Virtual memory usage"
 msgstr "Utilizzo della memoria virtuale"
@@ -78326,6 +78515,12 @@ msgstr "media"
 
 msgid "avg. duration"
 msgstr "durata media"
+
+msgid "azblob backend cache hits"
+msgstr ""
+
+msgid "azblob backend cache missess"
+msgstr ""
 
 msgid "backup"
 msgstr "backup"

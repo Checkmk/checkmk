@@ -8352,6 +8352,23 @@ msgstr "Temperatura bateriei"
 msgid "Battery time remaining"
 msgstr "Timpul rămas al bateriei"
 
+#, fuzzy
+#| msgid "Database Password"
+msgid "Bazel Cache Password"
+msgstr "Parola bazei de date"
+
+#, fuzzy
+#| msgid "Backend Port"
+msgid "Bazel Cache Port"
+msgstr "Port backend"
+
+#, fuzzy
+msgid "Bazel Cache User"
+msgstr "Numele elementului pentru eveniment"
+
+msgid "Bazel Remote Cache"
+msgstr ""
+
 msgid "Beamer lamp operation time"
 msgstr "Durata de funcționare a lămpii Beamer"
 
@@ -9698,11 +9715,25 @@ msgstr "Bytes"
 msgid "Bytes accepted"
 msgstr "Byte acceptate"
 
+msgid "Bytes allocated and in use"
+msgstr ""
+
 msgid "Bytes downloaded"
 msgstr "Byte descărcate"
 
 msgid "Bytes dropped"
 msgstr "Byte pierdute"
+
+msgid "Bytes in use by stack allocator"
+msgstr ""
+
+#, fuzzy
+#| msgid "Host uses xinetd or systemd %s"
+msgid "Bytes obtained from system"
+msgstr "Gazda utilizează xinetd sau systemd %s."
+
+msgid "Bytes obtained from system for stack allocator"
+msgstr ""
 
 msgid "Bytes per day"
 msgstr "Bytes pe zi"
@@ -9734,7 +9765,20 @@ msgstr "Octete trimise/recepționate"
 msgid "Bytes uploaded"
 msgstr "Byte încărcate"
 
+msgid "Bytes used by profiling bucket hash table"
+msgstr ""
+
 msgid "Bytes used for cache upper levels"
+msgstr "Bytes utilizate pentru nivelurile superioare ale cache-ului"
+
+#, fuzzy
+#| msgid "Count of garbage collections per second"
+msgid "Bytes used for garbage collection system metadata"
+msgstr "Numărul de colecții de gunoi pe secundă"
+
+#, fuzzy
+#| msgid "Bytes used for cache upper levels"
+msgid "Bytes used for other system allocations"
 msgstr "Bytes utilizate pentru nivelurile superioare ale cache-ului"
 
 msgid "C"
@@ -18328,6 +18372,20 @@ msgstr "Latență de scriere pe disc"
 msgid "Disk Writeback"
 msgstr "Disc Writeback"
 
+msgid "Disk backend bytes evicted (full cache)"
+msgstr ""
+
+msgid "Disk backend bytes removed or overwritten"
+msgstr ""
+
+#, fuzzy
+#| msgid "ID cache size"
+msgid "Disk backend size"
+msgstr "Dimensiunea cache-ului ID"
+
+msgid "Disk backend uncompressed"
+msgstr ""
+
 msgid "Disk drain rate"
 msgstr "Rata de golire a discului"
 
@@ -25379,6 +25437,12 @@ msgstr "Programări HTTP"
 msgid "HTTP accelerator statistics"
 msgstr "Statistici privind acceleratorul HTTP"
 
+msgid "HTTP backend cache hits"
+msgstr ""
+
+msgid "HTTP backend cache missess"
+msgstr ""
+
 msgid "HTTP fixed responses"
 msgstr "Răspunsuri fixe HTTP"
 
@@ -25650,6 +25714,18 @@ msgstr "Gazde sănătoase"
 
 msgid "Heap and non-heap memory"
 msgstr "Memorie Heap și non-heap"
+
+msgid "Heap bytes allocated and in use"
+msgstr ""
+
+msgid "Heap bytes released to OS"
+msgstr ""
+
+msgid "Heap bytes waiting to be used"
+msgstr ""
+
+msgid "Heap bytes when next garbage collection will take place"
+msgstr ""
 
 msgid "Heap memory committed"
 msgstr "Memoria Heap angajată"
@@ -28309,6 +28385,9 @@ msgstr "Servere inactive"
 msgid "Idle threads"
 msgstr "Fire inactive"
 
+msgid "Idle time of last item in the LRU cache"
+msgstr ""
+
 msgid "Idle timeout"
 msgstr "Timpul de inactivitate"
 
@@ -30942,6 +31021,11 @@ msgstr "Trafic de intrare Maxim"
 
 msgid "Incoming Traffic Minimum"
 msgstr "Trafic de intrare Minim"
+
+#, fuzzy
+#| msgid "Incoming Requests Dropped"
+msgid "Incoming cache request hit"
+msgstr "Solicitări primite, abandonate"
 
 #, python-format
 msgid "Incoming connections on port %s communicate via plain text"
@@ -36721,6 +36805,11 @@ msgstr "Numarul maxim de mesaje"
 msgid "Maximum number of nodes exceeded %d/%d"
 msgstr "Numărul maxim de noduri depășit %d/%d"
 
+#, fuzzy
+#| msgid "Expected number of open file descriptors"
+msgid "Maximum number of open file descriptors"
+msgstr "Numărul așteptat de descriptori de fișiere deschise"
+
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numarul maxim de linii parsate per fisier de loguri"
 
@@ -36823,6 +36912,11 @@ msgstr "Timpul maxim de funcționare al dispozitivului"
 
 msgid "Maximum used parallel connections"
 msgstr "Numărul maxim de conexiuni paralele utilizate"
+
+#, fuzzy
+#| msgid "Commitable memory (averaged)"
+msgid "Maximum virtual memory available"
+msgstr "Memorie comutabilă (medie)"
 
 msgid "Maximum wait time of all tasks in queue"
 msgstr "Timpul maxim de așteptare al tuturor sarcinilor din coada de așteptare"
@@ -40473,6 +40567,11 @@ msgstr "Numărul de blocaje / sec"
 msgid "Number of Documents"
 msgstr "Număr de documente"
 
+#, fuzzy
+#| msgid "Number of retries"
+msgid "Number of Go routines"
+msgstr "Numărul de încercări repetate"
+
 msgid "Number of ICMP sockets"
 msgstr "Numărul de prize ICMP"
 
@@ -40502,6 +40601,11 @@ msgstr "Numărul de OID-uri care trebuie să fie cerute în bloc: "
 
 msgid "Number of OK-nodes"
 msgstr "Numărul de noduri OK"
+
+#, fuzzy
+#| msgid "Number of threads"
+msgid "Number of OS threads created"
+msgstr "Numărul de fire"
 
 msgid "Number of PING probes"
 msgstr "Numărul de sonde PING"
@@ -40678,11 +40782,21 @@ msgstr "Numărul de elemente preluate"
 msgid "Number of fibers"
 msgstr "Număr de fibre"
 
+#, fuzzy
+#| msgid "Number of fibers"
+msgid "Number of files"
+msgstr "Număr de fibre"
+
 msgid "Number of fired alerts"
 msgstr "Numărul de alerte declanșate"
 
 msgid "Number of folders to create in each level"
 msgstr "Numărul de dosare care trebuie create în fiecare nivel"
+
+#, fuzzy
+#| msgid "Number of retries"
+msgid "Number of goroutines"
+msgstr "Numărul de încercări repetate"
 
 msgid "Number of handles that are currently open for input for the queue."
 msgstr ""
@@ -40832,6 +40946,11 @@ msgstr "Numărul de apariții"
 msgid "Number of ongoing shard info requests"
 msgstr ""
 "Numărul de solicitări de informații în curs de desfășurare pentru shard"
+
+#, fuzzy
+#| msgid "Expected number of open file descriptors"
+msgid "Number of open file descriptors"
+msgstr "Numărul așteptat de descriptori de fișiere deschise"
 
 msgid "Number of packets"
 msgstr "Numărul de pachete"
@@ -47874,6 +47993,11 @@ msgstr "Cereri"
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Solicită date despre clusterele, nodurile și indicii Elasticsearch."
 
+msgid ""
+"Requests data from a Bazel Remote Cache instance metrics endpoint running "
+"version v2.4.1 or higher"
+msgstr ""
+
 msgid "Requests data from a RabbitMQ instance."
 msgstr "Solicită date de la o instanță RabbitMQ."
 
@@ -47962,6 +48086,11 @@ msgstr "Revânzător"
 msgid "Reserved DB instances"
 msgstr "Instanțe DB rezervate"
 
+#, fuzzy
+#| msgid "Reserved space"
+msgid "Reserved size"
+msgstr "Spațiu rezervat"
+
 msgid "Reserved space"
 msgstr "Spațiu rezervat"
 
@@ -48031,6 +48160,11 @@ msgstr "Raportul dintre articolele rezidenților"
 
 msgid "Resident memory averaging"
 msgstr "Mediile de memorie rezidentă"
+
+#, fuzzy
+#| msgid "Resident memory usage"
+msgid "Resident memory size"
+msgstr "Utilizarea memoriei rezidente"
 
 msgid "Resident memory usage"
 msgstr "Utilizarea memoriei rezidente"
@@ -48938,6 +49072,12 @@ msgstr "Nivelul de putere Rx"
 
 msgid "S."
 msgstr "S."
+
+msgid "S3 backend cache hits"
+msgstr ""
+
+msgid "S3 backend cache missess"
+msgstr ""
 
 msgid "SAML"
 msgstr "SAML"
@@ -54502,6 +54642,11 @@ msgstr "Începeți restaurarea copiei de rezervă"
 
 msgid "Start restore of this backup"
 msgstr "Începeți restaurarea acestei copii de rezervă"
+
+#, fuzzy
+#| msgid "Size of processes"
+msgid "Start time of process"
+msgstr "Dimensiunea proceselor"
 
 msgid "Start type"
 msgstr "Tipul de start"
@@ -60373,6 +60518,11 @@ msgstr "Parola utilizatorului"
 msgid "The password or API key of the user."
 msgstr "Parola sau cheia API a utilizatorului."
 
+#, fuzzy
+#| msgid "The password used to connect to the database"
+msgid "The password used to connect to the Bazel Cache"
+msgstr "Parola utilizată pentru conectarea la baza de date"
+
 msgid "The password used to connect to the database"
 msgstr "Parola utilizată pentru conectarea la baza de date"
 
@@ -61601,6 +61751,11 @@ msgstr ""
 
 msgid "The username used for broker authentication."
 msgstr "Numele de utilizator utilizat pentru autentificarea brokerului."
+
+#, fuzzy
+#| msgid "The username used to connect to the database"
+msgid "The username used to connect to the Bazel Cache"
+msgstr "Numele de utilizator utilizat pentru conectarea la baza de date"
 
 msgid "The username used to connect to the database"
 msgstr "Numele de utilizator utilizat pentru conectarea la baza de date"
@@ -66988,6 +67143,11 @@ msgstr "Timp de la ultima construcție"
 msgid "Time since last checkpoint"
 msgstr "Timp de la ultimul punct de control"
 
+#, fuzzy
+#| msgid "Time since last successful completion"
+msgid "Time since last garbage collection"
+msgstr "Timp de la ultima finalizare cu succes"
+
 msgid "Time since last successful build"
 msgstr "Timp de la ultima construcție reușită"
 
@@ -67248,6 +67408,11 @@ msgstr ""
 
 msgid "Timespan or Duration in seconds"
 msgstr "Timespan sau durata în secunde"
+
+#, fuzzy
+#| msgid "Percent time spent in garbage collection"
+msgid "Timespan since last Go garbage collection cycle"
+msgstr "Procentul de timp petrecut în colectarea gunoiului"
 
 #, python-format
 msgid "Timespecific parameters computed at %s"
@@ -67904,6 +68069,14 @@ msgstr "Numărul total de lucrări eșuate"
 
 msgid "Total number of hosts"
 msgstr "Numărul total de gazde"
+
+#, fuzzy
+#| msgid "Total number of instances"
+msgid "Total number of incoming AC get cache request hits"
+msgstr "Numărul total de instanțe"
+
+msgid "Total number of incoming AC get cache request misses"
+msgstr ""
 
 msgid "Total number of indexes lower level"
 msgstr "Numărul total de indici nivel inferior"
@@ -70417,6 +70590,11 @@ msgstr "Total RAM utilizabil"
 msgid "Total used memory"
 msgstr "Total memorie utilizată"
 
+#, fuzzy
+#| msgid "Total query timeout"
+msgid "Total user and system CPU time"
+msgstr "Timeout total de interogare"
+
 msgid "Total virtual memory"
 msgstr "Total memorie virtuală"
 
@@ -71249,6 +71427,11 @@ msgstr "Neclasificat"
 
 msgid "Uncommitted"
 msgstr "Neangajat"
+
+#, fuzzy
+#| msgid "Uncompressed size in memory"
+msgid "Uncompressed size"
+msgstr "Dimensiunea necomprimată în memorie"
 
 msgid "Uncompressed size in memory"
 msgstr "Dimensiunea necomprimată în memorie"
@@ -74408,6 +74591,11 @@ msgstr "Starea heartbeat a mașinii virtuale (de exemplu, ESX)"
 
 msgid "Virtual memory averaging"
 msgstr "Calcularea mediei de memorie virtuală"
+
+#, fuzzy
+#| msgid "Virtual memory usage"
+msgid "Virtual memory size"
+msgstr "Utilizarea memoriei virtuale"
 
 msgid "Virtual memory usage"
 msgstr "Utilizarea memoriei virtuale"
@@ -79295,6 +79483,12 @@ msgstr "medie"
 
 msgid "avg. duration"
 msgstr "durata medie"
+
+msgid "azblob backend cache hits"
+msgstr ""
+
+msgid "azblob backend cache missess"
+msgstr ""
 
 msgid "backup"
 msgstr "backup"
@@ -86430,10 +86624,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #, fuzzy
 #~ msgid "Name of Channel or Queue"
-#~ msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-#~ msgid "Name of the User"
 #~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy

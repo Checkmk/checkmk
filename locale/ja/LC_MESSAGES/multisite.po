@@ -8264,6 +8264,24 @@ msgstr "バッテリー温度"
 msgid "Battery time remaining"
 msgstr "バッテリー残量"
 
+#, fuzzy
+#| msgid "Database Password"
+msgid "Bazel Cache Password"
+msgstr "データベースパスワード"
+
+#, fuzzy
+#| msgid "Backend Port"
+msgid "Bazel Cache Port"
+msgstr "バックエンドポート"
+
+#, fuzzy
+#| msgid "Max Cache Age"
+msgid "Bazel Cache User"
+msgstr "最大キャッシュ経過時間"
+
+msgid "Bazel Remote Cache"
+msgstr ""
+
 msgid "Beamer lamp operation time"
 msgstr "ビーマーランプの動作時間"
 
@@ -9519,11 +9537,25 @@ msgstr "バイト"
 msgid "Bytes accepted"
 msgstr "受け入れられたバイト"
 
+msgid "Bytes allocated and in use"
+msgstr ""
+
 msgid "Bytes downloaded"
 msgstr "バイトダウンロード済"
 
 msgid "Bytes dropped"
 msgstr "バイトがドロップされました"
+
+msgid "Bytes in use by stack allocator"
+msgstr ""
+
+#, fuzzy
+#| msgid "Host uses xinetd or systemd %s"
+msgid "Bytes obtained from system"
+msgstr "ホストは xinetd または systemd %s を使用しています"
+
+msgid "Bytes obtained from system for stack allocator"
+msgstr ""
 
 msgid "Bytes per day"
 msgstr "1日あたりのバイト数"
@@ -9555,7 +9587,20 @@ msgstr "送信/受信　バイト数"
 msgid "Bytes uploaded"
 msgstr "バイトアップロード済"
 
+msgid "Bytes used by profiling bucket hash table"
+msgstr ""
+
 msgid "Bytes used for cache upper levels"
+msgstr "キャッシュ使用バイト数の上位レベル"
+
+#, fuzzy
+#| msgid "Count of garbage collections per second"
+msgid "Bytes used for garbage collection system metadata"
+msgstr "1秒あたりのガベージコレクションの数"
+
+#, fuzzy
+#| msgid "Bytes used for cache upper levels"
+msgid "Bytes used for other system allocations"
 msgstr "キャッシュ使用バイト数の上位レベル"
 
 msgid "C"
@@ -18120,6 +18165,20 @@ msgstr "ディスク書き込みレイテンシ"
 msgid "Disk Writeback"
 msgstr "ディスクライトバック"
 
+msgid "Disk backend bytes evicted (full cache)"
+msgstr ""
+
+msgid "Disk backend bytes removed or overwritten"
+msgstr ""
+
+#, fuzzy
+#| msgid "ID cache size"
+msgid "Disk backend size"
+msgstr "IDキャッシュサイズ"
+
+msgid "Disk backend uncompressed"
+msgstr ""
+
 msgid "Disk drain rate"
 msgstr "ディスクドレイン速度"
 
@@ -25152,6 +25211,12 @@ msgstr "HTTPタイミング"
 msgid "HTTP accelerator statistics"
 msgstr "HTTPアクセラレータ統計"
 
+msgid "HTTP backend cache hits"
+msgstr ""
+
+msgid "HTTP backend cache missess"
+msgstr ""
+
 #, fuzzy
 #| msgid "HTTP Fixed Responses"
 msgid "HTTP fixed responses"
@@ -25439,6 +25504,18 @@ msgstr "正常なホスト"
 
 msgid "Heap and non-heap memory"
 msgstr "ヒープおよび非ヒープメモリ"
+
+msgid "Heap bytes allocated and in use"
+msgstr ""
+
+msgid "Heap bytes released to OS"
+msgstr ""
+
+msgid "Heap bytes waiting to be used"
+msgstr ""
+
+msgid "Heap bytes when next garbage collection will take place"
+msgstr ""
 
 msgid "Heap memory committed"
 msgstr "ヒープメモリがコミットされました"
@@ -28069,6 +28146,9 @@ msgstr "アイドルサーバー"
 msgid "Idle threads"
 msgstr "アイドルスレッド"
 
+msgid "Idle time of last item in the LRU cache"
+msgstr ""
+
 msgid "Idle timeout"
 msgstr "アイドルタイムアウト"
 
@@ -30571,6 +30651,11 @@ msgstr "着信トラフィックの最大値"
 
 msgid "Incoming Traffic Minimum"
 msgstr "着信トラフィックの最小"
+
+#, fuzzy
+#| msgid "Incoming Requests Dropped"
+msgid "Incoming cache request hit"
+msgstr "着信リクエストが削除されました"
 
 #, python-format
 msgid "Incoming connections on port %s communicate via plain text"
@@ -36326,6 +36411,11 @@ msgstr "メッセージの最大数"
 msgid "Maximum number of nodes exceeded %d/%d"
 msgstr "ノードの最大数が %d/%dを超えました"
 
+#, fuzzy
+#| msgid "Expected number of open file descriptors"
+msgid "Maximum number of open file descriptors"
+msgstr "開いているファイルディスクリプタの予想数"
+
 msgid "Maximum number of parsed lines per log file"
 msgstr "ログファイルごとに解析される最大行数"
 
@@ -36430,6 +36520,11 @@ msgstr "デバイスの最大稼働時間"
 
 msgid "Maximum used parallel connections"
 msgstr "使用される並列接続の最大数"
+
+#, fuzzy
+#| msgid "Virtual memory averaging"
+msgid "Maximum virtual memory available"
+msgstr "仮想メモリの平均化"
 
 msgid "Maximum wait time of all tasks in queue"
 msgstr "キュー内のすべてのタスクの最大待機時間"
@@ -40046,6 +40141,11 @@ msgstr "デッドロックの数/秒"
 msgid "Number of Documents"
 msgstr "ドキュメントの数"
 
+#, fuzzy
+#| msgid "Number of retries"
+msgid "Number of Go routines"
+msgstr "再試行回数"
+
 msgid "Number of ICMP sockets"
 msgstr "ICMPソケットの数"
 
@@ -40075,6 +40175,11 @@ msgstr "バルクごとに要求するOIDの数: "
 
 msgid "Number of OK-nodes"
 msgstr "OKノードの数"
+
+#, fuzzy
+#| msgid "Number of threads"
+msgid "Number of OS threads created"
+msgstr "スレッド数"
 
 msgid "Number of PING probes"
 msgstr "PINGプローブの数"
@@ -40251,11 +40356,21 @@ msgstr "フェッチされたアイテムの数"
 msgid "Number of fibers"
 msgstr "ファイバーの数"
 
+#, fuzzy
+#| msgid "Number of fibers"
+msgid "Number of files"
+msgstr "ファイバーの数"
+
 msgid "Number of fired alerts"
 msgstr "発生したアラートの数"
 
 msgid "Number of folders to create in each level"
 msgstr "各レベルで作成するフォルダーの数"
+
+#, fuzzy
+#| msgid "Number of retries"
+msgid "Number of goroutines"
+msgstr "再試行回数"
 
 msgid "Number of handles that are currently open for input for the queue."
 msgstr "キューへの入力用に現在開いているハンドルの数。"
@@ -40396,6 +40511,11 @@ msgstr "発生数"
 
 msgid "Number of ongoing shard info requests"
 msgstr "進行中の共有情報リクエストの数"
+
+#, fuzzy
+#| msgid "Expected number of open file descriptors"
+msgid "Number of open file descriptors"
+msgstr "開いているファイルディスクリプタの予想数"
 
 msgid "Number of packets"
 msgstr "パケット数"
@@ -47428,6 +47548,11 @@ msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr ""
 "Elasticsearchのクラスタ、ノード、インデックスに関するデータを要求します。"
 
+msgid ""
+"Requests data from a Bazel Remote Cache instance metrics endpoint running "
+"version v2.4.1 or higher"
+msgstr ""
+
 msgid "Requests data from a RabbitMQ instance."
 msgstr "RabbitMQインスタンスからデータを要求します。"
 
@@ -47517,6 +47642,11 @@ msgstr "リセラー"
 msgid "Reserved DB instances"
 msgstr "予約済みDBインスタンス"
 
+#, fuzzy
+#| msgid "Reserved space"
+msgid "Reserved size"
+msgstr "予約スペース"
+
 msgid "Reserved space"
 msgstr "予約スペース"
 
@@ -47590,6 +47720,11 @@ msgstr "レジデント項目比率"
 
 msgid "Resident memory averaging"
 msgstr "常駐メモリの平均化"
+
+#, fuzzy
+#| msgid "Resident memory usage"
+msgid "Resident memory size"
+msgstr "常駐メモリ使用量"
 
 msgid "Resident memory usage"
 msgstr "常駐メモリ使用量"
@@ -48481,6 +48616,12 @@ msgstr "Rxパワーレベル"
 
 msgid "S."
 msgstr "S."
+
+msgid "S3 backend cache hits"
+msgstr ""
+
+msgid "S3 backend cache missess"
+msgstr ""
 
 msgid "SAML"
 msgstr "SAML"
@@ -53902,6 +54043,11 @@ msgstr "バックアップの復元を開始"
 
 msgid "Start restore of this backup"
 msgstr "このバックアップの復元を開始します"
+
+#, fuzzy
+#| msgid "Size of processes"
+msgid "Start time of process"
+msgstr "プロセスのサイズ"
 
 msgid "Start type"
 msgstr "開始タイプ"
@@ -59568,6 +59714,11 @@ msgstr "ユーザーのパスワード"
 msgid "The password or API key of the user."
 msgstr "ユーザーのパスワードまたはAPIキー。"
 
+#, fuzzy
+#| msgid "The password used to connect to the database"
+msgid "The password used to connect to the Bazel Cache"
+msgstr "データベース接続に使用されるパスワード"
+
 msgid "The password used to connect to the database"
 msgstr "データベース接続に使用されるパスワード"
 
@@ -60738,6 +60889,11 @@ msgstr ""
 
 msgid "The username used for broker authentication."
 msgstr "ブローカー認証に使用されるユーザー名。"
+
+#, fuzzy
+#| msgid "The username used to connect to the database"
+msgid "The username used to connect to the Bazel Cache"
+msgstr "データベースへの接続に使用されるユーザー名"
 
 msgid "The username used to connect to the database"
 msgstr "データベースへの接続に使用されるユーザー名"
@@ -65902,6 +66058,11 @@ msgstr "最後のビルドからの時間"
 msgid "Time since last checkpoint"
 msgstr "最後のチェックポイントからの時間"
 
+#, fuzzy
+#| msgid "Time since last successful completion"
+msgid "Time since last garbage collection"
+msgstr "前回正常終了してからの時間"
+
 msgid "Time since last successful build"
 msgstr "最後に成功したビルドからの時間"
 
@@ -66148,6 +66309,11 @@ msgstr "総メッセージ数の差分計算の所要時間"
 
 msgid "Timespan or Duration in seconds"
 msgstr "タイムスパンまたは期間(秒単位)"
+
+#, fuzzy
+#| msgid "Percent time spent in garbage collection"
+msgid "Timespan since last Go garbage collection cycle"
+msgstr "ガベージコレクションに費やされた時間の割合"
 
 #, python-format
 msgid "Timespecific parameters computed at %s"
@@ -66802,6 +66968,14 @@ msgstr "失敗したジョブの総数"
 
 msgid "Total number of hosts"
 msgstr "ホストの総数"
+
+#, fuzzy
+#| msgid "Total number of instances"
+msgid "Total number of incoming AC get cache request hits"
+msgstr "インスタンス総数"
+
+msgid "Total number of incoming AC get cache request misses"
+msgstr ""
 
 msgid "Total number of indexes lower level"
 msgstr "インデックス総数の下位レベル"
@@ -69466,6 +69640,11 @@ msgstr "使用可能なRAMの合計"
 msgid "Total used memory"
 msgstr "合計使用メモリ"
 
+#, fuzzy
+#| msgid "Total query timeout"
+msgid "Total user and system CPU time"
+msgstr "合計クエリタイムアウト"
+
 msgid "Total virtual memory"
 msgstr "合計仮想メモリ"
 
@@ -70307,6 +70486,11 @@ msgstr "未分類"
 
 msgid "Uncommitted"
 msgstr "コミットされていない"
+
+#, fuzzy
+#| msgid "Uncompressed size in memory"
+msgid "Uncompressed size"
+msgstr "メモリ内の非圧縮サイズ"
 
 msgid "Uncompressed size in memory"
 msgstr "メモリ内の非圧縮サイズ"
@@ -73401,6 +73585,11 @@ msgstr "仮想マシン(ESXなど)のハートビートステータス"
 
 msgid "Virtual memory averaging"
 msgstr "仮想メモリの平均化"
+
+#, fuzzy
+#| msgid "Virtual memory usage"
+msgid "Virtual memory size"
+msgstr "仮想メモリの使用量"
 
 msgid "Virtual memory usage"
 msgstr "仮想メモリの使用量"
@@ -78089,6 +78278,12 @@ msgstr "平均"
 
 msgid "avg. duration"
 msgstr "平均. デュレーション"
+
+msgid "azblob backend cache hits"
+msgstr ""
+
+msgid "azblob backend cache missess"
+msgstr ""
 
 msgid "backup"
 msgstr "バックアップ"

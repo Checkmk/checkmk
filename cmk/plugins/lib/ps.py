@@ -353,7 +353,7 @@ class ProcessAggregator:
         self.processes.append(process)
 
     def core_weight(self, is_win):
-        cpu_rescale_max = self.params.get("cpu_rescale_max")
+        cpu_rescale_max = self.params["cpu_rescale_max"]
 
         if any(
             (

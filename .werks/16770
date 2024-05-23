@@ -1,0 +1,17 @@
+Title: Netapp ontap qtree quota: fix users parsing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718876135
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+This werk impacts all those who monitor the disk usage of qtrees
+via the check plugin _NetApp Filer: Used Space of qtrees in Volumes_
+
+The qtree quota users information coming from the netapp API
+was not being retrieved and parsed correctly by the special agent
+and this was resulting in a crash during discovery.
+
+This werk corrects this behaviour.

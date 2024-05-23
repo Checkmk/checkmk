@@ -610,11 +610,11 @@ class QtreeQuotaModel(BaseModel):
     """
 
     type_: str
-    name: str
+    name: str | None = None
     volume: str
     hard_limit: int | None = None
     used_total: int | None = None
-    users: str | None = None
+    users: Sequence[str]
 
 
 class SnapMirrorModel(BaseModel):

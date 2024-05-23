@@ -730,13 +730,17 @@ def fetch_qtree_quota(
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
+
+        if element_data["type"] != "tree":
+            continue
+
         yield netapp_ontap_models.QtreeQuotaModel(
             type_=element_data["type"],
-            name=element_data["qtree"]["name"],
+            name=element_data.get("qtree", {}).get("name"),
             volume=element_data["volume"]["name"],
             hard_limit=element_data.get("space", {}).get("hard_limit"),
             used_total=element_data.get("space", {}).get("used", {}).get("total"),
-            users=element_data.get("users", {}).get("name"),
+            users=[user["name"] for user in element_data.get("users", []) if "name" in user],
         )
 
 

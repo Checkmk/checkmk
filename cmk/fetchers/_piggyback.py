@@ -62,7 +62,13 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.log(VERBOSE, "Get piggybacked data")
-        return AgentRawData(bytes(self._get_main_section() + self._get_source_labels_section()))
+        return AgentRawData(
+            bytes(
+                self._get_main_section()
+                + self._get_source_summary_section()
+                + self._get_source_labels_section()
+            )
+        )
 
     def _get_main_section(self) -> bytearray | bytes:
         raw_data = bytearray()
@@ -77,6 +83,17 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
                 #     added; ie. if file_info is not successfully processed
                 raw_data += src.raw_data
         return raw_data
+
+    def _get_source_summary_section(self) -> bytes:
+        """Add some meta information about the piggyback sources to the agent output.
+
+        The fetcher messages currently lack the capability to add additional meta information
+        to the sources (other than one single exception).
+        Since we're adding payload anyway, we add this section as well, to be consumed by the summarizer.
+        """
+        return f"<<<piggyback_source_summary:sep(0)>>>\n{'\n'.join(s.info.serialize() for s in self._sources)}\n".encode(
+            "utf-8"
+        )
 
     def _get_source_labels_section(self) -> bytearray | bytes:
         """Return a <<<labels>>> agent section which adds the piggyback sources

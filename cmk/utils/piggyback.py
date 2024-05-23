@@ -5,6 +5,7 @@
 
 import datetime
 import errno
+import json
 import logging
 import os
 import re
@@ -12,9 +13,9 @@ import tempfile
 import time
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Final, NamedTuple
+from typing import Final, NamedTuple, Self
 
 import cmk.utils
 import cmk.utils.paths
@@ -45,6 +46,20 @@ class PiggybackFileInfo:
     def __post_init__(self) -> None:
         if not self.message:
             raise ValueError(self.message)
+
+    def serialize(self) -> str:
+        return json.dumps({k: str(v) for k, v in asdict(self).items()})
+
+    @classmethod
+    def deserialize(cls, serialized: str, /) -> Self:
+        raw = json.loads(serialized)
+        return cls(
+            source=HostName(raw["source"]),
+            file_path=Path(raw["file_path"]),
+            valid=bool(raw["valid"]),
+            message=str(raw["message"]),
+            status=int(raw["status"]),
+        )
 
 
 class PiggybackRawDataInfo(NamedTuple):

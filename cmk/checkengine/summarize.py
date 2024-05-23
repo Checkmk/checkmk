@@ -18,12 +18,13 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
+from cmk.utils.piggyback import PiggybackFileInfo, PiggybackTimeSettings
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
-from cmk.checkengine.parser import HostSections
+from cmk.checkengine.parser import AgentRawDataSection, HostSections
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 
@@ -54,7 +55,8 @@ def summarize(
 ) -> Sequence[ActiveCheckResult]:
     if fetcher_type is FetcherType.PIGGYBACK:
         return host_sections.fold(
-            ok=lambda _: summarize_piggyback(
+            ok=lambda host_sections: summarize_piggyback(
+                host_sections=host_sections,
                 hostname=hostname,
                 ipaddress=ipaddress,
                 time_settings=config.time_settings,
@@ -100,21 +102,18 @@ def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveChe
 
 def summarize_piggyback(
     *,
+    host_sections: HostSections[AgentRawDataSection],
     hostname: HostName,
     ipaddress: HostAddress | None,
     time_settings: PiggybackTimeSettings,
     expect_data: bool,
 ) -> Sequence[ActiveCheckResult]:
-    if sources := [
-        source
-        for origin in (hostname, ipaddress)
-        # TODO(ml): The code uses `get_piggyback_raw_data()` instead of
-        # `HostSections.piggyback_raw_data` because this allows it to
-        # sneakily use cached data.  At minimum, we should group all cache
-        # handling performed after the parser.
-        for source in get_piggyback_raw_data(origin, time_settings)
+    summary_section = SectionName("piggypack_source_summary")
+    if meta_infos := [
+        PiggybackFileInfo.deserialize(raw_file_info)
+        for (raw_file_info,) in host_sections.sections.get(summary_section, [])
     ]:
-        return [ActiveCheckResult(src.info.status, src.info.message) for src in sources]
+        return [ActiveCheckResult(info.status, info.message) for info in meta_infos]
 
     if expect_data:
         return [ActiveCheckResult(1, "Missing data")]

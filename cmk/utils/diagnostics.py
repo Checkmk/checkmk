@@ -717,7 +717,7 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     "redis-server.log": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
-        description="The log file of the redis-server of the Checkmk instance.",
+        description="The log file of the redis-server of the Checkmk site.",
         encryption=CheckmkFileEncryption.none,
     ),
     "agent-receiver/access.log": CheckmkFileInfo(

@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import flask
+from werkzeug.exceptions import RequestEntityTooLarge
 
 import livestatus
 
@@ -219,6 +220,9 @@ def _process_request(  # pylint: disable=too-many-branches
     except MKException as e:
         resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
+
+    except RequestEntityTooLarge as e:
+        resp = _render_exception(e, title=_("Request too large"))
 
     except Exception:
         resp = handle_unhandled_exception()

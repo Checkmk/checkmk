@@ -443,12 +443,14 @@ def complete_raw_context(
 
 
 def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
-    labels = read_notify_host_file(enriched_context["HOSTNAME"])
-    for k, v in labels.host_labels.items():
+    notify_host_config = read_notify_host_file(enriched_context["HOSTNAME"])
+    for k, v in notify_host_config.host_labels.items():
         # Dynamically added keys...
         enriched_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
     if enriched_context["WHAT"] == "SERVICE":
-        for k, v in labels.service_labels.get(enriched_context["SERVICEDESC"], {}).items():
+        for k, v in notify_host_config.service_labels.get(
+            enriched_context["SERVICEDESC"], {}
+        ).items():
             # Dynamically added keys...
             enriched_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
 
@@ -570,11 +572,24 @@ def event_match_hosttags(
 ) -> str | None:
     required = rule.get("match_hosttags")
     if required:
-        tags = [TagID(ident) for ident in context.get("HOSTTAGS", "").split()]
+        notify_host_config = read_notify_host_file(context["HOSTNAME"])
+        # TODO This is a temporary solution to use the new core config generated
+        # tag infos. Will be reworked if the problem of HostTagCondition storing
+        # the tags as list is solved. See CMK-11285
+        #
+        # The following entries are skipped, even if they were present in the
+        # HOSTTAGS context key:
+        # * "site" (e.g. "site:heute") handled within event_match_site()
+        # * Folder (e.g. '/wato/') not needed
+        tags = [
+            TagID(tag_id)
+            for taggroup_id, tag_id in notify_host_config.tags.items()
+            if taggroup_id != "site"
+        ]
         if not hosttags_match_taglist(tags, (TagID(_) for _ in required)):
-            return "The host's tags {} do not match the required tags {}".format(
-                "|".join(tags),
-                "|".join(required),
+            return (
+                f"The host's tags {'|'.join(tags)} do not "
+                f"match the required tags {'|'.join(required)}"
             )
     return None
 

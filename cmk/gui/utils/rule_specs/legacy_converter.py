@@ -6,7 +6,7 @@ import dataclasses
 import enum
 import urllib.parse
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from types import ModuleType
@@ -1032,7 +1032,12 @@ def _pack_dict_groups(
     ignored_elements: Sequence[str],
     dict_to_pack: Mapping[str, object],
     packed_dict: dict,
-) -> MutableMapping[str, object]:
+) -> Mapping[str, object]:
+    if not set(_get_group_keys(dict_elements)).isdisjoint(
+        dict_to_pack.keys()
+    ):  # already transformed
+        return dict_to_pack
+
     for key_to_pack, value_to_pack in dict_to_pack.items():
         if key_to_pack in ignored_elements:
             packed_dict[key_to_pack] = value_to_pack
@@ -1064,8 +1069,6 @@ def _transform_dict_groups_forth(
 ) -> Callable[[Mapping[str, object] | None], Mapping[str, object] | None]:
     def _forth(value: Mapping[str, object] | None) -> Mapping[str, object] | None:
         if value is None:
-            return value
-        if not set(_get_group_keys(dict_elements)).isdisjoint(value.keys()):  # already transformed
             return value
 
         return _pack_dict_groups(

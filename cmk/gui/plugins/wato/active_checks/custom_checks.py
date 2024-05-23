@@ -13,7 +13,7 @@ from cmk.gui.wato import PluginCommandLine, RulespecGroupIntegrateOtherServices
 def _valuespec_custom_checks() -> MigrateNotUpdated:
     return MigrateNotUpdated(
         valuespec=Dictionary(
-            title=_("Integrate Nagios plugins"),
+            title=_("Integrate Nagios plug-ins"),
             help=_(
                 'With this ruleset you can configure "classical Monitoring checks" '
                 "to be executed directly on your monitoring server. These checks "
@@ -96,7 +96,7 @@ def _valuespec_custom_checks() -> MigrateNotUpdated:
                             (
                                 "output",
                                 TextInput(
-                                    title=_("Plugin output in case of absent updates"),
+                                    title=_("Plug-in output in case of absent updates"),
                                     size=40,
                                     allow_empty=False,
                                     default_value=_("Check result did not arrive in time"),

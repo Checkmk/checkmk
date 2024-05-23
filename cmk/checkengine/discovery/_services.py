@@ -29,17 +29,17 @@ def find_plugins(
     providers: Mapping[HostKey, Provider],
     preliminary_candidates: Sequence[tuple[CheckPluginName, Sequence[ParsedSectionName]]],
 ) -> set[CheckPluginName]:
-    """Return names of check plugins that this multi_host_section may
+    """Return names of check plug-ins that this multi_host_section may
     contain data for.
 
     Given this mutli_host_section, there is no point in trying to discover
-    any check plugins not returned by this function.  This does not
-    address the question whether or not the returned check plugins will
+    any check plug-ins not returned by this function.  This does not
+    address the question whether or not the returned check plug-ins will
     discover something.
 
     We have to consider both the host, and the management board as source
     type. Note that the determination of the plug-in names is not quite
-    symmetric: For the host, we filter out all management plugins,
+    symmetric: For the host, we filter out all management plug-ins,
     for the management board we create management variants from all
     plugins that are not already designed for management boards.
 
@@ -94,7 +94,7 @@ def _find_host_plugins(
     return {
         name
         for (name, sections) in preliminary_candidates
-        # *filter out* all names of management only check plugins
+        # *filter out* all names of management only check plug-ins
         if not name.is_management_name()
         and any(section in available_parsed_sections for section in sections)
     }
@@ -165,7 +165,7 @@ def _discover_plugins_services(
     try:
         plugin = plugins[check_plugin_name]
     except KeyError:
-        console.warning(tty.format_warning(f"  Missing check plugin: '{check_plugin_name}'\n"))
+        console.warning(tty.format_warning(f"  Missing check plug-in: '{check_plugin_name}'\n"))
         return
 
     try:

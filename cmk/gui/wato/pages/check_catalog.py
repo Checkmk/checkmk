@@ -371,7 +371,7 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
             "os",
             True,
             _("Operating systems"),
-            _("Plugins for operating systems, things like memory, CPU, filesystems, etc."),
+            _("Plug-ins for operating systems, things like memory, CPU, filesystems, etc."),
         ),
         (
             "app",
@@ -395,13 +395,13 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
             "agentless",
             False,
             _("Networking checks without agent"),
-            _("Plugins that directly check networking protocols like HTTP or IMAP"),
+            _("Plug-ins that directly check networking protocols like HTTP or IMAP"),
         ),
         (
             "generic",
             False,
             _("Generic check plug-ins"),
-            _("Plugins for local agent extensions or communication with the agent in general"),
+            _("Plug-ins for local agent extensions or communication with the agent in general"),
         ),
         (
             "virtual",

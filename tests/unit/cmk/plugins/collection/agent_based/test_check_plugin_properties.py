@@ -91,7 +91,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
 
 def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
     """
-    This is a sanity test for registered inventory and check plugins. It ensures that plugins
+    This is a sanity test for registered inventory and check plug-ins. It ensures that plugins
     have a non trivial section. Trivial sections may be created accidentally e.g. if a typo
     is introduced in the section or plug-in name during the migration to the new API. If a
     trivial section without a parse_function is sufficient for your plug-in you have to add it

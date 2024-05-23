@@ -247,14 +247,14 @@ def get_default_config() -> dict[str, Any]:
 
 
 def _get_default_config_from_legacy_plugins() -> dict[str, Any]:
-    """Plugins from local/share/check_mk/web/plugins/config are loaded here"""
+    """Plug-ins from local/share/check_mk/web/plugins/config are loaded here"""
     default_config: dict[str, Any] = {}
     utils.load_web_plugins("config", default_config)
     return default_config
 
 
 def _get_default_config_from_module_plugins() -> dict[str, Any]:
-    """Plugins from the config plug-in package are loaded here
+    """Plug-ins from the config plug-in package are loaded here
 
     These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
     `cmk.gui.cme.plugins.config`.

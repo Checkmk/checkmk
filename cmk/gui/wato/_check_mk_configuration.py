@@ -3766,7 +3766,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
     ]
 
     if user.may("wato.add_or_modify_executables") and edition() is not Edition.CSE:
-        choices.append(("custom", _("Use a custom check plugin..."), PluginCommandLine()))
+        choices.append(("custom", _("Use a custom check plug-in..."), PluginCommandLine()))
 
     return choices
 
@@ -4780,7 +4780,7 @@ def _valuespec_clustered_services_config():
             "</li><li>".join(
                 (
                     _(
-                        "Native: Use the cluster check function implemented by the check plugin. "
+                        "Native: Use the cluster check function implemented by the check plug-in. "
                         "If it is available, it is probably the best choice, as it implements logic "
                         "specifically designed for the check plug-in in question. Implementing it is "
                         "optional however, so this might not be available (a warning will be displayed). "
@@ -6137,7 +6137,7 @@ def _valuespec_snmp_fetch_interval():
                 title=_("Section"),
                 help=_(
                     "You can only configure section names here, but not choose individual "
-                    "check plugins. The reason for this is that the check plug-ins "
+                    "check plug-ins. The reason for this is that the check plug-ins "
                     "themselves are not aware whether or not they are processing SNMP based "
                     "data."
                 ),

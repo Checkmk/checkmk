@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Migrate legacy checks.
 
-This tool will modify legacy check plugins in place, to make them use the API `cmk.agent_based.v2`.
+This tool will modify legacy check plug-ins in place, to make them use the API `cmk.agent_based.v2`.
 It requires you to install the python library `libcst`.
 It does not require, but will attempt to call `autoflake`, `scripts/run-black` and `scripts/run-isort` on the modified file(s).
 For very simple plugins, it might do the whole job, for most it will not.

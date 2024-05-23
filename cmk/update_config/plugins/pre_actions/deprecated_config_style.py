@@ -697,7 +697,7 @@ class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
             return
         raise MKUserError(
             None,
-            "Loading config variables for legacy check plugins is no longer supported. "
+            "Loading config variables for legacy check plug-ins is no longer supported. "
             f"Please remove the following variables from your .mk files: {', '.join(sorted(problematic_variables))}",
         )
 

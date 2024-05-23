@@ -111,7 +111,7 @@ def test_evaluate_cpu_utilization(
             "#e3fff9",
             id="None None None None",
         ),
-        # This is a terrible metric from Nagios plugins. Test is for survival instead of
+        # This is a terrible metric from Nagios plug-ins. Test is for survival instead of
         # correctness The unit "percent" is lost on the way. Fixing this would imply also
         # figuring out how to represent graphs for active-icmp check when host has multiple
         # addresses.

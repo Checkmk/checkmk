@@ -47,7 +47,7 @@ def _make_parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "This check uses <tt>check_ldap</tt> from the standard "
-            "Nagios plugins in order to try the response of an LDAP "
+            "Nagios plug-ins in order to try the response of an LDAP "
             "server."
         ),
         elements={

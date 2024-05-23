@@ -95,7 +95,7 @@ snmp_section_cisco_mem_legacy = SNMPSection(
                 "2",  # ciscoMemoryPoolName
                 "5",  # ciscoMemoryPoolUsed
                 "6",  # ciscoMemoryPoolFree
-                "7",  # ciscoMemoryPoolLargestFree (unused by check plugin)
+                "7",  # ciscoMemoryPoolLargestFree (unused by check plug-in)
             ],
         ),
     ],

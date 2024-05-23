@@ -689,7 +689,7 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Plugin output") + " &nbsp; ")
+        html.write_text(_("Plug-in output") + " &nbsp; ")
         html.close_td()
         html.open_td()
         html.text_input("_fake_output", "", size=60, placeholder=_("What is the purpose?"))

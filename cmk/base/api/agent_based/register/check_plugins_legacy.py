@@ -118,7 +118,7 @@ def _create_check_function(
         kwargs["params"] = parameters
 
         if not requires_item:
-            # this handles a very weird case, in which check plugins do not have an '%s'
+            # this handles a very weird case, in which check plug-ins do not have an '%s'
             # in their description (^= no item) but do in fact discover an empty string.
             # We cannot just append "%s" to the service description, because in that case
             # our tests complain about the ruleset not being for plugins with item :-(

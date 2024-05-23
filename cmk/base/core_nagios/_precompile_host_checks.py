@@ -281,7 +281,7 @@ def _get_needed_plugin_names(
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
             for parsed_section_name in inventory_plugin.sections:
-                # check if we must add the legacy check plugin:
+                # check if we must add the legacy check plug-in:
                 legacy_check_name = config.legacy_check_plugin_names.get(
                     CheckPluginName(str(parsed_section_name))
                 )
@@ -305,7 +305,7 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> str | Non
 
     # See if me must include a legacy plug-in from which we derived the given one:
     # A management plug-in *could have been* created on the fly, from a 'regular' legacy
-    # check plugin. In this case, we must load that.
+    # check plug-in. In this case, we must load that.
     plugin = agent_based_register.get_check_plugin(check_plugin_name)
     if not plugin or plugin.location is not None:
         # it does *not* result from a legacy plugin, if module is not None

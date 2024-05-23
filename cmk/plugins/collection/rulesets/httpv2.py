@@ -377,7 +377,7 @@ def _valuespec_connection() -> Dictionary:
                         "at all. TLS 1.0 and 1.1 is supported by the underlying plug-in but not "
                         "on this rule set as the plug-in needs to be called with an unsafe "
                         "configuration of OpenSSL 3. This requires a direct call via "
-                        "<i>Integrate Nagios plugins.</i>"
+                        "<i>Integrate Nagios plug-ins.</i>"
                     ),
                     elements={
                         "min_version": DictElement(

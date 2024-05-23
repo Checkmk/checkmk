@@ -465,7 +465,7 @@ class CheckboxWithListOfCheckTypes(Checkbox):
         required=True,
         uniqueItems=True,
         example=["3par_capacity", "acme_fan", "acme_realm"],
-        description="Only apply the rule if the notification originates from certain types of check plugins. Note: Host notifications never match this rule if this option is being used",
+        description="Only apply the rule if the notification originates from certain types of check plug-ins. Note: Host notifications never match this rule if this option is being used",
     )
 
 

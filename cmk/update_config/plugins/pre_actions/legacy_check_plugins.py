@@ -37,7 +37,7 @@ class PreUpdateLegacyCheckPlugins(PreUpdateAction):
 pre_update_action_registry.register(
     PreUpdateLegacyCheckPlugins(
         name="legacy_check_plugins",
-        title="Legacy check plugins",
+        title="Legacy check plug-ins",
         sort_index=0,
     )
 )

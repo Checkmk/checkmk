@@ -1014,7 +1014,7 @@ def _translated_metric_scalar(
 
 
 def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, TranslatedMetric]:
-    """Convert Ascii-based performance data as output from a check plugin
+    """Convert Ascii-based performance data as output from a check plug-in
     into floating point numbers, do scaling if necessary.
 
     Simple example for perf_data: [(u'temp', u'48.1', u'', u'70', u'80', u'', u'')]

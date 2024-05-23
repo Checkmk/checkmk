@@ -48,7 +48,7 @@ def _make_parameter_form() -> Dictionary:
         title=Title("Check TCP port connection"),
         help_text=Help(
             "This check tests the connection to a TCP port. It uses "
-            "<tt>check_tcp</tt> from the standard Nagios plugins."
+            "<tt>check_tcp</tt> from the standard Nagios plug-ins."
         ),
         elements={
             "port": DictElement(

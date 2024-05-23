@@ -1046,7 +1046,7 @@ def test_get_graph_templates_with_predictive_metrics(
     ],
 )
 def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[str]) -> None:
-    # Hard to find all avail metric names of a check plugin.
+    # Hard to find all avail metric names of a check plug-in.
     # We test conflicting metrics as following:
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics

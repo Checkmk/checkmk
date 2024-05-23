@@ -91,7 +91,7 @@ TTY_COLORS = {
     "normal": "\033[0m",
 }
 
-CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
+CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plug-in
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -827,7 +827,7 @@ class Options:
         "overflow": "C",
         "nocontext": None,
         "maxcontextlines": None,
-        "maxoutputsize": 500000,  # same as logwatch_max_filesize in check plugin
+        "maxoutputsize": 500000,  # same as logwatch_max_filesize in check plug-in
         "fromstart": False,
         "skipconsecutiveduplicated": False,
     }

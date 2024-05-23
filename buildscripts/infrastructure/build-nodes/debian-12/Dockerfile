@@ -63,7 +63,6 @@ RUN apt-get install -y \
     libssl-dev \
     libxml2-dev \
     libxmlsec1-dev \
-    netcat \
     openssh-client \
     patch \
     rpcbind \

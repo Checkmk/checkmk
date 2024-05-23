@@ -63,7 +63,6 @@ RUN zypper ref -s \
     xmlsec1-devel \
     xmlsec1-openssl-devel \
     mariadb-client \
-    netcat \
     openldap2-devel \
     openssh \
     pango-devel \

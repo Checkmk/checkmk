@@ -68,7 +68,6 @@ RUN yum -y makecache \
     mariadb-devel \
     mpfr-devel \
     ncurses-devel \
-    netcat \
     openssh-clients \
     openssl-devel \
     pango-devel \

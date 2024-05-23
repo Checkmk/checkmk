@@ -13,7 +13,6 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfiguratio
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.config_validation_layer.site_management import validate_sites
 from cmk.utils.site import omd_site
 
 import cmk.gui.hooks as hooks
@@ -86,10 +85,6 @@ class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
             return default_single_site_configuration()
 
         return prepare_raw_site_config(sites_from_file)
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_sites(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

@@ -121,13 +121,13 @@ def parse_arguments(argv):
     )
 
     parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
-    parser.add_argument("-u", "--user", default=None, help="Username for jenkins login")
-    parser.add_argument("-s", "--password", default=None, help="Password for jenkins login")
+    parser.add_argument("-u", "--user", default=None, help="Username for Jenkins login")
+    parser.add_argument("-s", "--password", default=None, help="Password for Jenkins login")
     parser.add_argument(
         "-P",
         "--proto",
         default="https",
-        help="Use 'http' or 'https' for connection to jenkins (default=https)",
+        help="Use 'http' or 'https' for connection to Jenkins (default=https)",
     )
     parser.add_argument(
         "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
@@ -144,7 +144,7 @@ def parse_arguments(argv):
     )
 
     parser.add_argument(
-        "hostname", metavar="HOSTNAME", help="Name of the jenkins instance to query."
+        "hostname", metavar="HOSTNAME", help="Name of the Jenkins instance to query."
     )
 
     return parser.parse_args(argv)

@@ -649,7 +649,7 @@ def _vs_limits_vcpu_families():
                 for inst_fam, fam_name in AWSEC2InstFamilies.items()
             ],
         ),
-        title=_("Set limits and levels for running on-demand vCPUs on instance Families"),
+        title=_("Set limits and levels for running on-demand vCPUs on instance families"),
     )
 
 

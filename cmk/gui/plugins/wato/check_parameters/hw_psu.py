@@ -18,7 +18,7 @@ def _parameter_valuespec_hw_psu():
             (
                 "levels",
                 Tuple(
-                    title=_("PSU Capacity Levels"),
+                    title=_("PSU capacity levels"),
                     elements=[
                         Percentage(title=_("Warning at"), default_value=80.0),
                         Percentage(title=_("Critical at"), default_value=90.0),
@@ -36,6 +36,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("PSU (Chassis/Bay)")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hw_psu,
-        title=lambda: _("Power Supply Unit"),
+        title=lambda: _("Power supply unit"),
     )
 )

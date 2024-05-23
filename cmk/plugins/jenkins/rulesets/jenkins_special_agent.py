@@ -24,7 +24,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def _formspec_jenkins() -> Dictionary:
     return Dictionary(
         title=Title("Jenkins connection"),
-        help_text=Help("Requests data from a jenkins instance."),
+        help_text=Help("Requests data from a Jenkins instance."),
         elements={
             "instance": DictElement(
                 parameter_form=String(

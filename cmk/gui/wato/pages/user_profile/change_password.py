@@ -143,11 +143,11 @@ class UserChangePasswordPage(ABCUserProfilePage):
             forms.section(_("Current password"))
             html.password_input("cur_password", autocomplete="new-password")
 
-            forms.section(_("New Password"))
+            forms.section(_("New password"))
             html.password_input("password", autocomplete="new-password")
             html.password_meter()
 
-            forms.section(_("New Password Confirmation"))
+            forms.section(_("New password confirmation"))
             html.password_input("password2", autocomplete="new-password")
 
             html.hidden_field("_origtarget", request.get_str_input("_origtarget"))

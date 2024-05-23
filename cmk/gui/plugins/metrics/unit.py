@@ -333,7 +333,7 @@ unit_info["EUR"] = {
 unit_info["RCU"] = {
     "title": _("RCU"),
     "symbol": _("RCU"),
-    "description": _("Read Capacity Units"),
+    "description": _("Read capacity units"),
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="RCU"),
     "js_render": "v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 3, false, 'RCU')",
 }
@@ -341,7 +341,7 @@ unit_info["RCU"] = {
 unit_info["WCU"] = {
     "title": _("WCU"),
     "symbol": _("WCU"),
-    "description": _("Write Capacity Units"),
+    "description": _("Write capacity units"),
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="WCU"),
     "js_render": "v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 3, false, 'WCU')",
 }

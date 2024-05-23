@@ -259,7 +259,7 @@ def _item_spec_azure_databases():
 
 def _parameter_valuespec_azure_databases():
     return Dictionary(
-        title=_("Set Levels"),
+        title=_("Set levels"),
         elements=[
             (
                 "storage_percent_levels",

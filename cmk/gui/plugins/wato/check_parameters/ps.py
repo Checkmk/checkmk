@@ -702,7 +702,7 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
                 "label",
                 Labels(
                     world=Labels.World.CONFIG,
-                    title=_("Host Label"),
+                    title=_("Host label"),
                     help=_(
                         "Here you can set host labels that automatically get created when discovering the services."
                     ),
@@ -800,7 +800,7 @@ def hr_process_match_name_option():
 
 def hr_process_match_path_option():
     return Alternative(
-        title=_("Process Path Matching"),
+        title=_("Process path matching"),
         elements=[
             TextInput(
                 title=_("Exact name of the process path"),
@@ -840,7 +840,7 @@ def hr_process_match_elements():
         (
             "match_name_or_path",
             CascadingDropdown(
-                title=_("Process Match textual description or path of process"),
+                title=_("Process match textual description or path of process"),
                 choices=[
                     ("match_name", _("Match textual description"), hr_process_match_name_option()),
                     ("match_path", _("Match process path"), hr_process_match_path_option()),
@@ -851,7 +851,7 @@ def hr_process_match_elements():
         (
             "match_status",
             ListChoice(
-                title=_("Process Status Matching"),
+                title=_("Process status matching"),
                 choices=[
                     ("running", _("Running")),
                     ("runnable", _("Runnable (Waiting for resource)")),

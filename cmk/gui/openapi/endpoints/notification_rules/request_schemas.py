@@ -1246,7 +1246,7 @@ class JiraPluginCreate(PluginName):
     jira_url = fields.String(
         required=False,
         example="http://jira_url_example.com",
-        description="Configure the JIRA URL here",
+        description="Configure the Jira URL here",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     username = fields.String(
@@ -1262,37 +1262,37 @@ class JiraPluginCreate(PluginName):
     project_id = fields.String(
         required=True,
         example="",
-        description="The numerical JIRA project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
+        description="The numerical Jira project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
     )
     issue_type_id = fields.String(
         required=True,
         example="",
-        description="The numerical JIRA issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
+        description="The numerical Jira issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
     )
     host_custom_id = fields.String(
         required=True,
         example="",
-        description="The numerical JIRA custom field ID for host problems",
+        description="The numerical Jira custom field ID for host problems",
     )
     service_custom_id = fields.String(
         required=True,
         example="",
-        description="The numerical JIRA custom field ID for service problems",
+        description="The numerical Jira custom field ID for service problems",
     )
     monitoring_url = fields.String(
         required=True,
         example="",
-        description="Configure the base URL for the monitoring web-GUI here. Include the site name. Used for link to Checkmk out of JIRA",
+        description="Configure the base URL for the monitoring web-GUI here. Include the site name. Used for link to Checkmk out of Jira",
     )
     site_custom_id = fields.Nested(
         StrValueOneOfSchema,
         required=True,
-        description="The numerical ID of the JIRA custom field for sites. Please use this option if you have multiple sites in a distributed setup which send their notifications to the same JIRA instance",
+        description="The numerical ID of the Jira custom field for sites. Please use this option if you have multiple sites in a distributed setup which send their notifications to the same Jira instance",
     )
     priority_id = fields.Nested(
         StrValueOneOfSchema,
         required=True,
-        description="The numerical JIRA priority ID. If not set, it will be retrieved from a custom user attribute named jirapriority. If that is not set, the standard priority will be used",
+        description="The numerical Jira priority ID. If not set, it will be retrieved from a custom user attribute named jirapriority. If that is not set, the standard priority will be used",
     )
     host_summary = fields.Nested(
         StrValueOneOfSchema,
@@ -1312,7 +1312,7 @@ class JiraPluginCreate(PluginName):
     resolution_id = fields.Nested(
         StrValueOneOfSchema,
         required=True,
-        description="The numerical JIRA resolution transition ID. 11 - 'To Do', 21 - 'In Progress', 31 - 'Done'",
+        description="The numerical Jira resolution transition ID. 11 - 'To Do', 21 - 'In Progress', 31 - 'Done'",
     )
     optional_timeout = fields.Nested(
         StrValueOneOfSchema,

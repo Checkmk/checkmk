@@ -14,20 +14,20 @@ from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 def _parameter_valuespec_oracle_instance() -> Dictionary:
     return Dictionary(
-        title=_("Consider state of Archivelogmode: "),
+        title=_("Consider state of archive log mode: "),
         elements=[
             (
                 "archivelog",
                 MonitoringState(
                     default_value=0,
-                    title=_("State in case of Archivelogmode is enabled: "),
+                    title=_("State in case of archive log mode is enabled: "),
                 ),
             ),
             (
                 "noarchivelog",
                 MonitoringState(
                     default_value=1,
-                    title=_("State in case of Archivelogmode is disabled: "),
+                    title=_("State in case of archive log mode is disabled: "),
                 ),
             ),
             (

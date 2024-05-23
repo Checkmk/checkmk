@@ -7,10 +7,27 @@ from cmk.plugins.aws.ruleset_helper import (
     convert_tag_list,
     formspec_aws_limits,
     formspec_aws_tags,
-    migrate_global_service,
     migrate_regional_service,
     service_dict_element,
 )
+
+try:
+    from cmk.plugins.aws.rulesets.cce import (
+        edition_specific_global_services,
+        edition_specific_regional_services,
+        handle_edition_switch,
+        migrate_edition_specific_global_services_vs_to_fs,
+        migrate_edition_specific_regional_services_vs_to_fs,
+    )
+except ImportError:
+    from cmk.plugins.aws.rulesets.cre import (
+        edition_specific_global_services,
+        edition_specific_regional_services,
+        migrate_edition_specific_global_services_vs_to_fs,
+        migrate_edition_specific_regional_services_vs_to_fs,
+        handle_edition_switch,
+    )
+
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -31,7 +48,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
-def _all_global_services() -> dict[str, DictElement]:
+def _global_services() -> dict[str, DictElement]:
     return {
         "ce": service_dict_element(
             Title("Costs and usage (CE)"),
@@ -40,49 +57,11 @@ def _all_global_services() -> dict[str, DictElement]:
             filterable_by_name=False,
             filterable_by_tags=False,
         ),
-        "route53": service_dict_element(
-            Title("Route53"),
-            {},
-            default_enabled=False,
-            filterable_by_name=False,
-            filterable_by_tags=False,
-        ),
-        "cloudfront": service_dict_element(
-            Title("CloudFront"),
-            {
-                "host_assignment": DictElement(
-                    parameter_form=SingleChoice(
-                        title=Title("Define host assignment"),
-                        help_text=Help(
-                            "Define the host to assign the discovered CloudFront services."
-                            " You can assign them to the AWS host as any other AWS service or"
-                            " to a piggyback host that will be named as the 'Origin Domain'"
-                            " specified in the CloudFront distribution - in case you select the"
-                            " second option, you will have to create the piggyback host(s)"
-                        ),
-                        elements=[
-                            SingleChoiceElement(
-                                title=Title("Assign services to AWS host"),
-                                name="aws_host",
-                            ),
-                            SingleChoiceElement(
-                                title=Title(
-                                    "Assign services to piggyback host(s) named as the 'Origin Domain' configured in AWS"
-                                ),
-                                name="domain_host",
-                            ),
-                        ],
-                        prefill=DefaultValue("aws_host"),
-                    ),
-                    required=True,
-                ),
-            },
-            default_enabled=False,
-        ),
+        **edition_specific_global_services(),
     }
 
 
-def _all_regional_services() -> dict[str, DictElement]:
+def _regional_services() -> dict[str, DictElement]:
     return {
         "ec2": service_dict_element(
             Title("Elastic Compute Cloud (EC2)"), extra_elements=formspec_aws_limits()
@@ -148,16 +127,7 @@ def _all_regional_services() -> dict[str, DictElement]:
                 ),
             },
         ),
-        "aws_lambda": service_dict_element(Title("Lambda"), extra_elements=formspec_aws_limits()),
-        "sns": service_dict_element(
-            Title("Simple Notification Service (SNS)"), extra_elements=formspec_aws_limits()
-        ),
-        "ecs": service_dict_element(
-            Title("Elastic Container Service (ECS)"), extra_elements=formspec_aws_limits()
-        ),
-        "elasticache": service_dict_element(
-            Title("ElastiCache"), extra_elements=formspec_aws_limits()
-        ),
+        **edition_specific_regional_services(),
     }
 
 
@@ -271,8 +241,7 @@ def _migrate_access_vs_to_fs(values: object) -> None:
 def _migrate_global_services_vs_to_fs(values: object) -> None:
     assert isinstance(values, dict)
     values["ce"] = ("all", {}) if "ce" in values else ("none", None)
-    values["route53"] = ("all", {}) if "route53" in values else ("none", None)
-    migrate_global_service(values, "cloudfront")
+    migrate_edition_specific_global_services_vs_to_fs(values)
 
 
 def _migrate_regional_services_vs_to_fs(values: object) -> None:
@@ -290,10 +259,7 @@ def _migrate_regional_services_vs_to_fs(values: object) -> None:
     migrate_regional_service(values, "cloudwatch_alarms", selection_vs_str="alarms")
     migrate_regional_service(values, "dynamodb")
     migrate_regional_service(values, "wafv2")
-    migrate_regional_service(values, "aws_lambda")
-    migrate_regional_service(values, "sns")
-    migrate_regional_service(values, "ecs")
-    migrate_regional_service(values, "elasticache")
+    migrate_edition_specific_regional_services_vs_to_fs(values)
 
 
 def _convert_regions(values: object) -> list[str]:
@@ -301,9 +267,8 @@ def _convert_regions(values: object) -> list[str]:
     return [region.replace("-", "_") for region in values]
 
 
-def _pre_24_to_formspec_migration(values: object) -> dict[str, object]:
+def _pre_24_to_formspec_migration(values: dict) -> dict[str, object]:
     """Unable to split this into nested migrations due to CMK-17471."""
-    assert isinstance(values, dict)
 
     # Proxy migrate regions -> regions_to_monitor to indicate migration has been applied
     if "regions_to_monitor" in values:
@@ -325,10 +290,17 @@ def _pre_24_to_formspec_migration(values: object) -> dict[str, object]:
     return values
 
 
+def _migrate(values: object) -> dict[str, object]:
+    assert isinstance(values, dict)
+    _pre_24_to_formspec_migration(values)
+    handle_edition_switch(values)
+    return values
+
+
 def _formspec_aws():
     return Dictionary(
         title=Title("Amazon Web Services (AWS)"),
-        migrate=_pre_24_to_formspec_migration,  # Unable to split this due to CMK-17471
+        migrate=_migrate,  # Unable to split this due to CMK-17471
         elements={
             "access_key_id": DictElement(
                 parameter_form=String(
@@ -381,7 +353,7 @@ def _formspec_aws():
             "global_services": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Global services to monitor"),
-                    elements=_all_global_services(),
+                    elements=_global_services(),
                 ),
                 required=True,
             ),
@@ -403,7 +375,7 @@ def _formspec_aws():
             "services": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Services per region to monitor"),
-                    elements=_all_regional_services(),
+                    elements=_regional_services(),
                 ),
                 required=True,
             ),

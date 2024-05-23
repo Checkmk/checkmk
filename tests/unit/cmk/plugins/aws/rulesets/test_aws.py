@@ -2,13 +2,21 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import importlib
+import sys
+from typing import Generator
 from unittest.mock import ANY
+
+import pytest
+from pytest import MonkeyPatch
+
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition, skip_if_saas_edition
 
 from cmk.utils.version import Edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
-from cmk.plugins.aws.rulesets.aws import rule_spec_aws
+import cmk.plugins.aws.rulesets.aws as aws_ruleset
 from cmk.plugins.aws.server_side_calls.aws_agent_call import special_agent_aws
 from cmk.server_side_calls.v1 import HostConfig
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
@@ -60,7 +68,9 @@ AWS_VS_RULE_VALUE = {
 
 def test_vs_to_fs_rule_update_valid_datatypes() -> None:
     # GIVEN
-    valuespec = convert_to_legacy_rulespec(rule_spec_aws, Edition.CRE, lambda x: x).valuespec
+    valuespec = convert_to_legacy_rulespec(
+        aws_ruleset.rule_spec_aws, Edition.CRE, lambda x: x
+    ).valuespec
 
     # WHEN
     value = valuespec.transform_value(AWS_VS_RULE_VALUE)
@@ -234,3 +244,83 @@ def test_fs_values_to_args() -> None:
         "--piggyback-naming-convention",
         "private_dns_name",
     ]
+
+
+@pytest.fixture(autouse=True)
+def reset_cce_module() -> Generator[None, None, None]:
+    yield
+
+    importlib.reload(aws_ruleset)
+
+
+def test_cce_to_non_cce_rule_drops_services(monkeypatch: MonkeyPatch) -> None:
+    # GIVEN
+    monkeypatch.setitem(sys.modules, "cmk.plugins.aws.rulesets.cce", None)
+    importlib.reload(aws_ruleset)
+
+    valuespec = convert_to_legacy_rulespec(
+        aws_ruleset.rule_spec_aws, Edition.CRE, lambda x: x
+    ).valuespec
+
+    # WHEN
+    value = valuespec.transform_value(AWS_VS_RULE_VALUE)
+
+    # THEN
+    assert "route53" not in value["global_services"]
+    assert "cloudfront" not in value["global_services"]
+    assert "aws_lambda" not in value["services"]
+    assert "sns" not in value["services"]
+    assert "ecs" not in value["services"]
+    assert "elasticache" not in value["services"]
+
+
+@skip_if_raw_edition
+@skip_if_saas_edition
+def test_non_cce_to_cce_sets_defaults() -> None:
+    # GIVEN
+    valuespec = convert_to_legacy_rulespec(
+        aws_ruleset.rule_spec_aws, Edition.CRE, lambda x: x
+    ).valuespec
+    non_cce_value = {
+        "access_key_id": "foo_key",
+        "secret_access_key": ("password", "foo_pass"),
+        "access": {},
+        "global_services": {
+            "ce": None,
+        },
+        "regions": ["ap-northeast-2", "ap-southeast-2"],
+        "services": {
+            "ec2": {"selection": "all"},
+            "ebs": {"selection": "all"},
+            "s3": {"selection": "all"},
+            "glacier": {"selection": "all"},
+            "elbv2": {"selection": "all"},
+            "rds": {"selection": "all"},
+            "cloudwatch_alarms": {"alarms": "all"},
+            "dynamodb": {"selection": "all"},
+            "wafv2": {"selection": "all"},
+        },
+        "piggyback_naming_convention": "private_dns_name",
+        "overall_tags": [],
+    }
+
+    # WHEN
+    value = valuespec.transform_value(non_cce_value)
+
+    # THEN
+    assert value["global_services"]["route53"] == ("none", None)
+    assert value["global_services"]["cloudfront"] == ("none", None)
+
+    # We are unable to restore the defaults on the non-cce -> cce
+    # switch while the formspec migration is running as the migration
+    # already sets these to "none" if they might have been disabled
+    # in the valuespec.
+    assert value["services"]["aws_lambda"] == ("none", None)
+    assert value["services"]["sns"] == ("none", None)
+    assert value["services"]["ecs"] == ("none", None)
+    assert value["services"]["elasticache"] == ("none", None)
+    # TODO When formspec migration is removed, restore the defaults properly:
+    # assert value["services"]["aws_lambda"] == ("all", {"limits": "limits"})
+    # assert value["services"]["sns"] == ("all", {"limits": "limits"})
+    # assert value["services"]["ecs"] == ("all", {"limits": "limits"})
+    # assert value["services"]["elasticache"] == ("all", {"limits": "limits"})

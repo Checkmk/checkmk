@@ -292,7 +292,7 @@ CATALOG_TITLES: Final = {
     "kubernetes": "Kubernetes",
     "lxc": "Linux Container",
     "agentless": "Networking checks without agent",
-    "generic": "Generic check plugins",
+    "generic": "Generic check plug-ins",
     "unsorted": "Uncategorized",
     "zertificon": "Zertificon",
     "mqtt": "MQTT",

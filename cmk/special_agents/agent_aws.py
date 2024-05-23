@@ -1000,7 +1000,7 @@ class AWSSectionCloudwatch(AWSSection):
     def _extend_metrics_by_period(self, metrics: Metrics, raw_content: list) -> None:
         """
         Extend the queried metric values by the corresponding time period. For metrics based on the
-        "Sum" statistics, we add the actual time period which can then be used by the check plugins
+        "Sum" statistics, we add the actual time period which can then be used by the check plug-ins
         to compute a rate. For all other metrics, we add 'None', such that the metric values are
         always 2-tuples (value, period), where period is either an actual time period such as 600 s
         or None.

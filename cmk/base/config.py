@@ -1385,7 +1385,7 @@ service_rule_groups = {"temperature"}
 #   |               |_____\___/ \__,_|\__,_|_|_| |_|\__, |                 |
 #   |                                               |___/                  |
 #   +----------------------------------------------------------------------+
-#   | Loading of check plugins                                             |
+#   | Loading of check plug-ins                                            |
 #   '----------------------------------------------------------------------'
 
 
@@ -1650,7 +1650,7 @@ def _extract_check_plugins(
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
-    in check_info to create API compliant check plugins.
+    in check_info to create API compliant check plug-ins.
     """
     errors = []
     for check_plugin_name, check_info_element in sorted(legacy_checks.items()):

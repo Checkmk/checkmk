@@ -455,7 +455,7 @@ class Server:
                             attribute_data = self._get_attribute_data(xml_object, "dn")
                         if attribute_data is None:
                             logging.debug("No such attribute '%s'", attribute)
-                            # ensure order of entries in related check plugins is consistent
+                            # ensure order of entries in related check plug-ins is consistent
                             attribute_data = ""
                         xml_data.append((attribute, attribute_data))
                     data.setdefault(header, []).append((class_id, xml_data))

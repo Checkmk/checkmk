@@ -788,7 +788,7 @@ def render_werk_link(werk: Werk) -> HTML:
 
 def render_werk_title(werk: Werk) -> HTML:
     title = werk.title
-    # if the title begins with the name or names of check plugins, then
+    # if the title begins with the name or names of check plug-ins, then
     # we link to the man pages of those checks
     if ":" in title:
         parts = title.split(":", 1)

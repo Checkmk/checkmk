@@ -434,7 +434,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 get_effective_host=self.config_cache.effective_host,
                 snmp_backend=self.config_cache.get_snmp_backend(host_name),
                 # In the past the creation of predictions (and the livestatus query needed)
-                # was performed inside the check plugins context.
+                # was performed inside the check plug-ins context.
                 # We should consider moving this side effect even further up the stack
                 injected_p=InjectedParameters(
                     meta_file_path_template=prediction_store.meta_file_path_template,
@@ -871,7 +871,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         self.ruleset_matcher: Final = ruleset_matcher
 
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
-        # `get_check_plugin()` is not an error.  Both check plugins and
+        # `get_check_plugin()` is not an error.  Both check plug-ins and
         # discovery are declared together in the check API.
         plugin = _api.get_check_plugin(__key)
         if plugin is None:

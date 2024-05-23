@@ -93,7 +93,7 @@ register.snmp_section(
                 "2",  # ciscoMemoryPoolName
                 "5",  # ciscoMemoryPoolUsed
                 "6",  # ciscoMemoryPoolFree
-                "7",  # ciscoMemoryPoolLargestFree (unused by check plugin)
+                "7",  # ciscoMemoryPoolLargestFree (unused by check plug-in)
             ],
         ),
     ],

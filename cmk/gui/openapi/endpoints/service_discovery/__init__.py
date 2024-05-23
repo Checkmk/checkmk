@@ -689,7 +689,7 @@ class BulkDiscovery(BaseSchema):
     )
     ignore_errors = fields.Boolean(
         required=False,
-        description="The option whether to ignore errors in single check plugins.",
+        description="The option whether to ignore errors in single check plug-ins.",
         example=True,
         load_default=True,
     )

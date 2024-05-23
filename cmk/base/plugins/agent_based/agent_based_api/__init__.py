@@ -7,7 +7,7 @@ This API provides tools for the implementation of
 
  * **section definitions** parsing the raw data and discovering host labels
 
- * **check plugins** subscribing to sections and creating services
+ * **check plug-ins** subscribing to sections and creating services
 
- * **inventory plugins** subscribing to sections and creating entries for the HW/SW inventory
+ * **inventory plug-ins** subscribing to sections and creating entries for the HW/SW inventory
 """

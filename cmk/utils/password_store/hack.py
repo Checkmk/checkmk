@@ -40,7 +40,7 @@ HACK_CHECKS = {
     # For the plugins developed against the cmk.server_side_calls.v1 we
     # need to know whether they support the password store natively, or
     # if we have to apply the password store hack.
-    # Make sure to have *all* active check plugins listed here, so we
+    # Make sure to have *all* active check plug-ins listed here, so we
     # can test for it
     "by_ssh": False,  # has no secret
     "cert": False,  # has no secret

@@ -207,7 +207,7 @@ def validate_check_ruleset_item_consistency(
     check_plugin: CheckPlugin,
     check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]],
 ) -> None:
-    """Validate check plugins sharing a check_ruleset_name have either all or none an item.
+    """Validate check plug-ins sharing a check_ruleset_name have either all or none an item.
 
     Mixed checkgroups lead to strange exceptions when processing the check parameters.
     So it is much better to catch these errors in a central place with a clear error message.

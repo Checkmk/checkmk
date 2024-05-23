@@ -373,10 +373,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         cls,
         section_names: Iterable[SectionName],
     ) -> Sequence[SectionName]:
-        # In former Checkmk versions (<=1.4.0) CPU check plugins were
-        # checked before other check plugins like interface checks.
+        # In former Checkmk versions (<=1.4.0) CPU check plug-ins were
+        # checked before other check plug-ins like interface checks.
         # In Checkmk 1.5 the order was random and
-        # interface sections where executed before CPU check plugins.
+        # interface sections where executed before CPU check plug-ins.
         # This lead to high CPU utilization sent by device. Thus we have
         # to re-order the section names.
         return sorted(

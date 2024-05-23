@@ -95,7 +95,7 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
         quick_items.append(
             TopicMenuItem(
                 name="saas_onboarding_button_toggle",
-                title=_("Onboarding button toggle"),
+                title=_("Toggle onboarding button"),
                 url='javascript:cmk.sidebar.toggle_user_attribute("ajax_saas_onboarding_button_toggle.py")',
                 target="",
                 sort_index=30,
@@ -223,7 +223,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 
 
 class ModeAjaxCycleSaasOnboardingButtonToggle(AjaxPage):
-    """AJAX handler for quick access option 'Onboarding button toggle" in user menu"""
+    """AJAX handler for quick access option 'Toggle onboarding button" in user menu"""
 
     def page(self) -> PageResult:
         check_csrf_token()

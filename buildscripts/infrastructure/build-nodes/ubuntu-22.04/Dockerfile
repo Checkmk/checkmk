@@ -72,6 +72,7 @@ RUN apt-get install -y \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
+    netcat-openbsd \
     openssh-client \
     patch \
     rpcbind \

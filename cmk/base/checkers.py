@@ -1007,6 +1007,7 @@ class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
             sections=plugin.sections,
             function=plugin.inventory_function,
             ruleset_name=plugin.inventory_ruleset_name,
+            defaults=plugin.inventory_default_parameters,
         )
 
     def __iter__(self) -> Iterator[InventoryPluginName]:

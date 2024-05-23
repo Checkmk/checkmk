@@ -1344,7 +1344,7 @@ class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
                 "specific pages within Checkmk. To authenticate these requests it was possible to "
                 "add the _username and _secret parameters to the parameters (e.g. append them to the "
                 "URL). GET parameters are usually logged by proxies and webservers and are not "
-                "deemed secure for secrets. See Werk  #16223 for more information."
+                "deemed secure for secrets. See Werk #16223 for more information."
             ),
             default_value=True,
         )

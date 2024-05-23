@@ -226,7 +226,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             self._flash_message(
                 "warning",
                 _(
-                    "Maximum session duration almost reached. Re-authenticate session to prevent dataloss."
+                    "Maximum session duration almost reached. Re-authenticate session to prevent data loss."
                 ),
             )
 

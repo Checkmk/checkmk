@@ -255,8 +255,8 @@ def vs_idle_timeout_duration() -> Age:
             "to login sessions which is applied when the user stops interacting with "
             "the GUI for a given amount of time. When a user is exceeding the configured "
             "maximum idle time, the user will be logged out and redirected to the login "
-            "screen to renew the login session. This setting can be overridden for each "
-            "user individually in the profile of the users."
+            "screen to renew the login session. This setting can be overridden in each "
+            "individual user's profile."
         ),
         default_value=5400,
     )

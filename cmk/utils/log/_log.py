@@ -12,7 +12,6 @@ from typing import IO
 from ._level import VERBOSE
 
 __all__ = [
-    "clear_console_logging",
     "logger",
     "setup_console_logging",
     "setup_logging_handler",
@@ -21,12 +20,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger("cmk")
-
-
-def clear_console_logging() -> None:
-    logger.handlers[:] = []
-    logger.addHandler(logging.NullHandler())
-    logger.setLevel(logging.INFO)
 
 
 def setup_console_logging() -> None:

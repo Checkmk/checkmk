@@ -1695,7 +1695,9 @@ def mode_automation(args: list[str]) -> None:
         "try-inventory",
         "service-discovery-preview",
     ]:
-        log.clear_console_logging()
+        log.logger.handlers[:] = []
+        log.logger.addHandler(logging.NullHandler())
+        log.logger.setLevel(logging.INFO)
 
     sys.exit(automations.automations.execute(args[0], args[1:]))
 

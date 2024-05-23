@@ -221,15 +221,30 @@ class Option:
         long_option: str,
         short_help: str,
         short_option: str | None = None,
+        # ----------------------------------------------------------------------
+        # TODO: To avoid nonsensical and/or contradicting value combinations,
+        # all these argument-related parameters below should actually be a
+        # *single* parameter, see their intrinsic relations below.
         argument: bool = False,
         argument_descr: str | None = None,
         argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
         count: bool = False,
+        # ----------------------------------------------------------------------
         handler_function: OptionFunction | None = None,
         deprecated_long_options: set[str] | None = None,
     ) -> None:
         super().__init__()
+
+        # We have an argument description if and only if we have an argument.
+        assert (argument_descr is not None) == argument
+        # Having a conversion function implies that we have an argument.
+        assert (argument_conv is None) or argument
+        # Being optional implies that we actually have an argument.
+        assert not argument_optional or argument
+        # Counting an option and having an argument is mutually exclusive.
+        assert not (count and argument)
+
         self.long_option = long_option
         self.short_help = short_help
         self.short_option = short_option

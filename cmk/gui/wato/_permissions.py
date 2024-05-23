@@ -25,7 +25,7 @@ def register(
                 "This permissions allows users to use Setup - Checkmk's "
                 "Web Administration Tool. Without this "
                 "permission all references to Setup (buttons, links, "
-                "snapins) will be invisible."
+                "snap-ins) will be invisible."
             ),
             defaults=["admin", "user"],
         )

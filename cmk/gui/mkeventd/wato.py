@@ -4025,7 +4025,7 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
             help=_(
                 "The event daemon keeps statistics about the rate of messages, events "
                 "rule hits, and other stuff. These values are updated in the interval "
-                "configured here and are available in the sidebar snapin <i>Event Console "
+                "configured here and are available in the sidebar snap-in <i>Event Console "
                 "Performance</i>"
             ),
         )

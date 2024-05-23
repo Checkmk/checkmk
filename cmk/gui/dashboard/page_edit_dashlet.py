@@ -277,7 +277,7 @@ def dashlet_vs_general_settings(
                         (
                             _(
                                 "Most elements have a hard coded static title and some are aware of their "
-                                "content and set the title dynamically, like the view snapin, which "
+                                "content and set the title dynamically, like the view snap-in, which "
                                 "displays the title of the view. If you like to use any other title, set it "
                                 "here."
                             ),

@@ -20,6 +20,8 @@ from cmk.rulesets.v1.form_specs import (
     migrate_to_password,
     Password,
     String,
+    TimeMagnitude,
+    TimeSpan,
     validators,
 )
 
@@ -278,4 +280,14 @@ def fetching(
             ]
             if e.name in supported_protocols
         ],
+    )
+
+
+def timeout() -> TimeSpan:
+    return TimeSpan(
+        title=Title("Connect timeout"),
+        custom_validate=(validators.NumberInRange(min_value=1),),
+        prefill=DefaultValue(10.0),
+        displayed_magnitudes=(TimeMagnitude.SECOND,),
+        migrate=float,  # type: ignore[arg-type] # wrong type, right behaviour
     )

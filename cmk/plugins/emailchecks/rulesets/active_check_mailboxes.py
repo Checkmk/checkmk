@@ -24,7 +24,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
-from .options import fetching
+from .options import fetching, timeout
 
 
 def _valuespec_active_checks_mailboxes() -> Dictionary:
@@ -48,12 +48,7 @@ def _valuespec_active_checks_mailboxes() -> Dictionary:
                 parameter_form=fetching({"IMAP", "EWS"}),
             ),
             "connect_timeout": DictElement(
-                parameter_form=TimeSpan(
-                    title=Title("Connect Timeout"),
-                    custom_validate=(validators.NumberInRange(1, None),),
-                    prefill=DefaultValue(10.0),
-                    displayed_magnitudes=(TimeMagnitude.SECOND,),
-                )
+                parameter_form=timeout(),
             ),
             "age": DictElement(
                 parameter_form=SimpleLevels(

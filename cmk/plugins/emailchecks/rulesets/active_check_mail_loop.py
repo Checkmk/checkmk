@@ -94,13 +94,7 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
                 ),
             ),
             "connect_timeout": DictElement(
-                parameter_form=TimeSpan(
-                    title=Title("Connect Timeout"),
-                    custom_validate=(validators.NumberInRange(min_value=1),),
-                    prefill=DefaultValue(10.0),
-                    displayed_magnitudes=(TimeMagnitude.SECOND,),
-                    migrate=float,  # type: ignore[arg-type]  # wrong signature, right behavior
-                ),
+                parameter_form=options.timeout(),
             ),
             "duration": DictElement(
                 parameter_form=SimpleLevels(

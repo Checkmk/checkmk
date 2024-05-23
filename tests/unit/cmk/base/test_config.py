@@ -1122,7 +1122,7 @@ def test_host_config_inventory_parameters(
         },
     )
     plugin = InventoryPlugin(
-        sections=(), function=lambda *args, **kw: (), ruleset_name=RuleSetName("if")
+        sections=(), function=lambda *args, **kw: (), ruleset_name=RuleSetName("if"), defaults={}
     )
     assert ts.apply(monkeypatch).inventory_parameters(hostname, plugin) == result
 

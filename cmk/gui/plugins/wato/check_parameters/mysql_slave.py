@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 def _item_spec_mysql_slave():
     return TextInput(
         title=_("Instance"),
-        help=_("Only needed if you have multiple MySQL Instances on one server"),
+        help=_("Only needed if you have multiple MySQL instances on one server"),
     )
 
 
@@ -49,6 +49,6 @@ rulespec_registry.register(
         item_spec=_item_spec_mysql_slave,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mysql_slave,
-        title=lambda: _("MySQL Slave"),
+        title=lambda: _("MySQL slave"),
     )
 )

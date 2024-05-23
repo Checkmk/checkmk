@@ -260,7 +260,7 @@ class ModeDiagnostics(WatoMode):
                                 "timeout",
                                 Integer(
                                     title=_(
-                                        "If exceeded, an Exception will appear. "
+                                        "If exceeded, an exception will appear. "
                                         "In extraordinary cases, consider calling "
                                         "Support Diagnostics from command line "
                                         "(see inline help)."

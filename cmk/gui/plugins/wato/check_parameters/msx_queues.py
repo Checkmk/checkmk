@@ -71,12 +71,12 @@ def _item_spec_msx_queues():
 
 def _parameter_valuespec_msx_queues() -> Dictionary:
     return Dictionary(
-        title=_("Set Levels"),
+        title=_("Set levels"),
         elements=[
             (
                 "levels",
                 Tuple(
-                    title=_("Maximum Number of E-Mails in Queue"),
+                    title=_("Maximum number of emails in queue"),
                     elements=[
                         Integer(title=_("Warning at"), unit=_("E-Mails")),
                         Integer(title=_("Critical at"), unit=_("E-Mails")),

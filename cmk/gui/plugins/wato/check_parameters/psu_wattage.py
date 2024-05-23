@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, Float, Percentage, TextInput, Tuple, V
 
 def _parameter_valuespec_psu_wattage() -> Dictionary:
     return Dictionary(
-        title=_("Levels for Power Supply Wattage"),
+        title=_("Levels for power supply wattage"),
         elements=[
             (
                 "levels_abs_upper",
@@ -82,7 +82,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_psu_wattage,
-        title=lambda: _("Power Supply Wattage"),
+        title=lambda: _("Power supply wattage"),
         item_spec=_item_spec,
     )
 )

@@ -146,19 +146,19 @@ metric_info["writing"] = {
 }
 
 metric_info["apply_finish_time"] = {
-    "title": _("Apply Finish Time"),
+    "title": _("Apply finish time"),
     "unit": "s",
     "color": "11/a",
 }
 
 metric_info["transport_lag"] = {
-    "title": _("Transport Lag"),
+    "title": _("Transport lag"),
     "unit": "s",
     "color": "16/a",
 }
 
 metric_info["apply_lag"] = {
-    "title": _("Apply Lag"),
+    "title": _("Apply lag"),
     "unit": "s",
     "color": "21/a",
 }
@@ -224,13 +224,13 @@ metric_info["availability"] = {
 # TODO: Metric names with preceeding numbers seems not to be capable
 # of adding scalars with graph_info (e.g. for horizontal warning levels)
 metric_info["5ghz_clients"] = {
-    "title": _("Client connects for 5 Ghz Band"),
+    "title": _("Client connects for 5 Ghz band"),
     "unit": "count",
     "color": "13/a",
 }
 
 metric_info["24ghz_clients"] = {
-    "title": _("Client connects for 2,4 Ghz Band"),
+    "title": _("Client connects for 2,4 Ghz band"),
     "unit": "count",
     "color": "14/a",
 }
@@ -374,7 +374,7 @@ metric_info["inactive_sessions"] = {
 }
 
 metric_info["session_rate"] = {
-    "title": _("Session Rate"),
+    "title": _("Session rate"),
     "unit": "1/s",
     "color": "#4080a0",
 }
@@ -398,7 +398,7 @@ metric_info["sync_latency"] = {
 }
 
 metric_info["relay_log_space"] = {
-    "title": _("Relay Log Size"),
+    "title": _("Relay log size"),
     "unit": "bytes",
     "color": "#ffb080",
 }
@@ -431,7 +431,7 @@ metric_info["wlan_physical_errors"] = {
 }
 
 metric_info["wlan_resets"] = {
-    "title": "WLAN Reset operations",
+    "title": "WLAN reset operations",
     "unit": "1/s",
     "color": "21/a",
 }
@@ -557,13 +557,13 @@ metric_info["channel_utilization"] = {
 }
 
 metric_info["channel_utilization_24ghz"] = {
-    "title": _("Channel utilization for 2,4GHz Band"),
+    "title": _("Channel utilization for 2,4GHz band"),
     "unit": "%",
     "color": "25/a",
 }
 
 metric_info["channel_utilization_5ghz"] = {
-    "title": _("Channel utilization for 5GHz Band"),
+    "title": _("Channel utilization for 5GHz band"),
     "unit": "%",
     "color": "26/a",
 }
@@ -707,49 +707,49 @@ metric_info["error_rate"] = {
 }
 
 metric_info["managed_object_count"] = {
-    "title": _("Managed Objects"),
+    "title": _("Managed objects"),
     "unit": "count",
     "color": "45/a",
 }
 
 metric_info["active_vpn_tunnels"] = {
-    "title": _("Active VPN Tunnels"),
+    "title": _("Active VPN tunnels"),
     "unit": "count",
     "color": "43/a",
 }
 
 metric_info["active_vpn_users"] = {
-    "title": _("Active VPN Users"),
+    "title": _("Active VPN users"),
     "unit": "count",
     "color": "23/a",
 }
 
 metric_info["active_vpn_websessions"] = {
-    "title": _("Active VPN Web Sessions"),
+    "title": _("Active VPN web sessions"),
     "unit": "count",
     "color": "33/a",
 }
 
 metric_info["current_users"] = {
-    "title": _("Current Users"),
+    "title": _("Current users"),
     "unit": "count",
     "color": "23/a",
 }
 
 metric_info["average_latency"] = {
-    "title": _("Average Latency"),
+    "title": _("Average latency"),
     "unit": "s",
     "color": "35/a",
 }
 
 metric_info["total_active_sessions"] = {
-    "title": _("Total Active Sessions"),
+    "title": _("Total active sessions"),
     "unit": "count",
     "color": "#888888",
 }
 
 metric_info["tcp_active_sessions"] = {
-    "title": _("Active TCP Sessions"),
+    "title": _("Active TCP sessions"),
     "unit": "count",
     "color": "#888800",
 }
@@ -761,54 +761,54 @@ metric_info["udp_active_sessions"] = {
 }
 
 metric_info["icmp_active_sessions"] = {
-    "title": _("Active ICMP Sessions"),
+    "title": _("Active ICMP sessions"),
     "unit": "count",
     "color": "#008888",
 }
 
 metric_info["packages_accepted"] = {
-    "title": _("Accepted Packages/s"),
+    "title": _("Accepted packages/s"),
     "unit": "1/s",
     "color": "#80ff40",
 }
 metric_info["packages_blocked"] = {
-    "title": _("Blocked Packages/s"),
+    "title": _("Blocked packages/s"),
     "unit": "1/s",
     "color": "14/a",
 }
 
 metric_info["packages_icmp_total"] = {
-    "title": _("ICMP Packages/s"),
+    "title": _("ICMP packages/s"),
     "unit": "count",
     "color": "21/a",
 }
 
 metric_info["sslproxy_active_sessions"] = {
-    "title": _("Active SSL Proxy sessions"),
+    "title": _("Active SSL proxy sessions"),
     "unit": "count",
     "color": "#11FF11",
 }
 
 metric_info["locks_per_batch"] = {
-    "title": _("Locks/Batch"),
+    "title": _("Locks/batch"),
     "unit": "",
     "color": "21/a",
 }
 
 metric_info["page_reads_sec"] = {
-    "title": _("Page Reads"),
+    "title": _("Page reads"),
     "unit": "1/s",
     "color": "33/b",
 }
 
 metric_info["page_writes_sec"] = {
-    "title": _("Page Writes"),
+    "title": _("Page writes"),
     "unit": "1/s",
     "color": "14/a",
 }
 
 metric_info["page_lookups_sec"] = {
-    "title": _("Page Lookups"),
+    "title": _("Page lookups"),
     "unit": "1/s",
     "color": "42/a",
 }
@@ -820,13 +820,13 @@ metric_info["failed_search_requests"] = {
 }
 
 metric_info["failed_location_requests"] = {
-    "title": _("WEB - Failed Get Locations Requests"),
+    "title": _("WEB - Failed get locations requests"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["failed_ad_requests"] = {
-    "title": _("WEB - Timed out Active Directory Requests"),
+    "title": _("WEB - Timed out Active Directory requests"),
     "unit": "1/s",
     "color": "42/a",
 }
@@ -844,19 +844,19 @@ metric_info["sip_message_processing_time"] = {
 }
 
 metric_info["asp_requests_rejected"] = {
-    "title": _("ASP Requests Rejected"),
+    "title": _("ASP requests rejected"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["failed_file_requests"] = {
-    "title": _("Failed File Requests"),
+    "title": _("Failed file requests"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["join_failures"] = {
-    "title": _("Join Launcher Service Failures"),
+    "title": _("Join Launcher service failures"),
     "unit": "count",
     "color": "42/a",
 }
@@ -868,25 +868,25 @@ metric_info["failed_validate_cert_calls"] = {
 }
 
 metric_info["sip_incoming_responses_dropped"] = {
-    "title": _("SIP - Incoming Responses Dropped"),
+    "title": _("SIP - Incoming responses dropped"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["sip_incoming_requests_dropped"] = {
-    "title": _("SIP - Incoming Requests Dropped"),
+    "title": _("SIP - Incoming requests dropped"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["usrv_queue_latency"] = {
-    "title": _("USrv - Queue Latency"),
+    "title": _("USrv - Queue latency"),
     "unit": "s",
     "color": "42/a",
 }
 
 metric_info["usrv_sproc_latency"] = {
-    "title": _("USrv - Sproc Latency"),
+    "title": _("USrv - Sproc latency"),
     "unit": "s",
     "color": "42/a",
 }
@@ -898,67 +898,67 @@ metric_info["usrv_throttled_requests"] = {
 }
 
 metric_info["sip_503_responses"] = {
-    "title": _("SIP - Local 503 Responses"),
+    "title": _("SIP - Local 503 responses"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["sip_incoming_messages_timed_out"] = {
-    "title": _("SIP - Incoming Messages Timed out"),
+    "title": _("SIP - Incoming messages timed out"),
     "unit": "count",
     "color": "42/a",
 }
 
 metric_info["caa_incomplete_calls"] = {
-    "title": _("CAA - Incomplete Calls"),
+    "title": _("CAA - Incomplete calls"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["usrv_create_conference_latency"] = {
-    "title": _("USrv - Create Conference Latency"),
+    "title": _("USrv - Create conference latency"),
     "unit": "s",
     "color": "42/a",
 }
 
 metric_info["usrv_allocation_latency"] = {
-    "title": _("USrv - Allocation Latency"),
+    "title": _("USrv - Allocation latency"),
     "unit": "s",
     "color": "42/a",
 }
 
 metric_info["sip_avg_holding_time_incoming_messages"] = {
-    "title": _("SIP - Average holding time For incoming messages"),
+    "title": _("SIP - Average holding time for incoming messages"),
     "unit": "s",
     "color": "42/a",
 }
 
 metric_info["sip_flow_controlled_connections"] = {
-    "title": _("SIP - Flow-controlled Connections"),
+    "title": _("SIP - Flow-controlled connections"),
     "unit": "count",
     "color": "42/a",
 }
 
 metric_info["sip_avg_outgoing_queue_delay"] = {
-    "title": _("SIP - Average Outgoing Queue Delay"),
+    "title": _("SIP - Average outgoing queue delay"),
     "unit": "s",
     "color": "42/a",
 }
 
 metric_info["sip_sends_timed_out"] = {
-    "title": _("SIP - Sends Timed-Out"),
+    "title": _("SIP - Sends timed out"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["sip_authentication_errors"] = {
-    "title": _("SIP - Authentication Errors"),
+    "title": _("SIP - Authentication errors"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["mediation_load_call_failure_index"] = {
-    "title": _("MediationServer - Load Call Failure Index"),
+    "title": _("MediationServer - Load call failure index"),
     "unit": "count",
     "color": "42/a",
 }
@@ -976,49 +976,49 @@ metric_info["mediation_failed_calls_because_of_gateway"] = {
 }
 
 metric_info["mediation_media_connectivity_failure"] = {
-    "title": _("Mediation Server - Media Connectivity Check Failure"),
+    "title": _("Mediation Server - Media connectivity check failure"),
     "unit": "count",
     "color": "42/a",
 }
 
 metric_info["avauth_failed_requests"] = {
-    "title": _("A/V Auth - Bad Requests Received"),
+    "title": _("A/V Auth - Bad requests received"),
     "unit": "count",
     "color": "42/a",
 }
 
 metric_info["edge_udp_failed_auth"] = {
-    "title": _("UDP Authentication failures"),
+    "title": _("UDP authentication failures"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["edge_tcp_failed_auth"] = {
-    "title": _("A/V Edge - TCP Authentication failures"),
+    "title": _("A/V Edge - TCP authentication failures"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["edge_udp_allocate_requests_exceeding_port_limit"] = {
-    "title": _("A/V Edge - UDP Allocate Requests Exceeding Port Limit"),
+    "title": _("A/V Edge - UDP allocate requests exceeding port limit"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["edge_tcp_allocate_requests_exceeding_port_limit"] = {
-    "title": _("A/V Edge - TCP Allocate Requests Exceeding Port Limit"),
+    "title": _("A/V Edge - TCP allocate requests exceeding port limit"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["edge_udp_packets_dropped"] = {
-    "title": _("A/V Edge - UDP Packets Dropped"),
+    "title": _("A/V Edge - UDP packets dropped"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["edge_tcp_packets_dropped"] = {
-    "title": _("A/V Edge - TCP Packets Dropped"),
+    "title": _("A/V Edge - TCP packets dropped"),
     "unit": "1/s",
     "color": "42/a",
 }
@@ -1042,7 +1042,7 @@ metric_info["icmp_packets_received"] = {
 }
 
 metric_info["dataproxy_connections_throttled"] = {
-    "title": _("DATAPROXY - Throttled Server Connections"),
+    "title": _("DATAPROXY - Throttled server connections"),
     "unit": "count",
     "color": "42/a",
 }
@@ -1060,7 +1060,7 @@ metric_info["xmpp_failed_inbound_streams"] = {
 }
 
 metric_info["web_requests_processing"] = {
-    "title": _("WEB - Requests in Processing"),
+    "title": _("WEB - Requests in processing"),
     "unit": "count",
     "color": "12/a",
 }
@@ -1192,7 +1192,7 @@ metric_info["avg_response_time"] = {
 }
 
 metric_info["remaining_reads"] = {
-    "title": _("Remaining Reads"),
+    "title": _("Remaining reads"),
     "unit": "count",
     "color": "42/a",
 }
@@ -1338,12 +1338,12 @@ def register_requests_metrics() -> None:
         ["11/a", "13/a", "15/a", "21/a", "23/a", "25/a", "31/a"],
     ):
         metric_info["%s_requests" % request] = {
-            "title": _("%s Requests") % request.upper(),
+            "title": _("%s requests") % request.upper(),
             "unit": "1/s",
             "color": color,
         }
         metric_info["%s_requests_perc" % request] = {
-            "title": _("Percentage %s Requests") % request.upper(),
+            "title": _("Percentage %s requests") % request.upper(),
             "unit": "%",
             "color": color,
         }
@@ -1709,7 +1709,7 @@ graph_info["packet_loss"] = {
 def register_hop_graphs():
     for idx in range(1, MAX_NUMBER_HOPS):
         graph_info["hop_%d_round_trip_average" % idx] = {
-            "title": _("Hop %d Round trip average") % idx,
+            "title": _("Hop %d round trip average") % idx,
             "metrics": [
                 ("hop_%d_rtmax" % idx, "line"),
                 ("hop_%d_rtmin" % idx, "line"),
@@ -1718,7 +1718,7 @@ def register_hop_graphs():
             ],
         }
         graph_info["hop_%d_packet_loss" % idx] = {
-            "title": _("Hop %d Packet loss") % idx,
+            "title": _("Hop %d packet loss") % idx,
             "metrics": [
                 ("hop_%d_pl" % idx, "area"),
             ],
@@ -1748,7 +1748,7 @@ def register_hop_response_graph() -> None:
 register_hop_response_graph()
 
 graph_info["palo_alto_sessions"] = {
-    "title": _("Palo Alto Sessions"),
+    "title": _("Palo Alto sessions"),
     "metrics": [
         ("tcp_active_sessions", "area"),
         ("udp_active_sessions", "stack"),
@@ -1758,7 +1758,7 @@ graph_info["palo_alto_sessions"] = {
 }
 
 graph_info["page_activity"] = {
-    "title": _("Page Activity"),
+    "title": _("Page activity"),
     "metrics": [
         ("page_reads_sec", "area"),
         ("page_writes_sec", "-area"),
@@ -1774,7 +1774,7 @@ graph_info["authentication_failures"] = {
 }
 
 graph_info["allocate_requests_exceeding_port_limit"] = {
-    "title": _("Allocate Requests Exceeding Port Limit"),
+    "title": _("Allocate requests exceeding port limit"),
     "metrics": [
         ("edge_udp_allocate_requests_exceeding_port_limit", "line"),
         ("edge_tcp_allocate_requests_exceeding_port_limit", "line"),
@@ -1782,7 +1782,7 @@ graph_info["allocate_requests_exceeding_port_limit"] = {
 }
 
 graph_info["packets_dropped"] = {
-    "title": _("Packets Dropped"),
+    "title": _("Packets dropped"),
     "metrics": [
         ("edge_udp_packets_dropped", "line"),
         ("edge_tcp_packets_dropped", "line"),
@@ -1890,7 +1890,7 @@ graph_info["nodes_by_type"] = {
     ],
 }
 graph_info["channel_utilization_24ghz"] = {
-    "title": _("Channel utilization for 2,4GHz Band"),
+    "title": _("Channel utilization for 2,4GHz band"),
     "metrics": [
         ("channel_utilization_24ghz", "area"),
     ],
@@ -1902,7 +1902,7 @@ graph_info["channel_utilization_24ghz"] = {
 }
 
 graph_info["channel_utilization_5ghz"] = {
-    "title": _("Channel utilization for 5GHz Band"),
+    "title": _("Channel utilization for 5GHz band"),
     "metrics": [
         ("channel_utilization_5ghz", "area"),
     ],

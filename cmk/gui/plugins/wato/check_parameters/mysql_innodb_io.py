@@ -35,7 +35,7 @@ def migrate_to_bytes(params: Mapping[str, Any]) -> Mapping[str, Any]:
 def _item_spec_mysql_innodb_io():
     return TextInput(
         title=_("Instance"),
-        help=_("Only needed if you have multiple MySQL Instances on one server"),
+        help=_("Only needed if you have multiple MySQL instances on one server"),
     )
 
 
@@ -91,6 +91,6 @@ rulespec_registry.register(
         item_spec=_item_spec_mysql_innodb_io,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mysql_innodb_io,
-        title=lambda: _("MySQL InnoDB Throughput"),
+        title=lambda: _("MySQL InnoDB throughput"),
     )
 )

@@ -31,7 +31,7 @@ def _validate_sub_path(value: str) -> None:
 def _formspec_jenkins() -> Dictionary:
     return Dictionary(
         title=Title("Jenkins connection"),
-        help_text=Help("Requests data from a jenkins instance."),
+        help_text=Help("Requests data from a Jenkins instance."),
         elements={
             "instance": DictElement(
                 parameter_form=String(

@@ -345,7 +345,7 @@ class ConfigVariableEnableCommunityTranslations(ConfigVariable):
             title=_("Community translated languages (not supported)"),
             label=_("Community translated languages"),
             help=_(
-                'Show/Hide community translated languages in the "Language" dropdown (User > Edit '
+                'Show/hide community translated languages in the "Language" dropdown (User > Edit '
                 "profile). Note that these translations are contributed by the Checkmk community "
                 "and thus no liability is assumed for their validity.<br>"
                 "If this setting is turned from 'on' to 'off' while a user has set a community "
@@ -6314,7 +6314,7 @@ def _valuespec_piggybacked_host_files():
     )
 
     return Dictionary(
-        title=_("Processing of Piggybacked Host Data"),
+        title=_("Processing of piggybacked host data"),
         optional_keys=[],
         elements=[
             ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),

@@ -25,7 +25,7 @@ def _parameter_valuespec_esx_vsphere_datastores():
             (
                 "provisioning_levels",
                 Tuple(
-                    title=_("Provisioning Levels"),
+                    title=_("Provisioning levels"),
                     help=_(
                         # xgettext: no-python-format
                         "A provisioning of more than 100% is called "

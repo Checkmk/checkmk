@@ -18,7 +18,7 @@ def _parameter_valuespec_oracle_rman():
             (
                 "levels",
                 Tuple(
-                    title=_("Maximum Age for RMAN backups"),
+                    title=_("Maximum age for RMAN backups"),
                     elements=[
                         Age(title=_("warning if older than"), default_value=1800),
                         Age(title=_("critical if older than"), default_value=3600),
@@ -36,6 +36,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_rman,
-        title=lambda: _("Oracle RMAN Backups"),
+        title=lambda: _("Oracle RMAN backups"),
     )
 )

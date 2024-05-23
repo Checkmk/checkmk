@@ -41,6 +41,6 @@ rulespec_registry.register(
         check_group_name="netapp_instance",
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_netapp_instance,
-        title=lambda: _("Netapp Instance State"),
+        title=lambda: _("Netapp instance state"),
     )
 )

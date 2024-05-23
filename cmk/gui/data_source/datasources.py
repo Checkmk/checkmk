@@ -291,7 +291,7 @@ class DataSourceComments(DataSourceLivestatus):
 
     @property
     def title(self) -> str:
-        return _("Host- and Servicecomments")
+        return _("Host and service comments")
 
     @property
     def infos(self) -> SingleInfos:
@@ -313,7 +313,7 @@ class DataSourceDowntimes(DataSourceLivestatus):
 
     @property
     def title(self) -> str:
-        return _("Scheduled Downtimes")
+        return _("Scheduled downtimes")
 
     @property
     def infos(self) -> SingleInfos:
@@ -367,7 +367,7 @@ class DataSourceLogHostAndServiceEvents(LogDataSource):
 
     @property
     def title(self) -> str:
-        return _("Host and Service Events")
+        return _("Host and service events")
 
     @property
     def infos(self) -> SingleInfos:
@@ -385,7 +385,7 @@ class DataSourceLogHostEvents(LogDataSource):
 
     @property
     def title(self) -> str:
-        return _("Host Events")
+        return _("Host events")
 
     @property
     def infos(self) -> SingleInfos:

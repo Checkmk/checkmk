@@ -659,7 +659,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.checkmk-agent.spooldirectory": {"title": _l("Spool directory")},
         ".software.applications.checkmk-agent.pluginsdirectory": {"title": _l("Plug-ins directory")},
         ".software.applications.checkmk-agent.localdirectory": {"title": _l("Local directory")},
-        ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent Controller")},
+        ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent controller")},
         ".software.applications.checkmk-agent.plugins:": {
             "title": _l("Agent plug-ins"),
             "keyorder": ["name", "version", "cache_interval"],

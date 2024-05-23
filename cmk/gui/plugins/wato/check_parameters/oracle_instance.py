@@ -34,14 +34,14 @@ def _parameter_valuespec_oracle_instance() -> Dictionary:
                 "forcelogging",
                 MonitoringState(
                     default_value=0,
-                    title=_("State in case of Force Logging is enabled: "),
+                    title=_("State in case of force logging is enabled: "),
                 ),
             ),
             (
                 "noforcelogging",
                 MonitoringState(
                     default_value=1,
-                    title=_("State in case of Force Logging is disabled: "),
+                    title=_("State in case of force logging is disabled: "),
                 ),
             ),
             (
@@ -55,7 +55,7 @@ def _parameter_valuespec_oracle_instance() -> Dictionary:
                 "primarynotopen",
                 MonitoringState(
                     default_value=2,
-                    title=_("State in case of Database is PRIMARY and not OPEN: "),
+                    title=_("State in case of database is PRIMARY and not OPEN: "),
                 ),
             ),
         ],
@@ -69,6 +69,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_instance,
-        title=lambda: _("Oracle Instance"),
+        title=lambda: _("Oracle instance"),
     )
 )

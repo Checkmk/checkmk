@@ -115,7 +115,7 @@ class GUIViewRenderer(ABCViewRenderer):
         if transactions.transaction_valid() and html.do_actions():
             html.browser_reload = 0.0
 
-        # Show/Hide the header with page title, MK logo, etc.
+        # Show/hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
             html.body_start(view_title(view_spec, self.view.context))
 

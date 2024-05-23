@@ -104,6 +104,7 @@ class LayerViolationChecker(BaseChecker):
         self._linter = linter
 
     def open(self) -> None:
+        # TODO: Check how often this is called! Cache, if necessary!
         if filename := self._linter.config.layering_definition:
             self._is_import_ok = load_layering_configuration(Path(filename))
 

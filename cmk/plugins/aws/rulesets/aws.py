@@ -229,24 +229,26 @@ def _formspec_aws_piggyback_naming_convention() -> dict[str, DictElement]:
 
 
 def _migrate_access_vs_to_fs(values: object) -> None:
-    assert isinstance(values, dict)
+    if not isinstance(values, dict):
+        raise TypeError(values)
     if "global_service_region" in values:
         values["global_service_region"] = values["global_service_region"].replace("-", "_")
     if "role_arn_id" in values:
         if isinstance(values["role_arn_id"], tuple):
             iam_value, external_id_value = values.pop("role_arn_id")
             values["role_arn_id"] = {"role_arn": iam_value, "external_id": external_id_value}
-        assert not isinstance(values["role_arn_id"], tuple)
 
 
 def _migrate_global_services_vs_to_fs(values: object) -> None:
-    assert isinstance(values, dict)
+    if not isinstance(values, dict):
+        raise TypeError(values)
     values["ce"] = ("all", {}) if "ce" in values else ("none", None)
     migrate_edition_specific_global_services_vs_to_fs(values)
 
 
 def _migrate_regional_services_vs_to_fs(values: object) -> None:
-    assert isinstance(values, dict)
+    if not isinstance(values, dict):
+        raise TypeError(values)
     if "lambda" in values:
         values["aws_lambda"] = values.pop("lambda")
 
@@ -264,7 +266,8 @@ def _migrate_regional_services_vs_to_fs(values: object) -> None:
 
 
 def _convert_regions(values: object) -> list[str]:
-    assert isinstance(values, list)
+    if not isinstance(values, list):
+        raise TypeError(values)
     return [region.replace("-", "_") for region in values]
 
 
@@ -292,7 +295,8 @@ def _pre_24_to_formspec_migration(values: dict) -> dict[str, object]:
 
 
 def _migrate(values: object) -> dict[str, object]:
-    assert isinstance(values, dict)
+    if not isinstance(values, dict):
+        raise TypeError(values)
     _pre_24_to_formspec_migration(values)
     handle_edition_switch(values)
     return values

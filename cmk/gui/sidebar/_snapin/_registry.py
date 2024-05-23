@@ -76,7 +76,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
             # typing? Probably not in the current state of affairs where things
             # which should be instances are classes... :-/
             if not issubclass(base_snapin_type, SidebarSnapin):
-                raise ValueError("invalid snapin type %r" % base_snapin_type)
+                raise ValueError("invalid snap-in type %r" % base_snapin_type)
 
             if not issubclass(base_snapin_type, CustomizableSidebarSnapin):
                 continue

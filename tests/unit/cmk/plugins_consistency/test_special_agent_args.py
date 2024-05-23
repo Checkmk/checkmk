@@ -110,7 +110,6 @@ UNMIGRATED = {
     "allnet_ip_sensoric",
     "appdynamics",
     "aws",
-    "aws_status",
     "azure",
     "couchbase",
     "ddn_s2a",

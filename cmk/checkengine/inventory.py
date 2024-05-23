@@ -87,7 +87,6 @@ class InventoryPlugin:
     sections: Sequence[ParsedSectionName]
     function: Callable[..., Iterable[Attributes | TableRow]]
     ruleset_name: RuleSetName | None
-    defaults: Mapping[str, object]
 
 
 @dataclass(frozen=True)

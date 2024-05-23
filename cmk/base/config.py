@@ -2542,16 +2542,12 @@ class ConfigCache:
     def inventory_parameters(
         self, host_name: HostName, plugin: InventoryPlugin
     ) -> Mapping[str, object]:
-        return (
-            plugin.defaults
-            if plugin.ruleset_name is None
-            else {
-                **plugin.defaults,
-                **self.ruleset_matcher.get_host_merged_dict(
-                    host_name,
-                    inv_parameters.get(str(plugin.ruleset_name), []),
-                ),
-            }
+        if plugin.ruleset_name is None:
+            raise ValueError(plugin)
+
+        default: Sequence[RuleSpec[Mapping[str, object]]] = []
+        return self.ruleset_matcher.get_host_merged_dict(
+            host_name, inv_parameters.get(str(plugin.ruleset_name), default)
         )
 
     def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:

@@ -45,11 +45,14 @@ agent_section_lnx_sysctl = AgentSection(
 
 
 def inventory_lnx_sysctl(params: Mapping[str, Sequence[str]], section: Section) -> InventoryResult:
-    include_patterns = params["include_patterns"]
+    # We have 'include_patterns' as default keys, yet we get a key
+    # error in an integration test if we don't use `get` here.
+    # Looks like we completely ignore all inventory plugin default parameters oO
+    include_patterns = params.get("include_patterns", [])
     if not include_patterns:
         return
 
-    exclude_patterns = params["exclude_patterns"]
+    exclude_patterns = params.get("exclude_patterns", [])
 
     for name, values in section.items():
         if _include_parameter(

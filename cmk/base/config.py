@@ -3339,13 +3339,12 @@ class ConfigCache:
         self, host_name: HostName, plugin: PInventoryPlugin
     ) -> dict[str, object]:
         if plugin.inventory_ruleset_name is None:
-            return {**plugin.inventory_default_parameters}
-        return {
-            **plugin.inventory_default_parameters,
-            **self.host_extra_conf_merged(
-                host_name, inv_parameters.get(str(plugin.inventory_ruleset_name), [])
-            ),
-        }
+            raise ValueError(plugin)
+
+        default: Sequence[RuleSpec[object]] = []
+        return self.host_extra_conf_merged(
+            host_name, inv_parameters.get(str(plugin.inventory_ruleset_name), default)
+        )
 
     def custom_checks(self, host_name: HostName) -> list[dict]:
         """Return the free form configured custom checks without formalization"""

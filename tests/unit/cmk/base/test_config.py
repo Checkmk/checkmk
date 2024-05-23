@@ -47,7 +47,6 @@ class TestInventoryPlugin:
     sections: Sequence[ParsedSectionName]
     inventory_function: Callable[..., Iterable[PInventoryResult]]
     inventory_ruleset_name: RuleSetName | None
-    inventory_default_parameters: Mapping[str, object]
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -1038,7 +1037,6 @@ def test_host_config_inventory_parameters(
         sections=[],
         inventory_function=lambda *_args: (),
         inventory_ruleset_name=RuleSetName("if"),
-        inventory_default_parameters={},
     )
     assert ts.apply(monkeypatch).inventory_parameters(hostname, plugin) == result
 

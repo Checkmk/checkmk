@@ -46,11 +46,11 @@ register.agent_section(
 
 
 def inventory_lnx_sysctl(params: Mapping[str, Sequence[str]], section: Section) -> InventoryResult:
-    include_patterns = params["include_patterns"]
+    include_patterns = params.get("include_patterns")
     if not include_patterns:
         return
 
-    exclude_patterns = params["exclude_patterns"]
+    exclude_patterns: Sequence[str] = params.get("exclude_patterns", [])
 
     for name, values in section.items():
         if _include_parameter(
@@ -83,9 +83,6 @@ def _include_parameter(
 register.inventory_plugin(
     name="lnx_sysctl",
     inventory_function=inventory_lnx_sysctl,
-    inventory_default_parameters={
-        "include_patterns": [],
-        "exclude_patterns": [],
-    },
+    inventory_default_parameters={},
     inventory_ruleset_name="lnx_sysctl",
 )

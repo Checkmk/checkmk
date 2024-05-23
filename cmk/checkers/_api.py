@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Callable, Generator, Iterable, Mapping, Sequence, Set
+from collections.abc import Callable, Generator, Iterable, Sequence, Set
 from functools import partial
 from typing import Generic, Literal, NamedTuple, Protocol
 
@@ -149,10 +149,6 @@ class PInventoryPlugin(Protocol):
     def inventory_ruleset_name(self) -> RuleSetName | None:
         # Only used with the config.  Should we try to get rid
         # of this attribute?
-        ...
-
-    @property
-    def inventory_default_parameters(self) -> Mapping[str, object]:
         ...
 
 

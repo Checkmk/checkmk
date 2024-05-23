@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cc9fbe1b6ac2533f744f3982d7e4ec8e363ed880e2365e27e473e2897fb2b01d"
+            "sha256": "744e42dab59662ef194939f2e2db1ef9a1e21c9381f27ae3f85f24fab7e3b1cd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -742,12 +742,12 @@
         },
         "feedparser": {
             "hashes": [
-                "sha256:0be7ee7b395572b19ebeb1d6aafb0028dee11169f1c934e0ed67d54992f4ad45",
-                "sha256:c9d0407b64c6f2a065d0ebb292c2b35c01050cc0dc33757461aaabdc4c4184d5"
+                "sha256:27da485f4637ce7163cdeab13a80312b93b7d0c1b775bef4a47629a3110bca51",
+                "sha256:79c257d526d13b944e965f6095700587f27388e50ea16fd245babe4dfae7024f"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.6'",
-            "version": "==6.0.11"
+            "version": "==6.0.10"
         },
         "fido2": {
             "hashes": [

@@ -11,8 +11,8 @@ from typing import Any, cast, Literal
 from typing_extensions import TypedDict
 
 from cmk.utils.notify_types import (
+    AlwaysBulkParameters,
     BuiltInPluginNames,
-    BulkOutsideTimePeriodType,
     CaseState,
     CaseStateStr,
     ConditionEventConsoleAlertsType,
@@ -25,6 +25,8 @@ from cmk.utils.notify_types import (
     IlertAPIKey,
     IncidentState,
     IncidentStateStr,
+    is_always_bulk,
+    is_timeperiod_bulk,
     MatchRegex,
     MgmntPriorityType,
     MgmntUrgencyType,
@@ -45,6 +47,7 @@ from cmk.utils.notify_types import (
     SysLogFacilityStrType,
     SyslogPriorityIntType,
     SysLogPriorityStrType,
+    TimeperiodBulkParameters,
     URLPrefix,
     WebHookUrl,
 )
@@ -1797,7 +1800,7 @@ class BulkOutsideTimePeriod:
     time_horizon: int
 
     @classmethod
-    def from_mk_file_format(cls, data: BulkOutsideTimePeriodType | None) -> BulkOutsideTimePeriod:
+    def from_mk_file_format(cls, data: AlwaysBulkParameters | None) -> BulkOutsideTimePeriod:
         if data is None:
             return BulkOutsideTimePeriod.disabled()
 
@@ -1806,10 +1809,10 @@ class BulkOutsideTimePeriod:
             subject_for_bulk_notifications=CheckboxWithStrValue.from_mk_file_format(
                 data.get("bulk_subject")
             ),
-            max_bulk_size=data.get("count", 0),
-            notification_bulks_based_on=data.get("groupby", []),
-            notification_bulks_based_on_custom_macros=data.get("groupby_custom", []),
-            time_horizon=data.get("interval", 0),
+            max_bulk_size=data["count"],
+            notification_bulks_based_on=data["groupby"],
+            notification_bulks_based_on_custom_macros=data["groupby_custom"],
+            time_horizon=data["interval"],
         )
 
     @classmethod
@@ -1844,15 +1847,17 @@ class BulkOutsideTimePeriod:
             }
         return r
 
-    def to_mk_file_format(self) -> BulkOutsideTimePeriodType:
-        r = {
-            "count": self.max_bulk_size,
-            "groupby": self.notification_bulks_based_on,
-            "groupby_custom": self.notification_bulks_based_on_custom_macros,
-            "interval": self.time_horizon,
-            "bulk_subject": self.subject_for_bulk_notifications.to_mk_file_format(),
-        }
-        return cast(BulkOutsideTimePeriodType, {k: v for k, v in r.items() if v is not None})
+    def to_mk_file_format(self) -> AlwaysBulkParameters:
+        r = AlwaysBulkParameters(
+            count=self.max_bulk_size,
+            groupby=self.notification_bulks_based_on,
+            groupby_custom=self.notification_bulks_based_on_custom_macros,
+            interval=self.time_horizon,
+        )
+        if (bulk_subject := self.subject_for_bulk_notifications.to_mk_file_format()) is not None:
+            r["bulk_subject"] = bulk_subject
+
+        return r
 
     @classmethod
     def disabled(cls):
@@ -1914,7 +1919,7 @@ class CheckboxNotificationBulking:
 
         bulk: NotificationBulkingAlwaysParams | NotificationBulkingTimeoutParams
 
-        if when_to_bulk == "always":
+        if is_always_bulk(bulk_params):
             bulk = NotificationBulkingAlwaysParams(
                 subject_for_bulk_notifications=subject_for_bulk_notifications,
                 max_bulk_size=bulk_params["count"],
@@ -1922,7 +1927,7 @@ class CheckboxNotificationBulking:
                 notification_bulks_based_on_custom_macros=bulk_params["groupby_custom"],
                 time_horizon=bulk_params["interval"],
             )
-        elif when_to_bulk == "timeperiod":
+        elif is_timeperiod_bulk(bulk_params):
             bulk = NotificationBulkingTimeoutParams(
                 time_period=bulk_params["timeperiod"],
                 subject_for_bulk_notifications=subject_for_bulk_notifications,
@@ -1990,22 +1995,26 @@ class CheckboxNotificationBulking:
             "count": self.bulk.max_bulk_size,
             "groupby": self.bulk.notification_bulks_based_on,
             "groupby_custom": self.bulk.notification_bulks_based_on_custom_macros,
-            "bulk_subject": self.bulk.subject_for_bulk_notifications.to_mk_file_format(),
         }
+
+        if (
+            bulk_subject := self.bulk.subject_for_bulk_notifications.to_mk_file_format()
+        ) is not None:
+            r["bulk_subject"] = bulk_subject
 
         if isinstance(self.bulk, NotificationBulkingAlwaysParams):
             r["interval"] = self.bulk.time_horizon
+            always_bulk_params = cast(AlwaysBulkParameters, r)
+            return ("always", always_bulk_params)
 
-        elif isinstance(self.bulk, NotificationBulkingTimeoutParams):
-            r.update(
-                {
-                    "timeperiod": self.bulk.time_period,
-                    "bulk_outside": self.bulk.bulk_outside_timeperiod.to_mk_file_format(),
-                }
-            )
-
-        nbt: NotifyBulkType = (self.when_to_bulk, {k: v for k, v in r.items() if v is not None})
-        return nbt
+        r.update(
+            {
+                "timeperiod": self.bulk.time_period,
+                "bulk_outside": self.bulk.bulk_outside_timeperiod.to_mk_file_format(),
+            }
+        )
+        timeperiod_bulk_params = cast(TimeperiodBulkParameters, r)
+        return ("timeperiod", timeperiod_bulk_params)
 
 
 # ----------------------------------------------------------------

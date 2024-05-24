@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Literal, NewType, NotRequired, Required, TypedDict
+from typing import Any, Literal, NewType, NotRequired, Required, TypedDict, TypeGuard
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.timeperiod import TimeperiodName
@@ -42,11 +42,50 @@ ContactName = str
 HandlerName = str
 HandlerParameters = dict[str, Any]
 
+GroupBy = Literal[
+    "folder",
+    "host",
+    "service",
+    "sl",
+    "check_type",
+    "state",
+    "ec_comment",
+    "ec_contact",
+]
+
+
+class BulkBaseParameters(TypedDict):
+    count: int
+    groupby: list[GroupBy]
+    groupby_custom: list[str]
+    bulk_subject: NotRequired[str]
+
+
+class AlwaysBulkParameters(BulkBaseParameters):
+    interval: int
+
+
+class TimeperiodBulkParameters(BulkBaseParameters):
+    timeperiod: str
+    bulk_outside: NotRequired[AlwaysBulkParameters]
+
+
 NotifyPluginParamsList = list[str]
 NotifyPluginParamsDict = dict[str, Any]  # TODO: Improve this
 NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
-NotifyBulkParameters = dict[str, Any]  # TODO: Improve this
-NotifyBulkType = tuple[Literal["always", "timeperiod"], NotifyBulkParameters]
+NotifyBulkParameters = AlwaysBulkParameters | TimeperiodBulkParameters
+NotifyBulkType = (
+    tuple[Literal["always"], AlwaysBulkParameters]
+    | tuple[Literal["timeperiod"], TimeperiodBulkParameters]
+)
+
+
+def is_always_bulk(bulk_params: NotifyBulkParameters) -> TypeGuard[AlwaysBulkParameters]:
+    return "interval" in bulk_params
+
+
+def is_timeperiod_bulk(bulk_params: NotifyBulkParameters) -> TypeGuard[TimeperiodBulkParameters]:
+    return "timeperiod" in bulk_params
 
 
 class PluginOptions(StrEnum):

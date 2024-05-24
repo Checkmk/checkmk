@@ -16,7 +16,7 @@ from livestatus import LivestatusResponse
 
 import cmk.utils.store as store
 from cmk.utils.notify import NotificationContext
-from cmk.utils.notify_types import EventRule, NotifyAnalysisInfo
+from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.utils.version import edition, Edition
 
@@ -1249,7 +1249,10 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Bulking"))
                 if bulk:
                     html.write_text(_("Time horizon") + ": ")
-                    html.write_text(Age().value_to_html(bulk["interval"]))
+                    if is_always_bulk(bulk):
+                        html.write_text(Age().value_to_html(bulk["interval"]))
+                    else:
+                        html.write_text(Age().value_to_html(0))
                     html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
                     html.write_text(", %s " % (_("group by")))
                     html.write_text(self._vs_notification_bulkby().value_to_html(bulk["groupby"]))

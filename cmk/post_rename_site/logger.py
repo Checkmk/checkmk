@@ -11,12 +11,10 @@ logger = getLogger("cmk.post_rename_site")
 
 
 def setup_logging(*, verbose: bool) -> None:
-    level = log.verbosity_to_log_level(verbose)
-
+    # Huh? Implicit conversion from bool to int, technically correct, but weird.
     log.setup_console_logging()
-    log.logger.setLevel(level)
-
-    logger.setLevel(level)
+    log.logger.setLevel(log.verbosity_to_log_level(verbose))
+    logger.setLevel(log.logger.level)
 
     # TODO: Fix this cruel hack caused by our funny mix of GUI + console
     # stuff. Currently, we just move the console handler to the top, so

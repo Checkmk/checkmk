@@ -10,8 +10,7 @@ import cmk.utils.log as log
 logger = getLogger("cmk.post_rename_site")
 
 
-def setup_logging(*, verbose: bool) -> None:
-    # Huh? Implicit conversion from bool to int, technically correct, but weird.
+def setup_logging(*, verbose: int) -> None:
     log.setup_console_logging()
     log.logger.setLevel(log.verbosity_to_log_level(verbose))
     logger.setLevel(log.logger.level)

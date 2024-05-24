@@ -10,7 +10,6 @@ import inspect
 import json
 import logging
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -1163,9 +1162,6 @@ class Site:
             crash = json.loads(self.read_file(crash_file))
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
-            if re.search("list index out of range", crash_detail):
-                logger.warning("Ignored crash report due to CMK-17293!")
-                continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
                 See {crash_file} for more details."""

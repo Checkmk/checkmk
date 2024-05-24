@@ -61,18 +61,14 @@ def test_cleanup_piggyback_files() -> None:
 
 
 def test_get_piggyback_raw_data_no_data() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
-    ]
-    assert not piggyback.get_piggyback_raw_data(HostName("no-host"), time_settings)
+    assert not piggyback.get_piggyback_raw_data(HostName("no-host"))
 
 
 def _get_only_raw_data_element(
     host_name: HostName,
-    time_setting: piggyback.PiggybackTimeSettings,
 ) -> piggyback.PiggybackRawDataInfo:
     with time_machine.travel(_FREEZE_DATETIME):
-        raw_data_sequence = piggyback.get_piggyback_raw_data(host_name, time_setting)
+        raw_data_sequence = piggyback.get_piggyback_raw_data(host_name)
     assert len(raw_data_sequence) == 1
     return raw_data_sequence[0]
 
@@ -143,98 +139,38 @@ def _get_only_raw_data_element(
 )
 @pytest.mark.usefixtures("setup_files")
 def test_get_piggyback_raw_data_successful(time_settings: piggyback.PiggybackTimeSettings) -> None:
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
+    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME)
 
     assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.message == "Successfully processed from source 'source1'"
-    assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
 
 @pytest.mark.usefixtures("setup_files")
 def test_get_piggyback_raw_data_not_updated() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
-    ]
-
     # Fake age the test-host piggyback file
     os.utime(
         str(cmk.utils.paths.piggyback_dir / str(_TEST_HOST_NAME) / "source1"),
         (_REF_TIME - 10, _REF_TIME - 10),
     )
 
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
+    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME)
 
     assert raw_data.info.source == HostName("source1")
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.message == "Piggyback data not updated by source 'source1'"
-    assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
 
 @pytest.mark.usefixtures("setup_files")
 def test_get_piggyback_raw_data_not_sending() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
-    ]
-
     source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
     if source_status_file.exists():
         os.remove(str(source_status_file))
 
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
+    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME)
 
     assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.message == "Piggyback data not updated by source 'source1'"
-    assert raw_data.info.status == 0
-    assert raw_data.raw_data == _PAYLOAD
-
-
-@pytest.mark.usefixtures("setup_files")
-def test_get_piggyback_raw_data_too_old_global() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [(None, "max_cache_age", -1)]
-
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
-
-    assert raw_data.info.source == "source1"
-    assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert "too old" in raw_data.info.message.lower()
-    assert raw_data.info.status == 0
-    assert raw_data.raw_data == _PAYLOAD
-
-
-@pytest.mark.usefixtures("setup_files")
-def test_get_piggyback_raw_data_too_old_source() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-        ("source1", "max_cache_age", -1),
-    ]
-
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
-
-    assert raw_data.info.source == "source1"
-    assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert "too old" in raw_data.info.message.lower()
-    assert raw_data.info.status == 0
-    assert raw_data.raw_data == _PAYLOAD
-
-
-@pytest.mark.usefixtures("setup_files")
-def test_get_piggyback_raw_data_too_old_piggybacked_host() -> None:
-    time_settings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-        ("source1", "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-        ("test-host", "max_cache_age", -1),
-    ]
-
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
-
-    assert raw_data.info.source == "source1"
-    assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert "too old" in raw_data.info.message.lower()
-    assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
 
@@ -248,10 +184,6 @@ def test_remove_source_status_file() -> None:
 
 
 def test_store_piggyback_raw_data_new_host() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-    ]
-
     piggyback.store_piggyback_raw_data(
         HostName("source2"),
         {
@@ -262,20 +194,15 @@ def test_store_piggyback_raw_data_new_host() -> None:
         },
     )
 
-    raw_data = _get_only_raw_data_element(HostName("pig"), time_settings)
+    raw_data = _get_only_raw_data_element(HostName("pig"))
 
     assert raw_data.info.source == "source2"
     assert raw_data.info.file_path.parts[-2:] == ("pig", "source2")
-    assert raw_data.info.message.startswith("Successfully processed from source 'source2'")
-    assert raw_data.info.status == 0
     assert raw_data.raw_data == b"<<<check_mk>>>\nlulu\n"
 
 
 @pytest.mark.usefixtures("setup_files")
 def test_store_piggyback_raw_data_second_source() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-    ]
 
     with time_machine.travel(_FREEZE_DATETIME):
         piggyback.store_piggyback_raw_data(
@@ -289,21 +216,16 @@ def test_store_piggyback_raw_data_second_source() -> None:
         )
 
         raw_data_map = {
-            rd.info.source: rd
-            for rd in piggyback.get_piggyback_raw_data(_TEST_HOST_NAME, time_settings)
+            rd.info.source: rd for rd in piggyback.get_piggyback_raw_data(_TEST_HOST_NAME)
         }
     assert len(raw_data_map) == 2
 
     raw_data1, raw_data2 = raw_data_map[HostName("source1")], raw_data_map[HostName("source2")]
 
     assert raw_data1.info.file_path.parts[-2:] == (str(_TEST_HOST_NAME), "source1")
-    assert raw_data1.info.message.startswith("Successfully processed from source 'source1'")
-    assert raw_data1.info.status == 0
     assert raw_data1.raw_data == _PAYLOAD
 
     assert raw_data2.info.file_path.parts[-2:] == (str(_TEST_HOST_NAME), "source2")
-    assert raw_data2.info.message.startswith("Successfully processed from source 'source2'")
-    assert raw_data2.info.status == 0
     assert raw_data2.raw_data == b"<<<check_mk>>>\nlulu\n"
 
 
@@ -363,9 +285,7 @@ def test_get_source_and_piggyback_hosts() -> None:
     )
 
     with time_machine.travel(_FREEZE_DATETIME):
-        piggybacked = piggyback.get_piggybacked_host_with_sources(
-            [(None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)]
-        )
+        piggybacked = piggyback.get_piggybacked_host_with_sources()
 
     pprint.pprint(piggybacked)  # pytest won't show it :-(
     assert piggybacked == {
@@ -375,16 +295,12 @@ def test_get_source_and_piggyback_hosts() -> None:
                 file_path=cmk.utils.paths.piggyback_dir / "test-host" / "source1",
                 last_update=int(_REF_TIME - 10),
                 last_contact=int(_REF_TIME),
-                message="Piggyback data not updated by source 'source1'",
-                status=0,
             ),
             piggyback.PiggybackFileInfo(
                 source=HostAddress("source2"),
                 file_path=cmk.utils.paths.piggyback_dir / "test-host" / "source2",
                 last_update=int(_REF_TIME),
                 last_contact=int(_REF_TIME),
-                message="Successfully processed from source 'source2'",
-                status=0,
             ),
         ],
         HostName("test-host2"): [
@@ -393,185 +309,15 @@ def test_get_source_and_piggyback_hosts() -> None:
                 file_path=cmk.utils.paths.piggyback_dir / "test-host2" / "source1",
                 last_update=int(_REF_TIME),
                 last_contact=int(_REF_TIME),
-                message="Successfully processed from source 'source1'",
-                status=0,
             ),
             piggyback.PiggybackFileInfo(
                 source=HostAddress("source2"),
                 file_path=cmk.utils.paths.piggyback_dir / "test-host2" / "source2",
                 last_update=int(_REF_TIME),
                 last_contact=int(_REF_TIME),
-                message="Successfully processed from source 'source2'",
-                status=0,
             ),
         ],
     }
-
-
-@pytest.mark.parametrize(
-    "time_settings, successfully_processed, reason, reason_status",
-    [
-        (
-            [
-                (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-                ("source1", "validity_period", 1000),
-            ],
-            True,
-            "Piggyback data not updated by source 'source1' (still valid",
-            0,
-        ),
-        (
-            [
-                (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-                ("source1", "validity_period", 1000),
-                ("source1", "validity_state", 1),
-            ],
-            True,
-            "Piggyback data not updated by source 'source1' (still valid",
-            1,
-        ),
-    ],
-)
-@pytest.mark.usefixtures("setup_files")
-def test_get_piggyback_raw_data_source_validity(
-    time_settings: piggyback.PiggybackTimeSettings,
-    successfully_processed: bool,
-    reason: str,
-    reason_status: int,
-) -> None:
-    source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
-    if source_status_file.exists():
-        os.remove(str(source_status_file))
-
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
-
-    assert raw_data.info.source == "source1"
-    assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.message.startswith(reason)
-    assert raw_data.info.status == reason_status
-    assert raw_data.raw_data == _PAYLOAD
-
-
-@pytest.mark.parametrize(
-    "time_settings, successfully_processed, reason, reason_status",
-    [
-        (
-            [
-                (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-                ("source1", "validity_period", -1),
-            ],
-            False,
-            "Piggyback data not updated by source 'source1'",
-            0,
-        ),
-    ],
-)
-@pytest.mark.usefixtures("setup_files")
-def test_get_piggyback_raw_data_source_validity2(
-    time_settings: piggyback.PiggybackTimeSettings,
-    successfully_processed: bool,
-    reason: str,
-    reason_status: int,
-) -> None:
-    source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
-    if source_status_file.exists():
-        os.remove(str(source_status_file))
-
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
-
-    assert raw_data.info.source == "source1"
-    assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.message == reason
-    assert raw_data.info.status == reason_status
-    assert raw_data.raw_data == _PAYLOAD
-
-
-@pytest.mark.parametrize(
-    "time_settings, successfully_processed, reason, reason_status",
-    [
-        (
-            [
-                (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-                ("source1", "validity_period", -1),
-                ("test-host", "validity_period", 1000),
-            ],
-            True,
-            "Piggyback data not updated by source 'source1' (still valid",
-            0,
-        ),
-        (
-            [
-                (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-                ("source1", "validity_period", -1),
-                ("source1", "validity_state", 2),
-                ("test-host", "validity_period", 1000),
-                ("test-host", "validity_state", 1),
-            ],
-            True,
-            "Piggyback data not updated by source 'source1' (still valid",
-            1,
-        ),
-    ],
-)
-@pytest.mark.usefixtures("setup_files")
-def test_get_piggyback_raw_data_piggybacked_host_validity(
-    time_settings: piggyback.PiggybackTimeSettings,
-    successfully_processed: bool,
-    reason: str,
-    reason_status: int,
-) -> None:
-    # Fake age the test-host piggyback file
-    os.utime(
-        str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
-        (_REF_TIME - 10, _REF_TIME - 10),
-    )
-
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
-
-    assert raw_data.info.source == "source1"
-    assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.message.startswith(reason)
-    assert raw_data.info.status == reason_status
-    assert raw_data.raw_data == _PAYLOAD
-
-
-@pytest.mark.parametrize(
-    "time_settings, successfully_processed, reason, reason_status",
-    [
-        (
-            [
-                (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
-                ("source1", "validity_period", 1000),
-                ("source1", "validity_state", 2),
-                ("test-host", "validity_period", -1),
-                ("test-host", "validity_state", 1),
-            ],
-            False,
-            "Piggyback data not updated by source 'source1'",
-            0,
-        ),
-    ],
-)
-@pytest.mark.usefixtures("setup_files")
-def test_get_piggyback_raw_data_piggybacked_host_validity2(
-    time_settings: piggyback.PiggybackTimeSettings,
-    successfully_processed: bool,
-    reason: str,
-    reason_status: int,
-) -> None:
-    # Fake age the test-host piggyback file
-    os.utime(
-        str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
-        (_REF_TIME - 10, _REF_TIME - 10),
-    )
-
-    raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
-
-    assert raw_data.info.source == "source1"
-    assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.message.startswith(reason)
-    assert raw_data.info.status == reason_status
-    assert raw_data.raw_data == _PAYLOAD
 
 
 @pytest.mark.parametrize(

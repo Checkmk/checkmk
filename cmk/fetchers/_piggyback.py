@@ -13,7 +13,7 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.piggyback import Config as PiggybackConfig
-from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
+from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo
 
 from ._abstract import Fetcher, Mode
 
@@ -58,7 +58,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     def open(self) -> None:
         for origin in (self.hostname, self.address):
-            self._sources.extend(PiggybackFetcher._raw_data(origin, self.time_settings))
+            self._sources.extend(PiggybackFetcher._raw_data(origin))
 
     def close(self) -> None:
         self._sources.clear()
@@ -110,8 +110,5 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         return ("<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels)).encode("utf-8")
 
     @staticmethod
-    def _raw_data(
-        hostname: HostName | HostAddress | None,
-        time_settings: PiggybackTimeSettings,
-    ) -> Sequence[PiggybackRawDataInfo]:
-        return get_piggyback_raw_data(hostname if hostname else HostName(""), time_settings)
+    def _raw_data(hostname: HostAddress | None) -> Sequence[PiggybackRawDataInfo]:
+        return get_piggyback_raw_data(hostname if hostname else HostName(""))

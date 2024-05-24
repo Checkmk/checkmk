@@ -27,30 +27,11 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class _PayloadMetaData:
-    source: HostName
-    target: HostName
-    file_path: Path
-    mtime: int
-    status_mtime: int | None
-
-    @property
-    def abandoned(self) -> bool:
-        return self.status_mtime is None or self.status_mtime > self.mtime
-
-
-@dataclass(frozen=True, kw_only=True)
 class PiggybackFileInfo:
     source: HostName
     file_path: Path
     last_update: int
     last_contact: int | None
-    message: str
-    status: int
-
-    def __post_init__(self) -> None:
-        if not self.message:
-            raise ValueError(self.message)
 
     def serialize(self) -> str:
         return json.dumps({k: str(v) for k, v in asdict(self).items()})
@@ -63,8 +44,6 @@ class PiggybackFileInfo:
             file_path=Path(raw["file_path"]),
             last_update=int(raw["last_update"]),
             last_contact=None if (i := raw["last_contact"]) is None else int(i),
-            message=str(raw["message"]),
-            status=int(raw["status"]),
         )
 
 
@@ -77,7 +56,6 @@ _PiggybackTimeSetting = tuple[str | None, str, int]
 
 PiggybackTimeSettings = Sequence[_PiggybackTimeSetting]
 
-_PiggybackTimeSettingsMap = Mapping[tuple[str | None, str], int]
 
 # ***** Terminology *****
 # "piggybacked_host_folder":
@@ -97,17 +75,14 @@ _PiggybackTimeSettingsMap = Mapping[tuple[str | None, str], int]
 # - Path(tmp/check_mk/piggyback_sources/SOURCE).name
 
 
-def get_piggyback_raw_data(
-    piggybacked_hostname: HostAddress,
-    time_settings: PiggybackTimeSettings,
-) -> Sequence[PiggybackRawDataInfo]:
+def get_piggyback_raw_data(piggybacked_hostname: HostAddress) -> Sequence[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
     the source host name and the second element is the raw
     piggyback data (byte string)
     """
-    piggyback_file_infos = _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
+    piggyback_file_infos = _get_payload_meta_data(piggybacked_hostname)
     logger.debug("%s piggyback files for '%s'.", len(piggyback_file_infos), piggybacked_hostname)
 
     piggyback_data = []
@@ -122,17 +97,15 @@ def get_piggyback_raw_data(
             # race condition: file was removed between listing and reading
             continue
 
-        logger.debug("Piggyback file '%s': %s", file_info.file_path, file_info.message)
+        logger.debug("Read piggyback file '%s'", file_info.file_path)
         piggyback_data.append(PiggybackRawDataInfo(info=file_info, raw_data=AgentRawData(content)))
     return piggyback_data
 
 
-def get_piggybacked_host_with_sources(
-    time_settings: PiggybackTimeSettings,
-) -> Mapping[HostAddress, Sequence[PiggybackFileInfo]]:
+def get_piggybacked_host_with_sources() -> Mapping[HostAddress, Sequence[PiggybackFileInfo]]:
     """Generates all piggyback pig/piggybacked host pairs"""
     return {
-        piggybacked_host: _get_piggyback_processed_file_infos(piggybacked_host, time_settings)
+        piggybacked_host: _get_payload_meta_data(piggybacked_host)
         for piggybacked_host_folder in _get_piggybacked_host_folders()
         if (piggybacked_host := HostAddress(piggybacked_host_folder.name))
     }
@@ -191,74 +164,6 @@ class Config:
             return self._lookup("validity_state", source)
         except KeyError:
             return 0
-
-
-def _get_piggyback_processed_file_infos(
-    piggybacked_hostname: HostName | HostAddress,
-    time_settings: PiggybackTimeSettings,
-) -> Sequence[PiggybackFileInfo]:
-    """Gather a list of piggyback files to read for further processing.
-
-    Please note that there may be multiple parallel calls executing the
-    _get_piggyback_processed_file_infos(), store_piggyback_raw_data() or cleanup_piggyback_files()
-    functions. Therefor all these functions needs to deal with suddenly vanishing or
-    updated files/directories.
-    """
-    payload_meta_data = _get_payload_meta_data(piggybacked_hostname)
-    expanded_time_settings = Config(piggybacked_hostname, time_settings)
-    return [
-        _get_piggyback_processed_file_info(meta, settings=expanded_time_settings)
-        for meta in payload_meta_data
-    ]
-
-
-def _get_piggyback_processed_file_info(
-    meta: _PayloadMetaData,
-    *,
-    settings: Config,
-) -> PiggybackFileInfo:
-    file_age = time.time() - meta.mtime
-    if file_age > (allowed := settings.max_cache_age(meta.source)):
-        return PiggybackFileInfo(
-            source=meta.source,
-            file_path=meta.file_path,
-            last_update=meta.mtime,
-            last_contact=meta.status_mtime,
-            message=f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
-            status=0,
-        )
-
-    validity_period = settings.validity_period(meta.source)
-    validity_state = settings.validity_state(meta.source)
-
-    if meta.abandoned:
-        valid_msg = _validity_period_message(file_age, validity_period)
-        return PiggybackFileInfo(
-            source=meta.source,
-            file_path=meta.file_path,
-            last_update=meta.mtime,
-            last_contact=meta.status_mtime,
-            message=(f"Piggyback data not updated by source '{meta.source}'{valid_msg}"),
-            status=validity_state if valid_msg else 0,
-        )
-
-    return PiggybackFileInfo(
-        source=meta.source,
-        file_path=meta.file_path,
-        last_update=meta.mtime,
-        last_contact=meta.status_mtime,
-        message=f"Successfully processed from source '{meta.source}'",
-        status=0,
-    )
-
-
-def _validity_period_message(
-    file_age: float,
-    validity_period: int,
-) -> str:
-    if (time_left := validity_period - file_age) <= 0:
-        return ""
-    return f" (still valid, {_render_time(time_left)} left)"
 
 
 def _remove_piggyback_file(piggyback_file_path: Path) -> bool:
@@ -347,7 +252,13 @@ def _store_status_file_of(
 #   '----------------------------------------------------------------------'
 
 
-def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[_PayloadMetaData]:
+def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[PiggybackFileInfo]:
+    """Gather a list of piggyback files to read for further processing.
+
+    Please note that there may be multiple parallel calls executing
+    store_piggyback_raw_data() or cleanup_piggyback_files() functions.
+    All these functions need to deal with suddenly vanishing or updated files/directories.
+    """
     piggybacked_host_folder = cmk.utils.paths.piggyback_dir / Path(piggybacked_hostname)
     meta_data = []
     for payload_file in _files_in(piggybacked_host_folder):
@@ -358,12 +269,11 @@ def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[_PayloadM
             continue
 
         meta_data.append(
-            _PayloadMetaData(
+            PiggybackFileInfo(
                 source=source,
-                target=piggybacked_hostname,
                 file_path=payload_file,
-                mtime=mtime,
-                status_mtime=_get_mtime(status_file_path),
+                last_update=mtime,
+                last_contact=_get_mtime(status_file_path),
             )
         )
     return meta_data

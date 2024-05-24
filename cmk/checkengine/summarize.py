@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import datetime
+import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
@@ -18,6 +20,7 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.piggyback import Config as PiggybackConfig
 from cmk.utils.piggyback import PiggybackFileInfo, PiggybackTimeSettings
 from cmk.utils.sectionname import SectionName
 
@@ -107,14 +110,51 @@ def summarize_piggyback(
     ipaddress: HostAddress | None,
     time_settings: PiggybackTimeSettings,
     expect_data: bool,
+    now: int | None = None,
 ) -> Sequence[ActiveCheckResult]:
     summary_section = SectionName("piggyback_source_summary")
+    config = PiggybackConfig(hostname, time_settings)
+    now = int(time.time()) if now is None else now
     if meta_infos := [
         PiggybackFileInfo.deserialize(raw_file_info)
         for (raw_file_info,) in host_sections.sections.get(summary_section, [])
     ]:
-        return [ActiveCheckResult(info.status, info.message) for info in meta_infos]
+        return [_summarize_single_piggyback_source(info, config, now) for info in meta_infos]
 
     if expect_data:
         return [ActiveCheckResult(1, "Missing data")]
     return [ActiveCheckResult(0, "Success (but no data found for this host)")]
+
+
+def _summarize_single_piggyback_source(
+    meta: PiggybackFileInfo, config: PiggybackConfig, now: float
+) -> ActiveCheckResult:
+
+    if (age := now - meta.last_update) > (allowed := config.max_cache_age(meta.source)):
+        return ActiveCheckResult(
+            0,
+            f"Piggyback data outdated (age: {_render_time(age)}, allowed: {_render_time(allowed)})",
+        )
+
+    if meta.last_contact is None or (meta.last_update < meta.last_contact):
+        msg = f"Piggyback data not updated by source '{meta.source}'"
+        state = 0  # TODO: can it be 'validity_state' here as well? Why would we go back to ok?
+        if (time_left := meta.last_update + config.validity_period(meta.source) - now) > 0:
+            msg += f" (still valid, {_render_time(time_left)} left)"
+            state = config.validity_state(meta.source)
+        return ActiveCheckResult(state, msg)
+
+    return ActiveCheckResult(0, f"Successfully processed from source '{meta.source}'")
+
+
+def _render_time(value: float | int) -> str:
+    """Format time difference seconds into human readable text
+
+    >>> _render_time(184)
+    '0:03:04'
+
+    Unlikely in this context, but still acceptable:
+    >>> _render_time(92635.3)
+    '1 day, 1:43:55'
+    """
+    return str(datetime.timedelta(seconds=round(value)))

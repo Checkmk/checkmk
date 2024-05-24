@@ -3228,7 +3228,7 @@ class ConfigCache:
         def _is_usable(data: piggyback.PiggybackRawDataInfo) -> bool:
             return (now - data.info.last_update) <= piggy_config.max_cache_age(data.info.source)
 
-        return any(map(_is_usable, piggyback.get_piggyback_raw_data(host_name, time_settings)))
+        return any(map(_is_usable, piggyback.get_piggyback_raw_data(host_name)))
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
         if rules := self.ruleset_matcher.get_host_values(host_name, piggybacked_host_files):

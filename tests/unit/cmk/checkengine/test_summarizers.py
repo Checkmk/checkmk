@@ -3,10 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # pylint: disable=undefined-variable
+
+import time
+from pathlib import Path
+
 import pytest
 
 from cmk.utils.exceptions import MKAgentError, MKTimeout
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.piggyback import PiggybackFileInfo
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
@@ -59,12 +65,92 @@ class TestPiggybackSummarizer:
             expect_data=True,
         ) == [ActiveCheckResult(1, "Missing data")]
 
-    @pytest.mark.skip("requires patching cmk.utils.piggyback :(")
-    def test_summarize_existing_data_with_is_piggyback_option(self) -> None:
+    @pytest.mark.parametrize("expect_data", [True, False])
+    def test_summarize_outdated_data_regardless_of_is_piggyback_option(
+        self, expect_data: bool
+    ) -> None:
+        now = int(time.time())
         assert summarize_piggyback(
-            host_sections=HostSections({}),
+            host_sections=HostSections(
+                {
+                    SectionName("piggyback_source_summary"): [
+                        [
+                            PiggybackFileInfo(
+                                source=HostAddress("source"),
+                                file_path=Path(),
+                                last_update=now - 20,
+                                last_contact=now - 10,
+                            ).serialize()
+                        ]
+                    ],
+                }
+            ),
             hostname=HostName("hostname"),
             ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[("", "", 0)],
-            expect_data=True,
-        ) == [ActiveCheckResult(0, "success"), ActiveCheckResult(0, "success")]
+            time_settings=[(None, "max_cache_age", 10)],
+            expect_data=expect_data,
+            now=now,
+        ) == [ActiveCheckResult(0, "Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)")]
+
+    @pytest.mark.parametrize("expect_data", [True, False])
+    def test_summarize_abandoned_data_without_tolerance_regardless_of_is_piggyback_option(
+        self, expect_data: bool
+    ) -> None:
+        now = 123456789  # any time is fine
+        assert summarize_piggyback(
+            host_sections=HostSections(
+                {
+                    SectionName("piggyback_source_summary"): [
+                        [
+                            PiggybackFileInfo(
+                                source=HostAddress("source"),
+                                file_path=Path(),
+                                last_update=now - 2,
+                                last_contact=now - 1,
+                            ).serialize()
+                        ]
+                    ],
+                }
+            ),
+            hostname=HostName("hostname"),
+            ipaddress=HostAddress("1.2.3.4"),
+            time_settings=[(None, "max_cache_age", 10)],
+            expect_data=expect_data,
+            now=now,
+        ) == [ActiveCheckResult(0, "Piggyback data not updated by source 'source'")]
+
+    @pytest.mark.parametrize("expect_data", [True, False])
+    def test_summarize_abandoned_data_with_tolerance_regardless_of_is_piggyback_option(
+        self, expect_data: bool
+    ) -> None:
+        now = 123456789  # any time is fine
+        assert summarize_piggyback(
+            host_sections=HostSections(
+                {
+                    SectionName("piggyback_source_summary"): [
+                        [
+                            PiggybackFileInfo(
+                                source=HostAddress("source"),
+                                file_path=Path(),
+                                last_update=now - 2,
+                                last_contact=now - 1,
+                            ).serialize()
+                        ]
+                    ],
+                }
+            ),
+            hostname=HostName("hostname"),
+            ipaddress=HostAddress("1.2.3.4"),
+            time_settings=[
+                (None, "max_cache_age", 10),
+                (None, "validity_period", 30),
+                (None, "validity_state", 2),
+            ],
+            expect_data=expect_data,
+            now=now,
+        ) == [
+            ActiveCheckResult(
+                2,
+                "Piggyback data not updated by source 'source' (still valid, 0:00:28 left)",
+            ),
+        ]

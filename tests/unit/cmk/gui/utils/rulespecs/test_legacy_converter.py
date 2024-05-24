@@ -1711,6 +1711,21 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             ("key_new", "value_new"),
             id="migrate nested and top level element",
         ),
+        pytest.param(
+            api_v1.form_specs.CascadingSingleChoice(
+                elements=[
+                    api_v1.form_specs.CascadingSingleChoiceElement(
+                        name="key_new",
+                        title=api_v1.Title("Spec title"),
+                        parameter_form=api_v1.form_specs.FixedValue(value=None),
+                    )
+                ],
+                migrate=lambda x: ("key_new", None),
+            ),
+            None,
+            ("key_new", None),
+            id="migrate from `None` (Alterative + FixedValue(None))",
+        ),
     ],
 )
 def test_migrate(

@@ -94,7 +94,7 @@ _PiggybackTimeSettingsMap = Mapping[tuple[str | None, str], int]
 
 
 def get_piggyback_raw_data(
-    piggybacked_hostname: HostName | HostAddress | None,
+    piggybacked_hostname: HostAddress,
     time_settings: PiggybackTimeSettings,
 ) -> Sequence[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
@@ -103,16 +103,8 @@ def get_piggyback_raw_data(
     the source host name and the second element is the raw
     piggyback data (byte string)
     """
-    if not piggybacked_hostname:
-        return []
-
     piggyback_file_infos = _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
-    if not piggyback_file_infos:
-        logger.debug(
-            "No piggyback files for '%s'. Skip processing.",
-            piggybacked_hostname,
-        )
-        return []
+    logger.debug("%s piggyback files for '%s'.", len(piggyback_file_infos), piggybacked_hostname)
 
     piggyback_data = []
     for file_info in piggyback_file_infos:

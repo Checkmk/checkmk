@@ -146,15 +146,6 @@ def get_source_and_piggyback_hosts(
             yield HostName(file_info.source), HostName(piggybacked_host_folder.name)
 
 
-def has_piggyback_raw_data(
-    piggybacked_hostname: HostName,
-    time_settings: PiggybackTimeSettings,
-) -> bool:
-    return any(
-        fi.valid for fi in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
-    )
-
-
 class Config:
     def __init__(
         self,

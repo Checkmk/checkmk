@@ -20,7 +20,6 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import piggyback
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
@@ -474,10 +473,12 @@ def test_is_piggyback_host_auto(
     with_data: bool,
     result: bool,
 ) -> None:
-    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda *args, **kw: with_data)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_piggyback_host(hostname) == result
+    config_cache = ts.apply(monkeypatch)
+
+    config_cache._host_has_piggyback_data_right_now = lambda host_name: with_data  # type: ignore[method-assign]
+    assert config_cache.is_piggyback_host(hostname) == result
 
 
 @pytest.mark.parametrize(

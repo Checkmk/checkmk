@@ -56,7 +56,6 @@ def test_piggyback_default_time_settings() -> None:
     ]
     piggyback.get_piggyback_raw_data(_TEST_HOST_NAME, time_settings)
     piggyback.get_source_and_piggyback_hosts(time_settings)
-    piggyback.has_piggyback_raw_data(_TEST_HOST_NAME, time_settings)
     piggyback.cleanup_piggyback_files(time_settings)
 
 
@@ -251,22 +250,6 @@ def test_get_piggyback_raw_data_too_old_piggybacked_host() -> None:
     assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
-
-
-def test_has_piggyback_raw_data_no_data() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
-    ]
-    assert piggyback.has_piggyback_raw_data(HostName("no-host"), time_settings) is False
-
-
-@pytest.mark.usefixtures("setup_files")
-def test_has_piggyback_raw_data() -> None:
-    time_settings: piggyback.PiggybackTimeSettings = [
-        (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
-    ]
-    with time_machine.travel(_FREEZE_DATETIME):
-        assert piggyback.has_piggyback_raw_data(_TEST_HOST_NAME, time_settings) is True
 
 
 def test_remove_source_status_file_not_existing() -> None:

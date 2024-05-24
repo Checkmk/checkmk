@@ -21,6 +21,7 @@ import py_compile
 import socket
 import struct
 import sys
+import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
@@ -3208,18 +3209,29 @@ class ConfigCache:
         return socket.AddressFamily.AF_INET6 if is_ipv6_primary() else socket.AddressFamily.AF_INET
 
     def _has_piggyback_data(self, host_name: HostName) -> bool:
+        return (
+            self._host_has_piggyback_data_right_now(host_name)
+            or make_persisted_section_dir(
+                fetcher_type=FetcherType.PIGGYBACK,
+                host_name=host_name,
+                ident="piggyback",
+                section_cache_path=Path(cmk.utils.paths.var_dir),
+            ).exists()
+        )
+
+    def _host_has_piggyback_data_right_now(self, host_name: HostAddress) -> bool:
+        # This duplicates logic and should be kept in sync with what the fetcher does.
+        # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
+        piggy_config = piggyback.Config(host_name, time_settings)
 
-        if piggyback.has_piggyback_raw_data(host_name, time_settings):
-            return True
+        now = time.time()
 
-        return make_persisted_section_dir(
-            fetcher_type=FetcherType.PIGGYBACK,
-            host_name=host_name,
-            ident="piggyback",
-            section_cache_path=Path(cmk.utils.paths.var_dir),
-        ).exists()
+        def _is_usable(data: piggyback.PiggybackRawDataInfo) -> bool:
+            return (now - data.info.last_update) <= piggy_config.max_cache_age(data.info.source)
+
+        return any(map(_is_usable, piggyback.get_piggyback_raw_data(host_name, time_settings)))
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
         if rules := self.ruleset_matcher.get_host_values(host_name, piggybacked_host_files):

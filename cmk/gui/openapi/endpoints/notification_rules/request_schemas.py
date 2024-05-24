@@ -1445,11 +1445,6 @@ class OpsGeniePluginCreate(PluginName):
 
 # PagerDuty ---------------------------------------------------------
 
-PASSWORD_STORE_ID_SHOULD_EXIST = PasswordStoreIDField(
-    presence="should_exist",
-    required=True,
-)
-
 
 class PagerDutyAPIKeyStoreID(ExplicitOrStoreOptions):
     store_id = PASSWORD_STORE_ID_SHOULD_EXIST

@@ -378,9 +378,23 @@ MatchRegex = tuple[
 ]
 
 
-class URLPrefix(TypedDict, total=False):
+class AutomaticUrlPrefix(TypedDict):
     automatic: Literal["http", "https"]
+
+
+class ManualUrlPrefix(TypedDict):
     manual: str
+
+
+URLPrefix = AutomaticUrlPrefix | ManualUrlPrefix
+
+
+def is_auto_urlprefix(url_prefix: URLPrefix) -> TypeGuard[AutomaticUrlPrefix]:
+    return "automatic" in url_prefix
+
+
+def is_manual_urlprefix(url_prefix: URLPrefix) -> TypeGuard[ManualUrlPrefix]:
+    return "manual" in url_prefix
 
 
 class SMTPAuth(TypedDict, total=False):

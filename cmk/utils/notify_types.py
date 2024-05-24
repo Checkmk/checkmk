@@ -400,6 +400,13 @@ NotifyPlugin = tuple[NotificationPluginNameStr, NotifyPluginParams | None]
 NotificationRuleID = NewType("NotificationRuleID", str)
 
 
+CaseStateStr = Literal["none", "new", "closed", "resolved", "open", "awaiting_info"]
+CaseState = CaseStateStr | int
+
+IncidentStateStr = Literal["none", "new", "progress", "closed", "resolved", "hold", "canceled"]
+IncidentState = IncidentStateStr | int
+
+
 class _EventRuleMandatory(TypedDict):
     rule_id: NotificationRuleID
     allow_disable: bool

@@ -12,7 +12,7 @@ import pytest
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import version
-from cmk.utils.notify_types import CustomPluginName, PluginOptions
+from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
 
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
@@ -29,8 +29,6 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APIPluginDict,
     APIPluginList,
     APIRuleProperties,
-    CASE_STATE_TYPE,
-    INCIDENT_STATE_TYPE,
     MatchHostEventsAPIType,
     MatchServiceEventsAPIType,
     MgmtTypeAPI,
@@ -1424,7 +1422,7 @@ service_now_incident: MgmtTypeAPI = {
 
 def incident_states() -> list[MgmtTypeParamsAPI]:
     d: list[MgmtTypeParamsAPI] = []
-    for n, predefined_state in enumerate(list(get_args(INCIDENT_STATE_TYPE))):
+    for n, predefined_state in enumerate(list(get_args(IncidentStateStr))):
         d.append(
             {
                 "state_acknowledgement": {
@@ -1520,7 +1518,7 @@ service_now_case: MgmtTypeAPI = {
 
 def case_states() -> list[MgmtTypeParamsAPI]:
     d: list[MgmtTypeParamsAPI] = []
-    for n, predefined_state in enumerate(list(get_args(CASE_STATE_TYPE))):
+    for n, predefined_state in enumerate(list(get_args(CaseStateStr))):
         d.append(
             {
                 "state_recovery": {

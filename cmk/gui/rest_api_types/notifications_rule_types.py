@@ -13,6 +13,8 @@ from typing_extensions import TypedDict
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
     BulkOutsideTimePeriodType,
+    CaseState,
+    CaseStateStr,
     ConditionEventConsoleAlertsType,
     CustomPluginName,
     EmailBodyElementsType,
@@ -21,6 +23,8 @@ from cmk.utils.notify_types import (
     GroupbyType,
     HostEventType,
     IlertAPIKey,
+    IncidentState,
+    IncidentStateStr,
     MatchRegex,
     MgmntPriorityType,
     MgmntUrgencyType,
@@ -1232,26 +1236,8 @@ class CheckboxHttpProxy:
 
 
 # ----------------------------------------------------------------
-INCIDENT_STATE_TYPE = Literal[
-    "none",
-    "new",
-    "progress",
-    "hold",
-    "resolved",
-    "closed",
-    "canceled",
-]
-CASE_STATE_TYPE = Literal[
-    "none",
-    "new",
-    "closed",
-    "open",
-    "awaiting_info",
-]
-
-
 class AckStateValue(TypedDict, total=False):
-    start_predefined: INCIDENT_STATE_TYPE
+    start_predefined: IncidentStateStr
     start_integer: int
 
 
@@ -1260,7 +1246,7 @@ class AckStateAPI(CheckboxStateType, total=False):
 
 
 class AckStateMk(TypedDict):
-    start: INCIDENT_STATE_TYPE | int
+    start: IncidentState
 
 
 @dataclass
@@ -1301,7 +1287,7 @@ class AckState:
 
 # ----------------------------------------------------------------
 class RecoveryStateValue(TypedDict, total=False):
-    start_predefined: CASE_STATE_TYPE | INCIDENT_STATE_TYPE
+    start_predefined: CaseStateStr | IncidentStateStr
     start_integer: int
 
 
@@ -1310,7 +1296,7 @@ class RecoveryStateAPI(CheckboxStateType, total=False):
 
 
 class RecoveryStateMk(TypedDict):
-    start: CASE_STATE_TYPE | INCIDENT_STATE_TYPE | int
+    start: CaseState | IncidentState
 
 
 @dataclass
@@ -1351,8 +1337,8 @@ class RecoveryState:
 
 # ----------------------------------------------------------------
 class DowntimeStateValue(TypedDict, total=False):
-    start_predefined: INCIDENT_STATE_TYPE
-    end_predefined: INCIDENT_STATE_TYPE
+    start_predefined: IncidentStateStr
+    end_predefined: IncidentStateStr
     start_integer: int
     end_integer: int
 
@@ -1362,8 +1348,8 @@ class DowntimeStateAPI(CheckboxStateType, total=False):
 
 
 class DowntimeStateMk(TypedDict, total=False):
-    start: INCIDENT_STATE_TYPE | int
-    end: INCIDENT_STATE_TYPE | int
+    start: IncidentState
+    end: IncidentState
 
 
 @dataclass

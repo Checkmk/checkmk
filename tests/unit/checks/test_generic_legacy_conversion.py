@@ -1721,6 +1721,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mkeventd_status",
         "mknotifyd",
         "mknotifyd.connection",
+        "mknotifyd.connection_v2",
         "mongodb_asserts",
         "mongodb_cluster",
         "mongodb_cluster.collections",

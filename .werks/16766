@@ -1,0 +1,21 @@
+Title: mknotifyd: use site names in service description
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1716821823
+Edition: cre
+Level: 2
+Version: 2.2.0p28
+
+This update affects users monitoring the <em>OMD Notify Connection</em> services, regardless of whether the connection is encrypted.
+
+Previously it was not possible to correctly monitor the Notification Spooler connection with TLS. For encrypted incoming connections, the IP address and port were unavailable because managed by stunnel using Unix sockets. Consequently, services for encrypted connections were named incorrectly and always displayed the IP address as 127.0.0.1.
+
+To resolve this issue, we have updated the service naming.
+Now, the names of the involved sites will be shown in the format: <em>OMD MySite Notification Spooler connection to MyRemoteSite</em>.
+
+Impact:
+
+LI: Currently monitored services (e.g., those configured with unencrypted connections) will continue to work as usual.
+LI: Upon rediscovery, new services will be discovered and will adopt the new naming convention. For this reason, this werk is flagged as incompatible
+LI: To maintain service history, users can create a service description translation rule. This can be done in the configuration at: <em>Setup</em> &gt; <em>Agents</em> &gt; <em>Access to agents</em> &gt; <em>Translation of service descriptions</em>. Use a regex or static string to map the old service names to the new ones.

@@ -31,16 +31,20 @@ class _PayloadMetaData:
     source: HostName
     target: HostName
     file_path: Path
-    mtime: float
-    abandoned: bool
+    mtime: int
+    status_mtime: int | None
+
+    @property
+    def abandoned(self) -> bool:
+        return self.status_mtime is None or self.status_mtime > self.mtime
 
 
 @dataclass(frozen=True, kw_only=True)
 class PiggybackFileInfo:
     source: HostName
     file_path: Path
-    last_update: float
-    valid: bool
+    last_update: int
+    last_contact: int | None
     message: str
     status: int
 
@@ -57,8 +61,8 @@ class PiggybackFileInfo:
         return cls(
             source=HostName(raw["source"]),
             file_path=Path(raw["file_path"]),
-            last_update=float(raw["last_update"]),
-            valid=bool(raw["valid"]),
+            last_update=int(raw["last_update"]),
+            last_contact=None if (i := raw["last_contact"]) is None else int(i),
             message=str(raw["message"]),
             status=int(raw["status"]),
         )
@@ -125,15 +129,10 @@ def get_piggyback_raw_data(
 
 def get_piggybacked_host_with_sources(
     time_settings: PiggybackTimeSettings,
-) -> Mapping[HostAddress, Sequence[HostAddress]]:
-    """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
-
+) -> Mapping[HostAddress, Sequence[PiggybackFileInfo]]:
+    """Generates all piggyback pig/piggybacked host pairs"""
     return {
-        piggybacked_host: [
-            file_info.source
-            for file_info in _get_piggyback_processed_file_infos(piggybacked_host, time_settings)
-            if file_info.valid
-        ]
+        piggybacked_host: _get_piggyback_processed_file_infos(piggybacked_host, time_settings)
         for piggybacked_host_folder in _get_piggybacked_host_folders()
         if (piggybacked_host := HostAddress(piggybacked_host_folder.name))
     }
@@ -219,13 +218,12 @@ def _get_piggyback_processed_file_info(
     settings: Config,
 ) -> PiggybackFileInfo:
     file_age = time.time() - meta.mtime
-
     if file_age > (allowed := settings.max_cache_age(meta.source)):
         return PiggybackFileInfo(
             source=meta.source,
             file_path=meta.file_path,
             last_update=meta.mtime,
-            valid=False,
+            last_contact=meta.status_mtime,
             message=f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
             status=0,
         )
@@ -239,7 +237,7 @@ def _get_piggyback_processed_file_info(
             source=meta.source,
             file_path=meta.file_path,
             last_update=meta.mtime,
-            valid=bool(valid_msg),
+            last_contact=meta.status_mtime,
             message=(f"Piggyback data not updated by source '{meta.source}'{valid_msg}"),
             status=validity_state if valid_msg else 0,
         )
@@ -248,7 +246,7 @@ def _get_piggyback_processed_file_info(
         source=meta.source,
         file_path=meta.file_path,
         last_update=meta.mtime,
-        valid=True,
+        last_contact=meta.status_mtime,
         message=f"Successfully processed from source '{meta.source}'",
         status=0,
     )
@@ -261,25 +259,6 @@ def _validity_period_message(
     if (time_left := validity_period - file_age) <= 0:
         return ""
     return f" (still valid, {_render_time(time_left)} left)"
-
-
-def _is_piggybacked_host_abandoned(
-    status_file_path: Path,
-    piggyback_file_path: Path,
-) -> bool:
-    """Return True if the status file is missing or it is newer than the payload file
-
-    It will return True if the payload file is "abandoned", i.e. the source host is
-    still sending data, but no longer has data for this piggybacked ( = target) host.
-    """
-    try:
-        # TODO use Path.stat() but be aware of:
-        # On POSIX platforms Python reads atime and mtime at nanosecond resolution
-        # but only writes them at microsecond resolution.
-        # (We're using os.utime() in _store_status_file_of())
-        return os.stat(str(status_file_path))[8] > os.stat(str(piggyback_file_path))[8]
-    except FileNotFoundError:
-        return True
 
 
 def _remove_piggyback_file(piggyback_file_path: Path) -> bool:
@@ -372,19 +351,19 @@ def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[_PayloadM
     piggybacked_host_folder = cmk.utils.paths.piggyback_dir / Path(piggybacked_hostname)
     meta_data = []
     for payload_file in _files_in(piggybacked_host_folder):
-        source = HostName(payload_file.name)
+        source = HostAddress(payload_file.name)
         status_file_path = _get_source_status_file_path(source)
-        try:
-            mtime = payload_file.stat().st_mtime
-        except FileNotFoundError:
+
+        if (mtime := _get_mtime(payload_file)) is None:
             continue
+
         meta_data.append(
             _PayloadMetaData(
                 source=source,
                 target=piggybacked_hostname,
                 file_path=payload_file,
                 mtime=mtime,
-                abandoned=_is_piggybacked_host_abandoned(status_file_path, payload_file),
+                status_mtime=_get_mtime(status_file_path),
             )
         )
     return meta_data
@@ -563,6 +542,17 @@ def _time_since_last_modification(path: Path) -> float:
 
     """
     return time.time() - path.stat().st_mtime
+
+
+def _get_mtime(path: Path) -> int | None:
+    try:
+        # Beware:
+        # On POSIX platforms Python reads atime and mtime at nanosecond resolution
+        # but only writes them at microsecond resolution.
+        # (We're using os.utime() in _store_status_file_of())
+        return int(path.stat().st_mtime)
+    except FileNotFoundError:
+        return None
 
 
 def _render_time(value: float | int) -> str:

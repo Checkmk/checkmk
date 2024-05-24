@@ -30,7 +30,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import cmk.utils.store as store
-from cmk.utils.config_validation_layer.notification_rules import EventRule as EventRuleValidation
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EventRule,
@@ -83,7 +82,7 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
         super().__init__(
             config_file_path=Path(wato_root_dir() + "notifications.mk"),
             config_variable="notification_rules",
-            spec_class=EventRuleValidation,
+            spec_class=EventRule,
         )
 
     def _load_file(self, lock: bool) -> list[EventRule]:

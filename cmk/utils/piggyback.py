@@ -11,7 +11,7 @@ import os
 import re
 import tempfile
 import time
-from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -153,62 +153,57 @@ def has_piggyback_raw_data(
     )
 
 
-# TODO: first shot, improve this!
-class _TimeSettingsMap:
+class Config:
     def __init__(
         self,
-        source_hostnames: Container[HostName],
-        piggybacked_hostname: HostName | HostAddress,
+        piggybacked_hostname: HostAddress,
         time_settings: PiggybackTimeSettings,
     ) -> None:
-        matching_time_settings: dict[tuple[str | None, str], int] = {}
-        for expr, key, value in time_settings:
-            # expr may be
-            #   - None (global settings) or
-            #   - 'source-hostname' or
-            #   - 'piggybacked-hostname' or
-            #   - '~piggybacked-[hH]ostname'
-            # the first entry ('piggybacked-hostname' vs '~piggybacked-[hH]ostname') wins
-            if expr is None or expr in source_hostnames or expr == piggybacked_hostname:
-                matching_time_settings.setdefault((expr, key), value)
-            elif expr.startswith("~") and re.match(expr[1:], piggybacked_hostname):
-                matching_time_settings.setdefault((piggybacked_hostname, key), value)
+        self.piggybacked: Final = piggybacked_hostname
+        self._expanded_settings = {
+            (host, key): value
+            for expr, key, value in reversed(time_settings)
+            for host in self._normalize_pattern(expr, piggybacked_hostname)
+        }
 
-        self._expanded_settings: Final = matching_time_settings
+    @staticmethod
+    def _normalize_pattern(
+        expr: str | None, piggybacked: HostAddress
+    ) -> Iterable[HostAddress | None]:
+        # expr may be
+        #   - None (global settings) or
+        #   - 'source-hostname' or
+        #   - 'piggybacked-hostname' or
+        #   - '~piggybacked-[hH]ostname'
+        # the first entry ('piggybacked-hostname' vs '~piggybacked-[hH]ostname') wins
+        if expr is None:
+            yield None
+        elif not expr.startswith("~"):
+            yield HostAddress(expr)
+        elif re.match(expr[1:], piggybacked):
+            yield piggybacked
 
-    def _match(
-        self, key: str, source_hostname: HostName, piggybacked_hostname: HostName | HostAddress
-    ) -> int:
+    def _lookup(self, key: str, source_hostname: HostAddress) -> int:
         with suppress(KeyError):
-            return self._expanded_settings[(piggybacked_hostname, key)]
+            return self._expanded_settings[(self.piggybacked, key)]
         with suppress(KeyError):
             return self._expanded_settings[(source_hostname, key)]
+
+        # TODO: pass the defaults for *all* settings explicitly.
         return self._expanded_settings[(None, key)]
 
-    def max_cache_age(
-        self,
-        source_hostname: HostName,
-        piggybacked_hostname: HostName | HostAddress,
-    ) -> int:
-        return self._match("max_cache_age", source_hostname, piggybacked_hostname)
+    def max_cache_age(self, source: HostAddress) -> int:
+        return self._lookup("max_cache_age", source)
 
-    def validity_period(
-        self,
-        source_hostname: HostName,
-        piggybacked_hostname: HostName | HostAddress,
-    ) -> int | None:
+    def validity_period(self, source: HostAddress) -> int | None:
         try:
-            return self._match("validity_period", source_hostname, piggybacked_hostname)
+            return self._lookup("validity_period", source)
         except KeyError:
-            return None
+            return None  # TODO: in fact, we also default to 0 here
 
-    def validity_state(
-        self,
-        source_hostname: HostName,
-        piggybacked_hostname: HostName | HostAddress,
-    ) -> int:
+    def validity_state(self, source: HostAddress) -> int:
         try:
-            return self._match("validity_state", source_hostname, piggybacked_hostname)
+            return self._lookup("validity_state", source)
         except KeyError:
             return 0
 
@@ -225,8 +220,7 @@ def _get_piggyback_processed_file_infos(
     updated files/directories.
     """
     payload_meta_data = _get_payload_meta_data(piggybacked_hostname)
-    source_hostnames = [pmd.source for pmd in payload_meta_data]
-    expanded_time_settings = _TimeSettingsMap(source_hostnames, piggybacked_hostname, time_settings)
+    expanded_time_settings = Config(piggybacked_hostname, time_settings)
     return [
         _get_piggyback_processed_file_info(meta, settings=expanded_time_settings)
         for meta in payload_meta_data
@@ -236,11 +230,11 @@ def _get_piggyback_processed_file_infos(
 def _get_piggyback_processed_file_info(
     meta: _PayloadMetaData,
     *,
-    settings: _TimeSettingsMap,
+    settings: Config,
 ) -> PiggybackFileInfo:
     file_age = time.time() - meta.mtime
 
-    if file_age > (allowed := settings.max_cache_age(meta.source, meta.target)):
+    if file_age > (allowed := settings.max_cache_age(meta.source)):
         return PiggybackFileInfo(
             source=meta.source,
             file_path=meta.file_path,
@@ -249,8 +243,8 @@ def _get_piggyback_processed_file_info(
             status=0,
         )
 
-    validity_period = settings.validity_period(meta.source, meta.target)
-    validity_state = settings.validity_state(meta.source, meta.target)
+    validity_period = settings.validity_period(meta.source)
+    validity_state = settings.validity_state(meta.source)
 
     if meta.abandoned:
         valid_msg = _validity_period_message(file_age, validity_period)
@@ -476,12 +470,11 @@ def cleanup_piggyback_files(time_settings: PiggybackTimeSettings) -> None:
 
 def _get_piggybacked_hosts_settings(
     time_settings: PiggybackTimeSettings,
-) -> Sequence[tuple[Path, Sequence[Path], _TimeSettingsMap]]:
+) -> Sequence[tuple[Path, Sequence[Path], Config]]:
     piggybacked_hosts_settings = []
     for piggybacked_host_folder in _get_piggybacked_host_folders():
         source_hosts = _files_in(piggybacked_host_folder)
-        time_settings_map = _TimeSettingsMap(
-            [HostName(source_host.name) for source_host in source_hosts],
+        time_settings_map = Config(
             HostName(piggybacked_host_folder.name),
             time_settings,
         )
@@ -492,18 +485,17 @@ def _get_piggybacked_hosts_settings(
 
 
 def _cleanup_old_source_status_files(
-    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], _TimeSettingsMap]]
+    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], Config]]
 ) -> None:
     """Remove source status files which exceed configured maximum cache age.
     There may be several 'Piggybacked Host Files' rules where the max age is configured.
     We simply use the greatest one per source."""
 
     max_cache_age_by_sources: dict[str, int] = {}
-    for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
+    for _piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
         for source_host in source_hosts:
             max_cache_age = time_settings.max_cache_age(
                 HostName(source_host.name),
-                HostName(piggybacked_host_folder.name),
             )
 
             max_cache_age_of_source = max_cache_age_by_sources.get(source_host.name)
@@ -533,22 +525,21 @@ def _cleanup_old_source_status_files(
 
 
 def _cleanup_old_piggybacked_files(
-    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], _TimeSettingsMap]]
+    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], Config]]
 ) -> None:
     """Remove piggybacked data files which exceed configured maximum cache age."""
 
     for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
         for piggybacked_host_source in source_hosts:
             src = HostName(piggybacked_host_source.name)
-            dst = HostName(piggybacked_host_folder.name)
 
             try:
                 file_age = _time_since_last_modification(piggybacked_host_source)
             except FileNotFoundError:
                 continue
 
-            max_cache_age = time_settings.max_cache_age(src, dst)
-            validity_period = time_settings.validity_period(src, dst) or 0
+            max_cache_age = time_settings.max_cache_age(src)
+            validity_period = time_settings.validity_period(src) or 0
             if file_age <= max_cache_age or file_age <= validity_period:
                 # Do not remove files just because they're abandoned.
                 # We don't use them anymore, but the DCD still needs to know about them for a while.

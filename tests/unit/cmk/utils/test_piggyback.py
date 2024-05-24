@@ -577,8 +577,6 @@ def test_get_piggyback_raw_data_piggybacked_host_validity2(
         ([("source-host", "key", "value")], [("source-host", "key")]),
         ([("piggybacked-host", "key", "value")], [("piggybacked-host", "key")]),
         ([("~piggybacked-[hH]ost", "key", "value")], [("piggybacked-host", "key")]),
-        ([("not-source-host", "key", "value")], []),
-        ([("not-piggybacked-host", "key", "value")], []),
         ([("~PIGGYBACKED-[hH]ost", "key", "value")], []),
     ],
 )
@@ -587,7 +585,5 @@ def test_get_piggyback_matching_time_settings(
     expected_time_setting_keys: Iterable[tuple[str | None, str]],
 ) -> None:
     assert sorted(
-        piggyback._TimeSettingsMap(
-            [HostName("source-host")], HostName("piggybacked-host"), time_settings
-        )._expanded_settings.keys()
+        piggyback.Config(HostName("piggybacked-host"), time_settings)._expanded_settings.keys()
     ) == sorted(expected_time_setting_keys)

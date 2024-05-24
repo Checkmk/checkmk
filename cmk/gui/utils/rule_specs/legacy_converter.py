@@ -729,9 +729,12 @@ def _convert_to_legacy_valuespec(
         update_func: Callable[[object], object]
     ) -> Callable[[object], object]:
         def wrapper(v: object) -> object:
-            if v is None:
-                return v
-            return update_func(v)
+            try:
+                return update_func(v)
+            except Exception:
+                if v is None:
+                    return v
+                raise
 
         return wrapper
 

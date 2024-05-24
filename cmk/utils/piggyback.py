@@ -11,7 +11,7 @@ import os
 import re
 import tempfile
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -123,19 +123,20 @@ def get_piggyback_raw_data(
     return piggyback_data
 
 
-def get_source_and_piggyback_hosts(
+def get_piggybacked_host_with_sources(
     time_settings: PiggybackTimeSettings,
-) -> Iterator[tuple[HostName, HostName]]:
+) -> Mapping[HostAddress, Sequence[HostAddress]]:
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
 
-    for piggybacked_host_folder in _get_piggybacked_host_folders():
-        for file_info in _get_piggyback_processed_file_infos(
-            HostName(piggybacked_host_folder.name),
-            time_settings,
-        ):
-            if not file_info.valid:
-                continue
-            yield HostName(file_info.source), HostName(piggybacked_host_folder.name)
+    return {
+        piggybacked_host: [
+            file_info.source
+            for file_info in _get_piggyback_processed_file_infos(piggybacked_host, time_settings)
+            if file_info.valid
+        ]
+        for piggybacked_host_folder in _get_piggybacked_host_folders()
+        if (piggybacked_host := HostAddress(piggybacked_host_folder.name))
+    }
 
 
 class Config:

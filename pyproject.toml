@@ -210,6 +210,8 @@ filterwarnings = [
   'ignore:^jsonschema\.RefResolver is deprecated.*$:DeprecationWarning:schemathesis\..*:0',
   'ignore:^jsonschema\.exceptions\.RefResolutionError is deprecated.*$:DeprecationWarning:schemathesis\..*:0',
   'ignore:^Generating overly large repr.*$:Warning:hypothesis\..*:0',
+  # ignore DeprecationWarning for ast.NameConstant in reportlab <= 4.2
+  'ignore:^ast\.NameConstant is deprecated and will be removed in Python 3\.14\; use ast\.Constant instead$:DeprecationWarning:reportlab\..*:0',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

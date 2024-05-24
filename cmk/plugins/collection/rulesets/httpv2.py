@@ -149,6 +149,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                 parameter_form=Dictionary(
                     elements={
                         "header_name_pattern": DictElement[str](
+                            group=DictGroup(),
                             parameter_form=RegularExpression(
                                 label=Label("Header name pattern"),
                                 predefined_help_text=MatchingScope.INFIX,
@@ -157,6 +158,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                             required=True,
                         ),
                         "header_value_pattern": DictElement[str](
+                            group=DictGroup(),
                             parameter_form=RegularExpression(
                                 label=Label("Header value pattern"),
                                 predefined_help_text=MatchingScope.INFIX,
@@ -285,10 +287,12 @@ def _send_data() -> Dictionary:
 
 header_dict_elements = {
     "header_name": DictElement(
+        group=DictGroup(),
         parameter_form=String(label=Label("Name"), prefill=InputHint("Accept-Language")),
         required=True,
     ),
     "header_value": DictElement(
+        group=DictGroup(),
         parameter_form=String(label=Label("Value"), prefill=InputHint("en-US,en;q=0.5")),
         required=True,
     ),
@@ -381,6 +385,7 @@ def _valuespec_connection() -> Dictionary:
                     ),
                     elements={
                         "min_version": DictElement(
+                            group=DictGroup(),
                             parameter_form=SingleChoice(
                                 elements=[
                                     SingleChoiceElement(name="auto", title=Title("Negotiate")),
@@ -395,6 +400,7 @@ def _valuespec_connection() -> Dictionary:
                             required=True,
                         ),
                         "allow_higher": DictElement(
+                            group=DictGroup(),
                             parameter_form=BooleanChoice(label=Label("Allow higher versions")),
                             required=True,
                         ),

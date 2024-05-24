@@ -4,19 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-import urllib.parse
 from argparse import ArgumentParser
 from argparse import Namespace as Args
-from collections.abc import Callable, Iterator, Sequence
-from contextlib import suppress
-from dataclasses import dataclass, field
-from os import environ
+from collections.abc import Iterator
 from pathlib import Path
-from typing import NamedTuple
 
 import docker  # type: ignore
 import requests
-import yaml
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from tests.testlib.version import ABCPackageManager, code_name

@@ -16,7 +16,6 @@ from typing import NamedTuple
 
 import docker  # type: ignore
 import requests
-import yaml
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.parent.as_posix())
 from tests.testlib.utils import get_cmk_download_credentials as _get_cmk_download_credentials

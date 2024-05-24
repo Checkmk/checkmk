@@ -49,7 +49,7 @@ import tarfile
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import Iterator, Union
+from typing import Union
 
 import docker  # type: ignore
 

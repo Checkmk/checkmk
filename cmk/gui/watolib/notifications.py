@@ -30,13 +30,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import cmk.utils.store as store
-from cmk.utils.notify_types import (
-    BuiltInPluginNames,
-    EventRule,
-    NotificationRuleID,
-    NotifyBulkType,
-    NotifyPlugin,
-)
+from cmk.utils.notify_types import EventRule, NotificationRuleID, NotifyBulkType, NotifyPlugin
 from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
@@ -63,10 +57,10 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     RestrictToNotificationNumbers,
 )
 from cmk.gui.rest_api_types.notifications_types import (
-    CustomPlugin,
+    CustomPluginAdapter,
     get_plugin_from_api_request,
     get_plugin_from_mk_file,
-    NotificationPlugin,
+    PluginAdapter,
 )
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
@@ -197,17 +191,14 @@ class BulkNotAllowedException(Exception): ...
 @dataclass
 class NotificationMethod:
     notification_bulking: CheckboxNotificationBulking
-    notify_plugin: NotificationPlugin | CustomPlugin
+    notify_plugin: PluginAdapter | CustomPluginAdapter
 
     @classmethod
     def from_mk_file_format(
         cls, notify_plugin: NotifyPlugin, bulk_config: NotifyBulkType | None
     ) -> NotificationMethod:
-        plugin_name, pluginparams = notify_plugin
-        builtin_plugin_name = cast(BuiltInPluginNames, plugin_name)
-
         return cls(
-            notify_plugin=get_plugin_from_mk_file(builtin_plugin_name, pluginparams),
+            notify_plugin=get_plugin_from_mk_file(notify_plugin),
             notification_bulking=CheckboxNotificationBulking.from_mk_file_format(bulk_config),
         )
 

@@ -5,7 +5,19 @@
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Literal, NewType, NotRequired, Required, TypedDict, TypeGuard
+from typing import (
+    Annotated,
+    Any,
+    get_args,
+    Literal,
+    NewType,
+    NotRequired,
+    Required,
+    TypedDict,
+    TypeGuard,
+)
+
+from pydantic import PlainValidator, TypeAdapter, ValidationInfo
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.timeperiod import TimeperiodName
@@ -71,9 +83,6 @@ class TimeperiodBulkParameters(BulkBaseParameters):
     bulk_outside: NotRequired[AlwaysBulkParameters]
 
 
-NotifyPluginParamsList = list[str]
-NotifyPluginParamsDict = dict[str, Any]  # TODO: Improve this
-NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
 NotifyBulkParameters = AlwaysBulkParameters | TimeperiodBulkParameters
 NotifyBulkType = (
     tuple[Literal["always"], AlwaysBulkParameters]
@@ -129,7 +138,7 @@ BuiltInPluginNames = Literal[
 ]
 CustomPluginName = NewType("CustomPluginName", str)
 
-NotificationPluginNameStr = BuiltInPluginNames
+NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
 
 MgmntPriorityType = Literal[
     "low",
@@ -442,26 +451,7 @@ class BulkParameters(TypedDict, total=False):
 
 
 PluginNotificationContext = dict[str, str]
-NotifyPlugin = tuple[NotificationPluginNameStr, NotifyPluginParams | None]
 NotificationRuleID = NewType("NotificationRuleID", str)
-
-
-MailElement = Literal[
-    "omdsite",
-    "hosttags",
-    "address",
-    "abstime",
-    "reltime",
-    "longoutput",
-    "ack_author",
-    "ack_comment",
-    "notification_author",
-    "notification_comment",
-    "perfdata",
-    "graph",
-    "notesurl",
-    "context",
-]
 
 
 class EmailFromOrTo(TypedDict):
@@ -478,7 +468,7 @@ MailPluginModel = TypedDict(
         "service_subject": NotRequired[str],
         "bulk_sort_order": NotRequired[Literal["oldest_first", "newest_first"]],
         "disable_multiplexing": NotRequired[Literal[True]],
-        "elements": NotRequired[list[MailElement]],
+        "elements": NotRequired[list[EmailBodyElementsType]],
         "insert_html_section": NotRequired[str],
         "url_prefix": NotRequired[URLPrefix],
         "no_floating_graphs": NotRequired[Literal[True]],
@@ -713,6 +703,75 @@ SmsNotify = tuple[Literal["sms"], list[str] | None]
 SpectrumNotify = tuple[Literal["spectrum"], SpectrumPluginModel | None]
 SplunkNotify = tuple[Literal["victorops"], SplunkPluginModel | None]
 
+KnownPlugins = (
+    MailNotify
+    | AsciiMailNotify
+    | CiscoNotify
+    | MkeventdNotify
+    | IlertNotify
+    | JiraNotify
+    | OpsgenieNotify
+    | PagerdutyNotify
+    | PushoverNotify
+    | ServiceNowNotify
+    | SignL4Notify
+    | SlackNotify
+    | SmsApiNotify
+    | SmsNotify
+    | SpectrumNotify
+    | SplunkNotify
+    | MSteamsNotify
+)
+
+CustomPluginType = tuple[CustomPluginName, dict[str, Any] | list[str] | None]
+
+NotifyPlugin = KnownPlugins | CustomPluginType
+
+
+def is_known_plugin(notify_plugin: NotifyPlugin) -> TypeGuard[KnownPlugins]:
+    return notify_plugin[0] in get_args(BuiltInPluginNames)
+
+
+NotifyPluginParamsList = list[str]
+NotifyPluginParamsDict = (
+    MailPluginModel
+    | AsciiMailPluginModel
+    | CiscoPluginModel
+    | MKEventdPluginModel
+    | IlertPluginModel
+    | JiraIssuePluginModel
+    | OpsGenieIssuesPluginModel
+    | PagerDutyPluginModel
+    | PushoverPluginModel
+    | ServiceNowPluginModel
+    | SignL4PluginModel
+    | SlackPluginModel
+    | SmsApiPluginModel
+    | SpectrumPluginModel
+    | SplunkPluginModel
+    | MicrosoftTeamsPluginModel
+    | dict[str, Any]
+)
+
+NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
+
+
+custom_plugin_type_adapter = TypeAdapter(CustomPluginType)
+known_plugin_type_adapter = TypeAdapter(KnownPlugins)
+
+
+def validate_plugin(value: Any, _handler: ValidationInfo) -> NotifyPlugin:
+    assert isinstance(value, tuple)
+    assert len(value) == 2
+
+    # If it's a builtin plugin, validate against it's corresponding typeddict.
+    if value[0] in get_args(BuiltInPluginNames):
+        known_plugin_type_adapter.validate_python(value, strict=True)
+        return value
+
+    custom_plugin_type_adapter.validate_python(value)
+    return value
+
 
 class _EventRuleMandatory(TypedDict):
     rule_id: NotificationRuleID
@@ -722,7 +781,7 @@ class _EventRuleMandatory(TypedDict):
     contact_object: bool
     description: str
     disabled: bool
-    notify_plugin: NotifyPlugin
+    notify_plugin: Annotated[NotifyPlugin, PlainValidator(validate_plugin)]
 
 
 class EventRule(_EventRuleMandatory, total=False):
@@ -767,11 +826,9 @@ class EventRule(_EventRuleMandatory, total=False):
     match_site: list[str]
     match_sl: tuple[int, int]
     match_timeperiod: TimeperiodName
-    notify_method: NotifyPluginParams
     bulk: NotifyBulkType
     match_service_level: tuple[int, int]
     match_only_during_timeperiod: str
-    notification_method: NotificationPluginNameStr
 
 
 NotifyRuleInfo = tuple[str, EventRule, str]

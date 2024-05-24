@@ -18,8 +18,8 @@ from cmk.utils.notify_types import (
     ConditionEventConsoleAlertsType,
     CustomPluginName,
     EmailBodyElementsType,
+    EmailFromOrTo,
     EventConsoleOption,
-    FromOrToType,
     GroupbyType,
     HostEventType,
     IlertAPIKey,
@@ -43,8 +43,10 @@ from cmk.utils.notify_types import (
     RegexModes,
     RoutingKeyType,
     ServiceEventType,
+    SMTPAuthAttrs,
     SortOrder,
     SoundType,
+    SyncDeliverySMTP,
     SysLogFacilityIntType,
     SysLogFacilityStrType,
     SyslogPriorityIntType,
@@ -456,14 +458,10 @@ class CheckboxPushoverSound:
 
 
 # ----------------------------------------------------------------
-class API_AuthAttrs(TypedDict, total=False):
-    method: Literal["plaintext"]
-    password: str
-    user: str
 
 
 class API_AuthValueType(CheckboxStateType, total=False):
-    value: API_AuthAttrs
+    value: SMTPAuthAttrs
 
 
 class API_EnableSyncViaSMTPAttrs(TypedDict, total=False):
@@ -479,10 +477,10 @@ class API_EnableSyncViaSMTPValueType(CheckboxStateType, total=False):
 
 @dataclass
 class SMTPAuth:
-    value: API_AuthAttrs | None = None
+    value: SMTPAuthAttrs | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: API_AuthAttrs | None) -> SMTPAuth:
+    def from_mk_file_format(cls, data: SMTPAuthAttrs | None) -> SMTPAuth:
         return cls(value=data)
 
     @classmethod
@@ -498,7 +496,7 @@ class SMTPAuth:
             r["value"] = self.value
         return r
 
-    def to_mk_file_format(self) -> API_AuthAttrs | None:
+    def to_mk_file_format(self) -> SMTPAuthAttrs | None:
         if self.value is None:
             return None
 
@@ -506,7 +504,7 @@ class SMTPAuth:
 
 
 # ----------------------------------------------------------------
-class EnableSyncViaSMTPType(TypedDict, total=False):
+class EnableSyncViaSMTPType(TypedDict):
     auth: SMTPAuth
     encryption: Literal["ssl_tls", "starttls"]
     port: int
@@ -518,7 +516,7 @@ class EnableSyncDeliveryViaSMTP:
     value: EnableSyncViaSMTPType | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: dict[str, Any] | None) -> EnableSyncDeliveryViaSMTP:
+    def from_mk_file_format(cls, data: SyncDeliverySMTP | None) -> EnableSyncDeliveryViaSMTP:
         if data is None:
             return cls()
 
@@ -756,15 +754,15 @@ class RestrictToNotificationNumbers:
 
 # ----------------------------------------------------------------
 class FromAndToEmailFieldsAPIValueType(CheckboxStateType, total=False):
-    value: FromOrToType
+    value: EmailFromOrTo
 
 
 @dataclass
 class FromAndToEmailFields:
-    value: FromOrToType | None = None
+    value: EmailFromOrTo | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: FromOrToType | None) -> FromAndToEmailFields:
+    def from_mk_file_format(cls, data: EmailFromOrTo | None) -> FromAndToEmailFields:
         return cls(value=data)
 
     @classmethod
@@ -785,7 +783,7 @@ class FromAndToEmailFields:
         }
         return r
 
-    def to_mk_file_format(self) -> FromOrToType | None:
+    def to_mk_file_format(self) -> EmailFromOrTo | None:
         return self.value
 
     def disable(self) -> None:
@@ -2072,7 +2070,7 @@ class APIPasswordOption:
 
 
 # ----------------------------------------------------------------
-class APISecret(API_ExplicitOrStore, total=False):  # SignL4Plugin
+class APISecret(API_ExplicitOrStore, total=False):
     secret: str
 
 

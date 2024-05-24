@@ -56,7 +56,8 @@ def main(
     if arguments.debug:
         debug.enable()
 
-    logger = _setup_logging(arguments)
+    logger = _setup_logging(arguments.verbose)
+    logger.debug("parsed arguments: %s", arguments)
 
     ensure_site_is_stopped_callback(logger)
 
@@ -141,28 +142,23 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
     return p.parse_args(args)
 
 
-def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
-    log.setup_console_logging()
-    log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
+# TODO: Fix this cruel hack caused by our funny mix of GUI + console stuff.
+def _setup_logging(verbose: int) -> logging.Logger:
+    log.logger.setLevel(log.verbosity_to_log_level(verbose))
 
     logger = logging.getLogger("cmk.update_config")
     logger.setLevel(log.logger.level)
-    logger.debug("parsed arguments: %s", arguments)
 
-    # TODO: Fix this cruel hack caused by our funny mix of GUI + console
-    # stuff. Currently, we just move the console handler to the top, so
-    # both worlds are happy. We really, really need to split business logic
-    # from presentation code... :-/
-    if log.logger.handlers:
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        logging.getLogger().addHandler(console_handler)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logging.getLogger().addHandler(handler)
 
-        # Special case for PIL module producing messages like "STREAM b'IHDR'
-        # 16 13" in debug level
-        logging.getLogger("PIL").setLevel(logging.INFO)
+    # Special case for PIL module producing messages like "STREAM b'IHDR' 16 13" in debug level
+    logging.getLogger("PIL").setLevel(logging.INFO)
 
-    gui_logger.setLevel(_our_logging_level_to_gui_logging_level(logger.getEffectiveLevel()))
+    # The default in cmk.gui is WARNING, whereas our default is INFO. Hence, our
+    # default corresponds to INFO in cmk.gui, which results in too much logging.
+    gui_logger.setLevel(log.logger.level + 10)
 
     return logger
 
@@ -177,13 +173,6 @@ def ensure_site_is_stopped(logger: logging.Logger) -> None:
             "before updating the configuration. You can stop the site using 'omd stop'."
         )
         sys.exit(1)
-
-
-def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
-    """The default in cmk.gui is WARNING, whereas our default is INFO. Hence, our default
-    corresponds to INFO in cmk.gui, which results in too much logging.
-    """
-    return lvl + 10
 
 
 def _load_plugins(logger: logging.Logger) -> None:

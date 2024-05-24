@@ -397,14 +397,14 @@ def is_manual_urlprefix(url_prefix: URLPrefix) -> TypeGuard[ManualUrlPrefix]:
     return "manual" in url_prefix
 
 
-class SMTPAuth(TypedDict, total=False):
+class SMTPAuthAttrs(TypedDict, total=False):
     method: Literal["plaintext"]
     password: str
     user: str
 
 
 class SyncDeliverySMTP(TypedDict, total=False):
-    auth: SMTPAuth
+    auth: SMTPAuthAttrs
     encryption: Literal["ssl_tls", "starttls"]
     port: int
     smarthosts: list[str]

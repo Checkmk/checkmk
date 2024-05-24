@@ -26,6 +26,8 @@ from cmk.utils.notify_types import (
     IncidentState,
     IncidentStateStr,
     is_always_bulk,
+    is_auto_urlprefix,
+    is_manual_urlprefix,
     is_timeperiod_bulk,
     MatchRegex,
     MgmntPriorityType,
@@ -1165,11 +1167,12 @@ class CheckboxURLPrefix:
         if self.value is None:
             return r
 
-        if self.value.get("automatic"):
+        if is_auto_urlprefix(self.value):
             r["value"] = {"option": "automatic", "schema": self.value["automatic"]}
-            return r
 
-        r["value"] = {"option": "manual", "url": self.value["manual"]}
+        if is_manual_urlprefix(self.value):
+            r["value"] = {"option": "manual", "url": self.value["manual"]}
+
         return r
 
     def to_mk_file_format(self) -> URLPrefix | None:

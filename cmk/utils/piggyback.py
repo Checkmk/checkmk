@@ -39,6 +39,7 @@ class _PayloadMetaData:
 class PiggybackFileInfo:
     source: HostName
     file_path: Path
+    last_update: float
     valid: bool
     message: str
     status: int
@@ -56,6 +57,7 @@ class PiggybackFileInfo:
         return cls(
             source=HostName(raw["source"]),
             file_path=Path(raw["file_path"]),
+            last_update=float(raw["last_update"]),
             valid=bool(raw["valid"]),
             message=str(raw["message"]),
             status=int(raw["status"]),
@@ -238,6 +240,7 @@ def _get_piggyback_processed_file_info(
         return PiggybackFileInfo(
             source=meta.source,
             file_path=meta.file_path,
+            last_update=meta.mtime,
             valid=False,
             message=f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
             status=0,
@@ -251,6 +254,7 @@ def _get_piggyback_processed_file_info(
         return PiggybackFileInfo(
             source=meta.source,
             file_path=meta.file_path,
+            last_update=meta.mtime,
             valid=bool(valid_msg),
             message=(f"Piggyback data not updated by source '{meta.source}'{valid_msg}"),
             status=validity_state if valid_msg else 0,
@@ -259,6 +263,7 @@ def _get_piggyback_processed_file_info(
     return PiggybackFileInfo(
         source=meta.source,
         file_path=meta.file_path,
+        last_update=meta.mtime,
         valid=True,
         message=f"Successfully processed from source '{meta.source}'",
         status=0,

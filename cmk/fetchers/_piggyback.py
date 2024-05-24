@@ -5,12 +5,14 @@
 
 import json
 import logging
+import time
 from collections.abc import Sequence
 from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
+from cmk.utils.piggyback import Config as PiggybackConfig
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 
 from ._abstract import Fetcher, Mode
@@ -27,6 +29,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         super().__init__()
         self.hostname: Final = hostname
         self.address: Final = address
+        self.config: Final = PiggybackConfig(hostname, time_settings)
         self.time_settings: Final = time_settings
         self._logger: Final = logging.getLogger("cmk.helper.piggyback")
         self._sources: list[PiggybackRawDataInfo] = []
@@ -73,7 +76,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
     def _get_main_section(self) -> bytearray | bytes:
         raw_data = bytearray()
         for src in self._sources:
-            if src.info.valid:
+            if (time.time() - src.info.last_update) <= self.config.max_cache_age(src.info.source):
                 # !! Important for Check_MK and Check_MK Discovery service !!
                 #   - sources contains ALL file infos and is not filtered
                 #     in cmk/base/piggyback.py as in previous versions

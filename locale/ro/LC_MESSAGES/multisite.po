@@ -14765,9 +14765,6 @@ msgstr "Critic dacă mai mult de"
 msgid "Critical if older than"
 msgstr "Critic dacă este mai vechi de"
 
-msgid "Critical if over"
-msgstr "Critic dacă depășește"
-
 msgid "Critical if under"
 msgstr "Critic dacă este sub"
 
@@ -36810,6 +36807,10 @@ msgstr "Migrarea utilizatorilor către o altă conexiune"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "A migrat %d %s la conectorul '%s': %s."
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "Migrarea utilizatorilor"
 
 msgid "Migrating"
 msgstr "Migrarea"
@@ -74093,9 +74094,6 @@ msgstr "Avertisment în cazul în care mai mult de"
 msgid "Warning if older than"
 msgstr "Avertisment dacă este mai veche de"
 
-msgid "Warning if over"
-msgstr "Avertisment dacă depășește"
-
 msgid "Warning if under"
 msgstr "Avertisment dacă sub"
 
@@ -80396,6 +80394,12 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Critical if over"
+#~ msgstr "Critic dacă depășește"
+
+#~ msgid "Warning if over"
+#~ msgstr "Avertisment dacă depășește"
 
 #~ msgid "Access Points"
 #~ msgstr "Puncte de acces"

@@ -14380,9 +14380,6 @@ msgstr "以上の場合に重要"
 msgid "Critical if older than"
 msgstr "より古い場合は重要"
 
-msgid "Critical if over"
-msgstr "終わったらクリティカル"
-
 msgid "Critical if under"
 msgstr "アンダーの場合はクリティカル"
 
@@ -36001,6 +35998,10 @@ msgstr "ユーザーを別のコネクタに移行する"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "%d%sをコネクタ'%s'に移行しました:%s"
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "ユーザーを移行する"
 
 msgid "Migrating"
 msgstr "移行する"
@@ -72234,9 +72235,6 @@ msgstr "以上の場合の警告"
 msgid "Warning if older than"
 msgstr "より古い場合の警告"
 
-msgid "Warning if over"
-msgstr "終わったら警告"
-
 msgid "Warning if under"
 msgstr "下の場合 警告"
 
@@ -78303,6 +78301,12 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Critical if over"
+#~ msgstr "終わったらクリティカル"
+
+#~ msgid "Warning if over"
+#~ msgstr "終わったら警告"
 
 #~ msgid "Access Points"
 #~ msgstr "アクセスポイント"

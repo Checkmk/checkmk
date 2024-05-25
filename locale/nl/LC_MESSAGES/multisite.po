@@ -14755,9 +14755,6 @@ msgstr "Kritisch als er meer dan"
 msgid "Critical if older than"
 msgstr "Kritisch indien ouder dan"
 
-msgid "Critical if over"
-msgstr "Kritisch indien meer dan"
-
 msgid "Critical if under"
 msgstr "Kritisch indien onder"
 
@@ -36787,6 +36784,10 @@ msgstr "Gebruikers migreren naar een andere verbinding"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "Gemigreerd %d %s naar connector '%s': %s"
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "Gebruikers migreren"
 
 #, fuzzy
 msgid "Migrating"
@@ -73966,9 +73967,6 @@ msgstr "Waarschuwing indien meer dan"
 msgid "Warning if older than"
 msgstr "Waarschuwing indien ouder dan"
 
-msgid "Warning if over"
-msgstr "Waarschuwing indien meer dan"
-
 msgid "Warning if under"
 msgstr "Waarschuwing indien onder"
 
@@ -80275,6 +80273,12 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Critical if over"
+#~ msgstr "Kritisch indien meer dan"
+
+#~ msgid "Warning if over"
+#~ msgstr "Waarschuwing indien meer dan"
 
 #~ msgid "Access Points"
 #~ msgstr "Toegangspunten"

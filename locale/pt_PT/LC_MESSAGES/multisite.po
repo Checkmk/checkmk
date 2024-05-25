@@ -14748,9 +14748,6 @@ msgstr "Crítico se mais do que"
 msgid "Critical if older than"
 msgstr "Crítico se for mais velho que"
 
-msgid "Critical if over"
-msgstr "Crítico se acabou"
-
 msgid "Critical if under"
 msgstr "Crítico se sob"
 
@@ -36772,6 +36769,10 @@ msgstr "Migrar utilizadores para outra ligação"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "Migração de %d %s para o conetor '%s': %s"
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "Migrar utilizadores"
 
 msgid "Migrating"
 msgstr "Migração"
@@ -73893,9 +73894,6 @@ msgstr "Alerta se mais do que"
 msgid "Warning if older than"
 msgstr "Alerta se for mais velho que"
 
-msgid "Warning if over"
-msgstr "Alerta se acabou"
-
 msgid "Warning if under"
 msgstr "Alerta se sob"
 
@@ -80158,6 +80156,12 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Critical if over"
+#~ msgstr "Crítico se acabou"
+
+#~ msgid "Warning if over"
+#~ msgstr "Alerta se acabou"
 
 #~ msgid "Access Points"
 #~ msgstr "Pontos de Acesso"

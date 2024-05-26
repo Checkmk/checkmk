@@ -30,23 +30,17 @@ from cmk.gui.log import logger
 from cmk.gui.utils.user_errors import user_errors
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import (
-    CascadingSingleChoice,
-    Dictionary,
-    Float,
-    FormSpec,
-    Integer,
-    List,
-    Percentage,
-    ServiceState,
-    SingleChoice,
-    String,
-)
+from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Integer, ServiceState, String
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 ModelT = TypeVar("ModelT")
 
+
 # TODO: improve typing
+class DEFAULT_VALUE:
+    pass
+
+
 DataForDisk = Any
 Value = Any
 
@@ -147,34 +141,47 @@ def _optional_validation(validators: list[Callable[[ModelT], object]], raw_value
     return validation_errors
 
 
+def _compute_validation_errors(
+    visitor_options: VisitorOptions, validators: list[Callable[[ModelT], object]], raw_value: Any
+) -> list[Validation]:
+    if not visitor_options.validate:
+        return []
+
+    return [
+        Validation(location=[""], message=x)
+        for x in _optional_validation(validators, raw_value)
+        if x is not None
+    ]
+
+
 def _visit_integer(
-    visitor_options: VisitorOptions, form_spec: Integer, value: int
+    visitor_options: VisitorOptions, form_spec: Integer, value: int | DEFAULT_VALUE
 ) -> VueVisitorMethodResult:
+    if isinstance(value, DEFAULT_VALUE):
+        value = form_spec.prefill.value
+
     title, help_text = _get_title_and_help(form_spec)
 
     validators = [IsInteger()] + (
         list(form_spec.custom_validate) if form_spec.custom_validate else []
     )
-    validation_errors = []
-    if visitor_options.validate:
-        validation_errors = list(
-            Validation(location=[""], message=x)
-            for x in _optional_validation(validators, value)
-            if x is not None
-        )
 
     result = (
         VueInteger(title=title, help=help_text, validators=build_vue_validators(validators)),
         value,
-        validation_errors,
+        _compute_validation_errors(visitor_options, validators, value),
         value,
     )
     return result
 
 
 def _visit_dictionary(
-    visitor_options: VisitorOptions, form_spec: Dictionary, value: dict[str, Any]
+    visitor_options: VisitorOptions, form_spec: Dictionary, value: dict[str, Any] | DEFAULT_VALUE
 ) -> VueVisitorMethodResult:
+    if isinstance(value, DEFAULT_VALUE):
+        value = {}
+    assert isinstance(value, dict)
+
     title, help_text = _get_title_and_help(form_spec)
     elements_keyspec = []
     vue_values = {}
@@ -183,9 +190,7 @@ def _visit_dictionary(
 
     for key_name, dict_element in form_spec.elements.items():
         is_active = key_name in value
-        key_value = (
-            value[key_name] if is_active else _compute_default_value(dict_element.parameter_form)
-        )
+        key_value = value[key_name] if is_active else DEFAULT_VALUE
 
         element_schema, vue_value, vue_validation, disk_value = _visit(
             visitor_options, dict_element.parameter_form, key_value
@@ -262,26 +267,6 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTy
     # If no explicit conversion exist, create an ugly valuespec
     # TODO: raise an exception
     return String(title=Title("UNKNOWN custom_form_spec %s") % str(custom_form_spec))
-
-
-# TODO: move this into the visiting function
-def _compute_default_value(form_spec: FormSpec) -> Any:
-    form_spec = _convert_to_supported_form_spec(form_spec)
-    if isinstance(form_spec, (Integer, Percentage, Float)):
-        return form_spec.prefill.value
-    if isinstance(form_spec, CascadingSingleChoice):
-        return form_spec.prefill.value
-    if isinstance(form_spec, SingleChoice):
-        return form_spec.prefill.value
-    if isinstance(form_spec, List):
-        return []
-    if isinstance(form_spec, Dictionary):
-        # TODO: Enable active keys
-        return {}
-    if isinstance(form_spec, String):
-        return form_spec.prefill.value
-
-    return "##################MISSING DEFAULT VALUE##########################"
 
 
 def _process_validation_errors(validation_errors: list[Validation]) -> None:

@@ -39452,6 +39452,10 @@ msgstr ""
 "all'esecuzione del controllo. In seguito il controllo attende i pacchetti in "
 "arrivo."
 
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "Il parametro \"%s\" non è un intero."
+
 msgid "Number of Active Sessions"
 msgstr "Numero di sessioni attive"
 

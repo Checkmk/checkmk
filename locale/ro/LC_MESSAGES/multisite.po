@@ -39883,6 +39883,10 @@ msgstr ""
 "la executarea verificării. După aceea, verificarea așteaptă pachetele "
 "primite."
 
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "Parametrul \"%s\" nu este un număr întreg."
+
 msgid "Number of Active Sessions"
 msgstr "Numărul de sesiuni active"
 

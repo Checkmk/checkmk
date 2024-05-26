@@ -39291,6 +39291,10 @@ msgstr ""
 "sollen. Alle Pakete werden direkt gesendet. Danach wartet der Check auf "
 "eingehende Pakete."
 
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "Der Parameter \"%s\" ist keine Zahl."
+
 msgid "Number of Active Sessions"
 msgstr "Anzahl von aktiven Sitzungen"
 

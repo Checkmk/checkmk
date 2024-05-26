@@ -40203,6 +40203,10 @@ msgstr ""
 "cada ejecución de chequeo. Todos los paquetes se envían directamente en la "
 "ejecución del chequeo. Después la comprobación espera los paquetes entrantes."
 
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "El parámetro \"%s\" no es un entero."
+
 msgid "Number of Active Sessions"
 msgstr "Número de sesiones activas"
 

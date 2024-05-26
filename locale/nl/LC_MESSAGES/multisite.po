@@ -39851,6 +39851,10 @@ msgstr ""
 "de controle verzonden. Daarna wacht de controle op de binnenkomende "
 "pakketten."
 
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "De parameter \"%s\" is geen geheel getal."
+
 msgid "Number of Active Sessions"
 msgstr "Aantal actieve sessies"
 

@@ -40214,6 +40214,10 @@ msgstr ""
 "l'exécution de la vérification. Ensuite, la vérification attend les paquets "
 "entrants."
 
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "Le paramètre \"%s\" n'est pas un nombre entier."
+
 msgid "Number of Active Sessions"
 msgstr "Nombre de sessions actives"
 

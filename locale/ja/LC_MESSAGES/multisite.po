@@ -39018,6 +39018,10 @@ msgstr ""
 "べてのパケットは、チェックの実行時に直接送信されます。その後、チェックは着信"
 "パケットを待ちます。"
 
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "パラメータ \"%s\" は整数ではありません。"
+
 msgid "Number of Active Sessions"
 msgstr "アクティブなセッションの数"
 

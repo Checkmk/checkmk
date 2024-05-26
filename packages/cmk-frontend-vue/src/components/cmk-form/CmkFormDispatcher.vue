@@ -2,6 +2,7 @@
 import CmkFormInteger from './element/CmkFormInteger.vue'
 import CmkFormFloat from '@/components/cmk-form/element/CmkFormFloat.vue'
 import CmkFormString from './element/CmkFormString.vue'
+import CmkFormSingleChoice from './element/CmkFormSingleChoice.vue'
 import CmkFormDictionary from './container/CmkFormDictionary.vue'
 import type { ValidationMessages } from '@/utils'
 import type { VueSchema } from '@/vue_formspec_components'
@@ -18,7 +19,8 @@ const components: Record<string, unknown> = {
   integer: CmkFormInteger,
   dictionary: CmkFormDictionary,
   string: CmkFormString,
-  float: CmkFormFloat
+  float: CmkFormFloat,
+  single_choice: CmkFormSingleChoice
   //  legacy_valuespec: CmkFormLegacyValueSpec
 }
 

@@ -20,6 +20,17 @@ from typing import Final, Literal
 
 import libcst as cst
 
+# just add whatever we might need, we'll remove the unused ones later
+_ADDED_IMPORTS = (
+    "from collections.abc import Iterable, Mapping",
+    "from typing import Any",
+    "from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!",
+    (
+        "from cmk.agent_based.v2 import Service, DiscoveryResult, CheckResult,"
+        " Result, State, Metric, AgentSection, SNMPSection, SimpleSNMPSection, CheckPlugin"
+    ),
+)
+
 
 def _is_service(expr: cst.BaseExpression) -> bool:
     """is this expression "Service(...)"?"""
@@ -167,15 +178,7 @@ class AddImportsTransformer(cst.CSTTransformer):
             self.added_import = True
             return cst.FlattenSentinel(
                 [
-                    cst.parse_statement("from collections.abc import Iterable, Mapping"),
-                    cst.parse_statement("from typing import Any"),
-                    cst.parse_statement(
-                        "from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!"
-                    ),
-                    cst.parse_statement(
-                        "from cmk.agent_based.v2 import Service, DiscoveryResult, CheckResult,"
-                        " Result, State, Metric, AgentSection, SNMPSection, SimpleSNMPSection, CheckPlugin",
-                    ),
+                    *(cst.parse_statement(statement) for statement in _ADDED_IMPORTS),
                     updated_node,
                 ]
             )

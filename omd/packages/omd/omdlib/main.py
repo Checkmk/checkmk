@@ -78,6 +78,7 @@ from omdlib.system_apache import (
 )
 from omdlib.tmpfs import (
     add_to_fstab,
+    fstab_verify,
     prepare_and_populate_tmpfs,
     remove_from_fstab,
     save_tmpfs_dump,
@@ -1755,20 +1756,6 @@ def init_action(
 #   +----------------------------------------------------------------------+
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
-
-
-def fstab_verify(site_name: str, mountpoint: str) -> bool:
-    """Ensure that there is an fstab entry for the tmpfs of the site.
-    In case there is no fstab (seen in some containers) assume everything
-    is OK without fstab entry."""
-    if not (fstab_path := Path("/etc", "fstab")).exists():
-        return True
-
-    with fstab_path.open() as opened_file:
-        for line in opened_file:
-            if "uid=%s," % site_name in line and mountpoint in line:
-                return True
-    sys.exit(tty.error + ": fstab entry for %s does not exist" % mountpoint)
 
 
 # No using os.putenv, os.getenv os.unsetenv directly because

@@ -243,7 +243,7 @@ class CommandType(Enum):
 #   '----------------------------------------------------------------------'
 
 
-def site_name() -> str:
+def site_name_from_uid() -> str:
     return pwd.getpwuid(os.getuid()).pw_name
 
 
@@ -1757,19 +1757,18 @@ def init_action(
 #   '----------------------------------------------------------------------'
 
 
-def fstab_verify(site: SiteContext) -> bool:
+def fstab_verify(site_name: str, mountpoint: str) -> bool:
     """Ensure that there is an fstab entry for the tmpfs of the site.
     In case there is no fstab (seen in some containers) assume everything
     is OK without fstab entry."""
     if not (fstab_path := Path("/etc", "fstab")).exists():
         return True
 
-    mountpoint = site.tmp_dir
     with fstab_path.open() as opened_file:
         for line in opened_file:
-            if "uid=%s," % site.name in line and mountpoint in line:
+            if "uid=%s," % site_name in line and mountpoint in line:
                 return True
-    bail_out(tty.error + ": fstab entry for %s does not exist" % mountpoint)
+    sys.exit(tty.error + ": fstab entry for %s does not exist" % mountpoint)
 
 
 # No using os.putenv, os.getenv os.unsetenv directly because
@@ -2099,7 +2098,7 @@ def main_create(
         useradd(version_info, site, uid, gid)
 
     if reuse:
-        fstab_verify(site)
+        fstab_verify(site.name, site.tmp_dir)
     else:
         create_site_dir(site)
         add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
@@ -2485,7 +2484,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
         reuse = True
         if not user_verify(version_info, new_site):
             bail_out("Error verifying site user.")
-        fstab_verify(new_site)
+        fstab_verify(new_site.name, new_site.tmp_dir)
 
     sitename_must_be_valid(new_site.name, Path(new_site.dir), reuse)
 
@@ -3395,7 +3394,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
         # Restore site with its original name, or specify a new one
         new_sitename = new_site_name or sitename
     else:
-        new_sitename = site_name()
+        new_sitename = site_name_from_uid()
 
     site = SiteContext(new_sitename)
 
@@ -3525,7 +3524,7 @@ def prepare_restore_as_root(
         reuse = True
         if not user_verify(version_info, site, allow_populated=True):
             bail_out("Error verifying site user.")
-        fstab_verify(site)
+        fstab_verify(site.name, site.tmp_dir)
 
     sitename_must_be_valid(site.name, Path(site.dir), reuse)
 
@@ -4678,7 +4677,7 @@ def main() -> None:  # pylint: disable=too-many-branches
             elif command.needs_site == 1:
                 bail_out("omd: please specify site.")
         else:
-            site = SiteContext(site_name())
+            site = SiteContext(site_name_from_uid())
 
     check_site_user(site, command.site_must_exist)
 

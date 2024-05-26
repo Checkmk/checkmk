@@ -104,9 +104,9 @@ def check_elphase(  # pylint: disable=too-many-branches
             if bound == Bounds.Both:
                 levels = params[quantity]
                 if levels[0] is not None and levels[1] is not None:
-                    levels_upper = (factor * levels[0], factor * levels[1])
+                    levels_lower = (factor * levels[0], factor * levels[1])
                 if levels[2] is not None and levels[3] is not None:
-                    levels_lower = (factor * levels[2], factor * levels[3])
+                    levels_upper = (factor * levels[2], factor * levels[3])
             elif bound == Bounds.Upper:
                 levels = params[quantity]
                 if levels[0] is not None and levels[1] is not None:

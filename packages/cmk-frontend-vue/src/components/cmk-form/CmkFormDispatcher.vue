@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CmkFormInteger from './element/CmkFormInteger.vue'
+import CmkFormFloat from '@/components/cmk-form/element/CmkFormFloat.vue'
 import CmkFormString from './element/CmkFormString.vue'
 import CmkFormDictionary from './container/CmkFormDictionary.vue'
 import type { ValidationMessages } from '@/utils'
@@ -16,7 +17,8 @@ const data = defineModel('data', { required: true })
 const components: Record<string, unknown> = {
   integer: CmkFormInteger,
   dictionary: CmkFormDictionary,
-  string: CmkFormString
+  string: CmkFormString,
+  float: CmkFormFloat
   //  legacy_valuespec: CmkFormLegacyValueSpec
 }
 

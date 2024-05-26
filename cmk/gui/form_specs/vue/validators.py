@@ -63,11 +63,21 @@ def _build_length_in_range_validator(
     ]
 
 
-def _build_is_number_validator(
+def _build_is_integer_validator(
     validator: private_form_specs_validators.IsInteger,
 ) -> list[VueValidators]:
     return [
-        vue_validators.IsNumber(
+        vue_validators.IsInteger(
+            error_message=validator.error_msg.localize(_),
+        )
+    ]
+
+
+def _build_is_float_validator(
+    validator: private_form_specs_validators.IsFloat,
+) -> list[VueValidators]:
+    return [
+        vue_validators.IsFloat(
             error_message=validator.error_msg.localize(_),
         )
     ]
@@ -84,7 +94,8 @@ def register_class(validator_class: object, build_function: VueValidatorCreator)
 def register_validators():
     register_class(formspec_validators.NumberInRange, _build_in_range_validator)
     register_class(formspec_validators.LengthInRange, _build_length_in_range_validator)
-    register_class(private_form_specs_validators.IsInteger, _build_is_number_validator)
+    register_class(private_form_specs_validators.IsInteger, _build_is_integer_validator)
+    register_class(private_form_specs_validators.IsFloat, _build_is_float_validator)
 
 
 register_validators()

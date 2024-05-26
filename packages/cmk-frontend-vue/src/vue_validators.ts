@@ -5,13 +5,19 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type VueValidators1 = IsNumber | NumberInRange | LengthInRange
+export type VueValidators1 = IsInteger | IsFloat | NumberInRange | LengthInRange
 
 export interface VueValidators {
   all_schemas?: VueValidators1[]
 }
-export interface IsNumber {
-  vue_type?: 'is_number'
+
+export interface IsInteger {
+  vue_type?: 'is_integer'
+  error_message?: string
+}
+
+export interface IsFloat {
+  vue_type?: 'is_float'
   error_message?: string
 }
 export interface NumberInRange {

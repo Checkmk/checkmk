@@ -48,3 +48,15 @@ class IsInteger:
     def __call__(self, value: typing.Any) -> None:
         if not isinstance(value, int):
             raise ValidationError(self.error_msg)
+
+
+class IsFloat:
+    def __init__(
+        self,
+        error_msg: Message = Message("Number is not a float value."),
+    ) -> None:
+        self.error_msg = error_msg
+
+    def __call__(self, value: typing.Any) -> None:
+        if not isinstance(value, (float, int)):
+            raise ValidationError(self.error_msg)

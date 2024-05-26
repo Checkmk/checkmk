@@ -15,10 +15,11 @@ from typing import Any, Sequence, TypeVar
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private.validators import IsInteger
+from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
 from cmk.gui.form_specs.vue.type_defs.vue_formspec_components import (
     VueDictionary,
     VueDictionaryElement,
+    VueFloat,
     VueInteger,
     VueSchema,
     VueString,
@@ -31,7 +32,7 @@ from cmk.gui.log import logger
 from cmk.gui.utils.user_errors import user_errors
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Integer, ServiceState, String
+from cmk.rulesets.v1.form_specs import Dictionary, Float, FormSpec, Integer, ServiceState, String
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 ModelT = TypeVar("ModelT")
@@ -180,6 +181,26 @@ def _visit_integer(
     return result
 
 
+def _visit_float(
+    visitor_options: VisitorOptions, form_spec: Float, value: float | DEFAULT_VALUE
+) -> VueVisitorMethodResult:
+    if isinstance(value, DEFAULT_VALUE):
+        value = form_spec.prefill.value
+
+    title, help_text = _get_title_and_help(form_spec)
+    validators = [IsFloat()] + (
+        list(form_spec.custom_validate) if form_spec.custom_validate else []
+    )
+
+    result = (
+        VueFloat(title=title, help=help_text, validators=build_vue_validators(validators)),
+        value,
+        _compute_validation_errors(visitor_options, validators, value),
+        value,
+    )
+    return result
+
+
 def _visit_string(
     visitor_options: VisitorOptions, form_spec: String, value: str | DEFAULT_VALUE
 ) -> VueVisitorMethodResult:
@@ -260,6 +281,7 @@ def register_form_specs():
     register_class(Integer, _visit_integer)
     register_class(Dictionary, _visit_dictionary)
     register_class(String, _visit_string)
+    register_class(Float, _visit_float)
 
 
 register_form_specs()
@@ -267,7 +289,7 @@ register_form_specs()
 # Vue is able to render these types in the frontend
 VueFormSpecTypes = (
     Integer
-    #    | Float
+    | Float
     #    | Percentage
     | String
     #    | SingleChoice

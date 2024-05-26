@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from cmk.gui.form_specs.vue.type_defs.vue_validators import VueValidators
 
@@ -37,8 +37,8 @@ class VueLegacyValuespec(VueBase):
 
 
 @dataclass
-class VueText(VueBase):
-    vue_type: str = "text"
+class VueString(VueBase):
+    vue_type: str = "string"
     placeholder: Optional[str] = None
 
 
@@ -64,8 +64,25 @@ class VueDictionaryElement:
 
 @dataclass
 class VueDictionary(VueBase):
-    elements: List[VueDictionaryElement] = field(default_factory=list)
     vue_type: str = "dictionary"
+    elements: List[VueDictionaryElement] = field(default_factory=list)
 
 
-VueSchema = Union[VueInteger, VueFloat, VueText, VueDictionary, VueList, VueLegacyValuespec]
+@dataclass
+class VueSingleChoiceElement:
+    name: str = ""
+    title: str = ""
+
+
+@dataclass
+class VueSingleChoice(VueBase):
+    vue_type: str = "single_choice"
+    elements: list[VueSingleChoiceElement] = field(default_factory=list)
+    no_elements_text: Optional[str] = None
+    frozen: bool = False
+    label: Optional[str] = None
+
+
+VueSchema = Union[
+    VueInteger, VueFloat, VueString, VueDictionary, VueSingleChoice, VueList, VueLegacyValuespec
+]

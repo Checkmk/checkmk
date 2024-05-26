@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CmkFormInteger from './element/CmkFormInteger.vue'
+import CmkFormString from './element/CmkFormString.vue'
 import CmkFormDictionary from './container/CmkFormDictionary.vue'
 import type { ValidationMessages } from '@/utils'
 import type { VueSchema } from '@/vue_formspec_components'
@@ -14,9 +15,8 @@ const data = defineModel('data', { required: true })
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<string, unknown> = {
   integer: CmkFormInteger,
-  dictionary: CmkFormDictionary
-  //  float: CmkFormFloat,
-  //  text: CmkFormText,
+  dictionary: CmkFormDictionary,
+  string: CmkFormString
   //  legacy_valuespec: CmkFormLegacyValueSpec
 }
 

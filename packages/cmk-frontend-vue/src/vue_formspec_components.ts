@@ -8,27 +8,43 @@
 export type VueSchema =
   | VueInteger
   | VueFloat
-  | VueText
+  | VueString
   | VueDictionary
   | VueList
+  | VueSingleChoice
   | VueLegacyValuespec
+
 export type VueInteger = VueInteger1 & {
   vue_type?: 'integer'
   label?: string
   unit?: string
 }
 export type VueInteger1 = VueBase
+
+export interface VueSingleChoiceElement {
+  name: string
+  title: string
+}
+
+export type VueSingleChoice = VueSingleChoice1 & {
+  vue_type?: 'single_choice'
+  label?: string
+  unit?: string
+  elements: VueSingleChoiceElement[]
+}
+export type VueSingleChoice1 = VueBase
+
 export type VueFloat = VueFloat1 & {
   vue_type?: 'float'
   label?: string
   unit?: string
 }
 export type VueFloat1 = VueBase
-export type VueText = VueText1 & {
+export type VueString = VueString1 & {
   vue_type?: 'text'
   placeholder?: string
 }
-export type VueText1 = VueBase
+export type VueString1 = VueBase
 export type VueDictionary = VueDictionary1 & {
   vue_type?: 'dictionary'
   elements: VueDictionaryElement[]

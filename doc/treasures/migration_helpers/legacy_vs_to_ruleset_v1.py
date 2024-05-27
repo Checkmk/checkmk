@@ -14,7 +14,7 @@ It's a quick and dirty, untested hacky thing.
 import argparse
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 import libcst as cst
@@ -29,7 +29,7 @@ _ADDED_IMPORTS = (
         "from cmk.rulesets.v1.form_specs import (DefaultValue, DictElement, "
         "Dictionary, FieldSize, FixedValue, Integer, LevelDirection, migrate_to_float_simple_levels, "
         "migrate_to_password, Password, SimpleLevels, SingleChoice, SingleChoiceElement, String, "
-        "TimeMagnitude, TimeSpan, validators,)"
+        "TimeMagnitude, TimeSpan, validators, BooleanChoice, MultimpleChoice, MultipleChoiceElement,)"
     ),
     (
         "from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic, HostAndServiceCondition, HostCondition, "
@@ -73,6 +73,10 @@ class ImportsTransformer(cst.CSTTransformer):
         )
 
 
+def _extract(keyword: str, args: Sequence[cst.Arg]) -> Iterable[cst.Arg]:
+    return [arg for arg in args if cst.ensure_type(arg.keyword, cst.Name).value == keyword]
+
+
 class VSTransformer(cst.CSTTransformer):
 
     def leave_Arg(self, original_node: cst.Arg, updated_node: cst.Arg) -> cst.Arg:
@@ -99,15 +103,55 @@ class VSTransformer(cst.CSTTransformer):
                     return self._make_list(updated_node)
                 case "CascadingDropdown":
                     return self._make_cascading_single_choice(updated_node)
-                case "String":
+                case "DropdownChoice":
+                    return self._make_single_choice(updated_node)
+                case "TextInput":
                     return self._make_string(updated_node)
+                case "Checkbox":
+                    return self._make_boolean_choice(updated_node)
+                case "IndividualOrStoredPassword":
+                    return self._make_password(updated_node)
+                case "Tuple":
+                    return self._make_dictionary_from_tuple(updated_node)
+                case "TimeSpan":
+                    return self._make_time_span(updated_node)
 
         return updated_node
 
+    def _make_dictionary_from_tuple(self, old: cst.Call) -> cst.Call:
+        args = {k.value: arg.value for arg in old.args if (k := arg.keyword) is not None}
+
+        elements = cst.Dict(
+            [
+                cst.DictElement(
+                    cst.SimpleString(f"'key_{i}'"),
+                    cst.Call(
+                        func=cst.Name("DictElement"),
+                        args=(
+                            cst.Arg(
+                                cst.Name("True"),
+                                cst.Name("required"),
+                            ),
+                            cst.Arg(
+                                cst.ensure_type(el, cst.Element).value, cst.Name("parameter_form")
+                            ),
+                        ),
+                    ),
+                )
+                for i, el in enumerate(cst.ensure_type(args["elements"], cst.List).elements)
+            ]
+        )
+        return cst.Call(
+            func=cst.Name("Dictionary"),
+            args=(
+                *_extract("title", old.args),
+                *_extract("help", old.args),
+                cst.Arg(elements, cst.Name("elements")),
+            ),
+        )
+
     def _make_dictionary(self, old: cst.Call) -> cst.Call:
         args = {k.value: arg.value for arg in old.args if (k := arg.keyword) is not None}
-        title = cst.ensure_type(args["title"], cst.Call).args[0] if "title" in args else None
-        help_text = cst.ensure_type(args["help"], cst.Call).args[0] if "help" in args else None
 
         required_keys = self._extract_required_keys(args)
 
@@ -134,28 +178,16 @@ class VSTransformer(cst.CSTTransformer):
                 for t in (
                     cst.ensure_type(el.value, cst.Tuple)
                     for el in cst.ensure_type(args["elements"], cst.List).elements
+                    if isinstance(el.value, cst.Tuple)
                 )
             ]
         )
         return cst.Call(
             func=cst.Name("Dictionary"),
             args=(
-                *(
-                    (cst.Arg(cst.Call(func=cst.Name("Title"), args=(title,)), cst.Name("title")),)
-                    if title
-                    else ()
-                ),
+                *_extract("title", old.args),
+                *_extract("help", old.args),
                 cst.Arg(elements, cst.Name("elements")),
-                *(
-                    (
-                        cst.Arg(
-                            cst.Call(func=cst.Name("Help"), args=(help_text,)),
-                            cst.Name("help_text"),
-                        ),
-                    )
-                    if help_text
-                    else ()
-                ),
             ),
         )
 
@@ -168,14 +200,15 @@ class VSTransformer(cst.CSTTransformer):
             }
 
         present_keys = {
-            cst.ensure_type(
-                cst.ensure_type(t.value, cst.Tuple).elements[0].value, cst.SimpleString
-            ).value
+            cst.ensure_type(tv.elements[0].value, cst.SimpleString).value
             for t in cst.ensure_type(args["elements"], cst.List).elements
+            if isinstance(tv := t.value, cst.Tuple)
         }
         if (opt := args.get("optional_keys")) is not None:
             if isinstance(opt, cst.List):
-                optional_keys = {cst.ensure_type(t, cst.SimpleString).value for t in opt.elements}
+                optional_keys = {
+                    cst.ensure_type(t.value, cst.SimpleString).value for t in opt.elements
+                }
                 return present_keys - optional_keys
             if isinstance(opt, cst.Name) and opt.value == "False":
                 return present_keys
@@ -190,8 +223,26 @@ class VSTransformer(cst.CSTTransformer):
     def _make_cascading_single_choice(self, old: cst.Call) -> cst.Call:
         return cst.Call(func=cst.Name("CascadingSingleChoice"), args=old.args)
 
+    def _make_single_choice(self, old: cst.Call) -> cst.Call:
+        return cst.Call(func=cst.Name("SingleChoice"), args=old.args)
+
     def _make_string(self, old: cst.Call) -> cst.Call:
         return cst.Call(func=cst.Name("String"), args=old.args)
+
+    def _make_boolean_choice(self, old: cst.Call) -> cst.Call:
+        return cst.Call(func=cst.Name("BooleanChoice"), args=old.args)
+
+    def _make_time_span(self, old: cst.Call) -> cst.Call:
+        return cst.Call(func=cst.Name("TimeSpan"), args=old.args)
+
+    def _make_password(self, old: cst.Call) -> cst.Call:
+        return cst.Call(
+            func=cst.Name("Password"),
+            args=(
+                *_extract("title", old.args),
+                *_extract("help", old.args),
+            ),
+        )
 
 
 class RegistrationTransformer(cst.CSTTransformer):
@@ -212,28 +263,35 @@ class RegistrationTransformer(cst.CSTTransformer):
         return self._make_ruleset_plugin(old_ruleset)
 
     def _make_ruleset_plugin(self, old_ruleset: cst.Call) -> cst.SimpleStatementLine:
+        if (rule_type := cst.ensure_type(old_ruleset.func, cst.Name).value) in {
+            "CheckParameterRulespecWithItem",
+            "CheckParameterRulespecWithOutItem",
+        }:
+            return self._construct_check_parameters(old_ruleset.args)
 
-        match cst.ensure_type(old_ruleset.func, cst.Name).value:
-            case "CheckParameterRulespecWithItem" | "CheckParameterRulespecWithOutItem":
-                return self._construct_check_parameters(old_ruleset.args)
+        args = {k.value: arg.value for arg in old_ruleset.args if (k := arg.keyword) is not None}
+        if (
+            rule_type == "HostRulespec"
+            and cst.ensure_type(
+                cst.ensure_type(args["name"], cst.Call).func, cst.Attribute
+            ).attr.value
+            == "SpecialAgents"
+        ):
+            return self._construct_special_agent(old_ruleset.args)
 
-            case other_name:
-                print(f"not yet implemented rulespec type: {other_name}", file=sys.stderr)
-                return cst.SimpleStatementLine(
-                    (
-                        cst.Assign(
-                            targets=(
-                                cst.AssignTarget(cst.Name("None")),
-                            ),  # make sure this fails...
-                            value=old_ruleset,
-                        ),
-                    )
-                )
+        print(f"not yet implemented rulespec type: {rule_type}", file=sys.stderr)
+        return cst.SimpleStatementLine(
+            (
+                cst.Assign(
+                    targets=(cst.AssignTarget(cst.Name("None")),),  # make sure this fails...
+                    value=old_ruleset,
+                ),
+            )
+        )
 
     def _construct_check_parameters(self, old: Sequence[cst.Arg]) -> cst.SimpleStatementLine:
         args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
         name = self._extract_string(args["check_group_name"])
-        title = self._extract_title(args["title"])
         form_spec = args["parameter_valuespec"]
 
         return cst.SimpleStatementLine(
@@ -244,10 +302,7 @@ class RegistrationTransformer(cst.CSTTransformer):
                         func=cst.Name("CheckParameters"),
                         args=(
                             cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
-                            cst.Arg(
-                                cst.Call(func=cst.Name("Title"), args=(cst.Arg(title),)),
-                                cst.Name("title"),
-                            ),
+                            *_extract("title", old),
                             cst.Arg(cst.Name("Topic"), cst.Name("topic")),
                             cst.Arg(form_spec, cst.Name("parameter_form")),
                             cst.Arg(
@@ -260,9 +315,27 @@ class RegistrationTransformer(cst.CSTTransformer):
             )
         )
 
-    @staticmethod
-    def _extract_title(old_arg: cst.BaseExpression) -> cst.BaseExpression:
-        return cst.ensure_type(cst.ensure_type(old_arg, cst.Lambda).body, cst.Call).args[0].value
+    def _construct_special_agent(self, old: Sequence[cst.Arg]) -> cst.SimpleStatementLine:
+        args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
+        name = self._extract_string(cst.ensure_type(args["name"], cst.Call).args[0].value)
+        form_spec = args["valuespec"]
+
+        return cst.SimpleStatementLine(
+            (
+                cst.Assign(
+                    targets=(cst.AssignTarget(cst.Name(f"rule_spec_active_check_{name}")),),
+                    value=cst.Call(
+                        func=cst.Name("SpecialAgent"),
+                        args=(
+                            cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
+                            *_extract("title", old),
+                            cst.Arg(cst.Name("Topic"), cst.Name("topic")),
+                            cst.Arg(form_spec, cst.Name("parameter_form")),
+                        ),
+                    ),
+                ),
+            )
+        )
 
     @staticmethod
     def _extract_string(old_arg: cst.BaseExpression) -> str:

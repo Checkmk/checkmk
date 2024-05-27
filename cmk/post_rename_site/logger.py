@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from logging import getLogger
+import sys
+from logging import Formatter, getLogger, StreamHandler
 
 import cmk.utils.log as log
 
@@ -11,7 +12,11 @@ logger = getLogger("cmk.post_rename_site")
 
 
 def setup_logging(*, verbose: int) -> None:
-    log.setup_console_logging()
+    handler = StreamHandler(stream=sys.stdout)
+    handler.setFormatter(Formatter("%(message)s"))
+    del log.logger.handlers[:]  # Remove all previously existing handlers
+    log.logger.addHandler(handler)
+
     log.logger.setLevel(log.verbosity_to_log_level(verbose))
     logger.setLevel(log.logger.level)
 

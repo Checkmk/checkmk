@@ -142,7 +142,11 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
 
 
 def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
-    log.setup_console_logging()
+    handler = logging.StreamHandler(stream=sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    del log.logger.handlers[:]  # Remove all previously existing handlers
+    log.logger.addHandler(handler)
+
     log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
 
     logger = logging.getLogger("cmk.update_config")

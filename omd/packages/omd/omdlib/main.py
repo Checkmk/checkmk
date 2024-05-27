@@ -61,7 +61,7 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.site_name import sitename_must_be_valid
+from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites, is_disabled, main_sites
 from omdlib.skel_permissions import (
@@ -242,10 +242,6 @@ class CommandType(Enum):
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with sites                             |
 #   '----------------------------------------------------------------------'
-
-
-def site_name_from_uid() -> str:
-    return pwd.getpwuid(os.getuid()).pw_name
 
 
 def is_root() -> bool:

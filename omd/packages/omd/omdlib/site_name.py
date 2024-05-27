@@ -3,12 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
+import pwd
 import re
 import sys
 from pathlib import Path
 
 from omdlib.users_and_groups import group_exists, user_exists
 from omdlib.utils import site_exists
+
+
+def site_name_from_uid() -> str:
+    return pwd.getpwuid(os.getuid()).pw_name
 
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)

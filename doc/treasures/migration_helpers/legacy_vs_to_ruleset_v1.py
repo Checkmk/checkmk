@@ -83,12 +83,24 @@ class VSTransformer(cst.CSTTransformer):
                 return cst.Arg(cst.Call(func=cst.Name("Help"), args=args), cst.Name("help_text"))
             case cst.Arg(cst.Call(func=cst.Name("_"), args=args), cst.Name("label")):
                 return cst.Arg(cst.Call(func=cst.Name("Label"), args=args), cst.Name("label"))
+            case cst.Arg(cst.Name("False"), cst.Name("allow_empty")):
+                return cst.Arg(
+                    cst.parse_expression("(validators.LengthInRange(min_value=1),)"),
+                    cst.Name("custom_validate"),
+                )
         return updated_node
 
     def leave_Call(self, original_node: cst.Call, updated_node: cst.Call) -> cst.Call:
         if isinstance(func := original_node.func, cst.Name):
-            if func.value == "Dictionary":
-                return self._make_dictionary(updated_node)
+            match func.value:
+                case "Dictionary":
+                    return self._make_dictionary(updated_node)
+                case "ListOf":
+                    return self._make_list(updated_node)
+                case "CascadingDropdown":
+                    return self._make_cascading_single_choice(updated_node)
+                case "String":
+                    return self._make_string(updated_node)
 
         return updated_node
 
@@ -172,6 +184,15 @@ class VSTransformer(cst.CSTTransformer):
 
         return set()
 
+    def _make_list(self, old: cst.Call) -> cst.Call:
+        return cst.Call(func=cst.Name("List"), args=old.args)
+
+    def _make_cascading_single_choice(self, old: cst.Call) -> cst.Call:
+        return cst.Call(func=cst.Name("CascadingSingleChoice"), args=old.args)
+
+    def _make_string(self, old: cst.Call) -> cst.Call:
+        return cst.Call(func=cst.Name("String"), args=old.args)
+
 
 class RegistrationTransformer(cst.CSTTransformer):
 
@@ -191,17 +212,29 @@ class RegistrationTransformer(cst.CSTTransformer):
         return self._make_ruleset_plugin(old_ruleset)
 
     def _make_ruleset_plugin(self, old_ruleset: cst.Call) -> cst.SimpleStatementLine:
-        assert isinstance(name := old_ruleset.func, cst.Name)
-        if name.value == "CheckParameterRulespecWithItem":  # for now: check parameters
-            return self._construct_check_parameters(old_ruleset.args)
-        raise NotImplementedError()
+
+        match cst.ensure_type(old_ruleset.func, cst.Name).value:
+            case "CheckParameterRulespecWithItem" | "CheckParameterRulespecWithOutItem":
+                return self._construct_check_parameters(old_ruleset.args)
+
+            case other_name:
+                print(f"not yet implemented rulespec type: {other_name}", file=sys.stderr)
+                return cst.SimpleStatementLine(
+                    (
+                        cst.Assign(
+                            targets=(
+                                cst.AssignTarget(cst.Name("None")),
+                            ),  # make sure this fails...
+                            value=old_ruleset,
+                        ),
+                    )
+                )
 
     def _construct_check_parameters(self, old: Sequence[cst.Arg]) -> cst.SimpleStatementLine:
         args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
         name = self._extract_string(args["check_group_name"])
         title = self._extract_title(args["title"])
         form_spec = args["parameter_valuespec"]
-        item_spec = self._extract_itemspec(args["item_spec"])
 
         return cst.SimpleStatementLine(
             (
@@ -218,10 +251,7 @@ class RegistrationTransformer(cst.CSTTransformer):
                             cst.Arg(cst.Name("Topic"), cst.Name("topic")),
                             cst.Arg(form_spec, cst.Name("parameter_form")),
                             cst.Arg(
-                                cst.Call(
-                                    func=cst.Name("HostAndItemCondition"),
-                                    args=(cst.Arg(item_spec, cst.Name("item_form")),),
-                                ),
+                                self._make_condition(args.get("item_spec")),
                                 cst.Name("condition"),
                             ),
                         ),
@@ -239,8 +269,20 @@ class RegistrationTransformer(cst.CSTTransformer):
         return cst.ensure_type(old_arg, cst.SimpleString).value[1:-1]
 
     @staticmethod
-    def _extract_itemspec(old_arg: cst.BaseExpression) -> cst.BaseExpression:
-        return old_arg.body if isinstance(old_arg, cst.Lambda) else old_arg
+    def _make_condition(old_arg: cst.BaseExpression | None) -> cst.Call:
+        if old_arg is None:
+            return cst.Call(func=cst.Name("HostCondition"), args=())
+
+        return cst.Call(
+            func=cst.Name("HostAndItemCondition"),
+            args=(
+                cst.Arg(
+                    # not quite right, we need to move the title kwarg to the HostAndItemCondition
+                    old_arg.body if isinstance(old_arg, cst.Lambda) else old_arg,
+                    cst.Name("item_form"),
+                ),
+            ),
+        )
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:

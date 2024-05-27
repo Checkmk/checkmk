@@ -2004,7 +2004,7 @@ def main_help(
 
 def main_setversion(
     version_info: VersionInfo,
-    site: SiteContext,
+    _site: object,
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
@@ -3351,7 +3351,6 @@ def main_backup(
 def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     *,
     tar: tarfile.TarFile,
-    site: SiteContext,
     options: CommandOptions,
     global_opts: GlobalOptions,
     version_info: VersionInfo,
@@ -3454,7 +3453,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
 
 def main_restore(
     version_info: VersionInfo,
-    site: SiteContext,
+    _site: object,
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
@@ -3486,9 +3485,8 @@ def main_restore(
             fileobj=fileobj,
             mode=mode,
         ) as tar:
-            site = _restore_backup_from_tar(
+            _restore_backup_from_tar(
                 tar=tar,
-                site=site,
                 options=options,
                 global_opts=global_opts,
                 version_info=version_info,
@@ -3708,7 +3706,7 @@ def postprocess_restore_as_site_user(
 
 def main_cleanup(
     version_info: VersionInfo,
-    site: SiteContext,
+    _site: object,
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,

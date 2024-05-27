@@ -1,0 +1,15 @@
+Title: Show timeout in failed notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1716803850
+Edition: cee
+Level: 1
+Version: 2.2.0p27
+
+If a notification process was terminated because of a timeout, in the failed
+notifications view only "HOST/SERVICE NOTIFICATION RESULT" was shown without
+further informations.
+
+We now show the current delivery attempt and the timeout in seconds.
+You will find this message also in the notify.log next to the spoolfile name.

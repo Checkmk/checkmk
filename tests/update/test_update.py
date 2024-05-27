@@ -34,16 +34,19 @@ def test_update(
     )
     test_site.activate_changes_and_wait_for_core_reload()
 
-    logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
-    test_site.openapi.activate_changes_and_wait_for_completion()
-    test_site.schedule_check(hostname, "Check_MK", 0)
+    base_data: dict = {}
+    base_ok_services: set[str] = set()
+    if not version_from_env().is_saas_edition():
+        logger.info("Discovering services and waiting for completion...")
+        test_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
+        test_site.openapi.activate_changes_and_wait_for_completion()
+        test_site.schedule_check(hostname, "Check_MK", 0)
 
-    # get baseline monitoring data for each host
-    base_data = test_site.get_host_services(hostname)
+        # get baseline monitoring data for each host
+        base_data = test_site.get_host_services(hostname)
 
-    base_ok_services = get_services_with_status(base_data, 0)
-    assert len(base_ok_services) > 0
+        base_ok_services = get_services_with_status(base_data, 0)
+        assert len(base_ok_services) > 0
 
     target_version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
@@ -57,29 +60,33 @@ def test_update(
 
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
-    logger.info("Discovering services and waiting for completion...")
-    target_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
-    target_site.openapi.activate_changes_and_wait_for_completion()
-    target_site.schedule_check(hostname, "Check_MK", 0)
+    if not version_from_env().is_saas_edition():
+        logger.info("Discovering services and waiting for completion...")
+        target_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
+        target_site.openapi.activate_changes_and_wait_for_completion()
+        target_site.schedule_check(hostname, "Check_MK", 0)
 
-    # get update monitoring data
-    target_data = target_site.get_host_services(hostname)
-    target_ok_services = get_services_with_status(target_data, 0)
+        # get update monitoring data
+        target_data = target_site.get_host_services(hostname)
+        target_ok_services = get_services_with_status(target_data, 0)
 
-    not_found_services = [service for service in base_data if service not in target_data]
-    err_msg = (
-        f"The following services were found in base-version but not in target-version: "
-        f"{not_found_services}"
-    )
-    assert len(target_data) >= len(base_data), err_msg
+        not_found_services = [service for service in base_data if service not in target_data]
+        err_msg = (
+            f"The following services were found in base-version but not in target-version: "
+            f"{not_found_services}"
+        )
+        assert len(target_data) >= len(base_data), err_msg
 
-    not_ok_services = [service for service in base_ok_services if service not in target_ok_services]
-    err_details = [
-        (s, "state: " + str(target_data[s].state), target_data[s].summary) for s in not_ok_services
-    ]
-    err_msg = (
-        f"The following services were `OK` in base-version but not in target-version: "
-        f"{not_ok_services}"
-        f"\nDetails: {err_details})"
-    )
-    assert base_ok_services.issubset(target_ok_services), err_msg
+        not_ok_services = [
+            service for service in base_ok_services if service not in target_ok_services
+        ]
+        err_details = [
+            (s, "state: " + str(target_data[s].state), target_data[s].summary)
+            for s in not_ok_services
+        ]
+        err_msg = (
+            f"The following services were `OK` in base-version but not in target-version: "
+            f"{not_ok_services}"
+            f"\nDetails: {err_details})"
+        )
+        assert base_ok_services.issubset(target_ok_services), err_msg

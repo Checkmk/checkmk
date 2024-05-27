@@ -26,6 +26,7 @@ from cmk.utils.notify_types import (
 from cmk.gui.fields import (
     AuxTagIDField,
     FolderIDField,
+    GlobalHTTPProxyField,
     IPField,
     PasswordStoreIDField,
     ServiceLevelField,
@@ -516,11 +517,14 @@ URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE = fields.Nested(
 
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url"],
-        example="",
+        enum=["no_proxy", "environment", "url", "global"],
+        example="no_proxy",
     )
     url = fields.String(
         example="http://example_proxy",
+    )
+    global_proxy_id = GlobalHTTPProxyField(
+        presence="should_exist",
     )
 
 
@@ -533,8 +537,8 @@ class HttpProxyValue(CheckboxOutput):
 
 HTTP_PROXY_RESPONSE = fields.Nested(
     HttpProxyValue,
-    example={},
-    description="",
+    example={"state": "enabled", "value": "no_proxy"},
+    description="The http proxy settings for the plugin",
 )
 
 

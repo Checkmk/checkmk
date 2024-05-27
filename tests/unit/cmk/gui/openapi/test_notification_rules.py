@@ -574,6 +574,24 @@ plugin_test_data: list[PluginType] = [
     {
         "plugin_name": "cisco_webex_teams",
         "webhook_url": {
+            "option": "explicit",
+            "url": "http://abc.com",
+        },
+        "url_prefix_for_links_to_checkmk": {
+            "state": "enabled",
+            "value": {"option": "automatic", "schema": "http"},
+        },
+        "disable_ssl_cert_verification": {
+            "state": "enabled",
+        },
+        "http_proxy": {
+            "state": "enabled",
+            "value": {"option": "global", "global_proxy_id": "some_proxy_id"},
+        },
+    },
+    {
+        "plugin_name": "cisco_webex_teams",
+        "webhook_url": {
             "option": "store",
             "store_id": "some_store_id",
         },
@@ -1301,8 +1319,14 @@ def test_update_notification_method_cancel_previous(
 def test_update_notification_method(
     clients: ClientRegistry,
     plugin_data: PluginType,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     setup_site_data(clients)
+
+    monkeypatch.setattr(
+        "cmk.gui.fields.custom_fields._global_proxy_choices",
+        lambda: [("some_proxy_id")],
+    )
 
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(rule_config=config)

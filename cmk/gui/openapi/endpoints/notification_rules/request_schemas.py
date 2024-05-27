@@ -32,6 +32,7 @@ from cmk.gui.fields import (
     AuxTagIDField,
     ContactGroupField,
     FolderIDField,
+    GlobalHTTPProxyField,
     GroupField,
     HostField,
     IPField,
@@ -221,19 +222,40 @@ class CheckboxWithListOfStr(Checkbox):
 
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url"],
+        enum=["no_proxy", "environment", "url", "global"],
         required=True,
         example="",
     )
+
+
+class HttpProxyUrl(HttpProxy):
     url = fields.String(
-        required=False,
+        required=True,
         example="http://example_proxy",
     )
 
 
+class HttpProxyGlobal(HttpProxy):
+    global_proxy_id = GlobalHTTPProxyField(
+        required=True,
+        presence="should_exist",
+    )
+
+
+class HttpProxyOptions(OneOfSchema):
+    type_field = "option"
+    type_field_remove = False
+    type_schemas = {
+        "no_proxy": HttpProxy,
+        "environment": HttpProxy,
+        "url": HttpProxyUrl,
+        "global": HttpProxyGlobal,
+    }
+
+
 class HttpProxyValue(Checkbox):
     value = fields.Nested(
-        HttpProxy,
+        HttpProxyOptions,
         description="Use the proxy settings from the environment variables. The variables NO_PROXY, HTTP_PROXY and HTTPS_PROXY are taken into account during execution. Have a look at the python requests module documentation for further information. Note that these variables must be defined as a site-user in ~/etc/environment and that this might affect other notification methods which also use the requests module",
     )
 

@@ -504,9 +504,9 @@ AsciiMailPluginModel = TypedDict(
 )
 
 
-Environment = tuple[Literal["environment"], Literal["envronment"]]
+Environment = tuple[Literal["environment"], Literal["environment"]]
 WithoutProxy = tuple[Literal["no_proxy"], None]
-GlobalProxy = Any  # TODO: Not sure how to configure this.
+GlobalProxy = tuple[Literal["global"], str]
 ExplicitProxy = tuple[Literal["url"], str]
 ProxyUrl = Environment | WithoutProxy | GlobalProxy | ExplicitProxy
 WebhookURL = tuple[Literal["webhook_url", "store"], str]
@@ -653,6 +653,7 @@ class ServiceNowPluginModel(TypedDict):
     password: tuple[Literal["password", "store"], str]
     use_site_id: NotRequired[bool]
     timeout: NotRequired[str]
+    proxy_url: NotRequired[ProxyUrl]
     mgmt_type: tuple[Literal["incident"], MgmtTypeIncident] | tuple[Literal["case"], MgmtTypeCase]
 
 

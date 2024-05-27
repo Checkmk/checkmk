@@ -28,6 +28,7 @@ from cmk.gui.fields.attributes import (
 from cmk.gui.fields.custom_fields import (
     AuxTagIDField,
     ContactGroupField,
+    GlobalHTTPProxyField,
     IPField,
     LDAPConnectionID,
     NetworkPortNumber,
@@ -75,6 +76,7 @@ __all__ = [
     "FolderField",
     "FolderIDField",
     "FOLDER_PATTERN",
+    "GlobalHTTPProxyField",
     "GroupField",
     "HostAttributeManagementBoardField",
     "HostContactGroup",

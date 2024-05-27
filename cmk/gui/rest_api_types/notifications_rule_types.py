@@ -1182,13 +1182,28 @@ class CheckboxURLPrefix:
 
 
 # ----------------------------------------------------------------
-class HttpProxyAPIAttrs(TypedDict, total=False):
-    option: Literal["no_proxy", "environment", "url"]
+
+
+class HttpProxyAPINoProxy(TypedDict):
+    option: Literal["no_proxy"]
+
+
+class HttpProxyAPIEnvironment(TypedDict):
+    option: Literal["environment"]
+
+
+class HttpProxyAPIUrl(TypedDict):
+    option: Literal["url"]
     url: str
 
 
+class HttpProxyAPIGlobal(TypedDict):
+    option: Literal["global"]
+    global_proxy_id: str
+
+
 class HttpProxyAPIValueType(CheckboxStateType, total=False):
-    value: HttpProxyAPIAttrs
+    value: HttpProxyAPINoProxy | HttpProxyAPIEnvironment | HttpProxyAPIUrl | HttpProxyAPIGlobal
 
 
 @dataclass
@@ -1201,18 +1216,24 @@ class CheckboxHttpProxy:
 
     @classmethod
     def from_api_request(cls, data: HttpProxyAPIValueType) -> CheckboxHttpProxy:
-        if data["state"] == "disabled":
-            return cls()
-
-        value = data["value"]
-
-        match value["option"]:
-            case "no_proxy":
+        match data:
+            case {"state": "enabled", "value": {"option": "no_proxy"}}:
                 return cls(value=("no_proxy", None))
-            case "environment":
+
+            case {"state": "enabled", "value": {"option": "url", "url": str() as url}}:
+                return cls(value=("url", url))
+
+            case {
+                "state": "enabled",
+                "value": {"option": "global", "global_proxy_id": str() as global_proxy_id},
+            }:
+                return cls(value=("global", global_proxy_id))
+
+            case {"state": "enabled", "value": {"option": "environment"}}:
                 return cls(value=("environment", "environment"))
-            case "url":
-                return cls(value=("url", value["url"]))
+
+            case _:
+                return cls()
 
     def api_response(self) -> HttpProxyAPIValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
@@ -1228,7 +1249,10 @@ class CheckboxHttpProxy:
             r["value"] = {"option": option}
 
         if option == "url" and value is not None:
-            r["value"] = {"option": option, "url": value}
+            r["value"] = {"option": "url", "url": value}
+
+        if option == "global" and value is not None:
+            r["value"] = {"option": "global", "global_proxy_id": value}
 
         return r
 

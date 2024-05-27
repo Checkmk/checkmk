@@ -11,6 +11,7 @@ import cmk.utils.log as log
 logger = getLogger("cmk.post_rename_site")
 
 
+# TODO: Fix this cruel hack caused by our funny mix of GUI + console stuff.
 def setup_logging(*, verbose: int) -> None:
     handler = StreamHandler(stream=sys.stdout)
     handler.setFormatter(Formatter("%(message)s"))
@@ -20,11 +21,5 @@ def setup_logging(*, verbose: int) -> None:
     log.logger.setLevel(log.verbosity_to_log_level(verbose))
     logger.setLevel(log.logger.level)
 
-    # TODO: Fix this cruel hack caused by our funny mix of GUI + console
-    # stuff. Currently, we just move the console handler to the top, so
-    # both worlds are happy. We really, really need to split business logic
-    # from presentation code... :-/
-    if log.logger.handlers:
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        getLogger().addHandler(console_handler)
+    del log.logger.handlers[:]
+    getLogger().addHandler(handler)

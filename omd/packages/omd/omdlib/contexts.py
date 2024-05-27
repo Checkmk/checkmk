@@ -57,10 +57,6 @@ class AbstractSiteContext(abc.ABC):
         raise NotImplementedError()
 
     @property
-    def version_meta_dir(self) -> str:
-        return "%s/.version_meta" % self.dir
-
-    @property
     def conf(self) -> Config:
         """{ "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)"""
         if not self._config_loaded:
@@ -176,6 +172,10 @@ class SiteContext(AbstractSiteContext):
             return load_skel_permissions_from(skel_permissions_file_path(version))
 
         return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")
+
+    @property
+    def version_meta_dir(self) -> str:
+        return "%s/.version_meta" % self.dir
 
     @property
     def version_skel_dir(self) -> str:

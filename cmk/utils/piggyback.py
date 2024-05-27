@@ -10,7 +10,6 @@ import logging
 import os
 import re
 import tempfile
-import time
 from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import asdict, dataclass
@@ -335,101 +334,63 @@ def _get_piggybacked_file_path(
 #   '----------------------------------------------------------------------'
 
 
-def cleanup_piggyback_files(time_settings: PiggybackTimeSettings) -> None:
+def cleanup_piggyback_files(cut_off_timestamp: float) -> None:
     """This is a housekeeping job to clean up different old files from the
     piggyback directories.
 
     # Source status files and/or piggybacked data files are cleaned up/deleted
     # if and only if they have exceeded the maximum cache age configured in the
     # global settings or in the rule 'Piggybacked Host Files'."""
-    logger.debug("Cleanup piggyback files.")
-    logger.debug("Time settings: %r.", time_settings)
+    logger.debug(
+        "Cleanup piggyback data from before %s (%s).",
+        _render_datetime(cut_off_timestamp),
+        cut_off_timestamp,
+    )
 
-    piggybacked_hosts_settings = _get_piggybacked_hosts_settings(time_settings)
+    piggybacked_hosts_settings = [
+        (piggybacked_host_folder, _files_in(piggybacked_host_folder))
+        for piggybacked_host_folder in _get_piggybacked_host_folders()
+    ]
 
-    _cleanup_old_source_status_files(piggybacked_hosts_settings)
-    _cleanup_old_piggybacked_files(piggybacked_hosts_settings)
-
-
-def _get_piggybacked_hosts_settings(
-    time_settings: PiggybackTimeSettings,
-) -> Sequence[tuple[Path, Sequence[Path], Config]]:
-    piggybacked_hosts_settings = []
-    for piggybacked_host_folder in _get_piggybacked_host_folders():
-        source_hosts = _files_in(piggybacked_host_folder)
-        time_settings_map = Config(
-            HostName(piggybacked_host_folder.name),
-            time_settings,
-        )
-        piggybacked_hosts_settings.append(
-            (piggybacked_host_folder, source_hosts, time_settings_map)
-        )
-    return piggybacked_hosts_settings
+    _cleanup_old_source_status_files(_get_source_state_files(), cut_off_timestamp)
+    _cleanup_old_piggybacked_files(piggybacked_hosts_settings, cut_off_timestamp)
 
 
 def _cleanup_old_source_status_files(
-    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], Config]]
+    source_state_files: Sequence[Path],
+    cut_off_timestamp: float,
 ) -> None:
-    """Remove source status files which exceed configured maximum cache age.
-    There may be several 'Piggybacked Host Files' rules where the max age is configured.
-    We simply use the greatest one per source."""
-
-    max_cache_age_by_sources: dict[str, int] = {}
-    for _piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
-        for source_host in source_hosts:
-            max_cache_age = time_settings.max_cache_age(
-                HostName(source_host.name),
-            )
-
-            max_cache_age_of_source = max_cache_age_by_sources.get(source_host.name)
-            if max_cache_age_of_source is None or max_cache_age_of_source <= max_cache_age:
-                max_cache_age_by_sources[source_host.name] = max_cache_age
-
-    for source_state_file in _get_source_state_files():
-        try:
-            file_age = _time_since_last_modification(source_state_file)
-        except FileNotFoundError:
+    """Remove source status files which exceed provided maximum age."""
+    for source_state_file in source_state_files:
+        if (mtime := _get_mtime(source_state_file)) is None:
             continue  # File has been removed, that's OK.
 
-        # No entry -> no file
-        max_cache_age_of_source = max_cache_age_by_sources.get(source_state_file.name)
-        if max_cache_age_of_source is None:
-            logger.debug("No piggyback data from source '%s'", source_state_file.name)
-            continue
-
-        if file_age > max_cache_age_of_source:
+        if mtime < cut_off_timestamp:
             logger.debug(
-                "Piggyback source status file '%s' too old (age: %s, allowed: %s). Remove it.",
+                "Piggyback source status file '%s' too old (%s). Remove it.",
                 source_state_file,
-                _render_time(file_age),
-                _render_time(max_cache_age_of_source),
+                _render_datetime(mtime),
             )
             _remove_piggyback_file(source_state_file)
 
 
 def _cleanup_old_piggybacked_files(
-    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], Config]]
+    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path]]], cut_off_timestamp: float
 ) -> None:
-    """Remove piggybacked data files which exceed configured maximum cache age."""
+    """Remove piggybacked data files which exceed provided maximum age."""
 
-    for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
+    for piggybacked_host_folder, source_hosts in piggybacked_hosts_settings:
         for piggybacked_host_source in source_hosts:
-            src = HostName(piggybacked_host_source.name)
-
-            try:
-                file_age = _time_since_last_modification(piggybacked_host_source)
-            except FileNotFoundError:
+            if (mtime := _get_mtime(piggybacked_host_source)) is None:
                 continue
 
-            max_cache_age = time_settings.max_cache_age(src)
-            validity_period = time_settings.validity_period(src)
-            if file_age <= max_cache_age or file_age <= validity_period:
-                # Do not remove files just because they're abandoned.
-                # We don't use them anymore, but the DCD still needs to know about them for a while.
-                continue
-
-            logger.debug("Piggyback file '%s' is outdated. Remove it.", piggybacked_host_source)
-            _remove_piggyback_file(piggybacked_host_source)
+            if mtime < cut_off_timestamp:
+                logger.debug(
+                    "Piggyback file '%s' too old (%s). Remove it.",
+                    piggybacked_host_source,
+                    _render_datetime(mtime),
+                )
+                _remove_piggyback_file(piggybacked_host_source)
 
         # Remove empty backed host directory
         try:
@@ -439,19 +400,9 @@ def _cleanup_old_piggybacked_files(
                 continue
             raise
         logger.debug(
-            "Piggyback folder '%s' is empty. Removed it.",
+            "Piggyback folder '%s' was empty. Removed it.",
             piggybacked_host_folder,
         )
-
-
-def _time_since_last_modification(path: Path) -> float:
-    """Return the time difference between the last modification and now.
-
-    Raises:
-        FileNotFoundError if `path` does not exist.
-
-    """
-    return time.time() - path.stat().st_mtime
 
 
 def _get_mtime(path: Path) -> int | None:
@@ -465,14 +416,5 @@ def _get_mtime(path: Path) -> int | None:
         return None
 
 
-def _render_time(value: float | int) -> str:
-    """Format time difference seconds into human readable text
-
-    >>> _render_time(184)
-    '0:03:04'
-
-    Unlikely in this context, but still acceptable:
-    >>> _render_time(92635.3)
-    '1 day, 1:43:55'
-    """
-    return str(datetime.timedelta(seconds=round(value)))
+def _render_datetime(timestamp: float) -> str:
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")

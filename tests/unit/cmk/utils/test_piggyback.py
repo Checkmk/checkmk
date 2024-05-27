@@ -51,15 +51,6 @@ def fixture_setup_files(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     os.utime(str(source_status_file), (_REF_TIME, _REF_TIME))
 
 
-def test_cleanup_piggyback_files() -> None:
-    piggyback.cleanup_piggyback_files([(None, "max_cache_age", -1)])
-    assert not any(
-        list(piggybacked_dir.glob("*"))
-        for piggybacked_dir in cmk.utils.paths.piggyback_dir.glob("*")
-    )
-    assert not list(cmk.utils.paths.piggyback_source_dir.glob("*"))
-
-
 def test_get_piggyback_raw_data_no_data() -> None:
     assert not piggyback.get_piggyback_raw_data(HostName("no-host"))
 

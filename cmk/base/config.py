@@ -3243,8 +3243,8 @@ class ConfigCache:
         Max cache age, validity period and state are configurable wihtin this
         rule for all piggybacked host or per piggybacked host of this source.
         In order to differentiate later for which piggybacked hosts a parameter
-        is used we flat this rule to a homogeneous data structure:
-            (HOST, KEY): VALUE
+        is used we flatten this rule to a homogeneous data structure:
+            (HOST, KEY, VALUE)
         Then piggyback.py:_get_piggyback_processed_file_info can evaluate the
         parameters generically."""
         flat_rule: list[tuple[str | None, str, int]] = []
@@ -3878,6 +3878,16 @@ class ConfigCache:
         # From global settings
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
         return time_settings
+
+    def get_definitive_piggybacked_data_expiry_age(self) -> float:
+        """Get the interval after which we definitively can get rid of piggybacked data."""
+        return max(
+            *(
+                value
+                for _, key, value in self.get_piggybacked_hosts_time_settings()
+                if key in {"max_cache_age", "validity_period"}
+            )
+        )
 
     # TODO: Remove old name one day
     @staticmethod

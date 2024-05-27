@@ -845,8 +845,8 @@ modes.register(
 
 
 def mode_cleanup_piggyback() -> None:
-    time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings()
-    piggyback.cleanup_piggyback_files(time_settings)
+    max_age = config.get_config_cache().get_definitive_piggybacked_data_expiry_age()
+    piggyback.cleanup_piggyback_files(cut_off_timestamp=time.time() - max_age)
 
 
 modes.register(

@@ -67,7 +67,7 @@ from cmk.utils.paths import (
     var_dir,
 )
 from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.version import edition_supports_nagvis
@@ -98,8 +98,10 @@ from cmk.automations.results import (
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
     ServiceInfo,
+    SetAutochecksInput,
     SetAutochecksResult,
     SetAutochecksTable,
+    SetAutochecksV2Result,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
     UpdatePasswordsMergedFileResult,
@@ -133,6 +135,7 @@ from cmk.checkengine.discovery import (
     DiscoveryResult,
     DiscoverySettings,
     get_check_preview,
+    set_autochecks_for_effective_host,
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
@@ -892,7 +895,66 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     return discovery_results, True
 
 
+class AutomationSetAutochecksV2(DiscoveryAutomation):
+    cmd = "set-autochecks-v2"
+    needs_config = True
+    needs_checks = True
+
+    def execute(self, args: list[str]) -> SetAutochecksV2Result:
+        set_autochecks_input = SetAutochecksInput.deserialize(sys.stdin.read())
+        config_cache = config.get_config_cache()
+
+        service_descriptions: Mapping[tuple[HostName, CheckPluginName, str | None], ServiceName] = {
+            (host, autocheck_entry.check_plugin_name, autocheck_entry.item): service_name
+            for host, services in {
+                **{set_autochecks_input.discovered_host: set_autochecks_input.target_services},
+                **set_autochecks_input.nodes_services,
+            }.items()
+            for service_name, autocheck_entry in services.items()
+        }
+
+        def get_effective_host_by_id(
+            host: HostName, check_plugin: CheckPluginName, item: Item
+        ) -> HostName:
+            # This function is used to get the effective host for a service description.
+            # Some of the service_descriptions are actually already passed down in which case they
+            # are used directly. In case all service_descriptions are passed down, needs_checks can
+            # be set to False.
+            return config_cache.effective_host(
+                host,
+                service_descriptions.get((host, check_plugin, item))
+                or config.service_description(
+                    config_cache.ruleset_matcher, host, check_plugin, item
+                ),
+            )
+
+        if set_autochecks_input.discovered_host not in config_cache.hosts_config.clusters:
+            set_autochecks_for_effective_host(
+                autochecks_owner=set_autochecks_input.discovered_host,
+                effective_host=set_autochecks_input.discovered_host,
+                new_services=set_autochecks_input.target_services.values(),
+                get_effective_host=get_effective_host_by_id,
+            )
+        else:
+            desired_on_cluster = {s.id() for s in set_autochecks_input.target_services.values()}
+            for node, services in set_autochecks_input.nodes_services.items():
+                set_autochecks_for_effective_host(
+                    autochecks_owner=node,
+                    effective_host=set_autochecks_input.discovered_host,
+                    new_services=(s for s in services.values() if s.id() in desired_on_cluster),
+                    get_effective_host=get_effective_host_by_id,
+                )
+
+        self._trigger_discovery_check(config_cache, set_autochecks_input.discovered_host)
+
+        return SetAutochecksV2Result()
+
+
+automations.register(AutomationSetAutochecksV2())
+
+
 class AutomationSetAutochecks(DiscoveryAutomation):
+    # DEPRECATED: This automation is deprecated and will be removed in 2.5
     cmd = "set-autochecks"
     needs_config = True
     needs_checks = False
@@ -942,8 +1004,8 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             set_autochecks_of_cluster(
                 config_cache.nodes(hostname),
                 hostname,
-                # TODO: get full node information and pass it to set_autochecks_of_cluster.
-                # Currently the set-autochecks command will still set cluster information.
+                # The set-autochecks automation will do nothing in clustered mode.
+                # set-autochecks-v2 implements setting autochecks in clustered mode correctly.
                 {hostname: new_services},
                 config_cache.effective_host,
                 functools.partial(config.service_description, config_cache.ruleset_matcher),

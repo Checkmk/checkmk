@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
@@ -22,7 +23,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
@@ -234,6 +235,53 @@ result_type_registry.register(SetAutochecksResult)
 SetAutochecksTable = dict[
     tuple[str, Item], tuple[ServiceName, Mapping[str, object], Labels, list[HostName]]
 ]
+
+
+@dataclass
+class SetAutochecksV2Result(ABCAutomationResult):
+    @staticmethod
+    def automation_call() -> str:
+        return "set-autochecks-v2"
+
+
+result_type_registry.register(SetAutochecksV2Result)
+
+
+@dataclass
+class SetAutochecksInput:
+    discovered_host: HostName  # effective host, the one that is being discovered.
+    target_services: Mapping[
+        ServiceName, AutocheckEntry
+    ]  # the table of services we want to see on the discovered host
+    nodes_services: Mapping[
+        HostName, Mapping[ServiceName, AutocheckEntry]
+    ]  # the discovered services on all the nodes
+
+    @classmethod
+    def deserialize(cls, serialized_input: str) -> SetAutochecksInput:
+        raw = json.loads(serialized_input)
+        return cls(
+            discovered_host=HostName(raw["discovered_host"]),
+            target_services={
+                ServiceName(n): AutocheckEntry.load(s) for n, s in raw["target_services"].items()
+            },
+            nodes_services={
+                HostName(k): {ServiceName(n): AutocheckEntry.load(s) for n, s in v.items()}
+                for k, v in raw["nodes_services"].items()
+            },
+        )
+
+    def serialize(self) -> str:
+        return json.dumps(
+            {
+                "discovered_host": str(self.discovered_host),
+                "target_services": {n: s.dump() for n, s in self.target_services.items()},
+                "nodes_services": {
+                    str(k): {n: s.dump() for n, s in v.items()}
+                    for k, v in self.nodes_services.items()
+                },
+            }
+        )
 
 
 @dataclass

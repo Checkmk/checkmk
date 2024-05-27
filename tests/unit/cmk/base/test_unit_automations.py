@@ -46,6 +46,7 @@ def test_registered_automations() -> None:
         "restart",
         "scan-parents",
         "set-autochecks",
+        "set-autochecks-v2",
         "try-inventory",
         "update-dns-cache",
         "update-host-labels",

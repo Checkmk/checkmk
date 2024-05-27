@@ -17,7 +17,7 @@ from cmk.utils.notify_types import EventContext
 from cmk.utils.servicename import ServiceName
 
 from cmk.automations import results
-from cmk.automations.results import SetAutochecksTable
+from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -210,6 +210,21 @@ def set_autochecks(
             indata=checks,
         ),
         results.SetAutochecksResult,
+    )
+
+
+def set_autochecks_v2(
+    site_id: SiteId,
+    checks: SetAutochecksInput,
+) -> results.SetAutochecksV2Result:
+    return _deserialize(
+        _automation_serialized(
+            "set-autochecks-v2",
+            siteid=site_id,
+            args=None,
+            stdin_data=checks.serialize(),
+        ),
+        results.SetAutochecksV2Result,
     )
 
 

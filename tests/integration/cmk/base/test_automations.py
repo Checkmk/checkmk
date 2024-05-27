@@ -6,7 +6,7 @@
 import ast
 import re
 import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, MutableMapping, Sequence
 
 import pytest
 
@@ -16,12 +16,14 @@ from tests.testlib.utils import get_standard_linux_agent_output
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.servicename import ServiceName
 
 from cmk.automations import results
-from cmk.automations.results import SetAutochecksTable
+from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
 
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import DiscoveryResult
-from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer, AutocheckEntry
 
 
 @pytest.fixture(name="test_cfg", scope="module")
@@ -465,6 +467,61 @@ def test_automation_set_autochecks(site: Site) -> None:
     finally:
         if site.file_exists("var/check_mk/autochecks/%s.mk" % hostname):
             site.delete_file("var/check_mk/autochecks/%s.mk" % hostname)
+
+
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_set_autochecks_v2(site: Site) -> None:
+    host_name = HostName("blablahost")
+    autochecks_table: MutableMapping[ServiceName, AutocheckEntry] = {
+        "Filesystem xxx": AutocheckEntry(CheckPluginName("df"), "xxx", {}, {"xyz": "123"}),
+        "Uptime": AutocheckEntry(CheckPluginName("uptime"), None, {}, {}),
+    }
+    new_items: SetAutochecksInput = SetAutochecksInput(
+        host_name,
+        autochecks_table,
+        {host_name: autochecks_table},
+    )
+
+    try:
+        assert isinstance(
+            _execute_automation(
+                site,
+                "set-autochecks-v2",
+                args=None,
+                stdin=new_items.serialize(),
+            ),
+            results.SetAutochecksV2Result,
+        )
+
+        autochecks_file = f"var/check_mk/autochecks/{host_name}.mk"
+        assert site.file_exists(autochecks_file)
+
+        data = _AutochecksSerializer().deserialize(site.read_file(autochecks_file).encode("utf-8"))
+        services = [
+            (
+                (str(s.check_plugin_name), s.item),
+                s.parameters,
+                s.service_labels,
+            )
+            for s in data
+        ]
+        assert sorted(services) == [
+            (
+                ("df", "xxx"),
+                {},
+                {"xyz": "123"},
+            ),
+            (
+                ("uptime", None),
+                {},
+                {},
+            ),
+        ]
+
+        assert site.file_exists("var/check_mk/autochecks/%s.mk" % host_name)
+    finally:
+        if site.file_exists("var/check_mk/autochecks/%s.mk" % host_name):
+            site.delete_file("var/check_mk/autochecks/%s.mk" % host_name)
 
 
 @pytest.mark.usefixtures("test_cfg")

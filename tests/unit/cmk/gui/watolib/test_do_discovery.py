@@ -4,20 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from typing import Any
+from collections.abc import MutableMapping
+
+from cmk.utils.servicename import ServiceName
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.gui.watolib.services import _apply_state_change, DiscoveryState
 
-MOCK_KEY: tuple[str, str] = ("local", "1st service")
-MOCK_VALUE: tuple[str, dict[str, Any], dict[str, Any], list[str]] = (
-    "1st service",
-    {},
-    {},
-    ["test"],
-)
+MOCK_VALUE = AutocheckEntry(CheckPluginName("local"), "1st service", {}, {})
 MOCK_DESC = "1st service"
+MOCK_KEY = ServiceName(MOCK_DESC)
 
-RESULT = tuple[dict, set, set, set]
+RESULT = tuple[MutableMapping[ServiceName, AutocheckEntry], set, set, set]
 
 
 def _expected_clustered():

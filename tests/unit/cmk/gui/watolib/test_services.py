@@ -2,7 +2,8 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Generator
+
+from collections.abc import Generator, Mapping
 from unittest.mock import call, MagicMock, patch
 
 import pytest
@@ -12,15 +13,18 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.user import UserId
 
 from cmk.automations.results import (
     DeleteHostsResult,
     ServiceDiscoveryPreviewResult,
-    SetAutochecksResult,
+    SetAutochecksInput,
+    SetAutochecksV2Result,
 )
 
-from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
 
 from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore
@@ -99,7 +103,7 @@ def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
 @pytest.fixture(name="mock_set_autochecks")
 def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.set_autochecks", return_value=SetAutochecksResult()
+        "cmk.gui.watolib.services.set_autochecks_v2", return_value=SetAutochecksV2Result()
     )
 
 
@@ -315,12 +319,16 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         host=sample_host,
         raise_errors=True,
     )
+    sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
+        "Temperature Zone 1": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 1", {}, {}),
+    }
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
-        sample_host_name,
-        {
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, [sample_host_name]),
-        },
+        SetAutochecksInput(
+            sample_host_name,
+            sample_autochecks,
+            {},
+        ),
     )
     mock_discovery_preview.assert_called_once()
     assert [entry.check_source for entry in discovery_result.check_table] == [
@@ -565,13 +573,17 @@ def test_perform_discovery_single_update(
         host=sample_host,
         raise_errors=True,
     )
+    sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
+        "Check_MK Agent": AutocheckEntry(CheckPluginName("checkmk_agent"), None, {}, {}),
+        "Memory": AutocheckEntry(CheckPluginName("mem_linux"), None, {}, {}),
+    }
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
-        sample_host_name,
-        {
-            ("checkmk_agent", None): ("Check_MK Agent", {}, {}, ["TODAY"]),
-            ("mem_linux", None): ("Memory", {}, {}, ["TODAY"]),
-        },
+        SetAutochecksInput(
+            sample_host_name,
+            sample_autochecks,
+            {},
+        ),
     )
     mock_discovery_preview.assert_called_with(
         sample_host_name, prevent_fetching=True, raise_errors=False
@@ -768,17 +780,24 @@ def test_perform_discovery_action_update_services(
         host=sample_host,
         raise_errors=True,
     )
+    sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
+        "Filesystem /opt/omd/sites/heute/tmp": AutocheckEntry(
+            CheckPluginName("df"),
+            "/opt/omd/sites/heute/tmp",
+            {
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
+            },
+            {},
+        )
+    }
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
-        sample_host_name,
-        {
-            ("df", "/opt/omd/sites/heute/tmp"): (
-                "Filesystem /opt/omd/sites/heute/tmp",
-                {"item_appearance": "mountpoint", "mountpoint_for_block_devices": "volume_name"},
-                {},
-                ["TODAY"],
-            )
-        },
+        SetAutochecksInput(
+            sample_host_name,
+            sample_autochecks,
+            {},
+        ),
     )
     mock_discovery_preview.assert_called_with(
         sample_host_name, prevent_fetching=True, raise_errors=False

@@ -304,7 +304,7 @@ def _update_single_service_phase(
         action=action,
         update_target=target_phase,
         selected_services=((check_type, service_item),),
-    ).do_discovery(get_check_table(host, action, raise_errors=False))
+    ).do_discovery(get_check_table(host, action, raise_errors=False), host.name())
 
 
 @Endpoint(

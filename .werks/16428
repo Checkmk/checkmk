@@ -1,0 +1,14 @@
+Title: omd update: Don't Warn About Permissions of Deleted Files
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1716875270
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+After a file was deleted, <tt>omd update</tt> would still attempt to change permissions on the file.
+C+:
+ ! Permission:    cannot change 0000 -> 0640 etc/nsca: [Errno 2] No such file or directory: '/omd/sites/cmk/etc/nsca'
+C-:
+Users are no longer prompted with a dialog about these files and the warnings have been removed.

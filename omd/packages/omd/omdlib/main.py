@@ -1392,6 +1392,9 @@ def permission_action(
     if user_perm == new_perm:
         return None  # Is already in correct state
 
+    if user_type is None:
+        return None  # Deleted file, don't change permissions
+
     if old_type is None:
         return "default"  # New file, set permissions
 

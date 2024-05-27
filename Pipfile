@@ -27,6 +27,7 @@ hypothesis = "*"    # used by unit tests
 hypothesis-jsonschema = "*"  # used by unit tests
 isort = "*"  # used as a plugin for editors
 jsonschema = "*"
+libcst = "*" # concrete syntax trees for plugin migration helpers
 msrest = "*"
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 mypy-protobuf = "*" # for mypy

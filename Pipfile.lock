@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ef37bc1325d85faefc441a2e840b57aabb4da469c25fd36410abe83caea5277f"
+            "sha256": "c12f57286ab88f3e0ff7f5a46735fc33a6d0e4c2d13ad84c4e7e4ede6ba2b3fe"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -3465,6 +3465,15 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.6"
+        },
+        "libcst": {
+            "hashes": [
+                "sha256:449e0b16604f054fa7f27c3ffe86ea7ef6c409836fe68fe4e752a1894175db00",
+                "sha256:5da9d7dc83801aba3b8d911f82dc1a375db0d508318bad79d9fb245374afe068"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.9'",
+            "version": "==1.4.0"
         },
         "lupa": {
             "hashes": [

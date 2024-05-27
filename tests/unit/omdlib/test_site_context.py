@@ -14,7 +14,6 @@ from omdlib.contexts import RootContext, SiteContext
 
 def test_root_context() -> None:
     site = RootContext()
-    assert site.name is None
     assert site.real_dir == "/"
 
 

@@ -8,7 +8,6 @@ import abc
 import os
 import sys
 from pathlib import Path
-from typing import cast
 
 from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import (
@@ -26,15 +25,10 @@ from cmk.utils.version import Edition
 class AbstractSiteContext(abc.ABC):
     """Object wrapping site specific information"""
 
-    def __init__(self, sitename: str | None) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._sitename = sitename
         self._config_loaded = False
         self._config: Config = {}
-
-    @property
-    def name(self) -> str | None:
-        return self._sitename
 
     @property
     @abc.abstractmethod
@@ -68,13 +62,17 @@ class AbstractSiteContext(abc.ABC):
 
 
 class SiteContext(AbstractSiteContext):
+    def __init__(self, sitename: str) -> None:
+        super().__init__()
+        self._sitename = sitename
+
     @property
     def name(self) -> str:
-        return cast(str, self._sitename)
+        return self._sitename
 
     @property
     def dir(self) -> str:
-        return os.path.join("/omd/sites", cast(str, self._sitename))
+        return os.path.join("/omd/sites", self._sitename)
 
     @property
     def tmp_dir(self) -> str:
@@ -187,9 +185,6 @@ class SiteContext(AbstractSiteContext):
 
 
 class RootContext(AbstractSiteContext):
-    def __init__(self) -> None:
-        super().__init__(sitename=None)
-
     @property
     def tmp_dir(self) -> str:
         return "/tmp"  # nosec B108 # BNS:13b2c8

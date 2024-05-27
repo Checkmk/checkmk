@@ -152,6 +152,9 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
+@pytest.mark.skipif(
+    os.getenv("DISTRO") == "ubuntu-24.04", reason="Checkmk 2.2 is not available for this system"
+)
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

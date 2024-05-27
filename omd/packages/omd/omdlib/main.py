@@ -1927,7 +1927,7 @@ def _call_script(  # pylint: disable=too-many-branches
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
-    if not site.is_site_context():
+    if not isinstance(site, SiteContext):
         return
 
     if not site_must_exist:

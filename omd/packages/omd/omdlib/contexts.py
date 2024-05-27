@@ -38,11 +38,6 @@ class AbstractSiteContext(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def dir(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
     def tmp_dir(self) -> str:
         raise NotImplementedError()
 
@@ -205,18 +200,13 @@ class RootContext(AbstractSiteContext):
         super().__init__(sitename=None)
 
     @property
-    def dir(self) -> str:
-        """Absolute base path (without trailing slash)"""
-        return "/"
-
-    @property
     def tmp_dir(self) -> str:
         return "/tmp"  # nosec B108 # BNS:13b2c8
 
     @property
     def real_dir(self) -> str:
         """Absolute base path (without trailing slash)"""
-        return "/" + self.dir.lstrip("/")
+        return "/"
 
     @property
     def real_tmp_dir(self) -> str:

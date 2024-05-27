@@ -3065,7 +3065,7 @@ def main_umount(
 
     # if no site is selected, all sites are affected
     exit_status = 0
-    if not site.is_site_context():
+    if not isinstance(site, SiteContext):
         for site_id in all_sites(Path("/omd/")):
             # Set global vars for the current site
             site = SiteContext(site_id)
@@ -3101,7 +3101,7 @@ def main_init_action(  # pylint: disable=too-many-branches
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if site.is_site_context():
+    if isinstance(site, SiteContext):
         exit_status = init_action(version_info, site, global_opts, command, args, options)
 
         # When the whole site is about to be stopped check for remaining
@@ -4667,10 +4667,7 @@ def main() -> None:  # pylint: disable=too-many-branches
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.
     # That command must be run in the target version
-    if site.is_site_context() and command.site_must_exist and command.command != "update":
-        if not isinstance(site, SiteContext):
-            raise Exception("site must be of type SiteContext")
-
+    if isinstance(site, SiteContext) and command.site_must_exist and command.command != "update":
         v = version_from_site_dir(Path(site.dir))
         if v is None:  # Site has no home directory or version link
             if command.command == "rm":
@@ -4695,15 +4692,16 @@ def main() -> None:  # pylint: disable=too-many-branches
     # site user should always run with site user privileges. That way
     # we are sure that new files and processes are created under the
     # site user and never as root.
-    if not command.no_suid and site.is_site_context() and is_root() and not command.only_root:
-        if not isinstance(site, SiteContext):
-            raise Exception("site must be of type SiteContext")
+    if (
+        not command.no_suid
+        and isinstance(site, SiteContext)
+        and is_root()
+        and not command.only_root
+    ):
         switch_to_site_user(site)
 
     # Make sure environment is in a defined state
-    if site.is_site_context():
-        if not isinstance(site, SiteContext):
-            raise Exception("site must be of type SiteContext")
+    if isinstance(site, SiteContext):
         clear_environment()
         set_environment(site)
 

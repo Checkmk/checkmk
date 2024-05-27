@@ -66,11 +66,6 @@ class AbstractSiteContext(abc.ABC):
     def is_empty(self) -> bool:
         raise NotImplementedError()
 
-    @staticmethod
-    @abc.abstractmethod
-    def is_site_context() -> bool:
-        raise NotImplementedError()
-
 
 class SiteContext(AbstractSiteContext):
     @property
@@ -152,10 +147,6 @@ class SiteContext(AbstractSiteContext):
         """Check if site is completely stopped"""
         return check_status(self.dir, display=False) == 1
 
-    @staticmethod
-    def is_site_context() -> bool:
-        return True
-
     @property
     def skel_permissions(self) -> Permissions:
         """Returns the skeleton permissions. Load either from version meta directory
@@ -216,8 +207,4 @@ class RootContext(AbstractSiteContext):
         pass
 
     def is_empty(self) -> bool:
-        return False
-
-    @staticmethod
-    def is_site_context() -> bool:
         return False

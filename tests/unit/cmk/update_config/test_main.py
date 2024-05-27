@@ -75,7 +75,6 @@ class MockUpdateAction(registry.UpdateAction):
         self.calls += 1
 
 
-@pytest.mark.skip(reason="Fails on the CI only, needs to be investigated")
 def test_config_updater_executes_plugins(
     monkeypatch: pytest.MonkeyPatch,
     mocker: MockerFixture,

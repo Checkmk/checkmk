@@ -1,0 +1,11 @@
+Title: Use correct proxy settings for plugin "SMS (using modern API)"
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1716807473
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+If you used HTTPS for the modem URL, a ProxyError was raised on execution.
+Workaround was to use HTTP.

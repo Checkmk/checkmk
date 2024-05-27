@@ -5,7 +5,6 @@
 
 from collections.abc import Mapping
 
-from cmk.plugins.emailchecks.server_side_calls.check_mail_loop import Parameters
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -127,7 +126,6 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
             ),
         },
         migrate=_migrate,
-        custom_validate=(Parameters.model_validate,),
     )
 
 

@@ -286,54 +286,7 @@ def test_conditional_perfometer() -> None:
             continue
         conditional_perfometers.extend(_conditional_perfometer(perfometer))
 
-    assert conditional_perfometers == [
-        {
-            "condition": "fs_provisioning(%),100,>",
-            "label": ("fs_used(%)", "%"),
-            "segments": [
-                "fs_used(%)",
-                "100,fs_used(%),-#e3fff9",
-                "fs_provisioning(%),100.0,-#ffc030",
-            ],
-            "total": "fs_provisioning(%)",
-            "type": "linear",
-        },
-        {
-            "condition": "fs_provisioning(%),100,<=",
-            "label": ("fs_used(%)", "%"),
-            "segments": [
-                "fs_used(%)",
-                "fs_provisioning(%),fs_used(%),-#ffc030",
-                "100,fs_provisioning(%),fs_used(%),-,-#e3fff9",
-            ],
-            "total": 100,
-            "type": "linear",
-        },
-        {
-            "condition": "fs_used,uncommitted,+,fs_size,<",
-            "label": ("fs_used(%)", "%"),
-            "segments": [
-                "fs_used",
-                "uncommitted",
-                "fs_size,fs_used,-,uncommitted,-#e3fff9",
-                "0.1#559090",
-            ],
-            "total": "fs_size",
-            "type": "linear",
-        },
-        {
-            "condition": "fs_used,uncommitted,+,fs_size,>=",
-            "label": ("fs_used,fs_used,uncommitted,+,/,100,*", "%"),
-            "segments": [
-                "fs_used",
-                "fs_size,fs_used,-#e3fff9",
-                "0.1#559090",
-                "overprovisioned,fs_size,-#ffa000",
-            ],
-            "total": "overprovisioned",
-            "type": "linear",
-        },
-    ]
+    assert not conditional_perfometers
 
 
 def _is_non_trivial(expressions: Sequence[MetricExpression]) -> bool:
@@ -380,59 +333,6 @@ def test_non_trivial_perfometer_declarations() -> None:
         non_trivial_perfometers.extend(_perfometer_with_non_trivial_declarations(perfometer))
 
     assert non_trivial_perfometers == [
-        {
-            "type": "linear",
-            "condition": "fs_provisioning(%),100,>",
-            "segments": [
-                "fs_used(%)",
-                "100,fs_used(%),-#e3fff9",
-                "fs_provisioning(%),100.0,-#ffc030",
-            ],
-            "total": "fs_provisioning(%)",
-            "label": ("fs_used(%)", "%"),
-        },
-        {
-            "type": "linear",
-            "condition": "fs_provisioning(%),100,<=",
-            "segments": [
-                "fs_used(%)",
-                "fs_provisioning(%),fs_used(%),-#ffc030",
-                "100,fs_provisioning(%),fs_used(%),-,-#e3fff9",
-            ],
-            "total": 100,
-            "label": ("fs_used(%)", "%"),
-        },
-        {
-            "type": "linear",
-            "condition": "fs_used,uncommitted,+,fs_size,<",
-            "segments": [
-                "fs_used",
-                "uncommitted",
-                "fs_size,fs_used,-,uncommitted,-#e3fff9",
-                "0.1#559090",
-            ],
-            "total": "fs_size",
-            "label": ("fs_used(%)", "%"),
-        },
-        {
-            "type": "linear",
-            "condition": "fs_used,uncommitted,+,fs_size,>=",
-            "segments": [
-                "fs_used",
-                "fs_size,fs_used,-#e3fff9",
-                "0.1#559090",
-                "overprovisioned,fs_size,-#ffa000",
-            ],
-            "total": "overprovisioned",
-            "label": ("fs_used,fs_used,uncommitted,+,/,100,*", "%"),
-        },
-        {
-            # m(%) -> 100 * m / m:max
-            # => segments: ["fs_used"], "total": "fs_used:max"
-            "type": "linear",
-            "segments": ["fs_used(%)"],
-            "total": 100,
-        },
         {"type": "linear", "segments": ["mem_used(%)"], "total": 100.0},
     ]
 

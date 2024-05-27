@@ -5,6 +5,6 @@ Component: multisite
 Date: 1709548207
 Edition: cre
 Level: 1
-Version: 2.2.0p26
+Version: 2.2.0p27
 
 The user settings are no longer loaded multiple times in a single request, but are saved in a cache.

@@ -33,6 +33,7 @@ import * as graphs from "./modules/graphs";
 import * as help from "./modules/help";
 import * as host_diagnose from "./modules/host_diagnose";
 import * as hover from "./modules/hover";
+import * as jira_issue from "./modules/jira_issue";
 import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
 import * as nodevis from "./modules/nodevis/main";
 import * as number_format from "./modules/number_format";
@@ -170,6 +171,7 @@ export const cmk_export = {
         help: help,
         host_diagnose: host_diagnose,
         hover: hover,
+        jira_issue: jira_issue,
         keyboard_shortcuts: keyboard_shortcuts,
         license_usage: {
             timeseries_graph: license_usage_timeseries_graph,

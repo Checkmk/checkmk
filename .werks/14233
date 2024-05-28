@@ -1,0 +1,10 @@
+Title: HW/SW inventory: syncing inventory data from remote to central site did not working
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1716885224
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+HW/SW data synchronisation between a remote and a central site was interrupted after a new host was introduced at the remote site.

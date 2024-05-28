@@ -1,0 +1,13 @@
+Title: netapp: Fix crash when setting state in snapshot reserve service rule
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1716914026
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+A problem in the NetApp Snapshot Reserve rule caused a crash
+when setting the "State when no reserve is configured" option.
+This werk fixes the bug such that the state can be defined
+as expected.

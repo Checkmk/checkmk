@@ -85,7 +85,7 @@ def check_netapp_ontap_snapshots(
         )
         yield Metric("bytes", volume.snapshot_used)
         yield Result(
-            state=params.get("state_noreserve", State.WARN),
+            state=State(params.get("state_noreserve", State.WARN)),
             summary="No snapshot reserve configured",
         )
         return

@@ -128,11 +128,15 @@ def _generate_message_via_events_pipe(site: Site, message: str, end_of_line: boo
 
 
 def _generate_message_via_syslog(
-    site: Site, message: str, udp: bool = True, end_of_line: bool = True
+    site: Site,
+    message: str,
+    udp: bool = True,
+    end_of_line: bool = True,
+    timeout: int = 5,
 ) -> None:
     """Generate EC message via syslog"""
     cmd = (
-        f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} | nc -w 0 "
+        f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} | nc -w {timeout} "
         f"{'-u' if udp else ''} 127.0.0.1 514'"
     )
     logger.info("Executing: %s", cmd)

@@ -114,6 +114,11 @@ class CMKVersion:
         primary: object, other: object, compare_operator: Callable[..., bool]
     ) -> bool:
         if isinstance(primary, CMKVersion) and isinstance(other, CMKVersion):
+            if primary.edition != other.edition:
+                raise TypeError(
+                    "Invalid comparison, mismatching editions! "
+                    f"{primary.edition} != {other.edition}"
+                )
             primary_version, primary_timestamp = CMKVersion._sanitize_version_spec(primary.version)
             other_version, other_timestamp = CMKVersion._sanitize_version_spec(other.version)
             # if only one of the versions has a timestamp and other does not
@@ -141,7 +146,9 @@ class CMKVersion:
                 return compare_operator(primary_timestamp, other_timestamp)
             # (timestamps do not exist) or (timestamps exist but versions are unequal)
             return compare_operator(primary_version, other_version)
-        raise TypeError(f"Invalid comparison!{type(primary)} is compared to '{type(other)}'.")
+        raise TypeError(
+            f"Invalid comparison, mismatching types! {type(primary)} != '{type(other)}'."
+        )
 
     @staticmethod
     def _sanitize_version_spec(version: str) -> tuple[Version, time.struct_time | None]:

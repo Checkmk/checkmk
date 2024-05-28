@@ -4599,66 +4599,8 @@ def ensure_mkbackup_lock_dir_rights() -> None:
 #   '----------------------------------------------------------------------'
 
 
-# Handle global options. We might convert this to getopt
-# later. But a problem here is that we have options appearing
-# *before* the command and command specific ones. We handle
-# the options before the command here only
-# TODO: Refactor these global variables
-# TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
-def main() -> None:  # pylint: disable=too-many-branches
-    ensure_mkbackup_lock_dir_rights()
-
-    main_args = sys.argv[1:]
-    site: AbstractSiteContext = RootContext()
-
-    version_info = VersionInfo(omdlib.__version__)
-    version_info.load()
-
-    global_opts = default_global_options()
-    while len(main_args) >= 1 and main_args[0].startswith("-"):
-        opt = main_args[0]
-        main_args = main_args[1:]
-        if opt.startswith("--"):
-            global_opts, main_args = handle_global_option(global_opts, main_args, opt[2:], opt)
-        else:
-            for c in opt[1:]:
-                global_opts, main_args = handle_global_option(global_opts, main_args, c, opt)
-
-    if len(main_args) < 1:
-        main_help(version_info, site, global_opts)
-        sys.exit(1)
-
-    args = main_args[1:]
-
-    if global_opts.verbose:
-        logger.setLevel(VERBOSE)
-
-    command = _get_command(version_info, site, global_opts, main_args[0])
-
-    if not is_root() and command.only_root:
-        bail_out("omd: root permissions are needed for this command.")
-
-    # Parse command options. We need to do this now in order to know,
-    # if a site name has been specified or not
-
-    # Give a short description for the command when the user specifies --help:
-    if args and args[0] in ["-h", "--help"]:
-        sys.stdout.write("%s\n\n" % command.description)
-    args, command_options = _parse_command_options(args, command.options)
-
-    # Some commands need a site to be specified. If we are
-    # called as root, this must be done explicitely. If we
-    # are site user, the site name is our user name
-    if command.needs_site > 0:
-        if is_root():
-            if len(args) >= 1:
-                site = SiteContext(args[0])
-                args = args[1:]
-            elif command.needs_site == 1:
-                bail_out("omd: please specify site.")
-        else:
-            site = SiteContext(site_name_from_uid())
-
+def _site_environment(site_name: str, command: Command) -> SiteContext:
+    site = SiteContext(site_name)
     check_site_user(site, command.site_must_exist)
 
     # Commands operating on an existing site *must* run omd in
@@ -4701,6 +4643,71 @@ def main() -> None:  # pylint: disable=too-many-branches
     if isinstance(site, SiteContext):
         clear_environment()
         set_environment(site)
+    return site
+
+
+# Handle global options. We might convert this to getopt
+# later. But a problem here is that we have options appearing
+# *before* the command and command specific ones. We handle
+# the options before the command here only
+# TODO: Refactor these global variables
+# TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
+def main() -> None:  # pylint: disable=too-many-branches
+    ensure_mkbackup_lock_dir_rights()
+
+    main_args = sys.argv[1:]
+
+    version_info = VersionInfo(omdlib.__version__)
+    version_info.load()
+
+    global_opts = default_global_options()
+    while len(main_args) >= 1 and main_args[0].startswith("-"):
+        opt = main_args[0]
+        main_args = main_args[1:]
+        if opt.startswith("--"):
+            global_opts, main_args = handle_global_option(global_opts, main_args, opt[2:], opt)
+        else:
+            for c in opt[1:]:
+                global_opts, main_args = handle_global_option(global_opts, main_args, c, opt)
+
+    if len(main_args) < 1:
+        main_help(version_info, object(), global_opts)
+        sys.exit(1)
+
+    args = main_args[1:]
+
+    if global_opts.verbose:
+        logger.setLevel(VERBOSE)
+
+    command = _get_command(version_info, global_opts, main_args[0])
+
+    if not is_root() and command.only_root:
+        bail_out("omd: root permissions are needed for this command.")
+
+    # Parse command options. We need to do this now in order to know,
+    # if a site name has been specified or not
+
+    # Give a short description for the command when the user specifies --help:
+    if args and args[0] in ["-h", "--help"]:
+        sys.stdout.write("%s\n\n" % command.description)
+    args, command_options = _parse_command_options(args, command.options)
+
+    # Some commands need a site to be specified. If we are
+    # called as root, this must be done explicitely. If we
+    # are site user, the site name is our user name
+    site: SiteContext | RootContext
+    if command.needs_site > 0:
+        if is_root():
+            if len(args) >= 1:
+                site_name = args[0]
+                args = args[1:]
+            elif command.needs_site == 1:
+                bail_out("omd: please specify site.")
+        else:
+            site_name = site_name_from_uid()
+        site = _site_environment(site_name, command)
+    else:
+        site = RootContext()
 
     if (global_opts.interactive or command.confirm) and not global_opts.force:
         answer = None
@@ -4728,7 +4735,6 @@ def default_global_options() -> GlobalOptions:
 
 def _get_command(
     version_info: VersionInfo,
-    site: AbstractSiteContext,
     global_opts: GlobalOptions,
     command_arg: str,
 ) -> Command:
@@ -4737,7 +4743,7 @@ def _get_command(
             return command
 
     sys.stderr.write("omd: no such command: %s\n" % command_arg)
-    main_help(version_info, site, global_opts)
+    main_help(version_info, object(), global_opts)
     sys.exit(1)
 
 

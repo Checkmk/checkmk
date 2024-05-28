@@ -4629,6 +4629,22 @@ def _site_environment(site_name: str, command: Command) -> SiteContext:
     return site
 
 
+def _run_command(
+    handler: Callable,
+    version_info: VersionInfo,
+    site: SiteContext | RootContext,
+    global_opts: GlobalOptions,
+    args: Arguments,
+    command_options: CommandOptions,
+) -> None:
+    try:
+        handler(version_info, site, global_opts, args, command_options)
+    except MKTerminate as e:
+        bail_out(str(e))
+    except KeyboardInterrupt:
+        bail_out(tty.normal + "Aborted.")
+
+
 # Handle global options. We might convert this to getopt
 # later. But a problem here is that we have options appearing
 # *before* the command and command specific ones. We handle
@@ -4699,12 +4715,7 @@ def main() -> None:  # pylint: disable=too-many-branches
         if answer in ["", "no"]:
             bail_out(tty.normal + "Aborted.")
 
-    try:
-        command.handler(version_info, site, global_opts, args, command_options)
-    except MKTerminate as e:
-        bail_out(str(e))
-    except KeyboardInterrupt:
-        bail_out(tty.normal + "Aborted.")
+    _run_command(command.handler, version_info, site, global_opts, args, command_options)
 
 
 def default_global_options() -> GlobalOptions:

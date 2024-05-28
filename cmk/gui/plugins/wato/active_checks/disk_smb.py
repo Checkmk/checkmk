@@ -82,7 +82,7 @@ def _valuespec_active_checks_disk_smb() -> Migrate:
                             (
                                 "define_host",
                                 _("Define name of NetBIOS server"),
-                                HostAddress(
+                                TextInput(
                                     title="Define name of NetBIOS server",
                                     allow_empty=False,
                                     help=_("You can specify the NetBIOS server name."),

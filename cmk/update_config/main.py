@@ -56,7 +56,8 @@ def main(
     if arguments.debug:
         debug.enable()
 
-    logger = _setup_logging(arguments)
+    logger = _setup_logging(arguments.verbose)
+    logger.debug("parsed arguments: %s", arguments)
 
     ensure_site_is_stopped_callback(logger)
 
@@ -142,17 +143,16 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
 
 
 # TODO: Fix this cruel hack caused by our funny mix of GUI + console stuff.
-def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
+def _setup_logging(verbose: int) -> logging.Logger:
     handler = logging.StreamHandler(stream=sys.stdout)
     handler.setFormatter(logging.Formatter("%(message)s"))
     del log.logger.handlers[:]  # Remove all previously existing handlers
     log.logger.addHandler(handler)
 
-    log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
+    log.logger.setLevel(log.verbosity_to_log_level(verbose))
 
     logger = logging.getLogger("cmk.update_config")
     logger.setLevel(log.logger.level)
-    logger.debug("parsed arguments: %s", arguments)
 
     del log.logger.handlers[:]
     logging.getLogger().addHandler(handler)

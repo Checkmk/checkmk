@@ -8,7 +8,6 @@ from collections.abc import Collection
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import GroupSpec
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -89,7 +88,7 @@ class PredefinedConditionModeType(SimpleModeType):
         return [ConfigDomainCore]
 
 
-class ModePredefinedConditions(SimpleListMode[GroupSpec]):
+class ModePredefinedConditions(SimpleListMode):
     @classmethod
     def name(cls) -> str:
         return "predefined_conditions"
@@ -134,7 +133,13 @@ class ModePredefinedConditions(SimpleListMode[GroupSpec]):
         )
         super().page()
 
-    def _show_action_cell(self, nr: int, table: Table, ident: str, entry: GroupSpec) -> None:
+    def _show_action_cell(  # type: ignore[no-untyped-def]
+        self,
+        nr: int,
+        table: Table,
+        ident: str,
+        entry,
+    ) -> None:
         super()._show_action_cell(nr, table, ident, entry)
 
         html.icon_button(
@@ -143,7 +148,7 @@ class ModePredefinedConditions(SimpleListMode[GroupSpec]):
             "search",
         )
 
-    def _search_url(self, ident: str) -> str:
+    def _search_url(self, ident):
         return makeuri_contextless(
             request,
             [
@@ -154,7 +159,7 @@ class ModePredefinedConditions(SimpleListMode[GroupSpec]):
             ],
         )
 
-    def _show_entry_cells(self, table: Table, ident: str, entry: GroupSpec) -> None:
+    def _show_entry_cells(self, table, ident, entry):
         table.cell(_("Title"), entry["title"])
 
         table.cell(_("Conditions"))
@@ -186,11 +191,11 @@ class ModePredefinedConditions(SimpleListMode[GroupSpec]):
         else:
             html.write_text(", ".join([self._contact_group_alias(g) for g in entry["shared_with"]]))
 
-    def _contact_group_alias(self, name: str) -> str:
+    def _contact_group_alias(self, name):
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
 
-class ModeEditPredefinedCondition(SimpleEditMode[GroupSpec]):
+class ModeEditPredefinedCondition(SimpleEditMode):
     @classmethod
     def name(cls) -> str:
         return "edit_predefined_condition"
@@ -269,7 +274,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[GroupSpec]):
             ),
         ]
 
-    def _save(self, entries: dict[str, GroupSpec]) -> None:
+    def _save(self, entries):
         # In case it already existed before, remember the previous path
         old_entries = self._store.load_for_reading()
         old_path = None
@@ -278,7 +283,6 @@ class ModeEditPredefinedCondition(SimpleEditMode[GroupSpec]):
 
         super()._save(entries)
 
-        assert self._ident is not None
         conditions = RuleConditions.from_config("", entries[self._ident]["conditions"])
 
         # Update rules of source folder in case the folder was changed
@@ -287,7 +291,8 @@ class ModeEditPredefinedCondition(SimpleEditMode[GroupSpec]):
 
         self._rewrite_rules_for(conditions)
 
-    def _move_rules_for_conditions(self, conditions: RuleConditions, old_path: str) -> None:
+    def _move_rules_for_conditions(self, conditions, old_path):
+        # type (RuleConditions, str) -> None
         """Apply changed folder of predefined condition to rules"""
         tree = folder_tree()
         old_folder = tree.folder(old_path)

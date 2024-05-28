@@ -871,6 +871,10 @@ msgstr "(組み込み)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(デフォルトは %r for %s/TLS)"
 
+#, fuzzy
+msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
+msgstr "Amazon Web Services (AWS)監視"
+
 msgid "(disabled)"
 msgstr "(無効)"
 
@@ -1274,6 +1278,26 @@ msgstr "<b>キーワード</b>パターン"
 
 msgid "<b>Keyword</b> runtime"
 msgstr "<b>キーワード</b>ランタイム"
+
+#, fuzzy
+msgid ""
+"<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
+"all service instances will be filtered by those tags. Otherwise, all "
+"instances will be collected.<br><br><b>Monitor instances with explicit AWS "
+"service tags ignoring overall tag filters:</b><br>Specify explicit tags for "
+"these services. The overall tags will be ignored for these services."
+"<br><br><b>Monitor instances with explicit service names ignoring overall "
+"tag filters:</b><br>Use this option to specify explicit names. The overall "
+"tags will be ignored for these services."
+msgstr ""
+"<b>すべてのサービスインスタンスを収集し、タグ全体で制限する：</b><br>タグ全体"
+"が上記で指定されている場合、すべてのサービスインスタンスはそれらのタグでフィ"
+"ルタリングされます。そうでない場合、すべてのインスタンスが収集されます。"
+"<br><br><b>明示的なサービスタグを使用し、タグ全体を上書きする：</b><br>これら"
+"のサービスに明示的なタグを指定します。これらのサービスでは、タグ全体が無視さ"
+"れます<br><br><b>明示的なサービス名を使用し、タグ全体を無視する：</b><br>この"
+"オプションを使用して指定します。これらのサービスでは、タグ全体が無視されま"
+"す。"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -3834,6 +3858,10 @@ msgid "Add new metric"
 msgstr "新しいメトリックを追加する"
 
 #, fuzzy
+msgid "Add new name"
+msgstr "新しい時間を追加する"
+
+#, fuzzy
 msgid "Add new node condition"
 msgstr "タグ条件を追加"
 
@@ -3880,6 +3908,10 @@ msgstr "新しいトピックを追加する"
 
 msgid "Add new user configuration"
 msgstr "新しいユーザー構成を追加する"
+
+#, fuzzy
+msgid "Add new value"
+msgstr "役割を追加"
 
 msgid "Add node condition"
 msgstr "ノード条件を追加"
@@ -16070,7 +16102,8 @@ msgstr ""
 "フォルトでは無効になっており、自分で掃除しないとメールボックスが肥大化しま"
 "す。"
 
-msgid "Delete all processed message belonging to this check"
+#, fuzzy
+msgid "Delete all processed messages belonging to this check"
 msgstr "このチェックに属する処理済みメッセージをすべて削除します"
 
 #, python-format
@@ -16158,9 +16191,6 @@ msgstr "ジョブ#%dを削除"
 
 msgid "Delete last alert handler rule"
 msgstr "最後のアラートハンドラルールを削除する"
-
-msgid "Delete messages"
-msgstr "メッセージを削除する"
 
 #, python-format
 msgid "Delete notification rule #%d"
@@ -17190,9 +17220,6 @@ msgid "Direction"
 msgstr "方向"
 
 msgid "Directly forward to Event Console"
-msgstr "イベントコンソールに直接転送する"
-
-msgid "Directly forward to event console"
 msgstr "イベントコンソールに直接転送する"
 
 msgid "Directly show the action icon in the column"
@@ -18443,8 +18470,16 @@ msgstr "連続するフェーズを等しい状態でマージしないでくだ
 msgid "Do not monitor"
 msgstr "監視しない"
 
+#, fuzzy
+msgid "Do not monitor limits"
+msgstr "監視しない"
+
 msgid "Do not monitor placeholder VMs"
 msgstr "プレースホルダーVMsを監視しない"
+
+#, fuzzy
+msgid "Do not monitor service"
+msgstr "監視しない"
 
 msgid "Do not offer this action as a command on open events"
 msgstr "オープンイベントのコマンドとしてこのアクションを提供しないでください"
@@ -18500,6 +18535,10 @@ msgstr "グループ化しないでください"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "キーに'aws:' プレフィックスを使用しないでください。"
+
+#, fuzzy
+msgid "Do not use 'aws:' prefix for the value."
+msgstr "値に\"aws:\"プレフィックスを使用しないでください。"
 
 msgid "Do not use 'aws:' prefix for the values."
 msgstr "値に\"aws:\"プレフィックスを使用しないでください。"
@@ -19175,6 +19214,20 @@ msgstr ""
 "ライベートIPv4アドレス}-{地域}-{インスタンスID}」で構成されます。これはEC2イ"
 "ンスタンスを一意に識別します。このホスト名にpingを打つことはできません。"
 
+#, fuzzy
+msgid ""
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+"hostname is pingable and changing the piggyback name will reset the "
+"piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+"consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely "
+"identifies the EC2 instance. It is not possible to ping this host name."
+msgstr ""
+"各EC2インスタンスはピギーバックホストを作成します。<br><b>注意:</b>すべてのホ"
+"スト名がping可能なわけではなく、ピギーバック名を変更するとピギーバックホスト"
+"はリセットされます。<br><br><b>- Region - インスタンスID:</b><br>名前は「{プ"
+"ライベートIPv4アドレス}-{地域}-{インスタンスID}」で構成されます。これはEC2イ"
+"ンスタンスを一意に識別します。このホスト名にpingを打つことはできません。"
+
 msgid ""
 "Each SNMPv3 device has it's own engine ID. This is normally automatically "
 "generated, but can also be configured manually for some devices. As the "
@@ -19286,6 +19339,10 @@ msgid ""
 "Each tag group will create one dropdown choice in the host configuration."
 msgstr ""
 "各タググループは、ホスト設定で1つのドロップダウンの選択肢を作成します。"
+
+#, fuzzy
+msgid "Each tag key must be unique and cannot be used multiple times."
+msgstr "各タグは一意である必要があり、複数回使用することはできません"
 
 msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "各タグは一意である必要があり、複数回使用することはできません"
@@ -27003,6 +27060,10 @@ msgstr "IOレイテンシー"
 msgid "IOPS"
 msgstr "IOPS"
 
+#, fuzzy
+msgid "IP - Region - Instance ID"
+msgstr "IP - 範囲 - インスタンスID"
+
 msgid "IP - region - instance ID"
 msgstr "IP - 範囲 - インスタンスID"
 
@@ -27543,6 +27604,14 @@ msgstr ""
 msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
 "or tag restrictions that may have been configured."
+msgstr ""
+"制限が有効な場合、設定されている名前やタグの制限に関係なく、すべてのインスタ"
+"ンスがフェッチされます。"
+
+#, fuzzy
+msgid ""
+"If limits are monitored, all instances will be fetched regardless of any "
+"name or tag restrictions that may have been configured."
 msgstr ""
 "制限が有効な場合、設定されている名前やタグの制限に関係なく、すべてのインスタ"
 "ンスがフェッチされます。"
@@ -36513,6 +36582,10 @@ msgid "Monitor all files in folder"
 msgstr "フォルダ内のすべてのファイルを監視します"
 
 #, fuzzy
+msgid "Monitor all instances"
+msgstr "見つかったすべてのインスタンスを監視する"
+
+#, fuzzy
 msgid "Monitor all instances detected and manually added"
 msgstr "見つかったすべてのインスタンスを監視する"
 
@@ -36555,6 +36628,20 @@ msgid ""
 "Monitor if your VMs are properly protected by the disaster recovery software "
 "Zerto (compatible with Zerto v9.x)."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Monitor instances with explicit AWS service tags ignoring overall tag filters"
+msgstr "明示的なAWSサービスタグを使用し、AWSタグ全体を無効にする"
+
+#, fuzzy
+msgid ""
+"Monitor instances with explicit service names ignoring overall tag filters"
+msgstr "明示的なサービス名を使用し、AWSタグ全体を無視します"
+
+#, fuzzy
+msgid "Monitor limits"
+msgstr "サービス制限を監視する"
 
 msgid "Monitor menu entries"
 msgstr "メニューエントリを監視する"
@@ -36880,6 +36967,10 @@ msgstr "移動"
 
 msgid "Move aggregations"
 msgstr "集計を移動する"
+
+#, fuzzy
+msgid "Move all processed messages to subfolder"
+msgstr "処理されたメッセージを削除する"
 
 msgid "Move existing hosts"
 msgstr "既存ホストの移動"
@@ -38158,6 +38249,10 @@ msgstr "このグラフにはまだ指標がありません。"
 msgid "No monitoring core"
 msgstr "モニタリングコアなし"
 
+#, fuzzy
+msgid "No names defined"
+msgstr "接続が定義されていません"
+
 msgid "No need for syncing sites"
 msgstr "サイト同期不要"
 
@@ -38270,6 +38365,10 @@ msgstr ""
 msgid "No such tree below %r"
 msgstr "%r下にそのようなツリーはありません"
 
+#, fuzzy
+msgid "No tags defined"
+msgstr "データソースが定義されていません。"
+
 msgid "No test host"
 msgstr "テストホストなし"
 
@@ -38297,6 +38396,10 @@ msgstr "有効なターゲットフォルダがありません。"
 
 msgid "No valid theme directories found."
 msgstr "有効なテーマディレクトリがありません。"
+
+#, fuzzy
+msgid "No values defined"
+msgstr "データソースが定義されていません。"
 
 msgid "No version limitation"
 msgstr "バージョン制限なし"
@@ -44107,6 +44210,10 @@ msgstr "ポートインデックス"
 msgid "Port index or 'Total'"
 msgstr "ポートインデックスまたは\"合計\""
 
+#, fuzzy
+msgid "Port must be between 0 and 65535"
+msgstr "%sの値は%dから%dの間でなければなりません"
+
 msgid "Port number"
 msgstr "ポート番号"
 
@@ -46450,6 +46557,10 @@ msgstr ""
 msgid "Remove filter"
 msgstr "フィルタを取り外します"
 
+#, fuzzy
+msgid "Remove name"
+msgstr "すべて削除する"
+
 msgid "Remove only matching vanished services"
 msgstr "一致する消失したサービスのみを削除する"
 
@@ -46509,6 +46620,10 @@ msgstr "2要素認証の解除"
 #, python-format
 msgid "Remove two-factor authentication of %s"
 msgstr "%sの2 要素認証を削除"
+
+#, fuzzy
+msgid "Remove value"
+msgstr "すべて削除する"
 
 msgid "Remove vanished services"
 msgstr "消失したサービスを削除する"
@@ -53144,9 +53259,6 @@ msgstr "送信できなかったスプールメッセージ"
 msgid "Spool to Event Console"
 msgstr "イベントコンソールへのスプール"
 
-msgid "Spool to event console"
-msgstr "イベントコンソールへのスプール"
-
 msgid "Spooling: Send events to local event console in same OMD site"
 msgstr ""
 "スプーリング: 同じOMDサイトのローカルイベントコンソールにイベントを送信します"
@@ -58080,9 +58192,6 @@ msgstr "ログファイルがサイトに存在しません。"
 
 msgid "The login is currently locked"
 msgstr "ログインは現在ロックされています"
-
-msgid "The mail subject is used as syslog appliaction"
-msgstr "メールの件名はsyslogアプリケーションとして使用されます"
 
 msgid "The mandatory group name is missing"
 msgstr "必須のグループ名がありません"
@@ -70051,11 +70160,6 @@ msgstr "カスタムチェックプラグインを使用してください…"
 msgid "Use a custom name for the SSL certificate validation"
 msgstr "SSL証明書の検証にはカスタム名を使用"
 
-msgid ""
-"Use a makro as (part of) server name. Macros must be in capital letters and "
-"start and end with '$'."
-msgstr ""
-
 msgid "Use a namespace prefix"
 msgstr "名前空間プレフィックスを使用する"
 
@@ -70389,8 +70493,9 @@ msgstr "次のステータスホストを使用します"
 msgid "Use the global configuration"
 msgstr "グローバル構成を使用する"
 
-msgid "Use the mail subject"
-msgstr "メールの件名を使用する"
+#, fuzzy
+msgid "Use the mail subject as syslog application"
+msgstr "メールの件名はsyslogアプリケーションとして使用されます"
 
 msgid "Use the multipath alias as service name, if one is set"
 msgstr "マルチパスエイリアスが設定されている場合は、サービス名として使用します"
@@ -71001,9 +71106,6 @@ msgstr "ログイン用のユーザー名"
 
 msgid "Username is unknown"
 msgstr "ユーザー名は不明です"
-
-msgid "Username/Password"
-msgstr "ユーザー名/パスワード"
 
 msgid "Username:"
 msgstr "ユーザー名:"
@@ -78305,6 +78407,21 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Delete messages"
+#~ msgstr "メッセージを削除する"
+
+#~ msgid "Directly forward to event console"
+#~ msgstr "イベントコンソールに直接転送する"
+
+#~ msgid "Spool to event console"
+#~ msgstr "イベントコンソールへのスプール"
+
+#~ msgid "Use the mail subject"
+#~ msgstr "メールの件名を使用する"
+
+#~ msgid "Username/Password"
+#~ msgstr "ユーザー名/パスワード"
 
 #~ msgid "Critical if over"
 #~ msgstr "終わったらクリティカル"

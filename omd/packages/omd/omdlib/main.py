@@ -2668,6 +2668,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     )
     sys.stdout.flush()
 
+    old_replacements = old_site.replacements
     # Create new user. Note: even on mv we need to create a new user.
     # Linux does not (officially) allow to rename a user.
     uid = options.get("uid")
@@ -2705,9 +2706,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     chown_tree(new_site.dir, new_site.name)
 
     # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(
-        conflict_mode, old_site, new_site, old_site.replacements, new_site.replacements
-    )
+    patch_skeleton_files(conflict_mode, old_site, new_site, old_replacements, new_site.replacements)
 
     # In case of mv now delete old user
     if command_type is CommandType.move and not reuse:

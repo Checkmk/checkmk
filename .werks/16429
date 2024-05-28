@@ -1,0 +1,19 @@
+Title: omd cp: Fix RuntimeError: Failed to determine site version
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1716877362
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+This problem affects users of the Checkmk Raw Edition.
+
+Previously, the command <tt>sudo omd mv cmk1 cmk2</tt> would result in the following traceback.
+C+:
+  File "/omd/versions/2.2.0p26.cre/lib/python3/omdlib/contexts.py", line 155, in replacements
+    raise RuntimeError("Failed to determine site version")
+RuntimeError: Failed to determine site version
+C-:
+With this Werk, the error is fixed.
+

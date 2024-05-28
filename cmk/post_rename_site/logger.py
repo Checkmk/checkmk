@@ -13,13 +13,11 @@ logger = getLogger("cmk.post_rename_site")
 
 # TODO: Fix this cruel hack caused by our funny mix of GUI + console stuff.
 def setup_logging(*, verbose: int) -> None:
-    handler = StreamHandler(stream=sys.stdout)
+    log.logger.setLevel(log.verbosity_to_log_level(verbose))
+    logger.setLevel(log.logger.level)
+    handler = StreamHandler(sys.stdout)
     handler.setFormatter(Formatter("%(message)s"))
     del log.logger.handlers[:]  # Remove all previously existing handlers
     log.logger.addHandler(handler)
-
-    log.logger.setLevel(log.verbosity_to_log_level(verbose))
-    logger.setLevel(log.logger.level)
-
     del log.logger.handlers[:]
     getLogger().addHandler(handler)

@@ -144,16 +144,15 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
 
 # TODO: Fix this cruel hack caused by our funny mix of GUI + console stuff.
 def _setup_logging(verbose: int) -> logging.Logger:
-    handler = logging.StreamHandler(stream=sys.stdout)
-    handler.setFormatter(logging.Formatter("%(message)s"))
-    del log.logger.handlers[:]  # Remove all previously existing handlers
-    log.logger.addHandler(handler)
-
     log.logger.setLevel(log.verbosity_to_log_level(verbose))
 
     logger = logging.getLogger("cmk.update_config")
     logger.setLevel(log.logger.level)
 
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    del log.logger.handlers[:]  # Remove all previously existing handlers
+    log.logger.addHandler(handler)
     del log.logger.handlers[:]
     logging.getLogger().addHandler(handler)
 

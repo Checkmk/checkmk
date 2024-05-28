@@ -181,11 +181,11 @@ class Config:
     def max_cache_age(self, source: HostAddress) -> int:
         return self._lookup("max_cache_age", source)
 
-    def validity_period(self, source: HostAddress) -> int | None:
+    def validity_period(self, source: HostAddress) -> int:
         try:
             return self._lookup("validity_period", source)
         except KeyError:
-            return None  # TODO: in fact, we also default to 0 here
+            return 0
 
     def validity_state(self, source: HostAddress) -> int:
         try:
@@ -256,9 +256,9 @@ def _get_piggyback_processed_file_info(
 
 def _validity_period_message(
     file_age: float,
-    validity_period: int | None,
+    validity_period: int,
 ) -> str:
-    if validity_period is None or (time_left := validity_period - file_age) <= 0:
+    if (time_left := validity_period - file_age) <= 0:
         return ""
     return f" (still valid, {_render_time(time_left)} left)"
 
@@ -528,7 +528,7 @@ def _cleanup_old_piggybacked_files(
                 continue
 
             max_cache_age = time_settings.max_cache_age(src)
-            validity_period = time_settings.validity_period(src) or 0
+            validity_period = time_settings.validity_period(src)
             if file_age <= max_cache_age or file_age <= validity_period:
                 # Do not remove files just because they're abandoned.
                 # We don't use them anymore, but the DCD still needs to know about them for a while.

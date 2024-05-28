@@ -362,6 +362,7 @@ CEE_UNUSED_PACKAGES = [
     "wrapt",
     "yarl",
     "zipp",
+    "robotframework",
 ]
 
 

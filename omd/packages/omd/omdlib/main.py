@@ -1925,17 +1925,6 @@ def _call_script(  # pylint: disable=too-many-branches
         raise SystemExit(1)
 
 
-def check_site_user(site: SiteContext, site_must_exist: int) -> None:
-    if not site_must_exist:
-        return
-
-    if not site_exists(Path(site.dir)):
-        bail_out(
-            "omd: The site '%s' does not exist. You need to execute "
-            "omd as root or site user." % site.name
-        )
-
-
 # .
 #   .--Commands------------------------------------------------------------.
 #   |         ____                                          _              |
@@ -4598,7 +4587,11 @@ def ensure_mkbackup_lock_dir_rights() -> None:
 
 def _site_environment(site_name: str, command: Command) -> SiteContext:
     site = SiteContext(site_name)
-    check_site_user(site, command.site_must_exist)
+    if command.site_must_exist and not site_exists(Path(site.dir)):
+        bail_out(
+            "omd: The site '%s' does not exist. You need to execute "
+            "omd as root or site user." % site.name
+        )
 
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.

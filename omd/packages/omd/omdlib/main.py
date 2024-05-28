@@ -50,7 +50,7 @@ from omdlib.config_hooks import (
     sort_hooks,
 )
 from omdlib.console import ok, show_success
-from omdlib.contexts import AbstractSiteContext, RootContext, SiteContext
+from omdlib.contexts import RootContext, SiteContext
 from omdlib.dialog import (
     ask_user_choices,
     dialog_config_choice_has_error,
@@ -1925,10 +1925,7 @@ def _call_script(  # pylint: disable=too-many-branches
         raise SystemExit(1)
 
 
-def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
-    if not isinstance(site, SiteContext):
-        return
-
+def check_site_user(site: SiteContext, site_must_exist: int) -> None:
     if not site_must_exist:
         return
 
@@ -4606,7 +4603,7 @@ def _site_environment(site_name: str, command: Command) -> SiteContext:
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.
     # That command must be run in the target version
-    if isinstance(site, SiteContext) and command.site_must_exist and command.command != "update":
+    if command.site_must_exist and command.command != "update":
         v = version_from_site_dir(Path(site.dir))
         if v is None:  # Site has no home directory or version link
             if command.command == "rm":
@@ -4624,25 +4621,18 @@ def _site_environment(site_name: str, command: Command) -> SiteContext:
         elif omdlib.__version__ != v:
             exec_other_omd(v)
 
-    if isinstance(site, SiteContext):
-        site.load_config(load_defaults(site))
+    site.load_config(load_defaults(site))
 
     # Commands which affect a site and can be called as root *or* as
     # site user should always run with site user privileges. That way
     # we are sure that new files and processes are created under the
     # site user and never as root.
-    if (
-        not command.no_suid
-        and isinstance(site, SiteContext)
-        and is_root()
-        and not command.only_root
-    ):
+    if not command.no_suid and is_root() and not command.only_root:
         switch_to_site_user(site)
 
     # Make sure environment is in a defined state
-    if isinstance(site, SiteContext):
-        clear_environment()
-        set_environment(site)
+    clear_environment()
+    set_environment(site)
     return site
 
 

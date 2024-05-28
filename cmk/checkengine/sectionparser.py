@@ -9,10 +9,12 @@ from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Any, Final, Generic, NamedTuple, TypeVar
 
-import cmk.utils.piggyback
+from cmk.utils import debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.validatedstr import ValidatedString
+
+from cmk import piggyback
 
 from .fetcher import HostKey, SourceType
 from .parser import HostSections
@@ -111,7 +113,7 @@ class SectionsParser(Generic[_TSeq]):
         try:
             return parse_function(list(raw_data))
         except Exception:
-            if cmk.utils.debug.enabled():
+            if debug.enabled():
                 raise
             self.parsing_errors.append(self.error_handling(section_name, raw_data))
             return None
@@ -202,9 +204,7 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
             # management board (SNMP or IPMI) does not support piggybacking
             continue
 
-        cmk.utils.piggyback.store_piggyback_raw_data(
-            host_key.hostname, host_sections.piggybacked_raw_data
-        )
+        piggyback.store_piggyback_raw_data(host_key.hostname, host_sections.piggybacked_raw_data)
 
 
 def make_providers(

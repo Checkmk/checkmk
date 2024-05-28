@@ -15,13 +15,14 @@ import cmk.utils.paths
 from cmk.utils import crash_reporting
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
-from cmk.utils.piggyback import get_source_hostnames
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.piggyback import get_source_hostnames
 
 CrashReportStore = crash_reporting.CrashReportStore
 

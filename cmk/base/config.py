@@ -45,11 +45,12 @@ import cmk.utils.cleanup
 import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.paths
+import cmk.utils.piggyback_config
 import cmk.utils.store.host_storage
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
-from cmk.utils import config_warnings, password_store, piggyback, store, tty
+from cmk.utils import config_warnings, password_store, store, tty
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
@@ -130,6 +131,7 @@ from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
 from cmk.base.sources import SNMPFetcherConfig
 
+from cmk import piggyback
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
@@ -3221,7 +3223,7 @@ class ConfigCache:
         # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
-        piggy_config = piggyback.Config(host_name, time_settings)
+        piggy_config = cmk.utils.piggyback_config.Config(host_name, time_settings)
 
         now = time.time()
 

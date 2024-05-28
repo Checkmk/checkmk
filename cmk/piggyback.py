@@ -8,19 +8,16 @@ import errno
 import json
 import logging
 import os
-import re
 import tempfile
 from collections.abc import Iterable, Mapping, Sequence
-from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Final, NamedTuple, Self
+from typing import NamedTuple, Self
 
-import cmk.utils
-import cmk.utils.paths
-from cmk.utils import store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.paths import piggyback_dir, piggyback_source_dir
+from cmk.utils.store import load_bytes_from_file, makedirs, save_bytes_to_file
 
 logger = logging.getLogger(__name__)
 
@@ -49,11 +46,6 @@ class PiggybackFileInfo:
 class PiggybackRawDataInfo(NamedTuple):
     info: PiggybackFileInfo
     raw_data: AgentRawData
-
-
-_PiggybackTimeSetting = tuple[str | None, str, int]
-
-PiggybackTimeSettings = Sequence[_PiggybackTimeSetting]
 
 
 # ***** Terminology *****
@@ -90,7 +82,7 @@ def get_piggyback_raw_data(piggybacked_hostname: HostAddress) -> Sequence[Piggyb
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            content = store.load_bytes_from_file(file_info.file_path)
+            content = load_bytes_from_file(file_info.file_path)
 
         except FileNotFoundError:
             # race condition: file was removed between listing and reading
@@ -108,61 +100,6 @@ def get_piggybacked_host_with_sources() -> Mapping[HostAddress, Sequence[Piggyba
         for piggybacked_host_folder in _get_piggybacked_host_folders()
         if (piggybacked_host := HostAddress(piggybacked_host_folder.name))
     }
-
-
-class Config:
-    def __init__(
-        self,
-        piggybacked_hostname: HostAddress,
-        time_settings: PiggybackTimeSettings,
-    ) -> None:
-        self.piggybacked: Final = piggybacked_hostname
-        self._expanded_settings = {
-            (host, key): value
-            for expr, key, value in reversed(time_settings)
-            for host in self._normalize_pattern(expr, piggybacked_hostname)
-        }
-
-    @staticmethod
-    def _normalize_pattern(
-        expr: str | None, piggybacked: HostAddress
-    ) -> Iterable[HostAddress | None]:
-        # expr may be
-        #   - None (global settings) or
-        #   - 'source-hostname' or
-        #   - 'piggybacked-hostname' or
-        #   - '~piggybacked-[hH]ostname'
-        # the first entry ('piggybacked-hostname' vs '~piggybacked-[hH]ostname') wins
-        if expr is None:
-            yield None
-        elif not expr.startswith("~"):
-            yield HostAddress(expr)
-        elif re.match(expr[1:], piggybacked):
-            yield piggybacked
-
-    def _lookup(self, key: str, source_hostname: HostAddress) -> int:
-        with suppress(KeyError):
-            return self._expanded_settings[(self.piggybacked, key)]
-        with suppress(KeyError):
-            return self._expanded_settings[(source_hostname, key)]
-
-        # TODO: pass the defaults for *all* settings explicitly.
-        return self._expanded_settings[(None, key)]
-
-    def max_cache_age(self, source: HostAddress) -> int:
-        return self._lookup("max_cache_age", source)
-
-    def validity_period(self, source: HostAddress) -> int:
-        try:
-            return self._lookup("validity_period", source)
-        except KeyError:
-            return 0
-
-    def validity_state(self, source: HostAddress) -> int:
-        try:
-            return self._lookup("validity_state", source)
-        except KeyError:
-            return 0
 
 
 def _remove_piggyback_file(piggyback_file_path: Path) -> bool:
@@ -197,7 +134,7 @@ def store_piggyback_raw_data(
         # Raw data is always stored as bytes. Later the content is
         # converted to unicode in abstact.py:_parse_info which respects
         # 'encoding' in section options.
-        store.save_bytes_to_file(piggyback_file_path, b"%s\n" % b"\n".join(lines))
+        save_bytes_to_file(piggyback_file_path, b"%s\n" % b"\n".join(lines))
         piggyback_file_paths.append(piggyback_file_path)
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
@@ -212,7 +149,7 @@ def _store_status_file_of(
     status_file_path: Path,
     piggyback_file_paths: Iterable[Path],
 ) -> None:
-    store.makedirs(status_file_path.parent)
+    makedirs(status_file_path.parent)
 
     # Cannot use store.save_bytes_to_file like:
     # 1. store.save_bytes_to_file(status_file_path, b"")
@@ -258,7 +195,7 @@ def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[Piggyback
     store_piggyback_raw_data() or cleanup_piggyback_files() functions.
     All these functions need to deal with suddenly vanishing or updated files/directories.
     """
-    piggybacked_host_folder = cmk.utils.paths.piggyback_dir / Path(piggybacked_hostname)
+    piggybacked_host_folder = piggyback_dir / Path(piggybacked_hostname)
     meta_data = []
     for payload_file in _files_in(piggybacked_host_folder):
         source = HostAddress(payload_file.name)
@@ -288,16 +225,16 @@ def get_source_hostnames(
             for source_host in _files_in(piggybacked_host_folder)
         ]
 
-    piggybacked_host_folder = cmk.utils.paths.piggyback_dir / Path(piggybacked_hostname)
+    piggybacked_host_folder = piggyback_dir / Path(piggybacked_hostname)
     return [HostName(source_host.name) for source_host in _files_in(piggybacked_host_folder)]
 
 
 def _get_piggybacked_host_folders() -> Sequence[Path]:
-    return _files_in(cmk.utils.paths.piggyback_dir)
+    return _files_in(piggyback_dir)
 
 
 def _get_source_state_files() -> Sequence[Path]:
-    return _files_in(cmk.utils.paths.piggyback_source_dir)
+    return _files_in(piggyback_source_dir)
 
 
 def _files_in(path: Path) -> Sequence[Path]:
@@ -313,14 +250,14 @@ def _files_in(path: Path) -> Sequence[Path]:
 
 
 def _get_source_status_file_path(source_hostname: HostName) -> Path:
-    return cmk.utils.paths.piggyback_source_dir / str(source_hostname)
+    return piggyback_source_dir / str(source_hostname)
 
 
 def _get_piggybacked_file_path(
     source_hostname: HostName,
     piggybacked_hostname: HostName | HostAddress,
 ) -> Path:
-    return cmk.utils.paths.piggyback_dir / piggybacked_hostname / source_hostname
+    return piggyback_dir / piggybacked_hostname / source_hostname
 
 
 # .

@@ -12,8 +12,9 @@ from typing import Final
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.piggyback import Config as PiggybackConfig
-from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo
+from cmk.utils.piggyback_config import Config as PiggybackConfig
+
+from cmk.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo
 
 from ._abstract import Fetcher, Mode
 

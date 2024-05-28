@@ -11,13 +11,14 @@ import pytest
 
 from cmk.utils.exceptions import MKAgentError, MKTimeout
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.piggyback import PiggybackFileInfo
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
+
+from cmk.piggyback import PiggybackFileInfo
 
 
 class TestAgentSummarizer:

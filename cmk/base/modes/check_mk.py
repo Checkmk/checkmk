@@ -23,7 +23,7 @@ import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import config_warnings, log, piggyback, store, tty
+from cmk.utils import config_warnings, log, store, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
@@ -126,6 +126,7 @@ from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
+from cmk import piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
 

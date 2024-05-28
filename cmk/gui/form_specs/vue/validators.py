@@ -21,7 +21,7 @@ def build_vue_validators(validators: Sequence[object]) -> list[VueValidators]:
 
 def _build_vue_validator(validator: object) -> list[VueValidators]:
     try:
-        if build_function := _validator_registry.get(validator.__class__):
+        if build_function := _validator_registry.get(type(validator)):
             return build_function(validator)
     except AttributeError:
         pass
@@ -87,8 +87,8 @@ VueValidatorCreator = Callable[[Any], list[VueValidators]]
 _validator_registry: dict[type, VueValidatorCreator] = {}
 
 
-def register_class(validator_class: object, build_function: VueValidatorCreator) -> None:
-    _validator_registry[validator_class.__class__] = build_function
+def register_class(validator_class: type, build_function: VueValidatorCreator) -> None:
+    _validator_registry[validator_class] = build_function
 
 
 def register_validators():

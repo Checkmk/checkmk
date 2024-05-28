@@ -49,9 +49,12 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
 ModelT = TypeVar("ModelT")
 
 
-# TODO: improve typing
+# TODO: find better solution for default value type
 class DEFAULT_VALUE:
     pass
+
+
+_default_value = DEFAULT_VALUE()
 
 
 DataForDisk = Any
@@ -245,7 +248,7 @@ def _visit_dictionary(
 
     for key_name, dict_element in form_spec.elements.items():
         is_active = key_name in value
-        key_value = value[key_name] if is_active else DEFAULT_VALUE
+        key_value = value[key_name] if is_active else _default_value
 
         element_schema, vue_value, vue_validation, disk_value = _visit(
             visitor_options, dict_element.parameter_form, key_value
@@ -283,10 +286,19 @@ def _visit_dictionary(
 def _visit_single_choice(
     visitor_options: VisitorOptions, form_spec: SingleChoice, value: str | DEFAULT_VALUE
 ) -> VueVisitorMethodResult:
+
+    elements_to_show = []
+
     if isinstance(value, DEFAULT_VALUE):
-        if isinstance(form_spec.prefill.value, InputHint):
-            # TODO: create input hint element option ("", "The input hint")
+        if isinstance(form_spec.prefill, InputHint):
             value = ""
+            elements_to_show.append(
+                VueSingleChoiceElement(
+                    name="", title=form_spec.prefill.value.localize(translate_to_current_language)
+                )
+            )
+        else:
+            value = form_spec.prefill.value
 
     title, help_text = _get_title_and_help(form_spec)
 

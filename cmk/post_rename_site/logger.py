@@ -17,5 +17,4 @@ def setup_logging(*, verbose: int) -> None:
     logger.setLevel(log.logger.level)
     handler = StreamHandler(sys.stdout)
     handler.setFormatter(Formatter("%(message)s"))
-    del log.logger.handlers[:]  # Remove all previously existing handlers
     getLogger().addHandler(handler)

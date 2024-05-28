@@ -1189,6 +1189,38 @@ async fn test_check_config_exec_piggyback_remote() {
     assert!(!output.is_empty());
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn test_lack_of_sql_db() {
+    let dir = tools::create_temp_process_dir();
+    let content = std::fs::read_to_string(
+        PathBuf::new()
+            .join("tests")
+            .join("files")
+            .join("test-no-ms-sql.yml"),
+    )
+    .unwrap();
+    tools::create_file_with_content(dir.path(), "mk-sql.yml", &content);
+    let check_config = CheckConfig::load_file(&dir.path().join("mk-sql.yml")).unwrap();
+    let output = check_config.exec(&Env::default()).await.unwrap();
+    let awaited = "<<<mssql_instance:sep(124)>>>
+<<<mssql_databases:sep(124)>>>
+<<<mssql_counters:sep(124)>>>
+<<<mssql_blocked_sessions:sep(124)>>>
+<<<mssql_transactionlogs:sep(124)>>>
+<<<mssql_clusters:sep(124)>>>
+<<<mssql_mirroring:sep(09)>>>
+<<<mssql_availability_groups:sep(09)>>>
+<<<mssql_connections>>>
+<<<mssql_tablespaces>>>
+<<<mssql_datafiles:sep(124)>>>
+<<<mssql_backup:sep(124)>>>
+<<<mssql_jobs:sep(09)>>>
+<<<mssql_instance:sep(124)>>>
+ERROR: Failed to gather SQL server instances\n"
+        .to_owned();
+    assert_eq!(output.to_owned(), awaited);
+}
+
 #[cfg(windows)]
 fn create_localhost_remote_config(endpoint: SqlDbEndpoint) -> String {
     format!(

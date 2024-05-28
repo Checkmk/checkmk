@@ -42,7 +42,7 @@ from tests.testlib.utils import (
     wait_until,
     write_file,
 )
-from tests.testlib.version import CMKVersion, get_min_version, version_from_env, version_gte
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 from tests.testlib.web_session import CMKWebSession
 
 import livestatus
@@ -95,7 +95,7 @@ class Site:
             user=AUTOMATION_USER if self.exists() else ADMIN_USER,
             password=self.get_automation_secret() if self.exists() else self.admin_password,
             site=self.id,
-            site_version=self.version.version,
+            site_version=self.version,
         )
 
     @property
@@ -1471,7 +1471,7 @@ class SiteFactory:
         )
 
         pexpect_dialogs = []
-        version_supported = self._version_supported(base_version.version, min_version.version)
+        version_supported = base_version >= min_version
         if version_supported:
             logger.info("Updating to a supported version.")
             pexpect_dialogs.extend(
@@ -1586,7 +1586,7 @@ class SiteFactory:
         base_version = test_site.version
         self.version = target_version
 
-        version_supported = self._version_supported(base_version.version, min_version.version)
+        version_supported = base_version >= min_version
         if not version_supported:
             pytest.skip(f"{base_version} is not a supported version for {target_version.version}")
 
@@ -1637,11 +1637,6 @@ class SiteFactory:
         site.openapi.activate_changes_and_wait_for_completion()
 
         return site
-
-    @staticmethod
-    def _version_supported(version: str, min_version: str) -> bool:
-        """Check if the given version is supported for updating."""
-        return version_gte(version, min_version)
 
     def get_test_site(
         self,

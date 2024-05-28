@@ -12,7 +12,10 @@ from typing import Any, AnyStr, NamedTuple
 import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
-from tests.testlib.version import version_gte
+from tests.testlib.utils import current_base_branch_name, current_branch_version
+from tests.testlib.version import CMKVersion
+
+from cmk.utils.version import Edition
 
 from cmk.gui.http import HTTPMethod
 
@@ -84,10 +87,10 @@ class CMKOpenApiSession(requests.Session):
         host: str,
         user: str,
         password: str,
+        site_version: CMKVersion,
         port: int = 80,
         site: str = "heute",
         api_version: str = "1.0",
-        site_version: str = "",
     ):
         super().__init__()
         self.host = host
@@ -457,7 +460,10 @@ class CMKOpenApiSession(requests.Session):
             "bulk_size": bulk_size,
             "ignore_errors": ignore_errors,
         }
-        if version_gte(version=self.site_version, min_version="2.3.0"):
+
+        if self.site_version >= CMKVersion(
+            "2.3.0", Edition.CEE, current_base_branch_name(), current_branch_version()
+        ):
             body["options"] = {
                 "monitor_undecided_services": monitor_undecided_services,
                 "remove_vanished_services": remove_vanished_services,

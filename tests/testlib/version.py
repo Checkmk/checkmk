@@ -6,16 +6,17 @@
 import abc
 import hashlib
 import logging
+import operator
 import os
-import re
 import subprocess
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Final, NewType
+from typing import Final, NewType, Self
 
 import git
 import requests
+from packaging.version import Version
 
 from tests.testlib.utils import (
     branch_from_env,
@@ -39,6 +40,7 @@ PackageUrl = NewType("PackageUrl", str)
 class CMKVersion:
     DEFAULT = "default"
     DAILY = "daily"
+    TIMESTAMP_FORMAT = r"%Y.%m.%d"
 
     def __init__(
         self, version_spec: str, edition: Edition, branch: str, branch_version: str
@@ -58,7 +60,7 @@ class CMKVersion:
 
     def _version(self, version_spec: str, branch: str, branch_version: str) -> str:
         if version_spec == self.DAILY:
-            date_part = time.strftime("%Y.%m.%d")
+            date_part = time.strftime(CMKVersion.TIMESTAMP_FORMAT)
             if branch.startswith("sandbox"):
                 return f"{date_part}-{branch.replace('/', '-')}"
             return f"{branch_version}-{date_part}"
@@ -107,6 +109,78 @@ class CMKVersion:
     def __repr__(self) -> str:
         return f"CMKVersion([{self.version}][{self.edition.long}][{self.branch}])"
 
+    @staticmethod
+    def _checkmk_compare_versions_logic(
+        primary: object, other: object, compare_operator: Callable[..., bool]
+    ) -> bool:
+        if isinstance(primary, CMKVersion) and isinstance(other, CMKVersion):
+            primary_version, primary_timestamp = CMKVersion._sanitize_version_spec(primary.version)
+            other_version, other_timestamp = CMKVersion._sanitize_version_spec(other.version)
+            # if only one of the versions has a timestamp and other does not
+            if bool(primary_timestamp) ^ bool(other_timestamp):
+                # `==` operation
+                if compare_operator is operator.eq:
+                    return False
+                # `>` and `<` operations
+                # disregard patch versions for comparison
+                # to avoid `2.2.0p26 > 2.2.0-<timestamp>` resulting in false positive
+                primary_version = CMKVersion._disregard_patch_version(primary_version)
+                other_version = CMKVersion._disregard_patch_version(other_version)
+                if primary_version == other_version:
+                    # timestamped builds are the latest versions
+                    return (
+                        bool(primary_timestamp)
+                        if compare_operator is operator.gt
+                        else not bool(primary_timestamp)
+                    )
+                return compare_operator(primary_version, other_version)
+            # both versions have timestamps and versions are equal
+            if (bool(primary_timestamp) and bool(other_timestamp)) and (
+                primary_version == other_version
+            ):
+                return compare_operator(primary_timestamp, other_timestamp)
+            # (timestamps do not exist) or (timestamps exist but versions are unequal)
+            return compare_operator(primary_version, other_version)
+        raise TypeError(f"Invalid comparison!{type(primary)} is compared to '{type(other)}'.")
+
+    @staticmethod
+    def _sanitize_version_spec(version: str) -> tuple[Version, time.struct_time | None]:
+        """Sanitize `version_spec` and segregate it into version and timestamp.
+
+        Uses `packaging.version.Version` to wrap Checkmk version.
+        """
+        _timestamp = None
+        # treat `patch-version` as `micro-version`.
+        _version = version.replace("0p", "")
+        # detect daily builds
+        if "-" in version:
+            _timestamp = time.strptime(version.split("-")[-1], CMKVersion.TIMESTAMP_FORMAT)
+            _version = version.split("-")[0]
+        return Version(_version), _timestamp
+
+    @staticmethod
+    def _disregard_patch_version(version: Version) -> Version:
+        if version.micro > 0:
+            # parse only major.minor version and create a new Version object
+            _version = f"{version.major}.{version.minor}.0"
+            return Version(_version)
+        return version
+
+    def __eq__(self, other: object) -> bool:
+        return CMKVersion._checkmk_compare_versions_logic(self, other, operator.eq)
+
+    def __gt__(self, other: Self) -> bool:
+        return CMKVersion._checkmk_compare_versions_logic(self, other, operator.gt)
+
+    def __lt__(self, other: Self) -> bool:
+        return CMKVersion._checkmk_compare_versions_logic(self, other, operator.lt)
+
+    def __ge__(self, other: Self) -> bool:
+        return self > other or self == other
+
+    def __le__(self, other: Self) -> bool:
+        return self < other or self == other
+
 
 def version_from_env(
     *,
@@ -120,33 +194,6 @@ def version_from_env(
         branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
         current_branch_version(),
     )
-
-
-def version_gte(version: str, min_version: str) -> bool:
-    """Check if the given version is greater than or equal to min_version."""
-    # first replace all non-numerical segments by a dot
-    # and make sure there are no empty segments
-    cmp_version = re.sub("[^0-9.]+", ".", version).replace("..", ".")
-    min_version = re.sub("[^0-9]+", ".", min_version).replace("..", ".")
-
-    # now split the segments
-    version_pattern = r"[0-9]*(\.[0-9]*)*"
-    cmp_version_match = re.match(version_pattern, cmp_version)
-    cmp_version_values = cmp_version_match.group().split(".") if cmp_version_match else []
-    logger.debug("cmp_version=%s; cmp_version_values=%s", cmp_version, cmp_version_values)
-    min_version_match = re.match(version_pattern, min_version)
-    min_version_values = min_version_match.group().split(".") if min_version_match else []
-    while len(cmp_version_values) < len(min_version_values):
-        cmp_version_values.append("0")
-    logger.debug("min_version=%s; min_version_values=%s", min_version, min_version_values)
-
-    # compare the version numbers segment by segment
-    for i, min_val in enumerate(min_version_values):
-        if int(cmp_version_values[i]) > int(min_val):
-            return True
-        if int(cmp_version_values[i]) < int(min_val):
-            return False
-    return True
 
 
 def get_min_version() -> str:

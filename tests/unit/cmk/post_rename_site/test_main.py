@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import argparse
 import logging
 import sys
 
@@ -48,7 +47,7 @@ def restore_root_logger_handlers():
 def test_main_executes_run(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    def mock_run(args: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId) -> bool:
+    def mock_run(verbose: bool, old_site_id: SiteId, new_site_id: SiteId) -> bool:
         sys.stdout.write("XYZ\n")
         return False
 

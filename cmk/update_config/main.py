@@ -152,8 +152,6 @@ def _setup_logging(verbose: int) -> logging.Logger:
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(logging.Formatter("%(message)s"))
     del log.logger.handlers[:]  # Remove all previously existing handlers
-    log.logger.addHandler(handler)
-    del log.logger.handlers[:]
     logging.getLogger().addHandler(handler)
 
     # Special case for PIL module producing messages like "STREAM b'IHDR' 16 13" in debug level

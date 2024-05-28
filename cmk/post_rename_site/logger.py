@@ -18,6 +18,4 @@ def setup_logging(*, verbose: int) -> None:
     handler = StreamHandler(sys.stdout)
     handler.setFormatter(Formatter("%(message)s"))
     del log.logger.handlers[:]  # Remove all previously existing handlers
-    log.logger.addHandler(handler)
-    del log.logger.handlers[:]
     getLogger().addHandler(handler)

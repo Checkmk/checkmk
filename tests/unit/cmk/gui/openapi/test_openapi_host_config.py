@@ -483,7 +483,7 @@ def _custom_host_attribute() -> Iterator[None]:
             "name": "foo",
             "title": "bar",
             "help": "foo",
-            "topic": "topic",
+            "topic": "basic",
             "type": "TextAscii",
             "add_custom_macro": False,
             "show_in_table": False,

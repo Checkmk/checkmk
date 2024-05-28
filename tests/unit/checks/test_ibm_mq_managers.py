@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.ibm_mq_managers import parse_ibm_mq_managers
+from cmk.plugins.collection.agent_based.ibm_mq_managers import parse_ibm_mq_managers
 
 from .checktestlib import Check
 from .test_ibm_mq_include import parse_info

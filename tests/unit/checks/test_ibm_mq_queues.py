@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-from cmk.base.plugins.agent_based.ibm_mq_queues import parse_ibm_mq_queues
+from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.plugins.collection.agent_based.ibm_mq_queues import parse_ibm_mq_queues
 
 from .checktestlib import Check
 from .test_ibm_mq_include import parse_info

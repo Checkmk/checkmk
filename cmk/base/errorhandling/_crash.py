@@ -22,7 +22,7 @@ from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.piggyback import get_source_hostnames
+from cmk.piggyback import get_piggyback_raw_data
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -156,18 +156,16 @@ def _read_snmp_info(hostname: str) -> bytes | None:
 
 
 def _read_agent_output(hostname: HostName) -> AgentRawData | None:
-    cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
-    piggyback_cache_path = Path(cmk.utils.paths.piggyback_dir, hostname)
-    cache_paths = [cache_path] + [
-        piggyback_cache_path / source_hostname for source_hostname in get_source_hostnames(hostname)
-    ]
     agent_outputs = []
-    for cache_path in cache_paths:
-        try:
-            with cache_path.open(mode="rb") as f:
-                agent_outputs.append(f.read())
-        except OSError:
-            pass
+
+    cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
+    try:
+        agent_outputs.append(cache_path.read_bytes())
+    except OSError:
+        pass
+
+    # Note: this is not quite what the fetcher does :(
+    agent_outputs.extend(r.raw_data for r in get_piggyback_raw_data(hostname))
 
     if agent_outputs:
         return AgentRawData(b"\n".join(agent_outputs))

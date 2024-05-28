@@ -215,20 +215,6 @@ def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[Piggyback
     return meta_data
 
 
-def get_source_hostnames(
-    piggybacked_hostname: HostName | HostAddress | None = None,
-) -> Sequence[HostName]:
-    if piggybacked_hostname is None:
-        return [
-            HostName(source_host.name)
-            for piggybacked_host_folder in _get_piggybacked_host_folders()
-            for source_host in _files_in(piggybacked_host_folder)
-        ]
-
-    piggybacked_host_folder = piggyback_dir / Path(piggybacked_hostname)
-    return [HostName(source_host.name) for source_host in _files_in(piggybacked_host_folder)]
-
-
 def _get_piggybacked_host_folders() -> Sequence[Path]:
     return _files_in(piggyback_dir)
 

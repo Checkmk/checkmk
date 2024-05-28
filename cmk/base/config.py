@@ -3873,13 +3873,22 @@ class ConfigCache:
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: HostName | None = None
     ) -> Sequence[tuple[str | None, str, int]]:
-        time_settings: list[tuple[str | None, str, int]] = []
-        for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
-            time_settings.extend(self._piggybacked_host_files(source_hostname))
+        all_sources = piggyback.get_piggybacked_host_with_sources()
+        used_sources = (
+            {m.source for sources in all_sources.values() for m in sources}
+            if piggybacked_hostname is None
+            else {m.source for m in all_sources.get(piggybacked_hostname, [])}
+        )
 
-        # From global settings
-        time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
-        return time_settings
+        return [
+            *(
+                setting
+                for source in sorted(used_sources)
+                for setting in self._piggybacked_host_files(source)
+            ),
+            # From global settings
+            (None, "max_cache_age", piggyback_max_cachefile_age),
+        ]
 
     def get_definitive_piggybacked_data_expiry_age(self) -> float:
         """Get the interval after which we definitively can get rid of piggybacked data."""

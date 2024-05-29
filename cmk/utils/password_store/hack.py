@@ -21,6 +21,8 @@ HACK_AGENTS = {
     # if we have to apply the password store hack.
     # Make sure to have *all* special agent plugins listed here, so we
     # can test for it
+    "aws_dev_internal": True,
+    "aws_status": False,  # needs no secret
     "azure_status": False,  # needs no secret
     "bazel_cache": True,
     "bi": False,  # needs no secret
@@ -59,6 +61,7 @@ HACK_CHECKS = {
     "ldap": True,
     "mail_loop": True,  # TODO
     "mailboxes": True,  # TODO
+    "mail": True,  # TODO
     "mkevents": False,  # has no secret
     "notify_count": False,  # has no secret
     "smtp": True,

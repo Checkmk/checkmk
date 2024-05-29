@@ -694,6 +694,8 @@ class Site:
         # set the sites timezone according to TZ
         self.set_timezone(os.getenv("TZ", ""))
 
+        self.toggle_autostart(enabled=False)
+
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
             raise Exception(
@@ -1105,6 +1107,9 @@ class Site:
     def toggle_liveproxyd(self, enabled: bool = True) -> None:
         self.set_config("LIVEPROXYD", "on" if enabled else "off", with_restart=True)
         assert self.file_exists("tmp/run/liveproxyd.pid") == enabled
+
+    def toggle_autostart(self, enabled: bool = True) -> None:
+        self.set_config("AUTOSTART", "on" if enabled else "off", with_restart=True)
 
     def save_results(self) -> None:
         if not is_containerized():

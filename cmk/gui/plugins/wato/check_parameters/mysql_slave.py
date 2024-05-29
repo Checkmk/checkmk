@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Age, Dictionary, TextInput
 
 
 def _item_spec_mysql_slave():
@@ -24,17 +25,14 @@ def _parameter_valuespec_mysql_slave():
         elements=[
             (
                 "seconds_behind_master",
-                Tuple(
+                SimpleLevels(
                     title=_("Max. time behind the master"),
                     help=_(
                         "Compares the time which the slave can be behind the master. "
                         "This rule makes the check raise warning/critical states if the time is equal to "
                         "or above the configured levels."
                     ),
-                    elements=[
-                        Age(title=_("Warning at")),
-                        Age(title=_("Critical at")),
-                    ],
+                    spec=Age,
                 ),
             ),
         ],

@@ -15,8 +15,6 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.base import plugin_contexts
-
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig
 from cmk.server_side_calls_backend.config_processing import (
@@ -138,26 +136,25 @@ class ActiveCheck:
     ) -> Iterator[ActiveServiceData]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
-        with plugin_contexts.current_host(self.host_name):
-            for plugin_name, plugin_params in active_checks_rules:
-                service_iterator = self._get_service_iterator(plugin_name, plugin_params)
+        for plugin_name, plugin_params in active_checks_rules:
+            service_iterator = self._get_service_iterator(plugin_name, plugin_params)
 
-                if not service_iterator:
-                    continue
+            if not service_iterator:
+                continue
 
-                try:
-                    yield from self._get_service_data(plugin_name, service_iterator)
-                except InvalidPluginInfoError:
-                    config_warnings.warn(
-                        f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
-                        f"active check plug-in is missing an argument function or a service description"
-                    )
-                except Exception as e:
-                    if cmk.utils.debug.enabled():
-                        raise
-                    config_warnings.warn(
-                        f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
-                    )
+            try:
+                yield from self._get_service_data(plugin_name, service_iterator)
+            except InvalidPluginInfoError:
+                config_warnings.warn(
+                    f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
+                    f"active check plug-in is missing an argument function or a service description"
+                )
+            except Exception as e:
+                if cmk.utils.debug.enabled():
+                    raise
+                config_warnings.warn(
+                    f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
+                )
 
     def _get_service_iterator(
         self,
@@ -316,29 +313,26 @@ class ActiveCheck:
     ) -> Iterator[ActiveServiceDescription]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
-        with plugin_contexts.current_host(self.host_name):
-            for plugin_name, plugin_params in active_checks_rules:
-                service_iterator = self._get_service_description_iterator(
-                    plugin_name, plugin_params
+        for plugin_name, plugin_params in active_checks_rules:
+            service_iterator = self._get_service_description_iterator(plugin_name, plugin_params)
+
+            if not service_iterator:
+                continue
+
+            try:
+                yield from service_iterator
+            except InvalidPluginInfoError:
+                config_warnings.warn(
+                    f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
+                    f"active check plug-in is missing an argument function or a service description"
                 )
-
-                if not service_iterator:
-                    continue
-
-                try:
-                    yield from service_iterator
-                except InvalidPluginInfoError:
-                    config_warnings.warn(
-                        f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
-                        f"active check plug-in is missing an argument function or a service description"
-                    )
-                    continue
-                except Exception as e:
-                    if cmk.utils.debug.enabled():
-                        raise
-                    config_warnings.warn(
-                        f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
-                    )
+                continue
+            except Exception as e:
+                if cmk.utils.debug.enabled():
+                    raise
+                config_warnings.warn(
+                    f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
+                )
 
     def _get_service_description_iterator(
         self,

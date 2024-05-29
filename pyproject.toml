@@ -212,6 +212,11 @@ filterwarnings = [
   'ignore:^Generating overly large repr.*$:Warning:hypothesis\..*:0',
   # ignore DeprecationWarning for ast.NameConstant in reportlab <= 4.2
   'ignore:^ast\.NameConstant is deprecated and will be removed in Python 3\.14\; use ast\.Constant instead$:DeprecationWarning:reportlab\..*:0',
+  # ignore warnings caused by probuf 4.25.3 until updating to 5.x
+  'ignore:^Type google\._upb\._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new\. This is deprecated and will no longer be allowed in Python 3\.14\.$:DeprecationWarning:importlib._bootstrap:488',
+  'ignore:^Type google\._upb\._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new\. This is deprecated and will no longer be allowed in Python 3\.14\.$:DeprecationWarning:importlib._bootstrap:488',
+  # ignore PytestCollectionWarning caused by webtest
+  'ignore:^cannot collect test class .* because it has a __init__ constructor.*$:UserWarning:.*webtest.*:0',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

@@ -137,6 +137,7 @@ def register(
     config_variable_registry.register(ConfigVariableDebug)
     config_variable_registry.register(ConfigVariableGUIProfile)
     config_variable_registry.register(ConfigVariableDebugLivestatusQueries)
+    config_variable_registry.register(ConfigVariableCMCRulesetMatchingStats)
     config_variable_registry.register(ConfigVariableSelectionLivetime)
     config_variable_registry.register(ConfigVariableShowLivestatusErrors)
     config_variable_registry.register(ConfigVariableEnableSounds)
@@ -3214,6 +3215,26 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
             ),
             to_valuespec=transform_snmp_backend_hosts_to_valuespec,
             from_valuespec=transform_snmp_backend_from_valuespec,
+        )
+
+
+class ConfigVariableCMCRulesetMatchingStats(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupDeveloperTools
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainCore
+
+    def ident(self) -> str:
+        return "ruleset_matching_stats"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Collect ruleset matching statistics"),
+            help=_(
+                "If enabled, the core will collect statistics (cache hits/misses) during the "
+                "ruleset matching process."
+            ),
         )
 
 

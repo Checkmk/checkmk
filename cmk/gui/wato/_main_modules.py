@@ -70,7 +70,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
 
     # Register the built-in agent download page on the top level of Setup only when the Agent Bakery
     # does not exist (e.g. when using CRE)
-    if cmk_version.edition() in (cmk_version.Edition.CRE, cmk_version.Edition.CSE):
+    if cmk_version.edition() in (cmk_version.Edition.CRE,):
         main_module_registry.register(MainModuleAgentsWindows)
         main_module_registry.register(MainModuleAgentsLinux)
 

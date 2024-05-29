@@ -56,6 +56,8 @@ from cmk.utils.notify_types import (
     EventContext,
     EventRule,
     HostEventType,
+    is_always_bulk,
+    is_timeperiod_bulk,
     NotificationContext,
     NotificationPluginNameStr,
     NotifyAnalysisInfo,
@@ -997,15 +999,19 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
 
     if not bulk:
         return None
-    if isinstance(bulk, dict):  # old format: treat as "Always Bulk"
-        method, params = "always", bulk
-    else:
-        method, params = bulk
 
-    if method == "always":
+    if isinstance(bulk, tuple):
+        method, params = bulk
+    else:
+        method, params = (
+            "always",
+            bulk,
+        )  # old format: treat as "Always Bulk" - typing says this can't ever be the case. Can it be removed?
+
+    if is_always_bulk(params) or method == "always":
         return params
 
-    if method == "timeperiod":
+    if is_timeperiod_bulk(params):
         try:
             active = timeperiod_active(params["timeperiod"])
         except Exception:
@@ -1789,14 +1795,14 @@ def do_bulk_notify(  # pylint: disable=too-many-branches
     if "/" in contact or "/" in plugin_name:
         logger.error("Tried to construct bulk dir with unsanitized attributes")
         raise MKGeneralException("Slashes in CONTACTNAME or plugin_name are forbidden!")
-    if bulk.get("timeperiod"):
+    if is_timeperiod_bulk(bulk):
         bulk_path: list[str] = [
             contact,
             plugin_name,
             "timeperiod:" + bulk["timeperiod"],
             str(bulk["count"]),
         ]
-    else:
+    elif is_always_bulk(bulk):
         bulk_path = [contact, plugin_name, str(bulk["interval"]), str(bulk["count"])]
 
     bulkby = bulk["groupby"]

@@ -866,6 +866,10 @@ msgstr "(incorporato)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(l'impostazione predefinita è %r per %s/TLS)"
 
+#, fuzzy
+msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
+msgstr "Monitoraggio dei servizi Amazon Web (AWS)"
+
 msgid "(disabled)"
 msgstr "(disattivato)"
 
@@ -1272,6 +1276,25 @@ msgstr "<b>Parola chiave</b> pattern"
 
 msgid "<b>Keyword</b> runtime"
 msgstr "<b>Parola chiave</b> runtime"
+
+#, fuzzy
+msgid ""
+"<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
+"all service instances will be filtered by those tags. Otherwise, all "
+"instances will be collected.<br><br><b>Monitor instances with explicit AWS "
+"service tags ignoring overall tag filters:</b><br>Specify explicit tags for "
+"these services. The overall tags will be ignored for these services."
+"<br><br><b>Monitor instances with explicit service names ignoring overall "
+"tag filters:</b><br>Use this option to specify explicit names. The overall "
+"tags will be ignored for these services."
+msgstr ""
+"Raccogliere tutte le istanze del servizio e limitare in base ai tag generali:"
+"</b><br>Se i tag generali sono specificati sopra, tutte le istanze del "
+"servizio saranno filtrate da tali tag. Altrimenti, tutte le istanze saranno "
+"raccolte.<br>Tag espliciti del servizio e sovrascrittura dei tag generali:</"
+"b><br>Specificare tag espliciti per questi servizi. I tag generali saranno "
+"ignorati per questi servizi. I tag generali saranno ignorati per questi "
+"servizi."
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -3895,6 +3918,10 @@ msgstr "Aggiungere nuovi criteri di corrispondenza"
 msgid "Add new metric"
 msgstr "Aggiungi una nuova metrica"
 
+#, fuzzy
+msgid "Add new name"
+msgstr "Aggiungi un nuovo tempo"
+
 msgid "Add new node condition"
 msgstr "Aggiungere una nuova condizione al nodo"
 
@@ -3940,6 +3967,10 @@ msgstr "Aggiungere un nuovo argomento"
 
 msgid "Add new user configuration"
 msgstr "Aggiungere una nuova configurazione utente"
+
+#, fuzzy
+msgid "Add new value"
+msgstr "Aggiungi una nuova riga"
 
 msgid "Add node condition"
 msgstr "Aggiungi condizione al nodo"
@@ -16288,7 +16319,8 @@ msgstr ""
 "Questa funzione è disattivata per impostazione predefinita, il che farà "
 "crescere la casella di posta elettronica quando non la si pulisce da soli."
 
-msgid "Delete all processed message belonging to this check"
+#, fuzzy
+msgid "Delete all processed messages belonging to this check"
 msgstr "Elimina tutti i messaggi elaborati appartenenti a questo controllo"
 
 #, python-format
@@ -16376,9 +16408,6 @@ msgstr "Cancellare il lavoro #%d"
 
 msgid "Delete last alert handler rule"
 msgstr "Cancellare l'ultima regola di gestione degli avvisi"
-
-msgid "Delete messages"
-msgstr "Cancellare i messaggi"
 
 #, python-format
 msgid "Delete notification rule #%d"
@@ -17416,9 +17445,6 @@ msgstr "Direzione"
 
 msgid "Directly forward to Event Console"
 msgstr "Inoltrare direttamente a Event Console"
-
-msgid "Directly forward to event console"
-msgstr "Inoltrare direttamente alla console dell'evento"
 
 msgid "Directly show the action icon in the column"
 msgstr "Mostra direttamente l'icona dell'azione nella colonna"
@@ -18686,8 +18712,16 @@ msgstr "Non unire fasi consecutive con lo stesso stato"
 msgid "Do not monitor"
 msgstr "Non monitorare"
 
+#, fuzzy
+msgid "Do not monitor limits"
+msgstr "Non monitorare"
+
 msgid "Do not monitor placeholder VMs"
 msgstr "Non monitorare le macchine virtuali segnaposto"
+
+#, fuzzy
+msgid "Do not monitor service"
+msgstr "Non monitorare"
 
 msgid "Do not offer this action as a command on open events"
 msgstr "Non offrire questa azione come comando su eventi aperti"
@@ -18744,6 +18778,10 @@ msgstr "Non fidatevi"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Non usare il prefisso 'aws:' per la chiave."
+
+#, fuzzy
+msgid "Do not use 'aws:' prefix for the value."
+msgstr "Non usare il prefisso 'aws:' per i valori."
 
 msgid "Do not use 'aws:' prefix for the values."
 msgstr "Non usare il prefisso 'aws:' per i valori."
@@ -19422,6 +19460,20 @@ msgstr ""
 "IPv4 address}-{Region}-{Instance ID}\". Questo identifica in modo univoco "
 "l'istanza EC2. Non è possibile eseguire il ping di questo nome host."
 
+#, fuzzy
+msgid ""
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+"hostname is pingable and changing the piggyback name will reset the "
+"piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+"consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely "
+"identifies the EC2 instance. It is not possible to ping this host name."
+msgstr ""
+"Ogni istanza EC2 crea un host piggyback.<br><b>Nota:</b>Non tutti i nomi di "
+"host sono pingabili e la modifica del nome piggyback ripristinerà l'host "
+"piggyback.IP - Regione - ID istanza:</b><br>Il nome è composto da \"{Private "
+"IPv4 address}-{Region}-{Instance ID}\". Questo identifica in modo univoco "
+"l'istanza EC2. Non è possibile eseguire il ping di questo nome host."
+
 msgid ""
 "Each SNMPv3 device has it's own engine ID. This is normally automatically "
 "generated, but can also be configured manually for some devices. As the "
@@ -19537,6 +19589,10 @@ msgid ""
 msgstr ""
 "Ogni gruppo di tag creerà una scelta a discesa nella configurazione "
 "dell'host."
+
+#, fuzzy
+msgid "Each tag key must be unique and cannot be used multiple times."
+msgstr "Ogni tag deve essere unico e non può essere usato più volte"
 
 msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Ogni tag deve essere unico e non può essere usato più volte"
@@ -27299,6 +27355,10 @@ msgstr "Latenza IO"
 msgid "IOPS"
 msgstr ""
 
+#, fuzzy
+msgid "IP - Region - Instance ID"
+msgstr "IP - regione - ID istanza"
+
 msgid "IP - region - instance ID"
 msgstr "IP - regione - ID istanza"
 
@@ -27849,6 +27909,15 @@ msgstr ""
 msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
 "or tag restrictions that may have been configured."
+msgstr ""
+"Se i limiti sono abilitati, tutte le istanze verranno recuperate, "
+"indipendentemente da qualsiasi restrizione di nome o di tag eventualmente "
+"configurata."
+
+#, fuzzy
+msgid ""
+"If limits are monitored, all instances will be fetched regardless of any "
+"name or tag restrictions that may have been configured."
 msgstr ""
 "Se i limiti sono abilitati, tutte le istanze verranno recuperate, "
 "indipendentemente da qualsiasi restrizione di nome o di tag eventualmente "
@@ -36938,6 +37007,10 @@ msgstr "Monitoraggio del percorso53"
 msgid "Monitor all files in folder"
 msgstr "Controlla tutti i file nella cartella"
 
+#, fuzzy
+msgid "Monitor all instances"
+msgstr "Controlla tutte le istanze trovate"
+
 msgid "Monitor all instances detected and manually added"
 msgstr "Monitorare tutte le istanze rilevate e aggiunte manualmente"
 
@@ -36980,6 +37053,22 @@ msgid ""
 "Monitor if your VMs are properly protected by the disaster recovery software "
 "Zerto (compatible with Zerto v9.x)."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Monitor instances with explicit AWS service tags ignoring overall tag filters"
+msgstr ""
+"Utilizzare i tag espliciti del servizio AWS e sovrascrivere i tag generali "
+"di AWS"
+
+#, fuzzy
+msgid ""
+"Monitor instances with explicit service names ignoring overall tag filters"
+msgstr "Usare nomi di servizi espliciti e ignorare i tag generali di AWS"
+
+#, fuzzy
+msgid "Monitor limits"
+msgstr "Monitorare i limiti del servizio"
 
 msgid "Monitor menu entries"
 msgstr "Monitorare le voci di menu"
@@ -37309,6 +37398,10 @@ msgstr "Spostare"
 
 msgid "Move aggregations"
 msgstr "Spostare le aggregazioni"
+
+#, fuzzy
+msgid "Move all processed messages to subfolder"
+msgstr "Cancellare i messaggi elaborati"
 
 msgid "Move existing hosts"
 msgstr "Spostare gli host esistenti"
@@ -38586,6 +38679,10 @@ msgstr "Nessuna metrica in questo grafico ancora."
 msgid "No monitoring core"
 msgstr "Nessun nucleo di monitoraggio"
 
+#, fuzzy
+msgid "No names defined"
+msgstr "Nessuna connessione definita"
+
 msgid "No need for syncing sites"
 msgstr "Non è necessario sincronizzare i siti"
 
@@ -38696,6 +38793,10 @@ msgstr ""
 msgid "No such tree below %r"
 msgstr ""
 
+#, fuzzy
+msgid "No tags defined"
+msgstr "Nessuna fonte di dati definita."
+
 msgid "No test host"
 msgstr "Nessun host di prova"
 
@@ -38723,6 +38824,10 @@ msgstr "Nessuna cartella di destinazione valida."
 
 msgid "No valid theme directories found."
 msgstr "Non sono state trovate directory di temi valide."
+
+#, fuzzy
+msgid "No values defined"
+msgstr "Nessuna fonte di dati definita."
 
 msgid "No version limitation"
 msgstr "Nessuna limitazione di versione"
@@ -39451,6 +39556,10 @@ msgstr ""
 "ogni esecuzione del controllo. Tutti i pacchetti sono inviati direttamente "
 "all'esecuzione del controllo. In seguito il controllo attende i pacchetti in "
 "arrivo."
+
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "Il parametro \"%s\" non è un intero."
 
 msgid "Number of Active Sessions"
 msgstr "Numero di sessioni attive"
@@ -44592,6 +44701,10 @@ msgstr "Indice della porta"
 msgid "Port index or 'Total'"
 msgstr "Indice della porta o 'Totale"
 
+#, fuzzy
+msgid "Port must be between 0 and 65535"
+msgstr "Il valore di %s deve essere tra %d e %d"
+
 msgid "Port number"
 msgstr "Numero di porta"
 
@@ -46931,6 +47044,10 @@ msgstr "Rimuovere i file e le sottodirectory gestiti dall'agente Checkmk"
 msgid "Remove filter"
 msgstr "Rimuovi filtro"
 
+#, fuzzy
+msgid "Remove name"
+msgstr "Rimuovere tutti"
+
 msgid "Remove only matching vanished services"
 msgstr "Rimuovere solo i servizi corrispondenti scomparsi"
 
@@ -46987,6 +47104,10 @@ msgstr "Rimuovere l'autenticazione a due fattori"
 #, python-format
 msgid "Remove two-factor authentication of %s"
 msgstr "Rimuovere l'autenticazione a due fattori di %s"
+
+#, fuzzy
+msgid "Remove value"
+msgstr "Rimuovere tutti"
 
 msgid "Remove vanished services"
 msgstr "Rimuovere i servizi scomparsi"
@@ -53725,9 +53846,6 @@ msgstr "Spool di messaggi che non possono essere inviati"
 msgid "Spool to Event Console"
 msgstr "Spool su Event Console"
 
-msgid "Spool to event console"
-msgstr "Spool alla console degli eventi"
-
 msgid "Spooling: Send events to local event console in same OMD site"
 msgstr ""
 "Spooling: Invia eventi alla console eventi locale nello stesso sito OMD"
@@ -58812,9 +58930,6 @@ msgstr "Il file di registro non esiste sul sito."
 
 msgid "The login is currently locked"
 msgstr "Il login è attualmente bloccato"
-
-msgid "The mail subject is used as syslog appliaction"
-msgstr "L'oggetto della posta è usato come appliazione syslog"
 
 msgid "The mandatory group name is missing"
 msgstr "Manca il nome obbligatorio del gruppo"
@@ -71013,11 +71128,6 @@ msgstr "Usa un plugin di controllo personalizzato..."
 msgid "Use a custom name for the SSL certificate validation"
 msgstr "Utilizzare un nome personalizzato per la convalida del certificato SSL"
 
-msgid ""
-"Use a makro as (part of) server name. Macros must be in capital letters and "
-"start and end with '$'."
-msgstr ""
-
 msgid "Use a namespace prefix"
 msgstr "Utilizzare un prefisso dello spazio dei nomi"
 
@@ -71355,8 +71465,9 @@ msgstr "Utilizzare il seguente host di stato"
 msgid "Use the global configuration"
 msgstr "Utilizzare la configurazione globale"
 
-msgid "Use the mail subject"
-msgstr "Usa l'oggetto della mail"
+#, fuzzy
+msgid "Use the mail subject as syslog application"
+msgstr "L'oggetto della posta è usato come appliazione syslog"
 
 msgid "Use the multipath alias as service name, if one is set"
 msgstr "Usa l'alias multipath come nome del servizio, se ne è impostato uno"
@@ -72000,9 +72111,6 @@ msgstr "Nome utente per il login"
 
 msgid "Username is unknown"
 msgstr "Il nome utente è sconosciuto"
-
-msgid "Username/Password"
-msgstr "Nome utente/Password"
 
 msgid "Username:"
 msgstr "Nome utente:"
@@ -79479,6 +79587,21 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Delete messages"
+#~ msgstr "Cancellare i messaggi"
+
+#~ msgid "Directly forward to event console"
+#~ msgstr "Inoltrare direttamente alla console dell'evento"
+
+#~ msgid "Spool to event console"
+#~ msgstr "Spool alla console degli eventi"
+
+#~ msgid "Use the mail subject"
+#~ msgstr "Usa l'oggetto della mail"
+
+#~ msgid "Username/Password"
+#~ msgstr "Nome utente/Password"
 
 #~ msgid "Critical if over"
 #~ msgstr "Critico se oltre"

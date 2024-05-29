@@ -11,9 +11,11 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
+    CaseStateStr,
     EmailBodyElementsType,
     GroupbyType,
     IlertPriorityType,
+    IncidentStateStr,
     MgmntPriorityType,
     MgmntUrgencyType,
     OpsGeniePriorityStrType,
@@ -44,7 +46,6 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
-from cmk.gui.rest_api_types.notifications_rule_types import CASE_STATE_TYPE, INCIDENT_STATE_TYPE
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
@@ -1444,11 +1445,6 @@ class OpsGeniePluginCreate(PluginName):
 
 # PagerDuty ---------------------------------------------------------
 
-PASSWORD_STORE_ID_SHOULD_EXIST = PasswordStoreIDField(
-    presence="should_exist",
-    required=True,
-)
-
 
 class PagerDutyAPIKeyStoreID(ExplicitOrStoreOptions):
     store_id = PASSWORD_STORE_ID_SHOULD_EXIST
@@ -1610,7 +1606,7 @@ class PriorityOneOfSchema(CheckboxOneOfSchema):
 
 class ManagementTypeCaseStates(BaseSchema):
     start_predefined = fields.String(
-        enum=list(get_args(CASE_STATE_TYPE)),
+        enum=list(get_args(CaseStateStr)),
         example="new",
     )
     start_integer = fields.Integer(
@@ -1639,7 +1635,7 @@ class CaseParams(IncidentAndCaseParams):
 
 class ManagementTypeIncedentStates(BaseSchema):
     start_predefined = fields.String(
-        enum=list(get_args(INCIDENT_STATE_TYPE)),
+        enum=list(get_args(IncidentStateStr)),
         example="hold",
     )
     start_integer = fields.Integer(
@@ -1647,7 +1643,7 @@ class ManagementTypeIncedentStates(BaseSchema):
         minimum=0,
     )
     end_predefined = fields.String(
-        enum=list(get_args(INCIDENT_STATE_TYPE)),
+        enum=list(get_args(IncidentStateStr)),
         example="resolved",
     )
     end_integer = fields.Integer(

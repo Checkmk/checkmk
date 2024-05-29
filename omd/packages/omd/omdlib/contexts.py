@@ -8,7 +8,6 @@ import abc
 import os
 import sys
 from pathlib import Path
-from typing import cast
 
 from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import (
@@ -26,20 +25,10 @@ from cmk.utils.version import Edition
 class AbstractSiteContext(abc.ABC):
     """Object wrapping site specific information"""
 
-    def __init__(self, sitename: str | None) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._sitename = sitename
         self._config_loaded = False
         self._config: Config = {}
-
-    @property
-    def name(self) -> str | None:
-        return self._sitename
-
-    @property
-    @abc.abstractmethod
-    def dir(self) -> str:
-        raise NotImplementedError()
 
     @property
     @abc.abstractmethod
@@ -57,10 +46,6 @@ class AbstractSiteContext(abc.ABC):
         raise NotImplementedError()
 
     @property
-    def version_meta_dir(self) -> str:
-        return "%s/.version_meta" % self.dir
-
-    @property
     def conf(self) -> Config:
         """{ "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)"""
         if not self._config_loaded:
@@ -75,20 +60,19 @@ class AbstractSiteContext(abc.ABC):
     def is_empty(self) -> bool:
         raise NotImplementedError()
 
-    @staticmethod
-    @abc.abstractmethod
-    def is_site_context() -> bool:
-        raise NotImplementedError()
-
 
 class SiteContext(AbstractSiteContext):
+    def __init__(self, sitename: str) -> None:
+        super().__init__()
+        self._sitename = sitename
+
     @property
     def name(self) -> str:
-        return cast(str, self._sitename)
+        return self._sitename
 
     @property
     def dir(self) -> str:
-        return os.path.join("/omd/sites", cast(str, self._sitename))
+        return os.path.join("/omd/sites", self._sitename)
 
     @property
     def tmp_dir(self) -> str:
@@ -161,10 +145,6 @@ class SiteContext(AbstractSiteContext):
         """Check if site is completely stopped"""
         return check_status(self.dir, display=False) == 1
 
-    @staticmethod
-    def is_site_context() -> bool:
-        return True
-
     @property
     def skel_permissions(self) -> Permissions:
         """Returns the skeleton permissions. Load either from version meta directory
@@ -176,6 +156,10 @@ class SiteContext(AbstractSiteContext):
             return load_skel_permissions_from(skel_permissions_file_path(version))
 
         return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")
+
+    @property
+    def version_meta_dir(self) -> str:
+        return "%s/.version_meta" % self.dir
 
     @property
     def version_skel_dir(self) -> str:
@@ -201,14 +185,6 @@ class SiteContext(AbstractSiteContext):
 
 
 class RootContext(AbstractSiteContext):
-    def __init__(self) -> None:
-        super().__init__(sitename=None)
-
-    @property
-    def dir(self) -> str:
-        """Absolute base path (without trailing slash)"""
-        return "/"
-
     @property
     def tmp_dir(self) -> str:
         return "/tmp"  # nosec B108 # BNS:13b2c8
@@ -216,7 +192,7 @@ class RootContext(AbstractSiteContext):
     @property
     def real_dir(self) -> str:
         """Absolute base path (without trailing slash)"""
-        return "/" + self.dir.lstrip("/")
+        return "/"
 
     @property
     def real_tmp_dir(self) -> str:
@@ -226,8 +202,4 @@ class RootContext(AbstractSiteContext):
         pass
 
     def is_empty(self) -> bool:
-        return False
-
-    @staticmethod
-    def is_site_context() -> bool:
         return False

@@ -61,7 +61,8 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.site_name import sitename_must_be_valid
+from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
+from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites, is_disabled, main_sites
 from omdlib.skel_permissions import (
     get_skel_permissions,
@@ -77,6 +78,7 @@ from omdlib.system_apache import (
 )
 from omdlib.tmpfs import (
     add_to_fstab,
+    fstab_verify,
     prepare_and_populate_tmpfs,
     remove_from_fstab,
     save_tmpfs_dump,
@@ -240,10 +242,6 @@ class CommandType(Enum):
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with sites                             |
 #   '----------------------------------------------------------------------'
-
-
-def site_name() -> str:
-    return pwd.getpwuid(os.getuid()).pw_name
 
 
 def is_root() -> bool:
@@ -1723,7 +1721,7 @@ def init_action(
     args: Arguments,
     options: CommandOptions,
 ) -> int:
-    if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+    if is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         bail_out("This site is disabled.")
 
     if command in ["start", "restart"]:
@@ -1754,21 +1752,6 @@ def init_action(
 #   +----------------------------------------------------------------------+
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
-
-
-def fstab_verify(site: SiteContext) -> bool:
-    """Ensure that there is an fstab entry for the tmpfs of the site.
-    In case there is no fstab (seen in some containers) assume everything
-    is OK without fstab entry."""
-    if not (fstab_path := Path("/etc", "fstab")).exists():
-        return True
-
-    mountpoint = site.tmp_dir
-    with fstab_path.open() as opened_file:
-        for line in opened_file:
-            if "uid=%s," % site.name in line and mountpoint in line:
-                return True
-    bail_out(tty.error + ": fstab entry for %s does not exist" % mountpoint)
 
 
 # No using os.putenv, os.getenv os.unsetenv directly because
@@ -1944,7 +1927,7 @@ def _call_script(  # pylint: disable=too-many-branches
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
-    if not site.is_site_context():
+    if not isinstance(site, SiteContext):
         return
 
     if not site_must_exist:
@@ -2021,7 +2004,7 @@ def main_help(
 
 def main_setversion(
     version_info: VersionInfo,
-    site: SiteContext,
+    _site: object,
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
@@ -2098,7 +2081,7 @@ def main_create(
         useradd(version_info, site, uid, gid)
 
     if reuse:
-        fstab_verify(site)
+        fstab_verify(site.name, site.tmp_dir)
     else:
         create_site_dir(site)
         add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
@@ -2153,7 +2136,7 @@ def main_init(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if not is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+    if not is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         bail_out(
             "Cannot initialize site that is not disabled.\n"
             "Please call 'omd disable %s' first." % site.name
@@ -2275,7 +2258,7 @@ def finalize_site(
     site.load_config(load_defaults(site))
     register_with_system_apache(
         version_info,
-        Path(f"/omd/apache/{site.name}.conf"),
+        SitePaths.from_site_name(site.name).apache_conf,
         site.name,
         site.dir,
         site.conf["APACHE_TCP_ADDR"],
@@ -2344,7 +2327,7 @@ def main_rm(
     # refers to a not existing site apache config.
     unregister_from_system_apache(
         version_info,
-        Path(f"/omd/apache/{site.name}.conf"),
+        SitePaths.from_site_name(site.name).apache_conf,
         apache_reload="apache-reload" in options,
         verbose=global_opts.verbose,
     )
@@ -2385,7 +2368,7 @@ def main_disable(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+    if is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
@@ -2394,7 +2377,7 @@ def main_disable(
     sys.stdout.write("Disabling Apache configuration for this site...")
     unregister_from_system_apache(
         version_info,
-        Path(f"/omd/apache/{site.name}.conf"),
+        SitePaths.from_site_name(site.name).apache_conf,
         apache_reload=False,
         verbose=global_opts.verbose,
     )
@@ -2407,13 +2390,13 @@ def main_enable(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if not is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+    if not is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
     register_with_system_apache(
         version_info,
-        Path(f"/omd/apache/{site.name}.conf"),
+        SitePaths.from_site_name(site.name).apache_conf,
         site.name,
         site.dir,
         site.conf["APACHE_TCP_ADDR"],
@@ -2434,7 +2417,7 @@ def main_update_apache_config(
     if _is_apache_enabled(site):
         register_with_system_apache(
             version_info,
-            Path(f"/omd/apache/{site.name}.conf"),
+            SitePaths.from_site_name(site.name).apache_conf,
             site.name,
             site.dir,
             site.conf["APACHE_TCP_ADDR"],
@@ -2445,7 +2428,7 @@ def main_update_apache_config(
     else:
         unregister_from_system_apache(
             version_info,
-            Path(f"/omd/apache/{site.name}.conf"),
+            SitePaths.from_site_name(site.name).apache_conf,
             apache_reload=True,
             verbose=global_opts.verbose,
         )
@@ -2484,7 +2467,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
         reuse = True
         if not user_verify(version_info, new_site):
             bail_out("Error verifying site user.")
-        fstab_verify(new_site)
+        fstab_verify(new_site.name, new_site.tmp_dir)
 
     sitename_must_be_valid(new_site.name, Path(new_site.dir), reuse)
 
@@ -2524,7 +2507,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
         os.rename(old_site.dir, new_site.dir)
-        delete_apache_hook(Path(f"/omd/apache/{old_site.name}.conf"))
+        delete_apache_hook(SitePaths.from_site_name(old_site.name).apache_conf)
     else:
         # Make exact file-per-file copy with same user but already new name
         if not reuse:
@@ -2878,7 +2861,7 @@ def main_update(  # pylint: disable=too-many-branches
         bail_out("Aborted.")
 
     try:
-        hook_up_to_date = is_apache_hook_up_to_date(Path(f"/omd/apache/{site.name}.conf"))
+        hook_up_to_date = is_apache_hook_up_to_date(SitePaths.from_site_name(site.name).apache_conf)
     except PermissionError:
         # In case the hook can not be read, assume the hook needs to be updated
         hook_up_to_date = False
@@ -3082,7 +3065,7 @@ def main_umount(
 
     # if no site is selected, all sites are affected
     exit_status = 0
-    if not site.is_site_context():
+    if not isinstance(site, SiteContext):
         for site_id in all_sites(Path("/omd/")):
             # Set global vars for the current site
             site = SiteContext(site_id)
@@ -3118,7 +3101,7 @@ def main_init_action(  # pylint: disable=too-many-branches
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    if site.is_site_context():
+    if isinstance(site, SiteContext):
         exit_status = init_action(version_info, site, global_opts, command, args, options)
 
         # When the whole site is about to be stopped check for remaining
@@ -3160,7 +3143,7 @@ def main_init_action(  # pylint: disable=too-many-branches
             continue
 
         # Skip disabled sites completely
-        if is_disabled(Path(f"/omd/apache/{site.name}.conf")):
+        if is_disabled(SitePaths.from_site_name(site.name).apache_conf):
             continue
 
         site.load_config(load_defaults(site))
@@ -3368,7 +3351,6 @@ def main_backup(
 def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     *,
     tar: tarfile.TarFile,
-    site: SiteContext,
     options: CommandOptions,
     global_opts: GlobalOptions,
     version_info: VersionInfo,
@@ -3394,7 +3376,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
         # Restore site with its original name, or specify a new one
         new_sitename = new_site_name or sitename
     else:
-        new_sitename = site_name()
+        new_sitename = site_name_from_uid()
 
     site = SiteContext(new_sitename)
 
@@ -3471,7 +3453,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
 
 def main_restore(
     version_info: VersionInfo,
-    site: SiteContext,
+    _site: object,
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
@@ -3503,9 +3485,8 @@ def main_restore(
             fileobj=fileobj,
             mode=mode,
         ) as tar:
-            site = _restore_backup_from_tar(
+            _restore_backup_from_tar(
                 tar=tar,
-                site=site,
                 options=options,
                 global_opts=global_opts,
                 version_info=version_info,
@@ -3524,7 +3505,7 @@ def prepare_restore_as_root(
         reuse = True
         if not user_verify(version_info, site, allow_populated=True):
             bail_out("Error verifying site user.")
-        fstab_verify(site)
+        fstab_verify(site.name, site.tmp_dir)
 
     sitename_must_be_valid(site.name, Path(site.dir), reuse)
 
@@ -3725,7 +3706,7 @@ def postprocess_restore_as_site_user(
 
 def main_cleanup(
     version_info: VersionInfo,
-    site: SiteContext,
+    _site: object,
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
@@ -4677,17 +4658,14 @@ def main() -> None:  # pylint: disable=too-many-branches
             elif command.needs_site == 1:
                 bail_out("omd: please specify site.")
         else:
-            site = SiteContext(site_name())
+            site = SiteContext(site_name_from_uid())
 
     check_site_user(site, command.site_must_exist)
 
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.
     # That command must be run in the target version
-    if site.is_site_context() and command.site_must_exist and command.command != "update":
-        if not isinstance(site, SiteContext):
-            raise Exception("site must be of type SiteContext")
-
+    if isinstance(site, SiteContext) and command.site_must_exist and command.command != "update":
         v = version_from_site_dir(Path(site.dir))
         if v is None:  # Site has no home directory or version link
             if command.command == "rm":
@@ -4712,15 +4690,16 @@ def main() -> None:  # pylint: disable=too-many-branches
     # site user should always run with site user privileges. That way
     # we are sure that new files and processes are created under the
     # site user and never as root.
-    if not command.no_suid and site.is_site_context() and is_root() and not command.only_root:
-        if not isinstance(site, SiteContext):
-            raise Exception("site must be of type SiteContext")
+    if (
+        not command.no_suid
+        and isinstance(site, SiteContext)
+        and is_root()
+        and not command.only_root
+    ):
         switch_to_site_user(site)
 
     # Make sure environment is in a defined state
-    if site.is_site_context():
-        if not isinstance(site, SiteContext):
-            raise Exception("site must be of type SiteContext")
+    if isinstance(site, SiteContext):
         clear_environment()
         set_environment(site)
 

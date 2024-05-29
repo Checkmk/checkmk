@@ -880,6 +880,10 @@ msgstr "(încorporat)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(implicit este %r pentru %s/TLS)"
 
+#, fuzzy
+msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
+msgstr "Monitorizarea serviciilor web Amazon (AWS)"
+
 msgid "(disabled)"
 msgstr "(dezactivat)"
 
@@ -1287,6 +1291,27 @@ msgstr "<b>Cuvântul cheie</b> model"
 
 msgid "<b>Keyword</b> runtime"
 msgstr "<b>Cuvânt cheie</b> runtime"
+
+#, fuzzy
+msgid ""
+"<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
+"all service instances will be filtered by those tags. Otherwise, all "
+"instances will be collected.<br><br><b>Monitor instances with explicit AWS "
+"service tags ignoring overall tag filters:</b><br>Specify explicit tags for "
+"these services. The overall tags will be ignored for these services."
+"<br><br><b>Monitor instances with explicit service names ignoring overall "
+"tag filters:</b><br>Use this option to specify explicit names. The overall "
+"tags will be ignored for these services."
+msgstr ""
+"<b>Adunați toate instanțele de servicii și restricționați după etichete "
+"generale:</b><br>Dacă etichetele generale sunt specificate mai sus, atunci "
+"toate instanțele de servicii vor fi filtrate după aceste etichete. În caz "
+"contrar, toate instanțele vor fi colectate.<br><br><b>Etichete de serviciu "
+"explicite și suprascrierea etichetelor globale:</b><br>Specificați etichete "
+"explicite pentru aceste servicii. Etichetele globale vor fi ignorate pentru "
+"aceste servicii.<br><br><b>Explicit service names and ignore overall tags:</"
+"b><br>Utilizați această opțiune pentru a specifica nume explicite. "
+"Etichetele globale vor fi ignorate pentru aceste servicii."
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -3932,6 +3957,10 @@ msgstr "Adăugați noi criterii de potrivire"
 msgid "Add new metric"
 msgstr "Adăugați o nouă măsurătoare"
 
+#, fuzzy
+msgid "Add new name"
+msgstr "Adăugați o nouă oră"
+
 msgid "Add new node condition"
 msgstr "Adăugați o nouă condiție de nod"
 
@@ -3977,6 +4006,10 @@ msgstr "Adăugați un nou subiect"
 
 msgid "Add new user configuration"
 msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Add new value"
+msgstr "Adăugați un nou rol"
 
 msgid "Add node condition"
 msgstr "Adăugați o condiție de nod"
@@ -16477,7 +16510,8 @@ msgstr ""
 "Acest lucru este dezactivat în mod implicit, ceea ce va face ca cutia "
 "poștală să crească atunci când nu o curățați singur."
 
-msgid "Delete all processed message belonging to this check"
+#, fuzzy
+msgid "Delete all processed messages belonging to this check"
 msgstr "Șterge toate mesajele procesate care aparțin acestui control"
 
 #, python-format
@@ -16565,9 +16599,6 @@ msgstr "Ștergeți postul #%d"
 
 msgid "Delete last alert handler rule"
 msgstr "Ștergeți ultima regulă de gestionare a alertelor"
-
-msgid "Delete messages"
-msgstr "Ștergerea mesajelor"
 
 #, python-format
 msgid "Delete notification rule #%d"
@@ -17612,9 +17643,6 @@ msgstr "Direcția"
 
 msgid "Directly forward to Event Console"
 msgstr "Transmiteți direct la Consola de evenimente"
-
-msgid "Directly forward to event console"
-msgstr "Transmiteți direct la consola de evenimente"
 
 msgid "Directly show the action icon in the column"
 msgstr "Afișați direct pictograma de acțiune în coloană"
@@ -18891,8 +18919,16 @@ msgstr "Nu fuzionați faze consecutive cu stare egală"
 msgid "Do not monitor"
 msgstr "Nu monitorizați"
 
+#, fuzzy
+msgid "Do not monitor limits"
+msgstr "Nu monitorizați"
+
 msgid "Do not monitor placeholder VMs"
 msgstr "Nu monitorizați mașinile virtuale de tip placeholder"
+
+#, fuzzy
+msgid "Do not monitor service"
+msgstr "Nu monitorizați"
 
 msgid "Do not offer this action as a command on open events"
 msgstr "Nu oferiți această acțiune ca o comandă pentru evenimentele deschise."
@@ -18948,6 +18984,10 @@ msgstr "Nu aveți încredere"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Nu utilizați prefixul 'aws:' pentru cheie."
+
+#, fuzzy
+msgid "Do not use 'aws:' prefix for the value."
+msgstr "Nu utilizați prefixul 'aws:' pentru valori."
 
 msgid "Do not use 'aws:' prefix for the values."
 msgstr "Nu utilizați prefixul 'aws:' pentru valori."
@@ -19629,6 +19669,21 @@ msgstr ""
 "Aceasta identifică în mod unic instanța EC2. Nu este posibilă efectuarea "
 "unui ping la acest nume de gazdă."
 
+#, fuzzy
+msgid ""
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+"hostname is pingable and changing the piggyback name will reset the "
+"piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+"consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely "
+"identifies the EC2 instance. It is not possible to ping this host name."
+msgstr ""
+"Fiecare instanță EC2 creează o gazdă piggyback.<br><b>Notă:</b> Nu orice "
+"nume de gazdă este pingabil și schimbarea numelui piggyback va reseta gazda "
+"piggyback.<br><br><b>IP - Regiune - ID de instanță:</b><br>Numele este "
+"format din \"{Adresa IPv4 privată}-{Regiune}-{Identificare de instanță}\". "
+"Aceasta identifică în mod unic instanța EC2. Nu este posibilă efectuarea "
+"unui ping la acest nume de gazdă."
+
 msgid ""
 "Each SNMPv3 device has it's own engine ID. This is normally automatically "
 "generated, but can also be configured manually for some devices. As the "
@@ -19751,6 +19806,12 @@ msgid ""
 msgstr ""
 "Fiecare grup de etichete va crea câte o opțiune derulantă în configurația "
 "gazdei."
+
+#, fuzzy
+msgid "Each tag key must be unique and cannot be used multiple times."
+msgstr ""
+"Fiecare etichetă trebuie să fie unică și nu poate fi folosită de mai multe "
+"ori."
 
 msgid "Each tag must be unique and cannot be used multiple times"
 msgstr ""
@@ -27570,6 +27631,10 @@ msgstr "Latență IO"
 msgid "IOPS"
 msgstr "IOPS"
 
+#, fuzzy
+msgid "IP - Region - Instance ID"
+msgstr "IP - regiune - ID instanță"
+
 msgid "IP - region - instance ID"
 msgstr "IP - regiune - ID instanță"
 
@@ -28131,6 +28196,14 @@ msgstr ""
 msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
 "or tag restrictions that may have been configured."
+msgstr ""
+"Dacă sunt activate limitele, toate instanțele vor fi preluate indiferent de "
+"restricțiile de nume sau de etichete care au fost configurate."
+
+#, fuzzy
+msgid ""
+"If limits are monitored, all instances will be fetched regardless of any "
+"name or tag restrictions that may have been configured."
 msgstr ""
 "Dacă sunt activate limitele, toate instanțele vor fi preluate indiferent de "
 "restricțiile de nume sau de etichete care au fost configurate."
@@ -37321,6 +37394,10 @@ msgstr "Monitorizarea Route53"
 msgid "Monitor all files in folder"
 msgstr "Monitorizați toate fișierele din dosar"
 
+#, fuzzy
+msgid "Monitor all instances"
+msgstr "Monitorizarea tuturor instanțelor găsite"
+
 msgid "Monitor all instances detected and manually added"
 msgstr "Monitorizarea tuturor instanțelor detectate și adăugate manual"
 
@@ -37367,6 +37444,23 @@ msgid ""
 msgstr ""
 "Monitorizați dacă mașinile virtuale sunt protejate corespunzător de software-"
 "ul de recuperare în caz de dezastru Zerto (compatibil cu Zerto v9.x)."
+
+#, fuzzy
+msgid ""
+"Monitor instances with explicit AWS service tags ignoring overall tag filters"
+msgstr ""
+"Utilizați etichete explicite ale serviciilor AWS și anulați etichetele AWS "
+"generale"
+
+#, fuzzy
+msgid ""
+"Monitor instances with explicit service names ignoring overall tag filters"
+msgstr ""
+"Utilizați nume de servicii explicite și ignorați etichetele AWS generale"
+
+#, fuzzy
+msgid "Monitor limits"
+msgstr "Monitorizarea limitelor de serviciu"
 
 msgid "Monitor menu entries"
 msgstr "Monitorizarea intrărilor din meniu"
@@ -37710,6 +37804,10 @@ msgstr "Mutarea"
 
 msgid "Move aggregations"
 msgstr "Mutarea agregatelor"
+
+#, fuzzy
+msgid "Move all processed messages to subfolder"
+msgstr "Ștergerea mesajelor procesate"
 
 msgid "Move existing hosts"
 msgstr "Mutarea gazdelor existente"
@@ -39007,6 +39105,10 @@ msgstr "Nu există încă metrici în acest grafic."
 msgid "No monitoring core"
 msgstr "Fără miez de monitorizare"
 
+#, fuzzy
+msgid "No names defined"
+msgstr "Nu sunt definite conexiuni"
+
 msgid "No need for syncing sites"
 msgstr "Nu este nevoie de site-uri de sincronizare"
 
@@ -39117,6 +39219,10 @@ msgstr ""
 msgid "No such tree below %r"
 msgstr "Nu există un astfel de copac mai jos %r"
 
+#, fuzzy
+msgid "No tags defined"
+msgstr "Nu este definită nicio sursă de date."
+
 msgid "No test host"
 msgstr "Nici o gazdă de testare"
 
@@ -39146,6 +39252,10 @@ msgstr "Nu există un dosar țintă valid."
 
 msgid "No valid theme directories found."
 msgstr "Nu s-au găsit directoare de teme valide."
+
+#, fuzzy
+msgid "No values defined"
+msgstr "Nu este definită nicio sursă de date."
 
 msgid "No version limitation"
 msgstr "Fără limitare de versiune"
@@ -39882,6 +39992,10 @@ msgstr ""
 "țintă la fiecare execuție de verificare. Toate pachetele sunt trimise direct "
 "la executarea verificării. După aceea, verificarea așteaptă pachetele "
 "primite."
+
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "Parametrul \"%s\" nu este un număr întreg."
 
 msgid "Number of Active Sessions"
 msgstr "Numărul de sesiuni active"
@@ -45067,6 +45181,10 @@ msgstr "Indicele portului"
 msgid "Port index or 'Total'"
 msgstr "Indicele portului sau 'Total'"
 
+#, fuzzy
+msgid "Port must be between 0 and 65535"
+msgstr "Valoarea pentru %s trebuie să fie cuprinsă între %d și %d."
+
 msgid "Port number"
 msgstr "Numărul portului"
 
@@ -47426,6 +47544,10 @@ msgstr "Îndepărtați fișierele și subdirectoarele gestionate de agentul Chec
 msgid "Remove filter"
 msgstr "Eliminați filtrul"
 
+#, fuzzy
+msgid "Remove name"
+msgstr "Eliminați toate"
+
 msgid "Remove only matching vanished services"
 msgstr "Îndepărtați numai serviciile dispărute corespunzătoare"
 
@@ -47481,6 +47603,10 @@ msgstr "Îndepărtați autentificarea cu doi factori"
 #, python-format
 msgid "Remove two-factor authentication of %s"
 msgstr "Eliminați autentificarea cu doi factori a %s"
+
+#, fuzzy
+msgid "Remove value"
+msgstr "Eliminați toate"
 
 msgid "Remove vanished services"
 msgstr "Eliminarea serviciilor dispărute"
@@ -54340,9 +54466,6 @@ msgstr "Mesaje de tip spool care nu au putut fi trimise"
 msgid "Spool to Event Console"
 msgstr "Spool către consola de evenimente"
 
-msgid "Spool to event console"
-msgstr "Spool către consola de evenimente"
-
 msgid "Spooling: Send events to local event console in same OMD site"
 msgstr ""
 "Înfășurare: Trimiteți evenimente către consola locală de evenimente din "
@@ -59490,9 +59613,6 @@ msgstr "Fișierul jurnal nu există pe site."
 
 msgid "The login is currently locked"
 msgstr "Conectarea este blocată în prezent"
-
-msgid "The mail subject is used as syslog appliaction"
-msgstr "Subiectul mailului este folosit ca aplicație syslog."
 
 msgid "The mandatory group name is missing"
 msgstr "Lipsește numele grupului obligatoriu"
@@ -71837,13 +71957,6 @@ msgstr "Utilizați un plugin de verificare personalizat..."
 msgid "Use a custom name for the SSL certificate validation"
 msgstr "Utilizați un nume personalizat pentru validarea certificatului SSL"
 
-msgid ""
-"Use a makro as (part of) server name. Macros must be in capital letters and "
-"start and end with '$'."
-msgstr ""
-"Utilizați un makro ca (parte a) numele serverului. Macro-urile trebuie să "
-"fie scrise cu majuscule și să înceapă și să se termine cu \"$\"."
-
 msgid "Use a namespace prefix"
 msgstr "Utilizați un prefix de spațiu de nume"
 
@@ -72189,8 +72302,9 @@ msgstr "Utilizați următoarea gazdă de stare"
 msgid "Use the global configuration"
 msgstr "Utilizați configurația globală"
 
-msgid "Use the mail subject"
-msgstr "Folosiți subiectul e-mailului"
+#, fuzzy
+msgid "Use the mail subject as syslog application"
+msgstr "Subiectul mailului este folosit ca aplicație syslog."
 
 msgid "Use the multipath alias as service name, if one is set"
 msgstr "Utilizați aliasul multipath ca nume de serviciu, dacă este setat unul."
@@ -72837,9 +72951,6 @@ msgstr "Nume de utilizator pentru autentificare"
 
 msgid "Username is unknown"
 msgstr "Numele de utilizator este necunoscut"
-
-msgid "Username/Password"
-msgstr "Nume de utilizator/parolă"
 
 msgid "Username:"
 msgstr "Nume de utilizator:"
@@ -80394,6 +80505,28 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Delete messages"
+#~ msgstr "Ștergerea mesajelor"
+
+#~ msgid "Directly forward to event console"
+#~ msgstr "Transmiteți direct la consola de evenimente"
+
+#~ msgid "Spool to event console"
+#~ msgstr "Spool către consola de evenimente"
+
+#~ msgid ""
+#~ "Use a makro as (part of) server name. Macros must be in capital letters "
+#~ "and start and end with '$'."
+#~ msgstr ""
+#~ "Utilizați un makro ca (parte a) numele serverului. Macro-urile trebuie să "
+#~ "fie scrise cu majuscule și să înceapă și să se termine cu \"$\"."
+
+#~ msgid "Use the mail subject"
+#~ msgstr "Folosiți subiectul e-mailului"
+
+#~ msgid "Username/Password"
+#~ msgstr "Nume de utilizator/parolă"
 
 #~ msgid "Critical if over"
 #~ msgstr "Critic dacă depășește"

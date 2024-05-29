@@ -22,6 +22,7 @@ from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
+from cmk.gui.userdb._connections import get_connection
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
@@ -47,6 +48,17 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
     for entry in users_to_delete:
         if entry in all_users:  # Silently ignore not existing users
             deleted_users.append(entry)
+            connection_id = all_users[entry].get("connector", None)
+            connection = get_connection(connection_id)
+            log_security_event(
+                UserManagementEvent(
+                    event="user deleted",
+                    affected_user=entry,
+                    acting_user=user.id,
+                    connector=connection.type() if connection else None,
+                    connection_id=connection_id,
+                )
+            )
             del all_users[entry]
         else:
             raise MKUserError(None, _("Unknown user: %s") % entry)
@@ -57,13 +69,6 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
                 "edit-user",
                 "Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
-            )
-            log_security_event(
-                UserManagementEvent(
-                    event="user deleted",
-                    affected_user=user_id,
-                    acting_user=user.id,
-                )
             )
         add_change("edit-users", _l("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users, datetime.now())
@@ -98,12 +103,16 @@ def edit_users(changed_users: UserObject) -> None:
             diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
             object_ref=make_user_object_ref(user_id),
         )
+        connection_id = user_attrs.get("connector", None)
+        connection = get_connection(connection_id)
 
         log_security_event(
             UserManagementEvent(
                 event="user created" if is_new_user else "user modified",
                 affected_user=user_id,
                 acting_user=user.id,
+                connector=connection.type() if connection else None,
+                connection_id=connection_id,
             )
         )
 

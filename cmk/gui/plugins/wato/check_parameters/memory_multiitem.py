@@ -9,7 +9,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    Filesize,
+    FixedValue,
+    Percentage,
+    TextInput,
+    Tuple,
+)
 
 
 def _parameter_valuespec_memory_multiitem():
@@ -24,6 +32,7 @@ def _parameter_valuespec_memory_multiitem():
                 Alternative(
                     title=_("Memory levels"),
                     elements=[
+                        FixedValue(None, title=_("Do not impose levels")),
                         Tuple(
                             title=_("Specify levels in percentage of total RAM"),
                             elements=[

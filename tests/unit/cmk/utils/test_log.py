@@ -33,7 +33,7 @@ def test_setup_console_logging(capsys: CaptureFixture[str]) -> None:
     logging.getLogger("cmk.test").info("test123")
     assert ("", "") == capsys.readouterr()
 
-    old_handlers = log.logger.handlers
+    old_handlers = list(log.logger.handlers)
     try:
         log.setup_console_logging()
         logging.getLogger("cmk.test").warning("test123")

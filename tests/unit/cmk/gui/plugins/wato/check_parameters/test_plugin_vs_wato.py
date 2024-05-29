@@ -246,7 +246,6 @@ class ErrorReporter:
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
         ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
-        ("check", RuleGroup.CheckgroupParameters("fileinfo-groups")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),
         ("check", RuleGroup.CheckgroupParameters("mssql_blocked_sessions")),
         ("check", RuleGroup.CheckgroupParameters("postgres_sessions")),
@@ -297,86 +296,7 @@ class ErrorReporter:
         ("inventory", "inv_if", "inv_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }
-    KNOWN_ERROR_LOADING_DEFAULTS = {
-        # ruleset name # plug-in
-        (
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-            "casa_cpu_mem",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-            "couchbase_buckets_mem",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-            "rabbitmq_nodes_mem",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("memory_percentage_used"),
-            "tplink_mem",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("mq_queues"),
-            "mq_queues",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("mysql_slave"),
-            "mysql_slave",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("plesk_backups"),
-            "plesk_backups",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("ps"),
-            "ps",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("pulse_secure_mem_util"),
-            "pulse_secure_mem_util",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("pulse_secure_users"),
-            "pulse_secure_users",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("redis_info_persistence"),
-            "redis_info_persistence",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("skype_conferencing"),
-            "skype_conferencing",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("skype_sip"),
-            "skype_sip_stack",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("storage_iops"),
-            "ddn_s2a_stats_io",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("switch_contact"),
-            "ra32e_switch",
-        ),
-        (RuleGroup.CheckgroupParameters("temperature"), "apc_symmetra_temp"),
-        (
-            RuleGroup.CheckgroupParameters("temperature"),
-            "openhardwaremonitor_temperature",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("vm_guest_tools"),
-            "esx_vsphere_vm_guest_tools",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("vm_heartbeat"),
-            "esx_vsphere_vm_heartbeat",
-        ),
-        (
-            RuleGroup.CheckgroupParameters("volume_groups"),
-            "lvm_vgs",
-        ),
-    }
+    KNOWN_ERROR_LOADING_DEFAULTS: set[tuple[str, str]] = set()
 
     def __init__(self) -> None:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None

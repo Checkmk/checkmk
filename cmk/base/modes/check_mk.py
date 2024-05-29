@@ -2342,6 +2342,14 @@ def mode_check(
         with suppress(IOError):
             sys.stdout.write(check_result.as_text() + "\n")
             sys.stdout.flush()
+
+    # TODO: Nur fuer die aktuellen tests (cmk -v heute)
+    #       Denke wir sollten fuer das stats recording so etwas aehnliches wie
+    #       den --profile schalter fuers profiling einbauen
+    if config.ruleset_matching_stats:
+        config_cache.ruleset_matcher.persist_matching_stats(
+            "tmp/ruleset_matching_stats", config.get_ruleset_id_mapping()
+        )
     return check_result.state
 
 

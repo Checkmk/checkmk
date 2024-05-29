@@ -875,6 +875,10 @@ msgstr "(ingebouwd)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(standaard is %r voor %s/TLS)"
 
+#, fuzzy
+msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
+msgstr "Toezicht op Amazon Web Services (AWS)"
+
 msgid "(disabled)"
 msgstr "(uitgeschakeld)"
 
@@ -1284,6 +1288,26 @@ msgstr "Netwerkbewaking"
 #, fuzzy
 msgid "<b>Keyword</b> runtime"
 msgstr "Netwerkbewaking"
+
+#, fuzzy
+msgid ""
+"<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
+"all service instances will be filtered by those tags. Otherwise, all "
+"instances will be collected.<br><br><b>Monitor instances with explicit AWS "
+"service tags ignoring overall tag filters:</b><br>Specify explicit tags for "
+"these services. The overall tags will be ignored for these services."
+"<br><br><b>Monitor instances with explicit service names ignoring overall "
+"tag filters:</b><br>Use this option to specify explicit names. The overall "
+"tags will be ignored for these services."
+msgstr ""
+"<b>Alle dienstinstanties verzamelen en beperken door algemene tags:</"
+"b><br>Als algemene tags hierboven zijn gespecificeerd, dan worden alle "
+"dienstinstanties op die tags gefilterd. Anders worden alle instanties "
+"verzameld.<br><br><b>Expliciete diensttags en overschrijven algemene tags:</"
+"b><br>Specificeer expliciete tags voor deze diensten. De algemene tags "
+"worden voor deze diensten genegeerd.<br><br><b>Expliciete dienstnamen en "
+"algemene tags negeren:</b><br>Gebruik deze optie om expliciete namen op te "
+"geven. De algemene tags worden voor deze diensten genegeerd."
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -3928,6 +3952,10 @@ msgid "Add new metric"
 msgstr "Nieuwe metriek toevoegen"
 
 #, fuzzy
+msgid "Add new name"
+msgstr "Nieuwe tijd toevoegen"
+
+#, fuzzy
 msgid "Add new node condition"
 msgstr "Voeg tag voorwaarde toe"
 
@@ -3974,6 +4002,10 @@ msgstr "Nieuw onderwerp toevoegen"
 
 msgid "Add new user configuration"
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+msgid "Add new value"
+msgstr "Nieuwe rol toevoegen"
 
 #, fuzzy
 msgid "Add node condition"
@@ -16466,7 +16498,8 @@ msgstr ""
 "deze controle. Dit is standaard uitgeschakeld, waardoor uw mailbox zal "
 "groeien als u deze niet zelf opruimt."
 
-msgid "Delete all processed message belonging to this check"
+#, fuzzy
+msgid "Delete all processed messages belonging to this check"
 msgstr "Verwijder alle verwerkte berichten die bij deze controle horen"
 
 #, python-format
@@ -16557,9 +16590,6 @@ msgstr "Job verwijderen #%d"
 
 msgid "Delete last alert handler rule"
 msgstr "Verwijder de laatste alert handler regel"
-
-msgid "Delete messages"
-msgstr "Berichten verwijderen"
 
 #, python-format
 msgid "Delete notification rule #%d"
@@ -17597,9 +17627,6 @@ msgstr "Richting"
 
 msgid "Directly forward to Event Console"
 msgstr "Direct doorsturen naar Event Console"
-
-msgid "Directly forward to event console"
-msgstr "Direct doorsturen naar event console"
 
 msgid "Directly show the action icon in the column"
 msgstr "Toon direct het actie icoon in de kolom"
@@ -18866,8 +18893,16 @@ msgstr "Voeg geen opeenvolgende fasen met gelijke toestand samen"
 msgid "Do not monitor"
 msgstr "Controleer niet"
 
+#, fuzzy
+msgid "Do not monitor limits"
+msgstr "Controleer niet"
+
 msgid "Do not monitor placeholder VMs"
 msgstr "Geen placeholder VM's monitoren"
+
+#, fuzzy
+msgid "Do not monitor service"
+msgstr "Controleer niet"
 
 msgid "Do not offer this action as a command on open events"
 msgstr "Bied deze actie niet aan als een commando bij open gebeurtenissen"
@@ -18924,6 +18959,10 @@ msgstr "Niet groeperen"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Gebruik niet het voorvoegsel \"aws:\" voor de sleutel."
+
+#, fuzzy
+msgid "Do not use 'aws:' prefix for the value."
+msgstr "Gebruik niet het voorvoegsel \"aws:\" voor de waarden."
 
 msgid "Do not use 'aws:' prefix for the values."
 msgstr "Gebruik niet het voorvoegsel \"aws:\" voor de waarden."
@@ -19611,6 +19650,21 @@ msgstr ""
 "EC2-instantie op unieke wijze. Het is niet mogelijk om deze hostnaam te "
 "pingen."
 
+#, fuzzy
+msgid ""
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+"hostname is pingable and changing the piggyback name will reset the "
+"piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+"consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely "
+"identifies the EC2 instance. It is not possible to ping this host name."
+msgstr ""
+"Elke EC2 instance creëert een piggyback host.<br><b>Opmerking:</b> Niet elke "
+"hostnaam is pingable en het wijzigen van de piggyback naam zal de piggyback "
+"host resetten.<br><br><b>IP - Region - Instance ID:</b><br>De naam bestaat "
+"uit \"{Private IPv4 address}-{Region}-{Instance ID}\". Dit identificeert de "
+"EC2-instantie op unieke wijze. Het is niet mogelijk om deze hostnaam te "
+"pingen."
+
 msgid ""
 "Each SNMPv3 device has it's own engine ID. This is normally automatically "
 "generated, but can also be configured manually for some devices. As the "
@@ -19727,6 +19781,10 @@ msgstr ""
 msgid ""
 "Each tag group will create one dropdown choice in the host configuration."
 msgstr "Elke tag groep zal een dropdown keuze creëren in de host configuratie."
+
+#, fuzzy
+msgid "Each tag key must be unique and cannot be used multiple times."
+msgstr "Elke tag moet uniek zijn en kan niet meerdere keren worden gebruikt"
 
 msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Elke tag moet uniek zijn en kan niet meerdere keren worden gebruikt"
@@ -27563,6 +27621,10 @@ msgstr "IO latentie"
 msgid "IOPS"
 msgstr ""
 
+#, fuzzy
+msgid "IP - Region - Instance ID"
+msgstr "IP - regio - instantie-ID"
+
 msgid "IP - region - instance ID"
 msgstr "IP - regio - instantie-ID"
 
@@ -28117,6 +28179,14 @@ msgstr ""
 msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
 "or tag restrictions that may have been configured."
+msgstr ""
+"Als beperkingen zijn ingeschakeld, worden alle instanties opgehaald, "
+"ongeacht eventuele naam- of tagbeperkingen die zijn geconfigureerd."
+
+#, fuzzy
+msgid ""
+"If limits are monitored, all instances will be fetched regardless of any "
+"name or tag restrictions that may have been configured."
 msgstr ""
 "Als beperkingen zijn ingeschakeld, worden alle instanties opgehaald, "
 "ongeacht eventuele naam- of tagbeperkingen die zijn geconfigureerd."
@@ -37302,6 +37372,10 @@ msgid "Monitor all files in folder"
 msgstr "Bewaak alle bestanden in de map"
 
 #, fuzzy
+msgid "Monitor all instances"
+msgstr "Controleer alle gevonden gevallen"
+
+#, fuzzy
 msgid "Monitor all instances detected and manually added"
 msgstr "Controleer alle gevonden gevallen"
 
@@ -37345,6 +37419,20 @@ msgid ""
 "Monitor if your VMs are properly protected by the disaster recovery software "
 "Zerto (compatible with Zerto v9.x)."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Monitor instances with explicit AWS service tags ignoring overall tag filters"
+msgstr "Gebruik expliciete AWS service tags en overrul algemene AWS tags"
+
+#, fuzzy
+msgid ""
+"Monitor instances with explicit service names ignoring overall tag filters"
+msgstr "Gebruik expliciete dienstnamen en negeer algemene AWS-tags"
+
+#, fuzzy
+msgid "Monitor limits"
+msgstr "Bewaak de servicelimieten"
 
 msgid "Monitor menu entries"
 msgstr "Menu-items bewaken"
@@ -37679,6 +37767,10 @@ msgstr "Verplaats"
 
 msgid "Move aggregations"
 msgstr "Verplaats aggregaties"
+
+#, fuzzy
+msgid "Move all processed messages to subfolder"
+msgstr "Verwerkte berichten verwijderen"
 
 msgid "Move existing hosts"
 msgstr "Bestaande hosts verplaatsen"
@@ -38971,6 +39063,10 @@ msgstr "Nog geen metriek in deze grafiek."
 msgid "No monitoring core"
 msgstr "Geen bewakingskern"
 
+#, fuzzy
+msgid "No names defined"
+msgstr "Geen verbindingen gedefinieerd"
+
 msgid "No need for syncing sites"
 msgstr "Geen behoefte om sites te synchroniseren"
 
@@ -39085,6 +39181,10 @@ msgstr ""
 msgid "No such tree below %r"
 msgstr "Licentiegebruik"
 
+#, fuzzy
+msgid "No tags defined"
+msgstr "Geen datasource gedefinieerd."
+
 msgid "No test host"
 msgstr "Geen test host"
 
@@ -39113,6 +39213,10 @@ msgstr "Geen geldige doelmap."
 
 msgid "No valid theme directories found."
 msgstr "Geen geldige themamappen gevonden."
+
+#, fuzzy
+msgid "No values defined"
+msgstr "Geen datasource gedefinieerd."
 
 msgid "No version limitation"
 msgstr "Geen versiebeperking"
@@ -39850,6 +39954,10 @@ msgstr ""
 "uitvoering van de controle. Alle pakketten worden direct bij uitvoering van "
 "de controle verzonden. Daarna wacht de controle op de binnenkomende "
 "pakketten."
+
+#, fuzzy
+msgid "Number is not an integer value."
+msgstr "De parameter \"%s\" is geen geheel getal."
 
 msgid "Number of Active Sessions"
 msgstr "Aantal actieve sessies"
@@ -45033,6 +45141,10 @@ msgstr "Haven index"
 msgid "Port index or 'Total'"
 msgstr "Havenindex of \"Totaal"
 
+#, fuzzy
+msgid "Port must be between 0 and 65535"
+msgstr "De waarde voor %s moet tussen %d en %d liggen"
+
 msgid "Port number"
 msgstr "Poortnummer"
 
@@ -47401,6 +47513,10 @@ msgstr "Verwijder bestanden en submappen beheerd door de Checkmk agent"
 msgid "Remove filter"
 msgstr "Verwijder filter"
 
+#, fuzzy
+msgid "Remove name"
+msgstr "Verwijder alle"
+
 msgid "Remove only matching vanished services"
 msgstr "Alleen overeenkomende verdwenen diensten verwijderen"
 
@@ -47460,6 +47576,10 @@ msgstr "Twee-factor authenticatie verwijderen"
 #, python-format
 msgid "Remove two-factor authentication of %s"
 msgstr "Twee-factor authenticatie verwijderen van %s"
+
+#, fuzzy
+msgid "Remove value"
+msgstr "Verwijder alle"
 
 msgid "Remove vanished services"
 msgstr "Verwijder verdwenen diensten"
@@ -54233,9 +54353,6 @@ msgstr "Spool berichten die niet konden worden verzonden"
 msgid "Spool to Event Console"
 msgstr "Spool naar Event Console"
 
-msgid "Spool to event console"
-msgstr "Spool naar event console"
-
 msgid "Spooling: Send events to local event console in same OMD site"
 msgstr ""
 "Spooling: Stuur gebeurtenissen naar lokale gebeurtenissenconsole in dezelfde "
@@ -59382,9 +59499,6 @@ msgstr "Het logbestand bestaat niet op de site."
 
 msgid "The login is currently locked"
 msgstr "De login is momenteel vergrendeld"
-
-msgid "The mail subject is used as syslog appliaction"
-msgstr "Het onderwerp van de mail wordt gebruikt als syslog appliactie"
 
 msgid "The mandatory group name is missing"
 msgstr "De verplichte groepsnaam ontbreekt"
@@ -71720,11 +71834,6 @@ msgstr "Gebruik een aangepaste controle plugin..."
 msgid "Use a custom name for the SSL certificate validation"
 msgstr "Gebruik een aangepaste naam voor de SSL-certificaatvalidatie"
 
-msgid ""
-"Use a makro as (part of) server name. Macros must be in capital letters and "
-"start and end with '$'."
-msgstr ""
-
 msgid "Use a namespace prefix"
 msgstr "Gebruik een namespace voorvoegsel"
 
@@ -72068,8 +72177,9 @@ msgstr "Gebruik de volgende status host"
 msgid "Use the global configuration"
 msgstr "Gebruik de globale configuratie"
 
-msgid "Use the mail subject"
-msgstr "Gebruik het onderwerp van de e-mail"
+#, fuzzy
+msgid "Use the mail subject as syslog application"
+msgstr "Het onderwerp van de mail wordt gebruikt als syslog appliactie"
 
 msgid "Use the multipath alias as service name, if one is set"
 msgstr "Gebruik de multipath alias als dienstnaam, als er een is ingesteld"
@@ -72709,9 +72819,6 @@ msgstr "Gebruikersnaam voor inloggen"
 
 msgid "Username is unknown"
 msgstr "Gebruikersnaam is onbekend"
-
-msgid "Username/Password"
-msgstr "Gebruikersnaam/Wachtwoord"
 
 msgid "Username:"
 msgstr "Gebruikersnaam:"
@@ -80273,6 +80380,21 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Delete messages"
+#~ msgstr "Berichten verwijderen"
+
+#~ msgid "Directly forward to event console"
+#~ msgstr "Direct doorsturen naar event console"
+
+#~ msgid "Spool to event console"
+#~ msgstr "Spool naar event console"
+
+#~ msgid "Use the mail subject"
+#~ msgstr "Gebruik het onderwerp van de e-mail"
+
+#~ msgid "Username/Password"
+#~ msgstr "Gebruikersnaam/Wachtwoord"
 
 #~ msgid "Critical if over"
 #~ msgstr "Kritisch indien meer dan"

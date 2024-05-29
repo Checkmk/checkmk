@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable
+from typing import TypedDict
 
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
@@ -35,7 +36,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
 from cmk.gui.watolib.main_menu import main_module_registry, MainModuleTopic
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -56,13 +57,11 @@ def register(
     mega_menu_registry.register(MegaMenuSetup)
 
 
-def render_wato(mini) -> None | bool:  # type: ignore[no-untyped-def]
+def render_wato(mini: bool) -> None:
     if not active_config.wato_enabled:
         html.write_text(_("Setup is disabled."))
-        return False
     if not user.may("wato.use"):
         html.write_text(_("You are not allowed to use the setup."))
-        return False
 
     menu = get_wato_menu_items()
 
@@ -84,7 +83,6 @@ def render_wato(mini) -> None | bool:  # type: ignore[no-untyped-def]
         assert pending_info.message is not None  # only for mypy, semantically useless
         footnotelinks([(pending_info.message, "wato.py?mode=changelog")])
         html.div("", class_="clear")
-    return None
 
 
 def get_wato_menu_items() -> list[TopicMenuTopic]:
@@ -209,11 +207,11 @@ MatchItemGeneratorSetup = MatchItemGeneratorSetupMenu("setup", MegaMenuSetup.top
 
 class SidebarSnapinWATOMini(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "admin_mini"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Quick setup")
 
     @classmethod
@@ -221,7 +219,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
         return True
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Access to the setup menu with only icons (saves space)")
 
     @classmethod
@@ -230,34 +228,47 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     # refresh pending changes, if other user modifies something
     @classmethod
-    def refresh_regularly(cls):
+    def refresh_regularly(cls) -> bool:
         return True
 
-    def show(self):
+    def show(self) -> None:
         render_wato(mini=True)
 
 
-def compute_foldertree():
+FolderEntry = TypedDict(
+    "FolderEntry",
+    {
+        ".folders": dict[str, "FolderEntry"],
+        ".num_hosts": int,
+        ".path": str,
+        "title": str,
+    },
+)
+
+
+def compute_foldertree() -> dict[str, FolderEntry]:
     sites.live().set_prepend_site(True)
     query = "GET hosts\nStats: state >= 0\nColumns: filename"
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
 
-    def get_folder(tree, path, num=0):
+    def get_folder(tree: FolderTree, path: str, num: int = 0) -> FolderEntry:
         folder = tree.folder(path)
-        return {
-            "title": folder.title() or path.split("/")[-1],
-            ".path": path,
-            ".num_hosts": num,
-            ".folders": {},
-        }
+        return FolderEntry(
+            {
+                "title": folder.title() or path.split("/")[-1],
+                ".path": path,
+                ".num_hosts": num,
+                ".folders": {},
+            }
+        )
 
     # After the query we have a list of lists where each
     # row is a folder with the number of hosts on this level.
     #
     # Now get number of hosts by folder
     # Count all children for each folder
-    user_folders = {}
+    user_folders: dict[str, FolderEntry] = {}
     tree = folder_tree()
     for _site, filename, num in sorted(hosts):
         # Remove leading /wato/
@@ -308,10 +319,7 @@ def compute_foldertree():
     return user_folders
 
 
-# Note: the dictionary that represents the folder here is *not*
-# the datastructure from Setup but a result of compute_foldertree(). The reason:
-# We fetch the information via livestatus - not from Setup.
-def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-untyped-def]
+def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
     subfolders = folder.get(".folders", {}).values()
     is_leaf = len(subfolders) == 0
 
@@ -346,26 +354,25 @@ def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-unt
 
 class SidebarSnapinWATOFoldertree(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "wato_foldertree"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Tree of folders")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _(
             "This snap-in shows the folders defined in Setup. It can be used to "
             "open views filtered by the Setup folder. It works standalone, without "
             "interaction with any other snap-in."
         )
 
-    def show(self):
+    def show(self) -> None:
         if not site_config.is_wato_slave_site():
             if not active_config.wato_enabled:
                 html.write_text(_("Setup is disabled."))
-                return False
 
         user_folders = compute_foldertree()
 
@@ -445,4 +452,3 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             render_tree_folder(
                 "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
             )
-        return None

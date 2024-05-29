@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from functools import partial
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import pytest
 
@@ -2834,6 +2834,84 @@ def test_dictionary_groups_migrate(
 ) -> None:
     converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     assert converted.transform_value(value_to_migrate) == expected
+
+
+@pytest.mark.parametrize(
+    ["form_spec", "rule"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Dictionary(
+                                        elements={
+                                            "key3": api_v1.form_specs.DictElement(
+                                                group=api_v1.form_specs.DictGroup(),
+                                                parameter_form=api_v1.form_specs.String(),
+                                                required=True,
+                                            )
+                                        }
+                                    )
+                                )
+                            }
+                        ),
+                    )
+                }
+            ),
+            {"key1": {"key2": {"key3": ""}}},
+            id="nested dictionary with inner group",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    group=api_v1.form_specs.DictGroup(),
+                                    parameter_form=api_v1.form_specs.String(),
+                                    required=True,
+                                ),
+                            },
+                        ),
+                    )
+                },
+                migrate=lambda x: x,  # type: ignore
+            ),
+            {"key1": {"key2": ""}},
+            id="inner group with outer migrate",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key1": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "key2": api_v1.form_specs.DictElement(
+                                    group=api_v1.form_specs.DictGroup(),
+                                    parameter_form=api_v1.form_specs.String(),
+                                    required=True,
+                                ),
+                            },
+                        ),
+                    )
+                },
+                custom_validate=(lambda x: None,),
+            ),
+            {"key1": {"key2": ""}},
+            id="inner group with outer validate",
+        ),
+    ],
+)
+def test_dictionary_groups_legacy_validation(
+    form_spec: api_v1.form_specs.FormSpec, rule: Mapping[str, Any]
+) -> None:
+    converted = _convert_to_legacy_valuespec(form_spec, lambda x: x)
+    converted.validate_datatype(rule, "")
+    converted.validate_value(rule, "")
 
 
 @pytest.mark.parametrize(

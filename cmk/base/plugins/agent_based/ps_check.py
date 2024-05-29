@@ -91,6 +91,11 @@ def cluster_check_ps(
     )
 
 
+CHECK_DEFAULT_PARAMETERS = {
+    "levels": (1, 1, 99999, 99999),
+    "cpu_rescale_max": False,
+}
+
 register.check_plugin(
     name="ps",
     service_name="Process %s",
@@ -105,9 +110,7 @@ register.check_plugin(
     },
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_ps,
-    check_default_parameters={
-        "levels": (1, 1, 99999, 99999),
-    },
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="ps",
     cluster_check_function=cluster_check_ps,
 )

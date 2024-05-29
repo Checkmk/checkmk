@@ -128,11 +128,15 @@ def _generate_message_via_events_pipe(site: Site, message: str, end_of_line: boo
 
 
 def _generate_message_via_syslog(
-    site: Site, message: str, udp: bool = True, end_of_line: bool = True
+    site: Site,
+    message: str,
+    udp: bool = True,
+    end_of_line: bool = True,
+    timeout: int = 5,
 ) -> None:
     """Generate EC message via syslog"""
     cmd = (
-        f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} | nc -w 0 "
+        f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} | nc -w {timeout} "
         f"{'-u' if udp else ''} 127.0.0.1 514'"
     )
     logger.info("Executing: %s", cmd)
@@ -143,14 +147,19 @@ def _generate_message_via_syslog(
 
 
 def _wait_for_queried_column(
-    site: Site, query: str, sleep_time: float = 1, max_count: int = 20
+    site: Site,
+    query: str,
+    sleep_time: float = 1,
+    max_count: int = 20,
+    strict: bool = True,
 ) -> list[str]:
     count = 0
     while not (queried_column := site.live.query_column(query)) and count < max_count:
         logger.info("Waiting for the following livestatus query: %s", repr(query))
         time.sleep(sleep_time)
         count += 1
-    assert queried_column, f"Failed to retrieve livestatus query: {repr(query)}"
+    if strict:
+        assert queried_column, f"Failed to retrieve livestatus query: {repr(query)}"
     return queried_column
 
 
@@ -194,7 +203,9 @@ def _setup_ec(site: Site) -> Iterator[tuple[str, str, State]]:
     _activate_ec_changes(site)
 
     # cleanup: archive generated events
-    for event_id in site.live.query_column("GET eventconsoleevents\nColumns: event_id\n"):
+    for event_id in _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_id\n", max_count=3, strict=False
+    ):
         resp = site.openapi.post(
             "domain-types/event_console/actions/delete/invoke",
             headers={"Content-Type": "application/json"},
@@ -299,10 +310,14 @@ def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
 
     _generate_message_via_events_pipe(site, event_message)
 
-    queried_event_states = site.live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n", max_count=3, strict=False
+    )
     assert not queried_event_states
 
-    queried_event_messages = site.live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text", max_count=3, strict=False
+    )
     assert not queried_event_messages
 
 
@@ -350,10 +365,14 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_recei
     )
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
-    queried_event_states = site.live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n", max_count=3, strict=False
+    )
     assert not queried_event_states
 
-    queried_event_messages = site.live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text", max_count=3, strict=False
+    )
     assert not queried_event_messages
 
 
@@ -433,10 +452,14 @@ def test_ec_rule_no_eol(site: Site, setup_ec: Iterator, enable_receivers: None) 
     _generate_message_via_events_pipe(site, event_message, end_of_line=False)
     _generate_message_via_syslog(site, event_message, udp=False, end_of_line=False)
 
-    queried_event_states = site.live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n", max_count=3, strict=False
+    )
     assert not queried_event_states
 
-    queried_event_messages = site.live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text", max_count=3, strict=False
+    )
     assert not queried_event_messages
 
     _generate_message_via_syslog(site, event_message, udp=True, end_of_line=False)

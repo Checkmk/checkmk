@@ -42,9 +42,12 @@ export function validate_value(new_value: unknown, validators: VueValidators1[])
         errors.push(validator.error_message!)
       if (max_value !== null && max_value !== undefined && check_value > max_value)
         errors.push(validator.error_message!)
-    } else if (validator.vue_type === 'is_number') {
+    } else if (validator.vue_type === 'is_integer') {
       const check_value = new_value as string
-      if (!/^-?\d+$/.test(check_value)) errors.push(validator.error_message!)
+      if (!is_integer(check_value)) errors.push(validator.error_message!)
+    } else if (validator.vue_type === 'is_float') {
+      const check_value = new_value as string
+      if (!is_float(check_value)) errors.push(validator.error_message!)
     }
   }
   return errors
@@ -52,6 +55,10 @@ export function validate_value(new_value: unknown, validators: VueValidators1[])
 
 export function is_integer(value: string): boolean {
   return /^-?\d+$/.test(value)
+}
+
+export function is_float(value: string): boolean {
+  return /^-?\d+\.?\d+$/.test(value)
 }
 
 export interface ValidationMessage {

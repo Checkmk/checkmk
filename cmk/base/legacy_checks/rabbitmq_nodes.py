@@ -248,14 +248,14 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
     if mem_mark is None:
         return
 
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
 
     yield check_memory_element(
         "Memory used",
         mem_used,
         mem_mark,
-        (mode, (warn, crit)),
+        (mode, levels),
         label_total="High watermark",
         metric_name="mem_used",
     )
@@ -267,6 +267,7 @@ check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
     discovery_function=discover_key("mem"),
     check_function=check_rabbitmq_nodes_mem,
     check_ruleset_name="memory_multiitem",
+    check_default_parameters={"levels": None},
 )
 
 _UNITS_NODES_GC = {"gc_num_rate": "1/s"}

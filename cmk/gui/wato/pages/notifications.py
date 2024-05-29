@@ -10,14 +10,15 @@ import time
 from collections.abc import Collection, Iterator, Mapping
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, overload
+from typing import Any, cast, Literal, NamedTuple, overload
 
-from livestatus import LivestatusResponse
+from livestatus import LivestatusResponse, SiteId
 
 import cmk.utils.store as store
 from cmk.utils.notify import NotificationContext
-from cmk.utils.notify_types import EventRule, NotifyAnalysisInfo
+from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
 from cmk.utils.statename import host_state_name, service_state_name
+from cmk.utils.user import UserId
 from cmk.utils.version import edition, Edition
 
 import cmk.gui.forms as forms
@@ -51,7 +52,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, MegaMenu, PermissionName
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -128,7 +129,6 @@ class ABCNotificationsMode(ABCEventsMode):
         # Make sure that all dynamic permissions are available
         permissions.load_dynamic_permissions()
 
-    # TODO: Clean this up. Use inheritance
     @classmethod
     def _rule_match_conditions(cls):
         return (
@@ -790,7 +790,7 @@ class ModeNotifications(ABCNotificationsMode):
     def _get_notification_rules(self) -> list[EventRule]:
         return NotificationRuleConfigFile().load_for_reading()
 
-    def _save_notification_display_options(self):
+    def _save_notification_display_options(self) -> None:
         user.save_file(
             "notification_display_options",
             {
@@ -886,7 +886,7 @@ class ModeNotifications(ABCNotificationsMode):
         context["SERVICECONTACTGROUPNAMES"] = ",".join(resp[0][3])
         context["SERVICECHECKCOMMAND"] = resp[0][4]
 
-    def _show_no_fallback_contact_warning(self):
+    def _show_no_fallback_contact_warning(self) -> None:
         if not self._fallback_mail_contacts_configured():
             url = "wato.py?mode=edit_configvar&varname=notification_fallback_email"
             html.show_warning(
@@ -901,7 +901,7 @@ class ModeNotifications(ABCNotificationsMode):
                 % url
             )
 
-    def _fallback_mail_contacts_configured(self):
+    def _fallback_mail_contacts_configured(self) -> bool:
         current_settings = load_configuration_settings()
         if current_settings.get("notification_fallback_email"):
             return True
@@ -912,7 +912,7 @@ class ModeNotifications(ABCNotificationsMode):
 
         return False
 
-    def _show_bulk_notifications(self):
+    def _show_bulk_notifications(self) -> None:
         if self._show_bulks:
             # Warn if there are unsent bulk notifications
             if not self._render_bulks(only_ripe=False):
@@ -921,7 +921,7 @@ class ModeNotifications(ABCNotificationsMode):
             # Warn if there are unsent bulk notifications
             self._render_bulks(only_ripe=True)
 
-    def _render_bulks(self, only_ripe) -> bool:  # type: ignore[no-untyped-def]
+    def _render_bulks(self, only_ripe: bool) -> bool:
         bulks = notification_get_bulks(only_ripe).result
         if not bulks:
             return False
@@ -1075,7 +1075,7 @@ class ModeNotifications(ABCNotificationsMode):
         if analyse is not None:
             self._show_resulting_notifications(result=analyse)
 
-    def _show_notification_backlog(self):
+    def _show_notification_backlog(self) -> None:
         """Show recent notifications. We can use them for rule analysis"""
         if not self._show_backlog:
             return
@@ -1211,7 +1211,6 @@ class ModeNotifications(ABCNotificationsMode):
             html.td(val)
         html.close_table()
 
-    # TODO: Refactor this
     def _show_rules(self, analyse: NotifyAnalysisInfo | None) -> None:
         start_nr = 0
         rules = self._get_notification_rules()
@@ -1247,12 +1246,15 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Bulking"))
                 if bulk:
                     html.write_text(_("Time horizon") + ": ")
-                    html.write_text(Age().value_to_html(bulk["interval"]))
+                    if is_always_bulk(bulk):
+                        html.write_text(Age().value_to_html(bulk["interval"]))
+                    else:
+                        html.write_text(Age().value_to_html(0))
                     html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
                     html.write_text(", %s " % (_("group by")))
                     html.write_text(self._vs_notification_bulkby().value_to_html(bulk["groupby"]))
 
-    def _vs_notification_scripts(self):
+    def _vs_notification_scripts(self) -> DropdownChoice:
         return DropdownChoice(
             title=_("Notification Script"),
             choices=notification_script_choices,
@@ -1466,7 +1468,7 @@ class ModeNotifications(ABCNotificationsMode):
             )
 
 
-def _validate_general_opts(value, varprefix):
+def _validate_general_opts(value: dict, varprefix: str) -> None:
     if not value["on_hostname_hint"]:
         raise MKUserError(
             f"{varprefix}_p_on_hostname_hint", _("Please provide a hostname to test with.")
@@ -1548,7 +1550,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         )
 
 
-def _get_notification_sync_sites():
+def _get_notification_sync_sites() -> list[SiteId]:
     # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
     # pylint: disable=not-an-iterable
     return sorted(
@@ -1654,7 +1656,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         super().__init__()
         user.need_permission("general.edit_notifications")
 
-    def main_menu(self):
+    def main_menu(self) -> MegaMenu:
         return mega_menu_registry.menu_user()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1689,7 +1691,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def _user_id(self):
         return user.id
 
-    def _add_change(self, log_what, log_text):
+    def _add_change(self, log_what: str, log_text: str) -> None:
         if has_wato_slave_sites():
             self._start_async_repl = True
             _audit_log.log_audit(log_what, log_text)
@@ -1733,7 +1735,6 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         """Optional method to update the rule after editing with the valuespec"""
         return rule
 
-    # TODO: Refactor this
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._clone_nr = request.get_integer_input_mandatory("clone", -1)
@@ -1756,11 +1757,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification rule")
 
-    def _valuespec(self):
+    def _valuespec(self) -> Dictionary:
         return self._vs_notification_rule(self._user_id())
 
-    # TODO: Refactor this mess
-    def _vs_notification_rule(self, userid=None):
+    def _vs_notification_rule(self, userid: UserId | None) -> Dictionary:
         if userid:
             contact_headers: list[tuple[str, list[str]] | tuple[str, str, list[str]]] = []
             section_contacts = []
@@ -2177,7 +2177,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             choices.append((script_name, title, vs_alternative))
         return choices
 
-    def _validate_notification_rule(self, rule, varprefix):
+    def _validate_notification_rule(self, rule: dict, varprefix: str) -> None:
         if "bulk" in rule and rule["notify_plugin"][1] is None:
             raise MKUserError(
                 varprefix + "_p_bulk_USE",
@@ -2217,8 +2217,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             return self._back_mode()
 
         vs = self._valuespec()
-        self._rule = self._rule_from_valuespec(vs.from_html_vars("rule"))
-        vs.validate_value(self._rule, "rule")
+        raw_value = vs.from_html_vars("rule")
+        vs.validate_value(raw_value, "rule")
+        # There is currently no way around this as we don't have typing support from the VS
+        self._rule = self._rule_from_valuespec(cast(EventRule, raw_value))
 
         if self._new and self._clone_nr >= 0:
             self._rules[self._clone_nr : self._clone_nr] = [self._rule]
@@ -2244,7 +2246,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         with html.form_context("rule", method="POST"):
             vs = self._valuespec()
-            vs.render_input("rule", self._rule)
+            vs.render_input("rule", dict(self._rule))
             vs.set_focus("rule")
             forms.end()
             html.hidden_fields()

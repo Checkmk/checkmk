@@ -18,6 +18,7 @@ from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import session
+from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeuri_contextless
@@ -86,12 +87,15 @@ class UserChangePasswordPage(ABCUserProfilePage):
             user_spec["serial"] += 1
 
         userdb.save_users(users, now)
-
+        connection_id = user_spec.get("connector", None)
+        connection = get_connection(connection_id)
         log_security_event(
             UserManagementEvent(
                 event="password changed",
                 affected_user=user.id,
                 acting_user=user.id,
+                connector=connection.type() if connection else None,
+                connection_id=connection_id,
             )
         )
 

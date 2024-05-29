@@ -54,4 +54,5 @@ check_info["tplink_mem"] = LegacyCheckDefinition(
     discovery_function=inventory_tplink_mem,
     check_function=check_tplink_mem,
     check_ruleset_name="memory_percentage_used",
+    check_default_parameters={"levels": None},
 )

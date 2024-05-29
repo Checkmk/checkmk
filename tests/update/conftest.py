@@ -22,7 +22,7 @@ from tests.testlib.utils import (
     restart_httpd,
     run,
 )
-from tests.testlib.version import CMKVersion, get_min_version
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.utils.version import Edition
 
@@ -65,15 +65,26 @@ class BaseVersions:
     with open(Path(__file__).parent.resolve() / "base_versions.json") as f:
         BASE_VERSIONS_STR = json.load(f)
 
-    BASE_VERSIONS = [
-        CMKVersion(
-            base_version_str,
-            edition_from_env(fallback=Edition.CEE),
-            current_base_branch_name(),
-            current_branch_version(),
-        )
-        for base_version_str in BASE_VERSIONS_STR
-    ]
+    if version_from_env().is_saas_edition():
+        BASE_VERSIONS = [
+            CMKVersion(
+                CMKVersion.DAILY,
+                edition_from_env(),
+                "2.3.0",
+                "2.3.0",
+            )
+        ]
+    else:
+        BASE_VERSIONS = [
+            CMKVersion(
+                base_version_str,
+                edition_from_env(),
+                current_base_branch_name(),
+                current_branch_version(),
+            )
+            for base_version_str in BASE_VERSIONS_STR
+            if not version_from_env().is_saas_edition()
+        ]
 
 
 @dataclasses.dataclass
@@ -249,7 +260,9 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
     test_site = _get_site(base_version, interactive=not disable_interactive_mode)
     dumps_dir = Path(__file__).parent.resolve() / "dumps"
-    _inject_dumps(test_site, dumps_dir)
+    if not version_from_env().is_saas_edition():
+        # 'datasource_programs' rule is not supported in the SaaS edition
+        _inject_dumps(test_site, dumps_dir)
     yield test_site, disable_interactive_mode
     logger.info("Removing test-site...")
     test_site.rm()

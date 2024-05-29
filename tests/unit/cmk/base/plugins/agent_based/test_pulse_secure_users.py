@@ -32,7 +32,7 @@ def test_parse_pulse_secure_users(
 def test_check_pulse_secure_users() -> None:
     assert list(
         pulse_secure_users.check_pulse_secure_users(
-            {},
+            {"upper_number_of_users": None},
             {"n_users": 172},
         )
     ) == [
@@ -53,7 +53,7 @@ def test_check_pulse_secure_users() -> None:
 def test_cluster_check_pulse_secure_users() -> None:
     assert list(
         pulse_secure_users.cluster_check_pulse_secure_users(
-            {},
+            {"upper_number_of_users": None},
             {"node1": {"n_users": 20}, "node2": {"n_users": 30}},
         )
     ) == [

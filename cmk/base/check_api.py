@@ -34,8 +34,6 @@ from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 from cmk.base.config import CheckContext as _CheckContext
 from cmk.base.config import get_http_proxy as _get_http_proxy
-from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
-from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
 
 from cmk.agent_based import v1 as _v1
 

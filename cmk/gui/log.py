@@ -93,13 +93,20 @@ class UserManagementEvent(SecurityEvent):
         event: Literal["user created", "user deleted", "user modified", "password changed"],
         affected_user: UserId,
         acting_user: UserId | None,
+        connector: str | None = None,
+        connection_id: str | None = None,
     ) -> None:
+        details = {
+            "affected_user": str(affected_user),
+            "acting_user": str(acting_user or "Unknown user"),
+        }
+        if connector is not None:
+            details["connector"] = connector
+            details["connection_id"] = str(connection_id or "Unknown connection")
+
         super().__init__(
             event,
-            {
-                "affected_user": str(affected_user),
-                "acting_user": str(acting_user or "Unknown user"),
-            },
+            details,
             SecurityEvent.Domain.user_management,
         )
 

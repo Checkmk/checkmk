@@ -204,13 +204,13 @@ def inventory_hp_hh3c_ext_mem(parsed):
 def check_hp_hh3c_ext_mem(item, params, parsed):
     if not (data := parsed.get(item)):
         return
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
     yield check_memory_element(
         "Usage",
         data["mem_used"],
         data["mem_total"],
-        (mode, (warn, crit)),
+        (mode, levels),
         metric_name="memused",
     )
 

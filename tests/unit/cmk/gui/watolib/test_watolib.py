@@ -152,6 +152,7 @@ def test_registered_configvars() -> None:
         "retention_interval",
         "rrdcached_tuning",
         "rule_optimizer",
+        "ruleset_matching_stats",
         "selection_livetime",
         "service_view_grouping",
         "session_mgmt",

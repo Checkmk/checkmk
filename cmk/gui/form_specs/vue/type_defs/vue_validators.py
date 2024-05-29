@@ -9,10 +9,14 @@ from typing import List, Optional, Union
 
 
 @dataclass
-class IsNumber:
-    vue_type: str = "is_number"
+class IsInteger:
+    vue_type: str = "is_integer"
     error_message: Optional[str] = None
 
+@dataclass
+class IsFloat:
+    vue_type: str = "is_float"
+    error_message: Optional[str] = None
 
 @dataclass
 class LengthInRange:
@@ -30,7 +34,7 @@ class NumberInRange:
     error_message: Optional[str] = None
 
 
-VueValidators = Union[IsNumber, NumberInRange, LengthInRange]
+VueValidators = Union[IsInteger, IsFloat, NumberInRange, LengthInRange]
 
 
 @dataclass

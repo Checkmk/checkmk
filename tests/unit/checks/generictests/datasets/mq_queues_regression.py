@@ -24,10 +24,22 @@ checks = {
             [
                 (
                     0,
-                    "Queue Size: 1, Enqueue Count: 3, Dequeue Count: 4",
+                    "Queue size: 1",
                     [
                         ("queue", 1, None, None, None, None),
+                    ],
+                ),
+                (
+                    0,
+                    "Enqueue count: 3",
+                    [
                         ("enque", 3, None, None, None, None),
+                    ],
+                ),
+                (
+                    0,
+                    "Dequeue count: 4",
+                    [
                         ("deque", 4, None, None, None, None),
                     ],
                 )

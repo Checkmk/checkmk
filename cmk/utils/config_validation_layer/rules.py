@@ -5,7 +5,7 @@
 
 from typing import Any, cast, Mapping
 
-from pydantic import BaseModel, model_validator, RootModel, ValidationError
+from pydantic import BaseModel, ConfigDict, model_validator, RootModel, ValidationError
 
 from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
@@ -43,13 +43,11 @@ _Rulesets = RootModel[dict[RulesetName, dict[str, list[Rule]] | list[Rule]]]
 
 
 class Rulesets(BaseModel):
+    model_config = ConfigDict(extra="allow")
     ALL_HOSTS: list[str] | Omitted = OMITTED_FIELD
     ALL_SERVICES: list[str] | Omitted = OMITTED_FIELD
     FOLDER_PATH: str | Omitted = OMITTED_FIELD
     NEGATE: str | Omitted = OMITTED_FIELD
-
-    class Config:
-        extra = "allow"
 
     @model_validator(mode="after")
     def validate_after(self) -> "Rulesets":

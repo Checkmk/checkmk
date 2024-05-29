@@ -31,8 +31,7 @@ RUN apt-get install -y \
     sudo \
     vim
 
-RUN apt-get update \
-    && apt-get install -y \
+RUN apt-get install -y --fix-missing \
     apache2 \
     apache2-dev \
     autoconf \

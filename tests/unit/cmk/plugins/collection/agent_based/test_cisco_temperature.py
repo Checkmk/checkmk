@@ -2,8 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
+from pathlib import Path
 
 import pytest
+
+from tests.unit.cmk.base.plugins.agent_based.snmp import get_parsed_snmp_section, snmp_is_detected
 
 from cmk.agent_based.v1 import Metric, Result, Service, State
 from cmk.agent_based.v1.type_defs import CheckResult, StringTable
@@ -14,8 +18,509 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
     ["input_table", "expected_section"],
     [
         pytest.param(
+            """
+.1.3.6.1.2.1.1.1.0 cisco
+.1.3.6.1.2.1.2.2.1.2.30 TenGigabitEthernet2/0/22
+.1.3.6.1.2.1.2.2.1.7.30 1
+.1.3.6.1.2.1.47.1.1.1.1.4.2262 2083
+.1.3.6.1.2.1.47.1.1.1.1.4.2263 2262
+.1.3.6.1.2.1.47.1.1.1.1.4.2264 2262
+.1.3.6.1.2.1.47.1.1.1.1.4.2265 2262
+.1.3.6.1.2.1.47.1.1.1.1.4.2266 2262
+.1.3.6.1.2.1.47.1.1.1.1.4.2267 2262
+.1.3.6.1.2.1.47.1.1.1.1.7.2262 Te2/0/22
+.1.3.6.1.2.1.47.1.1.1.1.7.2263 Te2/0/22 Module Temperature Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.2264 Te2/0/22 Supply Voltage Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.2265 Te2/0/22 Bias Current Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.2266 Te2/0/22 Transmit Power Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.2267 Te2/0/22 Receive Power Sensor
+.1.3.6.1.2.1.47.1.3.2.1.2.2262.0 .1.3.6.1.2.1.2.2.1.1.30
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.2263 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.2264 4
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.2265 5
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.2266 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.2267 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.2263 9
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.2264 9
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.2265 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.2266 9
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.2267 9
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.2263 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.2264 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.2265 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.2266 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.2267 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.2263 240
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.2264 32
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.2265 373
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.2266 -14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.2267 -48
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.2263 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.2264 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.2265 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.2266 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.2267 1
+""",
+            {
+                "8": {
+                    "Te2/0/22 Module Temperature Sensor": {
+                        "descr": "Te2/0/22 Module Temperature Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": 24.0,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    }
+                },
+                "14": {
+                    "Te2/0/22 Transmit Power Sensor": {
+                        "descr": "Te2/0/22 Transmit Power Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": -1.4000000000000001,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                    "Te2/0/22 Receive Power Sensor": {
+                        "descr": "Te2/0/22 Receive Power Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": -4.800000000000001,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                },
+            },
+            id="Catalyst",
+        ),
+        pytest.param(
+            """
+.1.3.6.1.2.1.1.1.0 cisco
+.1.3.6.1.2.1.2.2.1.2.1 GigabitEthernet0/0/0
+.1.3.6.1.2.1.2.2.1.7.1 1
+.1.3.6.1.2.1.47.1.1.1.1.4.1046 1015
+.1.3.6.1.2.1.47.1.1.1.1.4.1047 1046
+.1.3.6.1.2.1.47.1.1.1.1.4.1048 1047
+.1.3.6.1.2.1.47.1.1.1.1.4.1050 1047
+.1.3.6.1.2.1.47.1.1.1.1.4.1051 1047
+.1.3.6.1.2.1.47.1.1.1.1.4.1052 1047
+.1.3.6.1.2.1.47.1.1.1.1.4.1053 1047
+.1.3.6.1.2.1.47.1.1.1.1.4.1054 1047
+.1.3.6.1.2.1.47.1.1.1.1.7.1046 subslot 0/0 transceiver container 0
+.1.3.6.1.2.1.47.1.1.1.1.7.1047 subslot 0/0 transceiver 0
+.1.3.6.1.2.1.47.1.1.1.1.7.1048 GigabitEthernet0/0/0
+.1.3.6.1.2.1.47.1.1.1.1.7.1050 subslot 0/0 transceiver 0 Temperature Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.1051 subslot 0/0 transceiver 0 Supply Voltage Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.1052 subslot 0/0 transceiver 0 Bias Current Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.1053 subslot 0/0 transceiver 0 Tx Power Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.1054 subslot 0/0 transceiver 0 Rx Power Sensor
+.1.3.6.1.2.1.47.1.3.2.1.2.1048.0 .1.3.6.1.2.1.2.2.1.1.1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.1050 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.1051 4
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.1052 5
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.1053 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.1054 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.1050 9
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.1051 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.1052 7
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.1053 9
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.1054 9
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.1050 3
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.1051 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.1052 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.1053 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.1054 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.1050 29218
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.1051 33261
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.1052 2782
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.1053 -61
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.1054 -54
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.1050 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.1051 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.1052 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.1053 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.1054 1
+            """,
+            {
+                "8": {
+                    "subslot 0/0 transceiver 0 Temperature Sensor": {
+                        "descr": "subslot 0/0 transceiver 0 Temperature Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": 29.218,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                },
+                "14": {
+                    "subslot 0/0 transceiver 0 Tx Power Sensor": {
+                        "descr": "subslot 0/0 transceiver 0 Tx Power Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": -6.1000000000000005,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                    "subslot 0/0 transceiver 0 Rx Power Sensor": {
+                        "descr": "subslot 0/0 transceiver 0 Rx Power Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": -5.4,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                },
+            },
+            id="ASR",
+        ),
+        pytest.param(
+            """
+.1.3.6.1.2.1.1.1.0 cisco
+.1.3.6.1.2.1.2.2.1.2.436207616 Ethernet1/1
+.1.3.6.1.2.1.2.2.1.7.436207616 1
+.1.3.6.1.2.1.47.1.1.1.1.4.300000002 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.300000004 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.300000007 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.300000013 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.300000014 4950
+.1.3.6.1.2.1.47.1.1.1.1.7.300000002 Ethernet1/1 Lane 1 Transceiver Voltage Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000004 Ethernet1/1 Lane 1 Transceiver Bias Current Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000007 Ethernet1/1 Lane 1 Transceiver Temperature Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000013 Ethernet1/1 Lane 1 Transceiver Receive Power Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000014 Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor
+.1.3.6.1.2.1.47.1.3.2.1.2.4950.0 .1.3.6.1.2.1.2.2.1.1.436207616
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000002 3
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000004 5
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000007 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000013 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000014 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000002 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000004 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000007 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000013 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000014 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000002 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000004 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000007 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000013 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000014 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000002 3
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000004 7
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000007 30
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000013 -2
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000014 -2
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000002 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000004 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000007 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000013 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000014 1
+            """,
+            {
+                "14": {
+                    "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor": {
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": -0.002,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                    "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor": {
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": -0.002,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                },
+                "8": {
+                    "Ethernet1/1 Lane 1 Transceiver Temperature Sensor": {
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Temperature Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": 0.03,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    }
+                },
+            },
+            id="Nexus",
+        ),
+        pytest.param(
+            """
+.1.3.6.1.2.1.1.1.0 cisco
+.1.3.6.1.2.1.2.2.1.2.436207616 Ethernet1/1
+.1.3.6.1.2.1.2.2.1.2.436215808 Ethernet1/3
+.1.3.6.1.2.1.2.2.1.7.436207616 2
+.1.3.6.1.2.1.2.2.1.7.436215808 1
+.1.3.6.1.2.1.47.1.1.1.1.4.31958 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.31960 4952
+.1.3.6.1.2.1.47.1.1.1.1.7.300000003 Ethernet1/1 Lane 1 Transceiver Voltage Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000004 Ethernet1/1 Lane 1 Transceiver Bias Current Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000007 Ethernet1/1 Lane 1 Transceiver Temperature Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000013 Ethernet1/1 Lane 1 Transceiver Receive Power Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000014 Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300003523 Ethernet1/3 Lane 1 Transceiver Voltage Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300003524 Ethernet1/3 Lane 1 Transceiver Bias Current Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300003527 Ethernet1/3 Lane 1 Transceiver Temperature Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300003533 Ethernet1/3 Lane 1 Transceiver Receive Power Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300003534 Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor
+.1.3.6.1.2.1.47.1.1.1.1.16.300028174 2
+.1.3.6.1.2.1.47.1.3.2.1.2.4950.0 .1.3.6.1.2.1.2.2.1.1.436207616
+.1.3.6.1.2.1.47.1.3.2.1.2.4952.0 .1.3.6.1.2.1.2.2.1.1.436215808
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000003 4
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000004 5
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000007 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000013 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000014 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300003523 4
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300003524 5
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300003527 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300003533 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300003534 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000003 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000004 7
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000007 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000013 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000014 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300003523 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300003524 7
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300003527 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300003533 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300003534 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000003 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000004 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000007 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000013 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000014 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300003523 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300003524 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300003527 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300003533 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300003534 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000003 3354
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000004 314
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000007 26757
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000013 -33010
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000014 -10788
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300003523 3337
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300003524 6172
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300003527 26949
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300003533 -2862
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300003534 -2369
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000003 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000004 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000007 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000013 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000014 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300003523 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300003524 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300003527 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300003533 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300003534 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300005283 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300005284 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300005287 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300005293 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300005294 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300028163 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300028164 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300028167 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300028173 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300028174 1
+            """,
+            {
+                "14": {
+                    "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor": {
+                        "admin_state": "down",
+                        "descr": "Ethernet1/1 "
+                        "Lane "
+                        "1 "
+                        "Transceiver "
+                        "Receive "
+                        "Power "
+                        "Sensor",
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                        "dev_state": (0, "OK"),
+                        "raw_dev_state": "1",
+                        "reading": -33.01,
+                    },
+                    "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor": {
+                        "admin_state": "down",
+                        "descr": "Ethernet1/1 "
+                        "Lane "
+                        "1 "
+                        "Transceiver "
+                        "Transmit "
+                        "Power "
+                        "Sensor",
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                        "dev_state": (0, "OK"),
+                        "raw_dev_state": "1",
+                        "reading": -10.788,
+                    },
+                    "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor": {
+                        "admin_state": "up",
+                        "descr": "Ethernet1/3 "
+                        "Lane "
+                        "1 "
+                        "Transceiver "
+                        "Receive "
+                        "Power "
+                        "Sensor",
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                        "dev_state": (0, "OK"),
+                        "raw_dev_state": "1",
+                        "reading": -2.862,
+                    },
+                    "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor": {
+                        "admin_state": "up",
+                        "descr": "Ethernet1/3 "
+                        "Lane "
+                        "1 "
+                        "Transceiver "
+                        "Transmit "
+                        "Power "
+                        "Sensor",
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                        "dev_state": (0, "OK"),
+                        "raw_dev_state": "1",
+                        "reading": -2.369,
+                    },
+                },
+                "8": {
+                    "Ethernet1/1 Lane 1 Transceiver Temperature Sensor": {
+                        "admin_state": "down",
+                        "descr": "Ethernet1/1 " "Lane 1 " "Transceiver " "Temperature " "Sensor",
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                        "dev_state": (0, "OK"),
+                        "raw_dev_state": "1",
+                        "reading": 26.757,
+                    },
+                    "Ethernet1/3 Lane 1 Transceiver Temperature Sensor": {
+                        "admin_state": "up",
+                        "descr": "Ethernet1/3 " "Lane 1 " "Transceiver " "Temperature " "Sensor",
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                        "dev_state": (0, "OK"),
+                        "raw_dev_state": "1",
+                        "reading": 26.949,
+                    },
+                },
+            },
+            id="NX-OS",
+        ),
+        pytest.param(
+            """
+.1.3.6.1.2.1.1.1.0 cisco
+.1.3.6.1.2.1.2.2.1.2.436207616 Ethernet1/1
+.1.3.6.1.2.1.2.2.1.7.436207616 1
+.1.3.6.1.2.1.47.1.1.1.1.4.300000002 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.300000004 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.300000007 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.300000013 4950
+.1.3.6.1.2.1.47.1.1.1.1.4.300000014 4950
+.1.3.6.1.2.1.47.1.1.1.1.7.300000002 Ethernet1/1 Lane 1 Transceiver Voltage Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000004 Ethernet1/1 Lane 1 Transceiver Bias Current Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000007 Ethernet1/1 Lane 1 Transceiver Temperature Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000013 Ethernet1/1 Lane 1 Transceiver Receive Power Sensor
+.1.3.6.1.2.1.47.1.1.1.1.7.300000014 Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000002 3
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000004 5
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000007 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000013 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.300000014 14
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000002 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000004 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000007 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000013 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.300000014 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000002 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000004 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000007 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000013 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.300000014 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000002 3
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000004 7
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000007 30
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000013 -2
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.300000014 -2
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000002 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000004 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000007 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000013 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.300000014 1
+            """,
+            {
+                "14": {
+                    "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor": {
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": -0.002,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                    "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor": {
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": -0.002,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    },
+                },
+                "8": {
+                    "Ethernet1/1 Lane 1 Transceiver Temperature Sensor": {
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Temperature Sensor",
+                        "raw_dev_state": "1",
+                        "dev_state": (0, "OK"),
+                        "admin_state": "up",
+                        "reading": 0.03,
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": None,
+                    }
+                },
+            },
+            id="fallback entAliasMapping missing",
+        ),
+    ],
+)
+def test_parse_admin_state_mapping(
+    input_table: str,
+    expected_section: ct.Section,
+    as_path: Callable[[str], Path],
+) -> None:
+    snmp_walk = as_path(input_table)
+
+    assert snmp_is_detected(ct.snmp_section_cisco_temperature, snmp_walk)
+
+    assert expected_section == get_parsed_snmp_section(ct.snmp_section_cisco_temperature, snmp_walk)
+
+
+@pytest.mark.parametrize(
+    ["input_table", "expected_section"],
+    [
+        pytest.param(
             [
-                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "", "Switch 1 - Inlet Temp Sensor"]],
                 [["1010", "8", "9", "0", "49", "1"]],
                 [
                     ["1010.1", "20", "4", "56"],
@@ -23,7 +528,8 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     ["1010.3", "20", "2", "-5"],
                 ],
                 [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
-                [["description", "1"]],
+                [["oid_end", "description", "1"]],
+                [],
             ],
             {
                 "8": {
@@ -66,7 +572,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
         ),
         pytest.param(
             [
-                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "", "Switch 1 - Inlet Temp Sensor"]],
                 [["1010", "8", "9", "0", "49", "1"]],
                 [
                     ["1010.1", "20", "4", "56"],
@@ -74,7 +580,8 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     ["1010.3", "20", "2", "-5"],
                 ],
                 [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
-                [["description", "1"]],
+                [["oid_end", "description", "1"]],
+                [],
             ],
             {
                 "8": {
@@ -91,8 +598,9 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
         ),
         pytest.param(
             [
-                [["1132", "TenGigabitEthernet1/1/7 Transmit Power Sensor"]],
+                [["1132", "", "TenGigabitEthernet1/1/7 Transmit Power Sensor"]],
                 [["1132", "14", "9", "1", "-19", "2"]],
+                [],
                 [],
                 [],
                 [],
@@ -112,7 +620,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
         ),
         pytest.param(
             [
-                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "", "Switch 1 - Inlet Temp Sensor"]],
                 [["1010", "8", "9", "0", "49", "1"]],
                 [
                     # threshold relations not applicable to check_levels:
@@ -122,7 +630,8 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     ["1010.3", "20", "2", "-5"],
                 ],
                 [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
-                [["description", "1"]],
+                [["oid_end", "description", "1"]],
+                [],
             ],
             {
                 "8": {
@@ -139,7 +648,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
         ),
         pytest.param(
             [
-                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "", "Switch 1 - Inlet Temp Sensor"]],
                 [["1010", "8", "9", "0", "49", "1"]],
                 [
                     # thresholds with severity = "other":
@@ -150,7 +659,8 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     ["1010.4", "1", "4", "-15"],
                 ],
                 [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
-                [["description", "1"]],
+                [["oid_end", "description", "1"]],
+                [],
             ],
             {
                 "8": {
@@ -167,7 +677,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
         ),
         pytest.param(
             [
-                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "", "Switch 1 - Inlet Temp Sensor"]],
                 [["1010", "8", "9", "0", "49", "1"]],
                 [
                     # thresholds with severity = "other":
@@ -176,7 +686,8 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     ["1010.2", "1", "1", "66"],
                 ],
                 [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
-                [["description", "1"]],
+                [["oid_end", "description", "1"]],
+                [],
             ],
             {
                 "8": {
@@ -193,7 +704,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
         ),
         pytest.param(
             [
-                [["1010", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "", "Switch 1 - Inlet Temp Sensor"]],
                 [["1010", "8", "9", "0", "49", "1"]],
                 [
                     # No coercion, 3 thresholds are not applicable to our 4 levels.
@@ -202,7 +713,8 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     ["1010.3", "1", "4", "-5"],
                 ],
                 [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
-                [["description", "1"]],
+                [["oid_end", "description", "1"]],
+                [],
             ],
             {
                 "8": {
@@ -240,12 +752,12 @@ def _section_not_ok_sensors() -> ct.Section:
     return ct.parse_cisco_temperature(
         [
             [
-                ["1107", "TenGigabitEthernet2/1/7 Module Temperature Sensor"],
-                ["1110", "TenGigabitEthernet2/1/7 Transmit Power Sensor"],
-                ["1111", "TenGigabitEthernet2/1/7 Receive Power Sensor"],
-                ["1129", "TenGigabitEthernet1/1/7 Module Temperature Sensor"],
-                ["1132", "TenGigabitEthernet1/1/7 Transmit Power Sensor"],
-                ["1133", "TenGigabitEthernet1/1/7 Receive Power Sensor"],
+                ["1107", "", "TenGigabitEthernet2/1/7 Module Temperature Sensor"],
+                ["1110", "", "TenGigabitEthernet2/1/7 Transmit Power Sensor"],
+                ["1111", "", "TenGigabitEthernet2/1/7 Receive Power Sensor"],
+                ["1129", "", "TenGigabitEthernet1/1/7 Module Temperature Sensor"],
+                ["1132", "", "TenGigabitEthernet1/1/7 Transmit Power Sensor"],
+                ["1133", "", "TenGigabitEthernet1/1/7 Receive Power Sensor"],
             ],
             [
                 ["1107", "8", "9", "1", "245", "3"],
@@ -258,21 +770,22 @@ def _section_not_ok_sensors() -> ct.Section:
             [],
             [],
             [],
+            [],
         ],
     )
 
 
 @pytest.fixture(name="section_dom", scope="module")
-def _get_secion_dom() -> ct.Section:
+def _get_section_dom() -> ct.Section:
     return ct.parse_cisco_temperature(
         [
             [
-                ["300000013", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor"],
-                ["300000014", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor"],
-                ["300003533", "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor"],
-                ["300003534", "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor"],
-                ["300005293", "Ethernet1/4 Lane 1 Transceiver Receive Power Sensor"],
-                ["300005294", "Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor"],
+                ["300000013", "", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor"],
+                ["300000014", "", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor"],
+                ["300003533", "", "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor"],
+                ["300003534", "", "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor"],
+                ["300005293", "", "Ethernet1/4 Lane 1 Transceiver Receive Power Sensor"],
+                ["300005294", "", "Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor"],
             ],
             [
                 ["300000013", "14", "8", "0", "-3271", "1"],
@@ -310,13 +823,14 @@ def _get_secion_dom() -> ct.Section:
             ],
             [],
             [
-                ["Ethernet1/1 Lane 1 Transceiver Receive Power Sensor", "1"],
-                ["Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor", "1"],
-                ["Ethernet1/3 Lane 1 Transceiver Receive Power Sensor", "2"],
-                ["Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor", "2"],
-                ["Ethernet1/4 Lane 1 Transceiver Receive Power Sensor", "3"],
-                ["Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor", "3"],
+                ["20", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor", "1"],
+                ["21", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor", "1"],
+                ["43", "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor", "2"],
+                ["44", "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor", "2"],
+                ["70", "Ethernet1/4 Lane 1 Transceiver Receive Power Sensor", "3"],
+                ["71", "Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor", "3"],
             ],
+            [],
         ]
     )
 
@@ -382,23 +896,23 @@ def test_check_dom_no_levels() -> None:
 
 
 @pytest.fixture(name="section_temp", scope="module")
-def _get_secion_temp() -> ct.Section:
+def _get_section_temp() -> ct.Section:
     return ct.parse_cisco_temperature(
         [
             [
-                ["1176", "Filtered sensor"],
-                ["1177", "Sensor with large precision"],
-                ["2008", "Switch 1 - WS-C2960X-24PD-L - Sensor 0"],
-                ["4950", "Linecard-1 Port-1"],
-                ["21590", "module-1 Crossbar1(s1)"],
-                ["21591", "module-1 Crossbar2(s2)"],
-                ["21592", "module-1 Arb-mux (s3)"],
-                ["31958", "Transceiver(slot:1-port:1)"],
-                ["300000003", "Ethernet1/1 Lane 1 Transceiver Voltage Sensor"],
-                ["300000004", "Ethernet1/1 Lane 1 Transceiver Bias Current Sensor"],
-                ["300000007", "Ethernet1/1 Lane 1 Transceiver Temperature Sensor"],
-                ["300000013", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor"],
-                ["300000014", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor"],
+                ["1176", "", "Filtered sensor"],
+                ["1177", "", "Sensor with large precision"],
+                ["2008", "", "Switch 1 - WS-C2960X-24PD-L - Sensor 0"],
+                ["4950", "", "Linecard-1 Port-1"],
+                ["21590", "", "module-1 Crossbar1(s1)"],
+                ["21591", "", "module-1 Crossbar2(s2)"],
+                ["21592", "", "module-1 Arb-mux (s3)"],
+                ["31958", "", "Transceiver(slot:1-port:1)"],
+                ["300000003", "", "Ethernet1/1 Lane 1 Transceiver Voltage Sensor"],
+                ["300000004", "", "Ethernet1/1 Lane 1 Transceiver Bias Current Sensor"],
+                ["300000007", "", "Ethernet1/1 Lane 1 Transceiver Temperature Sensor"],
+                ["300000013", "", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor"],
+                ["300000014", "", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor"],
             ],
             [
                 ["1176", "1", "9", "1613258611", "0", "1"],
@@ -444,6 +958,7 @@ def _get_secion_temp() -> ct.Section:
                 ["2008", "SW#1, Sensor#1, GREEN", "36", "68", "1"],
                 ["3008", "SW#2, Sensor#1, GREEN", "37", "68", "1"],
             ],
+            [],
             [],
         ]
     )

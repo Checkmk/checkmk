@@ -32,6 +32,8 @@ from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
 
+from ._two_factor import is_two_factor_login_enabled
+
 auth_logger = gui_logger.getChild("auth")
 
 
@@ -67,7 +69,8 @@ def _load_serial(username: UserId) -> int:
 def on_succeeded_login(username: UserId, now: datetime) -> None:
     ensure_user_can_init_session(username, now)
     # Set failed login counter to 0
-    save_custom_attr(username, "num_failed_logins", 0)
+    if not is_two_factor_login_enabled(username):
+        save_custom_attr(username, "num_failed_logins", 0)
     if active_config.single_user_session is not None:
         # In single user session mode there is only one session allowed at a time. Once we
         # reach this place, we can be sure that we are allowed to remove all existing ones.

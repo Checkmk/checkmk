@@ -45,7 +45,7 @@ class LoginPage(CmkPage):
             return self.page.url
         return ""
 
-    def login(self, credentials: CmkCredentials) -> None:
+    def login(self, credentials: CmkCredentials, expected_url: str | None = None) -> None:
         """Login to Checkmk GUI.
 
         By default, the credentials provided to `LoginPage` are used.
@@ -54,7 +54,7 @@ class LoginPage(CmkPage):
             self.page.locator("#input_user").fill(credentials.username)
             self.page.locator("#input_pass").fill(credentials.password)
             self.page.locator("#_login").click()
-            _url_pattern = re.escape(self._target_page())
+            _url_pattern = re.escape(expected_url or self._target_page())
             self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
             self._logged_in = True
 

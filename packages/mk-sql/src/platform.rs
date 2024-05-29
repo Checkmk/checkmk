@@ -4,17 +4,27 @@
 
 use crate::types::{InstanceName, Port};
 
+#[derive(Debug, PartialEq)]
+pub enum Transport {
+    Tcp,
+    NamedPipe,
+    SharedMemory,
+}
+
 #[derive(Debug)]
 pub struct InstanceInfo {
     pub name: InstanceName,
     port: Option<Port>,
     dynamic_port: Option<Port>,
-    shared_memory: bool,
     pipe: Option<String>,
+    transports: Vec<Transport>,
 }
 
 impl InstanceInfo {
     pub fn final_port(&self) -> Option<&Port> {
+        if !self.is_tcp() {
+            return None;
+        }
         self.dynamic_port
             .as_ref()
             .filter(|p| p.0 != 0)
@@ -23,18 +33,26 @@ impl InstanceInfo {
     }
 
     pub fn is_shared_memory(&self) -> bool {
-        self.shared_memory
+        self.transports.contains(&Transport::SharedMemory)
     }
 
     pub fn is_pipe(&self) -> bool {
-        self.pipe.is_some()
+        self.transports.contains(&Transport::NamedPipe) && self.pipe.is_some()
+    }
+
+    pub fn is_tcp(&self) -> bool {
+        self.transports.contains(&Transport::Tcp)
+    }
+
+    pub fn is_odbc_only(&self) -> bool {
+        !self.transports.is_empty() && !self.is_tcp()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        platform::InstanceInfo,
+        platform::{InstanceInfo, Transport},
         types::{InstanceName, Port},
     };
 
@@ -44,8 +62,8 @@ mod tests {
             name: InstanceName::from("AAA".to_owned()),
             port: port.map(|p| p.into()),
             dynamic_port: dynamic_port.map(|p| p.into()),
-            shared_memory: false,
             pipe: None,
+            transports: vec![Transport::Tcp],
         };
 
         let std_port = 1;
@@ -213,7 +231,7 @@ pub mod odbc {
 
 #[cfg(windows)]
 pub mod registry {
-    use super::InstanceInfo;
+    use super::{InstanceInfo, Transport};
     use crate::types::{InstanceName, Port};
     use std::collections::HashMap;
     use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
@@ -249,8 +267,11 @@ pub mod registry {
             .collect::<Vec<InstanceInfo>>()
     }
 
-    fn get_sm(sql_key: &str, key_name: &str) -> bool {
-        let instance_sm_key = format!(r"{}\MSSQLServer\SuperSocketNetLib\Sm", key_name);
+    fn get_transport(sql_key: &str, registry_instance_name: &str, transport_key: &str) -> bool {
+        let instance_sm_key = format!(
+            r"{}\MSSQLServer\SuperSocketNetLib\{}",
+            registry_instance_name, transport_key
+        );
         let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
         if let Ok(key) = root_key.open_subkey_with_flags(
             sql_key.to_owned() + &instance_sm_key,
@@ -281,10 +302,29 @@ pub mod registry {
         }
     }
 
-    fn get_info(sql_key: &str, name: &str, key_name: &str) -> Option<InstanceInfo> {
-        let instance_name = name;
-        let instance_tcp_ip_all_key =
-            format!(r"{}\MSSQLServer\SuperSocketNetLib\Tcp\IPAll", key_name);
+    fn get_enabled_transports(sql_key: &str, key_name: &str) -> Vec<Transport> {
+        let mut transports = vec![];
+        if get_transport(sql_key, key_name, "Tcp") {
+            transports.push(Transport::Tcp);
+        }
+        if get_transport(sql_key, key_name, "Sm") {
+            transports.push(Transport::SharedMemory);
+        }
+        if get_transport(sql_key, key_name, "Np") {
+            transports.push(Transport::NamedPipe);
+        }
+        transports
+    }
+
+    fn get_info(
+        sql_key: &str,
+        instance_name: &str,
+        registry_instance_name: &str,
+    ) -> Option<InstanceInfo> {
+        let instance_tcp_ip_all_key = format!(
+            r"{}\MSSQLServer\SuperSocketNetLib\Tcp\IPAll",
+            registry_instance_name
+        );
         let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
         if let Ok(key) = root_key.open_subkey_with_flags(
             sql_key.to_owned() + &instance_tcp_ip_all_key,
@@ -298,8 +338,8 @@ pub mod registry {
                 dynamic_port: dynamic_port
                     .and_then(|s| s.parse::<u16>().ok())
                     .map(Port::from),
-                shared_memory: get_sm(sql_key, key_name),
-                pipe: get_pipe(sql_key, key_name),
+                pipe: get_pipe(sql_key, registry_instance_name),
+                transports: get_enabled_transports(sql_key, registry_instance_name),
             })
         } else {
             log::warn!("cannot open key: {}", instance_tcp_ip_all_key);

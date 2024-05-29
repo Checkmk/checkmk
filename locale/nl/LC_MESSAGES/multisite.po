@@ -12354,6 +12354,10 @@ msgstr "Verzamel informatie van Checkmk sites voor diagnostische analyse."
 msgid "Collect performance data for disk latency"
 msgstr "Verzamel prestatiegegevens voor schijflatentie"
 
+#, fuzzy
+msgid "Collect ruleset matching statistics"
+msgstr "Statistieken clusterverkeer"
+
 msgid "Collection Size"
 msgstr "Collectie Omvang"
 
@@ -28154,6 +28158,11 @@ msgstr ""
 "zullen de globale instellingen hier overschrijven."
 
 msgid ""
+"If enabled, the core will collect statistics (cache hits/misses) during the "
+"ruleset matching process."
+msgstr ""
+
+msgid ""
 "If enabled, the service details will contain username of a process owner."
 msgstr ""
 
@@ -34109,18 +34118,19 @@ msgid "Local path"
 msgstr "Lokaal pad"
 
 msgid ""
-"Local path including filename. Base directory for this relative path will be "
-"the home directory of your site. The testfile will be created if it does not "
-"exist. Examples: 'tmp/testfile' (file will be located in $OMD_ROOT/tmp/"
-"testfile )"
+"Local path to the directory where to put the file, relative to \"var/"
+"check_mk/active_checks/check_sftp\" within the home directory of your site. "
+"If left empty, the file will be placed directly in \"var/check_mk/"
+"active_checks/check_sftp\"."
 msgstr ""
-"Lokaal pad inclusief bestandsnaam. De basismap voor dit relatieve pad is de "
-"thuismap van uw site. Het testbestand zal worden aangemaakt als het niet "
-"bestaat. Voorbeelden: 'tmp/testfile' (bestand zal zich bevinden in $OMD_ROOT/"
-"tmp/testfile )"
 
-msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
-msgstr "Lokaal pad waar het gedownloade bestand moet komen (bijv. 'tmp' )."
+msgid ""
+"Local path to the file to be uploaded. The path is relative to \"var/"
+"check_mk/active_checks/check_sftp\" within the home directory of your site. "
+"If the file does not exist, it will be created. Example: 'testfile.txt' (The "
+"file $OMD_ROOT/var/check_mk/active_checks/check_sftp/testfile.txt will be "
+"uploaded)."
+msgstr ""
 
 msgid "Local port number"
 msgstr "Lokaal poortnummer"
@@ -39954,6 +39964,10 @@ msgstr ""
 "uitvoering van de controle. Alle pakketten worden direct bij uitvoering van "
 "de controle verzonden. Daarna wacht de controle op de binnenkomende "
 "pakketten."
+
+#, fuzzy
+msgid "Number is not a float value."
+msgstr "De parameter \"%s\" is geen geheel getal."
 
 #, fuzzy
 msgid "Number is not an integer value."
@@ -47418,21 +47432,26 @@ msgstr "Bestand op afstand"
 msgid "Remote instances %s"
 msgstr "Externe instanties %s"
 
+#, fuzzy
 msgid ""
-"Remote path including filename (e.g. 'testfile'). If you also enabled 'Put "
-"file to SFTP server', you can use the same file for both tests."
-msgstr ""
-"Pad op afstand inclusief bestandsnaam (bijv. 'testfile'). Als u ook 'Zet "
-"bestand naar SFTP-server' hebt ingeschakeld, kunt u hetzelfde bestand voor "
-"beide tests gebruiken."
-
-msgid ""
-"Remote path where to put the file. If you leave this empty, the file will be "
-"placed in the home directory of the user. Example: 'myDirectory' "
+"Remote path to the directory where to put the file. If left empty, the file "
+"will be placed in the home directory of the user. The directory has to exist "
+"on the remote or the check will fail. Example: 'myDirectory' (The file will "
+"be uploaded to '~/myDirectory')."
 msgstr ""
 "Externe pad waar het bestand moet komen. Als je dit leeg laat, zal het "
 "bestand in de home directory van de gebruiker geplaatst worden. Voorbeeld: "
 "\"myDirectory "
+
+#, fuzzy
+msgid ""
+"Remote path to the file to be downloaded. The path is relative to the home "
+"directory of the user. If you also enabled 'Put file to SFTP server', you "
+"can use the same file for both tests."
+msgstr ""
+"Pad op afstand inclusief bestandsnaam (bijv. 'testfile'). Als u ook 'Zet "
+"bestand naar SFTP-server' hebt ingeschakeld, kunt u hetzelfde bestand voor "
+"beide tests gebruiken."
 
 msgid "Remote port number"
 msgstr "Poortnummer op afstand"
@@ -71367,6 +71386,10 @@ msgstr "Bovenste niveaus voor het aantal signaleringen"
 msgid "Upper levels for number of requests"
 msgstr "Bovenste niveaus voor het aantal verzoeken"
 
+#, fuzzy
+msgid "Upper levels for number of signed-in web users"
+msgstr "Bovenste niveaus voor het aantal verzoeken"
+
 msgid "Upper levels for open network sockets"
 msgstr "Bovenste niveaus voor open netwerk sockets"
 
@@ -73168,9 +73191,6 @@ msgstr "Geldig tot Checkmk versie"
 
 msgid "Validate server certificate during port query"
 msgstr "Servercertificaat valideren tijdens poortverzoek"
-
-msgid "Validation errors occurred. Please fix the input fields and try again."
-msgstr ""
 
 msgid "Validity of missing data"
 msgstr "Geldigheid van ontbrekende gegevens"
@@ -80380,6 +80400,20 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "Local path including filename. Base directory for this relative path will "
+#~ "be the home directory of your site. The testfile will be created if it "
+#~ "does not exist. Examples: 'tmp/testfile' (file will be located in "
+#~ "$OMD_ROOT/tmp/testfile )"
+#~ msgstr ""
+#~ "Lokaal pad inclusief bestandsnaam. De basismap voor dit relatieve pad is "
+#~ "de thuismap van uw site. Het testbestand zal worden aangemaakt als het "
+#~ "niet bestaat. Voorbeelden: 'tmp/testfile' (bestand zal zich bevinden in "
+#~ "$OMD_ROOT/tmp/testfile )"
+
+#~ msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
+#~ msgstr "Lokaal pad waar het gedownloade bestand moet komen (bijv. 'tmp' )."
 
 #~ msgid "Delete messages"
 #~ msgstr "Berichten verwijderen"

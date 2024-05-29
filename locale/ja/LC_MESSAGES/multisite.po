@@ -12048,6 +12048,10 @@ msgstr "診断分析のためにCheckmkサイトの情報を収集します。"
 msgid "Collect performance data for disk latency"
 msgstr "ディスク遅延のパフォーマンスデータを収集する"
 
+#, fuzzy
+msgid "Collect ruleset matching statistics"
+msgstr "クラスタートラフィック統計"
+
 msgid "Collection Size"
 msgstr "コレクションのサイズ"
 
@@ -27582,6 +27586,11 @@ msgstr ""
 "こで行われたグローバル設定を上書きします。"
 
 msgid ""
+"If enabled, the core will collect statistics (cache hits/misses) during the "
+"ruleset matching process."
+msgstr ""
+
+msgid ""
 "If enabled, the service details will contain username of a process owner."
 msgstr "有効な場合、サービスの詳細にはプロセス所有者のユーザー名が含まれます。"
 
@@ -33366,17 +33375,19 @@ msgid "Local path"
 msgstr "ローカルパス"
 
 msgid ""
-"Local path including filename. Base directory for this relative path will be "
-"the home directory of your site. The testfile will be created if it does not "
-"exist. Examples: 'tmp/testfile' (file will be located in $OMD_ROOT/tmp/"
-"testfile )"
+"Local path to the directory where to put the file, relative to \"var/"
+"check_mk/active_checks/check_sftp\" within the home directory of your site. "
+"If left empty, the file will be placed directly in \"var/check_mk/"
+"active_checks/check_sftp\"."
 msgstr ""
-"ファイル名を含むローカルパス。この相対パスのベースディレクトリは、サイトの"
-"ホームディレクトリになります。テストファイルが存在しない場合は作成されます。"
-"例: 'tmp/testfile' (ファイルは$OMD_ROOT/tmp/testfile にあります)"
 
-msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
-msgstr "ダウンロードしたファイルを配置するローカルパス(例 'tmp' )。"
+msgid ""
+"Local path to the file to be uploaded. The path is relative to \"var/"
+"check_mk/active_checks/check_sftp\" within the home directory of your site. "
+"If the file does not exist, it will be created. Example: 'testfile.txt' (The "
+"file $OMD_ROOT/var/check_mk/active_checks/check_sftp/testfile.txt will be "
+"uploaded)."
+msgstr ""
 
 msgid "Local port number"
 msgstr "ローカルポート番号"
@@ -39120,6 +39131,10 @@ msgstr ""
 "チェックの実行ごとにターゲットホストに送信するICMPエコー要求パケットの数。す"
 "べてのパケットは、チェックの実行時に直接送信されます。その後、チェックは着信"
 "パケットを待ちます。"
+
+#, fuzzy
+msgid "Number is not a float value."
+msgstr "パラメータ \"%s\" は整数ではありません。"
 
 #, fuzzy
 msgid "Number is not an integer value."
@@ -46463,19 +46478,24 @@ msgstr "リモートファイル"
 msgid "Remote instances %s"
 msgstr "リモートインスタンス %s"
 
+#, fuzzy
 msgid ""
-"Remote path including filename (e.g. 'testfile'). If you also enabled 'Put "
-"file to SFTP server', you can use the same file for both tests."
-msgstr ""
-"ファイル名を含むリモートパス(例: \"testfile\") \"ファイルをSFTPサーバーに置く"
-"\"を有効にした場合は、両方のテストで同じファイルを使用できます。"
-
-msgid ""
-"Remote path where to put the file. If you leave this empty, the file will be "
-"placed in the home directory of the user. Example: 'myDirectory' "
+"Remote path to the directory where to put the file. If left empty, the file "
+"will be placed in the home directory of the user. The directory has to exist "
+"on the remote or the check will fail. Example: 'myDirectory' (The file will "
+"be uploaded to '~/myDirectory')."
 msgstr ""
 "ファイルを保存するリモート・パス。これを空にすると、ユーザーのホームディレク"
 "トリにファイルが置かれます。例:'myDirectory' "
+
+#, fuzzy
+msgid ""
+"Remote path to the file to be downloaded. The path is relative to the home "
+"directory of the user. If you also enabled 'Put file to SFTP server', you "
+"can use the same file for both tests."
+msgstr ""
+"ファイル名を含むリモートパス(例: \"testfile\") \"ファイルをSFTPサーバーに置く"
+"\"を有効にした場合は、両方のテストで同じファイルを使用できます。"
 
 msgid "Remote port number"
 msgstr "リモートポート番号"
@@ -69702,6 +69722,10 @@ msgstr "アラート数の上位レベル"
 msgid "Upper levels for number of requests"
 msgstr "リクエスト数の上位レベル"
 
+#, fuzzy
+msgid "Upper levels for number of signed-in web users"
+msgstr "リクエスト数の上位レベル"
+
 msgid "Upper levels for open network sockets"
 msgstr "オープンネットワークソケットの上位レベル"
 
@@ -71448,9 +71472,6 @@ msgstr "Checkmkバージョンまで有効"
 
 msgid "Validate server certificate during port query"
 msgstr "ポート照会時にサーバ証明書を検証する"
-
-msgid "Validation errors occurred. Please fix the input fields and try again."
-msgstr ""
 
 msgid "Validity of missing data"
 msgstr "欠測データの有効性"
@@ -78407,6 +78428,19 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "Local path including filename. Base directory for this relative path will "
+#~ "be the home directory of your site. The testfile will be created if it "
+#~ "does not exist. Examples: 'tmp/testfile' (file will be located in "
+#~ "$OMD_ROOT/tmp/testfile )"
+#~ msgstr ""
+#~ "ファイル名を含むローカルパス。この相対パスのベースディレクトリは、サイトの"
+#~ "ホームディレクトリになります。テストファイルが存在しない場合は作成されま"
+#~ "す。例: 'tmp/testfile' (ファイルは$OMD_ROOT/tmp/testfile にあります)"
+
+#~ msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
+#~ msgstr "ダウンロードしたファイルを配置するローカルパス(例 'tmp' )。"
 
 #~ msgid "Delete messages"
 #~ msgstr "メッセージを削除する"

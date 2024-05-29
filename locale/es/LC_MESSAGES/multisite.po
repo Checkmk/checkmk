@@ -12462,6 +12462,10 @@ msgstr ""
 msgid "Collect performance data for disk latency"
 msgstr "Recoger datos de rendimiento para la latencia del disco"
 
+#, fuzzy
+msgid "Collect ruleset matching statistics"
+msgstr "Estadísticas de tráfico del clúster"
+
 msgid "Collection Size"
 msgstr "Tamaño de la colección"
 
@@ -28399,6 +28403,11 @@ msgstr ""
 "la configuración global realizada aquí."
 
 msgid ""
+"If enabled, the core will collect statistics (cache hits/misses) during the "
+"ruleset matching process."
+msgstr ""
+
+msgid ""
 "If enabled, the service details will contain username of a process owner."
 msgstr ""
 "Si se activa, los detalles del servicio contendrán el nombre de usuario de "
@@ -34398,18 +34407,19 @@ msgid "Local path"
 msgstr "Ruta local"
 
 msgid ""
-"Local path including filename. Base directory for this relative path will be "
-"the home directory of your site. The testfile will be created if it does not "
-"exist. Examples: 'tmp/testfile' (file will be located in $OMD_ROOT/tmp/"
-"testfile )"
+"Local path to the directory where to put the file, relative to \"var/"
+"check_mk/active_checks/check_sftp\" within the home directory of your site. "
+"If left empty, the file will be placed directly in \"var/check_mk/"
+"active_checks/check_sftp\"."
 msgstr ""
-"Ruta local incluyendo el nombre del archivo. El directorio base para esta "
-"ruta relativa será el directorio principal de su sitio. El archivo de prueba "
-"se creará si no existe. Ejemplos: 'tmp/testfile' (el archivo se ubicará en "
-"$OMD_ROOT/tmp/testfile )"
 
-msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
-msgstr "Ruta local donde colocar el archivo descargado (por ejemplo, 'tmp' )."
+msgid ""
+"Local path to the file to be uploaded. The path is relative to \"var/"
+"check_mk/active_checks/check_sftp\" within the home directory of your site. "
+"If the file does not exist, it will be created. Example: 'testfile.txt' (The "
+"file $OMD_ROOT/var/check_mk/active_checks/check_sftp/testfile.txt will be "
+"uploaded)."
+msgstr ""
 
 msgid "Local port number"
 msgstr "Número de puerto local"
@@ -40312,6 +40322,10 @@ msgstr ""
 "Número de paquetes de solicitud de eco ICMP a enviar al host de destino en "
 "cada ejecución de chequeo. Todos los paquetes se envían directamente en la "
 "ejecución del chequeo. Después la comprobación espera los paquetes entrantes."
+
+#, fuzzy
+msgid "Number is not a float value."
+msgstr "El parámetro \"%s\" no es un entero."
 
 #, fuzzy
 msgid "Number is not an integer value."
@@ -47842,20 +47856,25 @@ msgstr "Archivo remoto"
 msgid "Remote instances %s"
 msgstr "Instancias remotas %s"
 
+#, fuzzy
 msgid ""
-"Remote path including filename (e.g. 'testfile'). If you also enabled 'Put "
-"file to SFTP server', you can use the same file for both tests."
+"Remote path to the directory where to put the file. If left empty, the file "
+"will be placed in the home directory of the user. The directory has to exist "
+"on the remote or the check will fail. Example: 'myDirectory' (The file will "
+"be uploaded to '~/myDirectory')."
+msgstr ""
+"Ruta remota donde colocar el archivo. Si lo deja vacío, el archivo se "
+"colocará en el directorio personal del usuario. Ejemplo: 'miDirectorio' "
+
+#, fuzzy
+msgid ""
+"Remote path to the file to be downloaded. The path is relative to the home "
+"directory of the user. If you also enabled 'Put file to SFTP server', you "
+"can use the same file for both tests."
 msgstr ""
 "Ruta remota incluyendo el nombre del archivo (por ejemplo, 'testfile'). Si "
 "también ha activado la opción \"Poner el archivo en el servidor SFTP\", "
 "puede utilizar el mismo archivo para ambas pruebas."
-
-msgid ""
-"Remote path where to put the file. If you leave this empty, the file will be "
-"placed in the home directory of the user. Example: 'myDirectory' "
-msgstr ""
-"Ruta remota donde colocar el archivo. Si lo deja vacío, el archivo se "
-"colocará en el directorio personal del usuario. Ejemplo: 'miDirectorio' "
 
 msgid "Remote port number"
 msgstr "Número de puerto remoto"
@@ -72016,6 +72035,10 @@ msgstr "Niveles superiores de número de descripciones"
 msgid "Upper levels for number of requests"
 msgstr "Niveles superiores para el número de solicitudes"
 
+#, fuzzy
+msgid "Upper levels for number of signed-in web users"
+msgstr "Niveles superiores para el número de solicitudes"
+
 msgid "Upper levels for open network sockets"
 msgstr "Niveles superiores para las tomas de red abiertas"
 
@@ -73850,9 +73873,6 @@ msgstr "Válido hasta la versión Checkmk"
 
 msgid "Validate server certificate during port query"
 msgstr "Validar el certificado del servidor durante la consulta del puerto"
-
-msgid "Validation errors occurred. Please fix the input fields and try again."
-msgstr ""
 
 msgid "Validity of missing data"
 msgstr "Validez de los datos que faltan"
@@ -81098,6 +81118,21 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#~ msgid ""
+#~ "Local path including filename. Base directory for this relative path will "
+#~ "be the home directory of your site. The testfile will be created if it "
+#~ "does not exist. Examples: 'tmp/testfile' (file will be located in "
+#~ "$OMD_ROOT/tmp/testfile )"
+#~ msgstr ""
+#~ "Ruta local incluyendo el nombre del archivo. El directorio base para esta "
+#~ "ruta relativa será el directorio principal de su sitio. El archivo de "
+#~ "prueba se creará si no existe. Ejemplos: 'tmp/testfile' (el archivo se "
+#~ "ubicará en $OMD_ROOT/tmp/testfile )"
+
+#~ msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
+#~ msgstr ""
+#~ "Ruta local donde colocar el archivo descargado (por ejemplo, 'tmp' )."
 
 #~ msgid "Delete messages"
 #~ msgstr "Borrar mensajes"

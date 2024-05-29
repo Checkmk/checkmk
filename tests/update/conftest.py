@@ -19,6 +19,7 @@ from tests.testlib.utils import (
     current_base_branch_name,
     current_branch_version,
     edition_from_env,
+    repo_path,
     restart_httpd,
     run,
 )
@@ -28,6 +29,7 @@ from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
+RULES_DIR = repo_path() / "tests" / "update" / "rules"
 
 
 def pytest_addoption(parser):
@@ -303,3 +305,22 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
     logger.info('Creating rule "%s"...', ruleset_name)
     site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
     logger.info('Rule "%s" created!', ruleset_name)
+
+
+def inject_rules(site: Site) -> None:
+    try:
+        with open(RULES_DIR / "ignore.txt", "r", encoding="UTF-8") as ignore_list_file:
+            ignore_list = [_ for _ in ignore_list_file.read().splitlines() if _]
+    except FileNotFoundError:
+        ignore_list = []
+    rules_file_names = [
+        _ for _ in os.listdir(RULES_DIR) if _.endswith(".json") and _ not in ignore_list
+    ]
+    for rules_file_name in rules_file_names:
+        rules_file_path = RULES_DIR / rules_file_name
+        with open(rules_file_path, "r", encoding="UTF-8") as ruleset_file:
+            logger.info('Importing rules file "%s"...', rules_file_path)
+            rules = json.load(ruleset_file)
+            for rule in rules:
+                site.openapi.create_rule(value=rule)
+    site.activate_changes_and_wait_for_core_reload()

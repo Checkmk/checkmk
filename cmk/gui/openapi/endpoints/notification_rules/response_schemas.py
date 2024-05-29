@@ -12,6 +12,7 @@ from marshmallow import post_dump, pre_dump
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EmailBodyElementsType,
+    get_builtin_plugin_names,
     GroupbyType,
     IlertPriorityType,
     OpsGeniePriorityStrType,
@@ -310,7 +311,7 @@ class CheckboxServiceEventTypeOutput(CheckboxOutput):
 # Plugin Responses --------------------------------------------------
 class PluginName(BaseSchema):
     plugin_name = fields.String(
-        enum=list(get_args(BuiltInPluginNames)),
+        enum=get_builtin_plugin_names(),
         description="The plug-in name.",
         example="mail",
     )
@@ -984,7 +985,7 @@ class PluginBase(BaseSchema):
     )
 
     def dump(self, obj: dict[str, Any], *args: Any, **kwargs: Any) -> Mapping:
-        if obj["plugin_params"]["plugin_name"] not in list(get_args(BuiltInPluginNames)):
+        if obj["plugin_params"]["plugin_name"] not in get_builtin_plugin_names():
             return obj
 
         schema_mapper: Mapping[BuiltInPluginNames, type[BaseSchema]] = {

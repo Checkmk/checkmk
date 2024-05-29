@@ -10,9 +10,9 @@ from marshmallow import post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.notify_types import (
-    BuiltInPluginNames,
     CaseStateStr,
     EmailBodyElementsType,
+    get_builtin_plugin_names,
     GroupbyType,
     IlertPriorityType,
     IncidentStateStr,
@@ -781,7 +781,7 @@ class CheckboxEventConsoleAlerts(Checkbox):
 
 class PluginName(BaseSchema):
     plugin_name = fields.String(
-        enum=list(get_args(BuiltInPluginNames)),
+        enum=get_builtin_plugin_names(),
         required=True,
         description="The plug-in name.",
         example="mail",

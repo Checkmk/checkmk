@@ -2461,6 +2461,7 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
             help=_(
                 "This options enables automatic locking of user accounts after "
                 "the configured number of consecutive invalid login attempts. "
+                "These attempts include failed Two Factor authentication events. "
                 "Once the account is locked only an admin user can unlock it. "
                 "Beware: Also the admin users will be locked that way. You need "
                 "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "

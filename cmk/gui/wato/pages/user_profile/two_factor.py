@@ -10,6 +10,7 @@ import http.client as http_client
 import json
 import time
 from base64 import b32decode, b32encode
+from http import HTTPStatus
 from typing import Literal
 from urllib import parse
 from uuid import uuid4
@@ -32,6 +33,7 @@ from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site
 from cmk.utils.totp import TOTP, TotpVersion
+from cmk.utils.user import UserId
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
@@ -68,8 +70,10 @@ from cmk.gui.userdb import (
     is_two_factor_login_enabled,
     load_two_factor_credentials,
     make_two_factor_backup_codes,
+    on_failed_login,
+    user_locked,
 )
-from cmk.gui.userdb.store import save_two_factor_credentials
+from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
@@ -123,6 +127,21 @@ def log_event_auth(two_factor_method: str) -> None:
             remote_ip=request.remote_ip,
         )
     )
+
+
+def handle_failed_auth(user_id: UserId) -> None:
+    on_failed_login(user_id, datetime.datetime.now())
+    if user_locked(user_id):
+        session.invalidate()
+        session.persist()
+        raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
+
+
+def handle_success_auth(user_id: UserId) -> None:
+    origtarget = request.get_url_input("_origtarget", "index.py")
+    session.session_info.two_factor_completed = True
+    save_custom_attr(user_id, "num_failed_logins", 0)
+    raise HTTPRedirect(origtarget)
 
 
 overview_page_name: str = "user_two_factor_overview"
@@ -914,7 +933,6 @@ class UserLoginTwoFactor(Page):
         cls, available_methods: set[str], credentials: TwoFactorCredentials
     ) -> None:
         assert user.id is not None
-        origtarget = request.get_url_input("_origtarget", "index.py")
         if "totp_credentials" in available_methods:
             if totp_code := request.get_validated_type_input(Password, "_totp_code"):
                 totp_credential = credentials["totp_credentials"]
@@ -924,17 +942,19 @@ class UserLoginTwoFactor(Page):
                         totp_code.raw_bytes.decode(),
                         otp.calculate_generation(datetime.datetime.now()),
                     ):
-                        session.session_info.two_factor_completed = True
-                        raise HTTPRedirect(origtarget)
+                        handle_success_auth(user.id)
                 log_event_auth("Authenticator application (TOTP)")
+                handle_failed_auth(user.id)
+                raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
         if "backup_codes" in available_methods:
             if backup_code := request.get_validated_type_input(Password, "_backup_code"):
                 if is_two_factor_backup_code_valid(user.id, backup_code):
                     log_event_usermanagement(TwoFactorEventType.backup_used)
-                    session.session_info.two_factor_completed = True
-                    raise HTTPRedirect(origtarget)
+                    handle_success_auth(user.id)
                 log_event_auth("Backup code")
+                handle_failed_auth(user.id)
+                raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
     def page(self) -> None:
         assert user.id is not None
@@ -1037,8 +1057,9 @@ class UserWebAuthnLoginComplete(JsonPage):
             )
         except:
             log_event_auth("Webauthn")
+            handle_failed_auth(user.id)
             raise
 
         session.session_info.webauthn_action_state = None
-        session.session_info.two_factor_completed = True
+        handle_success_auth(user.id)
         return {"status": "OK"}

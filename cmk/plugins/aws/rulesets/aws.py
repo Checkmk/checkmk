@@ -13,7 +13,7 @@ from cmk.plugins.aws.ruleset_helper import (
 
 try:
     # Ignore import-untyped for non-CCE CI stages
-    from cmk.plugins.aws.rulesets.cce import (  # type: ignore[import-untyped]
+    from cmk.plugins.aws.rulesets.cce import (  # type: ignore[import-untyped,unused-ignore]
         edition_specific_global_services,
         edition_specific_regional_services,
         handle_edition_switch,

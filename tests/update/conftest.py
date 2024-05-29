@@ -266,6 +266,7 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     if not version_from_env().is_saas_edition():
         # 'datasource_programs' rule is not supported in the SaaS edition
         inject_dumps(test_site, DUMPS_DIR)
+        inject_rules(test_site)
 
     yield test_site, disable_interactive_mode
     logger.info("Removing test-site...")

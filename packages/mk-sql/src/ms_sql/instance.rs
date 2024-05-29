@@ -326,6 +326,11 @@ impl SqlInstance {
         log::trace!("{:?} @ {:?}", self, endpoint);
         let body = match self.create_client(endpoint, None).await {
             Ok(mut client) => {
+                let real_name = obtain_instance_name(&mut client)
+                    .await
+                    .ok()
+                    .unwrap_or_default()
+                    .unwrap_or(InstanceName::from("???".to_string()));
                 log::info!(
                     "PROCESSING instance '{:?}' by '{}' sql name: '{}'",
                     self.full_name(),
@@ -334,14 +339,21 @@ impl SqlInstance {
                         .ok()
                         .unwrap_or_default()
                         .unwrap_or("???".to_string()),
-                    obtain_instance_name(&mut client)
-                        .await
-                        .ok()
-                        .unwrap_or_default()
-                        .unwrap_or(InstanceName::from("???".to_string()))
+                    real_name
                 );
-                self._generate_sections(&mut client, endpoint, sections)
-                    .await
+                if real_name.to_string().to_uppercase() != self.name.to_string().to_uppercase() {
+                    let error_text = format!(
+                        "Instance name mismatch: expected '{}', got '{}'",
+                        self.name, real_name
+                    );
+                    log::error!("{}", error_text);
+                    let instance_section = Section::make_instance_section(); // this is important section always present
+                    instance_section.to_plain_header()
+                        + &self.generate_bad_state_entry(instance_section.sep(), &error_text)
+                } else {
+                    self._generate_sections(&mut client, endpoint, sections)
+                        .await
+                }
             }
             Err(err) => {
                 log::warn!("Can't access {} instance with err {err}\n", self.id);

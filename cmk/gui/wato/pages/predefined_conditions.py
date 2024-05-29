@@ -8,7 +8,6 @@ from collections.abc import Collection
 
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import GroupSpec
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -18,6 +17,7 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Alternative,
+    DictionaryEntry,
     DropdownChoice,
     DualListChoice,
     FixedValue,
@@ -25,11 +25,12 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
-from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionSpec, PredefinedConditionStore
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, RuleConditions, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
 
@@ -72,24 +73,24 @@ def vs_conditions() -> Transform:
     )
 
 
-class PredefinedConditionModeType(SimpleModeType):
-    def type_name(self):
+class PredefinedConditionModeType(SimpleModeType[PredefinedConditionSpec]):
+    def type_name(self) -> str:
         return "predefined_condition"
 
-    def name_singular(self):
+    def name_singular(self) -> str:
         return _("predefined condition")
 
     def is_site_specific(self) -> bool:
         return False
 
-    def can_be_disabled(self):
+    def can_be_disabled(self) -> bool:
         return False
 
-    def affected_config_domains(self):
+    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
         return [ConfigDomainCore]
 
 
-class ModePredefinedConditions(SimpleListMode[GroupSpec]):
+class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
     @classmethod
     def name(cls) -> str:
         return "predefined_conditions"
@@ -108,10 +109,10 @@ class ModePredefinedConditions(SimpleListMode[GroupSpec]):
     def title(self) -> str:
         return _("Predefined conditions")
 
-    def _table_title(self):
+    def _table_title(self) -> str:
         return _("Predefined conditions")
 
-    def _validate_deletion(self, ident, entry):
+    def _validate_deletion(self, ident: str, entry: PredefinedConditionSpec) -> None:
         if {
             name: ruleset
             for name, ruleset in AllRulesets.load_all_rulesets().get_rulesets().items()
@@ -134,7 +135,13 @@ class ModePredefinedConditions(SimpleListMode[GroupSpec]):
         )
         super().page()
 
-    def _show_action_cell(self, nr: int, table: Table, ident: str, entry: GroupSpec) -> None:
+    def _show_action_cell(
+        self,
+        nr: int,
+        table: Table,
+        ident: str,
+        entry: PredefinedConditionSpec,
+    ) -> None:
         super()._show_action_cell(nr, table, ident, entry)
 
         html.icon_button(
@@ -154,7 +161,7 @@ class ModePredefinedConditions(SimpleListMode[GroupSpec]):
             ],
         )
 
-    def _show_entry_cells(self, table: Table, ident: str, entry: GroupSpec) -> None:
+    def _show_entry_cells(self, table: Table, ident: str, entry: PredefinedConditionSpec) -> None:
         table.cell(_("Title"), entry["title"])
 
         table.cell(_("Conditions"))
@@ -190,7 +197,7 @@ class ModePredefinedConditions(SimpleListMode[GroupSpec]):
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
 
-class ModeEditPredefinedCondition(SimpleEditMode[GroupSpec]):
+class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
     @classmethod
     def name(cls) -> str:
         return "edit_predefined_condition"
@@ -209,7 +216,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[GroupSpec]):
             store=PredefinedConditionStore(),
         )
 
-    def _vs_individual_elements(self):
+    def _vs_individual_elements(self) -> list[DictionaryEntry]:
         if user.may("wato.edit_all_predefined_conditions"):
             admin_element: list[ValueSpec] = [
                 FixedValue(
@@ -269,7 +276,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[GroupSpec]):
             ),
         ]
 
-    def _save(self, entries: dict[str, GroupSpec]) -> None:
+    def _save(self, entries: dict[str, PredefinedConditionSpec]) -> None:
         # In case it already existed before, remember the previous path
         old_entries = self._store.load_for_reading()
         old_path = None
@@ -325,7 +332,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[GroupSpec]):
 
         rulesets.save_folder()
 
-    def _contact_group_choices(self, only_own=False):
+    def _contact_group_choices(self, only_own: bool = False) -> list[tuple[str, str]]:
         contact_groups = load_contact_group_information()
 
         if only_own:

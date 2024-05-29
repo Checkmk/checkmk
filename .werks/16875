@@ -1,0 +1,12 @@
+Title: Nutanix agent: introduce option to skip TLS verification and resolve broken request helper
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1717422187
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Prior to this werk, it was not possible for the user to skip the TLS certificate verification
+which subsequently broke the agent for some. This werk introduces the option to toggle the
+verification.

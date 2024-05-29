@@ -9,7 +9,7 @@ from typing import Any, Mapping, Optional, Sequence
 def agent_prism_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[str]:
-    return [
+    args = [
         "--server",
         ipaddress or hostname,
         "--username",
@@ -18,6 +18,10 @@ def agent_prism_arguments(
         passwordstore_get_cmdline("%s", params["password"]),
         *(["--port", "%s" % params["port"]] if "port" in params else []),
     ]
+
+    if params.get("no_cert_check"):
+        args.append("--no-cert-check")
+    return args
 
 
 special_agent_info["prism"] = agent_prism_arguments

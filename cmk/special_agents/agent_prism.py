@@ -3,15 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import csv
 import logging
 import sys
 from collections.abc import Generator, Sequence
 from typing import Any
 
+import requests
+
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.utils.request_helper import HTTPSAuthRequester, Requester
 
 SectionLine = tuple[Any, ...]
 
@@ -51,14 +53,17 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument(
         "--password", type=str, required=True, metavar="PASSWORD", help="password for that account"
     )
+    parser.add_argument(
+        "--no-cert-check", action="store_true", help="Do not verify TLS certificate"
+    )
 
     return parser.parse_args(argv)
 
 
 # TODO: get rid of CSV and write JSON
-def output_containers(requester: Requester) -> None:
+def output_containers(session: requests.Session, url: str, timeout: int) -> None:
     LOGGING.debug("do request..")
-    obj = requester.get("containers")
+    obj = session.get(url + "/containers", timeout=timeout).json()
     LOGGING.debug("got %d containers", len(obj["entities"]))
 
     write_title("containers")
@@ -74,14 +79,17 @@ def output_containers(requester: Requester) -> None:
         )
 
 
-def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
+def output_alerts(
+    session: requests.Session, url: str, timeout: int
+) -> Generator[SectionLine, None, None]:
     needed_context_keys = {"vm_type"}
 
     LOGGING.debug("do request..")
-    obj = requester.get(
-        "alerts",
-        parameters={"resolved": "false", "acknowledged": "false"},
-    )
+    obj = session.get(
+        url + "/alerts",
+        params={"resolved": "false", "acknowledged": "false"},
+        timeout=timeout,
+    ).json()
     LOGGING.debug("got %d alerts", len(obj["entities"]))
 
     yield ("timestamp", "severity", "message", "context")
@@ -111,9 +119,9 @@ def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
 
 
 # TODO: get rid of CSV and write JSON
-def output_cluster(requester: Requester) -> None:
+def output_cluster(session: requests.Session, url: str, timeout: int) -> None:
     LOGGING.debug("do request..")
-    obj = requester.get("cluster")
+    obj = session.get(url + "/cluster", timeout=timeout).json()
     LOGGING.debug("got %d keys", len(obj.keys()))
 
     write_title("info")
@@ -123,9 +131,9 @@ def output_cluster(requester: Requester) -> None:
 
 
 # TODO: get rid of CSV and write JSON
-def output_storage_pools(requester: Requester) -> None:
+def output_storage_pools(session: requests.Session, url: str, timeout: int) -> None:
     LOGGING.debug("do request..")
-    obj = requester.get("storage_pools")
+    obj = session.get(url + "/storage_pools", timeout=timeout).json()
     LOGGING.debug("got %d entities", len(obj["entities"]))
 
     write_title("storage_pools")
@@ -146,26 +154,31 @@ def agent_prism_main(args: Args) -> int:
     """Establish a connection to a Prism server and process containers, alerts, clusters and
     storage_pools"""
     LOGGING.info("setup HTTPS connection..")
-    requester = HTTPSAuthRequester(
-        args.server,
-        args.port,
-        "PrismGateway/services/rest/v1",
-        args.username,
-        args.password,
+
+    base_url_v1 = f"https://{args.server}:{args.port}/PrismGateway/services/rest/v1"
+    session = requests.session()
+    session.headers.update(
+        {
+            "Authorization": "Basic "
+            + base64.b64encode(f"{args.username}:{args.password}".encode()).decode()
+        }
+    )
+    session.verify = (
+        False if args.no_cert_check else True  # pylint: disable=simplifiable-if-expression
     )
 
     LOGGING.info("fetch and write container info..")
-    output_containers(requester)
+    output_containers(session, base_url_v1, timeout=args.timeout)
 
     LOGGING.info("fetch and write alerts..")
     with SectionWriter("prism_alerts") as writer:
-        writer.append_json(output_alerts(requester))
+        writer.append_json(output_alerts(session, base_url_v1, timeout=args.timeout))
 
     LOGGING.info("fetch and write cluster info..")
-    output_cluster(requester)
+    output_cluster(session, base_url_v1, timeout=args.timeout)
 
     LOGGING.info("fetch and write storage_pools..")
-    output_storage_pools(requester)
+    output_storage_pools(session, base_url_v1, timeout=args.timeout)
 
     LOGGING.info("all done. bye.")
 

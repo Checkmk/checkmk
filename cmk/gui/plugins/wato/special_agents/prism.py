@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput
+from cmk.gui.valuespec import Dictionary, FixedValue, Integer, TextInput
 
 
 def _valuespec_special_agents_prism():
@@ -37,8 +37,16 @@ def _valuespec_special_agents_prism():
                 "password",
                 MigrateToIndividualOrStoredPassword(title=_("Password for this user"), size=35),
             ),
+            (
+                "no_cert_check",
+                FixedValue(
+                    value=True,
+                    title=_("Disable SSL certificate validation"),
+                    totext=_("SSL certificate validation is disabled"),
+                ),
+            ),
         ],
-        optional_keys=["port"],
+        optional_keys=["port", "no_cert_check"],
     )
 
 

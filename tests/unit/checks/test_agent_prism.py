@@ -36,7 +36,12 @@ pytestmark = pytest.mark.checks
             id="explicit password and port",
         ),
         pytest.param(
-            {"username": "userid", "password": ("store", "prism"), "port": 9440},
+            {
+                "username": "userid",
+                "password": ("store", "prism"),
+                "port": 9440,
+                "no_cert_check": True,
+            },
             [
                 "--server",
                 "address",
@@ -46,6 +51,7 @@ pytestmark = pytest.mark.checks
                 ("store", "prism", "%s"),
                 "--port",
                 "9440",
+                "--no-cert-check",
             ],
             id="password from store and port",
         ),

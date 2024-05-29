@@ -117,29 +117,6 @@ NotificationType = Literal[
 ]
 NotificationContext = NewType("NotificationContext", dict[str, str])
 
-BuiltInPluginNames = Literal[
-    "asciimail",
-    "cisco_webex_teams",
-    "mkeventd",
-    "mail",
-    "ilert",
-    "jira_issues",
-    "opsgenie_issues",
-    "pagerduty",
-    "pushover",
-    "servicenow",
-    "signl4",
-    "slack",
-    "sms_api",
-    "sms",
-    "spectrum",
-    "victorops",
-    "msteams",
-]
-CustomPluginName = NewType("CustomPluginName", str)
-
-NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
-
 MgmntPriorityType = Literal[
     "low",
     "moderate",
@@ -685,23 +662,59 @@ class SplunkPluginModel(TypedDict, total=False):
     url_prefix: URLPrefix
 
 
-CiscoNotify = tuple[Literal["cisco_webex_teams"], CiscoPluginModel | None]
-MkeventdNotify = tuple[Literal["mkeventd"], MKEventdPluginModel | None]
-AsciiMailNotify = tuple[Literal["asciimail"], AsciiMailPluginModel | None]
-MailNotify = tuple[Literal["mail"], MailPluginModel | None]
-MSteamsNotify = tuple[Literal["msteams"], MicrosoftTeamsPluginModel | None]
-IlertNotify = tuple[Literal["ilert"], IlertPluginModel | None]
-JiraNotify = tuple[Literal["jira_issues"], JiraIssuePluginModel | None]
-OpsgenieNotify = tuple[Literal["opsgenie_issues"], OpsGenieIssuesPluginModel | None]
-PagerdutyNotify = tuple[Literal["pagerduty"], PagerDutyPluginModel | None]
-PushoverNotify = tuple[Literal["pushover"], PushoverPluginModel | None]
-ServiceNowNotify = tuple[Literal["servicenow"], ServiceNowPluginModel | None]
-SignL4Notify = tuple[Literal["signl4"], SignL4PluginModel | None]
-SlackNotify = tuple[Literal["slack"], SlackPluginModel | None]
-SmsApiNotify = tuple[Literal["sms_api"], SmsApiPluginModel | None]
-SmsNotify = tuple[Literal["sms"], list[str] | None]
-SpectrumNotify = tuple[Literal["spectrum"], SpectrumPluginModel | None]
-SplunkNotify = tuple[Literal["victorops"], SplunkPluginModel | None]
+CiscoPluginName = Literal["cisco_webex_teams"]
+CiscoNotify = tuple[CiscoPluginName, CiscoPluginModel | None]
+
+MkeventdPluginName = Literal["mkeventd"]
+MkeventdNotify = tuple[MkeventdPluginName, MKEventdPluginModel | None]
+
+AsciiMailPluginName = Literal["asciimail"]
+AsciiMailNotify = tuple[AsciiMailPluginName, AsciiMailPluginModel | None]
+
+MailPluginName = Literal["mail"]
+MailNotify = tuple[MailPluginName, MailPluginModel | None]
+
+MSTeamsPluginName = Literal["msteams"]
+MSteamsNotify = tuple[MSTeamsPluginName, MicrosoftTeamsPluginModel | None]
+
+IlertPluginName = Literal["ilert"]
+IlertNotify = tuple[IlertPluginName, IlertPluginModel | None]
+
+JiraPluginName = Literal["jira_issues"]
+JiraNotify = tuple[JiraPluginName, JiraIssuePluginModel | None]
+
+OpsGeniePluginName = Literal["opsgenie_issues"]
+OpsgenieNotify = tuple[OpsGeniePluginName, OpsGenieIssuesPluginModel | None]
+
+PagerdutyPluginName = Literal["pagerduty"]
+PagerdutyNotify = tuple[PagerdutyPluginName, PagerDutyPluginModel | None]
+
+PushoverPluginName = Literal["pushover"]
+PushoverNotify = tuple[PushoverPluginName, PushoverPluginModel | None]
+
+ServiceNowPluginName = Literal["servicenow"]
+ServiceNowNotify = tuple[ServiceNowPluginName, ServiceNowPluginModel | None]
+
+Signl4PluginName = Literal["signl4"]
+SignL4Notify = tuple[Signl4PluginName, SignL4PluginModel | None]
+
+SlackPluginName = Literal["slack"]
+SlackNotify = tuple[SlackPluginName, SlackPluginModel | None]
+
+SmsApiPluginName = Literal["sms_api"]
+SmsApiNotify = tuple[SmsApiPluginName, SmsApiPluginModel | None]
+
+SmsPluginName = Literal["sms"]
+SmsNotify = tuple[SmsPluginName, list[str] | None]
+
+SpectrumPluginName = Literal["spectrum"]
+SpectrumNotify = tuple[SpectrumPluginName, SpectrumPluginModel | None]
+
+SplunkPluginName = Literal["victorops"]
+SplunkNotify = tuple[SplunkPluginName, SplunkPluginModel | None]
+
+CustomPluginName = NewType("CustomPluginName", str)
+CustomPluginType = tuple[CustomPluginName, dict[str, Any] | list[str] | None]
 
 KnownPlugins = (
     MailNotify
@@ -723,13 +736,37 @@ KnownPlugins = (
     | MSteamsNotify
 )
 
-CustomPluginType = tuple[CustomPluginName, dict[str, Any] | list[str] | None]
+BuiltInPluginNames = (
+    CiscoPluginName
+    | MkeventdPluginName
+    | AsciiMailPluginName
+    | MailPluginName
+    | MSTeamsPluginName
+    | IlertPluginName
+    | JiraPluginName
+    | OpsGeniePluginName
+    | PagerdutyPluginName
+    | PushoverPluginName
+    | ServiceNowPluginName
+    | Signl4PluginName
+    | SlackPluginName
+    | SmsApiPluginName
+    | SmsPluginName
+    | SpectrumPluginName
+    | SplunkPluginName
+)
 
+
+NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
 NotifyPlugin = KnownPlugins | CustomPluginType
 
 
+def get_builtin_plugin_names() -> list[BuiltInPluginNames]:
+    return [get_args(name)[0] for name in get_args(BuiltInPluginNames)]
+
+
 def is_known_plugin(notify_plugin: NotifyPlugin) -> TypeGuard[KnownPlugins]:
-    return notify_plugin[0] in get_args(BuiltInPluginNames)
+    return notify_plugin[0] in get_builtin_plugin_names()
 
 
 NotifyPluginParamsList = list[str]

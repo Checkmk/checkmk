@@ -6,13 +6,14 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Literal, TypedDict
+from typing import Any, cast, Literal, Required, TypedDict
 
 from cmk.utils.notify_types import (
     AlwaysBulkParameters,
-    BuiltInPluginNames,
+    AsciiMailPluginName,
     CaseState,
     CaseStateStr,
+    CiscoPluginName,
     ConditionEventConsoleAlertsType,
     CustomPluginName,
     EmailBodyElementsType,
@@ -21,29 +22,44 @@ from cmk.utils.notify_types import (
     GroupbyType,
     HostEventType,
     IlertAPIKey,
+    IlertPluginName,
     IncidentState,
     IncidentStateStr,
     is_always_bulk,
     is_auto_urlprefix,
     is_manual_urlprefix,
     is_timeperiod_bulk,
+    JiraPluginName,
+    MailPluginName,
     MatchRegex,
     MgmntPriorityType,
     MgmntUrgencyType,
+    MkeventdPluginName,
+    MSTeamsPluginName,
     NotifyBulkType,
+    OpsGeniePluginName,
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
+    PagerdutyPluginName,
     PasswordType,
     PluginOptions,
     ProxyUrl,
+    PushoverPluginName,
     PushOverPriorityNumType,
     PushOverPriorityStringType,
     RegexModes,
     RoutingKeyType,
     ServiceEventType,
+    ServiceNowPluginName,
+    Signl4PluginName,
+    SlackPluginName,
+    SmsApiPluginName,
+    SmsPluginName,
     SMTPAuthAttrs,
     SortOrder,
     SoundType,
+    SpectrumPluginName,
+    SplunkPluginName,
     SyncDeliverySMTP,
     SysLogFacilityIntType,
     SysLogFacilityStrType,
@@ -2311,11 +2327,8 @@ class WebhookURLOption:
 # ----------------------------------------------------------------
 
 
-class APINotifyPluginParams(TypedDict):
-    plugin_name: BuiltInPluginNames
-
-
-class API_AsciiMailData(APINotifyPluginParams, total=False):
+class API_AsciiMailData(TypedDict, total=False):
+    plugin_name: Required[AsciiMailPluginName]
     from_details: FromAndToEmailFieldsAPIValueType
     reply_to: FromAndToEmailFieldsAPIValueType
     subject_for_host_notifications: CheckboxStrAPIType
@@ -2327,7 +2340,8 @@ class API_AsciiMailData(APINotifyPluginParams, total=False):
     body_tail_for_service_notifications: CheckboxStrAPIType
 
 
-class API_HTMLMailData(APINotifyPluginParams, total=False):
+class API_HTMLMailData(TypedDict, total=False):
+    plugin_name: Required[MailPluginName]
     from_details: FromAndToEmailFieldsAPIValueType
     reply_to: FromAndToEmailFieldsAPIValueType
     subject_for_host_notifications: CheckboxStrAPIType
@@ -2343,19 +2357,22 @@ class API_HTMLMailData(APINotifyPluginParams, total=False):
     bulk_notifications_with_graphs: CheckboxIntAPIType
 
 
-class API_CiscoData(APINotifyPluginParams, total=False):
+class API_CiscoData(TypedDict, total=False):
+    plugin_name: Required[CiscoPluginName]
     webhook_url: API_WebhookURL
     http_proxy: HttpProxyAPIValueType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     disable_ssl_cert_verification: CheckboxStateType
 
 
-class API_MKEventData(APINotifyPluginParams, total=False):
+class API_MKEventData(TypedDict, total=False):
+    plugin_name: Required[MkeventdPluginName]
     syslog_facility_to_use: SysLogFacilityAPIValueType
     ip_address_of_remote_event_console: CheckboxStrAPIType
 
 
-class API_IlertData(APINotifyPluginParams, total=False):
+class API_IlertData(TypedDict, total=False):
+    plugin_name: Required[IlertPluginName]
     api_key: APIKey
     disable_ssl_cert_verification: CheckboxStateType
     notification_priority: Literal["HIGH", "LOW"]
@@ -2365,7 +2382,8 @@ class API_IlertData(APINotifyPluginParams, total=False):
     http_proxy: HttpProxyAPIValueType
 
 
-class API_JiraData(APINotifyPluginParams, total=False):
+class API_JiraData(TypedDict, total=False):
+    plugin_name: Required[JiraPluginName]
     jira_url: str
     disable_ssl_cert_verification: CheckboxStateType
     username: str
@@ -2384,7 +2402,8 @@ class API_JiraData(APINotifyPluginParams, total=False):
     optional_timeout: CheckboxStrAPIType
 
 
-class API_OpsGenieIssueData(APINotifyPluginParams, total=False):
+class API_OpsGenieIssueData(TypedDict, total=False):
+    plugin_name: Required[OpsGeniePluginName]
     api_key: APIKey
     domain: CheckboxStrAPIType
     http_proxy: HttpProxyAPIValueType
@@ -2403,14 +2422,16 @@ class API_OpsGenieIssueData(APINotifyPluginParams, total=False):
     entity: CheckboxStrAPIType
 
 
-class API_PagerDutyData(APINotifyPluginParams, total=False):
+class API_PagerDutyData(TypedDict, total=False):
+    plugin_name: Required[PagerdutyPluginName]
     integration_key: APIKey
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
 
 
-class API_PushOverData(APINotifyPluginParams, total=False):
+class API_PushOverData(TypedDict, total=False):
+    plugin_name: Required[PushoverPluginName]
     api_key: str
     user_group_key: str
     url_prefix_for_links_to_checkmk: CheckboxStrAPIType
@@ -2419,7 +2440,8 @@ class API_PushOverData(APINotifyPluginParams, total=False):
     sound: CheckboxPushoverSoundAPIType
 
 
-class API_ServiceNowData(APINotifyPluginParams, total=False):
+class API_ServiceNowData(TypedDict, total=False):
+    plugin_name: Required[ServiceNowPluginName]
     servicenow_url: str
     http_proxy: HttpProxyAPIValueType
     username: str
@@ -2429,21 +2451,24 @@ class API_ServiceNowData(APINotifyPluginParams, total=False):
     management_type: MgmtTypeAPI
 
 
-class API_SignL4Data(APINotifyPluginParams, total=False):
+class API_SignL4Data(TypedDict, total=False):
+    plugin_name: Required[Signl4PluginName]
     team_secret: APISecret
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
 
 
-class API_SlackData(APINotifyPluginParams, total=False):
+class API_SlackData(TypedDict, total=False):
+    plugin_name: Required[SlackPluginName]
     webhook_url: API_WebhookURL
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
 
 
-class API_SmsAPIData(APINotifyPluginParams, total=False):
+class API_SmsAPIData(TypedDict, total=False):
+    plugin_name: Required[SmsApiPluginName]
     modem_type: Literal["trb140"]
     modem_url: str
     disable_ssl_cert_verification: CheckboxStateType
@@ -2453,24 +2478,28 @@ class API_SmsAPIData(APINotifyPluginParams, total=False):
     timeout: str
 
 
-class API_SmsData(APINotifyPluginParams, total=False):
+class API_SmsData(TypedDict, total=False):
+    plugin_name: Required[SmsPluginName]
     params: list[str]
 
 
-class API_SpectrumData(APINotifyPluginParams, total=False):
+class API_SpectrumData(TypedDict, total=False):
+    plugin_name: Required[SpectrumPluginName]
     base_oid: str
     destination_ip: str
     snmp_community: str
 
 
-class API_VictorOpsData(APINotifyPluginParams, total=False):
+class API_VictorOpsData(TypedDict, total=False):
+    plugin_name: Required[SplunkPluginName]
     splunk_on_call_rest_endpoint: API_WebhookURL
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
 
 
-class API_MSTeamsData(APINotifyPluginParams, total=False):
+class API_MSTeamsData(TypedDict, total=False):
+    plugin_name: Required[MSTeamsPluginName]
     webhook_url: API_WebhookURL
     http_proxy: HttpProxyAPIValueType
     host_title: CheckboxStrAPIType

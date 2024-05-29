@@ -9,26 +9,43 @@ from typing import Any, cast, ClassVar, Literal, Protocol
 
 from cmk.utils.notify_types import (
     AsciiMailPluginModel,
+    AsciiMailPluginName,
     CiscoPluginModel,
+    CiscoPluginName,
     CustomPluginName,
     CustomPluginType,
     IlertPluginModel,
+    IlertPluginName,
     is_known_plugin,
     JiraIssuePluginModel,
+    JiraPluginName,
     MailPluginModel,
+    MailPluginName,
     MicrosoftTeamsPluginModel,
     MKEventdPluginModel,
+    MkeventdPluginName,
+    MSTeamsPluginName,
     NotifyPlugin,
     OpsGenieIssuesPluginModel,
+    OpsGeniePluginName,
     PagerDutyPluginModel,
+    PagerdutyPluginName,
     PluginOptions,
     PushoverPluginModel,
+    PushoverPluginName,
     ServiceNowPluginModel,
+    ServiceNowPluginName,
     SignL4PluginModel,
+    Signl4PluginName,
     SlackPluginModel,
+    SlackPluginName,
     SmsApiPluginModel,
+    SmsApiPluginName,
+    SmsPluginName,
     SpectrumPluginModel,
+    SpectrumPluginName,
     SplunkPluginModel,
+    SplunkPluginName,
 )
 
 from cmk.gui.rest_api_types.notifications_rule_types import (
@@ -93,7 +110,7 @@ class PluginAdapter(Protocol):
 
 @dataclass
 class AsciiMailPlugin:
-    plugin_name: ClassVar[Literal["asciimail"]] = "asciimail"
+    plugin_name: ClassVar[AsciiMailPluginName] = "asciimail"
     option: PluginOptions = PluginOptions.CANCEL
     from_details: FromAndToEmailFields = field(default_factory=FromAndToEmailFields)
     reply_to: FromAndToEmailFields = field(default_factory=FromAndToEmailFields)
@@ -224,7 +241,7 @@ class AsciiMailPlugin:
 
 @dataclass
 class HTMLMailPlugin:
-    plugin_name: ClassVar[Literal["mail"]] = "mail"
+    plugin_name: ClassVar[MailPluginName] = "mail"
     option: PluginOptions = PluginOptions.CANCEL
     from_details: FromAndToEmailFields = field(
         default_factory=FromAndToEmailFields,
@@ -408,7 +425,7 @@ class HTMLMailPlugin:
 
 @dataclass
 class CiscoWebexPlugin:
-    plugin_name: ClassVar[Literal["cisco_webex_teams"]] = "cisco_webex_teams"
+    plugin_name: ClassVar[CiscoPluginName] = "cisco_webex_teams"
     option: PluginOptions = PluginOptions.CANCEL
     webhook_url: WebhookURLOption = field(default_factory=WebhookURLOption)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
@@ -484,7 +501,7 @@ class CiscoWebexPlugin:
 
 @dataclass
 class MkEventDPlugin:
-    plugin_name: ClassVar[Literal["mkeventd"]] = "mkeventd"
+    plugin_name: ClassVar[MkeventdPluginName] = "mkeventd"
     option: PluginOptions = PluginOptions.CANCEL
     syslog_facility_to_use: CheckboxSysLogFacility = field(default_factory=CheckboxSysLogFacility)
     ip_address_of_remote_ec: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
@@ -549,7 +566,7 @@ class MkEventDPlugin:
 
 @dataclass
 class IlertPlugin:
-    plugin_name: ClassVar[Literal["ilert"]] = "ilert"
+    plugin_name: ClassVar[IlertPluginName] = "ilert"
     option: PluginOptions = PluginOptions.CANCEL
     ilert_key: APIIlertKeyOption = field(default_factory=APIIlertKeyOption)
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
@@ -638,7 +655,7 @@ class IlertPlugin:
 
 @dataclass
 class JiraIssuePlugin:
-    plugin_name: ClassVar[Literal["jira_issues"]] = "jira_issues"
+    plugin_name: ClassVar[JiraPluginName] = "jira_issues"
     option: PluginOptions = PluginOptions.CANCEL
     url: str | None = None
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
@@ -784,7 +801,7 @@ class JiraIssuePlugin:
 
 @dataclass
 class OpsGenieIssuePlugin:
-    plugin_name: ClassVar[Literal["opsgenie_issues"]] = "opsgenie_issues"
+    plugin_name: ClassVar[OpsGeniePluginName] = "opsgenie_issues"
     option: PluginOptions = PluginOptions.CANCEL
     api_key: APIOpenGenieKeyOption = field(default_factory=APIOpenGenieKeyOption)
     domain: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
@@ -945,7 +962,7 @@ class OpsGenieIssuePlugin:
 
 @dataclass
 class PagerDutyPlugin:
-    plugin_name: ClassVar[Literal["pagerduty"]] = "pagerduty"
+    plugin_name: ClassVar[PagerdutyPluginName] = "pagerduty"
     option: PluginOptions = PluginOptions.CANCEL
     integration_key: APIPagerDutyKeyOption = field(default_factory=APIPagerDutyKeyOption)
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
@@ -1026,7 +1043,7 @@ class PagerDutyPlugin:
 
 @dataclass
 class PushOverPlugin:
-    plugin_name: ClassVar[Literal["pushover"]] = "pushover"
+    plugin_name: ClassVar[PushoverPluginName] = "pushover"
     option: PluginOptions = PluginOptions.CANCEL
     api_key: str | None = None
     user_group_key: str | None = None
@@ -1114,7 +1131,7 @@ class PushOverPlugin:
 
 @dataclass
 class ServiceNowPlugin:
-    plugin_name: ClassVar[Literal["servicenow"]] = "servicenow"
+    plugin_name: ClassVar[ServiceNowPluginName] = "servicenow"
     option: PluginOptions = PluginOptions.CANCEL
     url: str | None = None
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
@@ -1201,7 +1218,7 @@ class ServiceNowPlugin:
 
 @dataclass
 class SignL4Plugin:
-    plugin_name: ClassVar[Literal["signl4"]] = "signl4"
+    plugin_name: ClassVar[Signl4PluginName] = "signl4"
     option: PluginOptions = PluginOptions.CANCEL
     team_secret: APISignL4SecretOption = field(default_factory=APISignL4SecretOption)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
@@ -1277,7 +1294,7 @@ class SignL4Plugin:
 
 @dataclass
 class SlackPlugin:
-    plugin_name: ClassVar[Literal["slack"]] = "slack"
+    plugin_name: ClassVar[SlackPluginName] = "slack"
     option: PluginOptions = PluginOptions.CANCEL
     webhook_url: WebhookURLOption = field(default_factory=WebhookURLOption)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
@@ -1355,7 +1372,7 @@ class SlackPlugin:
 
 @dataclass
 class SMSAPIPlugin:
-    plugin_name: ClassVar[Literal["sms_api"]] = "sms_api"
+    plugin_name: ClassVar[SmsApiPluginName] = "sms_api"
     option: PluginOptions = PluginOptions.CANCEL
     modem_type: Literal["trb140"] = "trb140"  # Teltonika-TRB140
     modem_url: str | None = None
@@ -1440,7 +1457,7 @@ class SMSAPIPlugin:
 
 @dataclass
 class SMSPlugin:
-    plugin_name: ClassVar[Literal["sms"]] = "sms"
+    plugin_name: ClassVar[SmsPluginName] = "sms"
     option: PluginOptions = PluginOptions.CANCEL
     params: list[str] | None = None
 
@@ -1483,7 +1500,7 @@ class SMSPlugin:
 
 @dataclass
 class SpectrumPlugin:
-    plugin_name: ClassVar[Literal["spectrum"]] = "spectrum"
+    plugin_name: ClassVar[SpectrumPluginName] = "spectrum"
     option: PluginOptions = PluginOptions.CANCEL
     baseoid: str = ""
     snmp_community: str = ""
@@ -1544,7 +1561,7 @@ class SpectrumPlugin:
 
 @dataclass
 class VictoropsPlugin:
-    plugin_name: ClassVar[Literal["victorops"]] = "victorops"
+    plugin_name: ClassVar[SplunkPluginName] = "victorops"
     option: PluginOptions = PluginOptions.CANCEL
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
@@ -1625,7 +1642,7 @@ class VictoropsPlugin:
 
 @dataclass
 class MsTeamsPlugin:
-    plugin_name: ClassVar[Literal["msteams"]] = "msteams"
+    plugin_name: ClassVar[MSTeamsPluginName] = "msteams"
     option: PluginOptions = PluginOptions.CANCEL
     webhook_url: WebhookURLOption = field(default_factory=WebhookURLOption)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)

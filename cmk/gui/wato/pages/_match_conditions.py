@@ -32,6 +32,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from .._group_selection import sorted_host_group_choices
+from ._rule_conditions import DictHostTagCondition
 
 
 def multifolder_host_rule_match_conditions() -> list[DictionaryEntry]:
@@ -82,7 +83,16 @@ class FullPathFolderChoice(DropdownChoice):
 
 def common_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
-        ("match_hosttags", HostTagCondition(title=_("Match host tags"))),
+        (
+            "match_hosttags",
+            DictHostTagCondition(
+                title=_("Match host tags"),
+                help_txt=_(
+                    "Rule only applies to hosts that meet all of the host tag "
+                    "conditions listed here",
+                ),
+            ),
+        ),
         (
             "match_hostlabels",
             Labels(

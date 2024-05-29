@@ -20,6 +20,8 @@ from typing import (
 from pydantic import PlainValidator, TypeAdapter, ValidationInfo
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.tags import TagGroupID
 from cmk.utils.timeperiod import TimeperiodName
 
 __all__ = [
@@ -852,7 +854,7 @@ class EventRule(_EventRuleMandatory, total=False):
     match_hostgroups: list[str]
     match_hostlabels: dict[str, str]
     match_hosts: list[str]
-    match_hosttags: list[str]
+    match_hosttags: Mapping[TagGroupID, TagCondition]
     match_notification_comment: str
     match_plugin_output: str
     match_service_event: Sequence[ServiceEventType]

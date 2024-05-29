@@ -575,6 +575,7 @@ def test_diagnostics_element_checkmk_files_error(
         ),
         (diagnostics.CheckmkLogFilesDiagnosticsElement, cmk.utils.paths.log_dir, "test.log"),
     ],
+    ids=["conf", "log"],
 )
 def test_diagnostics_element_checkmk_files_content(tmp_path, diag_elem, test_dir, test_filename):
     test_conf_dir = Path(test_dir) / "test"

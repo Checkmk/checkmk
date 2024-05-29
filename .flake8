@@ -45,8 +45,6 @@ ignore=
     E272,
     # missing whitespace after keyword
     E275,
-    # trailing whitespace
-    W291,
     # expected 1 blank line, found 0
     E301,
     # expected 2 blank lines, found 1

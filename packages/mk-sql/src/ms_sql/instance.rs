@@ -1467,7 +1467,8 @@ fn generate_signaling_block(
 async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Result<String> {
     let instances = find_usable_instances(ms_sql, environment).await?;
     if instances.is_empty() {
-        return Ok("ERROR: Failed to gather SQL server instances\n".to_string());
+        return Ok(generate_signaling_block(ms_sql, &None)
+            + "ERROR: Failed to gather SQL server instances\n");
     } else {
         log::info!(
             "Found {} SQL server instances: [ {} ]",

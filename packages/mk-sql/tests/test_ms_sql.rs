@@ -1414,6 +1414,8 @@ fn test_get_instances() {
             assert!(instance.final_port().is_some());
             assert!(instance.is_shared_memory());
             assert!(!instance.is_pipe());
+            assert!(instance.is_tcp());
+            assert!(!instance.is_odbc_only());
         }
     }
 

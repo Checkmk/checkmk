@@ -78,7 +78,37 @@ pub mod odbc {
         ConnectionOptions, Cursor, Environment, ResultSetMetadata,
     };
 
+    const ODBC_DRIVER_LIST: &str = "Get-OdbcDriver -Name '* SQL Server' -Platform 32-Bit | Format-Table -HideTableHeaders -Property Name";
+
     use crate::types::InstanceName;
+    lazy_static::lazy_static! {
+        pub static ref ODBC_DRIVER: String = gather_odbc_drivers().last().unwrap_or(&"".to_string()).clone();
+    }
+
+    pub fn gather_odbc_drivers() -> Vec<String> {
+        match run_powershell_command(ODBC_DRIVER_LIST) {
+            Ok(output) => {
+                let output_text = std::str::from_utf8(&output.stdout)
+                    .map(|s| s.to_string())
+                    .unwrap_or_default();
+                output_text
+                    .split('\n')
+                    .map(|s| s.to_string().replace('\r', ""))
+                    .filter(|s| !s.is_empty())
+                    .collect::<Vec<String>>()
+            }
+            Err(e) => {
+                log::error!("Failed to gather ODBC drivers: {:?}", e);
+                vec![]
+            }
+        }
+    }
+
+    fn run_powershell_command(command: &str) -> std::io::Result<std::process::Output> {
+        std::process::Command::new("powershell")
+            .args(["-Command", command])
+            .output()
+    }
 
     /// creates a local connection string for the ODBC driver
     /// always SSPI and Trusted connection
@@ -88,8 +118,8 @@ pub mod odbc {
         driver: Option<&str>,
     ) -> String {
         format!(
-            "Driver={};SERVER=(local)\\{};Initial Catalog={};Integrated Security=SSPI;Trusted_Connection=yes;",
-            driver.unwrap_or("{ODBC Driver 17 for SQL Server}"),
+            "Driver={{{}}};SERVER=(local)\\{};Initial Catalog={};Integrated Security=SSPI;Trusted_Connection=yes;",
+            driver.unwrap_or(&ODBC_DRIVER.clone()),
             instance,
             database.unwrap_or("master")
         )
@@ -104,6 +134,8 @@ pub mod odbc {
 
     pub fn execute(connection_string: &str, query: &str) -> Result<Vec<Block>> {
         let env = Environment::new()?;
+
+        log::info!("Connecting with string {}", connection_string);
 
         let conn =
             env.connect_with_connection_string(connection_string, ConnectionOptions::default())?;
@@ -158,26 +190,22 @@ pub mod odbc {
 
     #[cfg(test)]
     mod tests {
-        use crate::platform::odbc;
+        use crate::platform::odbc::{self, ODBC_DRIVER};
         use crate::types::InstanceName;
 
         #[test]
         fn test_make_connection_string() {
-            assert_eq!(
-                odbc::make_connection_string(
-                    &InstanceName::from("SQLEXPRESS_NAME".to_string()),
-                    None,
-                    None
-                ),
-                "Driver={ODBC Driver 17 for SQL Server};SERVER=(local)\\SQLEXPRESS_NAME;Initial Catalog=master;Integrated Security=SSPI;Trusted_Connection=yes;"
-            );
+            assert_eq!( odbc::make_connection_string(
+                &InstanceName::from("SQLEXPRESS_NAME".to_string()),
+                None,
+                None),
+                format!("Driver={{{}}};SERVER=(local)\\SQLEXPRESS_NAME;Initial Catalog=master;Integrated Security=SSPI;Trusted_Connection=yes;", ODBC_DRIVER.clone()));
             assert_eq!(
                 odbc::make_connection_string(
                     &InstanceName::from("Instance".to_string()),
                     Some("db"),
-                    Some("driver"),
-                ),
-                "Driver=driver;SERVER=(local)\\Instance;Initial Catalog=db;Integrated Security=SSPI;Trusted_Connection=yes;"
+                    Some("driver")),
+                "Driver={driver};SERVER=(local)\\Instance;Initial Catalog=db;Integrated Security=SSPI;Trusted_Connection=yes;"
             );
         }
     }

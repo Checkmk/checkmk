@@ -79,8 +79,6 @@ ignore=
     ################################################################################################
     # do not compare types, for exact checks use `is` / `is not`, for instance checks use `isinstance()`
     E721,
-    # do not use bare 'except'
-    E722,
     # do not assign a lambda expression, use a def
     E731,
     # ambiguous variable name 'FOO'

@@ -7,6 +7,8 @@
 This script automates the most common changes required to migrate
 a plugin developed against the agent based API v1 to the API version 2.
 
+Files are changed inplace.
+
 Note that it is not perfect.
 You have to check and adjust the result manually!
 """
@@ -38,7 +40,9 @@ IMPORTS_ADDED = (
     "from collections.abc import Sequence\n"
     "from cmk.agent_based.v1 import check_levels\n"
     "from cmk.agent_based.v2 import AgentSection, SNMPSection,"
-    " SimpleSNMPSection, CheckPlugin, InventoryPlugin, RuleSetType\n\n"
+    " SimpleSNMPSection, CheckPlugin, InventoryPlugin, RuleSetType,"
+    " CheckResult, DiscoveryResult, StringTable, get_value_store, StringByteTable"
+    "\n\n"
 )
 
 REGISTRATION_REGEXES = (
@@ -69,7 +73,11 @@ REGISTRATION_REGEXES = (
     ),
 )
 
-BODY_REPLACEMENTS = (("list[StringTable]", "Sequence[StringTable]"),)
+BODY_REPLACEMENTS = (
+    ("list[StringTable]", "Sequence[StringTable]"),
+    ("type_defs.", ""),
+    ("register.RuleSetType", "RuleSetType"),
+)
 
 
 def parse_arguments(argv):

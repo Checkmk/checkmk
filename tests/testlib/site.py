@@ -30,7 +30,6 @@ from tests.testlib.utils import (
     cse_create_onboarding_dummies,
     cse_openid_oauth_provider,
     current_base_branch_name,
-    current_branch_version,
     execute,
     is_containerized,
     makedirs,
@@ -1575,12 +1574,7 @@ class SiteFactory:
             fallback_edition=Edition.CEE,
             fallback_branch=current_base_branch_name(),
         ),
-        min_version: CMKVersion = CMKVersion(
-            get_min_version(),
-            Edition.CEE,
-            current_base_branch_name(),
-            current_branch_version(),
-        ),
+        min_version: CMKVersion = get_min_version(Edition.CEE),
         conflict_mode: str = "keepold",
     ) -> Site:
         base_version = test_site.version

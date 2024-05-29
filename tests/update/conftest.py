@@ -25,8 +25,6 @@ from tests.testlib.utils import (
 )
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
-from cmk.utils.version import Edition
-
 logger = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
 RULES_DIR = repo_path() / "tests" / "update" / "rules"
@@ -168,12 +166,7 @@ def _get_site(  # pylint: disable=too-many-branches
 
     update = base_site is not None and base_site.exists()
     update_conflict_mode = "keepold"
-    min_version = CMKVersion(
-        BaseVersions.MIN_VERSION,
-        edition_from_env(fallback=Edition.CEE),
-        current_base_branch_name(),
-        current_branch_version(),
-    )
+    min_version = BaseVersions.MIN_VERSION
     sf = SiteFactory(
         version=CMKVersion(
             version.version,

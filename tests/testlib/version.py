@@ -203,9 +203,17 @@ def version_from_env(
     )
 
 
-def get_min_version() -> str:
+def get_min_version(edition: Edition | None = None) -> CMKVersion:
     """Minimal version supported for an update to the daily version of this branch."""
-    return os.getenv("MIN_VERSION", "2.3.0")
+    if edition is None:
+        # by default, fallback to edition: CEE
+        edition = edition_from_env(fallback=Edition.CEE)
+    return CMKVersion(
+        os.getenv("MIN_VERSION", "2.3.0"),
+        edition,
+        current_base_branch_name(),
+        current_branch_version(),
+    )
 
 
 def get_omd_distro_name() -> str:

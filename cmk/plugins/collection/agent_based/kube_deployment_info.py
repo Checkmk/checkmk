@@ -40,7 +40,7 @@ agent_section_kube_deployment_info_v1 = AgentSection[DeploymentInfo](
     name="kube_deployment_info_v1",
     parsed_section_name="kube_deployment_info",
     parse_function=parse,
-    host_label_function=host_labels("deployment"),  # type: ignore[arg-type] # FIXME
+    host_label_function=host_labels("deployment"),
 )
 
 

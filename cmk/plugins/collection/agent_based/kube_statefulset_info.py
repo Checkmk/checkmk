@@ -37,11 +37,11 @@ def parse(string_table: StringTable) -> StatefulSetInfo:
     return StatefulSetInfo(**json.loads(string_table[0][0]))
 
 
-agent_section_kube_statefulset_info_v1 = AgentSection[StatefulSetInfo](
+agent_section_kube_statefulset_info_v1 = AgentSection(
     name="kube_statefulset_info_v1",
     parsed_section_name="kube_statefulset_info",
     parse_function=parse,
-    host_label_function=host_labels("statefulset"),  # type: ignore[arg-type] # FIXME
+    host_label_function=host_labels("statefulset"),
 )
 
 

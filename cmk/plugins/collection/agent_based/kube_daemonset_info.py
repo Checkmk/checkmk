@@ -41,7 +41,7 @@ agent_section_kube_daemonset_info_v1 = AgentSection[DaemonSetInfo](
     name="kube_daemonset_info_v1",
     parsed_section_name="kube_daemonset_info",
     parse_function=parse,
-    host_label_function=host_labels("daemonset"),  # type: ignore[arg-type] # FIXME
+    host_label_function=host_labels("daemonset"),
 )
 
 

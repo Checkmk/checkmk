@@ -114,7 +114,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
                 def may_see(cls) -> bool:
                     return cls._custom_snapin.is_permitted()
 
-            _it_is_really_used = CustomSnapin  # noqa: F841
+            _it_is_really_used = CustomSnapin
 
 
 snapin_registry = SnapinRegistry()

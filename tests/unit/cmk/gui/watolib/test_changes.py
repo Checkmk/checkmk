@@ -15,7 +15,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import  # noqa: F401
+from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import
     compile_builtin_po_files,
     locale_base_dir,
     locale_paths,

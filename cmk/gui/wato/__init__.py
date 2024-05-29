@@ -11,7 +11,6 @@ backend business and persistence logic, which is also shared with the REST API.
 
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
-# flake8: noqa
 # pylint: disable=unused-import
 import cmk.utils.paths
 import cmk.utils.version as cmk_version

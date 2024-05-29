@@ -165,7 +165,7 @@ class PasswordStore:
 
     @staticmethod
     def decrypt(raw: bytes) -> str:
-        _version, rest = (  # noqa: F841
+        _version, rest = (
             raw[: PasswordStore.VERSION_BYTE_LENGTH],
             raw[PasswordStore.VERSION_BYTE_LENGTH :],
         )

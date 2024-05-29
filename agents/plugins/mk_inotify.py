@@ -17,7 +17,7 @@ except ImportError:  # Python 2
     import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 

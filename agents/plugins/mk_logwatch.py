@@ -45,13 +45,13 @@ import socket
 import time
 
 try:
-    from collections.abc import (  # noqa: F401 # pylint: disable=unused-import
+    from collections.abc import (  # pylint: disable=unused-import
         Collection,
         Iterable,
         Iterator,
         Sequence,
     )
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     # We need typing only for testing
     pass

@@ -18,7 +18,7 @@ import time
 from ftplib import FTP  # nosec B402 # BNS:97f639
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 

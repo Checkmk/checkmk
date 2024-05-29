@@ -3449,7 +3449,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # their path.
     def _is_zipfile(self, fo: io.BytesIO) -> bool:
         try:
-            with zipfile.ZipFile(fo) as _opened_file:  # noqa: F841
+            with zipfile.ZipFile(fo) as _opened_file:
                 pass
             return True
         except zipfile.BadZipfile:

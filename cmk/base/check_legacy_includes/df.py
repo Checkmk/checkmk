@@ -7,7 +7,7 @@
 
 from cmk.agent_based.v2 import Metric, render, Result, State
 from cmk.plugins.lib.df import check_filesystem_levels, check_inodes
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS  # noqa: F401
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS as FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.lib.df import INODES_DEFAULT_PARAMS as INODES_DEFAULT_PARAMS
 from cmk.plugins.lib.df import mountpoints_in_group as mountpoints_in_group

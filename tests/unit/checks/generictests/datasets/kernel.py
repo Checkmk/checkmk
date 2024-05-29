@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.base.plugins.agent_based.kernel import parse_kernel
+from cmk.plugins.collection.agent_based.kernel import parse_kernel
 
 # fmt: off
 

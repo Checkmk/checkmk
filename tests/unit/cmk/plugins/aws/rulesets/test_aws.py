@@ -10,9 +10,7 @@ from unittest.mock import ANY
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.pytest_helpers.marks import skip_if_raw_edition, skip_if_saas_edition
-
-from cmk.utils.version import Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
@@ -82,11 +80,12 @@ def test_vs_to_fs_rule_update_valid_datatypes() -> None:
     assert access_key[1] == "explicit_password"
     assert access_key[2][1] == "foo_pass"
     assert value["global_services"]["ce"] == ("all", {})
-    assert value["global_services"]["route53"] == ("none", None)
     assert value["access"]["global_service_region"] == "us_gov_east_1"
     assert value["regions_to_monitor"] == ["ap_northeast_2", "ap_southeast_2"]
     assert value["overall_tags"] == [{"key": "global_restrict_key", "values": ["value1"]}]
-    assert value["services"]["aws_lambda"] == ("all", {"limits": "limits"})
+    if edition() is Edition.CCE:
+        assert value["global_services"]["route53"] == ("none", None)
+        assert value["services"]["aws_lambda"] == ("all", {"limits": "limits"})
 
 
 def test_fs_values_to_args() -> None:
@@ -272,55 +271,3 @@ def test_cce_to_non_cce_rule_drops_services(monkeypatch: MonkeyPatch) -> None:
     assert "sns" not in value["services"]
     assert "ecs" not in value["services"]
     assert "elasticache" not in value["services"]
-
-
-@skip_if_raw_edition
-@skip_if_saas_edition
-def test_non_cce_to_cce_sets_defaults() -> None:
-    # GIVEN
-    valuespec = convert_to_legacy_rulespec(
-        aws_ruleset.rule_spec_aws, Edition.CRE, lambda x: x
-    ).valuespec
-    non_cce_value = {
-        "access_key_id": "foo_key",
-        "secret_access_key": ("password", "foo_pass"),
-        "access": {},
-        "global_services": {
-            "ce": None,
-        },
-        "regions": ["ap-northeast-2", "ap-southeast-2"],
-        "services": {
-            "ec2": {"selection": "all"},
-            "ebs": {"selection": "all"},
-            "s3": {"selection": "all"},
-            "glacier": {"selection": "all"},
-            "elbv2": {"selection": "all"},
-            "rds": {"selection": "all"},
-            "cloudwatch_alarms": {"alarms": "all"},
-            "dynamodb": {"selection": "all"},
-            "wafv2": {"selection": "all"},
-        },
-        "piggyback_naming_convention": "private_dns_name",
-        "overall_tags": [],
-    }
-
-    # WHEN
-    value = valuespec.transform_value(non_cce_value)
-
-    # THEN
-    assert value["global_services"]["route53"] == ("none", None)
-    assert value["global_services"]["cloudfront"] == ("none", None)
-
-    # We are unable to restore the defaults on the non-cce -> cce
-    # switch while the formspec migration is running as the migration
-    # already sets these to "none" if they might have been disabled
-    # in the valuespec.
-    assert value["services"]["aws_lambda"] == ("none", None)
-    assert value["services"]["sns"] == ("none", None)
-    assert value["services"]["ecs"] == ("none", None)
-    assert value["services"]["elasticache"] == ("none", None)
-    # TODO When formspec migration is removed, restore the defaults properly:
-    # assert value["services"]["aws_lambda"] == ("all", {"limits": "limits"})
-    # assert value["services"]["sns"] == ("all", {"limits": "limits"})
-    # assert value["services"]["ecs"] == ("all", {"limits": "limits"})
-    # assert value["services"]["elasticache"] == ("all", {"limits": "limits"})

@@ -14,10 +14,9 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based import job
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.collection.agent_based import job
 
 SECTION_1: job.Section = {
     "SHREK": {

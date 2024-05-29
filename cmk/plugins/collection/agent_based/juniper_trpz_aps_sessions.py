@@ -11,26 +11,29 @@
 # juniper-trpz-wlc-800-3 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.3.4
 
 import time
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
 from contextlib import suppress
 from typing import Any, TypedDict
 
-from .agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
     any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_rate,
     get_value_store,
     GetRateError,
     Metric,
     OIDEnd,
-    register,
     render,
     Result,
     Service,
+    SNMPSection,
     SNMPTree,
     startswith,
     State,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 RadioCounters = list[float]
 
@@ -62,7 +65,7 @@ AP_STATES = {
 }
 
 
-def parse_juniper_trpz_aps_sessions(string_table: list[StringTable]) -> Section:
+def parse_juniper_trpz_aps_sessions(string_table: Sequence[StringTable]) -> Section:
     """
     >>> aps, radios = parse_juniper_trpz_aps_sessions(
     ...     [[['12.109.103.48.50.49.50.48.51.48.50.54.50', '7', 'ap1'],
@@ -258,7 +261,7 @@ def cluster_check_juniper_trpz_aps_sessions(
     )
 
 
-register.snmp_section(
+snmp_section_juniper_trpz_aps_sessions = SNMPSection(
     name="juniper_trpz_aps_sessions",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
@@ -294,7 +297,7 @@ register.snmp_section(
     ],
 )
 
-register.check_plugin(
+check_plugin_juniper_trpz_aps_sessions = CheckPlugin(
     name="juniper_trpz_aps_sessions",
     service_name="Access Point %s",
     discovery_function=discovery_juniper_trpz_aps_sessions,

@@ -7,11 +7,18 @@ from collections.abc import Mapping
 from time import time
 from typing import TypedDict
 
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.lib.juniper import DETECT_JUNIPER
-
-from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, int]
 
@@ -24,7 +31,7 @@ def parse_juniper_cpu_util(string_table: StringTable) -> Section:
     }
 
 
-register.snmp_section(
+snmp_section_juniper_cpu_util = SimpleSNMPSection(
     name="juniper_cpu_util",
     parse_function=parse_juniper_cpu_util,
     fetch=SNMPTree(
@@ -71,7 +78,7 @@ def check_juniper_cpu_util(
     )
 
 
-register.check_plugin(
+check_plugin_juniper_cpu_util = CheckPlugin(
     name="juniper_cpu_util",
     service_name="CPU utilization %s",
     discovery_function=discover_juniper_cpu_util,

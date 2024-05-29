@@ -11,7 +11,10 @@ from typing import Any
 
 import pytest
 
-from tests.unit.cmk.base.plugins.agent_based.snmp import get_parsed_snmp_section, snmp_is_detected
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
+)
 from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionName

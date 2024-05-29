@@ -2,24 +2,27 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
-from .agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
     any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     Metric,
-    register,
     Result,
     Service,
+    SNMPSection,
     SNMPTree,
     startswith,
     State,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = tuple[int, int]
 
 
-def parse_juniper_trpz_aps(string_table: list[StringTable]) -> Section | None:
+def parse_juniper_trpz_aps(string_table: Sequence[StringTable]) -> Section | None:
     """
     >>> parse_juniper_trpz_aps([[['1', '0']]])
     (1, 0)
@@ -78,7 +81,7 @@ def cluster_check_juniper_trpz_aps(section: Mapping[str, Section | None]) -> Che
             yield from _check_common_juniper_trpz_aps(node_name, node_section)
 
 
-register.snmp_section(
+snmp_section_juniper_trpz_aps = SNMPSection(
     name="juniper_trpz_aps",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
@@ -96,7 +99,7 @@ register.snmp_section(
     ],
 )
 
-register.check_plugin(
+check_plugin_juniper_trpz_aps = CheckPlugin(
     name="juniper_trpz_aps",
     service_name="Access Points",
     discovery_function=discovery_juniper_trpz_aps,

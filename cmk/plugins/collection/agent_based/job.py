@@ -7,7 +7,18 @@ import time
 from collections.abc import Callable, Mapping
 from typing import Any, Final, TypedDict
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 # <<<job>>>
 # ==> asd ASD <==
@@ -77,7 +88,7 @@ def _job_parse_metrics(line: list[str]) -> tuple[str, float]:
 
 
 def _get_jobname_and_running_state(
-    string_table: type_defs.StringTable,
+    string_table: StringTable,
 ) -> tuple[str, str]:
     """determine whether the job is running. some jobs are flagged as
     running jobs, but are in fact not (i.e. they are pseudo running), for
@@ -112,7 +123,7 @@ def _get_jobname_and_running_state(
     return jobname, "running"
 
 
-def parse_job(string_table: type_defs.StringTable) -> Section:
+def parse_job(string_table: StringTable) -> Section:
     parsed: Section = {}
     pseudo_running_jobs: Section = (
         {}
@@ -157,13 +168,13 @@ def parse_job(string_table: type_defs.StringTable) -> Section:
     return parsed
 
 
-register.agent_section(
+agent_section_job = AgentSection(
     name="job",
     parse_function=parse_job,
 )
 
 
-def discover_job(section: Section) -> type_defs.DiscoveryResult:
+def discover_job(section: Section) -> DiscoveryResult:
     for jobname, job in section.items():
         if not job["running"]:
             yield Service(item=jobname)
@@ -182,7 +193,7 @@ _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
 }
 
 
-def _check_job_levels(job: Job, metric: str, notice_only: bool = True) -> type_defs.CheckResult:
+def _check_job_levels(job: Job, metric: str, notice_only: bool = True) -> CheckResult:
     label, render_func = _METRIC_SPECS[metric]
     yield from check_levels(
         job["metrics"][metric],
@@ -199,7 +210,7 @@ def _process_job_stats(
     age_levels: tuple[int, int] | None,
     exit_code_to_state_map: dict[int, State],
     now: float,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield Result(
         state=exit_code_to_state_map.get(job["exit_code"], State.CRIT),
         summary=f"Latest exit code: {job['exit_code']}",
@@ -264,7 +275,7 @@ def check_job(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     job = section.get(item)
     if job is None:
         return
@@ -291,7 +302,7 @@ _STATE_TO_STR = {
     State.UNKNOWN: "UNKNOWN",
 }
 
-register.check_plugin(
+check_plugin_job = CheckPlugin(
     name="job",
     service_name="Job %s",
     discovery_function=discover_job,

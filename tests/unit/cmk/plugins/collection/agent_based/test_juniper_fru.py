@@ -6,14 +6,17 @@
 from collections.abc import Callable
 from pathlib import Path
 
-from tests.unit.cmk.base.plugins.agent_based.snmp import get_parsed_snmp_section, snmp_is_detected
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
+)
 from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.agent_based.v2 import Result, Service, State
 
 # SUP-13184
 DATA_0 = """

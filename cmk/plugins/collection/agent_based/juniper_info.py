@@ -5,8 +5,15 @@
 
 from typing import NamedTuple
 
-from .agent_based_api.v1 import Attributes, register, SNMPTree, startswith
-from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.agent_based.v2 import (
+    Attributes,
+    InventoryPlugin,
+    InventoryResult,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 
 class Section(NamedTuple):
@@ -20,7 +27,7 @@ def parse_juniper_info(string_table: StringTable) -> Section | None:
     return None
 
 
-register.snmp_section(
+snmp_section_juniper_info = SimpleSNMPSection(
     name="juniper_info",
     parse_function=parse_juniper_info,
     fetch=SNMPTree(
@@ -44,7 +51,7 @@ def inventory_juniper_info(section: Section) -> InventoryResult:
     )
 
 
-register.inventory_plugin(
+inventory_plugin_juniper_info = InventoryPlugin(
     name="juniper_info",
     inventory_function=inventory_juniper_info,
 )

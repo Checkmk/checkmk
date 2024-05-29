@@ -7,7 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.cmk.base.plugins.agent_based.snmp import get_parsed_snmp_section, snmp_is_detected
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
+)
 
 from cmk.agent_based.v1 import Metric, Result, Service, State
 from cmk.agent_based.v1.type_defs import CheckResult, StringTable

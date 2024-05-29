@@ -3,20 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.juniper_trpz_aps import (
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
+from cmk.plugins.collection.agent_based.juniper_trpz_aps import (
     check_juniper_trpz_aps,
     cluster_check_juniper_trpz_aps,
     parse_juniper_trpz_aps,
 )
-from cmk.base.plugins.agent_based.juniper_trpz_aps import Section as SectionAps
-from cmk.base.plugins.agent_based.juniper_trpz_aps_sessions import (
+from cmk.plugins.collection.agent_based.juniper_trpz_aps import Section as SectionAps
+from cmk.plugins.collection.agent_based.juniper_trpz_aps_sessions import (
     _check_common_juniper_trpz_aps_sessions,
     discovery_juniper_trpz_aps_sessions,
     parse_juniper_trpz_aps_sessions,
@@ -654,7 +653,7 @@ DISCOVERD_ITEMS = {
     ],
 )
 def test_parse_juniper_trpz_aps(
-    section: list[StringTable], parsed_sections: SectionAps | None
+    section: Sequence[StringTable], parsed_sections: SectionAps | None
 ) -> None:
     section_result = parse_juniper_trpz_aps(section)
     assert section_result == parsed_sections
@@ -711,7 +710,7 @@ def test_cluster_check_juniper_trpz_aps(
     ],
 )
 def test_parse_juniper_trpz_aps_sessions(
-    node_sections: Mapping[str, list[StringTable]], parsed_sections: Mapping[str, object]
+    node_sections: Mapping[str, Sequence[StringTable]], parsed_sections: Mapping[str, object]
 ) -> None:
     assert {
         node_name: parse_juniper_trpz_aps_sessions(string_list)

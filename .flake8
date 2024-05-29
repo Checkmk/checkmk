@@ -77,8 +77,6 @@ ignore=
     ################################################################################################
     # We should probably have a look at these findings.
     ################################################################################################
-    # test for membership should be 'not in'
-    E713,
     # do not compare types, for exact checks use `is` / `is not`, for instance checks use `isinstance()`
     E721,
     # do not use bare 'except'
@@ -87,9 +85,9 @@ ignore=
     E731,
     # ambiguous variable name 'FOO'
     E741,
-    # undefined name 'unicode'
+    # undefined name 'FOO'
     F821,
     # local variable 'FOO' is assigned to but never used
     F841,
-    # local variable 'entry' is annotated but never used
+    # local variable 'FOO' is annotated but never used
     F842,

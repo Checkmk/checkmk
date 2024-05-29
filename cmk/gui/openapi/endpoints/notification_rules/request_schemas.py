@@ -2083,7 +2083,7 @@ class CustomPlugin(BaseSchema):
             try:
                 vs.validate_datatype(dif, "plugin_params")
             except MKUserError as exc:
-                message = exc.message if not ": " in exc.message else exc.message.split(": ")[-1]
+                message = exc.message if ": " not in exc.message else exc.message.split(": ")[-1]
                 if re.search("The entry (.*)", exc.message) is not None:
                     message = "A required (sub-)field is missing."
 

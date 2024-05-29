@@ -193,7 +193,7 @@ check_info["openhardwaremonitor"] = LegacyCheckDefinition(
 
 
 def check_openhardwaremonitor_temperature(item, params, parsed):
-    if not "levels" in params:
+    if "levels" not in params:
         params = next((v for k, v in params.items() if k in item), params["_default"])
 
     if item in parsed.get("Temperature", {}):
@@ -310,7 +310,7 @@ def check_openhardwaremonitor_smart(item, params, parsed):
         for reading in readings:
             reading_name = "{} {}".format(item, reading["name"])
 
-            if not reading_name in parsed[sensor_type]:
+            if reading_name not in parsed[sensor_type]:
                 # what smart values ohm reports is device dependent
                 continue
 

@@ -141,7 +141,7 @@ class MigrateParentsMK(UpdateAction):
 
         for host_name_str in result.all_hosts:
             host_name = HostName(host_name_str)
-            if not host_name in existing_hosts:
+            if host_name not in existing_hosts:
                 attributes = self._determine_attributes(
                     result.ipaddresses[host_name_str], central_site_id
                 )

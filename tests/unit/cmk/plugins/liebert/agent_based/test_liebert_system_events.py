@@ -7,9 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based import liebert_system_events as lse
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.plugins.liebert.agent_based import liebert_system_events as lse
 
 pytestmark = pytest.mark.checks
 

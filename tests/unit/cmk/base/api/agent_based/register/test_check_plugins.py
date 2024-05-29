@@ -224,4 +224,6 @@ def test_create_check_plugin() -> None:
 
 def test_module_attribute(fix_register: FixRegister) -> None:
     local_check = fix_register.check_plugins[CheckPluginName("local")]
-    assert local_check.location == PluginLocation("cmk.base.plugins.agent_based.local")
+    assert local_check.location == PluginLocation(
+        "cmk.plugins.collection.agent_based.local", "check_plugin_local"
+    )

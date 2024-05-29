@@ -5,10 +5,10 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
-from cmk.base.plugins.agent_based.lnx_if import check_lnx_if, discover_lnx_if
 from cmk.base.plugins.agent_based.section_lnx_container_host_if import parse_lnx_container_host_if
 
+from cmk.agent_based.v2 import Result
+from cmk.plugins.collection.agent_based.lnx_if import check_lnx_if, discover_lnx_if
 from cmk.plugins.lib.interfaces import (
     Attributes,
     Counters,

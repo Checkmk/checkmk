@@ -9,27 +9,24 @@ import typing
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
     IgnoreResultsError,
     Metric,
     Result,
     Service,
     State,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.liebert_temp_air import (
+from cmk.plugins.lib.temperature import TempParamDict, TrendComputeDict
+from cmk.plugins.liebert.agent_based.lib import SystemSection
+from cmk.plugins.liebert.agent_based.liebert_temp_air import (
     _check_liebert_temp_air,
     discover_liebert_temp_air,
     parse_liebert_temp_air,
     ParsedSection,
 )
-
-from cmk.plugins.lib.temperature import TempParamDict, TrendComputeDict
-from cmk.plugins.liebert.agent_based.lib import SystemSection
 
 STRING_TABLE = [
     [

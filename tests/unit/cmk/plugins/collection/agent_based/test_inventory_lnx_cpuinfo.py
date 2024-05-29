@@ -6,13 +6,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.lnx_cpuinfo import (
+from cmk.agent_based.v2 import Attributes
+from cmk.plugins.collection.agent_based.lnx_cpuinfo import (
     inventory_lnx_cpuinfo,
     parse_lnx_cpuinfo,
     Section,
 )
-
-from cmk.agent_based.v2 import Attributes
 
 OUTPUT_1 = """processor:0
 vendor_id:AuthenticAMD

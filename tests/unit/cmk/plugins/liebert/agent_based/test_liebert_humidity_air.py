@@ -13,13 +13,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.liebert_humidity_air import (
+
+from cmk.plugins.liebert.agent_based.lib import Section, SystemSection
+from cmk.plugins.liebert.agent_based.liebert_humidity_air import (
     check_liebert_humidity_air,
     discover_liebert_humidity_air,
     parse_liebert_humidity_air,
 )
-
-from cmk.plugins.liebert.agent_based.lib import Section, SystemSection
 
 ParsedSection = Section[str]
 

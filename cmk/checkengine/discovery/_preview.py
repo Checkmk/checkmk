@@ -40,7 +40,7 @@ from ._autochecks import AutocheckEntry, DiscoveredService
 from ._autodiscovery import _Transition, get_host_services_by_host_name
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._utils import DiscoveredItem, QualifiedDiscovery
+from ._utils import QualifiedDiscovery
 
 __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]
 
@@ -167,7 +167,6 @@ def get_check_preview(
         on_error=on_error,
     )
 
-    entry: DiscoveredItem[AutocheckEntry]
     passive_rows_by_host = {
         h: [
             _check_preview_table_row(

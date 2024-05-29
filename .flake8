@@ -89,5 +89,3 @@ ignore=
     F821,
     # local variable 'FOO' is assigned to but never used
     F841,
-    # local variable 'FOO' is annotated but never used
-    F842,

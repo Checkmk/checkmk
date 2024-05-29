@@ -51,6 +51,12 @@ def pytest_addoption(parser):
         default=False,
         help="Store list of lost services in a json reference.",
     )
+    parser.addoption(
+        "--disable-rules-injection",
+        action="store_true",
+        default=False,
+        help="Disable rules' injection in the test-site.",
+    )
 
 
 def pytest_configure(config):
@@ -263,10 +269,12 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
     test_site = _get_site(base_version, interactive=not disable_interactive_mode)
 
+    disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
     if not version_from_env().is_saas_edition():
         # 'datasource_programs' rule is not supported in the SaaS edition
         inject_dumps(test_site, DUMPS_DIR)
-        inject_rules(test_site)
+        if not disable_rules_injection:
+            inject_rules(test_site)
 
     yield test_site, disable_interactive_mode
     logger.info("Removing test-site...")

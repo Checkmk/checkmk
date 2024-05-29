@@ -8,7 +8,6 @@ import hashlib
 import logging
 import operator
 import os
-import re
 import subprocess
 import time
 from collections.abc import Callable
@@ -197,36 +196,17 @@ def version_from_env(
     )
 
 
-def version_gte(version: str, min_version: str) -> bool:
-    """Check if the given version is greater than or equal to min_version."""
-    # first replace all non-numerical segments by a dot
-    # and make sure there are no empty segments
-    cmp_version = re.sub("[^0-9.]+", ".", version).replace("..", ".")
-    min_version = re.sub("[^0-9]+", ".", min_version).replace("..", ".")
-
-    # now split the segments
-    version_pattern = r"[0-9]*(\.[0-9]*)*"
-    cmp_version_match = re.match(version_pattern, cmp_version)
-    cmp_version_values = cmp_version_match.group().split(".") if cmp_version_match else []
-    logger.debug("cmp_version=%s; cmp_version_values=%s", cmp_version, cmp_version_values)
-    min_version_match = re.match(version_pattern, min_version)
-    min_version_values = min_version_match.group().split(".") if min_version_match else []
-    while len(cmp_version_values) < len(min_version_values):
-        cmp_version_values.append("0")
-    logger.debug("min_version=%s; min_version_values=%s", min_version, min_version_values)
-
-    # compare the version numbers segment by segment
-    for i, min_val in enumerate(min_version_values):
-        if int(cmp_version_values[i]) > int(min_val):
-            return True
-        if int(cmp_version_values[i]) < int(min_val):
-            return False
-    return True
-
-
-def get_min_version() -> str:
+def get_min_version(edition: Edition | None = None) -> CMKVersion:
     """Minimal version supported for an update to the daily version of this branch."""
-    return os.getenv("MIN_VERSION", "2.2.0p11")
+    if edition is None:
+        # by default, fallback to edition: CEE
+        edition = edition_from_env(fallback=Edition.CEE)
+    return CMKVersion(
+        os.getenv("MIN_VERSION", "2.2.0p11"),
+        edition,
+        current_base_branch_name(),
+        current_branch_version(),
+    )
 
 
 def get_omd_distro_name() -> str:

@@ -16,7 +16,7 @@ import yaml
 
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd, run
-from tests.testlib.version import CMKVersion, get_min_version, version_gte
+from tests.testlib.version import CMKVersion, get_min_version
 
 from cmk.utils.version import Edition
 
@@ -58,12 +58,17 @@ class BaseVersions:
     """
 
     @staticmethod
-    def _limit_versions(versions: list[str], min_version: str) -> list[str]:
+    def _limit_versions(versions: list[str], min_version: CMKVersion) -> list[str]:
         """Select supported earliest and latest versions and eliminate duplicates"""
         max_earliest_versions = 1
         max_latest_versions = 4
 
-        active_versions = [_ for _ in versions if version_gte(_, min_version)]
+        active_versions = [
+            _
+            for _ in versions
+            if CMKVersion(_, min_version.edition, min_version.branch, min_version.branch_version)
+            >= min_version
+        ]
         earliest_versions = active_versions[0:max_earliest_versions]
         latest_versions = active_versions[-max_latest_versions:]
         # do not use a set to retain the order
@@ -153,12 +158,7 @@ def _get_site(  # pylint: disable=too-many-branches
     By default, both installing and updating is done directly via spawn_expect_process()."""
     update = base_site is not None and base_site.exists()
     update_conflict_mode = "keepold"
-    min_version = CMKVersion(
-        BaseVersions.MIN_VERSION,
-        Edition.CEE,
-        current_base_branch_name(),
-        current_branch_version(),
-    )
+    min_version = BaseVersions.MIN_VERSION
     sf = SiteFactory(
         version=CMKVersion(
             version.version,

@@ -23,6 +23,7 @@ from .conftest import BaseVersions, DUMPS_DIR, inject_dumps
 
 logger = logging.getLogger(__name__)
 
+
 def _create_site(
     site_factory: SiteFactory, site_name: str, *args: Any, **kwargs: Any
 ) -> Iterator[Site]:
@@ -32,10 +33,11 @@ def _create_site(
         if f"Version {site_factory.version.version} could not be installed" in str(excp):
             pytest.skip(
                 f"Base-version '{site_factory.version.version}' not available in "
-                f"distro '{os.environ.get("DISTRO")}'."
+                f"""distro '{os.environ.get("DISTRO")}'."""
             )
         else:
             raise excp
+
 
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
@@ -100,10 +102,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
     )
     assert target_version.edition == Edition.CEE, "This test works with CEE only"
 
-    min_version = CMKVersion(
-        BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name(), current_branch_version()
-    )
-
+    min_version = BaseVersions.MIN_VERSION
     target_site = site_factory.interactive_update(base_site, target_version, min_version)
 
     target_services = {}

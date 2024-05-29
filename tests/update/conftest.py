@@ -27,6 +27,7 @@ from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
+DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
 
 
 def pytest_addoption(parser):
@@ -259,10 +260,11 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     )
     logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
     test_site = _get_site(base_version, interactive=not disable_interactive_mode)
-    dumps_dir = Path(__file__).parent.resolve() / "dumps"
+
     if not version_from_env().is_saas_edition():
         # 'datasource_programs' rule is not supported in the SaaS edition
-        _inject_dumps(test_site, dumps_dir)
+        inject_dumps(test_site, DUMPS_DIR)
+
     yield test_site, disable_interactive_mode
     logger.info("Removing test-site...")
     test_site.rm()
@@ -274,7 +276,7 @@ def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) 
     return _get_site(target_version, base_site=site, interactive=interactive_mode)
 
 
-def _inject_dumps(site: Site, dumps_dir: Path) -> None:
+def inject_dumps(site: Site, dumps_dir: Path) -> None:
     # create dump folder in the test site
     site_dumps_path = site.path("var/check_mk/dumps")
     logger.info('Creating folder "%s"...', site_dumps_path)

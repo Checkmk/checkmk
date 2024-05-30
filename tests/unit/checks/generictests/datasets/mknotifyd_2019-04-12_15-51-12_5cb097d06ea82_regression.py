@@ -10,7 +10,7 @@
 checkname = "mknotifyd"
 
 
-info = [["[EX]"], ["Binary file (standard input) matches"]]
+info = [["1571212728"], ["[EX]"], ["Binary file (standard input) matches"]]
 
 
 discovery = {"": [("EX", {})], "connection": []}

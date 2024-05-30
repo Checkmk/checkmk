@@ -50,21 +50,21 @@
 # InputBuffer:              0 Bytes
 # OutputBuffer:             0 Bytes
 
-import time
+from collections.abc import Mapping
 from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import IgnoreResultsError, render
+from cmk.agent_based.v2 import render, StringTable
+
+Section = Mapping[str, object]
 
 
-def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
-    try:
-        timestamp, data = float(string_table[0][0]), string_table[1:]
-    except (IndexError, ValueError):
-        # versions before 1.5.0p23/1.6.0p4 did not include a timestamp
-        timestamp, data = time.time(), string_table
+def parse_mknotifyd(  # pylint: disable=too-many-branches
+    string_table: StringTable,
+) -> Section:
+    timestamp, data = float(string_table[0][0]), string_table[1:]
 
     parsed: dict[str, Any] = {
         "sites": {},
@@ -106,12 +106,13 @@ def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
                 site_entry["queues"][value] = sub_entry
 
             else:
+                sub_entry_value: Any = value
                 if value == "None":
-                    value = None
+                    sub_entry_value = None
                 elif value and varname == "Listening FD":
                     # May be the listening FD number or an error message
                     try:
-                        value = int(value.split()[0])
+                        sub_entry_value = int(value.split()[0])
                     except ValueError:
                         pass
                 elif (
@@ -127,10 +128,10 @@ def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
                         "Connect Time",
                     ]
                 ):
-                    value = int(value.split()[0])
+                    sub_entry_value = int(value.split()[0])
                 elif varname == "Connect Time":
-                    value = float(value.split()[0])
-                sub_entry[varname] = value
+                    sub_entry_value = float(value.split()[0])
+                sub_entry[varname] = sub_entry_value
 
     # Fixup names of the connections. For incoming connections the remote
     # port is irrelevant. It changes randomly. But there might anyway be
@@ -171,28 +172,23 @@ def inventory_mknotifyd(parsed):
 
 
 def check_mknotifyd(item, _no_params, parsed):
-    sites = parsed["sites"]
-    if item not in sites:
-        yield 2, "No status information, Spooler not running"
+    if (stat := parsed["sites"].get(item)) is None:
         return
 
     # There are dummy-entries created during the parsing. So the
     # dict will never be completely empty. We check for Version
     # because this should be always present in a valid state file.
-    stat = sites[item]
-    if not stat.get("Version"):
+    if (version := stat.get("Version")) is None:
         yield 2, "The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly"
         return
-
-    # Output Version
-    yield 0, "Version: " + stat["Version"], []
+    yield 0, f"Version: {version}", []
 
     # Check age of status file. It's updated every 20 seconds
     status_age = parsed["timestamp"] - stat["Updated"]
     if status_age > 90:
         state = 2
-        infotext = "Status last updated %s ago, spooler seems crashed or busy" % render.timespan(
-            status_age
+        infotext = (
+            f"Status last updated {render.timespan(status_age)} ago, spooler seems crashed or busy"
         )
     else:
         state = 0
@@ -202,34 +198,25 @@ def check_mknotifyd(item, _no_params, parsed):
         ("new_files", stat["spools"]["New"]["Count"]),
     ]
 
-    # Are there any corrupted files
     corrupted = stat["spools"]["Corrupted"]
-    if corrupted["Count"]:
+    if corrupted.get("Count"):
         age = parsed["timestamp"] - corrupted["Youngest"]
         perf_data = [("corrupted_files", corrupted["Count"])]
-        yield 1, "%d corrupted files: youngest %s ago" % (
-            corrupted["Count"],
-            render.timespan(age),
-        ), perf_data
+        yield 1, f"{corrupted['Count']} corrupted files: youngest {render.timespan(age)} ago", perf_data
 
     # Are there deferred files that are too old?
     deferred = stat["spools"]["Deferred"]
-    if deferred["Count"]:
+    if deferred.get("Count"):
         age = parsed["timestamp"] - deferred["Oldest"]
         count = deferred["Count"]
         perf_data = [("deferred_age", age), ("deferred_files", deferred["Count"])]
         if age > 5:
             state = 1
-        elif age > 600:
+        elif age > 600:  # TODO: not reachable
             state = 2
         else:
             state = 0
-        yield state, "%d deferred files: oldest %s ago" % (
-            count,
-            render.timespan(age),
-        ), perf_data
-
-    return
+        yield state, f"{count} deferred files: oldest {render.timespan(age)} ago", perf_data
 
 
 check_info["mknotifyd"] = LegacyCheckDefinition(
@@ -255,17 +242,20 @@ def inventory_mknotifyd_connection(parsed):
     yield
 
 
+_V2_SERVICE_NAMING = "Notification Spooler connection to"
+
+
 def check_mknotifyd_connection(item, _no_params, parsed):
 
     # "mknotifyd.connection_v2"
-    if "Notification Spooler connection to" in item:
-        site_name, connection_name = item.split(" Notification Spooler connection to ", 1)
+    if _V2_SERVICE_NAMING in item:
+        site_name, connection_name = item.split(f" {_V2_SERVICE_NAMING} ", 1)
     # "mknotifyd.connection"
     else:
         site_name, connection_name = item.split("-", 1)
 
     if site_name not in parsed["sites"]:
-        raise IgnoreResultsError("No status information about spooler available")
+        return
 
     states = {
         "established": (0, "Alive"),
@@ -274,30 +264,23 @@ def check_mknotifyd_connection(item, _no_params, parsed):
         "connecting": (2, "Trying to connect"),
     }
 
-    connections = parsed["sites"][site_name]["connections"]
-    if connection_name in connections:
-        connection = connections[connection_name]
+    if (connection := parsed["sites"][site_name]["connections"].get(connection_name)) is not None:
 
-        # First check state
-        state, state_name = states[connection["State"]]
-        yield state, state_name
+        yield states[connection["State"]]
 
         if "Status Message" in connection:
             yield 0, connection["Status Message"]
 
-        # Show uptime
         if connection["State"] == "established":
             age = parsed["timestamp"] - connection["Since"]
-            yield 0, "Uptime: %s" % render.timespan(age)
+            yield 0, f"Uptime: {render.timespan(age)}"
 
             if "Connect Time" in connection:
-                yield 0, "Connect time: %.3f sec" % connection["Connect Time"]
+                yield 0, f"Connect time: {connection['Connect Time']:.3f} sec"
 
-        # Stats
         for what in ("Sent", "Received"):
-            num = connection["Notifications " + what]
-            if num:
-                yield 0, "%d Notifications %s" % (num, what.lower())
+            if num := connection["Notifications " + what]:
+                yield 0, f"{num} Notifications {what.lower()}"
 
 
 # deprecated
@@ -315,7 +298,7 @@ def inventory_mknotifyd_connection_v2(parsed):
             if "." in connection_name:
                 # item of old discovered "mknotifyd.connection"
                 continue
-            yield f"{site_name} Notification Spooler connection to {connection_name}", {}
+            yield f"{site_name} {_V2_SERVICE_NAMING} {connection_name}", {}
 
 
 check_info["mknotifyd.connection_v2"] = LegacyCheckDefinition(

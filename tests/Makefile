@@ -383,11 +383,19 @@ test-unit: prepare-protobuf-files test-unit-doctests
 		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		--ignore=tests/unit/omdlib/ \
+		$(PYTEST_OPTS_UNIT_PARALLEL) \
 		-- \
 		tests/unit
 
+test-unit-xdist:
+	PYTEST_OPTS_UNIT_PARALLEL="--numprocesses=4 --dist=loadfile" \
+	make --quiet test-unit
+
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
+
+test-unit-xdist-docker:
+	../scripts/run-in-docker.sh make --quiet test-unit-xdist
 
 test-unit-slow: prepare-protobuf-files
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \

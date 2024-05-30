@@ -7,6 +7,7 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
+from contextlib import suppress
 from typing import NamedTuple
 
 import requests
@@ -27,7 +28,7 @@ def main() -> int:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
-    sections = ["instance", "jobs", "nodes", "queue"]
+    sections = ["instance", "jobs", "nodes", "queue", "system_metrics"]
 
     parser = create_default_argument_parser(description=__doc__)
 
@@ -83,6 +84,11 @@ def agent_jenkins_main(args: Args) -> int:
             key="items",
             uri="/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,pending,why,buildableStartMilliseconds,task[name,color]]",
         ),
+        Section(
+            name="system_metrics",
+            key="items",
+            uri="/metrics/currentUser/metrics",
+        ),
     ]
 
     try:
@@ -135,6 +141,15 @@ def handle_request(args, sections):
 
         if section.name == "instance":
             value = response.json()
+        elif section.name == "system_metrics":
+            value = response.json()
+
+            # Historic information is huge and not interesting for this
+            with suppress(KeyError):
+                del value["histograms"]
+            # Timers contain values we can compute ourselfs
+            with suppress(KeyError):
+                del value["timers"]
         else:
             value = response.json()[section.key]
 

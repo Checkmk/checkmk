@@ -110,14 +110,18 @@ def _formspec_jenkins() -> Dictionary:
                     title=Title("Monitor (min. 1)"),
                     help_text=Help(
                         "Defines what information to query. You can choose "
-                        "between the instance state, job states, node states "
-                        "and the job queue."
+                        "between the instance state, job states, node states, "
+                        "the job queue and system metrics."
                     ),
                     elements=[
                         MultipleChoiceElement(name="instance", title=Title("Instance state")),
                         MultipleChoiceElement(name="jobs", title=Title("Job state")),
                         MultipleChoiceElement(name="nodes", title=Title("Node state")),
                         MultipleChoiceElement(name="queue", title=Title("Queue info")),
+                        MultipleChoiceElement(
+                            name="system_metrics",
+                            title=Title("System metrics (requires 'Metrics' plugin in Jenkins)"),
+                        ),
                     ],
                     prefill=DefaultValue(["instance", "jobs", "nodes", "queue"]),
                     custom_validate=[

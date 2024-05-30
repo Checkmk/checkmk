@@ -20,12 +20,13 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd
+from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
+DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
 
 
 def pytest_addoption(parser):
@@ -276,3 +277,32 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         agent_controller_daemon(installed_agent_ctl_in_unknown_state),
     ):
         yield installed_agent_ctl_in_unknown_state
+
+
+def inject_dumps(site: Site, dumps_dir: Path) -> None:
+    # create dump folder in the test site
+    site_dumps_path = site.path("var/check_mk/dumps")
+    logger.info('Creating folder "%s"...', site_dumps_path)
+    rc = site.execute(["mkdir", "-p", site_dumps_path]).wait()
+    assert rc == 0
+
+    logger.info("Injecting agent-output...")
+
+    for dump_name in list(os.listdir(dumps_dir)):
+        assert (
+            run(
+                [
+                    "sudo",
+                    "cp",
+                    "-f",
+                    f"{dumps_dir}/{dump_name}",
+                    f"{site_dumps_path}/{dump_name}",
+                ]
+            ).returncode
+            == 0
+        )
+
+    ruleset_name = "datasource_programs"
+    logger.info('Creating rule "%s"...', ruleset_name)
+    site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
+    logger.info('Rule "%s" created!', ruleset_name)

@@ -4,35 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from collections.abc import Iterable
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 from cmk.active_checks.check_sftp import Args, CheckSftp, parse_arguments, SecurityError
-
-
-def _with_omd_root(path: str) -> Iterable[None]:
-    old_omd_root = os.environ.get("OMD_ROOT")
-    try:
-        os.environ["OMD_ROOT"] = path
-        yield
-    finally:
-        if old_omd_root is not None:
-            os.environ["OMD_ROOT"] = old_omd_root
-        else:
-            del os.environ["OMD_ROOT"]
-
-
-@pytest.fixture(name="mock_omd_root")
-def fixture_mock_omd_root() -> Iterable[None]:
-    yield from _with_omd_root("/omdroot")
-
-
-@pytest.fixture(name="tmp_omd_root")
-def fixture_omd_root(tmp_path: Path) -> Iterable[None]:
-    yield from _with_omd_root(str(tmp_path))
 
 
 class MockSSHClient(Mock):
@@ -140,11 +117,9 @@ def test_parse_arguments(params: list[str], expected_args: Args) -> None:
         ),
     ],
 )
-def test_put_options(
-    mock_omd_root: None, arguments: str, expected_options: None | CheckSftp.TransferOptions
-) -> None:
+def test_put_options(arguments: str, expected_options: None | CheckSftp.TransferOptions) -> None:
     """Check that testing file upload options work, given the put-local/put-remote arguments"""
-    check = CheckSftp(MockSSHClient(), parse_arguments(arguments.split()))
+    check = CheckSftp(MockSSHClient(), "/omdroot", parse_arguments(arguments.split()))
 
     assert check.download_options is None
     assert check.timestamp_path is None
@@ -190,11 +165,9 @@ def test_put_options(
         ),
     ],
 )
-def test_get_options(
-    mock_omd_root: None, arguments: str, expected_options: None | CheckSftp.TransferOptions
-) -> None:
+def test_get_options(arguments: str, expected_options: None | CheckSftp.TransferOptions) -> None:
     """Check that testing file download options work, given the get-local/get-remote arguments"""
-    check = CheckSftp(MockSSHClient(), parse_arguments(arguments.split()))
+    check = CheckSftp(MockSSHClient(), "/omdroot", parse_arguments(arguments.split()))
 
     assert check.upload_options is None
     assert check.timestamp_path is None
@@ -209,8 +182,8 @@ def test_get_options(
         pytest.param("--get-timestamp some_file.txt", "some_file.txt", id="get-timestamp"),
     ],
 )
-def test_timestamp_path(mock_omd_root: None, arguments: str, expected_options: None | str) -> None:
-    check = CheckSftp(MockSSHClient(), parse_arguments(arguments.split()))
+def test_timestamp_path(arguments: str, expected_options: None | str) -> None:
+    check = CheckSftp(MockSSHClient(), "/omdroot", parse_arguments(arguments.split()))
 
     assert check.upload_options is None
     assert check.download_options is None
@@ -225,14 +198,15 @@ def test_timestamp_path(mock_omd_root: None, arguments: str, expected_options: N
         "--get-remote htpasswd --get-local ../../etc",
     ],
 )
-def test_path_traversal(mock_omd_root: None, arguments: str) -> None:
+def test_path_traversal(arguments: str) -> None:
     with pytest.raises(SecurityError):
-        CheckSftp(MockSSHClient(), parse_arguments(arguments.split()))
+        CheckSftp(MockSSHClient(), "/omdroot", parse_arguments(arguments.split()))
 
 
-def test_run_optional_checks(tmp_omd_root: None) -> None:
+def test_run_optional_checks(tmp_path: Path) -> None:
     check = CheckSftp(
         MockSSHClient(),
+        str(tmp_path),
         parse_arguments(
             [
                 "--put-local=local_file.txt",
@@ -244,16 +218,17 @@ def test_run_optional_checks(tmp_omd_root: None) -> None:
 
     status, messages = check.run_optional_checks()
 
-    assert os.path.isfile(f"{check.local_tempdir()}/local_file.txt"), "Test file was created"
+    assert os.path.isfile(f"{check.local_directory}/local_file.txt"), "Test file was created"
     assert status == 0
     assert messages[0] == "Successfully put file to SFTP server"
     assert messages[1] == "Successfully got file from SFTP server"
     assert messages[2].startswith("Timestamp of timestamp.txt is:")
 
 
-def test_optional_checks_fail(tmp_omd_root: None) -> None:
+def test_optional_checks_fail(tmp_path: str) -> None:
     check = CheckSftp(
         MockSSHClient(),
+        str(tmp_path),
         parse_arguments(
             [
                 "--put-local=local_file.txt",
@@ -276,9 +251,10 @@ def test_optional_checks_fail(tmp_omd_root: None) -> None:
     ]
 
 
-def test_optional_checks_fail_verbose(tmp_omd_root: None) -> None:
+def test_optional_checks_fail_verbose(tmp_path: str) -> None:
     check = CheckSftp(
         MockSSHClient(),
+        str(tmp_path),
         parse_arguments(
             [
                 "--put-local=local_file.txt",

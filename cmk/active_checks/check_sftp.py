@@ -13,7 +13,7 @@ import paramiko
 
 from cmk.utils.password_store import replace_passwords
 
-TMP_DIR = "var/check_mk/active_checks/check_sftp"
+_LOCAL_DIR = "var/check_mk/active_checks/check_sftp"
 
 
 def usage() -> NoReturn:
@@ -26,8 +26,8 @@ OPTIONS:
   --secret SECRET            Secret/Password for sftp login
   --port PORT                Alternative port number (default is 22)
   --get-remote FILE          Path on the remote to the file that should be pulled from server (relative to the remote home)
-  --get-local DIRECTORY      Path where the pulled file should be stored (relative to '{TMP_DIR}' in the site's directory)
-  --put-local FILE           Path to the file to push to server (relative to '{TMP_DIR}' in the site's directory). If the file does not exist, it will be created with a test message.
+  --get-local DIRECTORY      Path where the pulled file should be stored (relative to '{_LOCAL_DIR}' in the site's directory)
+  --put-local FILE           Path to the file to push to server (relative to '{_LOCAL_DIR}' in the site's directory). If the file does not exist, it will be created with a test message.
   --put-remote DIRECTORY     Path on the remote where the pushed file should be stored (relative to the remote home)
   --get-timestamp PATH       Path to the file on the remote server for which the timestamp should be checked
   --timeout SECONDS          Set timeout for connection (default is 10 seconds)
@@ -144,24 +144,19 @@ def output_check_result(s: str) -> None:
 
 
 class CheckSftp:
-    @classmethod
-    def local_tempdir(cls) -> str:
-        omd_root = os.getenv("OMD_ROOT")
-        if omd_root is None:
-            sys.stderr.write("This check must be executed from within a site\n")
-            sys.exit(1)
+    @property
+    def local_directory(self) -> str:
+        return f"{self.omd_root}/{_LOCAL_DIR}"
 
-        return f"{omd_root}/{TMP_DIR}"
-
-    @classmethod
-    def is_in_tempdir(cls, path: str) -> bool:
-        return os.path.normpath(path).startswith(cls.local_tempdir())
+    def is_in_local_directory(self, path: str) -> bool:
+        return os.path.normpath(path).startswith(self.local_directory)
 
     class TransferOptions(NamedTuple):
         local: str
         remote: str
 
-    def __init__(self, client: paramiko.SSHClient, args: Args):
+    def __init__(self, client: paramiko.SSHClient, omd_root: str, args: Args):
+        self.omd_root = omd_root
         self.host: str = args.host or "localhost"
         self.user: str | None = args.user
         self.pass_: str | None = args.pass_
@@ -179,7 +174,7 @@ class CheckSftp:
             None
             if args.put_local is None
             else self.process_put_options(
-                self.local_tempdir(), args.put_local, remote_workdir, args.put_remote
+                self.local_directory, args.put_local, remote_workdir, args.put_remote
             )
         )
 
@@ -187,7 +182,7 @@ class CheckSftp:
             None
             if args.get_remote is None
             else self.process_get_options(
-                remote_workdir, args.get_remote, self.local_tempdir(), args.get_local
+                remote_workdir, args.get_remote, self.local_directory, args.get_local
             )
         )
 
@@ -203,31 +198,29 @@ class CheckSftp:
             os.path.normpath(f"{dst_dir}/{src_file.split('/')[-1]}"),
         )
 
-    @classmethod
     def process_put_options(
-        cls, local_base: str, local_file: str, remote_base: str, remote_dir: str | None
+        self, local_base: str, local_file: str, remote_base: str, remote_dir: str | None
     ) -> None | TransferOptions:
-        local, remote = cls.resolve_transfer_paths(
+        local, remote = self.resolve_transfer_paths(
             f"{local_base}/{local_file}", f"{remote_base}/{remote_dir or '.'}"
         )
 
-        if not cls.is_in_tempdir(local):
+        if not self.is_in_local_directory(local):
             raise SecurityError("Invalid local path for put operation")
 
-        return cls.TransferOptions(local, remote)
+        return CheckSftp.TransferOptions(local, remote)
 
-    @classmethod
     def process_get_options(
-        cls, remote_base: str, remote_file: str, local_base: str, local_dir: str | None
+        self, remote_base: str, remote_file: str, local_base: str, local_dir: str | None
     ) -> None | TransferOptions:
-        remote, local = cls.resolve_transfer_paths(
+        remote, local = self.resolve_transfer_paths(
             f"{remote_base}/{remote_file}", f"{local_base}/{local_dir or '.'}"
         )
 
-        if not cls.is_in_tempdir(local):
+        if not self.is_in_local_directory(local):
             raise SecurityError("Invalid local path for get operation")
 
-        return cls.TransferOptions(local, remote)
+        return CheckSftp.TransferOptions(local, remote)
 
     def connect(self, client: paramiko.SSHClient) -> paramiko.sftp_client.SFTPClient:
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B507
@@ -322,10 +315,15 @@ class CheckSftp:
 
 
 def main() -> int:
+    if (omd_root := os.getenv("OMD_ROOT")) is None:
+        sys.stderr.write("This check must be executed from within a site\n")
+        sys.exit(1)
+
     replace_passwords()
     args = parse_arguments(sys.argv[1:])
+
     try:
-        check = CheckSftp(paramiko.SSHClient(), args)
+        check = CheckSftp(paramiko.SSHClient(), omd_root, args)
     except SecurityError as e:
         if args.verbose:
             raise

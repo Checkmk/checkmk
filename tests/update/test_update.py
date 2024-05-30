@@ -7,11 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import (
-    register_controller,
-    wait_for_agent_cache_omd_status,
-    wait_until_host_receives_data,
-)
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name, get_services_with_status
 from tests.testlib.version import CMKVersion, version_from_env
@@ -41,14 +36,10 @@ def test_update(  # pylint: disable=too-many-branches
 
     test_site.activate_changes_and_wait_for_core_reload()
 
-    register_controller(agent_ctl, test_site, hostname, site_address=ip_address)
-    wait_until_host_receives_data(test_site, hostname)
-
     logger.info("Discovering services and waiting for completion...")
     test_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
     test_site.openapi.activate_changes_and_wait_for_completion()
-
-    test_site.reschedule_services(hostname)
+    test_site.schedule_check(hostname, "Check_MK", 0)
 
     # get baseline monitoring data for each host
     base_data = test_site.get_host_services(hostname)
@@ -86,12 +77,7 @@ def test_update(  # pylint: disable=too-many-branches
     target_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
     target_site.openapi.activate_changes_and_wait_for_completion()
 
-    # services such as 'omd status' rely on cache data:
-    # wait for the cache to be up-to-date and reschedule services
-    wait_for_agent_cache_omd_status(target_site)
     target_site.schedule_check(hostname, "Check_MK", 0)
-
-    target_site.reschedule_services(hostname)
 
     # get update monitoring data
     target_data = target_site.get_host_services(hostname)

@@ -7,7 +7,6 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
-from enum import auto, StrEnum
 from typing import NamedTuple
 
 import requests
@@ -16,17 +15,10 @@ from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
-class HttpMethod(StrEnum):
-    GET = auto()
-    POST = auto()
-
-
 class Section(NamedTuple):
     name: str
     key: str | None
     uri: str
-    method: HttpMethod
-    post_body: str | None = None
 
 
 def main() -> int:
@@ -75,25 +67,21 @@ def agent_jenkins_main(args: Args) -> int:
             name="instance",
             key=None,
             uri="/api/json?tree=mode,nodeDescription,useSecurity,quietingDown",
-            method=HttpMethod.GET,
         ),
         Section(
             name="jobs",
             key="jobs",
             uri="/api/json?tree=jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]",
-            method=HttpMethod.GET,
         ),
         Section(
             name="nodes",
             key="computer",
             uri="/computer/api/json?tree=displayName,busyExecutors,totalExecutors,computer[description,displayName,idle,jnlpAgent,numExecutors,assignedLabels[busyExecutors,idleExecutors,nodes[mode],name],offline,offlineCause,temporarilyOffline,monitorData[*]]",
-            method=HttpMethod.GET,
         ),
         Section(
             name="queue",
             key="items",
             uri="/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,pending,why,buildableStartMilliseconds,task[name,color]]",
-            method=HttpMethod.GET,
         ),
     ]
 
@@ -124,12 +112,7 @@ def handle_request(args, sections):
 
         url = url_base + section.uri
         try:
-            match section.method:
-                case HttpMethod.GET:
-                    response = session.get(url)
-                case HttpMethod.POST:
-                    assert section.post_body is not None
-                    response = session.post(url, data=section.post_body)
+            response = session.get(url)  # nosec B113
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:

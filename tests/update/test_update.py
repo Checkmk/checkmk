@@ -44,14 +44,6 @@ def test_update(  # pylint: disable=too-many-branches
     # get baseline monitoring data for each host
     base_data = test_site.get_host_services(hostname)
 
-    # * The 'Postfix status' service has been renamed into 'Postfix status default'.
-    #   Related: CMK-13774
-    # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
-    #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
-    for changed_service in ["Postfix status", "Postfix Queue"]:
-        if changed_service in base_data:
-            base_data.pop(changed_service)
-
     base_ok_services = get_services_with_status(base_data, 0)
     # used in debugging mode
     _ = get_services_with_status(base_data, 1)  # Warn

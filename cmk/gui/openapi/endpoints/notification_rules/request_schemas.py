@@ -983,6 +983,7 @@ class EnableSynchronousDeliveryViaSMTP(BaseSchema):
     smarthosts = fields.List(
         fields.String(),
         uniqueItems=True,
+        load_default=[],
     )
 
 

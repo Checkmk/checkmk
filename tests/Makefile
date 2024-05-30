@@ -393,10 +393,18 @@ test-cycles-docker:
 test-unit: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		$(PYTEST_UNIT_TEST_OPTS) \
+		$(PYTEST_OPTS_UNIT_PARALLEL)
+
+test-unit-xdist:
+	PYTEST_OPTS_UNIT_PARALLEL="--numprocesses=4 --dist=loadfile" \
+	make --quiet test-unit
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
+
+test-unit-xdist-docker:
+	../scripts/run-in-docker.sh make --quiet test-unit-xdist
 
 test-unit-slow: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \

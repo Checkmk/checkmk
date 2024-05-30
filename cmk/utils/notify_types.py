@@ -388,9 +388,9 @@ class SMTPAuthAttrs(TypedDict, total=False):
     user: str
 
 
-class SyncDeliverySMTP(TypedDict, total=False):
-    auth: SMTPAuthAttrs
-    encryption: Literal["ssl_tls", "starttls"]
+class SyncDeliverySMTP(TypedDict):
+    auth: NotRequired[SMTPAuthAttrs]
+    encryption: NotRequired[Literal["ssl_tls", "starttls"]]
     port: int
     smarthosts: list[str]
 

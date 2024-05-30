@@ -66,6 +66,7 @@ RUN apt-get install -y --fix-missing \
     libxml2-dev \
     libxmlsec1-dev \
     openssh-client \
+    netcat-openbsd \
     patch \
     rpcbind \
     rsync \

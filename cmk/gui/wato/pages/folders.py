@@ -173,7 +173,7 @@ class ModeFolder(WatoMode):
             return self._search_folder_page_menu(breadcrumb)
         assert not isinstance(self._folder, SearchFolder)
 
-        has_hosts = bool(self._folder.has_hosts())
+        has_hosts = self._folder.has_hosts()
 
         menu = PageMenu(
             dropdowns=[
@@ -280,7 +280,7 @@ class ModeFolder(WatoMode):
                         ),
                         make_checkbox_selection_topic(
                             "wato-folder-/%s" % self._folder.path(),
-                            is_enabled=bool(self._folder.has_hosts()),
+                            is_enabled=self._folder.has_hosts(),
                         ),
                     ],
                 ),
@@ -306,7 +306,7 @@ class ModeFolder(WatoMode):
         )
 
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
-        is_enabled = bool(self._folder.has_hosts())
+        folder_has_hosts = self._folder.has_hosts()
         if (
             not self._folder.locked_hosts()
             and user.may("wato.manage_hosts")
@@ -336,7 +336,11 @@ class ModeFolder(WatoMode):
                 icon_name="services",
                 item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
                 disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=is_enabled,
+                is_enabled=folder_has_hosts
+                or (  # has hosts in any of its subfolders
+                    isinstance(self._folder, Folder)
+                    and any(sub.has_hosts() for sub in self._folder.subfolders())
+                ),
             )
 
         if user.may("wato.rename_hosts"):
@@ -345,7 +349,7 @@ class ModeFolder(WatoMode):
                 icon_name="rename_host",
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
                 disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=is_enabled,
+                is_enabled=folder_has_hosts,
             )
 
         if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
@@ -364,7 +368,7 @@ class ModeFolder(WatoMode):
                     warning=True,
                 ),
                 disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=is_enabled,
+                is_enabled=folder_has_hosts,
             )
 
         if (
@@ -377,7 +381,7 @@ class ModeFolder(WatoMode):
                 icon_name="parentscan",
                 item=make_simple_link(self._folder.url([("mode", "parentscan"), ("all", "1")])),
                 disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=is_enabled,
+                is_enabled=folder_has_hosts,
             )
 
         if user.may("wato.random_hosts"):
@@ -393,7 +397,7 @@ class ModeFolder(WatoMode):
         if not user.may("wato.edit_hosts") and not user.may("wato.manage_hosts"):
             return
 
-        is_enabled = bool(self._folder.has_hosts())
+        is_enabled = self._folder.has_hosts()
 
         if not self._folder.locked_hosts() and user.may("wato.edit_hosts"):
             yield PageMenuEntry(

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Literal, Required, TypedDict
+from typing import cast, Literal, Required, TypedDict
 
 from cmk.utils.notify_types import (
     AlwaysBulkParameters,
@@ -518,76 +518,57 @@ class SMTPAuth:
 
 
 # ----------------------------------------------------------------
-class EnableSyncViaSMTPType(TypedDict):
-    auth: SMTPAuth
-    encryption: Literal["ssl_tls", "starttls"]
-    port: int
-    smarthosts: list[str]
 
 
 @dataclass
 class EnableSyncDeliveryViaSMTP:
-    value: EnableSyncViaSMTPType | None = None
+    value: SyncDeliverySMTP | None = None
 
     @classmethod
     def from_mk_file_format(cls, data: SyncDeliverySMTP | None) -> EnableSyncDeliveryViaSMTP:
-        if data is None:
-            return cls()
-
-        return cls(
-            value=EnableSyncViaSMTPType(
-                auth=SMTPAuth.from_mk_file_format(data.get("auth")),
-                encryption=data["encryption"],
-                port=data["port"],
-                smarthosts=data["smarthosts"],
-            )
-        )
+        return cls(value=data)
 
     @classmethod
     def from_api_request(cls, data: API_EnableSyncViaSMTPValueType) -> EnableSyncDeliveryViaSMTP:
         if data["state"] == "disabled":
-            return cls()
+            return cls(value=None)
 
         v = data["value"]
 
-        if "smarthosts" in v:
-            smarthosts = v["smarthosts"]
-            if len(v["smarthosts"]) > 2:
-                smarthosts = v["smarthosts"][:2]  # TODO only two allowed - set in schema
-        else:
-            smarthosts = []
+        smarthosts = v["smarthosts"]
+        if len(v["smarthosts"]) > 2:
+            smarthosts = v["smarthosts"][:2]  # TODO only two allowed - set in schema
 
-        value = EnableSyncViaSMTPType(
-            auth=SMTPAuth.from_api_request(v["auth"]),
-            encryption=v["encryption"],
+        value = SyncDeliverySMTP(
             port=v["port"],
             smarthosts=smarthosts,
         )
+
+        if (auth := SMTPAuth.from_api_request(v["auth"]).to_mk_file_format()) is not None:
+            value["auth"] = auth
+
+        if (encryption := v.get("encryption")) is not None:
+            value["encryption"] = encryption
+
         return cls(value=value)
 
     def api_response(self) -> API_EnableSyncViaSMTPValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
         r: API_EnableSyncViaSMTPValueType = {"state": state}
+
         if self.value is not None:
             r["value"] = {
-                "auth": self.value["auth"].api_response(),
-                "encryption": self.value["encryption"],
+                "auth": SMTPAuth.from_mk_file_format(self.value.get("auth")).api_response(),
                 "port": self.value["port"],
                 "smarthosts": self.value["smarthosts"],
             }
+            if (encryption := self.value.get("encryption")) is not None:
+                r["value"]["encryption"] = encryption
+
         return r
 
-    def to_mk_file_format(self) -> Mapping[str, Any] | None:
-        if self.value is None:
-            return None
-
-        r = {
-            "auth": self.value["auth"].to_mk_file_format(),
-            "encryption": self.value["encryption"],
-            "port": self.value["port"],
-            "smarthosts": self.value["smarthosts"],
-        }
-        return {k: v for k, v in r.items() if v is not None}
+    def to_mk_file_format(self) -> SyncDeliverySMTP | None:
+        return self.value
 
 
 # ----------------------------------------------------------------

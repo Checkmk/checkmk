@@ -8,17 +8,12 @@ import json
 import logging
 import os
 import subprocess
-from collections.abc import Generator, Iterator
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
 import yaml
 
-from tests.testlib.agent import (
-    agent_controller_daemon,
-    clean_agent_controller,
-    download_and_install_agent_package,
-)
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_gte
@@ -263,21 +258,6 @@ def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) 
     """Update the test site to the target version."""
     logger.info("Updating site (interactive-mode=%s) ...", interactive_mode)
     return _get_site(target_version, base_site=site, interactive=interactive_mode)
-
-
-@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(test_setup: tuple, tmp_path: Path) -> Path:
-    test_site, _ = test_setup
-    return download_and_install_agent_package(test_site, tmp_path)
-
-
-@pytest.fixture(name="agent_ctl", scope="function")
-def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
-        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
-    ):
-        yield installed_agent_ctl_in_unknown_state
 
 
 def inject_dumps(site: Site, dumps_dir: Path) -> None:

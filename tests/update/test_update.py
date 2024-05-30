@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-from pathlib import Path
 
 import pytest
 
@@ -22,7 +21,6 @@ logger = logging.getLogger(__name__)
 @pytest.mark.cee
 def test_update(  # pylint: disable=too-many-branches
     test_setup: tuple[Site, bool],
-    agent_ctl: Path,
 ) -> None:
     test_site, disable_interactive_mode = test_setup
     base_version = test_site.version

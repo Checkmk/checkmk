@@ -470,16 +470,16 @@ class URLPrefixForLinksToCheckMkCheckbox(CheckboxOutput):
 class Authentication(BaseSchema):
     method = fields.String(
         enum=["plaintext"],
-        description="",
+        description="The authentication method is fixed at 'plaintext' for now.",
         example="plaintext",
     )
     user = fields.String(
-        description="",
-        example="",
+        description="The username for the SMTP connection",
+        example="user_1",
     )
     password = fields.String(
-        description="",
-        example="",
+        description="The password for the SMTP connection.",
+        example="password",
     )
 
 

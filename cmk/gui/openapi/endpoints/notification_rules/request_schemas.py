@@ -980,18 +980,21 @@ class Authentication(BaseSchema):
     method = fields.String(
         enum=["plaintext"],
         required=False,
-        description="",
+        description="The authentication method is fixed at 'plaintext' for now.",
         example="plaintext",
+        load_default="plaintext",
     )
     user = fields.String(
         required=False,
-        description="",
-        example="",
+        description="The username for the SMTP connection.",
+        example="user_1",
+        load_default="",
     )
     password = fields.String(
         required=False,
-        description="",
-        example="",
+        description="The password for the SMTP connection.",
+        example="password",
+        load_default="",
     )
 
 

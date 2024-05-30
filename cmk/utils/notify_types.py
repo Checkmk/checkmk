@@ -385,7 +385,7 @@ def is_manual_urlprefix(url_prefix: URLPrefix) -> TypeGuard[ManualUrlPrefix]:
     return "manual" in url_prefix
 
 
-class SMTPAuthAttrs(TypedDict, total=False):
+class SMTPAuthAttrs(TypedDict):
     method: Literal["plaintext"]
     password: str
     user: str

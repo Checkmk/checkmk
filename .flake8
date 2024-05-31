@@ -7,10 +7,6 @@ ignore=
     E203,
     # missing whitespace around arithmetic operator
     E226,
-    # multiple spaces after ':'
-    E241,
-    # unexpected spaces around keyword / parameter equals
-    E251,
     # inline comment should start with '# '
     E262,
     # block comment should start with '# '
@@ -21,12 +17,6 @@ ignore=
     E272,
     # missing whitespace after keyword
     E275,
-    # expected 1 blank line, found 0
-    E301,
-    # expected 2 blank lines, found 1
-    E302,
-    # too many blank lines
-    E303,
     # line too long
     E501,
     # line break before binary operator

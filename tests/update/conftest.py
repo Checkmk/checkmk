@@ -15,14 +15,7 @@ import pytest
 import yaml
 
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import (
-    current_base_branch_name,
-    current_branch_version,
-    edition_from_env,
-    repo_path,
-    restart_httpd,
-    run,
-)
+from tests.testlib.utils import edition_from_env, repo_path, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 logger = logging.getLogger(__name__)
@@ -73,22 +66,10 @@ class BaseVersions:
         BASE_VERSIONS_STR = json.load(f)
 
     if version_from_env().is_saas_edition():
-        BASE_VERSIONS = [
-            CMKVersion(
-                CMKVersion.DAILY,
-                edition_from_env(),
-                "2.3.0",
-                "2.3.0",
-            )
-        ]
+        BASE_VERSIONS = [CMKVersion(CMKVersion.DAILY, edition_from_env(), "2.3.0", "2.3.0")]
     else:
         BASE_VERSIONS = [
-            CMKVersion(
-                base_version_str,
-                edition_from_env(),
-                current_base_branch_name(),
-                current_branch_version(),
-            )
+            CMKVersion(base_version_str, edition_from_env())
             for base_version_str in BASE_VERSIONS_STR
             if not version_from_env().is_saas_edition()
         ]
@@ -168,12 +149,7 @@ def _get_site(  # pylint: disable=too-many-branches
     update_conflict_mode = "keepold"
     min_version = BaseVersions.MIN_VERSION
     sf = SiteFactory(
-        version=CMKVersion(
-            version.version,
-            version.edition,
-            current_base_branch_name(),
-            current_branch_version(),
-        ),
+        version=CMKVersion(version.version, version.edition),
         prefix=prefix,
         update=update,
         update_conflict_mode=update_conflict_mode,

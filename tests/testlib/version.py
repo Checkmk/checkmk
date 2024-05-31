@@ -43,7 +43,11 @@ class CMKVersion:
     TIMESTAMP_FORMAT = r"%Y.%m.%d"
 
     def __init__(
-        self, version_spec: str, edition: Edition, branch: str, branch_version: str
+        self,
+        version_spec: str,
+        edition: Edition,
+        branch: str = current_base_branch_name(),
+        branch_version: str = current_branch_version(),
     ) -> None:
         self.version_spec: Final = version_spec
         self.version: Final = self._version(version_spec, branch, branch_version)
@@ -199,7 +203,6 @@ def version_from_env(
         version_spec_from_env(fallback_version_spec or CMKVersion.DAILY),
         edition_from_env(fallback_edition or Edition.CEE),
         branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
-        current_branch_version(),
     )
 
 
@@ -208,12 +211,7 @@ def get_min_version(edition: Edition | None = None) -> CMKVersion:
     if edition is None:
         # by default, fallback to edition: CEE
         edition = edition_from_env(fallback=Edition.CEE)
-    return CMKVersion(
-        os.getenv("MIN_VERSION", "2.3.0"),
-        edition,
-        current_base_branch_name(),
-        current_branch_version(),
-    )
+    return CMKVersion(os.getenv("MIN_VERSION", "2.3.0"), edition)
 
 
 def get_omd_distro_name() -> str:

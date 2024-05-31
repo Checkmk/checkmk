@@ -30,10 +30,7 @@ from cmk.utils.version import Edition, Version, versions_compatible, VersionsCom
 logger = logging.getLogger()
 
 old_version = CMKVersion(
-    version_spec="2.3.0b1",
-    edition=Edition.CRE,
-    branch="2.3.0",
-    branch_version="2.3.0",
+    version_spec="2.3.0b1", edition=Edition.CRE, branch="2.3.0", branch_version="2.3.0"
 )
 
 

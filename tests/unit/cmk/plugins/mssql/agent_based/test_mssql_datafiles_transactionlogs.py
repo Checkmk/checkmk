@@ -250,7 +250,7 @@ def test_check_mssql_common_unlimited() -> None:
                     "max_size": 0.0,
                     "allocated_size": 44844449792.0,
                     "used_size": 40787509248.0,
-                    "mountpoint": "F",
+                    "mountpoint": "f:\\",
                 },
             },
             (
@@ -307,12 +307,11 @@ def test_check_mssql_transactionlogs_multiple_mp_single() -> None:
         )
     ) == [
         Result(state=State.OK, summary="Used: 121 GiB"),
-        Metric("data_size", 130203779072.0, boundaries=(0.0, 140556894208.0)),
+        Metric("data_size", 130203779072.0, boundaries=(0.0, 734020370432.0)),
         Result(state=State.OK, summary="Allocated used: 121 GiB"),
         Result(state=State.OK, summary="Allocated: 122 GiB"),
-        Metric("allocated_size", 130956656640.0, boundaries=(0.0, 140556894208.0)),
-        # FIXME. Currently this is 131 GiB: allocated for this file + available on D:\temp\. That's nonsense.
-        Result(state=State.OK, summary="Maximum size: 131 GiB"),
+        Metric("allocated_size", 130956656640.0, boundaries=(0.0, 734020370432.0)),
+        Result(state=State.OK, summary="Maximum size: 684 GiB"),
     ]
 
 
@@ -326,10 +325,9 @@ def test_check_mssql_transactionlogs_multiple_mp_summary() -> None:
         )
     ) == [
         Result(state=State.OK, summary="Used: 246 GiB"),
-        Metric("data_size", 264601862144.0, boundaries=(0.0, 285308092416.0)),
+        Metric("data_size", 264601862144.0, boundaries=(0.0, 868418453504.0)),
         Result(state=State.OK, summary="Allocated used: 246 GiB"),
         Result(state=State.OK, summary="Allocated: 248 GiB"),
-        Metric("allocated_size", 266107617280.0, boundaries=(0.0, 285308092416.0)),
-        # FIXME. See above. But this is twice as wrong: allocated + _2_ * avalable on D:\temp\
-        Result(state=State.OK, summary="Maximum size: 266 GiB"),
+        Metric("allocated_size", 266107617280.0, boundaries=(0.0, 868418453504.0)),
+        Result(state=State.OK, summary="Maximum size: 809 GiB"),
     ]

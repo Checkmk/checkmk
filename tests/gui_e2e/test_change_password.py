@@ -64,6 +64,11 @@ def _change_password(page: LoginPage, new_pw: str, new_pw_conf: str, old_pw: str
         ("😎 😎 😎 😎 😎 😎 ", "😎 😎 😎 😎 😎 😎 "),
         ("😎 😎 😎 😎 😎 😎 ", ""),
     ],
+    ids=[
+        "lowercase",
+        "specialchars",
+        "specialchars_no_confirm",
+    ],
 )
 def test_user_change_password_success(
     test_site: Site,

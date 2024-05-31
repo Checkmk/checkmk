@@ -7,8 +7,6 @@ ignore=
     E203,
     # missing whitespace around arithmetic operator
     E226,
-    # missing whitespace after ','
-    E231,
     # multiple spaces after ':'
     E241,
     # unexpected spaces around keyword / parameter equals

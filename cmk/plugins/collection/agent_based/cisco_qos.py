@@ -495,7 +495,7 @@ def check_cisco_qos_(
     )
     yield Result(
         state=State.OK,
-        summary=f"Bandwidth: {(render.nicspeed if unit == 'bit' else render.iobandwidth)(qos_data.bandwidth / 8 )}",
+        summary=f"Bandwidth: {(render.nicspeed if unit == 'bit' else render.iobandwidth)(qos_data.bandwidth / 8)}",
     )
 
 

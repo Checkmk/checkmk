@@ -3,10 +3,6 @@ ignore=
     ################################################################################################
     # Black is our formatting tool, so ignore any formatting-related findings.
     ################################################################################################
-    # whitespace after '{'
-    E201,
-    # whitespace before '}'
-    E202,
     # whitespace before ':'
     E203,
     # missing whitespace around operator
@@ -37,7 +33,7 @@ ignore=
     E301,
     # expected 2 blank lines, found 1
     E302,
-    #  too many blank lines
+    # too many blank lines
     E303,
     # line too long
     E501,

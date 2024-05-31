@@ -5,14 +5,8 @@ ignore=
     ################################################################################################
     # whitespace before ':'
     E203,
-    # missing whitespace around operator
-    E225,
     # missing whitespace around arithmetic operator
     E226,
-    # missing whitespace around bitwise or shift operator
-    E227,
-    # missing whitespace around modulo operator
-    E228,
     # missing whitespace after ','
     E231,
     # multiple spaces after ':'

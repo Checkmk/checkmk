@@ -252,7 +252,7 @@ def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tu
 
 def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None:
     x_scala = [
-        (i + x_range[0], f"{i//3600:02}:{i%3600:02}")
+        (i + x_range[0], f"{i // 3600:02}:{i % 3600:02}")
         for i in range(0, x_range[1] - x_range[0] + 1, 7200)
     ]
     y_scala = _compute_vertical_scala(*y_range)

@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.plugins.agent_based import prtconf
-
 from cmk.agent_based.v2 import Attributes, TableRow
+from cmk.plugins.collection.agent_based import prtconf
 
 INFO = [
     ["System Model", " IBM,8231-E2D"],

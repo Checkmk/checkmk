@@ -19,20 +19,20 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
     return perfometers.Perfometer(
         name=name,
         focus_range=perfometers.FocusRange(
-            perfometers.Closed(f"metric-name{start_idx+1}"),
-            perfometers.Closed(f"metric-name{start_idx+2}"),
+            perfometers.Closed(f"metric-name{start_idx + 1}"),
+            perfometers.Closed(f"metric-name{start_idx + 2}"),
         ),
         segments=[
-            metrics.WarningOf(f"metric-name{start_idx+3}"),
-            metrics.CriticalOf(f"metric-name{start_idx+4}"),
-            metrics.MinimumOf(f"metric-name{start_idx+5}", metrics.Color.BLUE),
-            metrics.MaximumOf(f"metric-name{start_idx+6}", metrics.Color.BLUE),
+            metrics.WarningOf(f"metric-name{start_idx + 3}"),
+            metrics.CriticalOf(f"metric-name{start_idx + 4}"),
+            metrics.MinimumOf(f"metric-name{start_idx + 5}", metrics.Color.BLUE),
+            metrics.MaximumOf(f"metric-name{start_idx + 6}", metrics.Color.BLUE),
             metrics.Sum(
                 Title("Title"),
                 metrics.Color.BLUE,
                 [
-                    f"metric-name{start_idx+7}",
-                    f"metric-name{start_idx+8}",
+                    f"metric-name{start_idx + 7}",
+                    f"metric-name{start_idx + 8}",
                 ],
             ),
             metrics.Product(
@@ -40,22 +40,22 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
                 UNIT,
                 metrics.Color.BLUE,
                 [
-                    f"metric-name{start_idx+9}",
-                    f"metric-name{start_idx+10}",
+                    f"metric-name{start_idx + 9}",
+                    f"metric-name{start_idx + 10}",
                 ],
             ),
             metrics.Difference(
                 Title("Title"),
                 metrics.Color.BLUE,
-                minuend=f"metric-name{start_idx+11}",
-                subtrahend=f"metric-name{start_idx+12}",
+                minuend=f"metric-name{start_idx + 11}",
+                subtrahend=f"metric-name{start_idx + 12}",
             ),
             metrics.Fraction(
                 Title("Title"),
                 UNIT,
                 metrics.Color.BLUE,
-                dividend=f"metric-name{start_idx+13}",
-                divisor=f"metric-name{start_idx+14}",
+                dividend=f"metric-name{start_idx + 13}",
+                divisor=f"metric-name{start_idx + 14}",
             ),
         ],
     )

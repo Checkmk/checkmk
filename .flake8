@@ -5,24 +5,10 @@ ignore=
     ################################################################################################
     # whitespace before ':'
     E203,
-    # missing whitespace around arithmetic operator
-    E226,
-    # inline comment should start with '# '
-    E262,
-    # block comment should start with '# '
-    E265,
-    # too many leading '#' for block comment
-    E266,
-    # multiple spaces before keyword
-    E272,
-    # missing whitespace after keyword
-    E275,
     # line too long
     E501,
     # line break before binary operator
     W503,
-    # line break after binary operator
-    W504,
     # multiple statements on one line (colon)
     E701,
     # multiple statements on one line (def)

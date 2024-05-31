@@ -16,7 +16,7 @@ IF64_BASE_TREE = SNMPTree(
     base=if64.BASE_OID,
     oids=if64.END_OIDS[:1]
     + [
-        "31.1.1.1.1",  #  1 ifName (brocade and lancom have no useful information in ifDescr)
+        "31.1.1.1.1",  # 1 ifName (brocade and lancom have no useful information in ifDescr)
     ]
     + if64.END_OIDS[2:3]
     + [
@@ -24,7 +24,7 @@ IF64_BASE_TREE = SNMPTree(
     ]
     + if64.END_OIDS[4:-1]
     + [
-        "2.2.1.2",  #    -1 ifDescr, used in order to ignore some logical NICs
+        "2.2.1.2",  # -1 ifDescr, used in order to ignore some logical NICs
     ],
 )
 

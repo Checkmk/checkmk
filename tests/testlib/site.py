@@ -338,7 +338,7 @@ class Site:
             "Columns: last_check state plugin_output\n"
             f"Filter: host_name = {hostname}\n"
             f"WaitObject: {hostname}\n"
-            f"WaitTimeout: {wait_timeout or self.check_wait_timeout*1000:d}\n"
+            f"WaitTimeout: {wait_timeout or self.check_wait_timeout * 1000:d}\n"
             f"WaitTrigger: check\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
         )
@@ -370,7 +370,7 @@ class Site:
             f"Filter: host_name = {hostname}\n"
             f"Filter: description = {service_description}\n"
             f"WaitObject: {hostname};{service_description}\n"
-            f"WaitTimeout: {(wait_timeout or self.check_wait_timeout)*1000:d}\n"
+            f"WaitTimeout: {(wait_timeout or self.check_wait_timeout) * 1000:d}\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
             "WaitCondition: has_been_checked = 1\n"
             "WaitTrigger: check\n"

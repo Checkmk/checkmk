@@ -512,8 +512,8 @@ PARSED_STATUS = {
         "forks_rate": "0",
         "has_event_handlers": "0",
         # Simulate the host without those counters:
-        #'helper_usage_fetcher': '0',
-        #'helper_usage_checker': '0',
+        # "helper_usage_fetcher": "0",
+        # "helper_usage_checker": "0",
         "helper_usage_generic": "0",
         "helper_usage_real_time": "0",
         "host_checks": "0",

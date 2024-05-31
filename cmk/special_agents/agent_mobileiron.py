@@ -80,7 +80,7 @@ class HostnameDict(UserDict):
     def __setitem__(self, key: str, value: Mapping) -> None:
         key = _sanitize_hostname(key)
         if (current_count := next(self._keys_seen[key])) >= 1:
-            key = f"{key}_{current_count+1}"
+            key = f"{key}_{current_count + 1}"
         super().__setitem__(key, value)
 
 

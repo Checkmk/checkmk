@@ -323,7 +323,7 @@ class ModifyEndTimeByDelta(ModifyEndTimeBaseSchema):
     @post_load
     def prefix_value(self, data, **kwargs):
         # Livestatus is expectind seconds, so we convert the minutes to seconds and then add + or - sign
-        data["value"] = f"{'+' if data['value'] >= 0 else '-'}{abs(data['value'])*60}"
+        data["value"] = f"{'+' if data['value'] >= 0 else '-'}{abs(data['value']) * 60}"
         return data
 
 

@@ -71,7 +71,7 @@ def parse_nfsiostat(string_table: StringTable) -> Section:
     # first seven. note that the NUMBER_SEPARATOR trick only works because the first and last number
     # on our list is not in brackets.
     matches = re.findall(
-        rf"(\S+:\S+) mounted on \S+:.*?{NUMBER_SEPARATOR.join([NUMBER]*2)}.*?read:.*?{NUMBERS}.*?write:.*?{NUMBERS}",
+        rf"(\S+:\S+) mounted on \S+:.*?{NUMBER_SEPARATOR.join([NUMBER] * 2)}.*?read:.*?{NUMBERS}.*?write:.*?{NUMBERS}",
         " ".join(new_info),
         flags=re.DOTALL,
     )

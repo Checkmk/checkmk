@@ -45,7 +45,6 @@
 #   (PackageHub/12.5/x86_64)
 
 #   Registered
-##.
 
 from collections.abc import Mapping, Sequence
 from typing import Final, TypeVar

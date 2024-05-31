@@ -801,11 +801,10 @@ def _process_notifications(
                 plugin_context = create_plugin_context(enriched_context, params, get_http_proxy)
                 rbn_add_contact_information(plugin_context, contacts)
 
+                # params can be a list (e.g. for custom notificatios)
                 split_contexts = (
                     plugin_name not in ["", "mail", "asciimail", "slack"]
-                    or
-                    # params can be a list (e.g. for custom notificatios)
-                    (isinstance(params, dict) and params.get("disable_multiplexing"))
+                    or (isinstance(params, dict) and params.get("disable_multiplexing"))
                     or bulk
                 )
                 if not split_contexts:

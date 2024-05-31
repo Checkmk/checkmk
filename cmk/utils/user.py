@@ -143,7 +143,7 @@ class UserId(str):
 
         if len(bytes(text, encoding="utf-8")) > 255:
             # ext4 and others allow filenames of up to 255 bytes
-            raise ValueError(f"Username too long: {text[:16]+'…'!r}")
+            raise ValueError(f"Username too long: {text[:16] + '…'!r}")
 
         if not cls.USER_ID_REGEX.match(text):
             raise ValueError(f"Invalid username: {text!r}")

@@ -337,7 +337,7 @@ class TestMetricometerRendererLegacyLinear:
                 id="no dedicated perfometer renderer",
             ),
             pytest.param(
-                lambda v: f"{2*v} U",
+                lambda v: f"{2 * v} U",
                 "120.0 U",
                 id="dedicated perfometer renderer",
             ),
@@ -438,7 +438,7 @@ class TestMetricometerRendererLegacyLogarithmic:
                 id="no dedicated perfometer renderer",
             ),
             pytest.param(
-                lambda v: f"{2*v} U",
+                lambda v: f"{2 * v} U",
                 "246.0 U",
                 id="dedicated perfometer renderer",
             ),

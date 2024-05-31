@@ -373,7 +373,9 @@ class VersionsIncompatible:
 
 
 def versions_compatible(
-    from_v: Version, to_v: Version, /
+    from_v: Version,
+    to_v: Version,
+    /,
 ) -> VersionsCompatible | VersionsIncompatible:
     """Whether or not two versions are compatible (e.g. for omd update or remote automation calls)
 
@@ -525,7 +527,9 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
 
 
 def _check_minimum_patch_release(
-    from_v: Version, to_v: Version, /
+    from_v: Version,
+    to_v: Version,
+    /,
 ) -> VersionsCompatible | VersionsIncompatible:
     if to_v.base is None:
         return VersionsCompatible()

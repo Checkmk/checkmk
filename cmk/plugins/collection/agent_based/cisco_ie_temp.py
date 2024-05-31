@@ -50,7 +50,7 @@ snmp_section_cisco_ie_temp = SimpleSNMPSection(
     name="cisco_ie_temp",
     parse_function=parse,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.9.9.832.1.24.1.3.6.1",  #  cie1000SysutilStatusTemperatureMonitorEntry
+        base=".1.3.6.1.4.1.9.9.832.1.24.1.3.6.1",  # cie1000SysutilStatusTemperatureMonitorEntry
         oids=[
             OIDEnd(),
             "5",  # cie1000SysutilStatusTemperatureMonitorTemperature

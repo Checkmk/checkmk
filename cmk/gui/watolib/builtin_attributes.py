@@ -622,13 +622,9 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     @staticmethod
     def _time_allowed_to_valuespec(
-        v: (
-            TimeofdayRangeValue
-            |
-            # we need list as input type here because Sequence[TimeofdayRangeValue] is hard to
-            # distinguish from TimeofdayRangeValue
-            list[TimeofdayRangeValue]
-        ),
+        # we need list as input type here because Sequence[TimeofdayRangeValue] is hard to
+        # distinguish from TimeofdayRangeValue
+        v: TimeofdayRangeValue | list[TimeofdayRangeValue],
     ) -> list[TimeofdayRangeValue]:
         return v if isinstance(v, list) else [v]
 

@@ -43,7 +43,7 @@ def check_ibm_xraid_pdisks(item, _no_params, section):
             if disk_state == "5":
                 return (2, "Disk is dead" + " [%s]" % slot_desc)
 
-    return (2, "disk is missing")  #  + " [%s]" % data[item][4])
+    return (2, "disk is missing")  # + " [%s]" % data[item][4])
 
 
 check_info["ibm_xraid_pdisks"] = LegacyCheckDefinition(

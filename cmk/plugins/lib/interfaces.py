@@ -2082,7 +2082,7 @@ def _render_floating_point(value: float, precision: int, unit: str) -> str:
     if round(value) == value:
         return f"{value:.0f}{unit}"
 
-    if abs(value) < float(tol := f"0.{'0'*(precision-1)}1"):
+    if abs(value) < float(tol := f"0.{'0' * (precision - 1)}1"):
         return f"{'<' if value > 0 else '>-'}{tol}{unit}"
 
     return f"{value:.{precision}f}".rstrip("0.") + unit

@@ -112,8 +112,8 @@ local_cfg = {
     "passwd": "",
     "trace": "3",
     "loglevel": "warn",
-    #'lang':     'EN',
-    #'host_prefix': 'FOOBAR_',
+    # "lang": "EN",
+    # "host_prefix": "FOOBAR_",
 }
 
 # A list of strings, while the string must match the full path to one or

@@ -91,7 +91,7 @@ VueVisitorMethodResult = tuple[VueSchema, Value, list[Validation], DataForDisk]
 VueFormSpecVisitorMethod = Callable[[VisitorOptions, Any, Any], VueVisitorMethodResult]
 
 
-######## DEBUG STUFF START ################
+# DEBUG STUFF START #######################
 _debug_indent = 0
 
 
@@ -109,7 +109,7 @@ def _log_indent(info):
     logger.warning(" " * _debug_indent + info)
 
 
-######## DEBUG STUFF END ################
+# DEBUG STUFF END #######################
 
 
 def _visit(

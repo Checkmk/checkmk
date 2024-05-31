@@ -146,7 +146,7 @@ class BackupTask:
             for elem in lines_with_numbers
             for line in (elem["t"],)
             if isinstance(line, str) and line.strip()
-        )  #  #  #  #
+        )
 
     def __str__(self) -> str:
         return "BackupTask({!r}, t={!r}, vms={!r})".format(
@@ -783,7 +783,7 @@ class ProxmoxVeAPI:
                     request_tree
                     if isinstance(request_tree, Mapping)
                     else next(iter(request_tree)) if len(request_tree) > 0 else {}
-                )  #  #
+                )
 
             def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:
                 """Check if there is exactly one root element with a variable name,

@@ -14,7 +14,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 SectionDict = dict[
     str,
-    (list[tuple[str, int]] | list[tuple[str, list[str]]]),  #  # TODO: .util.cpu_util.CPUInfo?
+    (list[tuple[str, int]] | list[tuple[str, list[str]]]),  # TODO: .util.cpu_util.CPUInfo?
 ]
 
 Section = tuple[int | None, SectionDict]

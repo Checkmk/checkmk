@@ -48,9 +48,9 @@ check_info["seh_ports"] = LegacyCheckDefinition(
             base=".1.3.6.1.4.1.1229.2.50.2.1",
             oids=[
                 OIDEnd(),  # index
-                "10",  #     utnPortTag: UTN USB port short description string
-                "26",  #     utnPortUsbOwn: UTN USB device connection status
-                "27",  #     utnPortSlot: UTN slot number the USB is attached to
+                "10",  # utnPortTag: UTN USB port short description string
+                "26",  # utnPortUsbOwn: UTN USB device connection status
+                "27",  # utnPortSlot: UTN slot number the USB is attached to
             ],
         ),
         # format taken from SEH-MIB v2.5 (2023.10.31)
@@ -69,10 +69,10 @@ check_info["seh_ports"] = LegacyCheckDefinition(
             #           .utnDevPort(7): UTN slot number the USB is attached to
             base=".1.3.6.1.4.1.1229.5",
             oids=[
-                OIDEnd(),  #    index
+                OIDEnd(),  # index
                 "10.2.1.10",  # utnPortTag: UTN USB port short description string
-                "20.2.1.7",  #  utnDevOwn: UTN USB device connection status
-                "20.2.1.8",  #  utnDevPort: UTN slot number the USB is attached to
+                "20.2.1.7",  # utnDevOwn: UTN USB device connection status
+                "20.2.1.8",  # utnDevPort: UTN slot number the USB is attached to
             ],
         ),
     ],

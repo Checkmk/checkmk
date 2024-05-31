@@ -437,7 +437,7 @@ def _create_graph(
         "",
         class_="prediction",
         id_=canvas_id,
-        style=f"width: {size[0]//2}px; height: {size[1]//2}px;",
+        style=f"width: {size[0] // 2}px; height: {size[1] // 2}px;",
         width=str(size[0]),
         height=str(size[1]),
     )

@@ -88,10 +88,10 @@ snmp_section_extreme_vsp_switches_power_supply = SNMPSection(
         SNMPTree(
             base=".1.3.6.1.4.1.2272.1.4.8.2.1",
             oids=[
-                "1",  #  rcChasPowerSupplyDetailId
+                "1",  # rcChasPowerSupplyDetailId
                 "7",  # rcChasPowerSupplyDetailPsePower
                 "8",  # rcChasPowerSupplyDetailInputLineVoltage
-                "10",  #  rcChasPowerSupplyDetailOutputWatts
+                "10",  # rcChasPowerSupplyDetailOutputWatts
             ],
         ),
     ],

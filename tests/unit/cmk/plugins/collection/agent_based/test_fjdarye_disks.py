@@ -468,7 +468,7 @@ def test_check_fjdarye_disks(
     assert list(check_fjdarye_disks(item, params, section)) == check_result
 
 
-###### fjdarye_disks_summary ######
+# fjdarye_disks_summary ###########
 
 
 @pytest.mark.parametrize(

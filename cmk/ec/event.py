@@ -97,7 +97,7 @@ def create_event_from_syslog_message(
         width = max(len(k) for k in event) + 1
         logger.info(
             "parsed message: %s",
-            "".join(f'\n {k+":":{width}} {v}' for k, v in sorted(event.items())),
+            "".join(f'\n {k + ":":{width}} {v}' for k, v in sorted(event.items())),
         )
     return event
 

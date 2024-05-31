@@ -98,7 +98,9 @@ def _check_cpu_load_type(
         )
 
     # provide additional info text
-    per_core_txt = f"{avg} min load per core: {(value/num_cpus):.2f} ({num_cpus} {proc_name}cores)"
+    per_core_txt = (
+        f"{avg} min load per core: {(value / num_cpus):.2f} ({num_cpus} {proc_name}cores)"
+    )
     yield (
         Result(state=State.OK, notice=per_core_txt)
         if notice_only

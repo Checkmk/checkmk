@@ -261,7 +261,7 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
         if baking_status.state == "finished":
             return
     raise AssertionError(
-        f"Now waiting {waiting_cycles*waiting_time} seconds for baking job to finish, giving up..."
+        f"Now waiting {waiting_cycles * waiting_time} seconds for baking job to finish, giving up..."
     )
 
 

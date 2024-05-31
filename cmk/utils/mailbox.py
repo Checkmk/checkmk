@@ -253,7 +253,7 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
         for mb in mb_list
         for match in (pattern.search(mb),)
         if match is not None
-    ]  #  #  #
+    ]
 
 
 def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:

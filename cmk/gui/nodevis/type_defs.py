@@ -280,7 +280,7 @@ class TopologyNode:
 TopologyNodes = dict[str, TopologyNode]
 
 
-#### FRONTEND DATACLASSES
+# FRONTEND DATACLASSES ##
 
 
 @dataclass

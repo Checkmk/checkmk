@@ -65,7 +65,7 @@ class FjdaryeDisk(NamedTuple):
 
 SectionFjdaryeDisk = Mapping[str, FjdaryeDisk]
 
-###### fjdarye_disks ######
+# fjdarye_disks ###########
 
 
 def parse_fjdarye_disks(string_table: Sequence[StringTable]) -> SectionFjdaryeDisk:
@@ -145,7 +145,7 @@ check_plugin_fjdarye_disks = CheckPlugin(
 )
 
 
-###### fjdarye_disks_summary ######
+# fjdarye_disks_summary ###########
 
 
 def _fjdarye_disks_states_summary(section: SectionFjdaryeDisk) -> Mapping[str, int]:

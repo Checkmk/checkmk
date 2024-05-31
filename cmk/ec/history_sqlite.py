@@ -269,7 +269,7 @@ class SQLiteHistory(History):
         sqlite_query, sqlite_arguments = filters_to_sqlite_query(query.filters)
         if query.limit:
             sqlite_query += " LIMIT ?"
-            sqlite_arguments += f" {query.limit+1}"
+            sqlite_arguments += f" {query.limit + 1}"
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(sqlite_query, sqlite_arguments)

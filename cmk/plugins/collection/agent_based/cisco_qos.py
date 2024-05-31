@@ -259,7 +259,8 @@ class _cbQosObjectsIndex(str): ...
 
 
 def _oid_end_to_policy_and_object_index(
-    oid_end: str, /
+    oid_end: str,
+    /,
 ) -> tuple[_cbQosPolicyIndex, _cbQosObjectsIndex]:
     oid_split = oid_end.split(".")
     return _cbQosPolicyIndex(oid_split[-2]), _cbQosObjectsIndex(oid_split[-1])

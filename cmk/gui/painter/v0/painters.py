@@ -674,7 +674,7 @@ class PainterSvcLongPluginOutput(Painter):
             )
             content.value = (
                 f"Lost data due to truncation of long output to "
-                f"{int(max_long_output_size/1000)}kB "
+                f"{int(max_long_output_size / 1000)}kB "
                 f"{setting_link_tag}"
                 f'{html.render_b("WARN", class_="stmark state1")}<br>'
                 f"{content.value}"

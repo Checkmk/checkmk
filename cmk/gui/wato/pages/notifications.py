@@ -1382,7 +1382,8 @@ class ModeNotifications(ABCNotificationsMode):
         return Checkbox(
             title=_("Dispatch notification"),
             label=_(
-                "Send out notification according to notification rules (uncheck to avoid spam)"
+                "Send out HTML/ASCII Email notification according "
+                "to notification rules (uncheck to avoid spam)"
             ),
             default_value=False,
         )

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
 
 checkname = "skype"
@@ -11,22 +10,34 @@ checkname = "skype"
 mock_item_state = {
     "": {
         "WEB - Failed search requests/sec_LS:WEB - Address Book Web Query": (0, 0),
-        "WEB - Failed Get Locations Requests/Second_LS:WEB - Location Information Service": (0, 264),
-        "WEB - Timed out Active Directory Requests/sec_LS:WEB - Distribution List Expansion": (0, 0),
+        "WEB - Failed Get Locations Requests/Second_LS:WEB - Location Information Service": (
+            0,
+            264,
+        ),
+        "WEB - Timed out Active Directory Requests/sec_LS:WEB - Distribution List Expansion": (
+            0,
+            0,
+        ),
         "UCWA - HTTP 5xx Responses/Second_LS:WEB - UCWA": (0.0, 1.0),
     },
     "sip_stack": {
-       "SIP - Average Incoming Message Processing Time_LS:SIP - Protocol": (0, 229005714),
-       "SIP - Average Incoming Message Processing Time_LS:SIP - Protocol_Base": (0, 2534318),
-       "SIP - Incoming Responses Dropped /Sec_LS:SIP - Protocol": (0, 502),
-       "SIP - Incoming Requests Dropped /Sec_LS:SIP - Protocol": (0, 813),
-       "USrv - Throttled requests/sec_LS:USrv - DBStore": (0, 0),
-       "SIP - Local 503 Responses /Sec_LS:SIP - Responses": (0, 6),
-       "SIP - Average Holding Time For Incoming Messages_LS:SIP - Load Management": (0.0, 1510747184),
-       "SIP - Average Holding Time For Incoming Messages_LS:SIP - Load Management_Base": (0.0, 2960375),
-       "SIP - Average Outgoing Queue Delay_LS:SIP - Peers": (0.0, 4103288425),
-       "SIP - Average Outgoing Queue Delay_LS:SIP - Peers_Base": (0.0, 10344),
-       "SIP - Sends Timed-Out /Sec_LS:SIP - Peers": (0.0, 0),
+        "SIP - Average Incoming Message Processing Time_LS:SIP - Protocol": (0, 229005714),
+        "SIP - Average Incoming Message Processing Time_LS:SIP - Protocol_Base": (0, 2534318),
+        "SIP - Incoming Responses Dropped /Sec_LS:SIP - Protocol": (0, 502),
+        "SIP - Incoming Requests Dropped /Sec_LS:SIP - Protocol": (0, 813),
+        "USrv - Throttled requests/sec_LS:USrv - DBStore": (0, 0),
+        "SIP - Local 503 Responses /Sec_LS:SIP - Responses": (0, 6),
+        "SIP - Average Holding Time For Incoming Messages_LS:SIP - Load Management": (
+            0.0,
+            1510747184,
+        ),
+        "SIP - Average Holding Time For Incoming Messages_LS:SIP - Load Management_Base": (
+            0.0,
+            2960375,
+        ),
+        "SIP - Average Outgoing Queue Delay_LS:SIP - Peers": (0.0, 4103288425),
+        "SIP - Average Outgoing Queue Delay_LS:SIP - Peers_Base": (0.0, 10344),
+        "SIP - Sends Timed-Out /Sec_LS:SIP - Peers": (0.0, 0),
     },
     "edge_auth": {
         "- Bad Requests Received/sec_LS:A/V Auth - Requests": (0.0, 0),

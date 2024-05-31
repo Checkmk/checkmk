@@ -411,7 +411,7 @@ class LicensingClient(RestApiClient):
     def call_online_verification(self, expect_ok: bool = False) -> Response:
         return self.request(
             "post",
-            url="/domain-types/licensing/actions/verify/invoke",
+            url=f"/domain-types/{self.domain}/actions/verify/invoke",
             expect_ok=expect_ok,
         )
 
@@ -421,8 +421,25 @@ class LicensingClient(RestApiClient):
         body = {"settings": settings} if settings else {}
         return self.request(
             "put",
-            url="/domain-types/licensing/actions/configure/invoke",
+            url=f"/domain-types/{self.domain}/actions/configure/invoke",
             body=body,
+            expect_ok=expect_ok,
+        )
+
+    def call_download_license_request(self, expect_ok: bool = False) -> Response:
+        return self.request(
+            "get",
+            url="/domain-types/license_request/actions/download/invoke",
+            expect_ok=expect_ok,
+        )
+
+    def call_verify_offline(
+        self, verification_response: dict[str, Any], expect_ok: bool = False
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/license_response/actions/upload/invoke",
+            body=verification_response,
             expect_ok=expect_ok,
         )
 

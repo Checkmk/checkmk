@@ -815,7 +815,7 @@ def _process_notifications(
                 for context in plugin_contexts:
                     plugin_info.append((context["CONTACTNAME"], plugin_name, params, bulk))
 
-                    if analyse and not dispatch:
+                    if analyse and (not dispatch or plugin_name not in ["mail", "asciimail"]):
                         continue
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)

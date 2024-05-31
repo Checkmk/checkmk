@@ -1,0 +1,12 @@
+Title: Fix snapshot creation when activating changes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1717142969
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Activating changes on a site running with a UID greater than 2097152
+generated an empty snapshot. This Werk fixes the issue and now the
+snapshots are generated correctly

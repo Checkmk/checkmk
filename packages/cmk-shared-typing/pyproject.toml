@@ -1,9 +1,7 @@
 [project]
 name = "cmk-shared-typing"
 version = "1.0.0"
-dependencies = [
-    "datamodel-code-generator",
-]
+dependencies = ["datamodel-code-generator"]
 
 [build-system]
 requires = ["setuptools"]
@@ -56,6 +54,6 @@ score = "no"
 disable = "missing-docstring,fixme"
 
 [tool.pytest.ini_options]
-pythonpath = [ "." ]
-testpaths = [ "cmk", "tests" ]
+pythonpath = ["."]
+testpaths = ["cmk", "tests"]
 addopts = "--doctest-modules --import-mode=importlib"

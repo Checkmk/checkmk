@@ -48,7 +48,7 @@ max-complexity = 15
 [tool.isort]
 known_testlib = "tests.testlib"
 known_compositiontests = "tests.composition"
-known_unittests = "tests.unit"
+known_unittests = "tests.unit,tests.plugins_integration,tests.update"
 known_livestatus = "livestatus"
 known_omd = "omdlib"
 known_cmk_utils = "cmk.utils"

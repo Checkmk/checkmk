@@ -457,3 +457,31 @@ class BackgroundJobStatus(BaseSchema):
         description="Logs related to the background job.",
         example={"result": ["result1"], "progress": ["progress1"]},
     )
+
+
+class VerificationRequest(BaseSchema):
+    """License verification request"""
+
+    VERSION = fields.String(required=True, description="The version of the request", example="3.0")
+    request_id = fields.String(
+        required=True,
+        description="The id of the request",
+        example="df17e557-0daf-4b78-b9f2-f3550252a8b5",
+    )
+    instance_id = fields.String(
+        required=True,
+        description="The id of the instance the request is for",
+        example="6b9e78d1-de99-46ef-9644-32ee33a2b489",
+    )
+    created_at = fields.Integer(
+        required=True, description="The creation timestamp", example=1690379907
+    )
+    upload_origin = fields.String(
+        required=True, description="How the request was uploaded", example="manual"
+    )
+    raw_reports = fields.List(
+        fields.Dict,
+        required=True,
+        description="The license usage reports",
+        example=[{}],
+    )

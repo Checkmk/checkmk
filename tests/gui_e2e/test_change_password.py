@@ -8,8 +8,9 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.login import LoginPage
-from tests.testlib.site import Site
+from tests.testlib.site import ADMIN_USER, Site
 
 
 @pytest.fixture(name="with_password_policy")
@@ -79,6 +80,13 @@ def test_user_change_password_success(
     _change_password(page, new_pw=new_pw, new_pw_conf=new_pw_conf, old_pw=test_site.admin_password)
     page.main_area.check_success("Successfully changed password.")
 
+    # Logout and then login with the new password
+    page.logout()
+    new_credentials = CmkCredentials(username=ADMIN_USER, password=new_pw)
+    page.login(new_credentials)
+    page.main_area.check_page_title("Main dashboard")
+
+    # Reset the password to the original one
     test_site.reset_admin_password()
 
 

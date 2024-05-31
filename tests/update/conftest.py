@@ -16,7 +16,7 @@ import yaml
 
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd, run
-from tests.testlib.version import CMKVersion, get_min_version, version_gte
+from tests.testlib.version import CMKVersion, get_min_version
 
 from cmk.utils.version import Edition
 
@@ -234,14 +234,6 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
         and base_version.version != BaseVersions.BASE_VERSIONS[-1].version
     ):
         pytest.skip("Only latest base-version selected")
-
-    if os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5") and not version_gte(
-        base_version.version, "2.2.0p8"
-    ):
-        pytest.skip(
-            "Checkmk installation failing for missing `php7`. This is fixed starting from "
-            "base-version 2.2.0p8"
-        )
 
     disable_interactive_mode = (
         request.config.getoption(name="--disable-interactive-mode") or not interactive_mode

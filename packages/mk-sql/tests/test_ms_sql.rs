@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
 
 use mk_sql::ms_sql::{
-    client::{self, Client},
+    client::{self, UniClient},
     instance::{self, SqlInstance, SqlInstanceBuilder},
     query,
     section::Section,
@@ -260,7 +260,7 @@ fn make_section<S: Into<String>>(name: S) -> Section {
     Section::new(&config_section, Some(100))
 }
 
-async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
+async fn validate_all(i: &SqlInstance, c: &mut UniClient, e: &Endpoint) {
     validate_database_names(i, c).await;
     assert!(
         tools::run_get_version(c).await.is_some()
@@ -296,14 +296,14 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_availability_groups_section(i, e).await;
 }
 
-async fn validate_database_names(instance: &SqlInstance, client: &mut Client) {
+async fn validate_database_names(instance: &SqlInstance, client: &mut UniClient) {
     let databases = instance.generate_databases(client).await;
     let expected = expected_databases();
     // O^2, but good enough for testing
     assert!(expected.iter().all(|item| databases.contains(item)),);
 }
 
-async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
+async fn validate_counters(instance: &SqlInstance, client: &mut UniClient) {
     let counters = instance
         .generate_counters_section(client, find_known_query(sqls::Id::Counters).unwrap(), '|')
         .await;
@@ -314,7 +314,7 @@ async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
     assert!(!counters[result[0].len()..].contains(' '));
 }
 
-async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) {
+async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut UniClient) {
     let blocked_sessions = &instance
         .generate_sessions_section(
             client,
@@ -328,7 +328,7 @@ async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) 
     );
 }
 
-async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut Client) {
+async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut UniClient) {
     let all_sessions = &instance
         .generate_sessions_section(
             client,
@@ -356,7 +356,11 @@ async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &
     }
 }
 
-async fn validate_table_spaces(instance: &SqlInstance, client: &mut Client, endpoint: &Endpoint) {
+async fn validate_table_spaces(
+    instance: &SqlInstance,
+    client: &mut UniClient,
+    endpoint: &Endpoint,
+) {
     let databases = instance.generate_databases(client).await;
     let expected = expected_databases();
 
@@ -383,7 +387,7 @@ async fn validate_table_spaces(instance: &SqlInstance, client: &mut Client, endp
     }
 }
 
-async fn validate_backup(instance: &SqlInstance, client: &mut Client) {
+async fn validate_backup(instance: &SqlInstance, client: &mut UniClient) {
     let mut to_be_found: HashSet<&str> = ["master", "model", "msdb"].iter().cloned().collect();
 
     let result = instance
@@ -410,7 +414,7 @@ async fn validate_backup(instance: &SqlInstance, client: &mut Client) {
 
 async fn validate_transaction_logs(
     instance: &SqlInstance,
-    client: &mut Client,
+    client: &mut UniClient,
     endpoint: &Endpoint,
 ) {
     let expected: HashSet<String> = expected_databases();
@@ -446,7 +450,7 @@ async fn validate_transaction_logs(
     assert_eq!(found, expected);
 }
 
-async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoint: &Endpoint) {
+async fn validate_datafiles(instance: &SqlInstance, client: &mut UniClient, endpoint: &Endpoint) {
     let expected: HashSet<String> = expected_databases();
     let databases = instance.generate_databases(client).await;
 
@@ -484,7 +488,7 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoin
     assert_eq!(found, expected);
 }
 
-async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
+async fn validate_databases(instance: &SqlInstance, client: &mut UniClient) {
     let expected: HashSet<String> = expected_databases();
 
     let databases = instance.generate_databases(client).await;
@@ -522,7 +526,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     assert_eq!(found, expected);
 }
 
-async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
+async fn validate_databases_error(instance: &SqlInstance, client: &mut UniClient) {
     let expected: HashSet<String> = expected_databases();
 
     let databases = instance.generate_databases(client).await;
@@ -552,7 +556,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     assert_eq!(found, expected);
 }
 
-async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
+async fn validate_connections(instance: &SqlInstance, client: &mut UniClient) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
@@ -580,7 +584,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
     assert_eq!(found, expected);
 }
 
-async fn validate_connections_error(instance: &SqlInstance, client: &mut Client) {
+async fn validate_connections_error(instance: &SqlInstance, client: &mut UniClient) {
     let result = instance
         .generate_connections_section(client, find_known_query(sqls::Id::BadQuery).unwrap(), ' ')
         .await;
@@ -592,7 +596,7 @@ async fn validate_connections_error(instance: &SqlInstance, client: &mut Client)
     assert!(lines[0].contains(" error: "));
 }
 
-async fn validate_clusters(_instance: &SqlInstance, _client: &mut Client, _endpoint: &Endpoint) {
+async fn validate_clusters(_instance: &SqlInstance, _client: &mut UniClient, _endpoint: &Endpoint) {
     // TODO(sk): implement it on arriving config
 }
 

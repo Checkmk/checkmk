@@ -1,54 +1,24 @@
 [tool.ruff]
 src = ["cmk", "tests"]
+extend-exclude = ["agents/plugins/mk_sap_2.py", "doc/**/*.py"]
 target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
 ignore = [
-  "E402", # module level import not on top of the file
-  "E501", # line too long, 100s of fails. Fixable.
-  "E731", # Do not assign a `lambda` expression, use a `def`
-  "E741", # amgiguous variable name (l, x, etc.)
-  "E713", # Test for membership should be `not in`
-  "E999", # SyntaxError, all due to missing "match" support in ruff. See: https://github.com/charliermarsh/ruff/issues/282
-
-  "S101", # assert detected
-
-  # Ignored in .flake8 but not here.
-  # F403 undefined imports, all are fixed now, but we shouldn't add new ones.
-  # F405 are * imports. We shouldn't do those.
+  # Black is our formatting tool, so ignore any formatting-related findings.
+  "E501", # line too long
+  # Ignore findings which are incompatible with our "import" techonology.
+  "F401", # 'FOO' imported but unused
+  "E402", # module level import not at top of file
+  "F403", # 'from FOO import *' used; unable to detect undefined names
+  "F405", # 'FOO' may be undefined, or defined from star imports: BAR
+  # We should probably have a look at these findings.
+  "E731", # do not assign a lambda expression, use a def
+  "E741", # ambiguous variable name 'FOO'
+  "F821", # undefined name 'FOO'
 ]
-select = ["E", "F", "YTT"]
-# Interesting to enable:
-#   "RUF" - Remove unused "noqa" directives from the code, etc.
-#   "TRY" - remove those "raise Exception" calls. 1688 failures.
-#   "G"  - wrong logging.log formattion! 107 failures
-#   "S" - emulate bandit. 12993 errors detected. Ignoring complaints about asserts, 335 failures remain.
-#   "PGH" - complain about blanket "type: ignore" without specifics.
-#   "T20" - complain about print found. 217 "failures" found. Needs some rework first!
-#   "DTZ" - disallows datetime objects without timezone, 254 failures.
-#   "UP" - emulate pyupgrade. 3024 failures, 3005 fixable automatically.
-
-#   "C4" - simplify comprehensions, 164 failures, 138 auto fixable
-#   "B" - bugbear, 756 failures, 71 auto fixable
-#   "ERA" - commented out code, 1717 failures, 1717 auto fixable
-#   "PL" - impersonate PyLint. 2819 failures, 1 auto fixable.
-#   "ARG" - unused arguments, 3358 failures
-#   "I" - replaces isort, but doesn't honor isort disable annotation yet, only "noqa: I001"
-#   "D" - enforces docstring writing style. Ignore "D10,D4" for now.
-#   "COM" - enforce trailing comma. Lots of matches.
-unfixable = [
-  "F401", # pylint: disable=unused-import. Clean up by hand.
-]
-
-[tool.ruff.lint.per-file-ignores]
-"cmk/gui/config.py" = ["F403", "F405"]
-
-[tool.ruff.lint.flake8-annotations]
-suppress-dummy-args = true
-
-[tool.ruff.lint.mccabe]
-max-complexity = 15
+select = ["E", "F", "W"]
 
 
 [tool.isort]

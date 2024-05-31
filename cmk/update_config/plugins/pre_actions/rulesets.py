@@ -65,7 +65,7 @@ class PreUpdateRulesets(PreUpdateAction):
                         user_input = prompt(
                             "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
                         )
-                        if not user_input.lower() in USER_INPUT_CONTINUE:
+                        if user_input.lower() not in USER_INPUT_CONTINUE:
                             raise MKUserError(None, "broken ruleset")
 
         if not result:

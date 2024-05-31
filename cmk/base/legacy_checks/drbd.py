@@ -269,7 +269,7 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
-        if not parsed["cs"] in drbd_cs_map:
+        if parsed["cs"] not in drbd_cs_map:
             return (3, 'Undefined "connection state" in drbd output')
 
         # Weight of connection state is calculated by the drbd_cs_map.

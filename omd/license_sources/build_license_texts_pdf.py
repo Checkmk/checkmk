@@ -85,7 +85,7 @@ def used_licenses_from_csv(path_licenses_csv):
 def main():
     try:
         path_omd = Path(__file__).resolve().parent.parent
-    except:
+    except BaseException:
         raise OSError
 
     path_license_texts = path_omd / "license_sources/license_texts/"

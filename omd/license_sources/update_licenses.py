@@ -323,7 +323,7 @@ def update_py3_modules(
             print(f"Adding package: {name}, {version} (License UNKN)")
         rows.append([name, version, "License UNKN", "", "", ""])
 
-    rows = [x for x in rows if not x in drop_rows]
+    rows = [x for x in rows if x not in drop_rows]
     return rows
 
 
@@ -389,7 +389,7 @@ def update_py_packages(
                 print(f"Removing package: {name} ({path})")
             drop_rows.append(row)
 
-    rows = [x for x in rows if not x in drop_rows]
+    rows = [x for x in rows if x not in drop_rows]
 
     license_links = get_license_links()
 
@@ -532,7 +532,7 @@ def update_js_dependencies(rows: list[list[str]], verbose: bool = False) -> list
             print(f"Adding package: {frow[0]}, {frow[1]} ({frow[2]})")
         rows.append(frow)
 
-    return sorted([x for x in rows if not x in drop_rows], key=lambda x: x[0].lower())
+    return sorted([x for x in rows if x not in drop_rows], key=lambda x: x[0].lower())
 
 
 def write_to_csv(data, licenses_csv):
@@ -608,7 +608,7 @@ def main(args):
             os.system("tar xf %s" % path_sources_pkg)
             path_sources_dir = Path(re.sub(".tar.gz", "/", str(path_sources_pkg)))
         licenses_csv = Path(path_omd / "Licenses.csv")
-    except:
+    except BaseException:
         if not args.path and path_sources_pkg.is_file():
             os.unlink(path_sources_pkg)
             if path_sources_dir.is_dir():

@@ -11,7 +11,6 @@ from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     current_base_branch_name,
-    current_branch_version,
     get_services_with_status,
     qa_test_data_path,
 )
@@ -41,9 +40,7 @@ def _create_site(
 
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
-    base_version = CMKVersion(
-        "2.2.0p27", Edition.CEE, current_base_branch_name(), current_branch_version()
-    )
+    base_version = CMKVersion("2.2.0p27", Edition.CEE)
     return SiteFactory(version=base_version, prefix="")
 
 
@@ -55,9 +52,7 @@ def _base_site(site_factory: SiteFactory) -> Iterator[Site]:
 
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
-    base_version = CMKVersion(
-        "2.2.0p27", Edition.CCE, current_base_branch_name(), current_branch_version()
-    )
+    base_version = CMKVersion("2.2.0p27", Edition.CCE)
     return SiteFactory(version=base_version, prefix="")
 
 

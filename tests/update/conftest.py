@@ -15,10 +15,8 @@ import pytest
 import yaml
 
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd, run
+from tests.testlib.utils import edition_from_env, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version
-
-from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
@@ -63,12 +61,7 @@ class BaseVersions:
         max_earliest_versions = 1
         max_latest_versions = 4
 
-        active_versions = [
-            _
-            for _ in versions
-            if CMKVersion(_, min_version.edition, min_version.branch, min_version.branch_version)
-            >= min_version
-        ]
+        active_versions = [_ for _ in versions if CMKVersion(_, min_version.edition) >= min_version]
         earliest_versions = active_versions[0:max_earliest_versions]
         latest_versions = active_versions[-max_latest_versions:]
         # do not use a set to retain the order
@@ -83,9 +76,7 @@ class BaseVersions:
         BASE_VERSIONS_CB = _limit_versions(json.load(f), MIN_VERSION)
 
     BASE_VERSIONS = [
-        CMKVersion(
-            base_version_str, Edition.CEE, current_base_branch_name(), current_branch_version()
-        )
+        CMKVersion(base_version_str, edition_from_env())
         for base_version_str in BASE_VERSIONS_PB + BASE_VERSIONS_CB
     ]
 
@@ -160,12 +151,7 @@ def _get_site(  # pylint: disable=too-many-branches
     update_conflict_mode = "keepold"
     min_version = BaseVersions.MIN_VERSION
     sf = SiteFactory(
-        version=CMKVersion(
-            version.version,
-            version.edition,
-            current_base_branch_name(),
-            current_branch_version(),
-        ),
+        version=CMKVersion(version.version, version.edition),
         prefix="update_",
         update=update,
         update_conflict_mode=update_conflict_mode,

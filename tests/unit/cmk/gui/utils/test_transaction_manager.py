@@ -57,8 +57,8 @@ def test_transaction_new_id(tm: TransactionManager) -> None:
         ("-1", True, True, False),
         ("123/abc", False, False, False),
         ("123/abc", True, False, False),
-        ("%d/abc" % time.time(), False, False, False),
-        ("%d/abc" % time.time(), False, True, True),
+        ("%time%/abc", False, False, False),
+        ("%time%/abc", False, True, True),
     ],
 )
 def test_transaction_valid(
@@ -75,6 +75,7 @@ def test_transaction_valid(
         assert tm._ignore_transids is True
 
     if transid is not None:
+        transid = transid.replace("%time%", str(int(time.time())))
         request.set_var("_transid", transid)
         assert request.has_var("_transid")
         assert request.var("_transid") == transid

@@ -6,6 +6,8 @@ use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
 use crate::platform;
+use crate::platform::registry::get_instances;
+use crate::platform::InstanceInfo;
 use crate::types::{
     CertPath, HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port,
 };
@@ -258,6 +260,12 @@ impl Config {
     }
 }
 
+pub fn get_registry_instance_info(name: &InstanceName) -> Option<InstanceInfo> {
+    let all = get_instances();
+    let a = all.iter().find(|i| &i.name == name);
+    a.cloned()
+}
+
 fn get_additional_registry_instances(
     already_found_instances: &[CustomInstance],
     auth: &Authentication,
@@ -288,11 +296,12 @@ fn get_additional_registry_instances(
                 return None;
             }
 
-            if let Some(port) = i.final_port() {
-                Some(CustomInstance::from_registry(&i.name, auth, conn, port))
-            } else {
-                None
-            }
+            Some(CustomInstance::from_registry(
+                &i.name,
+                auth,
+                conn,
+                &i.final_port(),
+            ))
         })
         .collect::<Vec<CustomInstance>>()
 }
@@ -641,9 +650,14 @@ pub struct CustomInstance {
     conn: Connection,
     alias: Option<InstanceAlias>,
     piggyback: Option<Piggyback>,
+    tcp: bool,
 }
 
 impl CustomInstance {
+    pub fn is_tcp(&self) -> bool {
+        self.tcp
+    }
+
     pub fn from_yaml(
         yaml: &Yaml,
         main_auth: &Authentication,
@@ -656,12 +670,14 @@ impl CustomInstance {
                 .to_uppercase(),
         );
         let (auth, conn) = CustomInstance::ensure_auth_and_conn(yaml, main_auth, main_conn, &name)?;
+        let tcp = is_use_tcp(&name, &auth, &conn);
         Ok(Self {
             name,
             auth,
             conn,
             alias: yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
             piggyback: Piggyback::from_yaml(yaml, sections)?,
+            tcp,
         })
     }
 
@@ -669,15 +685,20 @@ impl CustomInstance {
         name: &InstanceName,
         main_auth: &Authentication,
         main_conn: &Connection,
-        port: &Port,
+        port: &Option<&Port>,
     ) -> Self {
-        let (auth, conn) = CustomInstance::make_registry_auth_and_conn(main_auth, main_conn, port);
+        let (auth, conn) = CustomInstance::make_registry_auth_and_conn(
+            main_auth,
+            main_conn,
+            port.unwrap_or(&Port::from(0)),
+        );
         Self {
             name: name.clone(),
             auth,
             conn,
             alias: None,
             piggyback: None,
+            tcp: port.is_some(),
         }
     }
 
@@ -748,10 +769,24 @@ impl CustomInstance {
 }
 
 pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> HostName {
-    if auth.auth_type() == &AuthType::Integrated {
+    if is_local_host(auth, conn) {
         "localhost".to_string().into()
     } else {
         conn.hostname().clone()
+    }
+}
+
+pub fn is_local_host(auth: &Authentication, _conn: &Connection) -> bool {
+    auth.auth_type() == &AuthType::Integrated
+}
+
+pub fn is_use_tcp(name: &InstanceName, auth: &Authentication, conn: &Connection) -> bool {
+    if is_local_host(auth, conn) {
+        get_registry_instance_info(name)
+            .map(|i| i.is_tcp())
+            .unwrap_or(true)
+    } else {
+        true
     }
 }
 
@@ -1457,6 +1492,7 @@ connection:
         let found: Vec<CustomInstance> = vec![];
         let full = get_additional_registry_instances(&found, &auth, &conn);
         assert_eq!(full.len(), 3);
+        assert!(full.iter().all(|i| i.is_tcp()));
         assert!(full.iter().all(|i| i.conn().port() >= Port(1433)));
 
         // one is found
@@ -1600,5 +1636,23 @@ mssql:
                 ("jobs", SectionKind::Async),
             ]
         );
+    }
+
+    #[test]
+    fn test_is_use_tcp_local() {
+        let a = Authentication::default();
+        let c = Connection::default();
+        assert!(is_use_tcp(&"foo".to_string().into(), &a, &c));
+        assert!(is_use_tcp(&"MSSQLSERVER".to_string().into(), &a, &c));
+        assert!(is_use_tcp(&"SQLEXPRESS_NAME".to_string().into(), &a, &c));
+    }
+    #[test]
+    fn test_is_use_tcp_remote() {
+        let a = Authentication {
+            auth_type: AuthType::Undefined,
+            ..Default::default()
+        };
+        let c = Connection::default();
+        assert!(is_use_tcp(&"MSSQLSERVER".to_string().into(), &a, &c));
     }
 }

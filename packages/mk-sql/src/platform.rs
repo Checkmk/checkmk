@@ -4,14 +4,14 @@
 
 use crate::types::{InstanceName, Port};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Transport {
     Tcp,
     NamedPipe,
     SharedMemory,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InstanceInfo {
     pub name: InstanceName,
     port: Option<Port>,

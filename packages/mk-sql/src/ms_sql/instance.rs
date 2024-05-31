@@ -5,6 +5,7 @@
 use super::client::{self, Client};
 use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
+use crate::config::ms_sql::is_use_tcp;
 use crate::config::section;
 use crate::config::{
     self,
@@ -148,9 +149,12 @@ impl SqlInstanceBuilder {
 
     pub fn build(self) -> SqlInstance {
         let version_table = parse_version(&self.version);
+        let endpoint = self.endpoint.unwrap_or_default();
+        let name = self.name.unwrap_or_default();
+        let tcp = is_use_tcp(&name, endpoint.auth(), endpoint.conn());
         SqlInstance {
             alias: self.alias,
-            name: self.name.unwrap_or_default(),
+            name,
             id: self.id.unwrap_or_default(),
             edition: self.edition.unwrap_or_default(),
             version: self.version.unwrap_or_default(),
@@ -158,12 +162,13 @@ impl SqlInstanceBuilder {
             port: self.port,
             dynamic_port: self.dynamic_port,
             available: None,
-            endpoint: self.endpoint.unwrap_or_default(),
+            endpoint,
             computer_name: self.computer_name,
             environment: self.environment.unwrap_or_default(),
             cache_dir: self.cache_dir.unwrap_or_default(),
             piggyback: self.piggyback,
             version_table,
+            tcp,
         }
     }
 }
@@ -198,6 +203,7 @@ pub struct SqlInstance {
     cache_dir: String,
     piggyback: Option<PiggybackHostName>,
     version_table: [u32; 3],
+    pub tcp: bool,
 }
 
 impl AsRef<SqlInstance> for SqlInstance {

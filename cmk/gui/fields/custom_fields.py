@@ -614,7 +614,7 @@ class GlobalHTTPProxyField(fields.String):
         super()._validate(value)
 
         if self.presence == "should_exist":
-            if not value in _global_proxy_choices():
+            if value not in _global_proxy_choices():
                 raise self.make_error("should_exist", http_proxy=value)
 
         if self.presence == "should_not_exist":

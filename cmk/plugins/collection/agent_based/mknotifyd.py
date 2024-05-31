@@ -53,12 +53,20 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.v2 import render, StringTable
-
-Section = Mapping[str, object]
+Section = Mapping[str, Any]
 
 
 def parse_mknotifyd(  # pylint: disable=too-many-branches
@@ -155,6 +163,9 @@ def parse_mknotifyd(  # pylint: disable=too-many-branches
     return parsed
 
 
+agent_section_mknotifyd = AgentSection(name="mknotifyd", parse_function=parse_mknotifyd)
+
+
 #   .--Spooler Status------------------------------------------------------.
 #   | ____                    _             ____  _        _               |
 #   |/ ___| _ __   ___   ___ | | ___ _ __  / ___|| |_ __ _| |_ _   _ ___   |
@@ -167,62 +178,69 @@ def parse_mknotifyd(  # pylint: disable=too-many-branches
 #   '----------------------------------------------------------------------'
 
 
-def inventory_mknotifyd(parsed):
-    return [(p, {}) for p in parsed["sites"]]
+def discover_mknotifyd(section: Section) -> DiscoveryResult:
+    yield from [Service(item=p) for p in section["sites"]]
 
 
-def check_mknotifyd(item, _no_params, parsed):
-    if (stat := parsed["sites"].get(item)) is None:
+def check_mknotifyd(item: str, section: Section) -> CheckResult:
+    if (stat := section["sites"].get(item)) is None:
         return
 
     # There are dummy-entries created during the parsing. So the
     # dict will never be completely empty. We check for Version
     # because this should be always present in a valid state file.
     if (version := stat.get("Version")) is None:
-        yield 2, "The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly"
+        yield Result(
+            state=State.CRIT,
+            summary="The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly",
+        )
         return
-    yield 0, f"Version: {version}", []
+    yield Result(state=State.OK, summary=f"Version: {version}")
 
     # Check age of status file. It's updated every 20 seconds
-    status_age = parsed["timestamp"] - stat["Updated"]
+    status_age = section["timestamp"] - stat["Updated"]
     if status_age > 90:
-        state = 2
-        infotext = (
-            f"Status last updated {render.timespan(status_age)} ago, spooler seems crashed or busy"
+        yield Result(
+            state=State.CRIT,
+            summary=f"Status last updated {render.timespan(status_age)} ago, spooler seems crashed or busy",
         )
     else:
-        state = 0
-        infotext = "Spooler running"
-    yield state, infotext, [
-        ("last_updated", status_age),
-        ("new_files", stat["spools"]["New"]["Count"]),
-    ]
+        yield Result(state=State.OK, summary="Spooler running")
+    yield Metric("last_updated", status_age)
+    yield Metric("new_files", stat["spools"]["New"]["Count"])
 
     corrupted = stat["spools"]["Corrupted"]
     if corrupted.get("Count"):
-        age = parsed["timestamp"] - corrupted["Youngest"]
-        perf_data = [("corrupted_files", corrupted["Count"])]
-        yield 1, f"{corrupted['Count']} corrupted files: youngest {render.timespan(age)} ago", perf_data
+        age = section["timestamp"] - corrupted["Youngest"]
+
+        yield Result(
+            state=State.WARN,
+            summary=f"{corrupted['Count']} corrupted files: youngest {render.timespan(age)} ago",
+        )
+        yield Metric("corrupted_files", corrupted["Count"])
 
     # Are there deferred files that are too old?
     deferred = stat["spools"]["Deferred"]
     if deferred.get("Count"):
-        age = parsed["timestamp"] - deferred["Oldest"]
         count = deferred["Count"]
-        perf_data = [("deferred_age", age), ("deferred_files", deferred["Count"])]
+        age = section["timestamp"] - deferred["Oldest"]
         if age > 5:
-            state = 1
-        elif age > 600:  # TODO: not reachable
-            state = 2
+            state = State.WARN
+        elif age > 600:  # TODO
+            state = State.CRIT
         else:
-            state = 0
-        yield state, f"{count} deferred files: oldest {render.timespan(age)} ago", perf_data
+            state = State.OK
+        yield Result(
+            state=state, summary=f"{count} deferred files: oldest {render.timespan(age)} ago"
+        )
+        yield Metric("deferred_age", age)
+        yield Metric("deferred_files", count)
 
 
-check_info["mknotifyd"] = LegacyCheckDefinition(
-    parse_function=parse_mknotifyd,
+check_plugin_mknotifyd = CheckPlugin(
+    name="mknotifyd",
     service_name="OMD %s Notification Spooler",
-    discovery_function=inventory_mknotifyd,
+    discovery_function=discover_mknotifyd,
     check_function=check_mknotifyd,
 )
 
@@ -236,7 +254,7 @@ check_info["mknotifyd"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_mknotifyd_connection(parsed):
+def discover_mknotifyd_connection(section: Section) -> DiscoveryResult:
     # deprecated, do not discover anything
     return
     yield
@@ -245,7 +263,7 @@ def inventory_mknotifyd_connection(parsed):
 _V2_SERVICE_NAMING = "Notification Spooler connection to"
 
 
-def check_mknotifyd_connection(item, _no_params, parsed):
+def check_mknotifyd_connection(item: str, section: Section) -> CheckResult:
 
     # "mknotifyd.connection_v2"
     if _V2_SERVICE_NAMING in item:
@@ -254,7 +272,7 @@ def check_mknotifyd_connection(item, _no_params, parsed):
     else:
         site_name, connection_name = item.split("-", 1)
 
-    if site_name not in parsed["sites"]:
+    if site_name not in section["sites"]:
         return
 
     states = {
@@ -264,46 +282,50 @@ def check_mknotifyd_connection(item, _no_params, parsed):
         "connecting": (2, "Trying to connect"),
     }
 
-    if (connection := parsed["sites"][site_name]["connections"].get(connection_name)) is not None:
+    if (connection := section["sites"][site_name]["connections"].get(connection_name)) is not None:
 
-        yield states[connection["State"]]
+        state, summary = states[connection["State"]]
+        yield Result(state=State(state), summary=summary)
 
         if "Status Message" in connection:
-            yield 0, connection["Status Message"]
+            yield Result(state=State.OK, summary=connection["Status Message"])
 
         if connection["State"] == "established":
-            age = parsed["timestamp"] - connection["Since"]
-            yield 0, f"Uptime: {render.timespan(age)}"
+            age = section["timestamp"] - connection["Since"]
+            yield Result(state=State.OK, summary=f"Uptime: {render.timespan(age)}")
 
             if "Connect Time" in connection:
-                yield 0, f"Connect time: {connection['Connect Time']:.3f} sec"
+                yield Result(
+                    state=State.OK, summary=f"Connect time: {connection['Connect Time']:.3f} sec"
+                )
 
         for what in ("Sent", "Received"):
             if num := connection["Notifications " + what]:
-                yield 0, f"{num} Notifications {what.lower()}"
+                yield Result(state=State.OK, summary=f"{num} Notifications {what.lower()}")
 
 
-# deprecated
-check_info["mknotifyd.connection"] = LegacyCheckDefinition(
+check_plugin_mknotifyd_connection = CheckPlugin(
+    name="mknotifyd_connection",
     service_name="OMD %s Notify Connection",
     sections=["mknotifyd"],
-    discovery_function=inventory_mknotifyd_connection,
+    discovery_function=discover_mknotifyd_connection,
     check_function=check_mknotifyd_connection,
 )
 
 
-def inventory_mknotifyd_connection_v2(parsed):
-    for site_name, stats in parsed["sites"].items():
+def discover_mknotifyd_connection_v2(section: Section) -> DiscoveryResult:
+    for site_name, stats in section["sites"].items():
         for connection_name in stats["connections"]:
             if "." in connection_name:
                 # item of old discovered "mknotifyd.connection"
                 continue
-            yield f"{site_name} {_V2_SERVICE_NAMING} {connection_name}", {}
+            yield Service(item=f"{site_name} Notification Spooler connection to {connection_name}")
 
 
-check_info["mknotifyd.connection_v2"] = LegacyCheckDefinition(
+check_plugin_mknotifyd_connection_v2 = CheckPlugin(
+    name="mknotifyd_connection_v2",
     service_name="OMD %s",
     sections=["mknotifyd"],
-    discovery_function=inventory_mknotifyd_connection_v2,
+    discovery_function=discover_mknotifyd_connection_v2,
     check_function=check_mknotifyd_connection,
 )

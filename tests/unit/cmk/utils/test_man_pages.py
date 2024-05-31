@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.utils import repo_path
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
@@ -162,9 +162,14 @@ def test_cmk_plugins_families_manpages() -> None:
     check_plugins = discover_plugins(
         PluginGroup.AGENT_BASED, {CheckPlugin: "check_plugin_"}, raise_errors=True
     )
-    for location, plugin in check_plugins.plugins.items():
-        family_path_segment = os.path.join(*location.module.split(".")[:3])
-        assert family_path_segment in str(man_page_path_map[plugin.name])
+    assert not {
+        (location, plugin.name, expected, actual)
+        for location, plugin in check_plugins.plugins.items()
+        if (
+            (expected := os.path.join(*location.module.split(".")[:3]))
+            not in (actual := str(man_page_path_map[plugin.name]))
+        )
+    }
 
 
 def test_man_page_consistency(

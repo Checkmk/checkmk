@@ -17,7 +17,7 @@ from unittest import mock
 import pytest
 from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
-from tests.testlib import import_module_hack
+from tests.unit.import_module_hack import import_module_hack
 
 from cmk.utils.mailbox import _active_check_main_core, MailMessages
 

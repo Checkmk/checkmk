@@ -128,7 +128,7 @@ def automation_discovery(
     on_error: OnError,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> DiscoveryResult:
-    console.verbose("  Doing discovery with '%r'...\n" % settings)
+    console.verbose("  Doing discovery with '{settings!r}'...")
     results = {
         host_name: DiscoveryResult(),
         **{node: DiscoveryResult() for node in cluster_nodes},
@@ -159,7 +159,7 @@ def automation_discovery(
 
         host_sections_by_host = group_by_host(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-            lambda msg: console.debug(msg + "\n"),
+            console.debug,
         )
         store_piggybacked_sections(host_sections_by_host)
         providers = make_providers(
@@ -450,7 +450,7 @@ def autodiscovery(
         oldest_queued=oldest_queued,
     )
     if reason:
-        console.verbose(f"  skipped: {reason}\n")
+        console.verbose(f"  skipped: {reason}")
         return None, False
 
     result = automation_discovery(
@@ -481,7 +481,7 @@ def autodiscovery(
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain
         # compatible with the automation code
-        console.verbose(f"  failed: {result.error_text or 'host is offline'}\n")
+        console.verbose(f"  failed: {result.error_text or 'host is offline'}")
         # delete the file even in error case, otherwise we might be causing the same error
         # every time the cron job runs
         (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
@@ -498,10 +498,10 @@ def autodiscovery(
     )
 
     if not something_changed:
-        console.verbose("  nothing changed.\n")
+        console.verbose("  nothing changed.")
         activation_required = False
     else:
-        console.verbose(
+        console.verbose_no_lf(
             f"  {result.self_new} new, {result.self_removed} removed, "
             f"{result.self_kept} kept, {result.self_changed} changed, "
             f"{result.self_total} total services "
@@ -667,12 +667,12 @@ def _get_services_result(
     skip = {plugin_name for plugin_name in candidates if ignore_plugin(host_name, plugin_name)}
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
-    console.debug("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
+    console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
     # The host name must be set for the host_name() calls commonly used to determine the
     # host name for get_host_values{_merged,} calls in the legacy checks.
 
     for plugin_name in skip:
-        console.debug(f"  Skip ignored check plug-in name {plugin_name!r}\n")
+        console.debug(f"  Skip ignored check plug-in name {plugin_name!r}")
 
     autocheck_store = AutochecksStore(host_name)
     try:

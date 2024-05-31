@@ -326,7 +326,7 @@ MACROS_AND_VARS = [
     ("FIRST", _l("Time of the first occurrence (time stamp)")),
     ("LAST", _l("Time of the most recent occurrence")),
     ("COMMENT", _l("Event comment")),
-    ("SL", _l("Service Level")),
+    ("SL", _l("Service level")),
     ("HOST", _l("Host name (as sent by syslog)")),
     ("ORIG_HOST", _l("Original host name when host name has been rewritten, empty otherwise")),
     ("CONTACT", _l("Contact information")),
@@ -611,7 +611,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         (
             "sl",
             Dictionary(
-                title=_("Service Level"),
+                title=_("Service level"),
                 optional_keys=False,
                 elements=[
                     (
@@ -1799,9 +1799,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._copy_rules_from_master()
             self._add_change(
                 "copy-rules-from-master",
-                _("Copied the event rules from the master into the local configuration"),
+                _("Copied the event rules from the central site into the local configuration"),
             )
-            flash(_("Copied rules from master"))
+            flash(_("Copied rules from central site"))
             return redirect(self.mode_url())
 
         # Move rule packs
@@ -2512,7 +2512,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     html.write_text(facilities[facnr])
 
                 table.cell(
-                    _("Service Level"),
+                    _("Service level"),
                     dict(service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]),
                 )
 
@@ -3449,7 +3449,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # their path.
     def _is_zipfile(self, fo: io.BytesIO) -> bool:
         try:
-            with zipfile.ZipFile(fo) as _opened_file:  # noqa: F841
+            with zipfile.ZipFile(fo) as _opened_file:
                 pass
             return True
         except zipfile.BadZipfile:
@@ -3458,10 +3458,10 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def _process_uploaded_zip_file(self, filename: str, content: bytes) -> str:
         with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
             messages = []
+            success, fail = 0, 0
             for entry in zip_obj.infolist():
-                success, fail = 0, 0
+                mib_file_name = entry.filename
                 try:
-                    mib_file_name = entry.filename
                     if mib_file_name[-1] == "/":
                         continue  # silently skip directories
                     self._validate_mib_file_name(mib_file_name)
@@ -4022,7 +4022,7 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("Housekeeping Interval"),
+            title=_("Housekeeping interval"),
             help=_(
                 "From time to time the eventd checks for messages that are expected to "
                 "be seen on a regular base, for events that time out and yet for "
@@ -4044,7 +4044,7 @@ class ConfigVariableEventConsoleSqliteHousekeepingInterval(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("Event Console Housekeeping Interval"),
+            title=_("Event Console housekeeping interval"),
             help=_(
                 "From time to time the Event Console history requires maintenance. "
                 "For example, it needs to clean up old data, optimize the storage and "
@@ -4092,7 +4092,7 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
             help=_(
                 "The event daemon keeps statistics about the rate of messages, events "
                 "rule hits, and other stuff. These values are updated in the interval "
-                "configured here and are available in the sidebar snapin <i>Event Console "
+                "configured here and are available in the sidebar snap-in <i>Event Console "
                 "Performance</i>"
             ),
         )
@@ -5189,9 +5189,9 @@ def _sl_help() -> str:
             "views or as a criteria in rules for the Event Console. A higher service level "
             "is assumed to be more business critical. This ruleset allows to assign service "
             "levels to hosts and/or services. Note: if you assign a service level to "
-            "a host with the ruleset <i>Service Level of hosts</i>, then this level is "
+            "a host with the ruleset <i>Service level of hosts</i>, then this level is "
             "inherited to all services that do <b>not</b> have explicitly assigned a service "
-            "with the ruleset <i>Service Level of services</i>. Assigning no service level "
+            "with the ruleset <i>Service level of services</i>. Assigning no service level "
             "is equal to defining a level of 0.<br><br>The list of available service "
             "levels is configured via a <a href='%s'>global option.</a>"
         )
@@ -5201,7 +5201,7 @@ def _sl_help() -> str:
 
 def _valuespec_extra_host_conf__ec_sl() -> DropdownChoice:
     return DropdownChoice(
-        title=_("Service Level of hosts"),
+        title=_("Service level of hosts"),
         help=_sl_help(),
         choices=service_levels,
     )
@@ -5216,7 +5216,7 @@ ExtraHostConfECSLRulespec = HostRulespec(
 
 def _valuespec_extra_service_conf__ec_sl() -> DropdownChoice:
     return DropdownChoice(
-        title=_("Service Level of services"),
+        title=_("Service level of services"),
         help=_sl_help()
         + _(
             " Note: if no service level is configured for a service "
@@ -5483,6 +5483,7 @@ def replication_mode() -> str:
 
 # Only use this for master/slave replication. For status queries use livestatus
 def query_ec_directly(query: bytes) -> dict[str, Any]:
+    response_text = b""
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(active_config.mkeventd_connect_timeout)
@@ -5490,7 +5491,6 @@ def query_ec_directly(query: bytes) -> dict[str, Any]:
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
 
-        response_text = b""
         while True:
             chunk = sock.recv(8192)
             response_text += chunk
@@ -5522,7 +5522,7 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
                 (
                     "facility",
                     DropdownChoice(
-                        title=_("Syslog Facility to use"),
+                        title=_("Syslog facility to use"),
                         help=_(
                             "The notifications will be converted into syslog messages with "
                             "the facility that you choose here. In the Event Console you can "
@@ -5534,7 +5534,7 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
                 (
                     "remote",
                     IPv4Address(
-                        title=_("IP Address of remote Event Console"),
+                        title=_("IP address of remote Event Console"),
                         help=_(
                             "If you set this parameter then the notifications will be sent via "
                             "syslog/UDP (port 514) to a remote Event Console or syslog server."

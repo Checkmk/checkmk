@@ -11,9 +11,11 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
+    CaseStateStr,
     EmailBodyElementsType,
     GroupbyType,
     IlertPriorityType,
+    IncidentStateStr,
     MgmntPriorityType,
     MgmntUrgencyType,
     OpsGeniePriorityStrType,
@@ -30,6 +32,7 @@ from cmk.gui.fields import (
     AuxTagIDField,
     ContactGroupField,
     FolderIDField,
+    GlobalHTTPProxyField,
     GroupField,
     HostField,
     IPField,
@@ -44,7 +47,6 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
-from cmk.gui.rest_api_types.notifications_rule_types import CASE_STATE_TYPE, INCIDENT_STATE_TYPE
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
@@ -220,19 +222,40 @@ class CheckboxWithListOfStr(Checkbox):
 
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url"],
+        enum=["no_proxy", "environment", "url", "global"],
         required=True,
         example="",
     )
+
+
+class HttpProxyUrl(HttpProxy):
     url = fields.String(
-        required=False,
+        required=True,
         example="http://example_proxy",
     )
 
 
+class HttpProxyGlobal(HttpProxy):
+    global_proxy_id = GlobalHTTPProxyField(
+        required=True,
+        presence="should_exist",
+    )
+
+
+class HttpProxyOptions(OneOfSchema):
+    type_field = "option"
+    type_field_remove = False
+    type_schemas = {
+        "no_proxy": HttpProxy,
+        "environment": HttpProxy,
+        "url": HttpProxyUrl,
+        "global": HttpProxyGlobal,
+    }
+
+
 class HttpProxyValue(Checkbox):
     value = fields.Nested(
-        HttpProxy,
+        HttpProxyOptions,
         description="Use the proxy settings from the environment variables. The variables NO_PROXY, HTTP_PROXY and HTTPS_PROXY are taken into account during execution. Have a look at the python requests module documentation for further information. Note that these variables must be defined as a site-user in ~/etc/environment and that this might affect other notification methods which also use the requests module",
     )
 
@@ -465,7 +488,7 @@ class CheckboxWithListOfCheckTypes(Checkbox):
         required=True,
         uniqueItems=True,
         example=["3par_capacity", "acme_fan", "acme_realm"],
-        description="Only apply the rule if the notification originates from certain types of check plugins. Note: Host notifications never match this rule if this option is being used",
+        description="Only apply the rule if the notification originates from certain types of check plug-ins. Note: Host notifications never match this rule if this option is being used",
     )
 
 
@@ -1246,7 +1269,7 @@ class JiraPluginCreate(PluginName):
     jira_url = fields.String(
         required=False,
         example="http://jira_url_example.com",
-        description="Configure the JIRA URL here",
+        description="Configure the Jira URL here",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     username = fields.String(
@@ -1262,37 +1285,37 @@ class JiraPluginCreate(PluginName):
     project_id = fields.String(
         required=True,
         example="",
-        description="The numerical JIRA project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
+        description="The numerical Jira project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
     )
     issue_type_id = fields.String(
         required=True,
         example="",
-        description="The numerical JIRA issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
+        description="The numerical Jira issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
     )
     host_custom_id = fields.String(
         required=True,
         example="",
-        description="The numerical JIRA custom field ID for host problems",
+        description="The numerical Jira custom field ID for host problems",
     )
     service_custom_id = fields.String(
         required=True,
         example="",
-        description="The numerical JIRA custom field ID for service problems",
+        description="The numerical Jira custom field ID for service problems",
     )
     monitoring_url = fields.String(
         required=True,
         example="",
-        description="Configure the base URL for the Monitoring Web-GUI here. Include the site name. Used for link to check_mk out of jira",
+        description="Configure the base URL for the monitoring web-GUI here. Include the site name. Used for link to Checkmk out of Jira",
     )
     site_custom_id = fields.Nested(
         StrValueOneOfSchema,
         required=True,
-        description="The numerical ID of the JIRA custom field for sites. Please use this option if you have multiple sites in a distributed setup which send their notifications to the same JIRA instance",
+        description="The numerical ID of the Jira custom field for sites. Please use this option if you have multiple sites in a distributed setup which send their notifications to the same Jira instance",
     )
     priority_id = fields.Nested(
         StrValueOneOfSchema,
         required=True,
-        description="The numerical JIRA priority ID. If not set, it will be retrieved from a custom user attribute named jirapriority. If that is not set, the standard priority will be used",
+        description="The numerical Jira priority ID. If not set, it will be retrieved from a custom user attribute named jirapriority. If that is not set, the standard priority will be used",
     )
     host_summary = fields.Nested(
         StrValueOneOfSchema,
@@ -1312,7 +1335,7 @@ class JiraPluginCreate(PluginName):
     resolution_id = fields.Nested(
         StrValueOneOfSchema,
         required=True,
-        description="The numerical JIRA resolution transition ID. 11 - 'To Do', 21 - 'In Progress', 31 - 'Done'",
+        description="The numerical Jira resolution transition ID. 11 - 'To Do', 21 - 'In Progress', 31 - 'Done'",
     )
     optional_timeout = fields.Nested(
         StrValueOneOfSchema,
@@ -1443,11 +1466,6 @@ class OpsGeniePluginCreate(PluginName):
 
 
 # PagerDuty ---------------------------------------------------------
-
-PASSWORD_STORE_ID_SHOULD_EXIST = PasswordStoreIDField(
-    presence="should_exist",
-    required=True,
-)
 
 
 class PagerDutyAPIKeyStoreID(ExplicitOrStoreOptions):
@@ -1610,7 +1628,7 @@ class PriorityOneOfSchema(CheckboxOneOfSchema):
 
 class ManagementTypeCaseStates(BaseSchema):
     start_predefined = fields.String(
-        enum=list(get_args(CASE_STATE_TYPE)),
+        enum=list(get_args(CaseStateStr)),
         example="new",
     )
     start_integer = fields.Integer(
@@ -1639,7 +1657,7 @@ class CaseParams(IncidentAndCaseParams):
 
 class ManagementTypeIncedentStates(BaseSchema):
     start_predefined = fields.String(
-        enum=list(get_args(INCIDENT_STATE_TYPE)),
+        enum=list(get_args(IncidentStateStr)),
         example="hold",
     )
     start_integer = fields.Integer(
@@ -1647,7 +1665,7 @@ class ManagementTypeIncedentStates(BaseSchema):
         minimum=0,
     )
     end_predefined = fields.String(
-        enum=list(get_args(INCIDENT_STATE_TYPE)),
+        enum=list(get_args(IncidentStateStr)),
         example="resolved",
     )
     end_integer = fields.Integer(
@@ -1886,12 +1904,12 @@ class SpectrumPluginBase(PluginName):
     destination_ip = IPField(
         ip_type_allowed="ipv4",
         required=True,
-        description="IP Address of the Spectrum server receiving the SNMP trap",
+        description="IP address of the Spectrum server receiving the SNMP trap",
     )
     snmp_community = fields.String(
         required=True,
         example="",
-        description="SNMP Community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
+        description="SNMP community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
     )
     base_oid = fields.String(
         required=True,
@@ -2087,7 +2105,7 @@ class CustomPlugin(BaseSchema):
             try:
                 vs.validate_datatype(dif, "plugin_params")
             except MKUserError as exc:
-                message = exc.message if not ": " in exc.message else exc.message.split(": ")[-1]
+                message = exc.message if ": " not in exc.message else exc.message.split(": ")[-1]
                 if re.search("The entry (.*)", exc.message) is not None:
                     message = "A required (sub-)field is missing."
 

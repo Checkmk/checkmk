@@ -11,7 +11,6 @@ backend business and persistence logic, which is also shared with the REST API.
 
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
-# flake8: noqa
 # pylint: disable=unused-import
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -187,7 +186,7 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     # Initialize watolib things which are needed before loading the Setup plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()

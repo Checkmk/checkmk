@@ -9,13 +9,8 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based import aix_diskiod, diskstat_io
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    Result,
-    State,
-)
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
+from cmk.plugins.collection.agent_based import aix_diskiod, diskstat_io
 
 DISK = {
     "read_throughput": 2437253982208,

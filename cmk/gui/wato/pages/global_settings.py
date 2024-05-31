@@ -44,7 +44,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
-from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
@@ -571,7 +571,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditGlobals.mode_url()
 
 
-def is_a_checkbox(vs) -> bool:  # type: ignore[no-untyped-def]
+def is_a_checkbox(vs: ValueSpec) -> bool:
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True

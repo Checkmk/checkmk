@@ -10,13 +10,13 @@ from typing import Any
 from uuid import uuid4
 
 from cmk.utils import store
-from cmk.utils.config_validation_layer.groups import AllGroupSpecs, GroupName
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
-from cmk.utils.notify_types import EventRule, NotificationRuleID
+from cmk.utils.notify_types import EventRule, MailPluginModel, NotificationRuleID
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
+from cmk.gui.groups import AllGroupSpecs, GroupName
 from cmk.gui.log import logger
 from cmk.gui.userdb import create_cmk_automation_user
 from cmk.gui.watolib.config_domain_name import (
@@ -103,7 +103,7 @@ def get_default_notification_rule() -> EventRule:
         contact_object=True,
         description="Notify all contacts of a host/service via HTML email",
         disabled=False,
-        notify_plugin=("mail", {}),
+        notify_plugin=("mail", MailPluginModel()),
     )
 
 

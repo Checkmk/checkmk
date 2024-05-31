@@ -30,7 +30,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                         help=_(
                             "Webhook URL. Setup Cisco Webex Teams Webhook "
                             '<a href="https://apphub.webex.com/messaging/applications/incoming-webhooks-cisco-systems-38054" target="_blank">here</a>'
-                            "<br />This URL can also be collected from the Password Store from Checkmk."
+                            "<br />This URL can also be collected from the password store from Checkmk."
                         ),
                         choices=[
                             ("webhook_url", _("Webhook URL"), HTTPUrl(size=80, allow_empty=False)),

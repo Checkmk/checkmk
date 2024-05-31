@@ -154,9 +154,9 @@ def _get_only_raw_data_element(
 def test_get_piggyback_raw_data_successful(time_settings: piggyback.PiggybackTimeSettings) -> None:
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is True
+    assert raw_data.info.valid is True
     assert raw_data.info.message == "Successfully processed from source 'source1'"
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
@@ -176,10 +176,10 @@ def test_get_piggyback_raw_data_not_updated() -> None:
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == HostName("source1")
+    assert raw_data.info.source == HostName("source1")
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message == "Piggyback file not updated by source 'source1'"
+    assert raw_data.info.valid is False
+    assert raw_data.info.message == "Piggyback data not updated by source 'source1'"
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -196,10 +196,10 @@ def test_get_piggyback_raw_data_not_sending() -> None:
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message == "Source 'source1' not sending piggyback data"
+    assert raw_data.info.valid is False
+    assert raw_data.info.message == "Piggyback data not updated by source 'source1'"
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -210,9 +210,9 @@ def test_get_piggyback_raw_data_too_old_global() -> None:
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is False
+    assert raw_data.info.valid is False
     assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
@@ -227,9 +227,9 @@ def test_get_piggyback_raw_data_too_old_source() -> None:
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is False
+    assert raw_data.info.valid is False
     assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
@@ -245,9 +245,9 @@ def test_get_piggyback_raw_data_too_old_piggybacked_host() -> None:
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is False
+    assert raw_data.info.valid is False
     assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
@@ -295,9 +295,9 @@ def test_store_piggyback_raw_data_new_host() -> None:
 
     raw_data = _get_only_raw_data_element(HostName("pig"), time_settings)
 
-    assert raw_data.info.source_hostname == "source2"
+    assert raw_data.info.source == "source2"
     assert raw_data.info.file_path.parts[-2:] == ("pig", "source2")
-    assert raw_data.info.successfully_processed is True
+    assert raw_data.info.valid is True
     assert raw_data.info.message.startswith("Successfully processed from source 'source2'")
     assert raw_data.info.status == 0
     assert raw_data.raw_data == b"<<<check_mk>>>\nlulu\n"
@@ -321,7 +321,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
         )
 
         raw_data_map = {
-            rd.info.source_hostname: rd
+            rd.info.source: rd
             for rd in piggyback.get_piggyback_raw_data(_TEST_HOST_NAME, time_settings)
         }
     assert len(raw_data_map) == 2
@@ -329,13 +329,13 @@ def test_store_piggyback_raw_data_second_source() -> None:
     raw_data1, raw_data2 = raw_data_map[HostName("source1")], raw_data_map[HostName("source2")]
 
     assert raw_data1.info.file_path.parts[-2:] == (str(_TEST_HOST_NAME), "source1")
-    assert raw_data1.info.successfully_processed is True
+    assert raw_data1.info.valid is True
     assert raw_data1.info.message.startswith("Successfully processed from source 'source1'")
     assert raw_data1.info.status == 0
     assert raw_data1.raw_data == _PAYLOAD
 
     assert raw_data2.info.file_path.parts[-2:] == (str(_TEST_HOST_NAME), "source2")
-    assert raw_data2.info.successfully_processed is True
+    assert raw_data2.info.valid is True
     assert raw_data2.info.message.startswith("Successfully processed from source 'source2'")
     assert raw_data2.info.status == 0
     assert raw_data2.raw_data == b"<<<check_mk>>>\nlulu\n"
@@ -408,7 +408,7 @@ def test_get_source_and_piggyback_hosts() -> None:
                 ("source1", "validity_period", 1000),
             ],
             True,
-            "Source 'source1' not sending piggyback data (still valid",
+            "Piggyback data not updated by source 'source1' (still valid",
             0,
         ),
         (
@@ -418,7 +418,7 @@ def test_get_source_and_piggyback_hosts() -> None:
                 ("source1", "validity_state", 1),
             ],
             True,
-            "Source 'source1' not sending piggyback data (still valid",
+            "Piggyback data not updated by source 'source1' (still valid",
             1,
         ),
     ],
@@ -436,9 +436,9 @@ def test_get_piggyback_raw_data_source_validity(
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is successfully_processed
+    assert raw_data.info.valid is successfully_processed
     assert raw_data.info.message.startswith(reason)
     assert raw_data.info.status == reason_status
     assert raw_data.raw_data == _PAYLOAD
@@ -453,7 +453,7 @@ def test_get_piggyback_raw_data_source_validity(
                 ("source1", "validity_period", -1),
             ],
             False,
-            "Source 'source1' not sending piggyback data",
+            "Piggyback data not updated by source 'source1'",
             0,
         ),
     ],
@@ -471,9 +471,9 @@ def test_get_piggyback_raw_data_source_validity2(
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is successfully_processed
+    assert raw_data.info.valid is successfully_processed
     assert raw_data.info.message == reason
     assert raw_data.info.status == reason_status
     assert raw_data.raw_data == _PAYLOAD
@@ -489,7 +489,7 @@ def test_get_piggyback_raw_data_source_validity2(
                 ("test-host", "validity_period", 1000),
             ],
             True,
-            "Piggyback file not updated by source 'source1' (still valid",
+            "Piggyback data not updated by source 'source1' (still valid",
             0,
         ),
         (
@@ -501,7 +501,7 @@ def test_get_piggyback_raw_data_source_validity2(
                 ("test-host", "validity_state", 1),
             ],
             True,
-            "Piggyback file not updated by source 'source1' (still valid",
+            "Piggyback data not updated by source 'source1' (still valid",
             1,
         ),
     ],
@@ -521,9 +521,9 @@ def test_get_piggyback_raw_data_piggybacked_host_validity(
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is successfully_processed
+    assert raw_data.info.valid is successfully_processed
     assert raw_data.info.message.startswith(reason)
     assert raw_data.info.status == reason_status
     assert raw_data.raw_data == _PAYLOAD
@@ -541,7 +541,7 @@ def test_get_piggyback_raw_data_piggybacked_host_validity(
                 ("test-host", "validity_state", 1),
             ],
             False,
-            "Piggyback file not updated by source 'source1'",
+            "Piggyback data not updated by source 'source1'",
             0,
         ),
     ],
@@ -561,9 +561,9 @@ def test_get_piggyback_raw_data_piggybacked_host_validity2(
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
-    assert raw_data.info.successfully_processed is successfully_processed
+    assert raw_data.info.valid is successfully_processed
     assert raw_data.info.message.startswith(reason)
     assert raw_data.info.status == reason_status
     assert raw_data.raw_data == _PAYLOAD

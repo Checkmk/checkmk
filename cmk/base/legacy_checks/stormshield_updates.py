@@ -15,7 +15,7 @@ def inventory_stormshield_updates(info):
     for subsystem, state, lastrun in info:
         if state == "Failed" and lastrun == "":
             pass
-        elif not state in ["Not Available", "Never started"]:
+        elif state not in ["Not Available", "Never started"]:
             yield subsystem, {}
 
 

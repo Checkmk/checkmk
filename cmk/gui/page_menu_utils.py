@@ -240,7 +240,7 @@ def _collect_linked_visuals_of_type(
         # has no such information available. For example the "Oracle Tablespaces" inventory view
         # is useless on hosts that don't host Oracle databases.
         vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
-        if not visual_type.link_from(view, rows, visual, vars_values):
+        if not visual_type.link_from(view.spec["single_infos"], rows, visual, vars_values):
             continue
 
         yield visual_type, visual

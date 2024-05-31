@@ -14,19 +14,19 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 def _item_spec_msx_database():
     return TextInput(
-        title=_("Database Name"),
+        title=_("Database name"),
         help=_("Specify database names that the rule should apply to"),
     )
 
 
 def _parameter_valuespec_msx_database():
     return Dictionary(
-        title=_("Set Levels"),
+        title=_("Set levels"),
         elements=[
             (
                 "read_attached_latency",
                 Tuple(
-                    title=_("I/O Database Reads (Attached) Average Latency"),
+                    title=_("I/O database reads (attached) average latency"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("ms"), default_value=200.0),
                         Float(title=_("Critical at"), unit=_("ms"), default_value=250.0),
@@ -36,7 +36,7 @@ def _parameter_valuespec_msx_database():
             (
                 "read_recovery_latency",
                 Tuple(
-                    title=_("I/O Database Reads (Recovery) Average Latency"),
+                    title=_("I/O database reads (recovery) average latency"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("ms"), default_value=150.0),
                         Float(title=_("Critical at"), unit=_("ms"), default_value=200.0),
@@ -46,7 +46,7 @@ def _parameter_valuespec_msx_database():
             (
                 "write_latency",
                 Tuple(
-                    title=_("I/O Database Writes (Attached) Average Latency"),
+                    title=_("I/O database writes (attached) average latency"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("ms"), default_value=40.0),
                         Float(title=_("Critical at"), unit=_("ms"), default_value=50.0),
@@ -56,7 +56,7 @@ def _parameter_valuespec_msx_database():
             (
                 "log_latency",
                 Tuple(
-                    title=_("I/O Log Writes Average Latency"),
+                    title=_("I/O log writes average latency"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("ms"), default_value=5.0),
                         Float(title=_("Critical at"), unit=_("ms"), default_value=10.0),

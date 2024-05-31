@@ -1048,7 +1048,7 @@ class UserWebAuthnLoginComplete(JsonPage):
                 auth_data=data.authenticator_data,
                 signature=data.signature,
             )
-        except:
+        except BaseException:
             log_event_auth("Webauthn")
             raise
 

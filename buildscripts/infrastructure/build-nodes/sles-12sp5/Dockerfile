@@ -71,6 +71,7 @@ RUN zypper ref -s \
     libxmlsec1-1 \
     make \
     mysql \
+    netcat-openbsd \
     openldap2-devel \
     openssh \
     pango-devel \

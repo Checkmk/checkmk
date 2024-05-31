@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-import tests.testlib as testlib
+from tests.testlib.utils import repo_path
 
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
@@ -23,7 +23,7 @@ CVSS_REGEX = re.compile(
 
 @pytest.fixture(scope="function", name="precompiled_werks")
 def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    all_werks = cmk.utils.werks.load_raw_files(testlib.repo_path() / ".werks")
+    all_werks = cmk.utils.werks.load_raw_files(repo_path() / ".werks")
     cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", {w.id: w for w in all_werks})
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
@@ -31,7 +31,7 @@ def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
 def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     tmp_dir = str(tmp_path)
 
-    all_werks = cmk.utils.werks.load_raw_files(testlib.repo_path() / ".werks")
+    all_werks = cmk.utils.werks.load_raw_files(repo_path() / ".werks")
     cre_werks = {w.id: w for w in all_werks if w.edition.value == "cre"}
     cee_werks = {w.id: w for w in all_werks if w.edition.value == "cee"}
     cme_werks = {w.id: w for w in all_werks if w.edition.value == "cme"}
@@ -141,7 +141,7 @@ def _git_tag_exists(tag: str) -> bool:
             ["git", "rev-list", tag],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
-            cwd=testlib.repo_path(),
+            cwd=repo_path(),
         ).wait()
         == 0
     )
@@ -165,7 +165,7 @@ def _werks_in_git_tag(tag: str) -> list[str]:
     werks_in_tag = (
         subprocess.check_output(
             [b"git", b"ls-tree", b"-r", b"--name-only", tag.encode(), b".werks"],
-            cwd=testlib.repo_path(),
+            cwd=repo_path(),
         )
         .decode()
         .split("\n")

@@ -7,7 +7,7 @@ from collections.abc import Iterator
 import pytest
 from flask import Flask
 
-from tests.unit.cmk.gui.conftest import (  # NOQA # pylint: disable=unused-import
+from tests.unit.cmk.gui.conftest import (  # pylint: disable=unused-import
     admin_auth_request,
     flask_app,
     gui_cleanup_after_test,

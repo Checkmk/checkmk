@@ -112,7 +112,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     )
     parser.add_argument(
         "host_address",
-        help="Host name or IP-address of NetApp Filer.",
+        help="Host name or IP address of NetApp Filer.",
     )
     parser.add_argument(
         "user",

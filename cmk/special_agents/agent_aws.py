@@ -1062,7 +1062,7 @@ class AWSSectionCloudwatch(AWSSection):
     def _extend_metrics_by_period(self, metrics: Metrics, raw_content: list) -> None:
         """
         Extend the queried metric values by the corresponding time period. For metrics based on the
-        "Sum" statistics, we add the actual time period which can then be used by the check plugins
+        "Sum" statistics, we add the actual time period which can then be used by the check plug-ins
         to compute a rate. For all other metrics, we add 'None', such that the metric values are
         always 2-tuples (value, period), where period is either an actual time period such as 600 s
         or None.
@@ -1427,7 +1427,7 @@ class EC2Limits(AWSSectionLimits):
             "",
             AWSLimit(
                 "vpc_elastic_ip_addresses",
-                "VPC Elastic IP Addresses",
+                "VPC Elastic IP addresses",
                 5,
                 vpc_addresses,
             ),
@@ -1436,7 +1436,7 @@ class EC2Limits(AWSSectionLimits):
             "",
             AWSLimit(
                 "elastic_ip_addresses",
-                "Elastic IP Addresses",
+                "Elastic IP addresses",
                 5,
                 std_addresses,
             ),

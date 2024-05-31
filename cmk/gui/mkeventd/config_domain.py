@@ -29,7 +29,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         return config_domain_name.EVENT_CONSOLE
 
     @classmethod
-    def enabled(cls):
+    def enabled(cls) -> bool:
         return active_config.mkeventd_enabled
 
     def config_dir(self):

@@ -131,7 +131,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--address",
         type=str,
         metavar="IP ADDRESS",
-        help="IP-address of HOST (only necessary if HOST is in another network)",
+        help="IP address of HOST (only necessary if HOST is in another network)",
     )
     parser.add_argument(
         "-C",

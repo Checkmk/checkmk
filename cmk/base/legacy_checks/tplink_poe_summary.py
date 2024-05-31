@@ -20,7 +20,7 @@ def inventory_tplink_poe_summary(info):
 def check_tplink_poe_summary(_no_item, params, info):
     deci_watt = float(info[0][0])
     watt = deci_watt / 10
-    return check_levels(watt, "power", params.get("levels", (None, None)), unit="Watt")
+    return check_levels(watt, "power", params.get("levels"), unit="W")
 
 
 def parse_tplink_poe_summary(string_table: StringTable) -> StringTable:
@@ -38,4 +38,5 @@ check_info["tplink_poe_summary"] = LegacyCheckDefinition(
     discovery_function=inventory_tplink_poe_summary,
     check_function=check_tplink_poe_summary,
     check_ruleset_name="epower_single",
+    check_default_parameters={"levels": None},
 )

@@ -727,23 +727,23 @@ class Log(Table):
     current_host_last_time_down = Column(
         'current_host_last_time_down',
         col_type='time',
-        description='The last time the host was DOWN (Unix timestamp)',
+        description='Last time the host was DOWN (Unix timestamp)',
     )
-    """The last time the host was DOWN (Unix timestamp)"""
+    """Last time the host was DOWN (Unix timestamp)"""
 
     current_host_last_time_unreachable = Column(
         'current_host_last_time_unreachable',
         col_type='time',
-        description='The last time the host was UNREACHABLE (Unix timestamp)',
+        description='Last time the host was UNREACHABLE (Unix timestamp)',
     )
-    """The last time the host was UNREACHABLE (Unix timestamp)"""
+    """Last time the host was UNREACHABLE (Unix timestamp)"""
 
     current_host_last_time_up = Column(
         'current_host_last_time_up',
         col_type='time',
-        description='The last time the host was UP (Unix timestamp)',
+        description='Last time the host was UP (Unix timestamp)',
     )
-    """The last time the host was UP (Unix timestamp)"""
+    """Last time the host was UP (Unix timestamp)"""
 
     current_host_latency = Column(
         'current_host_latency',
@@ -1665,30 +1665,30 @@ class Log(Table):
     current_service_last_time_critical = Column(
         'current_service_last_time_critical',
         col_type='time',
-        description='The last time the service was CRIT (Unix timestamp)',
+        description='Last time the service was CRIT (Unix timestamp)',
     )
-    """The last time the service was CRIT (Unix timestamp)"""
+    """Last time the service was CRIT (Unix timestamp)"""
 
     current_service_last_time_ok = Column(
         'current_service_last_time_ok',
         col_type='time',
-        description='The last time the service was OK (Unix timestamp)',
+        description='Last time the service was OK (Unix timestamp)',
     )
-    """The last time the service was OK (Unix timestamp)"""
+    """Last time the service was OK (Unix timestamp)"""
 
     current_service_last_time_unknown = Column(
         'current_service_last_time_unknown',
         col_type='time',
-        description='The last time the service was UNKNOWN (Unix timestamp)',
+        description='Last time the service was UNKNOWN (Unix timestamp)',
     )
-    """The last time the service was UNKNOWN (Unix timestamp)"""
+    """Last time the service was UNKNOWN (Unix timestamp)"""
 
     current_service_last_time_warning = Column(
         'current_service_last_time_warning',
         col_type='time',
-        description='The last time the service was WARN (Unix timestamp)',
+        description='Last time the service was WARN (Unix timestamp)',
     )
-    """The last time the service was WARN (Unix timestamp)"""
+    """Last time the service was WARN (Unix timestamp)"""
 
     current_service_latency = Column(
         'current_service_latency',

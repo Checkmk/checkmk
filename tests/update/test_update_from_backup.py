@@ -5,18 +5,12 @@
 
 import json
 import logging
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import (
-    agent_controller_daemon,
-    clean_agent_controller,
-    download_and_install_agent_package,
-    register_controller,
-    wait_until_host_receives_data,
-)
 from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
@@ -27,7 +21,7 @@ from tests.testlib.utils import (
 )
 from tests.testlib.version import CMKVersion, version_from_env
 
-from tests.update.conftest import BaseVersions
+from tests.update.conftest import BaseVersions, DUMPS_DIR, inject_dumps
 
 from cmk.utils.version import Edition
 
@@ -48,20 +42,6 @@ def _base_site(site_factory: SiteFactory) -> Iterator[Site]:
     yield from site_factory.get_test_site(site_name, save_results=False)
 
 
-@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(base_site: Site, tmp_path: Path) -> Path:
-    return download_and_install_agent_package(base_site, tmp_path)
-
-
-@pytest.fixture(name="agent_ctl", scope="function")
-def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
-        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
-    ):
-        yield installed_agent_ctl_in_unknown_state
-
-
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
     base_version = CMKVersion(
@@ -78,16 +58,16 @@ def _base_site_demo(site_factory_demo):
 
 
 @pytest.mark.cee
-def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
+@pytest.mark.skipif(
+    os.getenv("DISTRO") == "ubuntu-24.04", reason="Checkmk 2.3 is not available for this system"
+)
+def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_2.3.0_backup.tar.gz")
     assert backup_path.exists()
 
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
-
-    for i, hostname in enumerate(hostnames, start=1):
-        register_controller(agent_ctl, base_site, hostname, site_address=f"127.0.0.{i}")
-        wait_until_host_receives_data(base_site, hostname)
+    inject_dumps(base_site, DUMPS_DIR)
 
     logger.info("Discovering services and waiting for completion...")
     base_site.openapi.bulk_discover_services_and_wait_for_completion(

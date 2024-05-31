@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint, state_markers
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
@@ -16,24 +16,17 @@ def inventory_enterasys_lsnat(info):
 
 def check_enterasys_lsnat(_no_item, params, info):
     if not info:
-        return 3, "LSNAT bindings info is missing"
+        return
 
     lsnat_bindings = saveint(info[0][0])
-    warn, crit = params.get("current_bindings", (None, None))
 
-    state = 0
-    state_info = ""
-    if warn:
-        if lsnat_bindings > crit:
-            state = 2
-            state_info = state_markers[state]
-        elif lsnat_bindings > warn:
-            state = 1
-            state_info = state_markers[state]
-
-    perfdata = [("current_bindings", lsnat_bindings, warn, crit)]
-
-    return state, "Current bindings %d%s" % (lsnat_bindings, state_info), perfdata
+    yield check_levels(
+        lsnat_bindings,
+        "current_bindings",
+        params.get("current_bindings"),
+        infoname="Current bindings",
+        human_readable_func=str,
+    )
 
 
 def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
@@ -54,4 +47,7 @@ check_info["enterasys_lsnat"] = LegacyCheckDefinition(
     discovery_function=inventory_enterasys_lsnat,
     check_function=check_enterasys_lsnat,
     check_ruleset_name="lsnat",
+    check_default_parameters={
+        "current_bindings": None,
+    },
 )

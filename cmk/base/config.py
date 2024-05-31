@@ -464,13 +464,12 @@ def register(name: str, default_value: Any) -> None:
 def load(
     with_conf_d: bool = True,
     validate_hosts: bool = True,
-    exclude_parents_mk: bool = False,
     *,
     changed_vars_handler: Callable[[set[str]], None] | None = None,
 ) -> None:
     _initialize_config()
 
-    changed_var_names = _load_config(with_conf_d, exclude_parents_mk)
+    changed_var_names = _load_config(with_conf_d)
     if changed_vars_handler is not None:
         changed_vars_handler(changed_var_names)
 
@@ -487,7 +486,10 @@ def load(
             )
         ):
             # TODO: Raise an exception
-            console.error(f"Error in configuration: duplicate hosts: {', '.join(duplicates)}\n")
+            console.error(
+                f"Error in configuration: duplicate hosts: {', '.join(duplicates)}",
+                file=sys.stderr,
+            )
             sys.exit(3)
 
 
@@ -584,7 +586,7 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
     )  # nosec B102 # BNS:aee528
 
 
-def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
+def _load_config(with_conf_d: bool) -> set[str]:
     helper_vars = {
         "FOLDER_PATH": None,
     }
@@ -608,10 +610,6 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
     host_storage_loaders = get_host_storage_loaders(config_storage_format)
     config_dir_path = Path(cmk.utils.paths.check_mk_config_dir)
     for path in get_config_file_paths(with_conf_d):
-        # During parent scan mode we must not read in old version of parents.mk!
-        if exclude_parents_mk and path.name == "parents.mk":
-            continue
-
         try:
             # Make the config path available as a global variable to be used
             # within the configuration file. The FOLDER_PATH is only used by
@@ -647,7 +645,7 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
             if cmk.utils.debug.enabled():
                 raise
             if sys.stderr.isatty():
-                console.error(f"Cannot read in configuration file {path}: {e}\n")
+                console.error(f"Cannot read in configuration file {path}: {e}", file=sys.stderr)
             sys.exit(1)
 
     # Cleanup global helper vars
@@ -1185,7 +1183,7 @@ def get_final_service_description(
 def service_depends_on(
     config_cache: ConfigCache, hostname: HostName, servicedesc: ServiceName
 ) -> list[ServiceName]:
-    """Return a list of services this services depends upon"""
+    """Return a list of services this service depends upon"""
     deps = []
     for entry in service_dependencies:
         entry, rule_options = tuple_rulesets.get_rule_options(entry)
@@ -1333,7 +1331,7 @@ service_rule_groups = {"temperature"}
 #   |               |_____\___/ \__,_|\__,_|_|_| |_|\__, |                 |
 #   |                                               |___/                  |
 #   +----------------------------------------------------------------------+
-#   | Loading of check plugins                                             |
+#   | Loading of check plug-ins                                            |
 #   '----------------------------------------------------------------------'
 
 
@@ -1408,7 +1406,7 @@ def load_checks(
 
         except Exception as e:
             ignored_plugins_errors.append(
-                f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!\n"
+                f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!"
             )
             if cmk.utils.debug.enabled():
                 raise
@@ -1428,7 +1426,7 @@ def load_checks(
             continue
         ignored_plugins_errors.append(
             f"Ignoring outdated plug-in {k!r}: Format no longer supported"
-            " -- this API is deprecated!\n"
+            " -- this API is deprecated!"
         )
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
@@ -1503,7 +1501,7 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
 
     do_compile = not _is_plugin_precompiled(path, precompiled_path)
     if do_compile:
-        console.debug(f"Precompile {path} to {precompiled_path}\n")
+        console.debug(f"Precompile {path} to {precompiled_path}")
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
         # The original file is from the version so the calculated mode is world readable...
@@ -1544,7 +1542,7 @@ def _precompiled_plugin_path(path: str) -> str:
 
 AUTO_MIGRATION_ERR_MSG = (
     "Failed to auto-migrate legacy plug-in to %s: %s\n"
-    "Please refer to Werk 10601 for more information.\n"
+    "Please refer to Werk 10601 for more information."
 )
 
 
@@ -1575,7 +1573,7 @@ def _extract_agent_and_snmp_sections(
                 )
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
-            # NOTE: missing section pugins may lead to missing data for a check plugin
+            # NOTE: missing section plug-ins may lead to missing data for a check plug-in
             #       *or* to more obscure errors, when a check/inventory plug-in will be
             #       passed un-parsed data unexpectedly.
             if cmk.utils.debug.enabled():
@@ -1598,7 +1596,7 @@ def _extract_check_plugins(
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
-    in check_info to create API compliant check plugins.
+    in check_info to create API compliant check plug-ins.
     """
     errors = []
     for check_plugin_name, check_info_element in sorted(legacy_checks.items()):
@@ -1610,13 +1608,13 @@ def _extract_check_plugins(
                 CheckPluginName(maincheckify(check_plugin_name))
             )
             if present_plugin is not None and present_plugin.location is not None:
-                # module is not None => it's a new plugin
+                # module is not None => it's a new plug-in
                 # (allow loading multiple times, e.g. update-config)
                 # implemented here instead of the agent based register so that new API code does not
                 # need to include any handling of legacy cases
                 raise ValueError(
                     f"Legacy check plug-in still exists for check plug-in {check_plugin_name}. "
-                    "Please remove legacy plugin."
+                    "Please remove legacy plug-in."
                 )
             agent_based_register.add_check_plugin(
                 create_check_plugin_from_legacy(
@@ -1626,7 +1624,7 @@ def _extract_check_plugins(
                 )
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
-            # NOTE: as a result of a missing check plugin, the corresponding services
+            # NOTE: as a result of a missing check plug-in, the corresponding services
             #       will be silently droppend on most (all?) occasions.
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(exc) from exc
@@ -1660,7 +1658,7 @@ def compute_check_parameters(
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
     check_plugin = agent_based_register.get_check_plugin(plugin_name)
-    if check_plugin is None:  # handle vanished check plugin
+    if check_plugin is None:  # handle vanished check plug-in
         return TimespecificParameters()
 
     if configured_parameters is None:
@@ -1811,37 +1809,35 @@ def get_resource_macros() -> Mapping[str, str]:
 
 def get_ssc_host_config(
     host_name: HostName,
-    config_cache: ConfigCache,
+    host_alias: str,
+    host_primary_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    host_ip_stack_config: IPStackConfig,
+    host_additional_addresses_ipv4: Sequence[HostAddress],
+    host_additional_addresses_ipv6: Sequence[HostAddress],
     macros: Mapping[str, object],
     ip_address_of: IPLookup,
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
-    primary_family = config_cache.default_address_family(host_name)
-    ip_stack_config = config_cache.ip_stack_config(host_name)
-    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-        host_name
-    )
-
     return server_side_calls_api.HostConfig(
         name=host_name,
-        alias=config_cache.alias(host_name),
+        alias=host_alias,
         ipv4_config=(
             server_side_calls_api.IPv4Config(
                 address=ip_address_of(host_name, socket.AddressFamily.AF_INET),
-                additional_addresses=additional_addresses_ipv4,
+                additional_addresses=host_additional_addresses_ipv4,
             )
-            if ip_lookup.IPStackConfig.IPv4 in ip_stack_config
+            if ip_lookup.IPStackConfig.IPv4 in host_ip_stack_config
             else None
         ),
         ipv6_config=(
             server_side_calls_api.IPv6Config(
                 address=ip_address_of(host_name, socket.AddressFamily.AF_INET6),
-                additional_addresses=additional_addresses_ipv6,
+                additional_addresses=host_additional_addresses_ipv6,
             )
-            if ip_lookup.IPStackConfig.IPv6 in ip_stack_config
+            if ip_lookup.IPStackConfig.IPv6 in host_ip_stack_config
             else None
         ),
-        primary_family=_get_ssc_ip_family(primary_family),
+        primary_family=_get_ssc_ip_family(host_primary_family),
         macros={k: str(v) for k, v in macros.items()},
     )
 
@@ -1933,6 +1929,7 @@ class ConfigCache:
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_cache,
             all_configured_hosts=list(set(self.hosts_config)),
+            debug_matching_stats=ruleset_matching_stats,
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
@@ -1955,7 +1952,7 @@ class ConfigCache:
         return SummaryConfig(
             exit_spec=self.exit_code_spec(host_name, source_id),
             time_settings=self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name),
-            is_piggyback_host=self.is_piggyback_host(host_name),
+            expect_data=self.is_piggyback_host(host_name),
         )
 
     def make_parent_scan_config(self, host_name: HostName) -> ParentScanConfig:
@@ -2543,11 +2540,13 @@ class ConfigCache:
     ) -> Mapping[str, object]:
         if plugin.ruleset_name is None:
             raise ValueError(plugin)
-
-        default: Sequence[RuleSpec[Mapping[str, object]]] = []
-        return self.ruleset_matcher.get_host_merged_dict(
-            host_name, inv_parameters.get(str(plugin.ruleset_name), default)
-        )
+        return {
+            **plugin.defaults,
+            **self.ruleset_matcher.get_host_merged_dict(
+                host_name,
+                inv_parameters.get(str(plugin.ruleset_name), []),
+            ),
+        }
 
     def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
         """Return the free form configured custom checks without formalization"""
@@ -2653,12 +2652,24 @@ class ConfigCache:
                     "<HOST>": host_name,
                     **self.get_host_macros_from_attributes(host_name, host_attrs),
                 }
+                additional_addresses_ipv4, additional_addresses_ipv6 = self.additional_ipaddresses(
+                    host_name
+                )
                 special_agent = SpecialAgent(
                     load_special_agents()[1],
                     special_agent_info,
                     host_name,
                     ip_address,
-                    get_ssc_host_config(host_name, self, macros, ip_address_of),
+                    get_ssc_host_config(
+                        host_name,
+                        self.alias(host_name),
+                        self.default_address_family(host_name),
+                        self.ip_stack_config(host_name),
+                        additional_addresses_ipv4,
+                        additional_addresses_ipv6,
+                        macros,
+                        ip_address_of,
+                    ),
                     host_attrs,
                     http_proxies,
                     passwords,
@@ -2917,6 +2928,27 @@ class ConfigCache:
 
     def checkmk_check_parameters(self, host_name: HostName) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self.is_ping_host(host_name))
+
+    @staticmethod
+    def notification_logging_level() -> int:
+        # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
+        # which agree with the values used in cmk/utils/log.py.
+        # The deprecated value 0 is transformed to the default logging value.
+        if notification_logging in (0, 1):
+            return 20
+        if notification_logging == 2:
+            return 10
+        return notification_logging
+
+    @staticmethod
+    def notification_spooling() -> Literal["local", "remote", "both"]:
+        if notification_spool_to:
+            if notification_spool_to[2]:
+                return "both"
+            return "remote"
+        if notification_spooling:
+            return "local"
+        return "remote"
 
     def notification_plugin_parameters(
         self,
@@ -3329,7 +3361,7 @@ class ConfigCache:
     def servicegroups_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> list[ServicegroupName]:
-        """Returns the list of servicegroups of this services"""
+        """Returns the list of servicegroups of this service"""
         return self.ruleset_matcher.service_extra_conf(hostname, description, service_groups)
 
     def contactgroups_of_service(self, hostname: HostName, description: ServiceName) -> list[str]:
@@ -4547,3 +4579,83 @@ class CEEConfigCache(ConfigCache):
             ("agent_encryption", agent_encryption),
             ("agent_exclude_sections", agent_exclude_sections),
         ]
+
+
+def get_ruleset_id_mapping() -> Mapping[int, str]:
+    def get_nested_rules(prefix: str, rulesets: dict[str, list]) -> Mapping[int, str]:
+        return {id(ruleset): f"{prefix}:{name}]" for name, ruleset in rulesets.items()}
+
+    return {
+        **get_nested_rules("static_checks", static_checks),
+        **get_nested_rules("checkgroup_parameters", checkgroup_parameters),
+        **get_nested_rules("inv_parameters", inv_parameters),
+        **get_nested_rules("active_checks", active_checks),
+        **get_nested_rules("special_agents", special_agents),
+        **get_nested_rules("extra_host_conf", extra_host_conf),
+        **get_nested_rules("extra_service_conf", extra_service_conf),
+        **get_nested_rules("notification_parameters", notification_parameters),
+        **get_nested_rules("agent_config", agent_config),
+        id(agent_ports): "agent_ports",
+        id(agent_encryption): "agent_encryption",
+        id(encryption_handling): "encryption_handling",
+        id(agent_exclude_sections): "agent_exclude_sections",
+        id(snmp_ports): "snmp_ports",
+        id(tcp_connect_timeouts): "tcp_connect_timeouts",
+        id(piggyback_translation): "piggyback_translation",
+        id(service_description_translation): "service_description_translation",
+        id(snmp_backend_hosts): "snmp_backend_hosts",
+        id(non_inline_snmp_hosts): "non_inline_snmp_hosts",
+        id(snmp_limit_oid_range): "snmp_limit_oid_range",
+        id(snmp_bulk_size): "snmp_bulk_size",
+        id(snmp_communities): "snmp_communities",
+        id(snmp_timing): "snmp_timing",
+        id(snmp_character_encodings): "snmp_character_encodings",
+        id(management_board_config): "management_board_config",
+        id(cmc_host_rrd_config): "cmc_host_rrd_config",
+        id(cmc_service_rrd_config): "cmc_service_rrd_config",
+        id(inv_retention_intervals): "inv_retention_intervals",
+        id(periodic_discovery): "periodic_discovery",
+        id(check_parameters): "check_parameters",
+        id(custom_checks): "custom_checks",
+        id(host_label_rules): "host_label_rules",
+        id(bulkwalk_hosts): "bulkwalk_hosts",
+        id(snmpv2c_hosts): "snmpv2c_hosts",
+        id(snmp_without_sys_descr): "snmp_without_sys_descr",
+        id(snmpv3_contexts): "snmpv3_contexts",
+        id(usewalk_hosts): "usewalk_hosts",
+        id(dyndns_hosts): "dyndns_hosts",
+        id(primary_address_family): "primary_address_family",
+        id(ignored_checktypes): "ignored_checktypes",
+        id(ignored_services): "ignored_services",
+        id(ignored_checks): "ignored_checks",
+        id(host_groups): "host_groups",
+        id(service_groups): "service_groups",
+        id(service_contactgroups): "service_contactgroups",
+        id(service_notification_periods): "service_notification_periods",
+        id(host_notification_periods): "host_notification_periods",
+        id(host_contactgroups): "host_contactgroups",
+        id(parents): "parents",
+        id(clustered_services): "clustered_services",
+        id(clustered_services_of): "clustered_services_of",
+        id(clustered_services_mapping): "clustered_services_mapping",
+        id(clustered_services_configuration): "clustered_services_configuration",
+        id(datasource_programs): "datasource_programs",
+        id(ping_levels): "ping_levels",
+        id(only_hosts): "only_hosts",
+        id(host_check_commands): "host_check_commands",
+        id(service_label_rules): "service_label_rules",
+        id(status_data_inventory): "status_data_inventory",
+        id(logwatch_rules): "logwatch_rules",
+        id(automatic_host_removal): "automatic_host_removal",
+        id(piggybacked_host_files): "piggybacked_host_files",
+        id(check_mk_exit_status): "check_mk_exit_status",
+        id(check_mk_agent_target_versions): "check_mk_agent_target_versions",
+        id(check_periods): "check_periods",
+        id(snmp_check_interval): "snmp_check_interval",
+        id(snmp_exclude_sections): "snmp_exclude_sections",
+        id(host_icons_and_actions): "host_icons_and_actions",
+        id(service_icons_and_actions): "service_icons_and_actions",
+        id(custom_service_attributes): "custom_service_attributes",
+        id(service_tag_rules): "service_tag_rules",
+        id(management_bulkwalk_hosts): "management_bulkwalk_hosts",
+    }

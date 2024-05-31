@@ -50,6 +50,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_heartbeat_rscstatus,
-        title=lambda: _("Heartbeat Ressource Status"),
+        title=lambda: _("Heartbeat ressource status"),
     )
 )

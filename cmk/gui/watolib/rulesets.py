@@ -435,7 +435,9 @@ class RulesetCollection:
             for rule in rules.get_folder_rules(folder)
             if isinstance(rule.value, dict)  # this is true for all _FormSpec_ SSC rules.
         ):
-            subprocess.check_call(["cmk", "--automation", "update-passwords-merged-file"])
+            subprocess.check_call(
+                ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
+            )
 
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
@@ -1696,7 +1698,7 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
     """Handles reading and writing rules.mk files"""
 
     def __init__(self, config_file_path: Path) -> None:
-        super().__init__(config_file_path=config_file_path)
+        super().__init__(config_file_path=config_file_path, spec_class=Mapping[RulesetName, Any])
 
     @property
     def folder(self) -> Folder:
@@ -1717,7 +1719,6 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
             lock=lock,
         )
 
-        validate_rulesets(loaded_file_config)
         return loaded_file_config
 
     def save_rulesets_and_unknown_rulesets(
@@ -1736,15 +1737,6 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         rulesets: Mapping[RulesetName, Ruleset],
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
     ) -> None:
-        validate_rulesets(
-            {
-                ruleset_name: {
-                    rule_name: [rule.to_config() for rule in rules]
-                    for rule_name, rules in ruleset.rules.items()
-                }
-                for ruleset_name, ruleset in rulesets.items()
-            }
-        )
         store.mkdir(folder.tree.get_root_dir())
         content = [
             *(
@@ -1778,6 +1770,10 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         finally:
             if may_use_redis():
                 get_wato_redis_client(folder.tree).folder_updated(folder.filesystem_path())
+
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
+        validate_rulesets(cfg)
 
 
 def register(

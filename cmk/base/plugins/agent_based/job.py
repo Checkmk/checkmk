@@ -237,7 +237,7 @@ def _process_job_stats(
             age,
             metric_name="job_age",
             label=f"Job age{currently_running}",
-            # In pre-2.0 versions of this check plugin, we had
+            # In pre-2.0 versions of this check plug-in, we had
             # check_default_parameters={"age": (0, 0)}
             # However, these levels were only applied if they were not zero. We still need to keep this
             # check because many old autocheck files still have

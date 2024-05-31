@@ -20,7 +20,7 @@ def enable() -> None:
 
     _profile = cProfile.Profile()
     _profile.enable()
-    console.verbose("Enabled profiling.\n")
+    console.verbose("Enabled profiling.")
 
 
 def enabled() -> bool:

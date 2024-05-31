@@ -190,7 +190,7 @@ def _parameter_valuespec_filestats():
         ],
         help=_(
             "Here you can impose various levels on the results reported by the"
-            " mk_filstats plugin. Note that some levels only apply to a matching"
+            " mk_filstats plug-in. Note that some levels only apply to a matching"
             " output format (e.g. max/min count levels are not applied if only the"
             " smallest, largest, oldest and newest file is reported). In order to"
             " receive the required data, you must configure the plug-in mk_filestats."

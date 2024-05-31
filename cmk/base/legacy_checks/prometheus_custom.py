@@ -91,14 +91,13 @@ def _metric_levels(
 
     """
     missing_levels = (None, None)
-    if service_levels:
-        for metric_entry in service_levels:
-            if metric_entry["metric_label"] == metric_label:
-                metric_levels = metric_entry.get("levels", {})
-                return (
-                    *metric_levels.get("upper_levels", missing_levels),
-                    *metric_levels.get("lower_levels", missing_levels),
-                )
+    for metric_entry in service_levels:
+        if metric_entry["metric_label"] == metric_label:
+            metric_levels = metric_entry.get("levels", {})
+            return (
+                *metric_levels.get("upper_levels", missing_levels),
+                *metric_levels.get("lower_levels", missing_levels),
+            )
 
     if datasource_levels:
         return (
@@ -127,7 +126,7 @@ def check_prometheus_custom(item, params, parsed):
         levels = _metric_levels(
             metric_label,
             metric_details.get("levels"),
-            params.get("metric_list"),
+            params["metric_list"],
         )
         yield check_levels(
             float(metric_details["value"]),
@@ -147,4 +146,5 @@ check_info["prometheus_custom"] = LegacyCheckDefinition(
     discovery_function=discover_prometheus_custom,
     check_function=check_prometheus_custom,
     check_ruleset_name="prometheus_custom",
+    check_default_parameters={"metric_list": []},
 )

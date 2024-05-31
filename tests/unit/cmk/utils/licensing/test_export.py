@@ -9,7 +9,7 @@ from typing import Any, Literal
 import pytest
 
 from cmk.utils.licensing.export import (
-    LicenseUsageExtensions,
+    _parse_extensions,
     make_parser,
     RawSubscriptionDetailsForAggregation,
     SubscriptionDetails,
@@ -387,18 +387,7 @@ def test_subscription_details_for_config(
 def test_LicenseUsageExtensions_parse_from_sample(
     raw_sample: dict, expected_ntop_enabled: bool
 ) -> None:
-    extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
-    assert extensions.ntop is expected_ntop_enabled
-
-
-@pytest.mark.parametrize(
-    "expected_ntop_enabled",
-    [pytest.param(True, id="ntop enabled"), pytest.param(False, id="ntop disabled")],
-)
-def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
-    extensions = LicenseUsageExtensions.parse(
-        LicenseUsageExtensions(ntop=expected_ntop_enabled).for_report()
-    )
+    extensions = _parse_extensions(raw_sample)
     assert extensions.ntop is expected_ntop_enabled
 
 

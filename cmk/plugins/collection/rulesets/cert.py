@@ -261,13 +261,13 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                     help_text=Help(
                                         "The prefix is automatically attached to each service "
                                         "name to be able to organize them. The prefix is static "
-                                        "and will be CERT. Alternatively, you may choose to not "
+                                        "and will be CERT. Alternatively, you may choose not to "
                                         "use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(
                                             name="auto",
-                                            title=Title('Use "CERT as prefix"'),
+                                            title=Title('Use "CERT" as service name prefix'),
                                         ),
                                         SingleChoiceElement(
                                             name="none",

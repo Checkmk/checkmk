@@ -874,7 +874,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_time", negate=False),
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
-            "title": _l("Service Notifications"),
+            "title": _l("Service notifications"),
             "owner": UserId.builtin(),
             "single_infos": ["service", "host"],
             "context": {

@@ -563,11 +563,7 @@ impl Endpoint {
     }
 
     pub fn hostname(&self) -> HostName {
-        if self.auth().auth_type() == &AuthType::Integrated {
-            "localhost".to_string().into()
-        } else {
-            self.conn().hostname().clone()
-        }
+        self.conn().hostname().clone()
     }
 }
 
@@ -721,7 +717,6 @@ impl CustomInstance {
         port: &Port,
     ) -> (Authentication, Connection) {
         let conn = Connection {
-            hostname: "localhost".to_string().into(),
             port: port.clone(),
             ..main_conn.clone()
         };

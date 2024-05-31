@@ -1423,7 +1423,7 @@ def _register_builtin_views():
                 "browser_reload": 0,
                 "column_headers": "pergroup",
                 "datasource": "hosts",
-                "description": _l("Host hover menu shown in topolgoy visualization"),
+                "description": _l("Host hover menu shown in topology visualization"),
                 "hidden": True,
                 "hidebutton": True,
                 "group_painters": [],
@@ -1595,7 +1595,7 @@ def get_topology_configuration(
     query_identifier = TopologyQueryIdentifier(topology_type, filter_configuration)
     serialized_settings = _get_topology_config_for_query(query_identifier)
     if serialized_settings:
-        topology_configuration = TopologyConfiguration.parse(serialized_settings)
+        topology_configuration = TopologyConfiguration.parse(serialized_settings, query_identifier)
         # Since we do not save the available_overlays in the settings we have to add them
         topology_configuration.frontend.overlays_config.available_layers = (
             default_overlays.available_layers

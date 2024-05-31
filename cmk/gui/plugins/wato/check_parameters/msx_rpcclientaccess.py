@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, Float, Integer, Tuple
 
 def _parameter_valuespec_msx_rpcclientaccess():
     return Dictionary(
-        title=_("Set Levels"),
+        title=_("Set levels"),
         elements=[
             (
                 "latency",

@@ -13,8 +13,8 @@ from marshmallow import ValidationError
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import UserRole, Users
-from cmk.gui.userdb import load_roles, load_users, save_users, UserRolesConfigFile
+from cmk.gui.type_defs import Users
+from cmk.gui.userdb import load_roles, load_users, save_users, UserRole, UserRolesConfigFile
 from cmk.gui.utils.transaction_manager import transactions
 
 RoleID = NewType("RoleID", str)

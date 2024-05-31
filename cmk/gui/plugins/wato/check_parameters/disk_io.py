@@ -115,7 +115,7 @@ def _parameter_valuespec_disk_io():
                 (
                     "latency",
                     Tuple(
-                        title=_("IO Latency"),
+                        title=_("IO latency"),
                         elements=[
                             Float(title=_("warning at"), unit=_("ms"), default_value=80.0),
                             Float(title=_("critical at"), unit=_("ms"), default_value=160.0),
@@ -125,7 +125,7 @@ def _parameter_valuespec_disk_io():
                 (
                     "latency_perfdata",
                     Checkbox(
-                        title=_("Performance Data for Latency"),
+                        title=_("Performance data for latency"),
                         label=_("Collect performance data for disk latency"),
                         help=_(
                             "Note: enabling performance data for the latency might "
@@ -137,7 +137,7 @@ def _parameter_valuespec_disk_io():
                 (
                     "read_ql",
                     Tuple(
-                        title=_("Read Queue-Length"),
+                        title=_("Read queue-length"),
                         elements=[
                             Float(title=_("warning at"), default_value=80.0),
                             Float(title=_("critical at"), default_value=90.0),
@@ -147,7 +147,7 @@ def _parameter_valuespec_disk_io():
                 (
                     "write_ql",
                     Tuple(
-                        title=_("Write Queue-Length"),
+                        title=_("Write queue-length"),
                         elements=[
                             Float(title=_("warning at"), default_value=80.0),
                             Float(title=_("critical at"), default_value=90.0),
@@ -157,7 +157,7 @@ def _parameter_valuespec_disk_io():
                 (
                     "ql_perfdata",
                     Checkbox(
-                        title=_("Performance Data for Queue Length"),
+                        title=_("Performance data for queue length"),
                         label=_("Collect performance data for disk latency"),
                         help=_(
                             "Note: enabling performance data for the latency might "

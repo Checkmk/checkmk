@@ -12,6 +12,7 @@ from typing import Any, AnyStr, NamedTuple
 import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
+from tests.testlib.version import version_gte
 
 from cmk.gui.http import HTTPMethod
 
@@ -86,13 +87,13 @@ class CMKOpenApiSession(requests.Session):
         port: int = 80,
         site: str = "heute",
         api_version: str = "1.0",
-        site_version_spec: str = "",
+        site_version: str = "",
     ):
         super().__init__()
         self.host = host
         self.port = port
         self.site = site
-        self.site_version_spec = site_version_spec
+        self.site_version = site_version
         self.api_version = api_version
         self.headers["Accept"] = "application/json"
         self.set_authentication_header(user, password)
@@ -456,18 +457,15 @@ class CMKOpenApiSession(requests.Session):
             "bulk_size": bulk_size,
             "ignore_errors": ignore_errors,
         }
-        # TODO: this should be removed once the 2.3.0b3 is available as this
-        # will introduce the options field to the api call. Until then the test should
-        # use the deprecated mode field
-        if self.site_version_spec in ["2.3.0b1", "2.3.0b2"]:
-            body["mode"] = "new"
-        else:
+        if version_gte(version=self.site_version, min_version="2.3.0"):
             body["options"] = {
                 "monitor_undecided_services": monitor_undecided_services,
                 "remove_vanished_services": remove_vanished_services,
                 "update_service_labels": update_service_labels,
                 "update_host_labels": update_host_labels,
             }
+        else:
+            body["mode"] = "new"
 
         response = self.post(
             "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body

@@ -5,10 +5,13 @@
 
 # pylint: disable=protected-access
 
+from collections.abc import Iterator
 from typing import Literal
 
 import pytest
 from pytest import MonkeyPatch
+
+from tests.testlib.plugin_registry import reset_registries
 
 import cmk.utils.version as cmk_version
 from cmk.utils.plugin_registry import Registry
@@ -44,6 +47,12 @@ class DummyDashlet(Dashlet[DummyDashletConfig]):
         html.write_text("dummy")
 
 
+@pytest.fixture(name="reset_dashlet_registry")
+def fixture_reset_dashlet_registry() -> Iterator[None]:
+    with reset_registries([dashlet_registry]):
+        yield
+
+
 @pytest.fixture(name="registry_list", scope="module")
 def fixture_registry_list() -> list[Registry]:
     """Returns 'dashlet_registry' to be reset after test-case execution."""
@@ -59,7 +68,8 @@ def fixture_dummy_config() -> DummyDashletConfig:
     )
 
 
-def test_dashlet_registry_plugins(reset_gui_registries: None) -> None:
+@pytest.mark.usefixtures("reset_dashlet_registry")
+def test_dashlet_registry_plugins() -> None:
     expected_plugins = [
         "hoststats",
         "servicestats",
@@ -159,11 +169,11 @@ TEST_DASHBOARD = DashboardConfig(
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
 @pytest.mark.usefixtures("mock_livestatus")
 @pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("reset_dashlet_registry")
 def test_dashlet_refresh_intervals(
     type_name: str,
     expected_refresh_interval: Literal[False] | int,
     monkeypatch: MonkeyPatch,
-    reset_gui_registries: None,
 ) -> None:
     dashlet_type = dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
@@ -396,7 +406,8 @@ def test_refresh_interval(dummy_config: DummyDashletConfig) -> None:
     assert dashlet.refresh_interval() == DummyDashlet.initial_refresh_interval()
 
 
-def test_dashlet_context_inheritance(reset_gui_registries: None) -> None:
+@pytest.mark.usefixtures("reset_dashlet_registry")
+def test_dashlet_context_inheritance() -> None:
     test_dashboard = TEST_DASHBOARD.copy()
     test_dashboard["context"] = {
         "wato_folder": {"wato_folder": "/aaa/eee"},

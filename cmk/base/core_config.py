@@ -68,6 +68,10 @@ class MonitoringCore(abc.ABC):
         self._create_config(
             config_path, config_cache, ip_address_of, licensing_handler, passwords, hosts_to_update
         )
+        if config.ruleset_matching_stats:
+            config_cache.ruleset_matcher.persist_matching_stats(
+                "tmp/ruleset_matching_stats", config.get_ruleset_id_mapping()
+            )
 
     @abc.abstractmethod
     def _create_config(
@@ -395,7 +399,7 @@ def _verify_non_deprecated_checkgroups() -> None:
         if checkgroup not in check_ruleset_names_with_plugin:
             config_warnings.warn(
                 'Found configured rules of deprecated check group "%s". These rules are not used '
-                "by any check plugin. Maybe this check group has been renamed during an update, "
+                "by any check plug-in. Maybe this check group has been renamed during an update, "
                 "in this case you will have to migrate your configuration to the new ruleset manually. "
                 "Please check out the release notes of the involved versions. "
                 'You may use the page "Deprecated rules" in the "Rule search" to view your rules '

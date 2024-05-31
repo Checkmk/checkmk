@@ -6966,7 +6966,7 @@ class PasswordSpec(Password):
             )
         html.icon_button(
             "#",
-            _("Show/Hide password"),
+            _("Show/hide password"),
             "showhide",
             onclick="cmk.valuespecs.toggle_hidden(this);",
         )

@@ -74,7 +74,7 @@ def add_section_plugin(section_plugin: SectionPlugin) -> None:
 
 
 def get_check_plugin(plugin_name: CheckPluginName) -> CheckPlugin | None:
-    """Returns the registered check plugin
+    """Returns the registered check plug-in
 
     Management plugins may be created on the fly.
     """

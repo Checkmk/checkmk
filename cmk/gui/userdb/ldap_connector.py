@@ -54,6 +54,7 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
@@ -65,6 +66,8 @@ from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.log import UserManagementEvent
+from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.valuespec import (
@@ -1306,6 +1309,15 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             ):
                 del users[user_id]  # remove the user
                 changes.append(_("LDAP [%s]: Removed user %s") % (connection_id, user_id))
+                log_security_event(
+                    UserManagementEvent(
+                        event="user deleted",
+                        affected_user=user_id,
+                        acting_user=logged_in_user.id,
+                        connector=self.type(),
+                        connection_id=connection_id,
+                    )
+                )
 
         has_changed_passwords = False
         profiles_to_synchronize = {}
@@ -1323,6 +1335,15 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             ):
                 user_connection_id = connection_id
                 user["connector"] = connection_id
+                log_security_event(
+                    UserManagementEvent(
+                        event="user modified",
+                        affected_user=user_id,
+                        acting_user=logged_in_user.id,
+                        connector=self.type(),
+                        connection_id=is_known_connection.id if is_known_connection else None,
+                    )
+                )
 
             if self._create_users_only_on_login() and mode_create:
                 self._logger.info(
@@ -1374,13 +1395,31 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             if mode_create:
                 add_internal_attributes(users[user_id])
                 changes.append(_("LDAP [%s]: Created user %s") % (connection_id, user_id))
+                log_security_event(
+                    UserManagementEvent(
+                        event="user created",
+                        affected_user=user_id,
+                        acting_user=logged_in_user.id,
+                        connector=self.type(),
+                        connection_id=connection_id,
+                    )
+                )
             else:
                 details = []
                 if added:
                     details.append(_("Added: %s") % ", ".join(added))
                 if removed:
                     details.append(_("Removed: %s") % ", ".join(removed))
-
+                if added or removed or changed:
+                    log_security_event(
+                        UserManagementEvent(
+                            event="user modified",
+                            affected_user=user_id,
+                            acting_user=logged_in_user.id,
+                            connector=self.type(),
+                            connection_id=connection_id,
+                        )
+                    )
                 # Password changes found in LDAP should not be logged as "pending change".
                 # These changes take effect imediately (pw already changed in AD, auth serial
                 # is increaed by sync plugin) on the local site, so no one needs to active this.
@@ -2141,12 +2180,12 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
 
     @property
     def title(self) -> str:
-        return _("Contactgroup Membership")
+        return _("Contact group membership")
 
     @property
     def help(self):
         return _(
-            "Adds the user to contactgroups based on the group memberships in LDAP. This "
+            "Adds the user to contact groups based on the group memberships in LDAP. This "
             "plugin adds the user only to existing contactgroups while the name of the "
             "contactgroup must match the common name (cn) of the LDAP group."
         )

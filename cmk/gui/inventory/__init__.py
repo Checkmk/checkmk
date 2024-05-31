@@ -57,6 +57,7 @@ from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from . import _rulespec
 from ._icon import InventoryIcon
 from ._inventory_path import InventoryPath as InventoryPath
+from ._inventory_path import parse_inventory_path as parse_inventory_path
 from ._inventory_path import TreeSource as TreeSource
 from ._rulespec import RulespecGroupInventory as RulespecGroupInventory
 from ._store import has_inventory as has_inventory
@@ -84,11 +85,58 @@ def register(
     icon_and_action_registry.register(InventoryIcon)
 
 
+def verify_permission(host_name: HostName, site: livestatus.SiteId | None) -> None:
+    if user.may("general.see_all"):
+        return
+
+    query = "GET hosts\nFilter: host_name = {}\nStats: state >= 0{}".format(
+        livestatus.lqencode(host_name),
+        "\nAuthUser: %s" % livestatus.lqencode(user.id) if user.id else "",
+    )
+
+    if site:
+        sites.live().set_only_sites([site])
+
+    try:
+        result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
+    except livestatus.MKLivestatusNotFoundError:
+        raise MKAuthException(
+            _("No such inventory tree of host %s. You may also have no access to this host.")
+            % host_name
+        )
+    finally:
+        if site:
+            sites.live().set_only_sites()
+
+    if result[0] == 0:
+        raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
+
+
 # TODO Cleanup variation:
-#   - InventoryPath.parse parses NOT visible, internal tree paths used in displayhints/views
+#   - parse_inventory_path parses NOT visible, internal tree paths used in displayhints/views
 #   - cmk.utils.structured_data.py::parse_visible_raw_path
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
+
+
+@request_memoize(maxsize=None)
+def _load_tree_from_file(
+    *, tree_type: Literal["inventory", "status_data"], host_name: HostName | None
+) -> ImmutableTree:
+    """Load data of a host, cache it in the current HTTP request"""
+    if not host_name:
+        return ImmutableTree()
+    if "/" in host_name:
+        # just for security reasons
+        return ImmutableTree()
+    return load_tree(
+        Path(
+            cmk.utils.paths.inventory_output_dir
+            if tree_type == "inventory"
+            else cmk.utils.paths.status_data_dir
+        )
+        / host_name
+    )
 
 
 class _PermittedPath(TypedDict):
@@ -99,6 +147,43 @@ class PermittedPath(_PermittedPath, total=False):
     attributes: Literal["nothing"] | tuple[str, Sequence[str]]
     columns: Literal["nothing"] | tuple[str, Sequence[str]]
     nodes: Literal["nothing"] | tuple[str, Sequence[str]]
+
+
+@request_memoize()
+def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
+    """
+    Returns either a list of permitted paths or
+    None in case the user is allowed to see the whole tree.
+    """
+
+    user_groups = [] if user.id is None else userdb.contactgroups_of_user(user.id)
+
+    if not user_groups:
+        return None
+
+    forbid_whole_tree = False
+    permitted_paths = []
+    for user_group in user_groups:
+        inventory_paths = active_config.multisite_contactgroups.get(user_group, {}).get(
+            "inventory_paths"
+        )
+        if inventory_paths is None:
+            # Old configuration: no paths configured means 'allow_all'
+            return None
+
+        if inventory_paths == "allow_all":
+            return None
+
+        if inventory_paths == "forbid_all":
+            forbid_whole_tree = True
+            continue
+
+        permitted_paths.extend(inventory_paths[1])
+
+    if forbid_whole_tree and not permitted_paths:
+        return []
+
+    return permitted_paths
 
 
 def _make_filter_choices_from_permitted_paths(
@@ -183,19 +268,9 @@ def get_short_inventory_filepath(hostname: HostName) -> Path:
 #   '----------------------------------------------------------------------'
 
 
-_DEFAULT_PATH_TO_TREE = Path()
-
-
 class InventoryHistoryPath(NamedTuple):
     path: Path
     timestamp: int | None
-
-    @classmethod
-    def default(cls) -> InventoryHistoryPath:
-        return InventoryHistoryPath(
-            path=_DEFAULT_PATH_TO_TREE,
-            timestamp=None,
-        )
 
     @property
     def short(self) -> Path:
@@ -227,7 +302,7 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
             raise FilterInventoryHistoryPathsError()
         return FilteredInventoryHistoryPaths(
             start_tree_path=(
-                InventoryHistoryPath.default() if len(tree_paths) == 1 else tree_paths[-2]
+                InventoryHistoryPath(Path(), None) if len(tree_paths) == 1 else tree_paths[-2]
             ),
             tree_paths=[tree_paths[-1]],
         )
@@ -255,7 +330,7 @@ def load_delta_tree(
             if tree_path.timestamp == timestamp:
                 if idx == 0:
                     return FilteredInventoryHistoryPaths(
-                        start_tree_path=InventoryHistoryPath.default(),
+                        start_tree_path=InventoryHistoryPath(Path(), None),
                         tree_paths=[tree_path],
                     )
                 return FilteredInventoryHistoryPaths(
@@ -284,7 +359,7 @@ def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[st
     return _get_history(
         hostname,
         filter_tree_paths=lambda tree_paths: FilteredInventoryHistoryPaths(
-            start_tree_path=InventoryHistoryPath.default(),
+            start_tree_path=InventoryHistoryPath(Path(), None),
             tree_paths=tree_paths,
         ),
     )
@@ -333,7 +408,7 @@ def _get_history(
         try:
             previous_tree = cached_tree_loader.get_tree(previous.path)
             current_tree = cached_tree_loader.get_tree(current.path)
-        except LoadStructuredDataError:
+        except (FileNotFoundError, ValueError):
             corrupted_history_files.add(current.short)
             continue
 
@@ -393,25 +468,16 @@ class _CachedTreeLoader:
     _lookup: dict[Path, ImmutableTree] = field(default_factory=dict)
 
     def get_tree(self, filepath: Path) -> ImmutableTree:
-        if filepath == _DEFAULT_PATH_TO_TREE:
+        if filepath == Path():
             return ImmutableTree()
 
         if filepath in self._lookup:
             return self._lookup[filepath]
 
-        return self._lookup.setdefault(filepath, self._load_tree_from_file(filepath))
+        if not (tree := load_tree(filepath)):
+            raise ValueError(tree)
 
-    def _load_tree_from_file(self, filepath: Path) -> ImmutableTree:
-        try:
-            tree = load_tree(filepath)
-        except FileNotFoundError:
-            raise LoadStructuredDataError()
-
-        if not tree:
-            # load_file may return an empty tree
-            raise LoadStructuredDataError()
-
-        return tree
+        return self._lookup.setdefault(filepath, tree)
 
 
 @dataclass(frozen=True)
@@ -485,85 +551,6 @@ class _CachedDeltaTreeLoader:
 
 
 # .
-#   .--helpers-------------------------------------------------------------.
-#   |                  _          _                                        |
-#   |                 | |__   ___| |_ __   ___ _ __ ___                    |
-#   |                 | '_ \ / _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 | | | |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   '----------------------------------------------------------------------'
-
-
-class LoadStructuredDataError(MKException):
-    pass
-
-
-@request_memoize(maxsize=None)
-def _load_tree_from_file(
-    *, tree_type: Literal["inventory", "status_data"], host_name: HostName | None
-) -> ImmutableTree:
-    """Load data of a host, cache it in the current HTTP request"""
-    if not host_name:
-        return ImmutableTree()
-
-    if "/" in host_name:
-        # just for security reasons
-        return ImmutableTree()
-
-    try:
-        return load_tree(
-            Path(
-                cmk.utils.paths.inventory_output_dir
-                if tree_type == "inventory"
-                else cmk.utils.paths.status_data_dir
-            )
-            / host_name
-        )
-    except Exception as e:
-        if active_config.debug:
-            html.show_warning("%s" % e)
-        raise LoadStructuredDataError()
-
-
-@request_memoize()
-def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
-    """
-    Returns either a list of permitted paths or
-    None in case the user is allowed to see the whole tree.
-    """
-
-    user_groups = [] if user.id is None else userdb.contactgroups_of_user(user.id)
-
-    if not user_groups:
-        return None
-
-    forbid_whole_tree = False
-    permitted_paths = []
-    for user_group in user_groups:
-        inventory_paths = active_config.multisite_contactgroups.get(user_group, {}).get(
-            "inventory_paths"
-        )
-        if inventory_paths is None:
-            # Old configuration: no paths configured means 'allow_all'
-            return None
-
-        if inventory_paths == "allow_all":
-            return None
-
-        if inventory_paths == "forbid_all":
-            forbid_whole_tree = True
-            continue
-
-        permitted_paths.extend(inventory_paths[1])
-
-    if forbid_whole_tree and not permitted_paths:
-        return []
-
-    return permitted_paths
-
-
-# .
 #   .--Inventory API-------------------------------------------------------.
 #   |   ___                      _                        _    ____ ___    |
 #   |  |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _     / \  |  _ \_ _|   |
@@ -574,10 +561,10 @@ def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
 #   '----------------------------------------------------------------------'
 
 
-def check_for_valid_hostname(hostname: str) -> None:
+def _check_for_valid_hostname(hostname: str) -> None:
     """test hostname for invalid chars, raises MKUserError if invalid chars are found
-    >>> check_for_valid_hostname("klappspaten")
-    >>> check_for_valid_hostname("../../etc/passwd")
+    >>> _check_for_valid_hostname("klappspaten")
+    >>> _check_for_valid_hostname("../../etc/passwd")
     Traceback (most recent call last):
     cmk.gui.exceptions.MKUserError: You need to provide a valid "host name". Only letters, digits, dash, underscore and dot are allowed.
     """
@@ -595,38 +582,6 @@ def check_for_valid_hostname(hostname: str) -> None:
 class _HostInvAPIResponse(TypedDict):
     result_code: Literal[0, 1]
     result: str | Mapping[str, SDRawTree]
-
-
-def page_host_inv_api() -> None:
-    resp: _HostInvAPIResponse
-    try:
-        api_request = request.get_request()
-        if not (hosts := api_request.get("hosts")):
-            if (host_name := api_request.get("host")) is None:
-                raise MKUserError("host", _('You need to provide a "host".'))
-            hosts = [host_name]
-
-        result: dict[str, SDRawTree] = {}
-        for a_host_name in hosts:
-            check_for_valid_hostname(a_host_name)
-            result[a_host_name] = inventory_of_host(a_host_name, api_request)
-
-        resp = {"result_code": 0, "result": result}
-
-    except MKException as e:
-        resp = {"result_code": 1, "result": "%s" % e}
-
-    except Exception as e:
-        if active_config.debug:
-            raise
-        resp = {"result_code": 1, "result": "%s" % e}
-
-    if html.output_format == "json":
-        _write_json(resp)
-    elif html.output_format == "xml":
-        _write_xml(resp)
-    else:
-        _write_python(resp)
 
 
 def _make_filter_choices_from_api_request_paths(
@@ -647,10 +602,10 @@ def _make_filter_choices_from_api_request_paths(
             nodes="all",
         )
 
-    return [_make_filter_choice(InventoryPath.parse(raw_path)) for raw_path in api_request_paths]
+    return [_make_filter_choice(parse_inventory_path(raw_path)) for raw_path in api_request_paths]
 
 
-def inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRawTree:
+def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRawTree:
     raw_site = api_request.get("site")
     site = livestatus.SiteId(raw_site) if raw_site is not None else None
     verify_permission(host_name, site)
@@ -664,31 +619,8 @@ def inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRaw
     return tree.serialize()
 
 
-def verify_permission(host_name: HostName, site: livestatus.SiteId | None) -> None:
-    if user.may("general.see_all"):
-        return
-
-    query = "GET hosts\nFilter: host_name = {}\nStats: state >= 0{}".format(
-        livestatus.lqencode(host_name),
-        "\nAuthUser: %s" % livestatus.lqencode(user.id) if user.id else "",
-    )
-
-    if site:
-        sites.live().set_only_sites([site])
-
-    try:
-        result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
-    except livestatus.MKLivestatusNotFoundError:
-        raise MKAuthException(
-            _("No such inventory tree of host %s. You may also have no access to this host.")
-            % host_name
-        )
-    finally:
-        if site:
-            sites.live().set_only_sites()
-
-    if result[0] == 0:
-        raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
+def _write_json(resp):
+    response.set_data(json.dumps(resp, sort_keys=True, indent=4, separators=(",", ": ")))
 
 
 def _write_xml(resp):
@@ -697,12 +629,40 @@ def _write_xml(resp):
     response.set_data(dom.toprettyxml())
 
 
-def _write_json(resp):
-    response.set_data(json.dumps(resp, sort_keys=True, indent=4, separators=(",", ": ")))
-
-
 def _write_python(resp):
     response.set_data(repr(resp))
+
+
+def page_host_inv_api() -> None:
+    resp: _HostInvAPIResponse
+    try:
+        api_request = request.get_request()
+        if not (hosts := api_request.get("hosts")):
+            if (host_name := api_request.get("host")) is None:
+                raise MKUserError("host", _('You need to provide a "host".'))
+            hosts = [host_name]
+
+        result: dict[str, SDRawTree] = {}
+        for a_host_name in hosts:
+            _check_for_valid_hostname(a_host_name)
+            result[a_host_name] = _inventory_of_host(a_host_name, api_request)
+
+        resp = {"result_code": 0, "result": result}
+
+    except MKException as e:
+        resp = {"result_code": 1, "result": "%s" % e}
+
+    except Exception as e:
+        if active_config.debug:
+            raise
+        resp = {"result_code": 1, "result": "%s" % e}
+
+    if html.output_format == "json":
+        _write_json(resp)
+    elif html.output_format == "xml":
+        _write_xml(resp)
+    else:
+        _write_python(resp)
 
 
 class InventoryHousekeeping:

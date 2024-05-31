@@ -6,7 +6,7 @@
 from base64 import b32decode
 from datetime import datetime
 
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 
 from cmk.utils.totp import TOTP
 

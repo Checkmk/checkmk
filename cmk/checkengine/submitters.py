@@ -315,4 +315,4 @@ def _output_check_result(
     )
     details = submittee.details.split("|", 1)[0].split("\n", 1)[0]
     perfdata = f" ({submittee.details.split('|', 1)[1]})" if show_perfdata else ""
-    console.verbose(f"{submittee.name:<20} {weight}{state_txt}{details}{tty.normal}{perfdata}\n")
+    console.verbose(f"{submittee.name:<20} {weight}{state_txt}{details}{tty.normal}{perfdata}")

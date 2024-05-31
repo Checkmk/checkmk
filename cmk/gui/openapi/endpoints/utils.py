@@ -11,13 +11,13 @@ from typing import Any, Literal
 from livestatus import MultiSiteConnection, SiteId
 
 from cmk.utils import version
-from cmk.utils.config_validation_layer.groups import GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.customer import customer_api, CustomerIdOrGlobal
 from cmk.gui.exceptions import MKHTTPException
+from cmk.gui.groups import GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.openapi.restful_objects.type_defs import CollectionObject

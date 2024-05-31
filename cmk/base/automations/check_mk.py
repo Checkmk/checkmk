@@ -489,11 +489,23 @@ def _active_check_preview_rows(
     resource_macros = config.get_resource_macros()
     macros = {**host_macros, **resource_macros}
     password_store_file = cmk.utils.password_store.pending_password_store_path()
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+        host_name
+    )
     active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
-        config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
+        config.get_ssc_host_config(
+            host_name,
+            config_cache.alias(host_name),
+            config_cache.default_address_family(host_name),
+            config_cache.ip_stack_config(host_name),
+            additional_addresses_ipv4,
+            additional_addresses_ipv6,
+            macros,
+            ip_address_of,
+        ),
         host_attrs,
         config.http_proxies,
         make_final_service_name,
@@ -698,14 +710,14 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     )
     for host_name in autodiscovery_queue:
         if host_name not in all_hosts:
-            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
+            console.verbose(f"  Removing mark '{host_name}' (host not configured")
             (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 
     if (oldest_queued := autodiscovery_queue.oldest()) is None:
-        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
+        console.verbose("Autodiscovery: No hosts marked by discovery check")
         return {}, False
 
-    console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
+    console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:")
     try:
         response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
         process_hosts: Container[HostName] = {
@@ -747,10 +759,10 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     )
 
                 hosts_processed.add(host_name)
-                console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
+                console.verbose(f"{tty.bold}{host_name}{tty.normal}:")
                 params = config_cache.discovery_check_parameters(host_name)
                 if params.commandline_only:
-                    console.verbose("  failed: discovery check disabled\n")
+                    console.verbose("  failed: discovery check disabled")
                     discovery_result, activate_host = None, False
                 else:
                     with plugin_contexts.current_host(host_name):
@@ -796,7 +808,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     activation_required |= activate_host
 
     except (MKTimeout, TimeoutError) as exc:
-        console.verbose(str(exc))
+        console.verbose_no_lf(str(exc))
 
     if not activation_required:
         return discovery_results, False
@@ -1396,11 +1408,23 @@ class AutomationAnalyseServices(Automation):
         resource_macros = config.get_resource_macros()
         macros = {**host_macros, **resource_macros}
         password_store_file = cmk.utils.password_store.pending_password_store_path()
+        additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+            host_name
+        )
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
+            config.get_ssc_host_config(
+                host_name,
+                config_cache.alias(host_name),
+                config_cache.default_address_family(host_name),
+                config_cache.ip_stack_config(host_name),
+                additional_addresses_ipv4,
+                additional_addresses_ipv6,
+                macros,
+                ip_address_of,
+            ),
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
@@ -2317,9 +2341,10 @@ class AutomationActiveCheck(Automation):
 
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        ip_address_of = config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
-        )
+
+        # Maybe we add some meaningfull error handling here someday?
+        # This reflects the effetive behavior when the error handler was inroduced.
+        ip_address_of = config.ConfiguredIPLookup(config_cache, error_handler=lambda *a, **kw: None)
 
         if plugin == "custom":
             for entry in config_cache.custom_checks(host_name):
@@ -2342,9 +2367,8 @@ class AutomationActiveCheck(Automation):
                 )
 
         with redirect_stdout(open(os.devnull, "w")):
-            # TODO: we're redirecting stdout to /dev/null here; so we might want to create
-            # a version of ip_address_of that does not write to stdout in the first place.
-            # Also I don't think we ever revisit the collected errors.
+            # The IP lookup used to write to stdout, that is not the case anymore.
+            # The redirect might not be needed anymore.
             host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
@@ -2352,11 +2376,23 @@ class AutomationActiveCheck(Automation):
         translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
         macros = {**host_macros, **resource_macros}
         password_store_file = cmk.utils.password_store.pending_password_store_path()
+        additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+            host_name
+        )
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
+            config.get_ssc_host_config(
+                host_name,
+                config_cache.alias(host_name),
+                config_cache.default_address_family(host_name),
+                config_cache.ip_stack_config(host_name),
+                additional_addresses_ipv4,
+                additional_addresses_ipv6,
+                macros,
+                ip_address_of,
+            ),
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
@@ -2666,6 +2702,10 @@ class AutomationNotificationReplay(Automation):
             config.get_http_proxy,
             ensure_nagios,
             int(nr),
+            fallback_email=config.notification_fallback_email,
+            fallback_format=config.notification_fallback_format,
+            spooling=ConfigCache.notification_spooling(),
+            logging_level=ConfigCache.notification_logging_level(),
         )
         return NotificationReplayResult()
 
@@ -2692,6 +2732,10 @@ class AutomationNotificationAnalyse(Automation):
                 config.get_http_proxy,
                 ensure_nagios,
                 int(nr),
+                fallback_email=config.notification_fallback_email,
+                fallback_format=config.notification_fallback_format,
+                spooling=ConfigCache.notification_spooling(),
+                logging_level=ConfigCache.notification_logging_level(),
             )
         )
 
@@ -2719,6 +2763,10 @@ class AutomationNotificationTest(Automation):
                 ),
                 config.get_http_proxy,
                 ensure_nagios,
+                fallback_email=config.notification_fallback_email,
+                fallback_format=config.notification_fallback_format,
+                spooling=ConfigCache.notification_spooling(),
+                logging_level=ConfigCache.notification_logging_level(),
                 dispatch=dispatch == "True",
             )
         )
@@ -2734,7 +2782,9 @@ class AutomationGetBulks(Automation):
 
     def execute(self, args: list[str]) -> NotificationGetBulksResult:
         only_ripe = args[0] == "1"
-        return NotificationGetBulksResult(notify.find_bulks(only_ripe))
+        return NotificationGetBulksResult(
+            notify.find_bulks(only_ripe, bulk_interval=config.notification_bulk_interval)
+        )
 
 
 automations.register(AutomationGetBulks())
@@ -2749,6 +2799,8 @@ class AutomationCreateDiagnosticsDump(Automation):
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
+            # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+            log.logger.setLevel(logging.INFO)
             dump = DiagnosticsDump(deserialize_cl_parameters(args))
             dump.create()
             return CreateDiagnosticsDumpResult(

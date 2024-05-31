@@ -11,6 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     DataSize,
     DefaultValue,
     DictElement,
+    DictGroup,
     Dictionary,
     FixedValue,
     InputHint,
@@ -148,6 +149,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                 parameter_form=Dictionary(
                     elements={
                         "header_name_pattern": DictElement[str](
+                            group=DictGroup(),
                             parameter_form=RegularExpression(
                                 label=Label("Header name pattern"),
                                 predefined_help_text=MatchingScope.INFIX,
@@ -156,6 +158,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                             required=True,
                         ),
                         "header_value_pattern": DictElement[str](
+                            group=DictGroup(),
                             parameter_form=RegularExpression(
                                 label=Label("Header value pattern"),
                                 predefined_help_text=MatchingScope.INFIX,
@@ -244,9 +247,8 @@ def _send_data() -> Dictionary:
                                 elements=[
                                     CascadingSingleChoiceElement(
                                         name="common",
-                                        title=Title("Type selection"),
+                                        title=Title("Select type from list"),
                                         parameter_form=SingleChoice(
-                                            title=Title("Select type from list"),
                                             elements=[
                                                 SingleChoiceElement(
                                                     name=content_type.lower()
@@ -285,10 +287,12 @@ def _send_data() -> Dictionary:
 
 header_dict_elements = {
     "header_name": DictElement(
+        group=DictGroup(),
         parameter_form=String(label=Label("Name"), prefill=InputHint("Accept-Language")),
         required=True,
     ),
     "header_value": DictElement(
+        group=DictGroup(),
         parameter_form=String(label=Label("Value"), prefill=InputHint("en-US,en;q=0.5")),
         required=True,
     ),
@@ -377,10 +381,11 @@ def _valuespec_connection() -> Dictionary:
                         "at all. TLS 1.0 and 1.1 is supported by the underlying plug-in but not "
                         "on this rule set as the plug-in needs to be called with an unsafe "
                         "configuration of OpenSSL 3. This requires a direct call via "
-                        "<i>Integrate Nagios plugins.</i>"
+                        "<i>Integrate Nagios plug-ins.</i>"
                     ),
                     elements={
                         "min_version": DictElement(
+                            group=DictGroup(),
                             parameter_form=SingleChoice(
                                 elements=[
                                     SingleChoiceElement(name="auto", title=Title("Negotiate")),
@@ -395,6 +400,7 @@ def _valuespec_connection() -> Dictionary:
                             required=True,
                         ),
                         "allow_higher": DictElement(
+                            group=DictGroup(),
                             parameter_form=BooleanChoice(label=Label("Allow higher versions")),
                             required=True,
                         ),
@@ -433,7 +439,7 @@ def _valuespec_connection() -> Dictionary:
                         ),
                         SingleChoiceElement(
                             name="stickyport",
-                            title=Title("Follow, but stay to same IP-address and port"),
+                            title=Title("Follow, but stay to same IP address and port"),
                         ),
                     ],
                     prefill=DefaultValue("follow"),
@@ -539,10 +545,10 @@ def _valuespec_content() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Search for header"),
                     help_text=Help(
-                        "The provided header key and value need to be exact as in the "
+                        "The provided header key and value need to match exactly with the "
                         "actual header of the response. Please note that the service will "
-                        "get WARN if any, the key or the value, is not matching. If looking"
-                        "for a regular expression the first match will considered as success."
+                        "get a WARN if any, the key or the value, is not matching. If searching "
+                        "for a regular expression, the first match is considered a success."
                     ),
                     prefill=DefaultValue("string"),
                     elements=[
@@ -650,15 +656,16 @@ def _valuespec_endpoints() -> List:
                         title=Title("Service name"),
                         elements={
                             "prefix": DictElement(
+                                group=DictGroup(),
                                 parameter_form=SingleChoice(
                                     title=Title("Prefix"),
                                     help_text=Help(
-                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose to not use the prefix option."
+                                        "The prefix is automatically added to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose not to use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(
                                             name="auto",
-                                            title=Title("Use protocol name: HTTP(S)"),
+                                            title=Title('Use "HTTP(S)" as service name prefix'),
                                         ),
                                         SingleChoiceElement(
                                             name="none",
@@ -670,6 +677,7 @@ def _valuespec_endpoints() -> List:
                                 required=True,
                             ),
                             "name": DictElement(
+                                group=DictGroup(),
                                 parameter_form=String(
                                     title=Title("Name"),
                                     help_text=Help(

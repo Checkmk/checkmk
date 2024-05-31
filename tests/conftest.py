@@ -9,8 +9,11 @@
 import logging
 import os
 import shutil
+import sys
+import tempfile
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Final
 
 import pytest
 import pytest_check  # type: ignore[import-untyped]
@@ -50,8 +53,15 @@ pytest.register_assert_rewrite(
 
 pytest_plugins = ("tests.testlib.playwright.plugin",)
 
-import tests.testlib as testlib
-from tests.testlib.utils import current_base_branch_name
+from tests.testlib.utils import (
+    add_python_paths,
+    current_base_branch_name,
+    is_cloud_repo,
+    is_enterprise_repo,
+    is_managed_repo,
+    is_saas_repo,
+    repo_path,
+)
 
 collect_ignore: list[str] = []
 
@@ -160,7 +170,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Confi
         if type_marker and type_marker.args:
             continue  # Do not modify manually set marks
         file_path = Path("%s" % item.reportinfo()[0])
-        repo_rel_path = file_path.relative_to(testlib.repo_path())
+        repo_rel_path = file_path.relative_to(repo_path())
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             if not isinstance(item, pytest.DoctestItem):
@@ -172,9 +182,22 @@ def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Confi
             item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]
 
 
-def pytest_runtest_setup(item):
+def pytest_runtest_setup(item: pytest.Item) -> None:
     """Skip tests of unwanted types"""
-    testlib.skip_unwanted_test_types(item)
+    _skip_unwanted_test_types(item)
+
+
+def _skip_unwanted_test_types(item: pytest.Item) -> None:
+    test_type = item.get_closest_marker("type")
+    if test_type is None:
+        raise Exception("Test is not TYPE marked: %s" % item)
+
+    if not item.config.getoption("-T"):
+        raise SystemExit("Please specify type of tests to be executed (py.test -T TYPE)")
+
+    test_type_name = test_type.args[0]
+    if test_type_name != item.config.getoption("-T"):
+        pytest.skip("Not testing type %r" % test_type_name)
 
 
 # Cleanup temporary directory created above
@@ -200,16 +223,76 @@ def pytest_cmdline_main(config):
 
 
 def verify_virtualenv():
-    if not testlib.virtualenv_path():
+    if not sys.prefix.endswith("/.venv"):
         raise SystemExit(
             "ERROR: Please load virtual environment first "
-            '(Use "pipenv shell" or configure direnv)'
+            f'(Use "pipenv shell" or configure direnv) ({sys.prefix})'
         )
+
+
+_UNPATCHED_PATHS: Final = {
+    # FIXME :-(
+    # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
+    "local_dashboards_dir",
+    "local_views_dir",
+    "local_reports_dir",
+}
+
+
+# Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
+# (e.g. cmk/base/default_config/notify.py) for edition specific variable
+# defaults. In integration tests we want to use the exact version of the
+# site. For unit tests we assume we are in Enterprise Edition context.
+def fake_version_and_paths() -> None:
+    from pytest import MonkeyPatch  # pylint: disable=import-outside-toplevel
+
+    monkeypatch = MonkeyPatch()
+    tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
+
+    import cmk.utils.paths  # pylint: disable=import-outside-toplevel
+    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
+
+    if is_managed_repo():
+        edition_short = "cme"
+    elif is_cloud_repo():
+        edition_short = "cce"
+    elif is_saas_repo():
+        edition_short = "cse"
+    elif is_enterprise_repo():
+        edition_short = "cee"
+    else:
+        edition_short = "cre"
+
+    monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
+    monkeypatch.setattr(
+        cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
+    )
+
+    # Unit test context: load all available modules
+    original_omd_root = Path(cmk.utils.paths.omd_root)
+    for name, value in vars(cmk.utils.paths).items():
+        if name.startswith("_") or not isinstance(value, (str, Path)) or name in _UNPATCHED_PATHS:
+            continue
+
+        try:
+            monkeypatch.setattr(
+                f"cmk.utils.paths.{name}",
+                type(value)(tmp_dir / Path(value).relative_to(original_omd_root)),
+            )
+        except ValueError:
+            pass  # path is outside of omd_root
+
+    # these use repo_path
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
 
 
 #
 # MAIN
 #
 
-testlib.add_python_paths()
-testlib.fake_version_and_paths()
+add_python_paths()
+fake_version_and_paths()

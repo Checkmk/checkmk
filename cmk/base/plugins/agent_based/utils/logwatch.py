@@ -42,6 +42,7 @@ SyslogConfig = tuple[Literal["tcp"], dict] | tuple[Literal["udp"], dict]
 
 
 class CommonLogwatchEc(TypedDict):
+    activation: NotRequired[bool]
     method: NotRequired[Literal["", "spool:"] | str | SyslogConfig]
     facility: NotRequired[int]
     restrict_logfiles: NotRequired[list[str]]
@@ -207,11 +208,17 @@ class LogFileFilter:
     def __init__(self, rules: Sequence[ParameterLogwatchEc]) -> None:
         self._expressions: tuple[Pattern[str], ...] = ()
         self.is_forwarded: Callable[[str], bool]
-        if not rules or not (params := rules[0]):
+        if not rules:
             # forwarding disabled
             self.is_forwarded = self._match_nothing
             return
 
+        if not next((p["activation"] for p in rules if "activation" in p), True):
+            # forwarding disabled
+            self.is_forwarded = self._match_nothing
+            return
+
+        params = rules[0]
         if "restrict_logfiles" not in params:
             # matches all logs on this host
             self.is_forwarded = self._match_all

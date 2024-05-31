@@ -30,14 +30,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import cmk.utils.store as store
-from cmk.utils.config_validation_layer.notification_rules import validate_notification_rules
-from cmk.utils.notify_types import (
-    BuiltInPluginNames,
-    EventRule,
-    NotificationRuleID,
-    NotifyBulkType,
-    NotifyPlugin,
-)
+from cmk.utils.notify_types import EventRule, NotificationRuleID, NotifyBulkType, NotifyPlugin
 from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
@@ -64,24 +57,26 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     RestrictToNotificationNumbers,
 )
 from cmk.gui.rest_api_types.notifications_types import (
-    CustomPlugin,
+    CustomPluginAdapter,
     get_plugin_from_api_request,
     get_plugin_from_mk_file,
-    NotificationPlugin,
+    PluginAdapter,
 )
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 
 logger = logging.getLogger(__name__)
 
 
-class NotificationRuleConfigFile(WatoSingleConfigFile[list[EventRule]]):
+class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
+
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir() + "notifications.mk"),
             config_variable="notification_rules",
+            spec_class=EventRule,
         )
 
     def _load_file(self, lock: bool) -> list[EventRule]:
@@ -99,12 +94,7 @@ class NotificationRuleConfigFile(WatoSingleConfigFile[list[EventRule]]):
                 del rule["notify_method"]
                 rule["notify_plugin"] = (plugin, method)
 
-        validate_notification_rules(notification_rules)
         return notification_rules
-
-    def save(self, cfg: list[EventRule]) -> None:
-        validate_notification_rules(cfg)
-        super().save(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
@@ -201,17 +191,14 @@ class BulkNotAllowedException(Exception): ...
 @dataclass
 class NotificationMethod:
     notification_bulking: CheckboxNotificationBulking
-    notify_plugin: NotificationPlugin | CustomPlugin
+    notify_plugin: PluginAdapter | CustomPluginAdapter
 
     @classmethod
     def from_mk_file_format(
         cls, notify_plugin: NotifyPlugin, bulk_config: NotifyBulkType | None
     ) -> NotificationMethod:
-        plugin_name, pluginparams = notify_plugin
-        builtin_plugin_name = cast(BuiltInPluginNames, plugin_name)
-
         return cls(
-            notify_plugin=get_plugin_from_mk_file(builtin_plugin_name, pluginparams),
+            notify_plugin=get_plugin_from_mk_file(notify_plugin),
             notification_bulking=CheckboxNotificationBulking.from_mk_file_format(bulk_config),
         )
 

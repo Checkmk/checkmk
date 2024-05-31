@@ -189,7 +189,7 @@ def update(params: Mapping[str, Any]) -> Response:
                 f"not be removed: {', '.join(faulty_attributes)}",
             )
 
-    folder.edit(folder.title() if not "title" in post_body else post_body["title"], attributes)
+    folder.edit(folder.title() if "title" not in post_body else post_body["title"], attributes)
 
     return _serve_folder(folder)
 
@@ -218,7 +218,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     faulty_folders = []
     for update_details in entries:
         folder: Folder = update_details["folder"]
-        title = folder.title() if not "title" in update_details else update_details["title"]
+        title = folder.title() if "title" not in update_details else update_details["title"]
         attributes = folder.attributes.copy()
 
         if replace_attributes := update_details.get("attributes"):

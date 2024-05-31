@@ -6,7 +6,7 @@ import os
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 from uuid import uuid4
 
 import cmk.utils.paths
@@ -34,6 +34,7 @@ class Password(TypedDict):
     # str -> Name of the contact group owning the password
     owned_by: str | None
     shared_with: list[str]
+    customer: NotRequired[str | None]
 
 
 def password_store_path() -> Path:
@@ -164,7 +165,7 @@ class PasswordStore:
 
     @staticmethod
     def decrypt(raw: bytes) -> str:
-        _version, rest = (  # noqa: F841
+        _version, rest = (
             raw[: PasswordStore.VERSION_BYTE_LENGTH],
             raw[PasswordStore.VERSION_BYTE_LENGTH :],
         )

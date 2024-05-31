@@ -24,14 +24,14 @@ class NotificationParameterSpectrum(NotificationParameter):
                     "destination",
                     IPv4Address(
                         title=_("Destination IP"),
-                        help=_("IP Address of the Spectrum server receiving the SNMP trap"),
+                        help=_("IP address of the Spectrum server receiving the SNMP trap"),
                     ),
                 ),
                 (
                     "community",
                     Password(
-                        title=_("SNMP Community"),
-                        help=_("SNMP Community for the SNMP trap"),
+                        title=_("SNMP community"),
+                        help=_("SNMP community for the SNMP trap"),
                     ),
                 ),
                 (

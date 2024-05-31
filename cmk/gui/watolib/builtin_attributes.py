@@ -181,7 +181,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
 
     def valuespec(self) -> ValueSpec:
         return HostAddress(
-            title=_("IPv6 Address"),
+            title=_("IPv6 address"),
             help=_(
                 "Specify an explicit IPv6 address or resolvable DNS name here, if "
                 "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
@@ -396,7 +396,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.List(
-            gui_fields.HostField(should_exist=True),
+            gui_fields.HostField(should_exist=True, skip_validation_on_view=True),
             description="A list of parents of this host.",
         )
 
@@ -504,7 +504,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 "try to detect new hosts in the configured IP ranges by sending pings "
                 "to each IP address to check whether or not a host is using this ip "
                 "address. Each new found host will be added to the current folder by "
-                "it's host name, when resolvable via DNS, or by it's IP address."
+                "it's host name, when resolvable via DNS, or by its IP address."
             ),
             optional_keys=["max_parallel_pings", "translate_names"],
             default_text=_("Not configured."),
@@ -665,7 +665,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         options: list[tuple[str, str, ValueSpec[Any]]] = [
             (
                 "ip_range",
-                _("IP-Range"),
+                _("IP range"),
                 Tuple(
                     elements=[
                         IPv4Address(
@@ -680,7 +680,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             ),
             (
                 "ip_network",
-                _("IP Network"),
+                _("IP network"),
                 Tuple(
                     elements=[
                         IPv4Address(
@@ -703,7 +703,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             ),
             (
                 "ip_list",
-                _("Explicit List of IP Addresses"),
+                _("Explicit list of IP addresses"),
                 ListOfStrings(
                     valuespec=IPv4Address(),
                     orientation="horizontal",

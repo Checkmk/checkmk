@@ -21,6 +21,8 @@ HACK_AGENTS = {
     # if we have to apply the password store hack.
     # Make sure to have *all* special agent plugins listed here, so we
     # can test for it
+    "aws_dev_internal": True,
+    "aws_status": False,  # needs no secret
     "azure_status": False,  # needs no secret
     "bazel_cache": True,
     "bi": False,  # needs no secret
@@ -44,7 +46,7 @@ HACK_CHECKS = {
     # For the plugins developed against the cmk.server_side_calls.v1 we
     # need to know whether they support the password store natively, or
     # if we have to apply the password store hack.
-    # Make sure to have *all* active check plugins listed here, so we
+    # Make sure to have *all* active check plug-ins listed here, so we
     # can test for it
     "by_ssh": False,  # has no secret
     "cert": False,  # has no secret
@@ -57,6 +59,9 @@ HACK_CHECKS = {
     "httpv2": False,  # yay!
     "icmp": False,  # has no secret
     "ldap": True,
+    "mail_loop": True,  # TODO
+    "mailboxes": True,  # TODO
+    "mail": True,  # TODO
     "mkevents": False,  # has no secret
     "notify_count": False,  # has no secret
     "smtp": True,

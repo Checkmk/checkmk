@@ -22,6 +22,7 @@ from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
+from cmk.gui.userdb._connections import get_connection
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
@@ -47,6 +48,17 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
     for entry in users_to_delete:
         if entry in all_users:  # Silently ignore not existing users
             deleted_users.append(entry)
+            connection_id = all_users[entry].get("connector", None)
+            connection = get_connection(connection_id)
+            log_security_event(
+                UserManagementEvent(
+                    event="user deleted",
+                    affected_user=entry,
+                    acting_user=user.id,
+                    connector=connection.type() if connection else None,
+                    connection_id=connection_id,
+                )
+            )
             del all_users[entry]
         else:
             raise MKUserError(None, _("Unknown user: %s") % entry)
@@ -57,13 +69,6 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
                 "edit-user",
                 "Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
-            )
-            log_security_event(
-                UserManagementEvent(
-                    event="user deleted",
-                    affected_user=user_id,
-                    acting_user=user.id,
-                )
             )
         add_change("edit-users", _l("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users, datetime.now())
@@ -98,12 +103,16 @@ def edit_users(changed_users: UserObject) -> None:
             diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
             object_ref=make_user_object_ref(user_id),
         )
+        connection_id = user_attrs.get("connector", None)
+        connection = get_connection(connection_id)
 
         log_security_event(
             UserManagementEvent(
                 event="user created" if is_new_user else "user modified",
                 affected_user=user_id,
                 acting_user=user.id,
+                connector=connection.type() if connection else None,
+                connection_id=connection_id,
             )
         )
 
@@ -260,8 +269,8 @@ def vs_idle_timeout_duration() -> Age:
             "to login sessions which is applied when the user stops interacting with "
             "the GUI for a given amount of time. When a user is exceeding the configured "
             "maximum idle time, the user will be logged out and redirected to the login "
-            "screen to renew the login session. This setting can be overridden for each "
-            "user individually in the profile of the users."
+            "screen to renew the login session. This setting can be overridden in each "
+            "individual user's profile."
         ),
         default_value=5400,
     )
@@ -309,17 +318,14 @@ class UsersConfigFile(WatoSingleConfigFile[dict]):
 
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(multisite_dir()) / "users.mk", config_variable="multisite_users"
+            config_file_path=Path(multisite_dir()) / "users.mk",
+            config_variable="multisite_users",
+            spec_class=dict,
         )
 
-    def _load_file(self, lock: bool) -> dict:
-        users = super()._load_file(lock)
-        validate_users(users)
-        return users
-
-    def save(self, cfg: dict) -> None:
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
         validate_users(cfg)
-        super().save(cfg)
 
 
 class ContactsConfigFile(WatoSingleConfigFile[dict]):
@@ -327,17 +333,14 @@ class ContactsConfigFile(WatoSingleConfigFile[dict]):
 
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(wato_root_dir()) / "contacts.mk", config_variable="contacts"
+            config_file_path=Path(wato_root_dir()) / "contacts.mk",
+            config_variable="contacts",
+            spec_class=dict,
         )
 
-    def _load_file(self, lock: bool) -> dict:
-        users = super()._load_file(lock)
-        validate_contacts(users)
-        return users
-
-    def save(self, cfg: dict) -> None:
+    def read_file_and_validate(self) -> None:
+        cfg = self.load_for_reading()
         validate_contacts(cfg)
-        super().save(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

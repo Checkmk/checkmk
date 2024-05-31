@@ -28,7 +28,7 @@ RUN apt-get install -y \
     sudo \
     vim
 
-RUN apt-get install -y \
+RUN apt-get install -y --fix-missing \
     apache2 \
     apache2-dev \
     autoconf \
@@ -69,6 +69,7 @@ RUN apt-get install -y \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
+    netcat-openbsd \
     openssh-client \
     patch \
     rpcbind \

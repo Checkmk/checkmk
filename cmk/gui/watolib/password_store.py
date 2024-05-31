@@ -8,7 +8,6 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cmk.utils import password_store, store
-from cmk.utils.config_validation_layer.passwords import validate_passwords
 from cmk.utils.password_store import Password
 
 import cmk.gui.userdb as userdb
@@ -24,6 +23,7 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "passwords.mk",
             config_variable="stored_passwords",
+            spec_class=Password,
         )
 
     def filter_usable_entries(self, entries: dict[str, Password]) -> dict[str, Password]:
@@ -60,14 +60,12 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
             ),
             password_store.load(password_store.password_store_path()),
         )
-        validate_passwords(cfg)
         return cfg
 
     def save(self, cfg: Mapping[str, Password]) -> None:
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
-        validate_passwords(cfg)
         meta_data, passwords = split_password_specs(cfg)
         super().save(meta_data)
         password_store.save(passwords, password_store.password_store_path())
@@ -76,7 +74,9 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
 
 def update_passwords_merged_file() -> None:
     # update the "live" merged passwords file
-    subprocess.check_call(["cmk", "--automation", "update-passwords-merged-file"])
+    subprocess.check_call(
+        ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
+    )
 
 
 def join_password_specs(

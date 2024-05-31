@@ -26,8 +26,8 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from collections.abc import Callable  # noqa: F401 # pylint: disable=unused-import
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from collections.abc import Callable  # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 

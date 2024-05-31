@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Dictionary, Filesize, MonitoringState, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Age, Dictionary, Filesize, MonitoringState, TextInput
 
 
 def _parameter_valuespec_plesk_backups():
@@ -26,28 +27,22 @@ def _parameter_valuespec_plesk_backups():
             ),
             (
                 "backup_age",
-                Tuple(
+                SimpleLevels(
                     title=_("Maximum age of backups"),
                     help=_("The maximum age of the last backup."),
-                    elements=[
-                        Age(title=_("Warning at")),
-                        Age(title=_("Critical at")),
-                    ],
+                    spec=Age,
                 ),
             ),
             (
                 "total_size",
-                Tuple(
+                SimpleLevels(
                     title=_("Maximum size of all files on backup space"),
                     help=_(
                         "The maximum size of all files on the backup space. "
                         "This might be set to the allowed quotas on the configured "
                         "FTP server to be notified if the space limit is reached."
                     ),
-                    elements=[
-                        Filesize(title=_("Warning at")),
-                        Filesize(title=_("Critical at")),
-                    ],
+                    spec=Filesize,
                 ),
             ),
         ],

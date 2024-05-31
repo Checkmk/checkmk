@@ -268,7 +268,7 @@ def _parameter_valuespec_checkmk_agent():
                     title=_("Agent plug-ins: Regular expression to exclude plugins"),
                     mode=RegExp.infix,
                     help=_(
-                        "Plugins matching this pattern will be excluded from the comparison with "
+                        "Plug-ins matching this pattern will be excluded from the comparison with "
                         "the required versions specified in '%s' and from the duplicates check."
                     )
                     % _("Agent plug-ins: versions"),

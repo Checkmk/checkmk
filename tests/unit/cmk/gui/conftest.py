@@ -26,7 +26,6 @@ from mypy_extensions import KwArg
 from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
-from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.rest_api_client import (
     ClientRegistry,
     expand_rel,
@@ -40,7 +39,6 @@ from tests.testlib.rest_api_client import (
 import cmk.utils.log
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.user import UserId
 
 from cmk.automations.results import DeleteHostsResult
@@ -286,22 +284,6 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.gui.background_job.BackgroundJob._exit")
     mocker.patch("cmk.utils.daemon.daemonize")
     mocker.patch("cmk.utils.daemon.closefrom")
-
-
-@pytest.fixture(name="registry_list")
-def fixture_registry_list() -> list[None | Registry[Any]]:
-    """Returns list of the registries to be reset after test-case execution.
-
-    Override this fixture by defining it within a test-module.
-    """
-    return []
-
-
-@pytest.fixture(name="reset_gui_registries")
-def fixture_reset_gui_registries(registry_list: list[Registry[Any]]) -> Iterator[None]:
-    """Fixture to reset a list of registries to their default entries."""
-    with reset_registries(registry_list):
-        yield
 
 
 @pytest.fixture()

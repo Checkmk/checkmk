@@ -130,13 +130,6 @@ def is_containerized() -> bool:
     )
 
 
-def virtualenv_path() -> Path:
-    venv = subprocess.check_output(
-        [repo_path() / "scripts/run-pipenv", "--bare", "--venv"], encoding="utf-8"
-    )
-    return Path(venv.rstrip("\n"))
-
-
 def find_git_rm_mv_files(dirpath: Path) -> list[str]:
     del_files = []
 

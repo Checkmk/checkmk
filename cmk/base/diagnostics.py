@@ -88,9 +88,9 @@ def create_diagnostics_dump(parameters: DiagnosticsOptionalParameters | None) ->
 
     section.section_step("Creating diagnostics dump", verbose=False)
     if dump.tarfile_created:
-        console.info(f"{_format_filepath(dump.tarfile_path)}\n")
+        console.info(f"{_format_filepath(dump.tarfile_path)}")
     else:
-        console.info(f"{_GAP}No dump\n")
+        console.info(f"{_GAP}No dump")
 
 
 #   .--format helper-------------------------------------------------------.
@@ -218,7 +218,7 @@ class DiagnosticsDump:
 
     def _create_dump_folder(self) -> None:
         section.section_step("Create dump folder")
-        console.verbose(f"{_format_filepath(self.dump_folder)}\n")
+        console.verbose(f"{_format_filepath(self.dump_folder)}")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self) -> None:
@@ -236,19 +236,19 @@ class DiagnosticsDump:
 
         filepaths = []
         for element in self.elements:
-            console.info(f"{_format_title(element.title)}\n")
-            console.info(f"{_format_description(element.description)}\n")
+            console.info(f"{_format_title(element.title)}")
+            console.info(f"{_format_description(element.description)}")
 
             try:
                 for filepath in element.add_or_get_files(tmp_dump_folder):
                     filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
-                console.info(f"{_format_error(str(e))}\n")
+                console.info(f"{_format_error(str(e))}")
                 continue
 
             except Exception:
-                console.info(f"{_format_error(traceback.format_exc())}\n")
+                console.info(f"{_format_error(traceback.format_exc())}")
                 continue
 
         return filepaths
@@ -267,7 +267,7 @@ class DiagnosticsDump:
             "Cleanup dump folder", add_info="keep last %d dumps" % self._keep_num_dumps
         )
         for _mtime, filepath in dumps:
-            console.verbose(f"{_format_filepath(filepath)}\n")
+            console.verbose(f"{_format_filepath(filepath)}")
             self._remove_file(filepath)
 
     def _remove_file(self, filepath: Path) -> None:
@@ -442,11 +442,11 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     @property
     def title(self) -> str:
-        return _("Performance Data")
+        return _("Performance data")
 
     @property
     def description(self) -> str:
-        return _("Performance Data related to sizing, e.g. number of helpers, hosts, services")
+        return _("Performance data related to sizing, e.g. number of helpers, hosts, services")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Get the runtime performance data from livestatus
@@ -1071,7 +1071,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 )
 
             except subprocess.CalledProcessError as e:
-                console.info(f"{_format_error(str(e))}\n")
+                console.info(f"{_format_error(str(e))}")
                 continue
 
             filepath = tmpdir.joinpath(f"{self.ident}{suffix}")

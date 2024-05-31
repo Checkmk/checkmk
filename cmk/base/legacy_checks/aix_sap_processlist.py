@@ -36,6 +36,7 @@
 
 import re
 import time
+from contextlib import suppress
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -43,9 +44,20 @@ from cmk.base.config import check_info
 from cmk.agent_based.v2 import render
 
 
+def strip(s: str) -> str:
+    return re.sub("^ ", "", s)
+
+
 def parse_aix_sap_processlist(string_table):
-    instance, description = None, None
+    instance = None
     parsed = {}
+
+    def add(*, description: str, status: str, textstatus: str, start: str) -> None:
+        itemname = f"{strip(description)} on Instance {instance}"
+        parsed.setdefault(itemname, {"status": strip(status), "textstatus": strip(textstatus)})
+        with suppress(ValueError):
+            parsed[itemname]["start_time"] = time.strptime(strip(start), "%Y %m %d %H:%M:%S")
+
     for line in string_table:
         if line[0].startswith("["):
             instance = line[0][1:-1]
@@ -54,22 +66,10 @@ def parse_aix_sap_processlist(string_table):
             instance = None
 
         elif instance and len(line) == 7 and line[-1] != " pid":
-            description, status, textstatus, start = (re.sub("^ ", "", x) for x in line[1:5])
+            add(description=line[1], status=line[2], textstatus=line[3], start=line[4])
 
         elif instance and len(line) == 9:
-            description, status, textstatus = (re.sub("^ ", "", x) for x in line[1:4])
-            start = re.sub("^ ", "", line[6])
-
-        else:
-            continue
-
-        if instance is not None and description is not None:
-            itemname = f"{description} on Instance {instance}"
-            parsed.setdefault(itemname, {"status": status, "textstatus": textstatus})
-            try:
-                parsed[itemname]["start_time"] = time.strptime(start, "%Y %m %d %H:%M:%S")
-            except ValueError:
-                continue
+            add(description=line[1], status=line[2], textstatus=line[3], start=line[6])
 
     return parsed
 

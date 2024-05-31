@@ -19,7 +19,7 @@ def _parameter_valuespec_hivemanager_ng_devices():
                 "max_clients",
                 Tuple(
                     title=_("Number of clients"),
-                    help=_("Number of clients connected to a Device."),
+                    help=_("Number of clients connected to a device."),
                     elements=[
                         Integer(title=_("Warning at"), unit=_("clients")),
                         Integer(title=_("Critical at"), unit=_("clients")),
@@ -34,9 +34,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hivemanager_ng_devices",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Host name of the Device")),
+        item_spec=lambda: TextInput(title=_("Host name of the device")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hivemanager_ng_devices,
-        title=lambda: _("HiveManager NG Devices"),
+        title=lambda: _("HiveManager NG devices"),
     )
 )

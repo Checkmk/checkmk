@@ -282,7 +282,7 @@ def parse_arguments(argv):
     parser.add_argument(
         "--jql-limit", nargs=1, action="append", help="Maximum number of processed search results."
     )
-    parser.add_argument("--hostname", required=True, help="JIRA server to use")
+    parser.add_argument("--hostname", required=True, help="Jira server to use")
 
     return parser.parse_args(argv)
 

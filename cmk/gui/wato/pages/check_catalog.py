@@ -352,7 +352,7 @@ def _render_manpage_list(
             table.cell(
                 _("Type of Check"), HTMLWriter.render_a(entry["title"], href=url), css=["title"]
             )
-            table.cell(_("Plugin Name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
+            table.cell(_("Plug-in Name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
             table.cell(
                 _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css=["agents"]
             )
@@ -371,7 +371,7 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
             "os",
             True,
             _("Operating systems"),
-            _("Plugins for operating systems, things like memory, CPU, filesystems, etc."),
+            _("Plug-ins for operating systems, things like memory, CPU, filesystems, etc."),
         ),
         (
             "app",
@@ -395,13 +395,13 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
             "agentless",
             False,
             _("Networking checks without agent"),
-            _("Plugins that directly check networking protocols like HTTP or IMAP"),
+            _("Plug-ins that directly check networking protocols like HTTP or IMAP"),
         ),
         (
             "generic",
             False,
             _("Generic check plug-ins"),
-            _("Plugins for local agent extensions or communication with the agent in general"),
+            _("Plug-ins for local agent extensions or communication with the agent in general"),
         ),
         (
             "virtual",

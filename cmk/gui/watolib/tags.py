@@ -13,7 +13,6 @@ from typing import Any, TypeVar
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tags
-from cmk.utils.config_validation_layer.tags import validate_tags
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
@@ -39,6 +38,7 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
         super().__init__(
             config_file_path=Path(multisite_dir()) / "tags.mk",
             config_variable="wato_tags",
+            spec_class=TagConfigSpec,
         )
 
     def _load_file(self, lock: bool = False) -> TagConfigSpec:
@@ -51,11 +51,9 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
         if not cfg:
             cfg = {"tag_groups": [], "aux_tags": []}
 
-        validate_tags(cfg)
         return cfg
 
     def save(self, cfg: TagConfigSpec) -> None:
-        validate_tags(cfg)
         self._save_gui_config(cfg)
         self._save_base_config(cfg)
         _export_hosttags_to_php(cfg)

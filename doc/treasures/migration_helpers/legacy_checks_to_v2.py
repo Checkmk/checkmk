@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Migrate legacy checks.
 
-This tool will modify legacy check plugins in place, to make them use the API `cmk.agent_based.v2`.
+This tool will modify legacy check plug-ins in place, to make them use the API `cmk.agent_based.v2`.
 It requires you to install the python library `libcst`.
 It does not require, but will attempt to call `autoflake`, `scripts/run-black` and `scripts/run-isort` on the modified file(s).
 For very simple plugins, it might do the whole job, for most it will not.
@@ -19,6 +19,17 @@ from pathlib import Path
 from typing import Final, Literal
 
 import libcst as cst
+
+# just add whatever we might need, we'll remove the unused ones later
+_ADDED_IMPORTS = (
+    "from collections.abc import Iterable, Mapping",
+    "from typing import Any",
+    "from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!",
+    (
+        "from cmk.agent_based.v2 import Service, DiscoveryResult, CheckResult,"
+        " Result, State, Metric, AgentSection, SNMPSection, SimpleSNMPSection, CheckPlugin"
+    ),
+)
 
 
 def _is_service(expr: cst.BaseExpression) -> bool:
@@ -167,15 +178,7 @@ class AddImportsTransformer(cst.CSTTransformer):
             self.added_import = True
             return cst.FlattenSentinel(
                 [
-                    cst.parse_statement("from collections.abc import Iterable, Mapping"),
-                    cst.parse_statement("from typing import Any"),
-                    cst.parse_statement(
-                        "from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!"
-                    ),
-                    cst.parse_statement(
-                        "from cmk.agent_based.v2 import Service, DiscoveryResult, CheckResult,"
-                        " Result, State, Metric, AgentSection, SNMPSection, SimpleSNMPSection, CheckPlugin",
-                    ),
+                    *(cst.parse_statement(statement) for statement in _ADDED_IMPORTS),
                     updated_node,
                 ]
             )

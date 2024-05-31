@@ -32,7 +32,7 @@ class NotificationParameterSlack(NotificationParameter):
                             '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>'
                             "<br />For Mattermost follow the documentation "
                             '<a href="https://docs.mattermost.com/developer/webhooks-incoming.html" target="_blank">here</a>'
-                            "<br />This URL can also be collected from the Password Store from Checkmk."
+                            "<br />This URL can also be collected from the password store from Checkmk."
                         ),
                         choices=[
                             (

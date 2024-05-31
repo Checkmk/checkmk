@@ -27,6 +27,7 @@ hypothesis = "*"    # used by unit tests
 hypothesis-jsonschema = "*"  # used by unit tests
 isort = "*"  # used as a plugin for editors
 jsonschema = "*"
+libcst = "*" # concrete syntax trees for plugin migration helpers
 msrest = "*"
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 mypy-protobuf = "*" # for mypy
@@ -118,7 +119,7 @@ urllib3 = "*"  # needed by requests
 pyopenssl = "*"
 pbr = "==5.11.1"  # needed by jira
 pyghmi = "==1.5.60"  # needed by base for IPMI
-requests = "~=2.31"
+requests = "<2.32"  # pinned due to docker-py, see https://github.com/docker/docker-py/issues/3256
 requests-kerberos = "==0.14.0"  # needed by check_bi_aggr
 markupsafe = "==2.1.2"  # needed by jinja2
 itsdangerous = "==2.1.2"  # needed by flask
@@ -182,13 +183,13 @@ cmk-livestatus-client = {editable = true, path = "./packages/cmk-livestatus-clie
 pysmb = "==1.2.9.1"  # used by SMB share special agent
 google-cloud-monitoring = "*"  # used by the gcp special agent
 google-cloud-asset = "*"  # used by the gcp special agent
-exchangelib = "==5.2.1"  # used by active checks for mail
+exchangelib = "==5.4.0"  # used by active checks for mail
 lxml = "==4.9.3"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 grpcio = "*"
 google-api-python-client = "*"  # use rest api to query big query for gcp cost monitoring
 setproctitle = "==1.3.3"  # used by mkbench/dcd/liveproxyd
 meraki = "==1.41.0"  # used by special agent Cisco Meraki
-feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
+feedparser = "*"  # used by special agent Microsoft Azure Status
 pysaml2 = "~=7.4"  # used by SSO via SAML2.0
 azure-storage-blob = "==12.15.0"  # used for backups to Azure Blob Storage
 azure-identity = "==1.12.0"  # used for backups to Azure Blob Storage

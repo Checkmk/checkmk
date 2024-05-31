@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.utils import tty
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
@@ -39,7 +40,7 @@ from ._autochecks import AutocheckEntry, DiscoveredService
 from ._autodiscovery import _Transition, get_host_services_by_host_name
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._utils import DiscoveredItem, QualifiedDiscovery
+from ._utils import QualifiedDiscovery
 
 __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]
 
@@ -107,7 +108,7 @@ def get_check_preview(
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-        lambda msg: console.debug(msg + "\n"),
+        console.debug,
     )
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(
@@ -150,7 +151,7 @@ def get_check_preview(
         itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
     ):
         for line in result.details:
-            console.warning(console.format_warning(f"{line}\n"))
+            console.warning(tty.format_warning(f"{line}"))
 
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,
@@ -166,7 +167,6 @@ def get_check_preview(
         on_error=on_error,
     )
 
-    entry: DiscoveredItem[AutocheckEntry]
     passive_rows_by_host = {
         h: [
             _check_preview_table_row(

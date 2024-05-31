@@ -200,7 +200,7 @@ def _file_cached_dns_lookup(
 
     if ipa != cached_ip:
         family_str = {socket.AF_INET: "IPv4", socket.AF_INET6: "IPv6"}[family]
-        console.verbose(f"Updating {family_str} DNS cache for {hostname}: {ipa}\n")
+        console.verbose(f"Updating {family_str} DNS cache for {hostname}: {ipa}")
         ip_lookup_cache[cache_id] = ipa
 
     return ipa
@@ -361,13 +361,13 @@ def update_dns_cache(
     ip_lookup_cache = _get_ip_lookup_cache()
 
     with ip_lookup_cache.persisting_disabled():
-        console.verbose("Cleaning up existing DNS cache...\n")
+        console.verbose("Cleaning up existing DNS cache...")
         ip_lookup_cache.clear()
 
-        console.verbose("Updating DNS cache...\n")
+        console.verbose("Updating DNS cache...")
         # `_annotate_family()` handles DUAL_STACK and NO_IP
         for host_name, host_config, family in _annotate_family(ip_lookup_configs):
-            console.verbose(f"{host_name} ({family})...")
+            console.verbose_no_lf(f"{host_name} ({family})...")
             try:
                 ip = lookup_ip_address(
                     host_name=host_name,
@@ -386,7 +386,7 @@ def update_dns_cache(
                     is_dyndns_host=host_config.is_dyndns_host,
                     force_file_cache_renewal=True,  # it's cleared anyway
                 )
-                console.verbose(f"{ip}\n")
+                console.verbose(f"{ip}")
 
             except (MKTerminate, MKTimeout):
                 # We should be more specific with the exception handler below, then we
@@ -394,11 +394,11 @@ def update_dns_cache(
                 raise
             except MKIPAddressLookupError as e:
                 failed.append(host_name)
-                console.verbose("lookup failed: %s\n" % e)
+                console.verbose(f"lookup failed: {e}")
                 continue
             except Exception as e:
                 failed.append(host_name)
-                console.verbose("lookup failed: %s\n" % e)
+                console.verbose(f"lookup failed: {e}")
                 if cmk.utils.debug.enabled():
                     raise
                 continue

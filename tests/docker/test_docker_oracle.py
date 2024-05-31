@@ -17,7 +17,6 @@ import docker.models.containers  # type: ignore[import-untyped]
 import docker.models.images  # type: ignore[import-untyped]
 import pytest
 
-from tests.testlib import repo_path
 from tests.testlib.docker import (
     checkmk_docker_add_host,
     checkmk_docker_api_request,
@@ -31,7 +30,7 @@ from tests.testlib.docker import (
     resolve_image_alias,
 )
 from tests.testlib.pytest_helpers.marks import skip_if_not_enterprise_edition
-from tests.testlib.utils import wait_until
+from tests.testlib.utils import repo_path, wait_until
 
 logger = logging.getLogger()
 

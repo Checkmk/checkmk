@@ -176,11 +176,10 @@ def _logwatch_inventory_mode_rules(
 ) -> tuple[Literal["no", "single", "groups"], logwatch.CommonLogwatchEc]:
     merged_rules: logwatch.CommonLogwatchEc = {}
     for rule in forward_settings[-1::-1]:
-        if isinstance(rule, dict):
-            for key, value in rule.items():
-                merged_rules[key] = value  # type: ignore[literal-required]
-        elif isinstance(rule, str):
-            return "no", {}  # Configured "no forwarding"
+        merged_rules.update(rule)
+
+    if forward_settings and not merged_rules.get("activation", True):
+        return "no", {}  # Configured "activation" to be False.
 
     if merged_rules.get("separate_checks", False):
         return "single", merged_rules
@@ -210,6 +209,7 @@ def discover_logwatch_ec_common(
 
     single_log_params = logwatch.CommonLogwatchEc()
     for key in [
+        "activation",
         "method",
         "facility",
         "monitor_logfilelist",

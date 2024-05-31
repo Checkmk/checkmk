@@ -73,7 +73,7 @@ def execute_checkmk_checks(
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-        lambda msg: console.debug(msg + "\n"),
+        console.debug,
     )
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(
@@ -219,7 +219,7 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
     if period is None:
         return False
     if check_timeperiod(period):
-        console.debug(f"Service {description}: time period {period} is currently active.\n")
+        console.debug(f"Service {description}: time period {period} is currently active.")
         return False
-    console.verbose(f"Skipping service {description}: currently not in time period {period}.\n")
+    console.verbose(f"Skipping service {description}: currently not in time period {period}.")
     return True

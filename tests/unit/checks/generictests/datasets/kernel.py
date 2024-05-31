@@ -36,7 +36,7 @@ parsed = parse_kernel(
 )
 
 discovery: Mapping[str, Sequence[tuple[str | None, Mapping[object, object]]]] = {
-    "": [], 
+    "": [],
     "performance": [(None, {})],
 }
 

@@ -293,14 +293,14 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
     if what == "bi":
         grouping_choices = [
             (None, _("Do not group")),
-            ("host", _("By Aggregation Group")),
+            ("host", _("By aggregation group")),
         ]
     else:
         grouping_choices = [
             (None, _("Do not group")),
-            ("host", _("By Host")),
-            ("host_groups", _("By Host group")),
-            ("service_groups", _("By Service group")),
+            ("host", _("By host")),
+            ("host_groups", _("By host group")),
+            ("service_groups", _("By service group")),
         ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
@@ -332,7 +332,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             "double",
             True,
             ListChoice(
-                title=_("Labelling Options"),
+                title=_("Labelling options"),
                 choices=[
                     ("omit_headers", _("Do not display column headers")),
                     ("omit_host", _("Do not display the host name")),
@@ -399,7 +399,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
                             ("crit", _("Crit/Down")),
                             ("unknown", _("Unknown/Unreach")),
                             ("flapping", _("Flapping")),
-                            ("host_down", _("Host Down")),
+                            ("host_down", _("Host down")),
                             ("in_downtime", _("Downtime")),
                             ("outof_notification_period", _("OO/Notif")),
                         ],
@@ -511,7 +511,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
 
 def vs_rangespec() -> Timerange:
     return Timerange(
-        title=_("Time Range"),
+        title=_("Time range"),
         default_value="d0",
     )
 
@@ -524,7 +524,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "double",
             True,
             Dictionary(
-                title=_("Scheduled Downtimes"),
+                title=_("Scheduled downtimes"),
                 columns=2,
                 elements=[
                     (
@@ -555,7 +555,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "double",
             True,
             Dictionary(
-                title=_("Status Classification"),
+                title=_("Status classification"),
                 columns=2,
                 elements=[
                     (
@@ -583,13 +583,13 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "double",
             True,
             Dictionary(
-                title=_("Service Status Grouping"),
+                title=_("Service status grouping"),
                 columns=2,
                 elements=[
                     (
                         "warn",
                         DropdownChoice(
-                            title=_("Treat Warning as"),
+                            title=_("Treat warning as"),
                             choices=[
                                 ("ok", _("OK")),
                                 ("warn", _("WARN")),
@@ -602,7 +602,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
                     (
                         "unknown",
                         DropdownChoice(
-                            title=_("Treat Unknown/Unreachable as"),
+                            title=_("Treat unknown/unreachable as"),
                             choices=[
                                 ("ok", _("OK")),
                                 ("warn", _("WARN")),
@@ -615,7 +615,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
                     (
                         "host_down",
                         DropdownChoice(
-                            title=_("Treat Host Down as"),
+                            title=_("Treat host down as"),
                             choices=[
                                 ("ok", _("OK")),
                                 ("warn", _("WARN")),
@@ -667,14 +667,14 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "single",
             True,
             Dictionary(
-                title=_("Host Status Grouping"),
+                title=_("Host status grouping"),
                 columns=2,
                 elements=[
                     (
                         "unreach",
                         DropdownChoice(
                             # TOOD: aligned
-                            title=_("Treat Unreachable as"),
+                            title=_("Treat unreachable as"),
                             choices=[
                                 ("up", _("UP")),
                                 ("down", _("DOWN")),
@@ -693,7 +693,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "single",
             True,
             DropdownChoice(
-                title=_("Service Time"),
+                title=_("Service time"),
                 choices=[
                     ("honor", _("Base report only on service times")),
                     ("ignore", _("Include both service and non-service times")),
@@ -708,7 +708,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "single",
             True,
             DropdownChoice(
-                title=_("Notification Period"),
+                title=_("Notification period"),
                 choices=[
                     ("honor", _("Distinguish times in and out of notification period")),
                     ("exclude", _("Exclude times out of notification period")),
@@ -723,7 +723,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "single",
             True,
             Integer(
-                title=_("Short Time Intervals"),
+                title=_("Short time intervals"),
                 label=_("Ignore intervals shorter or equal"),
                 minvalue=0,
                 unit=_("sec"),
@@ -736,7 +736,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "single",
             True,
             Checkbox(
-                title=_("Phase Merging"),
+                title=_("Phase merging"),
                 label=_("Do not merge consecutive phases with equal state"),
             ),
         ),
@@ -745,7 +745,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             "single",
             False,
             Age(
-                title=_("Query Time Limit"),
+                title=_("Query time limit"),
                 help=_(
                     "Limit the execution time of the query, in order to avoid a hanging system."
                 ),

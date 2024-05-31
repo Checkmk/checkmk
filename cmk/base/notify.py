@@ -8,11 +8,11 @@
 # There are two types of contexts:
 # 1. Raw contexts (purple)
 #    => These come right out of the monitoring core. They are not yet
-#       assinged to a certain plugin. In case of rule based notifictions
+#       assinged to a certain plug-in. In case of rule based notifictions
 #       they are not even assigned to a certain contact.
 #
-# 2. Plugin contexts (cyan)
-#    => These already bear all information about the contact, the plugin
+# 2. Plug-in contexts (cyan)
+#    => These already bear all information about the contact, the plug-in
 #       to call and its parameters.
 
 import datetime
@@ -56,6 +56,8 @@ from cmk.utils.notify_types import (
     EventContext,
     EventRule,
     HostEventType,
+    is_always_bulk,
+    is_timeperiod_bulk,
     NotificationContext,
     NotificationPluginNameStr,
     NotifyAnalysisInfo,
@@ -106,6 +108,8 @@ ContactNames = frozenset[ContactName]  # Must be hasable
 NotificationKey = tuple[ContactNames, NotificationPluginNameStr]
 NotificationValue = tuple[bool, NotifyPluginParams, NotifyBulkParameters | None]
 Notifications = dict[NotificationKey, NotificationValue]
+
+_FallbackFormat = tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
 
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -164,8 +168,8 @@ $LONGSERVICEOUTPUT$
 #   '----------------------------------------------------------------------'
 
 
-def _initialize_logging() -> None:
-    log.logger.setLevel(config.notification_logging)
+def _initialize_logging(logging_level: int) -> None:
+    log.logger.setLevel(logging_level)
     log.setup_watched_file_logging_handler(notification_log)
 
 
@@ -198,8 +202,8 @@ Available commands:
                             of taking variables from environment
     replay N                Uses the N'th recent notification from the backlog
                             and sends it again, counting from 0.
-    send-bulks              Send out ripe bulk notifications
-"""
+    send-bulks              Send out ripe bulk notifications""",
+        file=sys.stderr,
     )
 
 
@@ -213,6 +217,11 @@ def do_notify(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
+    bulk_interval: int,
+    spooling: Literal["local", "remote", "both"],
+    logging_level: int,
 ) -> int | None:
     # pylint: disable=too-many-branches
     global _log_to_stdout, notify_mode
@@ -222,37 +231,51 @@ def do_notify(
         os.makedirs(notification_logdir)
     if not os.path.exists(notification_spooldir):
         os.makedirs(notification_spooldir)
-    _initialize_logging()
+    _initialize_logging(logging_level)
 
     if keepalive and "keepalive" in options:
         keepalive.enable()
-
-    convert_legacy_configuration()
 
     try:
         notify_mode = "notify"
         if args:
             notify_mode = args[0]
             if notify_mode not in ["stdin", "spoolfile", "replay", "test", "send-bulks"]:
-                console.error("ERROR: Invalid call to check_mk --notify.\n\n")
+                console.error("ERROR: Invalid call to check_mk --notify.\n", file=sys.stderr)
                 notify_usage()
                 sys.exit(1)
 
             if notify_mode == "spoolfile" and len(args) != 2:
-                console.error("ERROR: need an argument to --notify spoolfile.\n\n")
+                console.error("ERROR: need an argument to --notify spoolfile.\n", file=sys.stderr)
                 sys.exit(1)
 
         # If the notify_mode is set to 'spoolfile' we try to parse the given spoolfile
         # This spoolfile contains a python dictionary
-        # { context: { Dictionary of environment variables }, plugin: "Plugin name" }
+        # { context: { Dictionary of environment variables }, plugin: "Plug-in name" }
         # Any problems while reading the spoolfile results in returning 2
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
             filename = args[1]
-            return handle_spoolfile(filename, host_parameters_cb, get_http_proxy)
+            return handle_spoolfile(
+                filename,
+                host_parameters_cb,
+                get_http_proxy,
+                fallback_email=fallback_email,
+                fallback_format=fallback_format,
+                spooling=spooling,
+            )
 
         if keepalive and keepalive.enabled():
-            notify_keepalive(host_parameters_cb, get_http_proxy, ensure_nagios)
+            notify_keepalive(
+                host_parameters_cb,
+                get_http_proxy,
+                ensure_nagios,
+                bulk_interval=bulk_interval,
+                fallback_email=fallback_email,
+                fallback_format=fallback_format,
+                spooling=spooling,
+                logging_level=logging_level,
+            )
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
@@ -263,25 +286,46 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                fallback_email=fallback_email,
+                fallback_format=fallback_format,
+                spooling=spooling,
+                logging_level=logging_level,
             )
         elif notify_mode == "test":
             assert isinstance(args[0], dict)
-            notify_notify(EventContext(args[0]), host_parameters_cb, get_http_proxy, ensure_nagios)
+            notify_notify(
+                EventContext(args[0]),
+                host_parameters_cb,
+                get_http_proxy,
+                ensure_nagios,
+                fallback_email=fallback_email,
+                fallback_format=fallback_format,
+                spooling=spooling,
+                logging_level=logging_level,
+            )
         elif notify_mode == "stdin":
             notify_notify(
                 events.raw_context_from_string(sys.stdin.read()),
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                fallback_email=fallback_email,
+                fallback_format=fallback_format,
+                spooling=spooling,
+                logging_level=logging_level,
             )
         elif notify_mode == "send-bulks":
-            send_ripe_bulks(get_http_proxy)
+            send_ripe_bulks(get_http_proxy, bulk_interval=bulk_interval)
         else:
             notify_notify(
                 raw_context_from_env(os.environ),
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
+                fallback_email=fallback_email,
+                fallback_format=fallback_format,
+                spooling=spooling,
+                logging_level=logging_level,
             )
 
     except Exception:
@@ -295,35 +339,16 @@ def do_notify(
     return None
 
 
-def convert_legacy_configuration() -> None:
-    # Convert legacy spooling configuration to new one (see above)
-    if isinstance(config.notification_spooling, bool):
-        if config.notification_spool_to:
-            also_local = config.notification_spool_to[2]
-            if also_local:
-                config.notification_spooling = "both"
-            else:
-                config.notification_spooling = "remote"
-        elif config.notification_spooling:
-            config.notification_spooling = "local"
-        else:
-            config.notification_spooling = "remote"
-
-    # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
-    # which agree with the values used in cmk/utils/log.py.
-    # The decprecated value 0 is transformed to the default logging value.
-    if config.notification_logging in [0, 1]:
-        config.notification_logging = 20
-    elif config.notification_logging == 2:
-        config.notification_logging = 10
-
-
 def notify_notify(
     raw_context: EventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
+    spooling: Literal["local", "remote", "both"],
+    logging_level: int,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
@@ -340,7 +365,7 @@ def notify_notify(
     enriched_context = events.complete_raw_context(
         raw_context,
         ensure_nagios,
-        with_dump=config.notification_logging <= 10,
+        with_dump=logging_level <= 10,
         contacts_needed=True,
     )
 
@@ -368,16 +393,23 @@ def notify_notify(
     enriched_context["LOGDIR"] = notification_logdir
 
     # Spool notification to remote host, if this is enabled
-    if config.notification_spooling in ("remote", "both"):
+    if spooling in ("remote", "both"):
         create_spoolfile(
             logger,
             Path(notification_spooldir),
             NotificationForward({"context": enriched_context, "forward": True}),
         )
 
-    if config.notification_spooling != "remote":
+    if spooling != "remote":
         return locally_deliver_raw_context(
-            enriched_context, host_parameters_cb, get_http_proxy, analyse=analyse, dispatch=dispatch
+            enriched_context,
+            host_parameters_cb,
+            get_http_proxy,
+            spooling=spooling,
+            fallback_email=fallback_email,
+            fallback_format=fallback_format,
+            analyse=analyse,
+            dispatch=dispatch,
         )
     return None
 
@@ -387,13 +419,23 @@ def locally_deliver_raw_context(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    spooling: Literal["local", "remote", "both"],
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
         return notify_rulebased(
-            enriched_context, host_parameters_cb, get_http_proxy, analyse=analyse, dispatch=dispatch
+            enriched_context,
+            host_parameters_cb,
+            get_http_proxy,
+            spooling=spooling,
+            fallback_email=fallback_email,
+            fallback_format=fallback_format,
+            analyse=analyse,
+            dispatch=dispatch,
         )
 
     except Exception:
@@ -409,12 +451,26 @@ def notification_replay_backlog(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     nr: int,
+    *,
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
+    spooling: Literal["local", "remote", "both"],
+    logging_level: int,
 ) -> None:
     global notify_mode
     notify_mode = "replay"
-    _initialize_logging()
+    _initialize_logging(logging_level)
     raw_context = raw_context_from_backlog(nr)
-    notify_notify(raw_context, host_parameters_cb, get_http_proxy, ensure_nagios)
+    notify_notify(
+        raw_context,
+        host_parameters_cb,
+        get_http_proxy,
+        ensure_nagios,
+        fallback_email=fallback_email,
+        fallback_format=fallback_format,
+        spooling=spooling,
+        logging_level=logging_level,
+    )
 
 
 def notification_analyse_backlog(
@@ -422,16 +478,25 @@ def notification_analyse_backlog(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     nr: int,
+    *,
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
+    spooling: Literal["local", "remote", "both"],
+    logging_level: int,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
-    _initialize_logging()
+    _initialize_logging(logging_level)
     raw_context = raw_context_from_backlog(nr)
     return notify_notify(
         raw_context,
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        fallback_email=fallback_email,
+        fallback_format=fallback_format,
+        spooling=spooling,
+        logging_level=logging_level,
         analyse=True,
     )
 
@@ -442,11 +507,15 @@ def notification_test(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
     *,
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
+    spooling: Literal["local", "remote", "both"],
+    logging_level: int,
     dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "test"
-    _initialize_logging()
+    _initialize_logging(logging_level)
     contacts = events.livestatus_fetch_contacts(
         HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
     )
@@ -458,6 +527,10 @@ def notification_test(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
+        fallback_email=fallback_email,
+        fallback_format=fallback_format,
+        spooling=spooling,
+        logging_level=logging_level,
         analyse=True,
         dispatch=dispatch,
     )
@@ -482,6 +555,12 @@ def notify_keepalive(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     ensure_nagios: Callable[[str], object],
+    *,
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
+    bulk_interval: int,
+    spooling: Literal["local", "remote", "both"],
+    logging_level: int,
 ) -> None:
     cmk.base.utils.register_sigint_handler()
     events.event_keepalive(
@@ -490,9 +569,13 @@ def notify_keepalive(
             host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
+            fallback_email=fallback_email,
+            fallback_format=fallback_format,
+            spooling=spooling,
+            logging_level=logging_level,
         ),
-        call_every_loop=partial(send_ripe_bulks, get_http_proxy),
-        loop_interval=config.notification_bulk_interval,
+        call_every_loop=partial(send_ripe_bulks, get_http_proxy, bulk_interval=bulk_interval),
+        loop_interval=bulk_interval,
     )
 
 
@@ -514,6 +597,9 @@ def notify_rulebased(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    spooling: Literal["local", "remote", "both"],
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo:
@@ -551,6 +637,7 @@ def notify_rulebased(
                 notifications,
                 rule_info,
                 host_parameters_cb,
+                fallback_email=fallback_email,
             )
 
     plugin_info = _process_notifications(
@@ -559,6 +646,9 @@ def notify_rulebased(
         num_rule_matches,
         host_parameters_cb,
         get_http_proxy,
+        fallback_email=fallback_email,
+        fallback_format=fallback_format,
+        spooling=spooling,
         analyse=analyse,
         dispatch=dispatch,
     )
@@ -578,8 +668,10 @@ def _create_notifications(
     notifications: Notifications,
     rule_info: list[NotifyRuleInfo],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    *,
+    fallback_email: str,
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
-    contacts = rbn_rule_contacts(rule, enriched_context)
+    contacts = rbn_rule_contacts(rule, enriched_context, fallback_email=fallback_email)
     contactstxt = ", ".join(contacts)
 
     plugin_name, plugin_parameters = rule["notify_plugin"]
@@ -651,6 +743,9 @@ def _process_notifications(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
+    spooling: Literal["local", "remote", "both"],
     analyse: bool,
     dispatch: bool = False,
 ) -> list[NotifyPluginInfo]:
@@ -661,13 +756,13 @@ def _process_notifications(
         if num_rule_matches:
             logger.info("%d rules matched, but no notification has been created.", num_rule_matches)
         elif not analyse:
-            fallback_contacts = rbn_fallback_contacts()
+            fallback_contacts = rbn_fallback_contacts(fallback_email=fallback_email)
             if fallback_contacts:
                 logger.info("No rule matched, notifying fallback contacts")
                 fallback_emails = [fc["email"] for fc in fallback_contacts]
                 logger.info("  Sending email to %s", fallback_emails)
 
-                plugin_name, fallback_params = config.notification_fallback_format
+                plugin_name, fallback_params = fallback_format
                 fallback_params = rbn_finalize_plugin_parameters(
                     enriched_context["HOSTNAME"], plugin_name, host_parameters_cb, fallback_params
                 )
@@ -725,7 +820,7 @@ def _process_notifications(
                         continue
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
-                    elif config.notification_spooling in ("local", "both"):
+                    elif spooling in ("local", "both"):
                         create_spoolfile(
                             logger,
                             Path(notification_spooldir),
@@ -750,10 +845,10 @@ def _process_notifications(
     return plugin_info
 
 
-def rbn_fallback_contacts() -> Contacts:
+def rbn_fallback_contacts(*, fallback_email: str) -> Contacts:
     fallback_contacts: Contacts = []
-    if config.notification_fallback_email:
-        fallback_contacts.append(rbn_fake_email_contact(config.notification_fallback_email))
+    if fallback_email:
+        fallback_contacts.append(rbn_fake_email_contact(fallback_email))
 
     contacts = cast(ConfigContacts, config.contacts)
     for contact_name, contact in contacts.items():
@@ -904,15 +999,19 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
 
     if not bulk:
         return None
-    if isinstance(bulk, dict):  # old format: treat as "Always Bulk"
-        method, params = "always", bulk
-    else:
-        method, params = bulk
 
-    if method == "always":
+    if isinstance(bulk, tuple):
+        method, params = bulk
+    else:
+        method, params = (
+            "always",
+            bulk,
+        )  # old format: treat as "Always Bulk" - typing says this can't ever be the case. Can it be removed?
+
+    if is_always_bulk(params) or method == "always":
         return params
 
-    if method == "timeperiod":
+    if is_timeperiod_bulk(params):
         try:
             active = timeperiod_active(params["timeperiod"])
         except Exception:
@@ -1123,13 +1222,16 @@ def rbn_match_event(
     )
 
 
-def rbn_rule_contacts(  # pylint: disable=too-many-branches
+def rbn_rule_contacts(
     rule: EventRule,
     context: EventContext,
+    *,
+    fallback_email: str,
 ) -> ContactNames:
+    # pylint: disable=too-many-branches
     the_contacts = set()
     if rule.get("contact_object"):
-        the_contacts.update(rbn_object_contact_names(context))
+        the_contacts.update(rbn_object_contact_names(context, fallback_email=fallback_email))
     if rule.get("contact_all"):
         the_contacts.update(rbn_all_contacts())
     if rule.get("contact_all_with_email"):
@@ -1143,8 +1245,8 @@ def rbn_rule_contacts(  # pylint: disable=too-many-branches
 
     all_enabled = []
     for contactname in the_contacts:
-        if contactname == config.notification_fallback_email:
-            contact: Contact | None = rbn_fake_email_contact(config.notification_fallback_email)
+        if contactname == fallback_email:
+            contact: Contact | None = rbn_fake_email_contact(fallback_email)
         else:
             contact = config.contacts.get(contactname)
 
@@ -1347,14 +1449,16 @@ def rbn_match_event_console(
     return None
 
 
-def rbn_object_contact_names(context: EventContext) -> list[ContactName]:
+def rbn_object_contact_names(context: EventContext, *, fallback_email: str) -> list[ContactName]:
     commasepped = context.get("CONTACTS")
     if commasepped == "?":
         logger.info(
             "Warning: Contacts of %s cannot be determined. Using fallback contacts",
             events.find_host_service_in_context(context),
         )
-        return [str(contact["name"]) for contact in rbn_fallback_contacts()]
+        return [
+            str(contact["name"]) for contact in rbn_fallback_contacts(fallback_email=fallback_email)
+        ]
 
     if commasepped:
         return commasepped.split(",")
@@ -1525,7 +1629,7 @@ def call_notification_script(
                 p.kill()
 
     if exitcode := 1 if timeout_guard.signaled else p.returncode:
-        plugin_log("Plugin exited with code %d" % exitcode)
+        plugin_log("Plug-in exited with code %d" % exitcode)
 
     # Result is already logged to history for spoolfiles by
     # mknotifyd.spool_handler
@@ -1593,6 +1697,9 @@ def handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    fallback_email: str,
+    fallback_format: _FallbackFormat,
+    spooling: Literal["local", "remote", "both"],
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
@@ -1629,7 +1736,14 @@ def handle_spoolfile(
         )
 
         store_notification_backlog(raw_context)
-        locally_deliver_raw_context(raw_context, host_parameters_cb, get_http_proxy)
+        locally_deliver_raw_context(
+            raw_context,
+            host_parameters_cb,
+            get_http_proxy,
+            fallback_email=fallback_email,
+            fallback_format=fallback_format,
+            spooling=spooling,
+        )
         # TODO: It is a bug that we don't transport result information and monitoring history
         # entries back to the origin site. The intermediate or final results should be sent back to
         # the origin site. Also log_to_history calls should not log the entries to the local
@@ -1681,14 +1795,14 @@ def do_bulk_notify(  # pylint: disable=too-many-branches
     if "/" in contact or "/" in plugin_name:
         logger.error("Tried to construct bulk dir with unsanitized attributes")
         raise MKGeneralException("Slashes in CONTACTNAME or plugin_name are forbidden!")
-    if bulk.get("timeperiod"):
+    if is_timeperiod_bulk(bulk):
         bulk_path: list[str] = [
             contact,
             plugin_name,
             "timeperiod:" + bulk["timeperiod"],
             str(bulk["count"]),
         ]
-    else:
+    elif is_always_bulk(bulk):
         bulk_path = [contact, plugin_name, str(bulk["interval"]), str(bulk["count"])]
 
     bulkby = bulk["groupby"]
@@ -1850,7 +1964,8 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: float | None = N
             logger.info("    -> Error removing it: %s", e)
 
 
-def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-branches
+def find_bulks(only_ripe: bool, *, bulk_interval: int) -> NotifyBulks:
+    # pylint: disable=too-many-branches
     if not os.path.exists(notification_bulkdir):
         return []
 
@@ -1911,7 +2026,7 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                     if active is True and len(uuids) < count:
                         # Only add a log entry every 10 minutes since timeperiods
                         # can be very long (The default would be 10s).
-                        if now % 600 <= config.notification_bulk_interval:
+                        if now % 600 <= bulk_interval:
                             logger.info(
                                 "Bulk %s is not ripe yet (time period %s: active, count: %d)",
                                 bulk_dir,
@@ -1938,8 +2053,10 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
     return bulks
 
 
-def send_ripe_bulks(get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig]) -> None:
-    ripe = find_bulks(True)
+def send_ripe_bulks(
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig], *, bulk_interval: int
+) -> None:
+    ripe = find_bulks(True, bulk_interval=bulk_interval)
     if ripe:
         logger.info("Sending out %d ripe bulk notifications", len(ripe))
         for bulk in ripe:
@@ -2120,7 +2237,7 @@ def raw_context_from_backlog(nr: int) -> EventContext:
     backlog = store.load_object_from_file(notification_logdir + "/backlog.mk", default=[])
 
     if nr < 0 or nr >= len(backlog):
-        console.error("No notification number %d in backlog.\n" % nr)
+        console.error(f"No notification number {nr} in backlog.", file=sys.stderr)
         sys.exit(2)
 
     logger.info("Replaying notification %d from backlog...\n", nr)

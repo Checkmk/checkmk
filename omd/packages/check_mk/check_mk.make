@@ -50,7 +50,7 @@ endif
 
 $(CHECK_MK_BUILD): $(CHECK_MK_WERKS_PATH) $(CHECK_MK_CHANGELOG_PATH)
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
-	$(MAKE) -C $(REPO_PATH)/locale mo
+	$(REPO_PATH)/locale/compile_mo_files
 	$(MAKE) -C $(REPO_PATH)/bin
 	$(MAKE) -C $(REPO_PATH)/active_checks
 	$(MAKE) -C $(REPO_PATH)/doc/plugin-api html

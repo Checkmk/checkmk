@@ -145,7 +145,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         elif o in ["-i", "--modules"]:
             mortypes = a.split(",")
         elif o in ["-t", "--timeout"]:
-            _opt_timeout = int(a)  # noqa: F841
+            _opt_timeout = int(a)
         elif o in ["-h", "--help"]:
             usage()
             sys.exit(0)

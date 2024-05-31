@@ -3,40 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
 import logging
+import sys
 
-from pytest import CaptureFixture, fixture, LogCaptureFixture
+from pytest import CaptureFixture, LogCaptureFixture
 
 from cmk.utils.log import console
 
 
-@fixture(name="stream")
-def stream_fixture() -> io.StringIO:
-    return io.StringIO()
-
-
-def read(stream: io.StringIO) -> str:
-    stream.seek(0)
-    return stream.read()
-
-
-def test_verbose_on(stream: io.StringIO, caplog: LogCaptureFixture) -> None:
+def test_verbose_on(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
-    console.verbose("hello", stream=stream)
-    assert read(stream) == "hello"
+    console.verbose("hello")
+    assert ("hello\n", "") == capsys.readouterr()
 
 
-def test_verbose_off(stream: io.StringIO, caplog: LogCaptureFixture) -> None:
+def test_verbose_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE + 1, logger="cmk.base")
-    console.verbose("hello", stream=stream)
-    assert not read(stream)
+    console.verbose("hello")
+    assert ("", "") == capsys.readouterr()
 
 
 def test_verbose_default_stream_on(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
     console.verbose("hello")
-    assert ("hello", "") == capsys.readouterr()
+    assert ("hello\n", "") == capsys.readouterr()
 
 
 def test_verbose_default_stream_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
@@ -48,7 +38,7 @@ def test_verbose_default_stream_off(caplog: LogCaptureFixture, capsys: CaptureFi
 def test_debug_on(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(logging.DEBUG, logger="cmk.base")
     console.debug("hello")
-    assert ("hello", "") == capsys.readouterr()
+    assert ("hello\n", "") == capsys.readouterr()
 
 
 def test_debug_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
@@ -60,7 +50,7 @@ def test_debug_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> No
 def test_info_on(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(logging.INFO, logger="cmk.base")
     console.info("hello")
-    assert ("hello", "") == capsys.readouterr()
+    assert ("hello\n", "") == capsys.readouterr()
 
 
 def test_info_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
@@ -69,12 +59,12 @@ def test_info_off(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> Non
     assert ("", "") == capsys.readouterr()
 
 
-def test_warning(stream: io.StringIO) -> None:
-    console.warning("  hello  ", stream=stream)
-    assert read(stream) == "  hello  "
+def test_warning(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
+    console.warning("  hello  ", file=sys.stderr)
+    assert ("", "  hello  \n") == capsys.readouterr()
 
 
 def test_error(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
-    console.error("hello")
-    assert ("", "hello") == capsys.readouterr()
+    console.error("hello", file=sys.stderr)
+    assert ("", "hello\n") == capsys.readouterr()

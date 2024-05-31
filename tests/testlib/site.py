@@ -10,7 +10,6 @@ import inspect
 import json
 import logging
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -49,7 +48,6 @@ from tests.testlib.web_session import CMKWebSession
 import livestatus
 
 from cmk.utils.crypto.secrets import Secret
-from cmk.utils.paths import counters_dir, piggyback_dir, piggyback_source_dir
 from cmk.utils.version import Edition, Version
 
 logger = logging.getLogger(__name__)
@@ -97,7 +95,7 @@ class Site:
             user=AUTOMATION_USER if self.exists() else ADMIN_USER,
             password=self.get_automation_secret() if self.exists() else self.admin_password,
             site=self.id,
-            site_version_spec=self.version.version_spec,
+            site_version=self.version.version,
         )
 
     @property
@@ -696,6 +694,8 @@ class Site:
         # set the sites timezone according to TZ
         self.set_timezone(os.getenv("TZ", ""))
 
+        self.toggle_autostart(enabled=False)
+
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
             raise Exception(
@@ -1108,6 +1108,9 @@ class Site:
         self.set_config("LIVEPROXYD", "on" if enabled else "off", with_restart=True)
         assert self.file_exists("tmp/run/liveproxyd.pid") == enabled
 
+    def toggle_autostart(self, enabled: bool = True) -> None:
+        self.set_config("AUTOSTART", "on" if enabled else "off", with_restart=True)
+
     def save_results(self) -> None:
         if not is_containerized():
             logger.info("Not containerized: not copying results")
@@ -1164,15 +1167,6 @@ class Site:
             crash = json.loads(self.read_file(crash_file))
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
-            if re.search("check_icmp: No hosts to check", crash_detail):
-                logger.warning("Ignored crash report due to CMK-17285!")
-                continue
-            if re.search(r"invalid literal for .* with base 16: 'xx'", crash_detail):
-                logger.warning("Ignored crash report due to CMK-17291!")
-                continue
-            if re.search("list index out of range", crash_detail):
-                logger.warning("Ignored crash report due to CMK-17293!")
-                continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
                 See {crash_file} for more details."""
@@ -1551,9 +1545,9 @@ class SiteFactory:
             or Version.from_str("2.3.0b1") <= from_version
         ):
             # tmpfs should have been restored:
-            assert os.path.exists(site.path(counters_dir))
-            assert os.path.exists(site.path(str(piggyback_dir)))
-            assert os.path.exists(site.path(str(piggyback_source_dir)))
+            assert os.path.exists(site.path("tmp/check_mk/counters"))
+            assert os.path.exists(site.path("tmp/check_mk/piggyback"))
+            assert os.path.exists(site.path("tmp/check_mk/piggyback_sources"))
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)

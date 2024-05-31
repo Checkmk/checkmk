@@ -24,8 +24,13 @@ import dockerpty  # type: ignore[import-untyped]
 import requests
 from docker.models.images import Image  # type: ignore[import-untyped]
 
-import tests.testlib as testlib
-from tests.testlib import get_cmk_download_credentials
+from tests.testlib.utils import (
+    get_cmk_download_credentials,
+    git_commit_id,
+    git_essential_directories,
+    package_hash_path,
+    repo_path,
+)
 from tests.testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
@@ -210,7 +215,7 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
     """Checks package_download folder for a Checkmk package and returns True if
     exactly one package is available and meets some requirements. If there are
     invalid packages, the application terminates."""
-    packages_dir = testlib.repo_path() / "package_download"
+    packages_dir = repo_path() / "package_download"
     if available_packages := [
         p for p in packages_dir.glob("*") if re.match("^.*check-mk.*(rpm|deb)$", p.name)
     ]:
@@ -259,7 +264,7 @@ def container_name_suffix(distro_name: str, docker_tag: str) -> str:
     Pipfile.lock) but make it 'unique' for now by adding a timestamp"""
     return (
         f"{distro_name}-{docker_tag}"
-        f"-{testlib.utils.git_commit_id('Pipfile.lock')[:10]}"
+        f"-{git_commit_id('Pipfile.lock')[:10]}"
         f"-{time.strftime('%Y%m%d%H%M%S')}"
     )
 
@@ -357,7 +362,7 @@ def _create_cmk_image(
         # image labels.
         logger.info("Get Checkmk package hash")
         _exit_code, output = container.exec_run(
-            ["cat", str(testlib.utils.package_hash_path(version.version, version.edition))],
+            ["cat", str(package_hash_path(version.version, version.edition))],
         )
         hash_entry = output.decode("ascii").strip()
         logger.info("Checkmk package hash entry: %s", hash_entry)
@@ -463,13 +468,13 @@ def _image_build_binds() -> Mapping[str, DockerBind]:
 
 
 def _git_repos() -> Mapping[str, DockerBind]:
-    checkout_dir = testlib.repo_path()
+    checkout_dir = repo_path()
     return {
         **{
             # This ensures that we can also work with git-worktrees and reference clones.
             # For this, the original git repository needs to be mapped into the container as well.
             path: DockerBind(bind=path, mode="ro")
-            for path in testlib.utils.git_essential_directories(checkout_dir)
+            for path in git_essential_directories(checkout_dir)
         },
         **{
             # To get access to the test scripts and for updating the version from
@@ -534,7 +539,9 @@ def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:
         yield c
     finally:
         # Do not leave inactive containers and anonymous volumes behind
-        c.remove(v=True, force=True)
+        if os.getenv("CLEANUP", "1") == "1":
+            c.stop()
+            c.remove(v=True, force=True)
 
 
 # pep-0692 is not yet finished in mypy...

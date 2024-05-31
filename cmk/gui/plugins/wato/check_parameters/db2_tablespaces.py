@@ -58,7 +58,7 @@ def _transform_abs_level_forth(value: int | float) -> tuple[int, _IEC_UNITS]:
 
 
 def _absolute_level_common(title: str, default_value: int) -> Transform:
-    # Note: The related check plugins expect levels in MiB
+    # Note: The related check plug-ins expect levels in MiB
     return Transform(
         Tuple(
             title=title,

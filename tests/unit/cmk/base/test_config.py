@@ -1189,7 +1189,7 @@ def test_host_config_inventory_parameters(
         },
     )
     plugin = InventoryPlugin(
-        sections=(), function=lambda *args, **kw: (), ruleset_name=RuleSetName("if")
+        sections=(), function=lambda *args, **kw: (), ruleset_name=RuleSetName("if"), defaults={}
     )
     assert ts.apply(monkeypatch).inventory_parameters(hostname, plugin) == result
 
@@ -2963,7 +2963,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
     registered_plugin = CheckPluginAPI(
         name=CheckPluginName("duplicate_plugin"),
         sections=[],
-        service_name="Duplicate Plugin",
+        service_name="Duplicate Plug-in",
         discovery_function=lambda: [],
         discovery_default_parameters=None,
         discovery_ruleset_name=None,

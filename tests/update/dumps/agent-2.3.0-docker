@@ -1,0 +1,302 @@
+<<<check_mk>>>
+Version: 2.3.0
+AgentOS: linux
+Hostname: 2a6191d1f51f
+AgentDirectory: /etc/check_mk
+DataDirectory: /var/lib/check_mk_agent
+SpoolDirectory: /var/lib/check_mk_agent/spool
+PluginsDirectory: /usr/lib/check_mk_agent/plugins
+LocalDirectory: /usr/lib/check_mk_agent/local
+OSType: linux
+OSName: Ubuntu
+OSPlatform: ubuntu
+OSVersion: 20.04
+FailedPythonReason: 
+SSHClient: 
+<<<cmk_agent_ctl_status:sep(0)>>>
+{"version":"2.3.0","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"site_id":"127.0.0.5/update_central","receiver_port":8000,"uuid":"7403a24b-d23f-4e1b-a8a7-57a3933e6c66","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'update_central' agent signing CA","from":"Wed, 15 May 2024 09:55:35 +0000","to":"Tue, 15 May 2029 09:55:35 +0000"}},"remote":"remote_query_disabled"},{"site_id":"127.0.0.3/update_central","receiver_port":8000,"uuid":"9af89b91-1012-42ee-8988-9546f369060e","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'update_central' agent signing CA","from":"Wed, 15 May 2024 09:55:31 +0000","to":"Tue, 15 May 2029 09:55:31 +0000"}},"remote":"remote_query_disabled"},{"site_id":"127.0.0.4/update_central","receiver_port":8000,"uuid":"9cbf0e54-57a9-4606-850a-85df58b2bab7","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'update_central' agent signing CA","from":"Wed, 15 May 2024 09:55:33 +0000","to":"Tue, 15 May 2029 09:55:33 +0000"}},"remote":"remote_query_disabled"},{"site_id":"127.0.0.1/update_central","receiver_port":8000,"uuid":"053c5970-10a7-43fa-974d-93f80a1eb729","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'update_central' agent signing CA","from":"Wed, 15 May 2024 09:54:18 +0000","to":"Tue, 15 May 2029 09:54:18 +0000"}},"remote":"remote_query_disabled"},{"site_id":"127.0.0.2/update_central","receiver_port":8000,"uuid":"e669f7b9-1233-460b-9842-2737c49015f6","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'update_central' agent signing CA","from":"Wed, 15 May 2024 09:55:29 +0000","to":"Tue, 15 May 2029 09:55:29 +0000"}},"remote":"remote_query_disabled"}]}
+<<<checkmk_agent_plugins_lnx:sep(0)>>>
+pluginsdir /usr/lib/check_mk_agent/plugins
+localdir /usr/lib/check_mk_agent/local
+<<<labels:sep(0)>>>
+{"cmk/device_type":"container"}
+<<<systemd_units>>>
+[list-unit-files]
+[status]
+[all]
+<<<nfsmounts_v2:sep(0)>>>
+<<<cifsmounts>>>
+<<<mounts>>>
+/dev/mapper/vgubuntu-root /usr/sbin/docker-init ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /git-lowerdir ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /root/.cmk-credentials ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/resolv.conf ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/hostname ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/hosts ext4 rw,relatime,errors=remount-ro 0 0
+<<<ps_lnx>>>
+[time]
+1715767065
+[processes]
+[header] CGROUP USER VSZ RSS TIME ELAPSED PID COMMAND
+- root 1136 512 00:00:00 08:59 1 /sbin/docker-init -- /opt/entrypoint.sh /bin/bash
+- root 6000 3584 00:00:00 08:59 7 /bin/bash
+- root 5868 3584 00:00:00 08:55 91 /bin/bash /git/scripts/run-pipenv shell
+- root 58608 52172 00:00:00 08:55 108 /opt/Python-3.12.3/bin/python3.12 /usr/bin/pipenv shell
+- root 6000 3712 00:00:00 08:55 110 /bin/bash -i
+- root 6912 5160 00:00:00 06:18 489 /usr/sbin/apache2 -k graceful
+- root 6000 3840 00:00:00 05:47 3417 bash
+- root 121344 108208 00:00:01 04:06 3927 /git/.venv/bin/python /git/.venv/bin/pytest -T update test_update.py --log-cli-level=INFO -k 2.3.0
+- www-data 1998380 5384 00:00:00 03:49 4195 /usr/sbin/apache2 -k graceful
+- www-data 1998380 5640 00:00:00 03:49 4196 /usr/sbin/apache2 -k graceful
+- update_central 37832 24608 00:00:00 03:42 6049 gunicorn: master [cmk.agent_receiver.main:main_app()]
+- update_central 73496 59536 00:00:01 03:42 6054 gunicorn: worker [cmk.agent_receiver.main:main_app()]
+- update_central 205964 33176 00:00:00 03:42 6056 python3 /omd/sites/update_central/bin/mkeventd
+- update_central 45868 27248 00:00:00 03:42 6064 liveproxyd[master]
+- update_central 41020 20632 00:00:00 03:42 6076 python3 /omd/sites/update_central/bin/mknotifyd
+- update_central 172888 2976 00:00:00 03:42 6080 /omd/sites/update_central/bin/rrdcached -t 4 -w 3600 -z 1800 -f 7200 -s update_central -m 660 -l unix:/omd/sites/update_central/tmp/run/rrdcached.sock -p /omd/sites/update_central/tmp/rrdcached.pid -j /omd/sites/update_central/var/rrdcached -o /omd/sites/update_central/var/log/rrdcached.log
+- update_central 1807356 14100 00:00:00 03:42 6100 /omd/sites/update_central/bin/cmc /omd/sites/update_central/var/check_mk/core/config.pb
+- update_central 175068 123624 00:00:01 03:42 6124 python3 /omd/sites/update_central/bin/cmk --create-rrd --keepalive
+- update_central 160592 108248 00:00:01 03:42 6126 python3 /omd/sites/update_central/bin/cmk --handle-alerts --keepalive
+- update_central 21344 8832 00:00:00 03:42 6130 /omd/sites/update_central/lib/cmc/checkhelper
+- update_central 21344 8448 00:00:00 03:42 6131 /omd/sites/update_central/lib/cmc/checkhelper
+- update_central 170848 117292 00:00:02 03:42 6132 python3 /omd/sites/update_central/bin/cmk -v --checker
+- update_central 170592 116324 00:00:01 03:42 6133 python3 /omd/sites/update_central/bin/cmk -v --checker
+- update_central 160500 108468 00:00:01 03:42 6134 python3 /omd/sites/update_central/bin/cmk -v --keepalive --real-time-checks
+- update_central 63808 52492 00:00:01 03:42 6135 python3 /omd/sites/update_central/bin/fetcher
+- update_central 62556 50520 00:00:00 03:42 6136 python3 /omd/sites/update_central/bin/fetcher
+- update_central 112996 61628 00:00:00 03:42 6137 python3 /omd/sites/update_central/bin/cmk --notify --keepalive
+- update_central 5428 2688 00:00:00 03:42 6138 /omd/sites/update_central/lib/cmc/icmpsender 8 0 1000
+- update_central 7752 4992 00:00:00 03:42 6139 /omd/sites/update_central/lib/cmc/icmpreceiver
+- update_central 18732 6888 00:00:00 03:41 6166 /usr/sbin/apache2 -f /omd/sites/update_central/etc/apache/apache.conf
+- update_central 18708 3572 00:00:00 03:41 6169 /usr/sbin/apache2 -f /omd/sites/update_central/etc/apache/apache.conf
+- update_central 293164 227588 00:00:05 03:41 6170 /usr/sbin/apache2 -f /omd/sites/update_central/etc/apache/apache.conf
+- update_central 132516 34536 00:00:00 03:40 6188 dcd
+- update_central 73844 13280 00:00:00 03:40 6194 /omd/sites/update_central/bin/redis-server unixsocket:/omd/sites/update_central/tmp/run/redis
+- update_central 3836 2048 00:00:00 03:40 6207 /omd/sites/update_central/var/tmp/xinetd -pidfile /omd/sites/update_central/tmp/run/xinetd.pid -filelog /omd/sites/update_central/var/log/xinetd.log -f /omd/sites/update_central/etc/xinetd.conf
+- update_central 294500 228432 00:00:02 03:37 6493 /usr/sbin/apache2 -f /omd/sites/update_central/etc/apache/apache.conf
+- root 120796 90092 00:00:00 03:32 7148 /git/.venv/bin/python /git/.venv/bin/pytest -T update test_update.py --log-cli-level=INFO -k 2.3.0
+- cmk-agent 18548 6232 00:00:00 03:32 7149 /usr/bin/cmk-agent-ctl daemon
+- update_central 294476 228224 00:00:02 03:27 7572 /usr/sbin/apache2 -f /omd/sites/update_central/etc/apache/apache.conf
+- update_central 294868 228148 00:00:14 03:26 7580 /usr/sbin/apache2 -f /omd/sites/update_central/etc/apache/apache.conf
+- update_central 294364 227856 00:00:02 03:26 7581 /usr/sbin/apache2 -f /omd/sites/update_central/etc/apache/apache.conf
+- root 7028 4096 00:00:00 01:15 19013 su update_central
+- update_central 6000 3840 00:00:00 01:15 19014 bash
+- update_central 160728 109656 00:00:01 00:01 20539 python3 /omd/sites/update_central/bin/cmk -d test-host-0
+- root 6792 4224 00:00:00 00:00 20540 /bin/bash /usr/bin/check_mk_agent
+- root 6924 3176 00:00:00 00:00 20558 /bin/bash /usr/bin/check_mk_agent
+- root 6792 2792 00:00:00 00:00 20559 /bin/bash /usr/bin/check_mk_agent
+- root 4412 1536 00:00:00 00:00 20561 cat
+- root 6924 2672 00:00:00 00:00 20589 /bin/bash /usr/bin/check_mk_agent
+- root 7652 3200 00:00:00 00:00 20590 ps ax -ww -o cgroup:512,user:32,vsz,rss,cputime,etime,pid,command
+- root 4292 1536 00:00:00 00:00 20591 tr -s 
+<<<docker_container_mem_cgroupv2>>>
+anon 1953882112
+file 2951995392
+kernel 381399040
+kernel_stack 2310144
+pagetables 8749056
+sec_pagetables 0
+percpu 20664
+sock 16384
+vmalloc 4096
+shmem 1220734976
+zswap 0
+zswapped 0
+file_mapped 60952576
+file_dirty 0
+file_writeback 0
+swapcached 0
+anon_thp 0
+file_thp 0
+shmem_thp 0
+inactive_anon 0
+active_anon 3174543360
+inactive_file 1730560000
+active_file 700416
+unevictable 0
+slab_reclaimable 320163712
+slab_unreclaimable 49098424
+slab 369262136
+workingset_refault_anon 0
+workingset_refault_file 0
+workingset_activate_anon 0
+workingset_activate_file 0
+workingset_restore_anon 0
+workingset_restore_file 0
+workingset_nodereclaim 0
+pgscan 0
+pgsteal 0
+pgscan_kswapd 0
+pgscan_direct 0
+pgscan_khugepaged 0
+pgsteal_kswapd 0
+pgsteal_direct 0
+pgsteal_khugepaged 0
+pgfault 7805141
+pgmajfault 10
+pgrefill 0
+pgactivate 0
+pgdeactivate 0
+pglazyfree 5752
+pglazyfreed 0
+zswpin 0
+zswpout 0
+thp_fault_alloc 0
+thp_collapse_alloc 0
+memory.current 5288423424
+memory.max max
+MemTotal:       65552132 kB
+<<<docker_container_cpu_cgroupv2>>>
+uptime 9460.34 144523.41
+num_cpus 16
+usage_usec 226312226
+user_usec 184617229
+system_usec 41694997
+core_sched.force_idle_usec 0
+nr_periods 0
+nr_throttled 0
+throttled_usec 0
+nr_bursts 0
+burst_usec 0
+<<<uptime>>>
+539
+<<<lnx_if:sep(58)>>>
+    lo: 11124757    3035    0    0    0     0          0         0 11124757    3035    0    0    0     0       0          0
+  eth0: 257239595   74429    0    0    0     0          0         0  4147256   62749    0    0    0     0       0          0
+[lo]
+Address: 00:00:00:00:00:00
+[eth0]
+Speed: 10000Mb/s
+Address: 02:42:ac:11:00:02
+<<<tcp_conn_stats>>>
+08 4
+01 2
+0A 5
+06 6
+<<<docker_container_diskstat_cgroupv2>>>
+[time]
+1715767065
+[io.stat]
+259:0 rbytes=2441216 wbytes=0 rios=73 wios=2 dbytes=0 dios=0
+252:0 rbytes=2441216 wbytes=178040832 rios=73 wios=1054 dbytes=0 dios=0
+252:1 rbytes=2441216 wbytes=1941975040 rios=73 wios=48645 dbytes=0 dios=0
+[names]
+dm-0 252:0
+dm-1 252:1
+dm-2 252:2
+loop0 7:0
+loop1 7:1
+loop10 7:10
+loop11 7:11
+loop12 7:12
+loop13 7:13
+loop14 7:14
+loop15 7:15
+loop16 7:16
+loop17 7:17
+loop18 7:18
+loop19 7:19
+loop2 7:2
+loop20 7:20
+loop21 7:21
+loop22 7:22
+loop23 7:23
+loop24 7:24
+loop25 7:25
+loop26 7:26
+loop27 7:27
+loop28 7:28
+loop3 7:3
+loop4 7:4
+loop5 7:5
+loop6 7:6
+loop7 7:7
+loop8 7:8
+loop9 7:9
+nvme0n1 259:0
+sda 8:0
+<<<md>>>
+Personalities : 
+unused devices: <none>
+<<<vbox_guest>>>
+<<<nullmailer_mailq>>>
+4 0 deferred
+4 0 failed
+<<<livestatus_status:sep(59)>>>
+[update_central]
+accept_passive_host_checks;accept_passive_service_checks;average_latency_checker;average_latency_fetcher;average_latency_generic;average_latency_real_time;average_runnable_jobs_checker;average_runnable_jobs_fetcher;cached_log_messages;carbon_bytes_sent;carbon_bytes_sent_rate;carbon_overflows;carbon_overflows_rate;carbon_queue_usage;carbon_queue_usage_rate;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;core_pid;edition;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;has_event_handlers;helper_usage_checker;helper_usage_fetcher;helper_usage_generic;helper_usage_real_time;host_checks;host_checks_rate;influxdb_bytes_sent;influxdb_bytes_sent_rate;influxdb_overflows;influxdb_overflows_rate;influxdb_queue_usage;influxdb_queue_usage_rate;interval_length;last_command_check;last_log_rotation;license_usage_history;livechecks;livechecks_rate;livestatus_active_connections;livestatus_overflows;livestatus_overflows_rate;livestatus_queued_connections;livestatus_threads;livestatus_usage;livestatus_version;log_messages;log_messages_rate;max_long_output_size;metrics_count;metrics_count_rate;mk_inventory_last;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_queued_alerts;num_queued_notifications;num_services;obsess_over_hosts;obsess_over_services;perf_data_count;perf_data_count_rate;process_performance_data;program_start;program_version;requests;requests_rate;rrdcached_bytes_sent;rrdcached_bytes_sent_rate;rrdcached_overflows;rrdcached_overflows_rate;rrdcached_queue_usage;rrdcached_queue_usage_rate;service_checks;service_checks_rate;state_file_created
+1;1;0;0.00294668;1.13812;0;0;0;0;0;0;0;0;0.0001;-3.64084e-09;1;1;1;316;0.299598;6100;enterprise;1;1;1;1;1;40;0;0;80;0.0138177;0;0;0;0;0.00100158;5.21794e-05;0;2310;2.89193;0;0;0;0;0;0;60;0;1715766843;LQ't#$x~}Qi Qb]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Q53gb4ahd\a3_6\ce76\3c4e\35hg_f5bh5cgQ[ QD:E6092D9Qi Q55h34fha_4f5h64ch4gbbfc64chd3hg34f4d54gf23`74g4acgf5hghhhc3hc`c6Q[ QG6CD:@?Qi Qa]b]_]466Q[ Q65:E:@?Qi Q466Q[ QA=2E7@C>Qi Q&3F?EF a_]_c]e {%$Q[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `f`dfb`a__[ QE:>6K@?6Qi Q&%rQ[ Q?F>09@DEDQi _[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi _[ Q?F>0D6CG:46DQi _[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi _[ Q?F>0DJ?E96E:40E6DEDQi _[ Q?F>0DJ?E96E:40E6DED06I4=F565Qi _[ Q6IE6?D:@?0?E@AQi 72=D6N.N;5;0.000602035;1;0;0;0;20;0.000100158;2.3.0;198;0.0131541;2000;5104;4.52565;1715766948;6100;0;0;5;0;0;105;0;0;521;0.528456;1;1715766943;Check_MK 2.3.0;523;0.335546;62633;72.0152;0;0;0.00045;6.69176e-07;740;0.762797;0
+<<<livestatus_ssl_certs:sep(124)>>>
+[update_central]
+/omd/sites/update_central/etc/ssl/ca.pem|2031299625
+/omd/sites/update_central/etc/ssl/sites/update_central.pem|2031299626
+<<<mkeventd_status:sep(0)>>>
+["update_central"]
+[["status_config_load_time", "status_num_open_events", "status_virtual_memory_size", "status_messages", "status_message_rate", "status_average_message_rate", "status_rule_tries", "status_rule_trie_rate", "status_average_rule_trie_rate", "status_rule_hits", "status_rule_hit_rate", "status_average_rule_hit_rate", "status_drops", "status_drop_rate", "status_average_drop_rate", "status_overflows", "status_overflow_rate", "status_average_overflow_rate", "status_events", "status_event_rate", "status_average_event_rate", "status_connects", "status_connect_rate", "status_average_connect_rate", "status_average_processing_time", "status_average_sync_time", "status_average_request_time", "status_replication_slavemode", "status_replication_last_sync", "status_replication_success", "status_event_limit_host", "status_event_limit_rule", "status_event_limit_overall", "status_event_limit_active_hosts", "status_event_limit_active_rules", "status_event_limit_active_overall"], [1715766843, 0, 210907136, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 52, 0.19999801637709588, 0.16864101503601706, 0.0, 0.0, 0.000569379363282583, "master", 0.0, false, 1000, 1000, 10000, [], [], false]]
+<<<cmk_site_statistics:sep(59)>>>
+[update_central]
+5;0;0;0
+105;0;0;0;0;0
+<<<job>>>
+<<<omd_status:cached(1715767060,60)>>>
+[update_central]
+agent-receiver 0
+mkeventd 0
+liveproxyd 0
+mknotifyd 0
+rrdcached 0
+cmc 0
+apache 0
+dcd 0
+redis 0
+xinetd 0
+crontab 0
+OVERALL 0
+<<<mknotifyd:sep(0)>>>
+1715767065
+[update_central]
+Version:         2.3.0
+Updated:         1715767064 (2024-05-15 09:57:44)
+Started:         1715766843 (2024-05-15 09:54:03, 221 sec ago)
+Configuration:   1715766843 (2024-05-15 09:54:03, 221 sec ago)
+Listening FD:    None
+
+Spool:           New
+Count:           0
+Oldest:          -
+Youngest:        -
+
+Spool:           Deferred
+Count:           0
+Oldest:          -
+Youngest:        -
+
+Spool:           Corrupted
+Count:           0
+Oldest:          -
+Youngest:        -
+<<<omd_apache:sep(124)>>>
+[update_central]
+
+<<<omd_diskusage:sep(0)>>>
+[site update_central]
+347526785	/omd/sites/update_central
+1863729	/omd/sites/update_central/var/log
+276113136	/omd/sites/update_central/var/check_mk/rrd
+20480	/omd/sites/update_central/var/pnp4nagios/
+119686	/omd/sites/update_central/tmp/
+335883	/omd/sites/update_central/local/
+58684213	/omd/sites/update_central/var/check_mk/agents/
+0 /omd/sites/update_central/var/mkeventd/history/
+642216	/omd/sites/update_central/var/check_mk/core/
+0 /omd/sites/update_central/var/check_mk/inventory_archive/
+<<<omd_info:sep(59)>>>
+[versions]
+version;number;edition;demo
+2.3.0.cee;2.3.0;cee;0
+2.4.0-2024.05.15.cee;2.4.0-2024.05.15;cee;0
+[sites]
+site;used_version;autostart
+update_central;2.3.0.cee;1
+<<<local:sep(0)>>>
+

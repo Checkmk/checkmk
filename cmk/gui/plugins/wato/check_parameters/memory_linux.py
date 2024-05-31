@@ -69,18 +69,18 @@ def _parameter_valuespec_memory_linux() -> Dictionary:
             ("levels_virtual", DualMemoryLevels(_("Total virtual memory"), (80.0, 90.0))),
             (
                 "levels_total",
-                UpperMemoryLevels(_("Total Data in relation to RAM"), (120.0, 150.0), _("RAM")),
+                UpperMemoryLevels(_("Total data in relation to RAM"), (120.0, 150.0), _("RAM")),
             ),
             ("levels_shm", UpperMemoryLevels(_("Shared memory"), (20.0, 30.0), _("RAM"))),
             ("levels_pagetables", UpperMemoryLevels(_("Page tables"), (8.0, 16.0), _("RAM"))),
-            ("levels_writeback", UpperMemoryLevels(_("Disk Writeback"))),
+            ("levels_writeback", UpperMemoryLevels(_("Disk writeback"))),
             (
                 "levels_committed",
                 UpperMemoryLevels(_("Committed memory"), (100.0, 150.0), _("RAM + Swap")),
             ),
             (
                 "levels_commitlimit",
-                LowerMemoryLevels(_("Commit Limit"), (20.0, 10.0), _("RAM + Swap")),
+                LowerMemoryLevels(_("Commit limit"), (20.0, 10.0), _("RAM + Swap")),
             ),
             (
                 "levels_available",
@@ -102,10 +102,10 @@ def _parameter_valuespec_memory_linux() -> Dictionary:
                     ),
                 ),
             ),
-            ("levels_vmalloc", LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
+            ("levels_vmalloc", LowerMemoryLevels(_("Largest free VMalloc chunk"))),
             (
                 "levels_hardwarecorrupted",
-                UpperMemoryLevels(_("Hardware Corrupted"), (1, 1), _("RAM")),
+                UpperMemoryLevels(_("Hardware corrupted"), (1, 1), _("RAM")),
             ),
         ],
     )
@@ -117,6 +117,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory_linux,
-        title=lambda: _("Memory and Swap usage on Linux"),
+        title=lambda: _("Memory and swap usage on Linux"),
     )
 )

@@ -179,7 +179,7 @@ def parse_api_url(  # type: ignore[no-untyped-def]
     """Parse the server api address
 
     custom url always has priority over other options, if not specified the address contains
-    either the ip-address or the hostname in the url
+    either the ip address or the hostname in the url
 
     the protocol should not be specified through the custom url
 
@@ -189,7 +189,7 @@ def parse_api_url(  # type: ignore[no-untyped-def]
             where the API can be queried
 
         server_address:
-            hostname or ip-address to the server
+            hostname or ip address to the server
 
         protocol:
             the transfer protocol (http or https)

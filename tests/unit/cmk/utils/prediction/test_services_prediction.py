@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.utils import repo_path
 
 from livestatus import RRDResponse
 

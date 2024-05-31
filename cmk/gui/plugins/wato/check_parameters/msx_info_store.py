@@ -21,7 +21,7 @@ def _item_spec_msx_info_store():
 
 def _parameter_valuespec_msx_info_store():
     return Dictionary(
-        title=_("Set Levels"),
+        title=_("Set levels"),
         elements=[
             (
                 "store_latency",

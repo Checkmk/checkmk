@@ -54,6 +54,7 @@ max-complexity = 15
 [tool.isort]
 known_testlib = "tests.testlib"
 known_compositiontests = "tests.composition"
+known_integrationtests = "tests.integration"
 known_unittests = "tests.unit,tests.plugins_integration,tests.update"
 known_livestatus = "livestatus"
 known_omd = "omdlib"
@@ -72,7 +73,7 @@ known_werks = "werks"
 known_first_party = "cmk"
 
 # Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
+sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,INTEGRATIONTESTS,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
 CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
 CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
 
@@ -181,14 +182,25 @@ warn_untyped_fields = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# Live logs initially look like a good idea to pin down problems in the tests
-# quickly, but with the current state of our tests it's simply too much noise.
-# Even in a successful unit test run, you get more than 70 log messages
-# cluttering up the output and making it hard to use: saml2.client logs already
-# at load time, tons of our own tests emit warnings up to ERROR even when
-# successful, etc. etc. We might reconsinder lowering the live log level when we
-# have cleaned up things...
-addopts = "--log-cli-level=CRITICAL --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
+addopts = [
+    # Live logs initially look like a good idea to pin down problems in the tests
+    # quickly, but with the current state of our tests it's simply too much noise.
+    # Even in a successful unit test run, you get more than 70 log messages
+    # cluttering up the output and making it hard to use: saml2.client logs already
+    # at load time, tons of our own tests emit warnings up to ERROR even when
+    # successful, etc. etc. We might reconsinder lowering the live log level when we
+    # have cleaned up things...
+    "--log-cli-level=CRITICAL",
+    "--log-cli-format=\"%(asctime)s %(levelname)s %(message)s\"",
+    # Show summary of skipped tests
+    "-rs",
+    # Show N slowest setup/test durations
+    "--durations=20",
+    # Disable a few plugins which slow down the pytest startup even when not used
+    "-p no:faker",
+    "-p no:schemathesis",
+    "-p no:hypothesispytest",
+]
 markers = [
   "checks: Run all existing test cases for checks.",
   "slow: Run tests which take relatively larger time to execute.",
@@ -205,6 +217,17 @@ filterwarnings = [
   'error::marshmallow.warnings.RemovedInMarshmallow4Warning',
   # Fun fact: pkg_resources calls declare_namespace() itself when it processes namespace_packages.txt files.
   'ignore:Deprecated call to `pkg_resources\.declare_namespace:DeprecationWarning:pkg_resources:0',
+  # ignore schemathesis testing related warnings
+  'ignore:^jsonschema\.RefResolver is deprecated.*$:DeprecationWarning:schemathesis\..*:0',
+  'ignore:^jsonschema\.exceptions\.RefResolutionError is deprecated.*$:DeprecationWarning:schemathesis\..*:0',
+  'ignore:^Generating overly large repr.*$:Warning:hypothesis\..*:0',
+  # ignore DeprecationWarning for ast.NameConstant in reportlab <= 4.2
+  'ignore:^ast\.NameConstant is deprecated and will be removed in Python 3\.14\; use ast\.Constant instead$:DeprecationWarning:reportlab\..*:0',
+  # ignore warnings caused by probuf 4.25.3 until updating to 5.x
+  'ignore:^Type google\._upb\._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new\. This is deprecated and will no longer be allowed in Python 3\.14\.$:DeprecationWarning:importlib._bootstrap:488',
+  'ignore:^Type google\._upb\._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new\. This is deprecated and will no longer be allowed in Python 3\.14\.$:DeprecationWarning:importlib._bootstrap:488',
+  # ignore PytestCollectionWarning caused by webtest
+  'ignore:^cannot collect test class .* because it has a __init__ constructor.*$:UserWarning:.*webtest.*:0',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

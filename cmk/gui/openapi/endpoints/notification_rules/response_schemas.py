@@ -26,6 +26,7 @@ from cmk.utils.notify_types import (
 from cmk.gui.fields import (
     AuxTagIDField,
     FolderIDField,
+    GlobalHTTPProxyField,
     IPField,
     PasswordStoreIDField,
     ServiceLevelField,
@@ -516,11 +517,14 @@ URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE = fields.Nested(
 
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url"],
-        example="",
+        enum=["no_proxy", "environment", "url", "global"],
+        example="no_proxy",
     )
     url = fields.String(
         example="http://example_proxy",
+    )
+    global_proxy_id = GlobalHTTPProxyField(
+        presence="should_exist",
     )
 
 
@@ -533,8 +537,8 @@ class HttpProxyValue(CheckboxOutput):
 
 HTTP_PROXY_RESPONSE = fields.Nested(
     HttpProxyValue,
-    example={},
-    description="",
+    example={"state": "enabled", "value": "no_proxy"},
+    description="The http proxy settings for the plugin",
 )
 
 
@@ -582,7 +586,7 @@ class IlertPluginResponse(PluginName):
 class JiraPluginResponse(PluginName):
     jira_url = fields.String(
         example="http://jira_url_example.com",
-        description="Configure the JIRA URL here",
+        description="Configure the Jira URL here",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     username = fields.String(
@@ -595,23 +599,23 @@ class JiraPluginResponse(PluginName):
     )
     project_id = fields.String(
         example="",
-        description="The numerical JIRA project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
+        description="The numerical Jira project ID. If not set, it will be retrieved from a custom user attribute named jiraproject. If that is not set, the notification will fail",
     )
     issue_type_id = fields.String(
         example="",
-        description="The numerical JIRA issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
+        description="The numerical Jira issue type ID. If not set, it will be retrieved from a custom user attribute named jiraissuetype. If that is not set, the notification will fail",
     )
     host_custom_id = fields.String(
         example="",
-        description="The numerical JIRA custom field ID for host problems",
+        description="The numerical Jira custom field ID for host problems",
     )
     service_custom_id = fields.String(
         example="",
-        description="The numerical JIRA custom field ID for service problems",
+        description="The numerical Jira custom field ID for service problems",
     )
     monitoring_url = fields.String(
         example="",
-        description="Configure the base URL for the Monitoring Web-GUI here. Include the site name. Used for link to check_mk out of jira",
+        description="Configure the base URL for the monitoring web-GUI here. Include the site name. Used for link to Checkmk out of Jira",
     )
     site_custom_id = fields.Nested(CheckboxWithStrValueOutput)
     priority_id = fields.Nested(CheckboxWithStrValueOutput)
@@ -908,11 +912,11 @@ class SMSPluginResponse(PluginName):
 class SpectrumPluginResponse(PluginName):
     destination_ip = IPField(
         ip_type_allowed="ipv4",
-        description="IP Address of the Spectrum server receiving the SNMP trap",
+        description="IP address of the Spectrum server receiving the SNMP trap",
     )
     snmp_community = fields.String(
         example="",
-        description="SNMP Community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
+        description="SNMP community for the SNMP trap. The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
     )
     base_oid = fields.String(
         example="1.3.6.1.4.1.1234",

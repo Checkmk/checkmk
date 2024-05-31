@@ -203,7 +203,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                 if (
                     error := _validate_agent_based_plugin_v2_ruleset_ref(
                         plugin,
-                        rule_group=lambda x: f"{x}",
+                        rule_group=RuleGroup.InvParameters,
                         ruleset_ref_attr="inventory_ruleset_name",
                         default_params_attr="inventory_default_parameters",
                     )

@@ -990,7 +990,7 @@ def test_check_ps_common(inv_item: Service, reference: type_defs.CheckResult) ->
         _cpu_cores, data, _ = ps_section._parse_ps(now, info)
         parsed.extend((None, ps_info, cmd_line, now) for (ps_info, cmd_line) in data)
 
-    factory_defaults = {"levels": (1, 1, 99999, 99999), **inv_item.parameters}
+    factory_defaults = {**ps_check.CHECK_DEFAULT_PARAMETERS, **inv_item.parameters}
     item = inv_item.item
     assert item is not None
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("CET"))):
@@ -1125,9 +1125,9 @@ def test_check_ps_common_cpu(data: cpu_config) -> None:
             )
         )
 
-    rescale_params = (
-        {"cpu_rescale_max": data.cpu_rescale_max} if data.cpu_rescale_max is not None else {}
-    )
+    rescale_params = {
+        "cpu_rescale_max": data.cpu_rescale_max if data.cpu_rescale_max is not None else False
+    }
     service = Service(
         item="test",
         parameters={
@@ -1383,7 +1383,7 @@ def test_parse_ps_windows(mocker: MockerFixture) -> None:
     section_mem = None
     section_mem_used = None
     section_cpu = None
-    params = {"levels": (0, 0, 0, 0), "single_cpulevels": (0, 0, 0, 0)}
+    params = {**ps_check.CHECK_DEFAULT_PARAMETERS, "single_cpulevels": (0, 0, 0, 0)}
 
     service = next(
         iter(

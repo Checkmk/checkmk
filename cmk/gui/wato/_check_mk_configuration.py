@@ -10,7 +10,6 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.version import edition, Edition
@@ -19,6 +18,7 @@ from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-viol
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
+from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_languages
@@ -137,6 +137,7 @@ def register(
     config_variable_registry.register(ConfigVariableDebug)
     config_variable_registry.register(ConfigVariableGUIProfile)
     config_variable_registry.register(ConfigVariableDebugLivestatusQueries)
+    config_variable_registry.register(ConfigVariableCMCRulesetMatchingStats)
     config_variable_registry.register(ConfigVariableSelectionLivetime)
     config_variable_registry.register(ConfigVariableShowLivestatusErrors)
     config_variable_registry.register(ConfigVariableEnableSounds)
@@ -345,7 +346,7 @@ class ConfigVariableEnableCommunityTranslations(ConfigVariable):
             title=_("Community translated languages (not supported)"),
             label=_("Community translated languages"),
             help=_(
-                'Show/Hide community translated languages in the "Language" dropdown (User > Edit '
+                'Show/hide community translated languages in the "Language" dropdown (User > Edit '
                 "profile). Note that these translations are contributed by the Checkmk community "
                 "and thus no liability is assumed for their validity.<br>"
                 "If this setting is turned from 'on' to 'off' while a user has set a community "
@@ -627,10 +628,10 @@ class ConfigVariableDebugLivestatusQueries(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Debug Livestatus queries"),
-            label=_("enable debug of Livestatus queries"),
+            title=_("Debug livestatus queries"),
+            label=_("enable debug of livestatus queries"),
             help=_(
-                "With this option turned on all Livestatus queries made by Multisite "
+                "With this option turned on all livestatus queries made by multisite "
                 "in order to render views are being displayed."
             ),
         )
@@ -1419,7 +1420,7 @@ class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
                 "specific pages within Checkmk. To authenticate these requests it was possible to "
                 "add the _username and _secret parameters to the parameters (e.g. append them to the "
                 "URL). GET parameters are usually logged by proxies and webservers and are not "
-                "deemed secure for secrets. See Werk  #16223 for more information."
+                "deemed secure for secrets. See Werk #16223 for more information."
             ),
             default_value=True,
         )
@@ -2788,7 +2789,7 @@ def find_usages_of_contact_group_in_default_user_profile(
     ]:
         used_in.append(
             (
-                "%s" % (_("Default User Profile")),
+                "%s" % (_("Default user profile")),
                 folder_preserving_link(
                     [("mode", "edit_configvar"), ("varname", "default_user_profile")]
                 ),
@@ -3214,6 +3215,26 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
             ),
             to_valuespec=transform_snmp_backend_hosts_to_valuespec,
             from_valuespec=transform_snmp_backend_from_valuespec,
+        )
+
+
+class ConfigVariableCMCRulesetMatchingStats(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupDeveloperTools
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainCore
+
+    def ident(self) -> str:
+        return "ruleset_matching_stats"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Collect ruleset matching statistics"),
+            help=_(
+                "If enabled, the core will collect statistics (cache hits/misses) during the "
+                "ruleset matching process."
+            ),
         )
 
 
@@ -3766,7 +3787,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
     ]
 
     if user.may("wato.add_or_modify_executables") and edition() is not Edition.CSE:
-        choices.append(("custom", _("Use a custom check plugin..."), PluginCommandLine()))
+        choices.append(("custom", _("Use a custom check plug-in..."), PluginCommandLine()))
 
     return choices
 
@@ -3812,7 +3833,7 @@ def monitoring_macro_help() -> str:
 
 def _valuespec_host_check_commands():
     return CascadingDropdown(
-        title=_("Host Check Command"),
+        title=_("Host check command"),
         help=_(
             "Usually Checkmk uses a series of PING (ICMP echo request) in order to determine "
             "whether a host is up. In some cases this is not possible, however. With this rule "
@@ -4780,7 +4801,7 @@ def _valuespec_clustered_services_config():
             "</li><li>".join(
                 (
                     _(
-                        "Native: Use the cluster check function implemented by the check plugin. "
+                        "Native: Use the cluster check function implemented by the check plug-in. "
                         "If it is available, it is probably the best choice, as it implements logic "
                         "specifically designed for the check plug-in in question. Implementing it is "
                         "optional however, so this might not be available (a warning will be displayed). "
@@ -6137,7 +6158,7 @@ def _valuespec_snmp_fetch_interval():
                 title=_("Section"),
                 help=_(
                     "You can only configure section names here, but not choose individual "
-                    "check plugins. The reason for this is that the check plug-ins "
+                    "check plug-ins. The reason for this is that the check plug-ins "
                     "themselves are not aware whether or not they are processing SNMP based "
                     "data."
                 ),
@@ -6314,7 +6335,7 @@ def _valuespec_piggybacked_host_files():
     )
 
     return Dictionary(
-        title=_("Processing of Piggybacked Host Data"),
+        title=_("Processing of piggybacked host data"),
         optional_keys=[],
         elements=[
             ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),

@@ -634,7 +634,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "
             "But there are specific reasons to deactivate this security feature. E.g. when "
-            "you want to display the HTML output produced by a specific check plugin."
+            "you want to display the HTML output produced by a specific check plug-in."
             "Disabling the escaping also allows the plug-in to execute not only HTML, but "
             "also Javascript code in the context of your browser. This makes it possible to "
             "execute arbitrary Javascript, even for injection attacks.<br>"
@@ -1151,15 +1151,8 @@ class ACTestSizeOfExtensions(ACTest):
     def is_relevant(self) -> bool:
         return has_wato_slave_sites() and self._replicates_mkps()
 
-    def _replicates_mkps(self):
-        replicates_mkps = False
-        for site in wato_slave_sites().values():
-            if site.get("replicate_mkps"):
-                replicates_mkps = True
-                break
-
-        if not replicates_mkps:
-            return
+    def _replicates_mkps(self) -> bool:
+        return any(site.get("replicate_mkps") for site in wato_slave_sites().values())
 
     def execute(self) -> Iterator[ACSingleResult]:
         size = self._size_of_extensions()
@@ -1254,7 +1247,7 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated check plugins")
+        return _("Deprecated check plug-ins")
 
     def help(self) -> str:
         return _(
@@ -1290,7 +1283,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated HW/SW inventory plugins")
+        return _("Deprecated HW/SW inventory plug-ins")
 
     def help(self) -> str:
         return _(

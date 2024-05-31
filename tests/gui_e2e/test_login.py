@@ -8,7 +8,7 @@ import pytest
 from playwright.sync_api import Page
 
 from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site
 
 

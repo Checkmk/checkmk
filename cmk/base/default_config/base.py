@@ -350,3 +350,5 @@ logwatch_rules: list[RuleSpec[object]] = []
 config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
 
 automatic_host_removal: list[RuleSpec[object]] = []
+
+ruleset_matching_stats = False

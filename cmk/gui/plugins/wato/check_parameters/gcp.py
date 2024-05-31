@@ -16,7 +16,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, Percentage, TextInput, ValueSpec
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
-# the check plugin. Please do not change them.
+# the check plug-in. Please do not change them.
 
 
 def _vs_disk_elements() -> Sequence[tuple[str, ValueSpec]]:

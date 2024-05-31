@@ -8,29 +8,28 @@ import json
 import logging
 import os
 import subprocess
-from collections.abc import Generator, Iterator
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
 import yaml
 
-from tests.testlib.agent import (
-    agent_controller_daemon,
-    clean_agent_controller,
-    download_and_install_agent_package,
-)
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     current_base_branch_name,
     current_branch_version,
     edition_from_env,
+    repo_path,
     restart_httpd,
+    run,
 )
-from tests.testlib.version import CMKVersion, get_min_version
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
+DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
+RULES_DIR = repo_path() / "tests" / "update" / "rules"
 
 
 def pytest_addoption(parser):
@@ -52,6 +51,12 @@ def pytest_addoption(parser):
         default=False,
         help="Store list of lost services in a json reference.",
     )
+    parser.addoption(
+        "--disable-rules-injection",
+        action="store_true",
+        default=False,
+        help="Disable rules' injection in the test-site.",
+    )
 
 
 def pytest_configure(config):
@@ -69,15 +74,26 @@ class BaseVersions:
     with open(Path(__file__).parent.resolve() / "base_versions.json") as f:
         BASE_VERSIONS_STR = json.load(f)
 
-    BASE_VERSIONS = [
-        CMKVersion(
-            base_version_str,
-            edition_from_env(fallback=Edition.CEE),
-            current_base_branch_name(),
-            current_branch_version(),
-        )
-        for base_version_str in BASE_VERSIONS_STR
-    ]
+    if version_from_env().is_saas_edition():
+        BASE_VERSIONS = [
+            CMKVersion(
+                CMKVersion.DAILY,
+                edition_from_env(),
+                "2.3.0",
+                "2.3.0",
+            )
+        ]
+    else:
+        BASE_VERSIONS = [
+            CMKVersion(
+                base_version_str,
+                edition_from_env(),
+                current_base_branch_name(),
+                current_branch_version(),
+            )
+            for base_version_str in BASE_VERSIONS_STR
+            if not version_from_env().is_saas_edition()
+        ]
 
 
 @dataclasses.dataclass
@@ -252,6 +268,14 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     )
     logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
     test_site = _get_site(base_version, interactive=not disable_interactive_mode)
+
+    disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
+    if not version_from_env().is_saas_edition():
+        # 'datasource_programs' rule is not supported in the SaaS edition
+        inject_dumps(test_site, DUMPS_DIR)
+        if not disable_rules_injection:
+            inject_rules(test_site)
+
     yield test_site, disable_interactive_mode
     logger.info("Removing test-site...")
     test_site.rm()
@@ -263,16 +287,49 @@ def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) 
     return _get_site(target_version, base_site=site, interactive=interactive_mode)
 
 
-@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(test_setup: tuple, tmp_path: Path) -> Path:
-    test_site, _ = test_setup
-    return download_and_install_agent_package(test_site, tmp_path)
+def inject_dumps(site: Site, dumps_dir: Path) -> None:
+    # create dump folder in the test site
+    site_dumps_path = site.path("var/check_mk/dumps")
+    logger.info('Creating folder "%s"...', site_dumps_path)
+    rc = site.execute(["mkdir", "-p", site_dumps_path]).wait()
+    assert rc == 0
+
+    logger.info("Injecting agent-output...")
+
+    for dump_name in list(os.listdir(dumps_dir)):
+        assert (
+            run(
+                [
+                    "sudo",
+                    "cp",
+                    "-f",
+                    f"{dumps_dir}/{dump_name}",
+                    f"{site_dumps_path}/{dump_name}",
+                ]
+            ).returncode
+            == 0
+        )
+
+    ruleset_name = "datasource_programs"
+    logger.info('Creating rule "%s"...', ruleset_name)
+    site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
+    logger.info('Rule "%s" created!', ruleset_name)
 
 
-@pytest.fixture(name="agent_ctl", scope="function")
-def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
-        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
-    ):
-        yield installed_agent_ctl_in_unknown_state
+def inject_rules(site: Site) -> None:
+    try:
+        with open(RULES_DIR / "ignore.txt", "r", encoding="UTF-8") as ignore_list_file:
+            ignore_list = [_ for _ in ignore_list_file.read().splitlines() if _]
+    except FileNotFoundError:
+        ignore_list = []
+    rules_file_names = [
+        _ for _ in os.listdir(RULES_DIR) if _.endswith(".json") and _ not in ignore_list
+    ]
+    for rules_file_name in rules_file_names:
+        rules_file_path = RULES_DIR / rules_file_name
+        with open(rules_file_path, "r", encoding="UTF-8") as ruleset_file:
+            logger.info('Importing rules file "%s"...', rules_file_path)
+            rules = json.load(ruleset_file)
+            for rule in rules:
+                site.openapi.create_rule(value=rule)
+    site.activate_changes_and_wait_for_core_reload()

@@ -49,7 +49,7 @@ def _make_parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "This check uses <tt>check_smtp</tt> from the standard "
-            "Nagios plugins in order to try the response of an SMTP "
+            "Nagios plug-ins in order to try the response of an SMTP "
             "server."
         ),
         elements={

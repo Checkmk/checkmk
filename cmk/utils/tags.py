@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Mapping, Sequence
-from typing import NamedTuple, NewType, TypedDict
+from typing import NamedTuple, NewType, NotRequired, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -24,25 +24,19 @@ class GroupedTagSpec(TypedDict):
     aux_tags: list[TagID]
 
 
-class _AuxTagSpecOpt(TypedDict, total=False):
-    topic: str
-    help: str
-
-
-class AuxTagSpec(_AuxTagSpecOpt):
+class AuxTagSpec(TypedDict):
     id: TagID
     title: str
+    topic: NotRequired[str]
+    help: NotRequired[str]
 
 
-class _TagGroupSpecOpt(TypedDict, total=False):
-    topic: str
-    help: str
-
-
-class TagGroupSpec(_TagGroupSpecOpt):
+class TagGroupSpec(TypedDict):
     id: TagGroupID
     title: str
     tags: list[GroupedTagSpec]
+    topic: NotRequired[str]
+    help: NotRequired[str]
 
 
 class TagConfigSpec(TypedDict):

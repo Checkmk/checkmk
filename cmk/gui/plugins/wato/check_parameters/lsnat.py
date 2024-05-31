@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer
 
 
 def _parameter_valuespec_lsnat():
@@ -17,12 +18,10 @@ def _parameter_valuespec_lsnat():
         elements=[
             (
                 "current_bindings",
-                Tuple(
+                SimpleLevels(
                     title=_("Number of current LSNAT bindings"),
-                    elements=[
-                        Integer(title=_("Warning at"), size=10, unit=_("bindings")),
-                        Integer(title=_("Critical at"), size=10, unit=_("bindings")),
-                    ],
+                    spec=Integer,
+                    unit=_("bindings"),
                 ),
             ),
         ],

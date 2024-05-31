@@ -18,10 +18,7 @@ def inventory_fortigate_ipsecvpn(info):
 
 
 def check_fortigate_ipsecvpn(item, params, info):
-    if isinstance(params, tuple):
-        params = {"levels": params}
-
-    tunnels_ignore_levels = params.get("tunnels_ignore_levels", [])
+    tunnels_ignore_levels = params["tunnels_ignore_levels"]
 
     tunnels_down = set()
     tunnels_ignored = set()
@@ -85,6 +82,7 @@ check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
     check_function=check_fortigate_ipsecvpn,
     check_ruleset_name="ipsecvpn",
     check_default_parameters={
+        "tunnels_ignore_levels": [],
         "levels": (1, 2),
     },
 )

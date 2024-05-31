@@ -77,6 +77,6 @@ register.check_plugin(
     service_name="MSSQL %s",
     discovery_function=discovery_mssql_counters_cache_hits,
     discovery_ruleset_name="inventory_mssql_counters_rules",
-    discovery_default_parameters={},
+    discovery_default_parameters={"add_zero_based_services": False},
     check_function=check_mssql_counters_cache_hits,
 )

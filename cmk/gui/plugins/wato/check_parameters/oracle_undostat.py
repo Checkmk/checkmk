@@ -43,6 +43,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_undostat,
-        title=lambda: _("Oracle Undo Retention"),
+        title=lambda: _("Oracle undo retention"),
     )
 )

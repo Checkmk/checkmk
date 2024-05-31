@@ -11,7 +11,7 @@ from cmk.base.check_api import check_levels
 
 ################################################################################################
 #  NOTE: This function has already been migrated to cmk.base.plugins.agent_based.snmp_uptime   #
-#         Plugins that use this function should probably just subscribe to the snmp_uptime     #
+#         Plug-ins that use this function should probably just subscribe to the snmp_uptime    #
 #         section!                                                                             #
 ################################################################################################
 def parse_snmp_uptime(ticks):

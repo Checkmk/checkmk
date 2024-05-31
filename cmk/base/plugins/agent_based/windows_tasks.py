@@ -191,7 +191,7 @@ def check_windows_tasks(
     data = section[item]
     last_result = data["Last Result"]
 
-    # schtasks.exe (used by the check plugin) returns a signed integer
+    # schtasks.exe (used by the check plug-in) returns a signed integer
     # e.g. -2147024629. However, error codes are unsigned integers.
     # To make it easier for the user to lookup the error code (e.g. on
     # MSDN) we convert the negative numbers to the hexadecimal

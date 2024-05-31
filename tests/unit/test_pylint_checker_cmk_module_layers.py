@@ -8,7 +8,7 @@
 import pytest
 from pylint.lint import PyLinter
 
-from tests.testlib.pylint_checker_cmk_module_layers import (
+from tests.pylint.checker_cmk_module_layers import (
     _COMPONENTS,
     CMKModuleLayerChecker,
     get_absolute_importee,

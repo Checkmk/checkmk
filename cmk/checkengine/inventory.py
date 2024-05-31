@@ -87,6 +87,7 @@ class InventoryPlugin:
     sections: Sequence[ParsedSectionName]
     function: Callable[..., Iterable[Attributes | TableRow]]
     ruleset_name: RuleSetName | None
+    defaults: Mapping[str, object]
 
 
 @dataclass(frozen=True)
@@ -140,7 +141,7 @@ def inventorize_host(
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-        lambda msg: console.debug(msg + "\n"),
+        console.debug,
     )
     store_piggybacked_sections(host_sections_by_host)
 
@@ -331,7 +332,7 @@ def _collect_inventory_plugin_items(
                 )
             ):
                 console.debug(
-                    f" {tty.yellow}{tty.bold}{plugin_name}{tty.normal}: skipped (no data)\n"
+                    f" {tty.yellow}{tty.bold}{plugin_name}{tty.normal}: skipped (no data)"
                 )
                 continue
 
@@ -357,8 +358,8 @@ def _collect_inventory_plugin_items(
                     raise
 
                 console.warning(
-                    console.format_warning(
-                        f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}\n"
+                    tty.format_warning(
+                        f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}"
                     )
                 )
                 continue
@@ -384,7 +385,7 @@ def _collect_inventory_plugin_items(
                 ),
             )
 
-            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok\n")
+            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok")
 
 
 _TV = TypeVar("_TV", bound=Attributes | TableRow)

@@ -306,7 +306,7 @@ def _get_averaged_disk(
         key: get_average(
             value_store=value_store,
             # We add 'check_diskstat_dict' to the key to avoid possible overlap with keys
-            # used in check plugins. For example, for the SUMMARY-item, the check plugin
+            # used in check plug-ins. For example, for the SUMMARY-item, the check plug-in
             # winperf_phydisk first computes all rates for all items using 'metric.item' as
             # key and then summarizes the disks. Hence, for a disk called 'avg', these keys
             # would be the same as the keys used here.

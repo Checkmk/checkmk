@@ -278,7 +278,7 @@ class ABCPackageManager(abc.ABC):
 
         logger.info("Downloading from: %s", package_url)
         response = requests.get(  # nosec
-            package_url, auth=get_cmk_download_credentials(), verify=False
+            package_url, auth=get_cmk_download_credentials(), verify=True
         )
         response.raise_for_status()
 

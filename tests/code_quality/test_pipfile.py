@@ -22,8 +22,12 @@ import isort
 import pytest
 from pipfile import Pipfile  # type: ignore[import-untyped]
 
-from tests.testlib import repo_path
-from tests.testlib.utils import branch_from_env, current_base_branch_name, is_enterprise_repo
+from tests.testlib.utils import (
+    branch_from_env,
+    current_base_branch_name,
+    is_enterprise_repo,
+    repo_path,
+)
 
 IGNORED_LIBS = {
     "agent_receiver",
@@ -159,6 +163,9 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         basepath / "omd/license_sources",  # update_licenses.py contains imports
         basepath / "packages",  # ignore all packages
         basepath / "tests",
+        # migration_helpers need libcst. I am conservative here, but wondering if we shouldn't
+        # exclude all treasures.
+        basepath / "doc/treasures/migration_helpers",
     )
 
     for source_file_path in iter_sourcefiles(basepath):
@@ -384,6 +391,7 @@ def test_dependencies_are_declared() -> None:
     undeclared_dependencies = list(get_undeclared_dependencies())
     undeclared_dependencies_str = {d.name for d in undeclared_dependencies}
     known_undeclared_dependencies = {
+        "buildscripts",  # used in build helper scripts in buildscripts/scripts
         "netsnmp",  # We ship it with omd/packages
         "pymongo",  # Optional except ImportError...
         "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
@@ -393,7 +401,6 @@ def test_dependencies_are_declared() -> None:
         "docker",  # optional
         "msrest",  # used in publish_cloud_images.py and not in the product
         "pipfile",  # used in tests and in helper script pin_dependencies.py
-        "libcst",  # used in a helper script in doc/treasures
     }
     assert (
         undeclared_dependencies_str >= known_undeclared_dependencies

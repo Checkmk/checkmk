@@ -67,7 +67,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
     def _get_main_section(self) -> bytearray | bytes:
         raw_data = bytearray()
         for src in self._sources:
-            if src.info.successfully_processed:
+            if src.info.valid:
                 # !! Important for Check_MK and Check_MK Discovery service !!
                 #   - sources contains ALL file infos and is not filtered
                 #     in cmk/base/piggyback.py as in previous versions
@@ -84,9 +84,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         if not self._sources:
             return b""
 
-        labels = {
-            "cmk/piggyback_source_%s" % src.info.source_hostname: "yes" for src in self._sources
-        }
+        labels = {"cmk/piggyback_source_%s" % src.info.source: "yes" for src in self._sources}
         return ("<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels)).encode("utf-8")
 
     @staticmethod

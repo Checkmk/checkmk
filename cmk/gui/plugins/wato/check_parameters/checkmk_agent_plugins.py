@@ -45,7 +45,7 @@ def _parameter_valuespec_checkmk_agent_plugins():
                     title=_("Regular expression to exclude plug-ins"),
                     mode=RegExp.infix,
                     help=_(
-                        "Plugins or local checks matching this pattern will be excluded from the "
+                        "Plug-ins or local checks matching this pattern will be excluded from the "
                         "comparison with the specified required versions."
                     ),
                 ),

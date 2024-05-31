@@ -1,46 +1,50 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { extract_validation, extract_value, type ValueAndValidation } from '@/types'
-import ValidationError from '../ValidationError.vue'
-import type { VueInteger } from '@/vue_types'
-
-const emit = defineEmits<{
-  (e: 'update-value', value: number): void
-}>()
+import { computed, ref } from 'vue'
+import { is_float, validate_value, type ValidationMessages } from '@/utils'
+import { FormValidation } from '@/components/cmk-form/'
+import type { VueFloat } from '@/vue_formspec_components'
 
 const props = defineProps<{
-  schema: VueInteger
-  data: ValueAndValidation<number>
+  spec: VueFloat
+  validation: ValidationMessages
 }>()
 
-const component_value = ref<string>()
+const data = defineModel('data', { required: true })
+const local_validation = ref<ValidationMessages | null>(null)
 
-onMounted(() => {
-  component_value.value = extract_value(props.data).toString()
-  send_value_upstream(component_value.value!)
+const emit = defineEmits<{
+  (e: 'update:data', value: number | string): void
+}>()
+
+const value = computed({
+  get() {
+    return data.value
+  },
+  set(value: unknown) {
+    local_validation.value = []
+    let emitted_value: string | number
+    if (is_float(value as string)) emitted_value = parseFloat(value as string)
+    else emitted_value = value as string
+    validate_value(emitted_value, props.spec.validators!).forEach((error) => {
+      local_validation.value = [{ message: error, location: [''] }]
+    })
+    emit('update:data', emitted_value)
+  }
 })
 
-function send_value_upstream(new_value: string) {
-  emit('update-value', parseInt(new_value))
-}
-
-let unit = computed(() => {
-  return props.schema.unit || ''
+const validation = computed(() => {
+  // If the local validation was never used (null), return the props.validation (backend validation)
+  if (local_validation.value === null) return props.validation
+  return local_validation.value
 })
 
-let style = computed(() => {
-  return { width: '5.8ex' }
+const unit = computed(() => {
+  return props.spec.unit || ''
 })
 </script>
 
 <template>
-  <input
-    class="number"
-    :style="style"
-    type="text"
-    :value="component_value"
-    @input="send_value_upstream(($event!.target! as HTMLInputElement).value)"
-  />
+  <input class="number" type="text" v-model="value" />
   <span v-if="unit" class="vs_floating_text">{{ unit }}</span>
-  <ValidationError :error="extract_validation(data)"></ValidationError>
+  <FormValidation :validation="validation"></FormValidation>
 </template>

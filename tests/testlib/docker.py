@@ -21,8 +21,7 @@ import docker.models  # type: ignore[import-untyped]
 import docker.models.containers  # type: ignore[import-untyped]
 import requests
 
-from tests.testlib import repo_path
-from tests.testlib.utils import wait_until
+from tests.testlib.utils import repo_path, wait_until
 from tests.testlib.version import CMKVersion, version_from_env
 
 logger = logging.getLogger()

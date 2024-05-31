@@ -25,7 +25,7 @@ RUN apt-get install -y \
     sudo \
     vim
 
-RUN apt-get install -y \
+RUN apt-get install -y --fix-missing \
     apache2 \
     apache2-dev \
     build-essential \
@@ -64,6 +64,7 @@ RUN apt-get install -y \
     libssl-dev \
     libxml2-dev \
     libxmlsec1-dev \
+    netcat-openbsd \
     openssh-client \
     patch \
     rpcbind \

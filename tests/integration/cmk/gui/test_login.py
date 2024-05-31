@@ -6,9 +6,9 @@
 import contextlib
 from typing import Iterator
 
-from tests.testlib import CMKWebSession
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
+from tests.testlib.web_session import CMKWebSession
 
 
 @skip_if_saas_edition

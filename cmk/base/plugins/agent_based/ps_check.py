@@ -91,18 +91,26 @@ def cluster_check_ps(
     )
 
 
+CHECK_DEFAULT_PARAMETERS = {
+    "levels": (1, 1, 99999, 99999),
+    "cpu_rescale_max": False,
+}
+
 register.check_plugin(
     name="ps",
     service_name="Process %s",
     sections=["ps", "mem", "mem_used", "cpu"],
     discovery_function=ps.discover_ps,
     discovery_ruleset_name="inventory_processes_rules",
-    discovery_default_parameters={},
+    discovery_default_parameters={
+        "descr": "Example service - unused",
+        "default_params": {
+            "cpu_rescale_max": True,
+        },
+    },
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_ps,
-    check_default_parameters={
-        "levels": (1, 1, 99999, 99999),
-    },
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="ps",
     cluster_check_function=cluster_check_ps,
 )

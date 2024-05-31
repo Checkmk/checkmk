@@ -15,6 +15,7 @@ from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
 from cmk.gui.config import active_config
 from cmk.gui.userdb import connection_choices, get_saml_connections
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.tags import (
@@ -580,3 +581,42 @@ class TagGroupIDField(fields.String):
 
         if self.presence == "should_not_exist" and tag_group_exists(value, builtin_included=True):
             raise self.make_error("should_exist", name=value)
+
+
+def _global_proxy_choices() -> list[str]:
+    return [p["ident"] for p in ConfigDomainCore().load().get("http_proxies", {}).values()]
+
+
+class GlobalHTTPProxyField(fields.String):
+    default_error_messages = {
+        "should_exist": "The global http proxy {http_proxy!r} should exist but it doesn't.",
+        "should_not_exist": "The global http proxy {http_proxy!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        description: str = "A global http proxy",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            description=description,
+            example="proxy_id_1",
+            **kwargs,
+        )
+        self.presence = presence
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if self.presence == "should_exist":
+            if value not in _global_proxy_choices():
+                raise self.make_error("should_exist", http_proxy=value)
+
+        if self.presence == "should_not_exist":
+            if value in _global_proxy_choices():
+                raise self.make_error("should_not_exist", http_proxy=value)

@@ -376,7 +376,7 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                                     ),
                                     SingleChoiceElement(
                                         "stickyport",
-                                        Title("Follow, but stay to same IP-address and port"),
+                                        Title("Follow, but stay to same IP address and port"),
                                     ),
                                 ],
                                 prefill=DefaultValue("follow"),

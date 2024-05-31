@@ -23,7 +23,7 @@ from tests.testlib.utils import (
 )
 
 # Import this fixture to not clutter this file, but it's unused here...
-from tests.unit.cmk.utils.crypto.certs import (  # pylint: disable=unused-import # noqa: F401
+from tests.unit.cmk.utils.crypto.certs import (  # pylint: disable=unused-import
     fixture_ed25519_private_key,
     fixture_rsa_private_key,
     fixture_secp256k1_private_key,

@@ -24,7 +24,7 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.notify_types import PluginNotificationContext
 
-from cmk.utils.html import (  # noqa: F401  # pylint: disable=unused-import  # isort:skip
+from cmk.utils.html import (  # pylint: disable=unused-import  # isort:skip
     replace_state_markers as format_plugin_output,
 )
 

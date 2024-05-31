@@ -131,7 +131,6 @@ from cmk.base.config import (
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.parent_scan import ScanConfig
 from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
@@ -656,7 +655,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             )
             if any(r.state != 0 for r in source_results):
                 summaries = ", ".join(r.summary for r in source_results)
-                console.error(f"ERROR [{source_info.ident}]: {summaries}\n")
+                console.error(f"ERROR [{source_info.ident}]: {summaries}", file=sys.stderr)
                 has_errors = True
             if raw_data.is_ok():
                 assert raw_data.ok is not None
@@ -863,72 +862,6 @@ modes.register(
 )
 
 # .
-#   .--scan-parents--------------------------------------------------------.
-#   |                                                         _            |
-#   |    ___  ___ __ _ _ __        _ __   __ _ _ __ ___ _ __ | |_ ___      |
-#   |   / __|/ __/ _` | '_ \ _____| '_ \ / _` | '__/ _ \ '_ \| __/ __|     |
-#   |   \__ \ (_| (_| | | | |_____| |_) | (_| | | |  __/ | | | |_\__ \     |
-#   |   |___/\___\__,_|_| |_|     | .__/ \__,_|_|  \___|_| |_|\__|___/     |
-#   |                             |_|                                      |
-#   '----------------------------------------------------------------------'
-
-
-def mode_scan_parents(options: dict, args: list[str]) -> None:
-    config.load(exclude_parents_mk=True)
-    config_cache = config.get_config_cache()
-    hosts_config = config.make_hosts_config()
-
-    max_num_processes = max(options.get("procs", config.max_num_processes), 1)
-    hosts = [HostName(hn) for hn in args]
-
-    def make_scan_config() -> Mapping[HostName, ScanConfig]:
-        return {
-            host: config_cache.make_parent_scan_config(host)
-            for host in itertools.chain(
-                hosts,
-                hosts_config.hosts,
-                ([HostName(config.monitoring_host)] if config.monitoring_host else ()),
-            )
-        }
-
-    cmk.base.parent_scan.do_scan_parents(
-        make_scan_config(),
-        hosts_config,
-        HostName(config.monitoring_host) if config.monitoring_host is not None else None,
-        hosts,
-        max_num_processes=max_num_processes,
-        lookup_ip_address=partial(config.lookup_ip_address, config_cache),
-    )
-
-
-modes.register(
-    Mode(
-        long_option="scan-parents",
-        handler_function=mode_scan_parents,
-        needs_config=False,
-        needs_checks=False,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Autoscan parents, create conf.d/parents.mk",
-        long_help=[
-            "Uses traceroute in order to automatically detect hosts's parents. "
-            "It creates the file conf.d/parents.mk which "
-            "defines gateway hosts and parent declarations.",
-        ],
-        sub_options=[
-            Option(
-                long_option="procs",
-                argument=True,
-                argument_descr="N",
-                argument_conv=int,
-                short_help="Start up to N processes in parallel. Defaults to 50.",
-            ),
-        ],
-    )
-)
-
-# .
 #   .--snmptranslate-------------------------------------------------------.
 #   |                            _                       _       _         |
 #   |  ___ _ __  _ __ ___  _ __ | |_ _ __ __ _ _ __  ___| | __ _| |_ ___   |
@@ -1031,14 +964,14 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
             options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
         )
     except Exception as e:
-        console.error(f"Error walking {backend.hostname}: {e}\n")
+        console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
         if cmk.utils.debug.enabled():
             raise
     cmk.utils.cleanup.cleanup_globals()
 
 
 def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: str, *, backend: SNMPBackend) -> None:
-    console.verbose("%s:\n" % backend.hostname)
+    console.verbose(f"{backend.hostname}:")
 
     oids = oids_to_walk(options)
 
@@ -1046,9 +979,9 @@ def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: str, *, backend: SNMPBa
         for rows in _execute_walks_for_dump(oids, backend=backend):
             for oid, value in rows:
                 file.write(f"{oid} {value}\n")
-            console.verbose("%d variables.\n" % len(rows))
+            console.verbose(f"{len(rows)} variables.")
 
-    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.\n")
+    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.")
 
 
 def _execute_walks_for_dump(
@@ -1056,10 +989,10 @@ def _execute_walks_for_dump(
 ) -> Iterable[list[tuple[OID, str]]]:
     for oid in oids:
         try:
-            console.verbose('Walk on "%s"...\n' % oid)
+            console.verbose(f'Walk on "{oid}"...')
             yield walk_for_export(backend.walk(oid, context=""))
         except Exception as e:
-            console.error("Error: %s\n" % e)
+            console.error(f"Error: {e}", file=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
 
@@ -1444,7 +1377,7 @@ def mode_update() -> None:
                 ),
             )
     except Exception as e:
-        console.error("Configuration Error: %s\n" % e)
+        console.error(f"Configuration Error: {e}", file=sys.stderr)
         if cmk.utils.debug.enabled():
             raise
         sys.exit(1)
@@ -1695,7 +1628,9 @@ def mode_automation(args: list[str]) -> None:
         "try-inventory",
         "service-discovery-preview",
     ]:
-        log.clear_console_logging()
+        log.logger.handlers[:] = []
+        log.logger.addHandler(logging.NullHandler())
+        log.logger.setLevel(logging.INFO)
 
     sys.exit(automations.automations.execute(args[0], args[1:]))
 
@@ -1742,6 +1677,11 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         ),
         get_http_proxy=config.get_http_proxy,
         ensure_nagios=ensure_nagios,
+        bulk_interval=config.notification_bulk_interval,
+        fallback_email=config.notification_fallback_email,
+        fallback_format=config.notification_fallback_format,
+        spooling=ConfigCache.notification_spooling(),
+        logging_level=ConfigCache.notification_logging_level(),
     )
 
 
@@ -1872,7 +1812,7 @@ def mode_check_discovery(
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(check_result.as_text())
+        console.verbose_no_lf(check_result.as_text())
     else:
         with suppress(IOError):
             sys.stdout.write(check_result.as_text() + "\n")
@@ -1893,7 +1833,7 @@ def register_mode_check_discovery(
             argument_descr="HOSTNAME",
             short_help="Check for not yet monitored services",
             long_help=[
-                "Make Check_MK behave as monitoring plugins that checks if an "
+                "Make Check_MK behave as monitoring plug-ins that checks if an "
                 "inventory would find new or vanished services for the host. "
                 "If configured to do so, this will queue those hosts for automatic "
                 "autodiscovery"
@@ -2067,30 +2007,21 @@ def _preprocess_hostnames(
     only_host_labels: bool,
 ) -> set[HostName]:
     """Default to all hosts and expand cluster names to their nodes"""
+    svc = "" if only_host_labels else "services and "
     if not arg_host_names:
-        console.verbose(
-            "Discovering %shost labels on all hosts\n"
-            % ("services and " if not only_host_labels else "")
-        )
+        console.verbose(f"Discovering {svc}host labels on all hosts")
         hosts_config = config_cache.hosts_config
         return {
             hn
             for hn in hosts_config.hosts
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         }
-
     node_names = {
         node_name
         for host_name in arg_host_names
         for node_name in (resolve_nodes(host_name) if is_cluster(host_name) else (host_name,))
     }
-
-    console.verbose(
-        "Discovering {}host labels on: {}\n".format(
-            "services and " if not only_host_labels else "", ", ".join(sorted(node_names))
-        )
-    )
-
+    console.verbose(f"Discovering {svc}host labels on: {', '.join(sorted(node_names))}")
     return node_names
 
 
@@ -2197,7 +2128,7 @@ modes.register(
         argument_optional=True,
         short_help="Find new services",
         long_help=[
-            "Make Check_MK behave as monitoring plugins that checks if an "
+            "Make Check_MK behave as monitoring plug-ins that checks if an "
             "inventory would find new or vanished services for the host. "
             "If configured to do so, this will queue those hosts for automatic "
             "autodiscovery",
@@ -2350,7 +2281,7 @@ def mode_check(
             ValueStoreManager(hostname), store_changes=not dry_run
         ) as value_store_manager,
     ):
-        console.debug(f"Checkmk version {cmk_version.__version__}\n")
+        console.debug(f"Checkmk version {cmk_version.__version__}")
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_plugins = CheckPluginMapper(
             config_cache,
@@ -2358,7 +2289,7 @@ def mode_check(
             clusters=hosts_config.clusters,
             rtc_package=None,
         )
-        with CPUTracker(lambda msg: console.debug(msg + "\n")) as tracker:
+        with CPUTracker(console.debug) as tracker:
             checks_result = execute_checkmk_checks(
                 hostname=hostname,
                 fetched=((f[0], f[1]) for f in fetched),
@@ -2406,11 +2337,19 @@ def mode_check(
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(check_result.as_text())
+        console.verbose_no_lf(check_result.as_text())
     else:
         with suppress(IOError):
             sys.stdout.write(check_result.as_text() + "\n")
             sys.stdout.flush()
+
+    # TODO: Nur fuer die aktuellen tests (cmk -v heute)
+    #       Denke wir sollten fuer das stats recording so etwas aehnliches wie
+    #       den --profile schalter fuers profiling einbauen
+    if config.ruleset_matching_stats:
+        config_cache.ruleset_matcher.persist_matching_stats(
+            "tmp/ruleset_matching_stats", config.get_ruleset_id_mapping()
+        )
     return check_result.state
 
 
@@ -2510,7 +2449,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     if args:
         hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
-        console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
+        console.verbose(f"Doing HW/SW inventory on: {', '.join(hostnames)}")
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(
@@ -2520,7 +2459,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                 if config_cache.is_active(hn) and config_cache.is_online(hn)
             }
         )
-        console.verbose("Doing HW/SW inventory on all hosts\n")
+        console.verbose("Doing HW/SW inventory on all hosts")
 
     if "force" in options:
         file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
@@ -2716,10 +2655,10 @@ def _execute_active_check_inventory(
         )
         # The order of archive or save is important:
         if save_tree_actions.do_archive:
-            console.verbose("Archive current inventory tree.\n")
+            console.verbose("Archive current inventory tree.")
             tree_or_archive_store.archive(host_name=host_name)
         if save_tree_actions.do_save:
-            console.verbose("Save new inventory tree.\n")
+            console.verbose("Save new inventory tree.")
             tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
 
     return result.check_result
@@ -2738,18 +2677,18 @@ def _get_save_tree_actions(
 ) -> _SaveTreeActions:
     if not inventory_tree:
         # Archive current inventory tree file if it exists. Important for host inventory icon
-        console.verbose("No inventory tree.\n")
+        console.verbose("No inventory tree.")
         return _SaveTreeActions(do_archive=True, do_save=False)
 
     if not previous_tree:
-        console.verbose("New inventory tree.\n")
+        console.verbose("New inventory tree.")
         return _SaveTreeActions(do_archive=False, do_save=True)
 
     if has_changed := previous_tree != inventory_tree:
-        console.verbose("Inventory tree has changed.\n")
+        console.verbose("Inventory tree has changed.")
 
     if update_result.save_tree:
-        console.verbose(str(update_result))
+        console.verbose_no_lf(str(update_result))
 
     return _SaveTreeActions(
         do_archive=has_changed,
@@ -2831,7 +2770,7 @@ def mode_inventory_as_check(
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
-        console.verbose(check_result.as_text())
+        console.verbose_no_lf(check_result.as_text())
     else:
         with suppress(IOError):
             sys.stdout.write(check_result.as_text() + "\n")
@@ -2922,7 +2861,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     if not (queue := AutoQueue(cmk.utils.paths.autoinventory_dir)):
-        console.verbose("Autoinventory: No hosts marked by inventory check\n")
+        console.verbose("Autoinventory: No hosts marked by inventory check")
         return
 
     config.load()
@@ -2962,14 +2901,14 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
     for host_name in queue:
         if host_name not in all_hosts:
-            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
+            console.verbose(f"  Removing mark '{host_name}' (host not configured")
             (queue.path / str(host_name)).unlink(missing_ok=True)
 
     if queue.oldest() is None:
-        console.verbose("Autoinventory: No hosts marked by inventory check\n")
+        console.verbose("Autoinventory: No hosts marked by inventory check")
         return
 
-    console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:\n")
+    console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:")
     try:
         response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
         process_hosts: Container[HostName] = {
@@ -3008,7 +2947,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
                     raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
                 )
     except (MKTimeout, TimeoutError) as exc:
-        console.verbose(str(exc))
+        console.verbose_no_lf(str(exc))
 
 
 modes.register(
@@ -3127,6 +3066,8 @@ modes.register(
 
 
 def mode_create_diagnostics_dump(options: DiagnosticsModesParameters) -> None:
+    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+    log.logger.setLevel(logging.INFO)
     cmk.base.diagnostics.create_diagnostics_dump(
         cmk.utils.diagnostics.deserialize_modes_parameters(options)
     )

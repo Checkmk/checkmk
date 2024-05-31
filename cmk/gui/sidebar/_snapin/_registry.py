@@ -76,7 +76,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
             # typing? Probably not in the current state of affairs where things
             # which should be instances are classes... :-/
             if not issubclass(base_snapin_type, SidebarSnapin):
-                raise ValueError("invalid snapin type %r" % base_snapin_type)
+                raise ValueError("invalid snap-in type %r" % base_snapin_type)
 
             if not issubclass(base_snapin_type, CustomizableSidebarSnapin):
                 continue
@@ -114,7 +114,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
                 def may_see(cls) -> bool:
                     return cls._custom_snapin.is_permitted()
 
-            _it_is_really_used = CustomSnapin  # noqa: F841
+            _it_is_really_used = CustomSnapin
 
 
 snapin_registry = SnapinRegistry()

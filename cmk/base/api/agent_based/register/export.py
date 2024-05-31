@@ -305,7 +305,7 @@ def check_plugin(
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the check plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
       sections:                 An optional list of section names that this plug-in subscribes to.
@@ -314,7 +314,7 @@ def check_plugin(
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the check plugin.
+                                a name equal to the name of the check plug-in.
 
       service_name:             The template for the service name. The check function must accept
                                 'item' as first argument if and only if "%s" is present in the value
@@ -385,7 +385,7 @@ def inventory_plugin(
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the check plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
       sections:                 An optional list of section names that this plug-in subscribes to.
@@ -394,7 +394,7 @@ def inventory_plugin(
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the inventory plugin.
+                                a name equal to the name of the inventory plug-in.
 
       inventory_function:       The inventory_function. Arguments must be 'params' (if inventory
                                 parameters are defined) and 'section' (if the plug-in subscribes

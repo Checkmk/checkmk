@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 from typing import Final
 
+from cmk.utils import tty
 from cmk.utils.log import console
 
 ConfigurationWarnings = list[str]
@@ -20,7 +20,7 @@ def initialize() -> None:
 
 def warn(text: str) -> None:
     g_configuration_warnings.append(text)
-    console.warning(console.format_warning(f"\n{text}\n"), stream=sys.stdout)
+    console.warning(tty.format_warning(f"\n{text}"))
 
 
 def get_configuration() -> ConfigurationWarnings:

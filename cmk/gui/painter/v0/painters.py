@@ -711,7 +711,7 @@ class PainterSvcMetrics(Painter):
         return "svc_metrics"
 
     def title(self, cell: Cell) -> str:
-        return _("Service Metrics")
+        return _("Service metrics")
 
     def short_title(self, cell: Cell) -> str:
         return _("Metrics")
@@ -1005,7 +1005,7 @@ class PainterSvcStateAge(Painter):
         return "svc_state_age"
 
     def title(self, cell: Cell) -> str:
-        return _("The age of the current service state")
+        return _("Age of the current service state")
 
     def short_title(self, cell: Cell) -> str:
         return _("Age")
@@ -1114,7 +1114,7 @@ class PainterSvcNextCheck(Painter):
         return "svc_next_check"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the next scheduled service check")
+        return _("Time of the next scheduled service check")
 
     def short_title(self, cell: Cell) -> str:
         return _("Next check")
@@ -1137,7 +1137,7 @@ class PainterSvcLastTimeOk(Painter):
         return "svc_last_time_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("The last time the service was OK")
+        return _("Last time the service was OK")
 
     def short_title(self, cell: Cell) -> str:
         return _("Last OK")
@@ -1162,7 +1162,7 @@ class PainterSvcNextNotification(Painter):
         return "svc_next_notification"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the next service notification")
+        return _("Time of the next service notification")
 
     def short_title(self, cell: Cell) -> str:
         return _("Next notification")
@@ -1237,7 +1237,7 @@ class PainterSvcLastNotification(Painter):
         return "svc_last_notification"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the last service notification")
+        return _("Time of the last service notification")
 
     def short_title(self, cell: Cell) -> str:
         return _("last notification")
@@ -2187,7 +2187,7 @@ class PainterHostNextCheck(Painter):
         return "host_next_check"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the next scheduled host check")
+        return _("Time of the next scheduled host check")
 
     def short_title(self, cell: Cell) -> str:
         return _("Next check")
@@ -2210,7 +2210,7 @@ class PainterHostNextNotification(Painter):
         return "host_next_notification"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the next host notification")
+        return _("Time of the next host notification")
 
     def short_title(self, cell: Cell) -> str:
         return _("Next notification")
@@ -2252,7 +2252,7 @@ class PainterHostLastNotification(Painter):
         return "host_last_notification"
 
     def title(self, cell: Cell) -> str:
-        return _("The time of the last host notification")
+        return _("Time of the last host notification")
 
     def short_title(self, cell: Cell) -> str:
         return _("last notification")
@@ -2535,7 +2535,7 @@ class PainterHostBlack(Painter):
         return "host_black"
 
     def title(self, cell: Cell) -> str:
-        return _("Host name, red background if down or unreachable (Deprecated)")
+        return _("Host name, red background if down or unreachable (deprecated)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Host")
@@ -2561,7 +2561,7 @@ class PainterHostWithState(Painter):
         return "host_with_state"
 
     def title(self, cell: Cell) -> str:
-        return _("Host name, marked red if down (Deprecated)")
+        return _("Host name, marked red if down (deprecated)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Host")

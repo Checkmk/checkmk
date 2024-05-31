@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "properties": {
+    "all_schemas": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/vue_validators"
+      }
+    }
+  },
+  "$defs": {
+     "is_number": {
+          "type": "object",
+          "properties": {
+              "vue_type": {
+                  "const": "is_number"
+              },
+              "error_message": {
+                  "type": "string"
+              }
+          }
+      },
+    "length_in_range": {
+      "type": "object",
+      "properties": {
+        "vue_type": {
+          "const": "length_in_range"
+        },
+        "min_value": {
+          "type": "integer"
+        },
+        "max_value": {
+          "type": "integer"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "number_in_range": {
+      "type": "object",
+      "properties": {
+        "vue_type": {
+          "const": "number_in_range"
+        },
+        "min_value": {
+          "type": "integer"
+        },
+        "max_value": {
+          "type": "integer"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "vue_validators": {
+      "discriminator": {
+        "propertyName": "vue_type"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/is_number"
+        },
+        {
+          "$ref": "#/$defs/number_in_range"
+        },
+        {
+          "$ref": "#/$defs/length_in_range"
+        }
+      ],
+      "required": ["vue_type"]
+    }
+  }
+}

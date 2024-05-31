@@ -101,9 +101,8 @@ def vnx_quotas_renaming(name: str, mappings: Sequence[tuple[str, str]]) -> str:
 def discover_vnx_quotas(params: list[Mapping[str, Any]], section: Section) -> DiscoveryResult:
     for quota in section.quotas:
         dms, mpt = quota.name.split(" ")
-        if params and params[0]:
-            dms = vnx_quotas_renaming(dms, params[0]["dms_names"])
-            mpt = vnx_quotas_renaming(mpt, params[0]["mp_names"])
+        dms = vnx_quotas_renaming(dms, params[0]["dms_names"])
+        mpt = vnx_quotas_renaming(mpt, params[0]["mp_names"])
         yield Service(item=f"{dms} {mpt}", parameters={"pattern": quota.name})
 
 
@@ -150,7 +149,10 @@ register.check_plugin(
     name="vnx_quotas",
     service_name="VNX Quota %s",
     discovery_function=discover_vnx_quotas,
-    discovery_default_parameters={},
+    discovery_default_parameters={
+        "dms_names": [],
+        "mp_names": [],
+    },
     discovery_ruleset_name="discovery_rules_vnx_quotas",
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_vnx_quotas,

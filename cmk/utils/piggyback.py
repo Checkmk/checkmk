@@ -25,11 +25,20 @@ from cmk.utils.hostaddress import HostAddress, HostName
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PiggybackFileInfo:
-    source_hostname: HostName
+@dataclass(frozen=True, kw_only=True)
+class _PayloadMetaData:
+    source: HostName
+    target: HostName
     file_path: Path
-    successfully_processed: bool
+    mtime: float
+    abandoned: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class PiggybackFileInfo:
+    source: HostName
+    file_path: Path
+    valid: bool
     message: str
     status: int
 
@@ -94,27 +103,14 @@ def get_piggyback_raw_data(
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            piggyback_raw_data = PiggybackRawDataInfo(
-                info=file_info,
-                raw_data=AgentRawData(store.load_bytes_from_file(file_info.file_path)),
-            )
+            content = store.load_bytes_from_file(file_info.file_path)
 
-        except OSError as exc:
-            piggyback_raw_data = PiggybackRawDataInfo(
-                PiggybackFileInfo(
-                    source_hostname=file_info.source_hostname,
-                    file_path=file_info.file_path,
-                    successfully_processed=False,
-                    message=f"Cannot read piggyback raw data from source '{file_info.source_hostname}': {exc}",
-                    status=0,
-                ),
-                raw_data=AgentRawData(b""),
-            )
+        except FileNotFoundError:
+            # race condition: file was removed between listing and reading
+            continue
 
-        logger.debug(
-            "Piggyback file '%s': %s", file_info.file_path, piggyback_raw_data.info.message
-        )
-        piggyback_data.append(piggyback_raw_data)
+        logger.debug("Piggyback file '%s': %s", file_info.file_path, file_info.message)
+        piggyback_data.append(PiggybackRawDataInfo(info=file_info, raw_data=AgentRawData(content)))
     return piggyback_data
 
 
@@ -128,9 +124,9 @@ def get_source_and_piggyback_hosts(
             HostName(piggybacked_host_folder.name),
             time_settings,
         ):
-            if not file_info.successfully_processed:
+            if not file_info.valid:
                 continue
-            yield HostName(file_info.source_hostname), HostName(piggybacked_host_folder.name)
+            yield HostName(file_info.source), HostName(piggybacked_host_folder.name)
 
 
 def has_piggyback_raw_data(
@@ -138,8 +134,7 @@ def has_piggyback_raw_data(
     time_settings: PiggybackTimeSettings,
 ) -> bool:
     return any(
-        fi.successfully_processed
-        for fi in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
+        fi.valid for fi in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
     )
 
 
@@ -214,73 +209,50 @@ def _get_piggyback_processed_file_infos(
     functions. Therefor all these functions needs to deal with suddenly vanishing or
     updated files/directories.
     """
-    source_hostnames = get_source_hostnames(piggybacked_hostname)
+    payload_meta_data = _get_payload_meta_data(piggybacked_hostname)
+    source_hostnames = [pmd.source for pmd in payload_meta_data]
     expanded_time_settings = _TimeSettingsMap(source_hostnames, piggybacked_hostname, time_settings)
     return [
-        _get_piggyback_processed_file_info(
-            source_hostname,
-            piggybacked_hostname=piggybacked_hostname,
-            piggyback_file_path=_get_piggybacked_file_path(source_hostname, piggybacked_hostname),
-            settings=expanded_time_settings,
-        )
-        for source_hostname in source_hostnames
-        if not source_hostname.startswith(".")
+        _get_piggyback_processed_file_info(meta, settings=expanded_time_settings)
+        for meta in payload_meta_data
     ]
 
 
 def _get_piggyback_processed_file_info(
-    source_hostname: HostName,
+    meta: _PayloadMetaData,
     *,
-    piggybacked_hostname: HostName | HostAddress,
-    piggyback_file_path: Path,
     settings: _TimeSettingsMap,
 ) -> PiggybackFileInfo:
-    try:
-        file_age = _time_since_last_modification(piggyback_file_path)
-    except FileNotFoundError:
+    file_age = time.time() - meta.mtime
+
+    if file_age > (allowed := settings.max_cache_age(meta.source, meta.target)):
         return PiggybackFileInfo(
-            source_hostname, piggyback_file_path, False, "Piggyback file is missing", 0
+            source=meta.source,
+            file_path=meta.file_path,
+            valid=False,
+            message=f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
+            status=0,
         )
 
-    if file_age > (allowed := settings.max_cache_age(source_hostname, piggybacked_hostname)):
-        return PiggybackFileInfo(
-            source_hostname,
-            piggyback_file_path,
-            False,
-            f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
-            0,
-        )
+    validity_period = settings.validity_period(meta.source, meta.target)
+    validity_state = settings.validity_state(meta.source, meta.target)
 
-    validity_period = settings.validity_period(source_hostname, piggybacked_hostname)
-    validity_state = settings.validity_state(source_hostname, piggybacked_hostname)
-
-    status_file_path = _get_source_status_file_path(source_hostname)
-    if not status_file_path.exists():
+    if meta.abandoned:
         valid_msg = _validity_period_message(file_age, validity_period)
         return PiggybackFileInfo(
-            source_hostname,
-            piggyback_file_path,
-            bool(valid_msg),
-            f"Source '{source_hostname}' not sending piggyback data{valid_msg}",
-            validity_state if valid_msg else 0,
-        )
-
-    if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
-        valid_msg = _validity_period_message(file_age, validity_period)
-        return PiggybackFileInfo(
-            source_hostname,
-            piggyback_file_path,
-            bool(valid_msg),
-            f"Piggyback file not updated by source '{source_hostname}'{valid_msg}",
-            validity_state if valid_msg else 0,
+            source=meta.source,
+            file_path=meta.file_path,
+            valid=bool(valid_msg),
+            message=(f"Piggyback data not updated by source '{meta.source}'{valid_msg}"),
+            status=validity_state if valid_msg else 0,
         )
 
     return PiggybackFileInfo(
-        source_hostname,
-        piggyback_file_path,
-        True,
-        f"Successfully processed from source '{source_hostname}'",
-        0,
+        source=meta.source,
+        file_path=meta.file_path,
+        valid=True,
+        message=f"Successfully processed from source '{meta.source}'",
+        status=0,
     )
 
 
@@ -293,14 +265,14 @@ def _validity_period_message(
     return f" (still valid, {_render_time(time_left)} left)"
 
 
-def _is_piggyback_file_outdated(
+def _is_piggybacked_host_abandoned(
     status_file_path: Path,
     piggyback_file_path: Path,
 ) -> bool:
     """Return True if the status file is missing or it is newer than the payload file
 
     It will return True if the payload file is "abandoned", i.e. the source host is
-    still sending data, but no longer has data for this target ( = piggybacked) host.
+    still sending data, but no longer has data for this piggybacked ( = target) host.
     """
     try:
         # TODO use Path.stat() but be aware of:
@@ -331,6 +303,12 @@ def store_piggyback_raw_data(
     source_hostname: HostName,
     piggybacked_raw_data: Mapping[HostName, Sequence[bytes]],
 ) -> None:
+    if not piggybacked_raw_data:
+        # Cleanup the status file when no piggyback data was sent this turn.
+        logger.debug("Received no piggyback data")
+        remove_source_status_file(source_hostname)
+        return
+
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
@@ -343,16 +321,10 @@ def store_piggyback_raw_data(
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
     # We use the mtime of this file later for comparison.
-    # Only do this for hosts that sent piggyback data this turn, cleanup the status file when no
-    # piggyback data was sent this turn.
-    if piggybacked_raw_data:
-        logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
-
-        status_file_path = _get_source_status_file_path(source_hostname)
-        _store_status_file_of(status_file_path, piggyback_file_paths)
-    else:
-        logger.debug("Received no piggyback data")
-        remove_source_status_file(source_hostname)
+    # Only do this for hosts that sent piggyback data this turn.
+    logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
+    status_file_path = _get_source_status_file_path(source_hostname)
+    _store_status_file_of(status_file_path, piggyback_file_paths)
 
 
 def _store_status_file_of(
@@ -396,6 +368,28 @@ def _store_status_file_of(
 #   |       |_|  \___/|_|\__,_|\___|_|  |___/_/ |_| |_|_|\___||___/        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+def _get_payload_meta_data(piggybacked_hostname: HostName) -> Sequence[_PayloadMetaData]:
+    piggybacked_host_folder = cmk.utils.paths.piggyback_dir / Path(piggybacked_hostname)
+    meta_data = []
+    for payload_file in _files_in(piggybacked_host_folder):
+        source = HostName(payload_file.name)
+        status_file_path = _get_source_status_file_path(source)
+        try:
+            mtime = payload_file.stat().st_mtime
+        except FileNotFoundError:
+            continue
+        meta_data.append(
+            _PayloadMetaData(
+                source=source,
+                target=piggybacked_hostname,
+                file_path=payload_file,
+                mtime=mtime,
+                abandoned=_is_piggybacked_host_abandoned(status_file_path, payload_file),
+            )
+        )
+    return meta_data
 
 
 def get_source_hostnames(

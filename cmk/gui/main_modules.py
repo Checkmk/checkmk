@@ -49,12 +49,12 @@ with suppress_module_not_found("cmk.gui.cme"):
     cmk.gui.cme.registration.register()
 
 with suppress_module_not_found("cmk.gui.cce"):
-    import cmk.gui.cce.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    import cmk.gui.cce.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cce.registration.register()
 
 with suppress_module_not_found("cmk.gui.cse"):
-    import cmk.gui.cse.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    import cmk.gui.cse.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cse.registration.register()
 

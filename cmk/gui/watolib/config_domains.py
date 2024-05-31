@@ -181,7 +181,7 @@ class ConfigDomainGUI(ABCConfigDomain):
 # TODO: This has been moved directly into watolib because it was not easily possible
 # to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
 # As soon as we have untied this we should re-establish a watolib plug-in hierarchy and
-# move this to a CEE/CME specific watolib plugin
+# move this to a CEE/CME specific watolib plug-in
 class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
@@ -192,7 +192,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         return config_domain_name.LIVEPROXY
 
     @classmethod
-    def enabled(cls):
+    def enabled(cls) -> bool:
         return (
             cmk_version.edition() is not cmk_version.Edition.CRE
             and active_config.liveproxyd_enabled

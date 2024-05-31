@@ -67,6 +67,7 @@ RUN yum -y makecache \
     xmlsec1-devel \
     mariadb-devel \
     mpfr-devel \
+    nc \
     ncurses-devel \
     openssh-clients \
     openssl-devel \

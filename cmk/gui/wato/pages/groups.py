@@ -7,7 +7,6 @@ import abc
 from collections.abc import Collection, Iterator, Sequence
 
 import cmk.utils.paths
-from cmk.utils.config_validation_layer.groups import GroupName, GroupSpec, GroupType
 from cmk.utils.user import UserId
 from cmk.utils.version import edition_supports_nagvis
 
@@ -16,6 +15,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import GroupName, GroupSpec, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

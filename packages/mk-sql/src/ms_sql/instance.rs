@@ -1467,7 +1467,8 @@ fn generate_signaling_block(
 async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Result<String> {
     let instances = find_usable_instances(ms_sql, environment).await?;
     if instances.is_empty() {
-        return Ok("ERROR: Failed to gather SQL server instances\n".to_string());
+        return Ok(generate_signaling_block(ms_sql, &None)
+            + "ERROR: Failed to gather SQL server instances\n");
     } else {
         log::info!(
             "Found {} SQL server instances: [ {} ]",
@@ -1558,6 +1559,15 @@ pub async fn find_all_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let found = find_detectable_instance_builders(ms_sql).await;
+    log::info!(
+        "Found {} instances by discovery: [ {} ]",
+        found.len(),
+        found
+            .iter()
+            .map(|i| format!("{}", i.get_name()))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 
     let detected = if ms_sql.discovery().detect() {
         found
@@ -1594,10 +1604,10 @@ async fn find_detectable_instance_builders(
 /// find instances described in the config but not detected by the discovery
 /// may NOT work - should be approved during testing
 async fn add_custom_instance_builders(
-    builders: Vec<SqlInstanceBuilder>,
+    input_builders: Vec<SqlInstanceBuilder>,
     customizations: &HashMap<&InstanceName, &CustomInstance>,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    let reconnects = determine_reconnect(builders, customizations);
+    let reconnects = determine_reconnect(input_builders, customizations);
 
     let mut builders: Vec<SqlInstanceBuilder> = Vec::new();
     for (builder, endpoint) in reconnects.into_iter() {
@@ -1752,6 +1762,7 @@ fn to_instance_builder(
         .computer_name(Some(properties.computer_name.clone()))
         .version(&properties.version)
         .edition(&properties.edition)
+        .endpoint(endpoint)
         .port(Some(endpoint.conn().port()))
 }
 /// returns

@@ -10,7 +10,6 @@ from collections.abc import Collection, Iterable
 from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
-from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
@@ -23,6 +22,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.groups import GroupName
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -1426,7 +1426,7 @@ class ModeBIEditRule(ABCBIMode):
                         "This option allows you to display an additional, freely configurable text, to the rule outcome, "
                         "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
                         "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "
-                        "check plugins."
+                        "check plug-ins."
                     ),
                     label=_("Add messages"),
                 ),

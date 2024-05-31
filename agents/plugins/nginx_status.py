@@ -7,7 +7,7 @@
 __version__ = "2.4.0b1"
 
 USER_AGENT = "checkmk-agent-nginx_status-" + __version__
-# Checkmk-Agent-Plugin - Nginx Server Status
+# Checkmk-Agent-Plug-in - Nginx Server Status
 #
 # Fetches the stub nginx_status page from detected or configured nginx
 # processes to gather status information about this process.

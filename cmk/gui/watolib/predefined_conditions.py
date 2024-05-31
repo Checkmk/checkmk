@@ -20,6 +20,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
             config_variable="predefined_conditions",
+            spec_class=PredefinedConditionSpec,
         )
 
     def filter_usable_entries(self, entries):

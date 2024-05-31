@@ -48,27 +48,6 @@ class TrustedCertificateAuthorities(TypedDict):
     trusted_cas: Sequence[str]
 
 
-@dataclass
-class UserRole:
-    name: str
-    alias: str
-    builtin: bool = False
-    permissions: dict[str, bool] = field(default_factory=dict)
-    basedon: str | None = None
-
-    def to_dict(self) -> dict:
-        userrole_dict = {
-            "alias": self.alias,
-            "permissions": self.permissions,
-            "builtin": self.builtin,
-        }
-
-        if not self.builtin:
-            userrole_dict["basedon"] = self.basedon
-
-        return userrole_dict
-
-
 class ChoiceGroup(NamedTuple):
     title: str
     choices: Choices

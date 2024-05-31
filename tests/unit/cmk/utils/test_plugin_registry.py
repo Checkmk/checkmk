@@ -70,7 +70,7 @@ def test_delitem(basic_registry: PluginRegistry) -> None:
 
 def test_getitem(basic_registry: PluginRegistry) -> None:
     with pytest.raises(KeyError):
-        _unused = basic_registry["bla"]  # noqa: F841
+        _unused = basic_registry["bla"]
 
     assert basic_registry["Plugin"] == Plugin
 

@@ -43,7 +43,7 @@ def _valuespec_active_checks_traceroute() -> Dictionary:
                     valuespec=Tuple(
                         elements=[
                             TextInput(
-                                title=_("Router (FQDN, IP-Address)"),
+                                title=_("Router (FQDN, IP address)"),
                                 allow_empty=False,
                             ),
                             DropdownChoice(

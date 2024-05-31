@@ -6,9 +6,10 @@
 import os
 import sys
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 
 import omdlib
-from omdlib.contexts import SiteContext
+from omdlib.utils import site_exists
 
 
 def main_version(
@@ -17,12 +18,14 @@ def main_version(
     _global_opts: object,
     args: Sequence[str],
     options: Mapping[str, str | None],
+    omd_path: Path = Path("/omd/"),
 ) -> None:
     if len(args) > 0:
-        site = SiteContext(args[0])
-        if not site.exists():
-            sys.exit("No such site: %s" % site.name)
-        version = site.version
+        site_name = args[0]
+        site_dir = omd_path / f"sites/{site_name}"
+        if not site_exists(site_dir):
+            sys.exit("No such site: %s" % site_name)
+        version = version_from_site_dir(site_dir)
     else:
         version = omdlib.__version__
 
@@ -41,32 +44,35 @@ def main_versions(
     _global_opts: object,
     args: Sequence[str],
     options: Mapping[str, str | None],
+    versions_path: Path = Path("/omd/versions"),
 ) -> None:
-    for v in omd_versions():
-        if v == default_version() and "bare" not in options:
+    for v in omd_versions(versions_path):
+        if v == default_version(versions_path) and "bare" not in options:
             sys.stdout.write("%s (default)\n" % v)
         else:
             sys.stdout.write("%s\n" % v)
 
 
-def default_version() -> str:
-    return os.path.basename(
-        os.path.realpath(os.path.join(omdlib.utils.omd_base_path(), "omd/versions/default"))
-    )
+def default_version(versions_path: Path) -> str:
+    return os.path.basename(os.path.realpath(versions_path / "default"))
 
 
-def omd_versions() -> Iterable[str]:
+def omd_versions(versions_path: Path) -> Iterable[str]:
     try:
-        return sorted(
-            [
-                v
-                for v in os.listdir(os.path.join(omdlib.utils.omd_base_path(), "omd/versions"))
-                if v != "default"
-            ]
-        )
+        return sorted([v for v in os.listdir(versions_path) if v != "default"])
     except FileNotFoundError:
         return []
 
 
-def version_exists(v: str) -> bool:
-    return v in omd_versions()
+def version_exists(v: str, versions_path: Path) -> bool:
+    return v in omd_versions(versions_path)
+
+
+def version_from_site_dir(site_dir: Path) -> str | None:
+    """The version of a site is solely determined by the link ~SITE/version
+    In case the version of a site can not be determined, it reports None."""
+    version_link = site_dir / "version"
+    try:
+        return os.readlink(version_link).split("/")[-1]
+    except Exception:
+        return None

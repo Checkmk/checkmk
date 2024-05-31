@@ -147,9 +147,9 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
     xml = ElementTree.fromstring("".join([element[0] for element in string_table]))
     # find the element name for power_readings
     power_readings_element = "gpu_power_readings"
-    if xml.find(f"gpu/{ power_readings_element }") is None:
+    if xml.find(f"gpu/{power_readings_element}") is None:
         power_readings_element = "power_readings"
-    has_power_management = xml.find(f"gpu/{ power_readings_element }/power_management") is not None
+    has_power_management = xml.find(f"gpu/{power_readings_element}/power_management") is not None
     return Section(
         timestamp=(
             datetime.strptime(timestamp, "%a %b %d %H:%M:%S %Y")
@@ -166,12 +166,12 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
                 product_brand=get_text_from_element(gpu.find("product_brand")),
                 power_readings=PowerReadings(
                     power_state=_let_pydantic_check_power_state(
-                        get_text_from_element(gpu.find(f"{ power_readings_element }/power_state"))
+                        get_text_from_element(gpu.find(f"{power_readings_element}/power_state"))
                     ),
                     power_management=(
                         PowerManagement(
                             get_text_from_element(
-                                gpu.find(f"{ power_readings_element }/power_management")
+                                gpu.find(f"{power_readings_element}/power_management")
                             )
                         )
                         if has_power_management
@@ -179,22 +179,22 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
                         else PowerManagement.SUPPORTED
                     ),
                     power_draw=get_float_from_element(
-                        gpu.find(f"{ power_readings_element }/power_draw"), "W"
+                        gpu.find(f"{power_readings_element}/power_draw"), "W"
                     ),
                     power_limit=get_float_from_element(
-                        gpu.find(f"{ power_readings_element }/power_limit"), "W"
+                        gpu.find(f"{power_readings_element}/power_limit"), "W"
                     ),
                     default_power_limit=get_float_from_element(
-                        gpu.find(f"{ power_readings_element }/default_power_limit"), "W"
+                        gpu.find(f"{power_readings_element}/default_power_limit"), "W"
                     ),
                     enforced_power_limit=get_float_from_element(
-                        gpu.find(f"{ power_readings_element }/enforced_power_limit"), "W"
+                        gpu.find(f"{power_readings_element}/enforced_power_limit"), "W"
                     ),
                     min_power_limit=get_float_from_element(
-                        gpu.find(f"{ power_readings_element }/min_power_limit"), "W"
+                        gpu.find(f"{power_readings_element}/min_power_limit"), "W"
                     ),
                     max_power_limit=get_float_from_element(
-                        gpu.find(f"{ power_readings_element }/max_power_limit"), "W"
+                        gpu.find(f"{power_readings_element}/max_power_limit"), "W"
                     ),
                 ),
                 temperature=Temperature(

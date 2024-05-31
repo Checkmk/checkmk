@@ -23,9 +23,9 @@ class ValidateConfigFiles(UpdateAction):
         for n, relative_file_path in enumerate(config_file_registry, start=1):
             result = f"    {tty.yellow}{n:02d}{tty.normal} {relative_file_path:.<60} "
             try:
-                config_file_registry[relative_file_path].load_for_reading()
-            except ConfigValidationError as exc:
-                result += f"{tty.red}Failed{tty.normal}\t\n{str(exc)}"
+                config_file_registry[relative_file_path].read_file_and_validate()
+            except (NotImplementedError, ConfigValidationError) as exc:
+                result += f"{tty.red}Failed{tty.normal}\n    {str(exc)}"
                 failures = True
             else:
                 result += f"{tty.green}Passed{tty.normal}"

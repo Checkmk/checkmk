@@ -3,7 +3,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-r"""Check_MK Agent Plugin: mk_docker.py
+r"""Check_MK Agent Plug-in: mk_docker.py
 
 This plugin is configured using an ini-style configuration file,
 i.e. a file with lines of the form 'key: value'.
@@ -177,7 +177,7 @@ class Section(list):
 
 def report_exception_to_server(exc, location):
     LOGGER.info("handling exception: %s", exc)
-    msg = "Plugin exception in %s: %s" % (location, exc)
+    msg = "Plug-in exception in %s: %s" % (location, exc)
     sec = Section("docker_node_info")
     sec.append(json.dumps({"Unknown": msg}))
     sec.write()

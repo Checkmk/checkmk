@@ -1559,6 +1559,7 @@ def test_move_host_between_nested_folders(clients: ClientRegistry) -> None:
 @managedtest
 def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="test_host")
+    clients.HostConfig.create(host_name="parent_host", attributes={"parents": ["test_host"]})
     resp = clients.HostConfig.edit(
         host_name="test_host", update_attributes={"parents": ["non-existent"]}, expect_ok=False
     )

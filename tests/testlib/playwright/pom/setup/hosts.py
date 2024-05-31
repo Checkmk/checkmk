@@ -9,7 +9,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import Locator, Page
 
-from tests.testlib.playwright.pom.navigation import CmkPage
+from tests.testlib.playwright.pom.page import CmkPage
 
 
 class HostDetails(NamedTuple):

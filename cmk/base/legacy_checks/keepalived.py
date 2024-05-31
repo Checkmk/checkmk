@@ -49,7 +49,7 @@ def check_keepalived(item, params, info):
                 map_state[str(entry[1])],
                 hex2ip(hexaddr),
             )
-    yield int(status), infotext
+    yield status, infotext
 
 
 def parse_keepalived(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
@@ -74,10 +74,10 @@ check_info["keepalived"] = LegacyCheckDefinition(
     check_function=check_keepalived,
     check_ruleset_name="keepalived",
     check_default_parameters={
-        "master": "0",
-        "unknown": "3",
-        "init": "0",
-        "backup": "0",
-        "fault": "2",
+        "master": 0,
+        "unknown": 3,
+        "init": 0,
+        "backup": 0,
+        "fault": 2,
     },
 )

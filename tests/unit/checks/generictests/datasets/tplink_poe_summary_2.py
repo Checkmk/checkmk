@@ -20,7 +20,7 @@ checks = {
             [
                 (
                     1,
-                    "90.00 Watt (warn/crit at 90.00 Watt/100.00 Watt)",
+                    "90.00 W (warn/crit at 90.00 W/100.00 W)",
                     [("power", 90.0, 90.0, 100.0)],
                 )
             ],

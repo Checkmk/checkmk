@@ -351,7 +351,7 @@ CheckmkOverviewDashboard = DashboardConfig(
         "sort_index": 5,
         "hidebutton": False,
         "title": _l("Checkmk dashboard"),
-        "description": _l("Displays an overview of all Checkmk servers and instances\n"),
+        "description": _l("Displays an overview of all Checkmk servers and sites\n"),
         "add_context_to_title": False,
         "link_from": {},
         "context": {},

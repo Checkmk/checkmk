@@ -1,13 +1,24 @@
 <script setup lang="ts">
-defineProps<{
-  validation: { messages: Array<string> }
+import type { ValidationMessages } from '@/utils'
+import { computed } from 'vue'
+
+const props = defineProps<{
+  validation: ValidationMessages
 }>()
+
+const messages = computed((): string[] => {
+  const messages: string[] = []
+  props.validation.forEach((msg) => {
+    messages.push(msg.message)
+  })
+  return messages
+})
 </script>
 
 <template>
-  <div v-if="validation.messages" class="validation">
+  <div v-if="messages" class="validation">
     <ul>
-      <li v-for="message in validation.messages" :key="message">&uarr; {{ message }}</li>
+      <li style="background: #ff5e5e" v-for="message in messages" :key="message">{{ message }}</li>
     </ul>
   </div>
 </template>

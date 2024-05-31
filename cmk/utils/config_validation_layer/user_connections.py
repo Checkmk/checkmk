@@ -6,10 +6,9 @@
 from collections.abc import Sequence
 from typing import Literal, NewType, TypedDict
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field
 
 from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
-from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 # these need to be written to a .mk file, so a more complex type like Path will lead to problems
 PrivateKeyPath = NewType("PrivateKeyPath", str)
@@ -183,17 +182,3 @@ class SAMLConnectionModel(BaseModel):
     email_attribute_name: str
     contactgroups_mapping: ContactGroupMappingSpec
     role_membership_mapping: ROLE_MAPPING
-
-
-UserConnectionListAdapter = TypeAdapter(list[LDAPConnectionModel | SAMLConnectionModel])
-
-
-def validate_user_connections(connections: Sequence) -> None:
-    try:
-        UserConnectionListAdapter.validate_python(connections)
-    except ValidationError as exc:
-        raise ConfigValidationError(
-            which_file="user_connections.mk",
-            pydantic_error=exc,
-            original_data=connections,
-        )

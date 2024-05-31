@@ -144,7 +144,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                 "error_handling",
                 Checkbox(
                     title=_("Error handling"),
-                    label=_("Ignore errors in single check plugins"),
+                    label=_("Ignore errors in single check plug-ins"),
                     default_value=True,
                 ),
             ),

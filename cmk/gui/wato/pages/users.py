@@ -1508,7 +1508,7 @@ class ModeEditUser(WatoMode):
                     "data from views for further procession), set the method to "
                     "<u>secret</u>. The secret will be stored in a local file. Processes "
                     "with read access to that file will be able to use Multisite as "
-                    "a webservice without any further configuration."
+                    "a web service without any further configuration."
                 )
             )
 

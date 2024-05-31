@@ -13,7 +13,6 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfiguratio
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.config_validation_layer.site_management import validate_sites
 from cmk.utils.site import omd_site
 
 import cmk.gui.hooks as hooks
@@ -68,6 +67,7 @@ class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
         super().__init__(
             config_file_path=Path(cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"),
             config_variable="sites",
+            spec_class=SiteConfigurations,
         )
 
     def _load_file(self, lock: bool) -> SiteConfigurations:
@@ -84,13 +84,7 @@ class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
         if not sites_from_file:
             return default_single_site_configuration()
 
-        sites = prepare_raw_site_config(sites_from_file)
-        validate_sites(sites)
-        return sites
-
-    def save(self, cfg: SiteConfigurations) -> None:
-        validate_sites(cfg)
-        super().save(cfg)
+        return prepare_raw_site_config(sites_from_file)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
@@ -237,7 +231,7 @@ class SiteManagement:
             title=_("Sync with LDAP connections"),
             orientation="horizontal",
             choices=[
-                (None, _("Disable automatic user synchronization (use master site users)")),
+                (None, _("Disable automatic user synchronization (use central site users)")),
                 ("all", _("Sync users with all connections")),
                 (
                     "list",

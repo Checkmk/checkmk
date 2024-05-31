@@ -7,10 +7,8 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.docker_node_info import inventory_docker_node_info
-
+from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
+from cmk.plugins.collection.agent_based.docker_node_info import inventory_docker_node_info
 from cmk.plugins.lib.docker import NodeInfoSection as Section
 
 from .utils_inventory import sort_inventory_result

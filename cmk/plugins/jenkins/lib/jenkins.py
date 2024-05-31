@@ -62,7 +62,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "hostname", metavar="HOSTNAME", help="Name of the jenkins instance to query."
+        "hostname", metavar="HOSTNAME", help="Name of the Jenkins instance to query."
     )
 
     return parser.parse_args(argv)

@@ -246,7 +246,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Service Level at least"),
+            title=_l("Service level at least"),
             sort_index=211,
             info="event",
             autocompleter=AutocompleterConfig(ident="service_levels"),
@@ -256,7 +256,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Service Level at most"),
+            title=_l("Service level at most"),
             sort_index=211,
             info="event",
             autocompleter=AutocompleterConfig(ident="service_levels"),

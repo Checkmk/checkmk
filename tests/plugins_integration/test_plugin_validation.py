@@ -6,7 +6,7 @@
 
 import subprocess
 
-from tests.testlib import Site
+from tests.testlib.site import Site
 
 
 def test_plugin_validation(plugin_validation_site: Site) -> None:

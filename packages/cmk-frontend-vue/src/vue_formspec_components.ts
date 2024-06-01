@@ -64,12 +64,6 @@ export type VueDictionary = VueDictionary1 & {
   elements: VueDictionaryElement[]
 }
 export type VueDictionary1 = VueBase
-export type VueList = VueList1 & {
-  vue_type?: 'list'
-  add_text?: string
-  vue_schema?: VueSchema
-}
-export type VueList1 = VueBase
 export type VueLegacyValuespec = VueLegacyValuespec1 & {
   vue_type?: 'legacy_valuespec'
 }
@@ -89,3 +83,14 @@ export interface VueDictionaryElement {
   default_value: unknown
   vue_schema: VueSchema
 }
+
+export type VueList = VueList1 & {
+  editable_order: boolean
+  vue_type: 'list'
+  element_template: VueBase
+  element_default_value: unknown
+  add_element_label: string
+  remove_element_label: string
+  no_element_label: string
+}
+export type VueList1 = VueBase

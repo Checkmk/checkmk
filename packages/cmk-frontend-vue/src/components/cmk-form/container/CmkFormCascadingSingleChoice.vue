@@ -7,6 +7,7 @@ import type {
   VueCascadingSingleChoiceElement,
   VueSchema
 } from '@/vue_formspec_components'
+import { FormValidation } from '@/components/cmk-form'
 
 const props = defineProps<{
   spec: VueCascadingSingleChoice
@@ -105,4 +106,5 @@ function get_validation_for_child(ident: string): ValidationMessages {
     :spec="active_element.spec"
     :validation="get_validation_for_child(value[0])"
   ></CmkFormDispatcher>
+  <FormValidation :validation="validation"></FormValidation>
 </template>

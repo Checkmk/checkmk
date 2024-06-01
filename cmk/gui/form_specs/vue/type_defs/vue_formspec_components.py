@@ -12,8 +12,8 @@ from cmk.gui.form_specs.vue.type_defs.vue_validators import VueValidators
 
 @dataclass
 class VueBase:
-    title: str
-    help: str
+    title: str = ""
+    help: str = ""
     validators: list[VueValidators] = field(default_factory=list)
 
 
@@ -45,13 +45,6 @@ class VueString(VueBase):
 @dataclass
 class Model:
     all_schemas: Optional[List[VueSchema]] = None
-
-
-@dataclass
-class VueList(VueBase):
-    vue_type: str = "list"
-    add_text: Optional[str] = None
-    vue_schema: Optional[VueSchema] = None
 
 
 @dataclass
@@ -98,6 +91,17 @@ class VueCascadingSingleChoice(VueBase):
     no_elements_text: Optional[str] = None
     frozen: bool = False
     label: Optional[str] = None
+
+
+@dataclass
+class VueList(VueBase):
+    editable_order: bool = True
+    vue_type: str = "list"
+    element_template: VueBase = field(default_factory=VueBase)
+    element_default_value: Any = None
+    add_element_label: str = ""
+    remove_element_label: str = ""
+    no_element_label: str = ""
 
 
 VueSchema = Union[

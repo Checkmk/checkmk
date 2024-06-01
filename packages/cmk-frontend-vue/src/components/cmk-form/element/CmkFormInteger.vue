@@ -9,7 +9,7 @@ const props = defineProps<{
   validation: ValidationMessages
 }>()
 
-const data = defineModel('data', { required: true })
+const data = defineModel<number>('data', { required: true })
 const local_validation = ref<ValidationMessages | null>(null)
 
 const emit = defineEmits<{

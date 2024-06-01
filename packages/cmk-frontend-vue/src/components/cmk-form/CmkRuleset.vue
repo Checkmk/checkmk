@@ -15,10 +15,6 @@ const data_ref = ref()
 onBeforeMount(() => {
   data_ref.value = props.data
 })
-
-function get_value() {
-  return data_ref.value
-}
 </script>
 
 <template>

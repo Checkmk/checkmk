@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import pprint
 import traceback
 from collections.abc import Callable
 from contextlib import contextmanager
@@ -22,6 +23,7 @@ from cmk.gui.form_specs.vue.type_defs.vue_formspec_components import (
     VueDictionaryElement,
     VueFloat,
     VueInteger,
+    VueList,
     VueSchema,
     VueSingleChoice,
     VueSingleChoiceElement,
@@ -43,6 +45,7 @@ from cmk.rulesets.v1.form_specs import (
     FormSpec,
     InputHint,
     Integer,
+    List,
     ServiceState,
     SingleChoice,
     String,
@@ -66,7 +69,7 @@ Value = Any
 
 @dataclass(kw_only=True)
 class Validation:
-    location: list
+    location: list[str]
     message: str
 
 
@@ -404,6 +407,53 @@ def _visit_cascading_single_choice(
     return result
 
 
+def _visit_list(
+    visitor_options: VisitorOptions, form_spec: List, value: list | DEFAULT_VALUE
+) -> VueVisitorMethodResult:
+
+    if isinstance(value, DEFAULT_VALUE):
+        value = []
+
+    element_schema, element_vue_default_value, _element_vue_validation, _element_disk_value = (
+        _visit(visitor_options, form_spec.element_template, _default_value)
+    )
+    title, help_text = _get_title_and_help(form_spec)
+
+    vue_values = []
+    disk_values = []
+    element_validations = []
+    for idx, element_value in enumerate(value):
+        element_schema, element_vue_value, element_vue_validation, element_disk_value = _visit(
+            visitor_options, form_spec.element_template, element_value
+        )
+        vue_values.append(element_vue_value)
+        disk_values.append(element_disk_value)
+        for validation in element_vue_validation:
+            element_validations.append(
+                Validation(
+                    location=[str(idx)] + validation.location,
+                    message=validation.message,
+                )
+            )
+
+    return (
+        VueList(
+            title=title,
+            help=help_text,
+            element_template=element_schema,
+            element_default_value=element_vue_default_value,
+            add_element_label=form_spec.add_element_label.localize(translate_to_current_language),
+            remove_element_label=form_spec.remove_element_label.localize(
+                translate_to_current_language
+            ),
+            no_element_label=form_spec.no_element_label.localize(translate_to_current_language),
+        ),
+        vue_values,
+        element_validations,
+        disk_values,
+    )
+
+
 _form_specs_visitor_registry: dict[type, VueFormSpecVisitorMethod] = {}
 
 
@@ -419,20 +469,20 @@ def register_form_specs():
     register_class(Float, _visit_float)
     register_class(SingleChoice, _visit_single_choice)
     register_class(CascadingSingleChoice, _visit_cascading_single_choice)
+    register_class(List, _visit_list)
 
 
 register_form_specs()
 
-# Vue is able to render these types in the frontend
+# Vue is able to render these types in the frontend directly
 VueFormSpecTypes = (
     Integer
     | Float
-    #    | Percentage
     | String
     | SingleChoice
     | CascadingSingleChoice
     | Dictionary
-    #    | List
+    | List
     #    | ValueSpecFormSpec
 )
 
@@ -492,8 +542,9 @@ def render_form_spec(form_spec: FormSpec, field_id: str, default_value: Any) -> 
                 validation_messages=validation,
             )
         )
-        # logger.warning(f"Vue app config:\n{pprint.pformat(vue_app_config, width=220)}")
-        # logger.warning(f"Vue value:\n{pprint.pformat(vue_value, width=220)}")
+        logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220))
+        logger.warning("Vue value:\n%s", pprint.pformat(vue_value, width=220))
+        logger.warning("Vue value:\n%s", pprint.pformat(validation, width=220))
         html.div("", data_cmk_vue_app=json.dumps(vue_app_config))
     except Exception as e:
         logger.warning("".join(traceback.format_exception(e)))

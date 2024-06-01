@@ -7,13 +7,14 @@ import CmkFormDictionary from './container/CmkFormDictionary.vue'
 import type { ValidationMessages } from '@/utils'
 import type { VueSchema } from '@/vue_formspec_components'
 import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
+import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
 
 const props = defineProps<{
   spec: VueSchema
   validation: ValidationMessages
 }>()
 
-const data = defineModel('data', { required: true })
+const data = defineModel<unknown>('data', { required: true })
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<string, unknown> = {
@@ -22,7 +23,8 @@ const components: Record<string, unknown> = {
   string: CmkFormString,
   float: CmkFormFloat,
   single_choice: CmkFormSingleChoice,
-  cascading_single_choice: CmkFormCascadingSingleChoice
+  cascading_single_choice: CmkFormCascadingSingleChoice,
+  list: CmkFormList
   //  legacy_valuespec: CmkFormLegacyValueSpec
 }
 

@@ -83,6 +83,30 @@ class VueSingleChoice(VueBase):
     label: Optional[str] = None
 
 
+@dataclass
+class VueCascadingSingleChoiceElement:
+    name: str
+    title: str
+    default_value: Any
+    parameter_form: VueBase
+
+
+@dataclass
+class VueCascadingSingleChoice(VueBase):
+    vue_type: str = "cascading_single_choice"
+    elements: list[VueCascadingSingleChoiceElement] = field(default_factory=list)
+    no_elements_text: Optional[str] = None
+    frozen: bool = False
+    label: Optional[str] = None
+
+
 VueSchema = Union[
-    VueInteger, VueFloat, VueString, VueDictionary, VueSingleChoice, VueList, VueLegacyValuespec
+    VueInteger,
+    VueFloat,
+    VueString,
+    VueDictionary,
+    VueSingleChoice,
+    VueList,
+    VueLegacyValuespec,
+    VueCascadingSingleChoice,
 ]

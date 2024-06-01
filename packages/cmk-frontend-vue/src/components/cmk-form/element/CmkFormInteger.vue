@@ -23,8 +23,11 @@ const value = computed({
   set(value: unknown) {
     local_validation.value = []
     let emitted_value: string | number
-    if (is_integer(value as string)) emitted_value = parseInt(value as string)
-    else emitted_value = value as string
+    if (is_integer(value as string)) {
+      emitted_value = parseInt(value as string)
+    } else {
+      emitted_value = value as string
+    }
     validate_value(emitted_value, props.spec.validators!).forEach((error) => {
       local_validation.value = [{ message: error, location: [''] }]
     })
@@ -34,7 +37,9 @@ const value = computed({
 
 const validation = computed(() => {
   // If the local validation was never used (null), return the props.validation (backend validation)
-  if (local_validation.value === null) return props.validation
+  if (local_validation.value === null) {
+    return props.validation
+  }
   return local_validation.value
 })
 
@@ -44,7 +49,7 @@ const unit = computed(() => {
 </script>
 
 <template>
-  <input class="number" type="text" v-model="value" />
+  <input v-model="value" class="number" type="text" />
   <span v-if="unit" class="vs_floating_text">{{ unit }}</span>
   <FormValidation :validation="validation"></FormValidation>
 </template>

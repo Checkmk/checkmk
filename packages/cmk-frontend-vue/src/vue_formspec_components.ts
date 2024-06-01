@@ -12,6 +12,7 @@ export type VueSchema =
   | VueDictionary
   | VueList
   | VueSingleChoice
+  | VueCascadingSingleChoice
   | VueLegacyValuespec
 
 export type VueInteger = VueInteger1 & {
@@ -33,6 +34,19 @@ export type VueSingleChoice = VueSingleChoice1 & {
   elements: VueSingleChoiceElement[]
 }
 export type VueSingleChoice1 = VueBase
+
+export interface VueCascadingSingleChoiceElement {
+  name: string
+  title: string
+  default_value: unknown
+  parameter_form: VueSchema
+}
+
+export type VueCascadingSingleChoice = VueCascadingSingleChoice1 & {
+  vue_type?: 'cascading_single_choice'
+  elements: VueCascadingSingleChoiceElement[]
+}
+export type VueCascadingSingleChoice1 = VueBase
 
 export type VueFloat = VueFloat1 & {
   vue_type?: 'float'

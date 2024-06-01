@@ -6,6 +6,7 @@ import CmkFormSingleChoice from './element/CmkFormSingleChoice.vue'
 import CmkFormDictionary from './container/CmkFormDictionary.vue'
 import type { ValidationMessages } from '@/utils'
 import type { VueSchema } from '@/vue_formspec_components'
+import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
 
 const props = defineProps<{
   spec: VueSchema
@@ -20,7 +21,8 @@ const components: Record<string, unknown> = {
   dictionary: CmkFormDictionary,
   string: CmkFormString,
   float: CmkFormFloat,
-  single_choice: CmkFormSingleChoice
+  single_choice: CmkFormSingleChoice,
+  cascading_single_choice: CmkFormCascadingSingleChoice
   //  legacy_valuespec: CmkFormLegacyValueSpec
 }
 
@@ -31,6 +33,6 @@ function get_component(): unknown {
 </script>
 
 <template>
-  <component :is="get_component()" :spec="spec" :validation="validation" v-model:data="data">
+  <component :is="get_component()" v-model:data="data" :spec="spec" :validation="validation">
   </component>
 </template>

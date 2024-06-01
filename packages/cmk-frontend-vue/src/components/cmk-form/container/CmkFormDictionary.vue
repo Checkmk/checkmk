@@ -41,18 +41,22 @@ function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
     return
   }
   clicked_checkbox_label(target as HTMLLabelElement)
-  if (key in data.value) delete data.value[key]
-  else data.value[key] = default_values[key]
+  if (key in data.value) {
+    delete data.value[key]
+  } else {
+    data.value[key] = default_values[key]
+  }
 }
 
 function get_validation_for_child(ident: string): ValidationMessages {
   const child_messages: ValidationMessages = []
   props.validation.forEach((msg) => {
-    if (msg.location[0] === ident)
+    if (msg.location[0] === ident) {
       child_messages.push({
         location: msg.location.slice(1),
         message: msg.message
       })
+    }
   })
   return child_messages
 }
@@ -82,9 +86,9 @@ function get_validation_for_child(ident: string): ValidationMessages {
           <div class="dictelement indent">
             <CmkFormDispatcher
               v-if="data[dict_element.dict_config.ident] !== undefined"
+              v-model:data="data[dict_element.dict_config.ident]"
               :spec="dict_element.dict_config.vue_schema"
               :validation="get_validation_for_child(dict_element.dict_config.ident)"
-              v-model:data="data[dict_element.dict_config.ident]"
             />
           </div>
         </td>

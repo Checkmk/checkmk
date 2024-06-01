@@ -20,7 +20,7 @@ const value_as_json = computed(() => {
   <table class="nform">
     <tr>
       <td>
-        <CmkFormDispatcher :spec="spec" :validation="validation" v-model:data="data" />
+        <CmkFormDispatcher v-model:data="data" :spec="spec" :validation="validation" />
       </td>
     </tr>
     <!-- This input field contains the computed json value which is sent when the form is submitted -->

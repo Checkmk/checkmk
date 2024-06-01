@@ -18,7 +18,7 @@ const messages = computed((): string[] => {
 <template>
   <div v-if="messages" class="validation">
     <ul>
-      <li style="background: #ff5e5e" v-for="message in messages" :key="message">{{ message }}</li>
+      <li v-for="message in messages" :key="message" style="background: #ff5e5e">{{ message }}</li>
     </ul>
   </div>
 </template>

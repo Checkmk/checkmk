@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import pprint
 import traceback
 from collections.abc import Callable
 from contextlib import contextmanager
@@ -17,6 +16,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
 from cmk.gui.form_specs.vue.type_defs.vue_formspec_components import (
+    VueCascadingSingleChoice,
+    VueCascadingSingleChoiceElement,
     VueDictionary,
     VueDictionaryElement,
     VueFloat,
@@ -35,6 +36,8 @@ from cmk.gui.utils.user_errors import user_errors
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    DefaultValue,
     Dictionary,
     Float,
     FormSpec,
@@ -250,11 +253,11 @@ def _visit_dictionary(
         is_active = key_name in value
         key_value = value[key_name] if is_active else _default_value
 
-        element_schema, vue_value, vue_validation, disk_value = _visit(
+        element_schema, element_vue_value, element_vue_validation, element_disk_value = _visit(
             visitor_options, dict_element.parameter_form, key_value
         )
 
-        for validation in vue_validation:
+        for validation in element_vue_validation:
             element_validations.append(
                 Validation(
                     location=[key_name] + validation.location,
@@ -263,13 +266,13 @@ def _visit_dictionary(
             )
 
         if is_active:
-            disk_values[key_name] = disk_value
+            disk_values[key_name] = element_disk_value
             vue_values[key_name] = key_value
 
         elements_keyspec.append(
             VueDictionaryElement(
                 ident=key_name,
-                default_value=vue_value,
+                default_value=element_vue_value,
                 required=dict_element.required,
                 vue_schema=element_schema,
             )
@@ -329,6 +332,78 @@ def _visit_single_choice(
     return result
 
 
+def _visit_cascading_single_choice(
+    visitor_options: VisitorOptions,
+    form_spec: CascadingSingleChoice,
+    value: tuple[str, Any] | DEFAULT_VALUE,
+) -> VueVisitorMethodResult:
+
+    selected_name = ""
+    selected_value = _default_value
+
+    elements_to_show = []
+    if isinstance(value, DEFAULT_VALUE):
+        if isinstance(form_spec.prefill, InputHint):
+            elements_to_show.append(
+                VueSingleChoiceElement(
+                    name="", title=form_spec.prefill.value.localize(translate_to_current_language)
+                )
+            )
+        else:
+            assert isinstance(form_spec.prefill, DefaultValue)
+            selected_name = form_spec.prefill.value
+    else:
+        selected_name = value[0]
+        selected_value = value[1]
+
+    title, help_text = _get_title_and_help(form_spec)
+
+    # TODO: add special __post_init__ / element validators for this form spec
+    validators = form_spec.custom_validate if form_spec.custom_validate else []
+
+    selected_disk_value: Any = None
+    vue_elements: list[VueCascadingSingleChoiceElement] = []
+    element_validations = []
+    for element in form_spec.elements:
+        element_value = _default_value if selected_name != element.name else selected_value
+        element_schema, element_vue_value, element_vue_validation, element_disk_value = _visit(
+            visitor_options, element.parameter_form, element_value
+        )
+        if selected_name == element.name:
+            selected_value = element_vue_value
+            selected_disk_value = element_disk_value
+
+        for validation in element_vue_validation:
+            element_validations.append(
+                Validation(
+                    location=[element.name] + validation.location,
+                    message=validation.message,
+                )
+            )
+
+        vue_elements.append(
+            VueCascadingSingleChoiceElement(
+                name=element.name,
+                title=element.title.localize(translate_to_current_language),
+                default_value=element_vue_value,
+                parameter_form=element_schema,
+            )
+        )
+
+    result = (
+        VueCascadingSingleChoice(
+            title=title,
+            help=help_text,
+            elements=vue_elements,
+            validators=build_vue_validators(validators),
+        ),
+        (selected_name, selected_value),
+        element_validations,
+        (selected_name, selected_disk_value),
+    )
+    return result
+
+
 _form_specs_visitor_registry: dict[type, VueFormSpecVisitorMethod] = {}
 
 
@@ -343,6 +418,7 @@ def register_form_specs():
     register_class(String, _visit_string)
     register_class(Float, _visit_float)
     register_class(SingleChoice, _visit_single_choice)
+    register_class(CascadingSingleChoice, _visit_cascading_single_choice)
 
 
 register_form_specs()
@@ -354,7 +430,7 @@ VueFormSpecTypes = (
     #    | Percentage
     | String
     | SingleChoice
-    #    | CascadingSingleChoice
+    | CascadingSingleChoice
     | Dictionary
     #    | List
     #    | ValueSpecFormSpec
@@ -416,10 +492,8 @@ def render_form_spec(form_spec: FormSpec, field_id: str, default_value: Any) -> 
                 validation_messages=validation,
             )
         )
-        logger.warning(pprint.pformat(vue_app_config))
-        # logger.warning(f"Vue app config:\n{pprint.pformat(vue_visitor.vue_schema, width=220)}")
-        # logger.warning(f"Vue value:\n{pprint.pformat(vue_visitor.value, width=220)}")
-        # logger.warning(f"Disk value:\n{pprint.pformat(vue_visitor.data_for_disk, width=220)}")
+        # logger.warning(f"Vue app config:\n{pprint.pformat(vue_app_config, width=220)}")
+        # logger.warning(f"Vue value:\n{pprint.pformat(vue_value, width=220)}")
         html.div("", data_cmk_vue_app=json.dumps(vue_app_config))
     except Exception as e:
         logger.warning("".join(traceback.format_exception(e)))

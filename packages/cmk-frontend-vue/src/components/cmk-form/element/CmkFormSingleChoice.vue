@@ -31,7 +31,9 @@ const value = computed({
 
 const validation = computed(() => {
   // If the local validation was never used (null), return the props.validation (backend validation)
-  if (local_validation.value === null) return props.validation
+  if (local_validation.value === null) {
+    return props.validation
+  }
   return local_validation.value
 })
 </script>
@@ -39,7 +41,7 @@ const validation = computed(() => {
 <template>
   <div>
     <select v-model="value">
-      <option :key="element.name" :value="element.name" v-for="element in spec.elements">
+      <option v-for="element in spec.elements" :key="element.name" :value="element.name">
         {{ element.title }}
       </option>
     </select>

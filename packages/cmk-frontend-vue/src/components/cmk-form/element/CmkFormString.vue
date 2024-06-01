@@ -31,12 +31,14 @@ const value = computed({
 
 const validation = computed(() => {
   // If the local validation was never used (null), return the props.validation (backend validation)
-  if (local_validation.value === null) return props.validation
+  if (local_validation.value === null) {
+    return props.validation
+  }
   return local_validation.value
 })
 </script>
 
 <template>
-  <input type="text" v-model="value" />
+  <input v-model="value" type="text" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

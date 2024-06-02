@@ -1,0 +1,12 @@
+Title: ups: widen support for ATS devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1717354484
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+From now on, devices such as the ATS Rack IT EdgeRG02 whose SNMP walk contains the following line will be detected and monitored by Checkmk:
+'.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.534.10'
+The services discovered and monitored will be the same as on other devices covered by the ups check.

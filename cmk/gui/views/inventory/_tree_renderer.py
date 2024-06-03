@@ -145,12 +145,6 @@ def _sort_delta_rows(
     ]
 
 
-def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHint) -> HTML:
-    # TODO separate tdclass from rendered value
-    _tdclass, code = hint.paint_function(value)
-    return HTML(code)
-
-
 def compute_cell_spec(
     item: SDItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
@@ -198,14 +192,10 @@ def compute_cell_spec(
     return tdclass, html_value
 
 
-def _show_item(
-    item: SDItem | _SDDeltaItem,
-    hint: AttributeDisplayHint | ColumnDisplayHint,
-) -> None:
-    if isinstance(item, _SDDeltaItem):
-        _show_delta_value(item, hint)
-        return
-    html.write_html(compute_cell_spec(item, hint)[1])
+def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHint) -> HTML:
+    # TODO separate tdclass from rendered value
+    _tdclass, code = hint.paint_function(value)
+    return HTML(code)
 
 
 def _show_delta_value(
@@ -327,7 +317,11 @@ class TreeRenderer:
             html.open_tr()
             html.th(self._get_header(attr_hint.title, item.key))
             html.open_td()
-            _show_item(item, attr_hint)
+            if isinstance(item, SDItem):
+                _tdclass, rendered_value = compute_cell_spec(item, attr_hint)
+                html.write_html(rendered_value)
+            else:
+                _show_delta_value(item, attr_hint)
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -380,13 +374,16 @@ class TreeRenderer:
             for item in row:
                 col_hint = column_hints[item.key]
                 # TODO separate tdclass from rendered value
-                if isinstance(item, _SDDeltaItem):
-                    tdclass, _rendered_value = col_hint.paint_function(item.old or item.new)
+                if isinstance(item, SDItem):
+                    tdclass, rendered_value = compute_cell_spec(item, col_hint)
+                    html.open_td(class_=tdclass)
+                    html.write_html(rendered_value)
+                    html.close_td()
                 else:
-                    tdclass, _rendered_value = col_hint.paint_function(item.value)
-                html.open_td(class_=tdclass)
-                _show_item(item, col_hint)
-                html.close_td()
+                    tdclass, _rendered_value = col_hint.paint_function(item.old or item.new)
+                    html.open_td(class_=tdclass)
+                    _show_delta_value(item, col_hint)
+                    html.close_td()
             html.close_tr()
         html.close_table()
 

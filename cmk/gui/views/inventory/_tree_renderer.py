@@ -192,36 +192,29 @@ def compute_cell_spec(
     return tdclass, html_value
 
 
-def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHint) -> HTML:
-    # TODO separate tdclass from rendered value
-    _tdclass, code = hint.paint_function(value)
-    return HTML(code)
-
-
-def _show_delta_value(
+def _compute_delta_cell_spec(
     item: _SDDeltaItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
-) -> None:
+) -> tuple[str, HTML]:
     if item.old is None and item.new is not None:
-        html.open_span(class_="invnew")
-        html.write_html(_get_html_value(item.new, hint))
-        html.close_span()
-    elif item.old is not None and item.new is None:
-        html.open_span(class_="invold")
-        html.write_html(_get_html_value(item.old, hint))
-        html.close_span()
-    elif item.old == item.new:
-        html.write_html(_get_html_value(item.old, hint))
-    elif item.old is not None and item.new is not None:
-        html.open_span(class_="invold")
-        html.write_html(_get_html_value(item.old, hint))
-        html.close_span()
-        html.write_text(" → ")
-        html.open_span(class_="invnew")
-        html.write_html(_get_html_value(item.new, hint))
-        html.close_span()
-    else:
-        raise NotImplementedError()
+        tdclass, rendered_value = hint.paint_function(item.new)
+        return tdclass, HTMLWriter.render_span(rendered_value, css="invnew")
+    if item.old is not None and item.new is None:
+        tdclass, rendered_value = hint.paint_function(item.old)
+        return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
+    if item.old == item.new:
+        tdclass, rendered_value = hint.paint_function(item.old)
+        return tdclass, HTML(rendered_value)
+    if item.old is not None and item.new is not None:
+        tdclass, rendered_old_value = hint.paint_function(item.old)
+        tdclass, rendered_new_value = hint.paint_function(item.new)
+        return (
+            tdclass,
+            HTMLWriter.render_span(rendered_old_value, css="invold")
+            + " → "
+            + HTMLWriter.render_span(rendered_new_value, css="invnew"),
+        )
+    raise NotImplementedError()
 
 
 # Ajax call for fetching parts of the tree
@@ -319,9 +312,9 @@ class TreeRenderer:
             html.open_td()
             if isinstance(item, SDItem):
                 _tdclass, rendered_value = compute_cell_spec(item, attr_hint)
-                html.write_html(rendered_value)
             else:
-                _show_delta_value(item, attr_hint)
+                _tdclass, rendered_value = _compute_delta_cell_spec(item, attr_hint)
+            html.write_html(rendered_value)
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -376,14 +369,11 @@ class TreeRenderer:
                 # TODO separate tdclass from rendered value
                 if isinstance(item, SDItem):
                     tdclass, rendered_value = compute_cell_spec(item, col_hint)
-                    html.open_td(class_=tdclass)
-                    html.write_html(rendered_value)
-                    html.close_td()
                 else:
-                    tdclass, _rendered_value = col_hint.paint_function(item.old or item.new)
-                    html.open_td(class_=tdclass)
-                    _show_delta_value(item, col_hint)
-                    html.close_td()
+                    tdclass, rendered_value = _compute_delta_cell_spec(item, col_hint)
+                html.open_td(class_=tdclass)
+                html.write_html(rendered_value)
+                html.close_td()
             html.close_tr()
         html.close_table()
 

@@ -148,7 +148,7 @@ def test_metric() -> None:
     assert metric1.levels == (2.4, 3.0)
     assert metric1.boundaries == (0.0, None)
 
-    assert metric1 == metric1  # pylint: disable=comparison-with-itself
+    assert metric1 == metric1  # pylint: disable=comparison-with-itself # noqa: PLR0124
     assert metric1 != metric2
 
 

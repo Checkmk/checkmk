@@ -2108,7 +2108,9 @@ class StatusServer(ECServerThread):
                     if addr_info:
                         allow_commands = self._tcp_allow_commands
                         if self.settings.options.debug:
-                            self._logger.info("Handle status connection from %s:%d", addr_info)
+                            self._logger.info(
+                                "Handle status connection from %s:%d", addr_info[0], addr_info[1]
+                            )
                         if allowed_ip(ipaddress.ip_address(addr_info[0]), self._tcp_access_list):
                             client_socket.close()
                             client_socket = None

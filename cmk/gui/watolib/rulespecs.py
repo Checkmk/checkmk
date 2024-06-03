@@ -1211,9 +1211,9 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             is_active = self.is_active(value)
 
         # Set the actual used mode
-        html.hidden_field(self.tp_current_mode, "%d" % is_active)
+        html.hidden_field(self.tp_current_mode, str(int(is_active)))
 
-        vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
+        vars_copy[self.tp_toggle_var] = str(int(not is_active))
 
         url_vars: HTTPVariables = []
         url_vars += vars_copy.items()

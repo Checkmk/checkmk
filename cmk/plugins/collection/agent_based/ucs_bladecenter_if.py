@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import interfaces, ucs_bladecenter
-
-from .agent_based_api.v1 import register, type_defs
 
 # <<ucs_bladecenter_if:sep(9)>>>
 # fcStats Dn sys/switch-A/slot-1/switch-fc/port-37/stats  BytesRx 2411057759048   BytesTx 1350394110752   Suspect no
@@ -123,7 +122,7 @@ _UCS_FIELDS_TO_IF_FIELDS = {
 
 
 def parse_ucs_bladecenter_if(
-    string_table: type_defs.StringTable,
+    string_table: StringTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     data = ucs_bladecenter.generic_parse(string_table)
     converted = []
@@ -299,7 +298,7 @@ def _parse_icnt_interfaces(data):
     )
 
 
-register.agent_section(
+agent_section_ucs_bladecenter_if = AgentSection(
     name="ucs_bladecenter_if",
     parse_function=parse_ucs_bladecenter_if,
     parsed_section_name="interfaces",

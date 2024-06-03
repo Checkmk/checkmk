@@ -24,22 +24,3 @@
 
 # NOTE: we have no idea what exactly is in use.
 # Just import everything that is not explicitly marked private.
-
-from cmk.plugins.lib.temperature import (
-    celsius_to_fahrenheit,
-    check_temperature,
-    fahrenheit_to_celsius,
-    FourLevelsType,
-    from_celsius,
-    LevelModes,
-    LevelsType,
-    render_temp,
-    StatusType,
-    temp_unitsym,
-    TempParamDict,
-    TempParamType,
-    TempUnitType,
-    to_celsius,
-    TrendComputeDict,
-    TwoLevelsType,
-)

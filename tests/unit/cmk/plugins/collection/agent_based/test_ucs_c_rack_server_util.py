@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.ucs_c_rack_server_util import (
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
+from cmk.plugins.collection.agent_based.ucs_c_rack_server_util import (
     check_ucs_c_rack_server_util,
     check_ucs_c_rack_server_util_cpu_,
     check_ucs_c_rack_server_util_mem,

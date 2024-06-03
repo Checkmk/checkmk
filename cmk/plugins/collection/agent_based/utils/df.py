@@ -24,33 +24,3 @@
 
 # NOTE: we have no idea what exactly is in use.
 # Just import everything that is not explicitly marked private.
-
-from cmk.plugins.lib.df import (
-    BlocksSubsection,
-    Bytes,
-    check_filesystem_levels,
-    check_inodes,
-    df_check_filesystem_list,
-    df_check_filesystem_single,
-    df_discovery,
-    DfBlock,
-    DfInode,
-    DfSection,
-    EXCLUDED_MOUNTPOINTS,
-    FILESYSTEM_DEFAULT_LEVELS,
-    FILESYSTEM_DEFAULT_PARAMS,
-    FilesystemLevels,
-    FSBlock,
-    FSBlocks,
-    get_filesystem_levels,
-    INODES_DEFAULT_PARAMS,
-    InodesSubsection,
-    LevelsFreeSpace,
-    LevelsUsedSpace,
-    MAGIC_FACTOR_DEFAULT_PARAMS,
-    mountpoints_in_group,
-    Percent,
-    RenderOptions,
-    SHOW_LEVELS_DEFAULT,
-    TREND_DEFAULT_PARAMS,
-)

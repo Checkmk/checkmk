@@ -10,10 +10,8 @@
 import datetime
 import re
 
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, StringTable
 from cmk.plugins.lib import uptime
-
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
 
 
 def parse_human_read_uptime(string: str) -> int:
@@ -136,13 +134,13 @@ def parse_uptime(string_table: StringTable) -> uptime.Section | None:
     return uptime.Section(from_boot_time, None)
 
 
-register.agent_section(
+agent_section_uptime = AgentSection(
     name="uptime",
     supersedes=["snmp_uptime"],
     parse_function=parse_uptime,
 )
 
-register.check_plugin(
+check_plugin_uptime = CheckPlugin(
     name="uptime",
     service_name="Uptime",
     discovery_function=uptime.discover,

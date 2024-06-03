@@ -14,10 +14,10 @@
 # equipmentIndicatorLed<TAB>dn sys/rack-unit-1/indicator-led-0<TAB>name OVERALL_DIMM_STATUS<TAB>color green<TAB>operState on
 
 
-from .agent_based_api.v1 import register, type_defs
+from cmk.agent_based.v2 import AgentSection, StringTable
 
 
-def parse_ucs_c_rack_server_led(string_table: type_defs.StringTable) -> dict[str, dict]:
+def parse_ucs_c_rack_server_led(string_table: StringTable) -> dict[str, dict]:
     """
     >>> parse_ucs_c_rack_server_led([['equipmentIndicatorLed', 'dn sys/rack-unit-1/indicator-led-1', 'name LED_PSU_STATUS', 'color green', 'operState on']])
     {'Rack Unit 1 1': {'Name': 'LED_PSU_STATUS', 'Color': 'green', 'Operational state': 'on'}}
@@ -44,7 +44,7 @@ def parse_ucs_c_rack_server_led(string_table: type_defs.StringTable) -> dict[str
     return parsed
 
 
-register.agent_section(
+agent_section_ucs_c_rack_server_led = AgentSection(
     name="ucs_c_rack_server_led",
     parse_function=parse_ucs_c_rack_server_led,
 )

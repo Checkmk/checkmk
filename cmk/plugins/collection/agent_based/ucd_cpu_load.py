@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
+from cmk.agent_based.v2 import SNMPSection, SNMPTree, StringTable
 from cmk.plugins.lib.cpu import Load, Section
 from cmk.plugins.lib.ucd_hr_detection import UCD
 
-from .agent_based_api.v1 import register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
 
-
-def parse_ucd_cpu_load(string_table: list[StringTable]) -> Section | None:
+def parse_ucd_cpu_load(string_table: Sequence[StringTable]) -> Section | None:
     cpu_loads, cpu_count = string_table
     if len(cpu_loads) != 3:
         return None
@@ -31,7 +31,7 @@ def parse_ucd_cpu_load(string_table: list[StringTable]) -> Section | None:
     )
 
 
-register.snmp_section(
+snmp_section_ucd_cpu_load = SNMPSection(
     name="ucd_cpu_load",
     parsed_section_name="cpu",
     parse_function=parse_ucd_cpu_load,

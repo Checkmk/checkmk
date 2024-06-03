@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import pytest
@@ -12,8 +12,8 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import snmp_is_detected
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.plugins.agent_based import ups_power
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
+from cmk.plugins.collection.agent_based import ups_power
 
 # walks/usv-liebert
 DATA0 = """
@@ -51,5 +51,5 @@ def test_ups_power_detect(as_path: Callable[[str], Path]) -> None:
         ),
     ],
 )
-def test_ups_power_check(string_table: list[StringTable], section: dict[str, int]) -> None:
+def test_ups_power_check(string_table: Sequence[StringTable], section: dict[str, int]) -> None:
     assert ups_power.parse_ups_power(string_table) == section

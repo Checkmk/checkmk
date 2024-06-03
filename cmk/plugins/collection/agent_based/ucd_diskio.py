@@ -5,29 +5,26 @@
 
 
 import time
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, TypedDict
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    StringTable,
-)
-
-from cmk.plugins.lib.diskstat import check_diskstat_dict
-from cmk.plugins.lib.ucd_hr_detection import UCD
-
-from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
     GetRateError,
     IgnoreResults,
-    register,
     Result,
     Service,
+    SNMPSection,
     SNMPTree,
     State,
+    StringTable,
 )
+from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.ucd_hr_detection import UCD
 
 
 class Disk(TypedDict):
@@ -41,7 +38,7 @@ class Disk(TypedDict):
 Section = Mapping[str, Disk]
 
 
-def parse_ucd_diskio(string_table: list[StringTable]) -> Section:
+def parse_ucd_diskio(string_table: Sequence[StringTable]) -> Section:
     section: dict[str, Disk] = {}
 
     if not string_table:
@@ -66,7 +63,7 @@ def parse_ucd_diskio(string_table: list[StringTable]) -> Section:
     return section
 
 
-register.snmp_section(
+snmp_section_ucd_diskio = SNMPSection(
     name="ucd_diskio",
     parse_function=parse_ucd_diskio,
     fetch=[
@@ -138,7 +135,7 @@ def _check_ucd_diskio(
     )
 
 
-register.check_plugin(
+check_plugin_ucd_diskio = CheckPlugin(
     name="ucd_diskio",
     service_name="Disk IO %s",
     discovery_function=discover_ucd_diskio,

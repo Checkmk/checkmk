@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import operator
+from collections.abc import Mapping, Sequence
 
+from cmk.agent_based.v2 import SNMPSection, SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
-
-from .agent_based_api.v1 import register, SNMPTree
 
 # .1.3.6.1.4.1.2021.4.2.0 swap      --> UCD-SNMP-MIB::memErrorName.0
 # .1.3.6.1.4.1.2021.4.3.0 8388604   --> UCD-SNMP-MIB::MemTotalSwap.0
@@ -25,7 +25,7 @@ def _info_str_to_bytes(info_str):
     return int(info_str.replace("kB", "").strip()) * 1024
 
 
-def parse_ucd_mem(string_table):
+def parse_ucd_mem(string_table: Sequence[StringTable]) -> Mapping[str, int]:
     info = string_table[0]
 
     # mandatory memory values
@@ -83,7 +83,7 @@ def parse_ucd_mem(string_table):
     return parsed
 
 
-register.snmp_section(
+snmp_section_ucd_mem = SNMPSection(
     name="ucd_mem",
     parse_function=parse_ucd_mem,
     fetch=[

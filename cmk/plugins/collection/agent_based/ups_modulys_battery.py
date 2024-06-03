@@ -4,23 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.plugins.lib.temperature import check_temperature, TempParamType
-from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
-
-from .agent_based_api.v1 import (
-    check_levels,
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
-    register,
     render,
     Result,
     Service,
+    SNMPSection,
     SNMPTree,
     State,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
 class UPSBattery(NamedTuple):
@@ -34,7 +36,7 @@ class UPSBattery(NamedTuple):
 UPSBatterySection = UPSBattery | None
 
 
-def parse_ups_modulys_battery(string_table: list[StringTable]) -> UPSBatterySection:
+def parse_ups_modulys_battery(string_table: Sequence[StringTable]) -> UPSBatterySection:
     try:
         raw_health, raw_uptime, raw_remaining_time, raw_capacity, raw_temperature = string_table[0][
             0
@@ -69,7 +71,7 @@ def parse_ups_modulys_battery(string_table: list[StringTable]) -> UPSBatterySect
     )
 
 
-register.snmp_section(
+snmp_section_ups_modulys_battery = SNMPSection(
     name="ups_modulys_battery",
     parse_function=parse_ups_modulys_battery,
     fetch=[
@@ -149,7 +151,7 @@ def check_ups_modulys_battery(params: Mapping[str, Any], section: UPSBatterySect
     )
 
 
-register.check_plugin(
+check_plugin_ups_modulys_battery = CheckPlugin(
     name="ups_modulys_battery",
     discovery_function=discover_ups_modulys_battery,
     check_function=check_ups_modulys_battery,
@@ -178,7 +180,7 @@ def check_ups_modulys_battery_temp(
         )
 
 
-register.check_plugin(
+check_plugin_ups_modulys_battery_temp = CheckPlugin(
     name="ups_modulys_battery_temp",
     check_function=check_ups_modulys_battery_temp,
     discovery_function=discover_ups_modulys_battery_temp,

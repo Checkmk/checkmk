@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+from collections.abc import Sequence
 
-from .agent_based_api.v1 import OIDEnd, register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
+from cmk.agent_based.v2 import OIDEnd, SNMPSection, SNMPTree, StringTable
+from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 
 def _parse_value(value: str) -> int | None:
@@ -17,7 +17,7 @@ def _parse_value(value: str) -> int | None:
 
 
 def parse_ups_power(
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
 ) -> dict[str, int]:
     section: dict[str, int] = {}
     for idx, voltage_str, power_str in string_table[0]:
@@ -37,7 +37,7 @@ def parse_ups_power(
     return section
 
 
-register.snmp_section(
+snmp_section_ups_power = SNMPSection(
     name="ups_power",
     parsed_section_name="epower",
     detect=DETECT_UPS_GENERIC,

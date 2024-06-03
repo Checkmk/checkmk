@@ -20,10 +20,18 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    render,
+    Service,
+    StringTable,
+)
 from cmk.plugins.lib.cpu_util import check_cpu_util
-
-from .agent_based_api.v1 import check_levels, get_value_store, register, render, Service
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclass(frozen=True)
@@ -68,7 +76,7 @@ def parse_ucs_c_rack_server_util(string_table: StringTable) -> Section:
     }
 
 
-register.agent_section(
+agent_section_ucs_c_rack_server_util = AgentSection(
     name="ucs_c_rack_server_util",
     parse_function=parse_ucs_c_rack_server_util,
 )
@@ -95,7 +103,7 @@ def check_ucs_c_rack_server_util(
     )
 
 
-register.check_plugin(
+check_plugin_ucs_c_rack_server_util = CheckPlugin(
     name="ucs_c_rack_server_util",
     service_name="Overall Utilization %s",
     discovery_function=discover_ucs_c_rack_server_util,
@@ -139,7 +147,7 @@ def check_ucs_c_rack_server_util_cpu(
     )
 
 
-register.check_plugin(
+check_plugin_ucs_c_rack_server_util_cpu = CheckPlugin(
     name="ucs_c_rack_server_util_cpu",
     sections=["ucs_c_rack_server_util"],
     service_name="CPU Utilization %s",
@@ -167,7 +175,7 @@ def check_ucs_c_rack_server_util_pci_io(
     )
 
 
-register.check_plugin(
+check_plugin_ucs_c_rack_server_util_pci_io = CheckPlugin(
     name="ucs_c_rack_server_util_pci_io",
     sections=["ucs_c_rack_server_util"],
     service_name="PCI IO Utilization %s",
@@ -195,7 +203,7 @@ def check_ucs_c_rack_server_util_mem(
     )
 
 
-register.check_plugin(
+check_plugin_ucs_c_rack_server_util_mem = CheckPlugin(
     name="ucs_c_rack_server_util_mem",
     sections=["ucs_c_rack_server_util"],
     service_name="Memory Utilization %s",

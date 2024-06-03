@@ -3,22 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
-
-from .agent_based_api.v1 import (
-    check_levels,
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     OIDEnd,
-    register,
     render,
     Result,
     Service,
+    SNMPSection,
     SNMPTree,
     State,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 
 class UpsPowerVoltage(NamedTuple):
@@ -35,11 +37,11 @@ def int_or_zero(value: str) -> int:
     return int(value)
 
 
-def parse_ups_load(string_table: list[StringTable]) -> Section:
+def parse_ups_load(string_table: Sequence[StringTable]) -> Section:
     return {i: UpsPowerVoltage(int_or_zero(p), int_or_zero(v)) for v, p, i in string_table[0]}
 
 
-register.snmp_section(
+snmp_section_ups_out_load = SNMPSection(
     name="ups_out_load",
     detect=DETECT_UPS_GENERIC,
     parse_function=parse_ups_load,
@@ -77,7 +79,7 @@ def check_ups_out_load(item: str, params: Mapping[str, Any], section: Section) -
     )
 
 
-register.check_plugin(
+check_plugin_ups_out_load = CheckPlugin(
     name="ups_out_load",
     service_name="OUT load phase %s",
     discovery_function=discovery_ups,

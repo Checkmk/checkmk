@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.agent_based.v2 import CheckPlugin, SimpleSNMPSection, SNMPTree, StringTable
 from cmk.plugins.lib.ups import (
     Battery,
     CHECK_DEFAULT_PARAMETERS,
@@ -12,9 +13,6 @@ from cmk.plugins.lib.ups import (
     discover_ups_capacity,
     optional_int,
 )
-
-from .agent_based_api.v1 import register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
 
 
 def parse_ups_capacity(string_table: StringTable) -> Battery | None:
@@ -38,7 +36,7 @@ def parse_ups_seconds_on_battery(string_table: StringTable) -> Battery | None:
     )
 
 
-register.snmp_section(
+snmp_section_ups_battery_capacity = SimpleSNMPSection(
     name="ups_battery_capacity",
     parse_function=parse_ups_capacity,
     fetch=SNMPTree(
@@ -51,7 +49,7 @@ register.snmp_section(
     detect=DETECT_UPS_GENERIC,
 )
 
-register.snmp_section(
+snmp_section_ups_seconds_on_battery = SimpleSNMPSection(
     name="ups_seconds_on_battery",
     parse_function=parse_ups_seconds_on_battery,
     fetch=SNMPTree(
@@ -63,7 +61,7 @@ register.snmp_section(
     detect=DETECT_UPS_GENERIC,
 )
 
-register.check_plugin(
+check_plugin_ups_capacity = CheckPlugin(
     name="ups_capacity",
     sections=["ups_battery_capacity", "ups_on_battery", "ups_seconds_on_battery"],
     service_name="Battery capacity",

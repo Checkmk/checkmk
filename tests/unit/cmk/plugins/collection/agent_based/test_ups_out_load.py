@@ -3,17 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-from cmk.base.plugins.agent_based.ups_out_load import (
+from cmk.plugins.collection.agent_based.ups_out_load import (
     check_ups_out_load,
     discovery_ups,
     parse_ups_load,
@@ -26,7 +29,9 @@ from cmk.base.plugins.agent_based.ups_out_load import (
         ([[["1", "2", "1"], ["0", "2", "2"]]], [Service(item="1")]),
     ],
 )
-def test_ups_out_load_discovery(info: list[StringTable], expected_result: DiscoveryResult) -> None:
+def test_ups_out_load_discovery(
+    info: Sequence[StringTable], expected_result: DiscoveryResult
+) -> None:
     section = parse_ups_load(info)
     result = discovery_ups(section)
     assert list(result) == expected_result
@@ -77,7 +82,10 @@ def test_ups_out_load_discovery(info: list[StringTable], expected_result: Discov
     ],
 )
 def test_ups_out_load_check(
-    item: str, params: Mapping[str, object], info: list[StringTable], expected_result: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    info: Sequence[StringTable],
+    expected_result: CheckResult,
 ) -> None:
     section = parse_ups_load(info)
     result = check_ups_out_load(item, params, section)

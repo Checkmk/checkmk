@@ -12,10 +12,10 @@
 # faultInst<TAB>severity major<TAB>cause equipmentInoperable<TAB>code F0531<TAB>descr Storage Raid Battery 11 is inoperable: Check Controller battery<TAB>affectedDN sys/rack-unit-1/board/storage-SAS-SLOT-SAS/raid-battery-11
 
 
-from .agent_based_api.v1 import register, type_defs
+from cmk.agent_based.v2 import AgentSection, StringTable
 
 
-def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> dict[str, list[str]]:
+def parse_ucs_c_rack_server_faultinst(string_table: StringTable) -> dict[str, list[str]]:
     """
     >>> parse_ucs_c_rack_server_faultinst([['faultInst', 'severity critical', 'cause powerproblem', 'code F0883', 'descr Broken', 'affectedDN sys/rack-unit-1/psu-4']])
     {'Severity': ['critical'], 'Cause': ['powerproblem'], 'Code': ['F0883'], 'Description': ['Broken'], 'Affected DN': ['rack-unit-1/psu-4']}
@@ -36,7 +36,7 @@ def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> di
     return parsed
 
 
-register.agent_section(
+agent_section_ucs_c_rack_server_faultinst = AgentSection(
     name="ucs_c_rack_server_faultinst",
     parse_function=parse_ucs_c_rack_server_faultinst,
 )

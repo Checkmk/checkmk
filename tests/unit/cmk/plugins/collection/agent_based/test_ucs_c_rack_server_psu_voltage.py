@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
+from cmk.agent_based.v2 import Service
 
 SECTION = """
 equipmentPsu	dn sys/rack-unit-7/psu-2	id 2	model UCSC-PSU1-1050W	operability operable	voltage ok

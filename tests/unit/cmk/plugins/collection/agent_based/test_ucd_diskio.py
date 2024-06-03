@@ -4,24 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResults,
-    Metric,
-    Result,
-    Service,
-    State,
-)
-from cmk.base.plugins.agent_based.ucd_diskio import (
+from cmk.agent_based.v2 import IgnoreResults, Metric, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based.ucd_diskio import (
     _check_ucd_diskio,
     discover_ucd_diskio,
     parse_ucd_diskio,
 )
-
-from cmk.agent_based.v1.type_defs import StringTable
 
 
 @pytest.fixture(name="string_table")
@@ -35,7 +27,7 @@ def snmp_section():
 
 
 def test_discover_ucd_diskio(
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
 ) -> None:
     discovery_results = list(discover_ucd_diskio(parse_ucd_diskio(string_table)))
     assert discovery_results == [
@@ -49,7 +41,7 @@ def test_discover_ucd_diskio_with_empty_section() -> None:
 
 
 def test_check_ucd_diskio_item_not_found(
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
 ) -> None:
     assert not list(
         _check_ucd_diskio(
@@ -63,7 +55,7 @@ def test_check_ucd_diskio_item_not_found(
 
 
 def test_check_ucd_diskio(
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
 ) -> None:
     value_store: MutableMapping = {}
 
@@ -103,7 +95,7 @@ def test_check_ucd_diskio(
 
 
 def test_check_ucd_diskio_dynamic(
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
 ) -> None:
     value_store: MutableMapping = {
         "ucd_disk_io_read_ios.ram1": (0, 60.0),

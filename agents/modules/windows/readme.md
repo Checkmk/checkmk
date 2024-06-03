@@ -145,3 +145,16 @@ In latter case the git_hash is replaced with string "latest".
              |-- python-3.12.timestamp
              |
              +-- python-3.12/
+
+## Troubleshooting
+
+### Failing Windows Builds
+
+Possible error messages you might encounter are:
+- `WARNING: Operation did not complete successfully because the file contains a virus or potentially unwanted software.`
+- `ModuleNotFoundError: No module named <module name>`
+
+One possible problem is that the builds are not properly created.
+Make sure that the Windows build system is up-to-date in regards of updates, especially the Windows Defender because it might block the creation of artifacts containing files it finds malicious - this is nearly always a false positive.
+To do this go to the Windows Update overview, check for updates and install the updates that are presented to you. If Windows asks for a restart, perform this restart.
+Afterwards try to rebuild.

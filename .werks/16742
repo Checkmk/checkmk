@@ -1,0 +1,9 @@
+Title: jenkins_nodes: Fix 'newline not allowed in service summary'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1717407455
+Edition: cre
+Level: 1
+Version: 2.1.0p44
+

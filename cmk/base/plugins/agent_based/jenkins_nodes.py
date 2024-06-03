@@ -75,7 +75,7 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section) 
 
         node_desc = node.get("description")
         if node_desc and node_desc is not None:
-            yield Result(state=State.OK, summary=f"Description: {node_desc.title()}")
+            yield Result(state=State.OK, summary=f"Description: {node_desc.strip().title()}")
 
         for key, infotext in [
             ("jnlpAgent", "Is JNLP agent"),

@@ -6,11 +6,10 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
-
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.collection.agent_based.aruba_wlc_clients import parse_aruba_wlc_clients
+from cmk.plugins.collection.agent_based.wlc_clients import check_wlc_clients
 from cmk.plugins.lib.wlc_clients import ClientsTotal, VsResult, WlcClientsSection
 
 # raw data looks like this:

@@ -96,7 +96,7 @@ function get_validation_for_child(ident: string): ValidationMessages {
   <CmkFormDispatcher
     v-model:data="data[1]"
     :spec="active_element.spec"
-    :validation="get_validation_for_child(value[0])"
+    :validation="get_validation_for_child(value[0]!)"
   ></CmkFormDispatcher>
   <FormValidation :validation="validation"></FormValidation>
 </template>

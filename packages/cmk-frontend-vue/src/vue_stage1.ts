@@ -40,7 +40,7 @@ function scriptOnError(event: string | Event) {
       throw Error(`Found ${entrypointScript.length} cmk-entrypoint-vue-stage1 scripts`)
     }
 
-    const scriptContent = entrypointScript[0].textContent
+    const scriptContent = entrypointScript[0]!.textContent
     if (scriptContent === null) {
       throw Error(`Found cmk-entrypoint-vue-stage1 script is empty`)
     }

@@ -66,8 +66,8 @@ function get_rows() {
 
   function get_custom_sorter_function(index: number, direction: number) {
     return function (a: TableRow, b: TableRow) {
-      const a_content = a.columns[index].content[0]!.content!.toLowerCase()
-      const b_content = b.columns[index].content[0]!.content!.toLowerCase()
+      const a_content = a.columns[index]!.content[0]!.content!.toLowerCase()
+      const b_content = b.columns[index]!.content[0]!.content!.toLowerCase()
       if (a_content == b_content) {
         return 0
       }
@@ -130,13 +130,13 @@ function set_sort_index(index: number) {
         <td v-for="cell in row.columns" :class="cell.classes">
           <template v-for="content in cell.content">
             <input v-if="content.type === 'checkbox'" class="vue_checkbox" type="checkbox" />
-            <a v-if="content.type === 'button'" :href="content.url" :title="content.title">
-              <img class="icon iconbutton" :src="content.icon" />
+            <a v-if="content.type === 'button'" :href="content.url!" :title="content.title!">
+              <img class="icon iconbutton" :src="content.icon!" />
             </a>
             <span v-if="content.type === 'text'">{{ content.content }}</span>
             <!-- eslint-disable-next-line vue/no-v-html -->
             <span v-if="content.type === 'html'" v-html="content.content" />
-            <a v-if="content.type === 'href'" :href="content.url">{{ content.alias }}</a>
+            <a v-if="content.type === 'href'" :href="content.url!">{{ content.alias }}</a>
           </template>
         </td>
         <!-- eslint-enable -->

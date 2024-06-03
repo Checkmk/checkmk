@@ -22,7 +22,7 @@ function setup_vue() {
       return
     }
 
-    const vue_app_data = dataset.cmk_vue_app
+    const vue_app_data = dataset['cmk_vue_app']
     if (vue_app_data == undefined) {
       return
     }

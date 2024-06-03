@@ -157,29 +157,29 @@ const row_with_uuid = computed(() => {
 
 <template>
   <table ref="table_ref" class="valuespec_listof">
-    <template v-for="(element_row, index) in row_with_uuid" :key="element_row.uuid">
-      <tr :class="class_listof_element">
-        <td :class="class_vlof_buttons">
-          <a
-            ><img src="themes/modern-dark/images/icon_drag.svg" :class="class_element_dragger" />
-          </a>
-          <a title="Delete this entry">
-            <img
-              class="icon iconbutton"
-              src="themes/modern-dark/images/icon_close.svg"
-              @click.prevent="remove_element(index)"
-            />
-          </a>
-        </td>
-        <td class="vlof_content">
-          <CmkFormDispatcher
-            v-model:data="value[index]"
-            :spec="spec.element_template"
-            :validation="get_validation_for_child(index)"
-          ></CmkFormDispatcher>
-        </td>
-      </tr>
-    </template>
+    <tr
+      v-for="(element_row, index) in row_with_uuid"
+      :key="element_row.uuid"
+      :class="class_listof_element"
+    >
+      <td :class="class_vlof_buttons">
+        <a><img src="themes/modern-dark/images/icon_drag.svg" :class="class_element_dragger" /> </a>
+        <a title="Delete this entry">
+          <img
+            class="icon iconbutton"
+            src="themes/modern-dark/images/icon_close.svg"
+            @click.prevent="remove_element(index)"
+          />
+        </a>
+      </td>
+      <td class="vlof_content">
+        <CmkFormDispatcher
+          v-model:data="value[index]"
+          :spec="spec.element_template"
+          :validation="get_validation_for_child(index)"
+        ></CmkFormDispatcher>
+      </td>
+    </tr>
   </table>
   <input
     type="button"

@@ -13,7 +13,53 @@ use std::time::Instant;
 
 use tiberius::{ColumnData, Query, Row};
 
-pub type Answer = Vec<Row>;
+pub type SqlRows = Vec<Row>;
+pub enum UniAnswer {
+    Rows(SqlRows),
+}
+
+impl UniAnswer {
+    pub fn is_empty(&self) -> bool {
+        match self {
+            UniAnswer::Rows(rows) => rows.is_empty(),
+        }
+    }
+
+    pub fn get_rows(&self) -> &SqlRows {
+        match self {
+            UniAnswer::Rows(rows) => rows,
+        }
+    }
+
+    pub fn get_node_names(&self) -> String {
+        match self {
+            UniAnswer::Rows(rows) => rows
+                .iter()
+                .map(|r| r.get_value_by_name("nodename"))
+                .collect::<Vec<String>>()
+                .join(","),
+        }
+    }
+    pub fn get_active_node(&self) -> String {
+        match self {
+            UniAnswer::Rows(rows) => rows
+                .last()
+                .map(|r| r.get_value_by_name("active_node"))
+                .unwrap_or_default(),
+        }
+    }
+
+    pub fn get_is_clustered(&self) -> bool {
+        match self {
+            UniAnswer::Rows(rows) => {
+                rows.first()
+                    .map(|r| r.get_value_by_name("is_clustered"))
+                    .unwrap_or("0".to_owned())
+                    != "0"
+            }
+        }
+    }
+}
 
 pub trait Column<'a> {
     fn get_bigint_by_idx(&self, idx: usize) -> i64;
@@ -92,7 +138,7 @@ impl<'a> Column<'a> for Row {
 pub async fn run_known_query<T: Borrow<sqls::Id>>(
     client: &mut UniClient,
     id: T,
-) -> Result<Vec<Answer>> {
+) -> Result<Vec<UniAnswer>> {
     let start = Instant::now();
     let result = _run_known_query(client, id.borrow()).await;
     log_query(start, &result, format!("{:?}", id.borrow()).as_str());
@@ -104,7 +150,7 @@ pub async fn run_known_query<T: Borrow<sqls::Id>>(
 pub async fn run_custom_query<T: AsRef<str>>(
     client: &mut UniClient,
     query: T,
-) -> Result<Vec<Answer>> {
+) -> Result<Vec<UniAnswer>> {
     let query = query.as_ref();
     if query.is_empty() {
         anyhow::bail!("Empty custom query");
@@ -116,7 +162,7 @@ pub async fn run_custom_query<T: AsRef<str>>(
     result
 }
 
-fn log_query(start: Instant, result: &Result<Vec<Answer>>, query_body: &str) {
+fn log_query(start: Instant, result: &Result<Vec<UniAnswer>>, query_body: &str) {
     let total = (Instant::now() - start).as_millis();
     match result {
         Ok(_) => log::info!("Query [SUCCESS], took {total} ms, `{query_body}`"),
@@ -129,19 +175,20 @@ fn log_query(start: Instant, result: &Result<Vec<Answer>>, query_body: &str) {
 async fn _run_known_query<T: Borrow<sqls::Id>>(
     client: &mut UniClient,
     id: T,
-) -> Result<Vec<Answer>> {
+) -> Result<Vec<UniAnswer>> {
     log::debug!("Query name: `{:?}`", id.borrow());
     let query = find_known_query(id)?;
     exec_sql(client, query).await
 }
 
-async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<Answer>> {
+async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>> {
     log::debug!("Query to run short: `{}`", make_short_query(query));
     log::trace!("Query to run: `{}`", query);
     match client {
         UniClient::Std(client) => {
             let stream = Query::new(query).query(client).await?;
-            let rows: Vec<Answer> = stream.into_results().await?;
+            let tiberius_rows: Vec<Vec<Row>> = stream.into_results().await?;
+            let rows: Vec<UniAnswer> = tiberius_rows.into_iter().map(UniAnswer::Rows).collect();
             Ok(rows)
         }
     }
@@ -154,45 +201,48 @@ fn make_short_query(query: &str) -> &str {
 }
 
 pub async fn obtain_computer_name(client: &mut UniClient) -> Result<Option<ComputerName>> {
-    let rows = run_known_query(client, sqls::Id::ComputerName).await?;
-    if rows.is_empty() || rows[0].is_empty() {
+    let answers = run_known_query(client, sqls::Id::ComputerName).await?;
+    let result = match answers.first() {
+        Some(UniAnswer::Rows(rows)) => get_first_row_column(rows, 0),
+        None => None,
+    };
+    if result.is_none() {
         log::warn!("Computer name not found with query computer_name");
-        return Ok(None);
-    }
-    let row = &rows[0];
-    Ok(row[0]
-        .try_get::<&str, usize>(0)
-        .ok()
-        .flatten()
-        .map(str::to_string)
-        .map(|s| s.into()))
+    };
+    Ok(result.map(ComputerName::from))
 }
 
 pub async fn obtain_instance_name(client: &mut UniClient) -> Result<Option<InstanceName>> {
-    let rows = run_custom_query(client, "select @@ServiceName").await?;
-    if rows.is_empty() || rows[0].is_empty() {
+    let answers = run_custom_query(client, "select @@ServiceName").await?;
+
+    let result = match answers.first() {
+        Some(UniAnswer::Rows(rows)) => get_first_row_column(rows, 0),
+        None => None,
+    };
+
+    if result.is_none() {
         log::warn!("Instance name not found with query");
-        return Ok(None);
-    }
-    let row = &rows[0];
-    Ok(row[0]
-        .try_get::<&str, usize>(0)
-        .ok()
-        .flatten()
-        .map(str::to_string)
-        .map(|s| s.into()))
+    };
+    Ok(result.map(InstanceName::from))
 }
 
 pub async fn obtain_system_user(client: &mut UniClient) -> Result<Option<String>> {
-    let rows = run_custom_query(client, "select System_User").await?;
-    if rows.is_empty() || rows[0].is_empty() {
+    let answers = run_custom_query(client, "select System_User").await?;
+    let result = match answers.first() {
+        Some(UniAnswer::Rows(rows)) => get_first_row_column(rows, 0),
+        None => None,
+    };
+    if result.is_none() {
         log::warn!("Can't obtain system user with query `select SystemUser`");
-        return Ok(None);
-    }
-    let row = &rows[0];
-    Ok(row[0]
-        .try_get::<&str, usize>(0)
-        .ok()
-        .flatten()
-        .map(str::to_string))
+    };
+    Ok(result)
+}
+
+pub fn get_first_row_column(rows: &[Row], column: usize) -> Option<String> {
+    rows.first().and_then(|r| {
+        r.try_get::<&str, usize>(column)
+            .ok()
+            .flatten()
+            .map(str::to_string)
+    })
 }

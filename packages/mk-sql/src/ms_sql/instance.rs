@@ -16,7 +16,7 @@ use crate::config::{
 use crate::emit;
 use crate::ms_sql::query::{
     obtain_computer_name, obtain_instance_name, obtain_system_user, run_custom_query,
-    run_known_query, Answer, Column,
+    run_known_query, Column, UniAnswer,
 };
 use crate::ms_sql::sqls;
 use crate::setup::Env;
@@ -576,9 +576,9 @@ impl SqlInstance {
         let x = run_custom_query(client, query)
             .await
             .and_then(validate_rows_has_two_blocks)
-            .and_then(|rows| {
-                Ok(self.process_utc_rows(&rows[0], sep)?
-                    + &self.process_counters_rows(&rows[1], sep)?)
+            .and_then(|answers| {
+                Ok(self.process_utc_rows(&answers[0], sep)?
+                    + &self.process_counters_rows(&answers[1], sep)?)
             });
         match x {
             Ok(result) => result,
@@ -593,7 +593,7 @@ impl SqlInstance {
         let x = run_known_query(client, sqls::Id::CounterEntries)
             .await
             .and_then(validate_rows)
-            .and_then(|rows| self.process_counters_rows(&rows[0], sep));
+            .and_then(|answers| self.process_counters_rows(&answers[0], sep));
         match x {
             Ok(result) => result,
             Err(err) => {
@@ -603,9 +603,13 @@ impl SqlInstance {
         }
     }
 
-    fn process_counters_rows(&self, rows: &[Row], sep: char) -> Result<String> {
-        let z: Vec<String> = rows.iter().map(|row| to_counter_entry(row, sep)).collect();
-        Ok(z.join(""))
+    fn process_counters_rows(&self, answer: &UniAnswer, sep: char) -> Result<String> {
+        match answer {
+            UniAnswer::Rows(rows) => {
+                let z: Vec<String> = rows.iter().map(|row| to_counter_entry(row, sep)).collect();
+                Ok(z.join(""))
+            }
+        }
     }
 
     pub async fn generate_sessions_section(
@@ -880,10 +884,10 @@ impl SqlInstance {
     }
 
     async fn is_database_clustered(&self, client: &mut UniClient) -> Result<bool> {
-        let rows = &run_known_query(client, sqls::Id::IsClustered)
+        let answers = &run_known_query(client, sqls::Id::IsClustered)
             .await
             .and_then(validate_rows)?;
-        Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
+        Ok(answers[0].get_is_clustered())
     }
 
     async fn get_cluster_nodes(
@@ -891,19 +895,9 @@ impl SqlInstance {
         client: &mut UniClient,
         query: &str,
     ) -> Result<(String, String)> {
-        let rows = &run_custom_query(client, query).await?;
-        if rows.len() > 2 && !rows[0].is_empty() && !rows[1].is_empty() {
-            return Ok((
-                rows[0]
-                    .iter()
-                    .map(|r| r.get_value_by_name("nodename"))
-                    .collect::<Vec<String>>()
-                    .join(","),
-                rows[1]
-                    .last() // as in legacy plugin
-                    .expect("impossible")
-                    .get_value_by_name("active_node"),
-            ));
+        let answers = &run_custom_query(client, query).await?;
+        if answers.len() > 2 && !answers[0].is_empty() && !answers[1].is_empty() {
+            return Ok((answers[0].get_node_names(), answers[1].get_active_node()));
         }
         Ok((String::default(), String::default()))
     }
@@ -920,22 +914,22 @@ impl SqlInstance {
             .unwrap_or_else(|e| format!("{}{sep}{}\n", self.name, e))
     }
 
-    fn to_connections_entries(&self, rows: &[Vec<Row>], sep: char) -> String {
-        if rows.is_empty() {
-            return String::new();
+    fn to_connections_entries(&self, answers: &[UniAnswer], sep: char) -> String {
+        match &answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
+                .iter()
+                .map(|row| {
+                    format!(
+                        "{}{sep}{}{sep}{}\n",
+                        self.name,
+                        row.get_value_by_idx(0).replace(' ', "_"), // for unknown reason we can't get it by name
+                        row.get_bigint_by_name("NumberOfConnections")
+                    )
+                })
+                .collect::<Vec<String>>()
+                .join(""),
+            None => String::new(),
         }
-        let rows = &rows[0];
-        rows.iter()
-            .map(|row| {
-                format!(
-                    "{}{sep}{}{sep}{}\n",
-                    self.name,
-                    row.get_value_by_idx(0).replace(' ', "_"), // for unknown reason we can't get it by name
-                    row.get_bigint_by_name("NumberOfConnections")
-                )
-            })
-            .collect::<Vec<String>>()
-            .join("")
     }
 
     /// NOTE: uses ' ' instead of '\t' in error messages
@@ -1000,19 +994,21 @@ impl SqlInstance {
     }
 
     /// rows must be not empty
-    fn to_entries(&self, rows: Vec<Vec<Row>>, sep: char) -> String {
+    fn to_entries(&self, answers: Vec<UniAnswer>, sep: char) -> String {
         // just a safety guard, the function should not get empty rows
-        if rows.is_empty() {
+        if answers.is_empty() {
             return String::new();
         }
 
-        let mut r = rows;
-        let rows = r.remove(0);
-        let result = rows
-            .into_iter()
-            .map(|r| r.get_all(sep))
-            .collect::<Vec<String>>()
-            .join("\n");
+        let mut answers_copy = answers;
+        let answer = answers_copy.remove(0);
+        let result = match answer {
+            UniAnswer::Rows(rows) => rows
+                .into_iter()
+                .map(|r| r.get_all(sep))
+                .collect::<Vec<String>>()
+                .join("\n"),
+        };
 
         if result.is_empty() {
             result
@@ -1021,24 +1017,40 @@ impl SqlInstance {
         }
     }
 
-    fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
-        let rows = &rows[0];
-        rows.iter()
-            .map(|row| to_blocked_session_entry(&self.name, row, sep))
-            .collect::<Vec<String>>()
-            .join("")
+    fn process_blocked_sessions_rows(&self, answers: &[UniAnswer], sep: char) -> String {
+        match answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
+                .iter()
+                .map(|row| to_blocked_session_entry(&self.name, row, sep))
+                .collect::<Vec<String>>()
+                .join(""),
+            None => {
+                log::error!("Process blocked sessions answer is empty");
+                String::new()
+            }
+        }
     }
 
-    fn process_utc_rows(&self, rows: &[Row], sep: char) -> Result<String> {
-        let utc = rows[0].get_value_by_name(sqls::UTC_DATE_FIELD);
-        Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
+    fn process_utc_rows(&self, answer: &UniAnswer, sep: char) -> Result<String> {
+        match answer {
+            UniAnswer::Rows(rows) => {
+                let utc = rows[0].get_value_by_name(sqls::UTC_DATE_FIELD);
+                Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
+            }
+        }
     }
 
-    fn process_databases_rows(&self, rows: &[Vec<Row>]) -> Vec<String> {
-        let row = &rows[0];
-        row.iter()
-            .map(|row| row.get_value_by_idx(0))
-            .collect::<Vec<String>>()
+    fn process_databases_rows(&self, answers: &[UniAnswer]) -> Vec<String> {
+        match answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
+                .iter()
+                .map(|row| row.get_value_by_idx(0))
+                .collect::<Vec<String>>(),
+            None => {
+                log::error!("Databases answer is empty");
+                vec![]
+            }
+        }
     }
 
     fn process_details_rows(&self, properties: &SqlInstanceProperties, sep: char) -> String {
@@ -1051,7 +1063,7 @@ impl SqlInstance {
         )
     }
 
-    fn process_backup_rows(&self, rows: &Vec<Vec<Row>>, databases: &[String], sep: char) -> String {
+    fn process_backup_rows(&self, rows: &[UniAnswer], databases: &[String], sep: char) -> String {
         let (mut ready, missing_data) = self.process_backup_rows_partly(rows, databases, sep);
         let missing: Vec<String> = self.process_missing_backup_rows(&missing_data, sep);
         ready.extend(missing);
@@ -1061,14 +1073,14 @@ impl SqlInstance {
     /// generates lit of correct backup entries + list of missing required backups
     fn process_backup_rows_partly(
         &self,
-        rows: &Vec<Vec<Row>>,
+        answers: &[UniAnswer],
         databases: &[String],
         sep: char,
     ) -> (Vec<String>, HashSet<String>) {
         let mut only_databases: HashSet<String> =
             databases.iter().map(|s| s.to_lowercase()).collect();
-        let s: Vec<String> = if !rows.is_empty() {
-            rows[0]
+        let s: Vec<String> = match answers.first() {
+            Some(UniAnswer::Rows(rows)) => rows
                 .iter()
                 .filter_map(|row| {
                     let backup_database = row.get_value_by_name("database_name").to_lowercase();
@@ -1079,9 +1091,8 @@ impl SqlInstance {
                         None
                     }
                 })
-                .collect()
-        } else {
-            vec![]
+                .collect(),
+            None => vec![],
         };
         (s, only_databases)
     }
@@ -1117,27 +1128,31 @@ pub struct SqlInstanceProperties {
     pub net_bios: String,
 }
 
-impl From<&Vec<Row>> for SqlInstanceProperties {
-    fn from(row: &Vec<Row>) -> Self {
-        let row = &row[0];
-        let name = row.get_value_by_name("InstanceName");
-        let version: InstanceVersion = row.get_value_by_name("ProductVersion").into();
-        let computer_name: ComputerName = row.get_value_by_name("MachineName").into();
-        let edition: InstanceEdition = row.get_value_by_name("Edition").into();
-        let product_level = row.get_value_by_name("ProductLevel");
-        let net_bios = row.get_value_by_name("NetBios");
-        Self {
-            name: (if name.is_empty() {
-                "MSSQLSERVER".to_string()
-            } else {
-                name.to_uppercase()
-            })
-            .into(),
-            version,
-            computer_name,
-            edition,
-            product_level,
-            net_bios,
+impl From<&UniAnswer> for SqlInstanceProperties {
+    fn from(answer: &UniAnswer) -> Self {
+        match answer {
+            UniAnswer::Rows(rows) => {
+                let row = &rows[0];
+                let name = row.get_value_by_name("InstanceName");
+                let version: InstanceVersion = row.get_value_by_name("ProductVersion").into();
+                let computer_name: ComputerName = row.get_value_by_name("MachineName").into();
+                let edition: InstanceEdition = row.get_value_by_name("Edition").into();
+                let product_level = row.get_value_by_name("ProductLevel");
+                let net_bios = row.get_value_by_name("NetBios");
+                Self {
+                    name: (if name.is_empty() {
+                        "MSSQLSERVER".to_string()
+                    } else {
+                        name.to_uppercase()
+                    })
+                    .into(),
+                    version,
+                    computer_name,
+                    edition,
+                    product_level,
+                    net_bios,
+                }
+            }
         }
     }
 }
@@ -1152,7 +1167,7 @@ impl SqlInstanceProperties {
     }
 }
 
-fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+fn validate_rows(rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> {
     if rows.is_empty() || rows[0].is_empty() {
         Err(anyhow::anyhow!("No output from query"))
     } else {
@@ -1160,7 +1175,7 @@ fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
     }
 }
 
-fn validate_rows_has_two_blocks(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+fn validate_rows_has_two_blocks(rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> {
     if rows.len() != 2 || rows[0].is_empty() || rows[1].is_empty() {
         Err(anyhow::anyhow!("Output from query is invalid"))
     } else {
@@ -1171,22 +1186,23 @@ fn validate_rows_has_two_blocks(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
 fn to_table_spaces_entry(
     instance_name: &str,
     database_name: &str,
-    rows: &Vec<Vec<Row>>,
+    answers: &[UniAnswer],
     sep: char,
 ) -> String {
-    let extract = |rows: &Vec<Vec<Row>>, part: usize, name: &str| {
-        if (rows.len() < part) || rows[part].is_empty() {
-            String::new()
-        } else {
-            rows[part][0].get_value_by_name(name).trim().to_string()
+    let extract = |answers: &[UniAnswer], part: usize, name: &str| {
+        if (answers.len() < part) || answers[part].is_empty() {
+            return String::new();
+        }
+        match &answers[part] {
+            UniAnswer::Rows(rows) => rows[0].get_value_by_name(name).trim().to_string(),
         }
     };
-    let db_size = extract(rows, 0, "database_size");
-    let unallocated = extract(rows, 0, "unallocated_space");
-    let reserved = extract(rows, 1, "reserved");
-    let data = extract(rows, 1, "data");
-    let index_size = extract(rows, 1, "index_size");
-    let unused = extract(rows, 1, "unused");
+    let db_size = extract(answers, 0, "database_size");
+    let unallocated = extract(answers, 0, "unallocated_space");
+    let reserved = extract(answers, 1, "reserved");
+    let data = extract(answers, 1, "data");
+    let index_size = extract(answers, 1, "index_size");
+    let unused = extract(answers, 1, "unused");
     format!(
         "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
         instance_name,
@@ -1203,17 +1219,19 @@ fn to_table_spaces_entry(
 fn to_transaction_logs_entries(
     instance_name: &InstanceName,
     database_name: &str,
-    rows: &[Vec<Row>],
+    answers: &[UniAnswer],
     sep: char,
 ) -> String {
-    if rows.is_empty() {
+    if answers.is_empty() {
         return String::new();
     }
-    rows[0]
-        .iter()
-        .map(|row| to_transaction_logs_entry(row, instance_name, database_name, sep))
-        .collect::<Vec<String>>()
-        .join("")
+    match &answers[0] {
+        UniAnswer::Rows(rows) => rows
+            .iter()
+            .map(|row| to_transaction_logs_entry(row, instance_name, database_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+    }
 }
 
 fn to_transaction_logs_entry(
@@ -1244,17 +1262,19 @@ fn to_transaction_logs_entry(
 fn to_datafiles_entries(
     instance_name: &InstanceName,
     database_name: &str,
-    rows: &[Vec<Row>],
+    answers: &[UniAnswer],
     sep: char,
 ) -> String {
-    if rows.is_empty() {
+    if answers.is_empty() {
         return String::new();
     }
-    rows[0]
-        .iter()
-        .map(|row| to_datafiles_entry(row, instance_name, database_name, sep))
-        .collect::<Vec<String>>()
-        .join("")
+    match &answers[0] {
+        UniAnswer::Rows(rows) => rows
+            .iter()
+            .map(|row| to_datafiles_entry(row, instance_name, database_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+    }
 }
 
 fn to_datafiles_entry(
@@ -1282,15 +1302,17 @@ fn to_datafiles_entry(
     )
 }
 
-fn to_databases_entries(instance_name: &InstanceName, rows: &[Vec<Row>], sep: char) -> String {
-    if rows.is_empty() {
+fn to_databases_entries(instance_name: &InstanceName, answers: &[UniAnswer], sep: char) -> String {
+    if answers.is_empty() {
         return String::new();
     }
-    rows[0]
-        .iter()
-        .map(|row| to_databases_entry(row, instance_name, sep))
-        .collect::<Vec<String>>()
-        .join("")
+    match &answers[0] {
+        UniAnswer::Rows(rows) => rows
+            .iter()
+            .map(|row| to_databases_entry(row, instance_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+    }
 }
 
 fn to_databases_entry(row: &Row, instance_name: &InstanceName, sep: char) -> String {
@@ -2007,11 +2029,14 @@ async fn exec_win_registry_sql_instances_query(
     }
 }
 
-fn to_sql_instance(rows: &Answer) -> Vec<SqlInstanceBuilder> {
-    rows.iter()
-        .map(|r| SqlInstanceBuilder::new().row(r))
-        .collect::<Vec<SqlInstanceBuilder>>()
-        .to_vec()
+fn to_sql_instance(answers: &UniAnswer) -> Vec<SqlInstanceBuilder> {
+    match answers {
+        UniAnswer::Rows(rows) => rows
+            .iter()
+            .map(|r| SqlInstanceBuilder::new().row(r))
+            .collect::<Vec<SqlInstanceBuilder>>()
+            .to_vec(),
+    }
 }
 
 #[cfg(test)]

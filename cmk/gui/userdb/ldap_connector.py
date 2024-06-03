@@ -1170,8 +1170,8 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         try:
             self.connect()
-        except Exception as e:
-            self._logger.exception("Failed to connect to LDAP:", e)
+        except Exception:
+            self._logger.exception("Failed to connect to LDAP:")
             # Could not connect to any of the LDAP servers, or unknown error. Skip this connection.
             return None
 

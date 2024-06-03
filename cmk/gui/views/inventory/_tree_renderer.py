@@ -408,7 +408,7 @@ class TreeRenderer:
                 hint.icon,
             ),
             fetch_url=makeuri_contextless(
-                request,
+                request_,
                 [
                     ("site", self._site_id),
                     ("host", self._hostname),

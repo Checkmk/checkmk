@@ -5,7 +5,7 @@ Component: checks
 Date: 1716895280
 Edition: cre
 Level: 1
-Version: 2.2.0p27
+Version: 2.2.0p28
 
 With the rework of disk_smb active check in version 2.1.0, using macros in
 'NetBIOS name of the server' was disallowed. Now, the macros are enabled

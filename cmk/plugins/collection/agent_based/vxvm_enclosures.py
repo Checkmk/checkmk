@@ -5,13 +5,16 @@
 from collections.abc import Mapping, MutableMapping
 from typing import NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-
-from .agent_based_api.v1 import register, Result, Service, State
 
 # Example output:
 # <<<vxvm_enclosures>>>
@@ -42,7 +45,7 @@ def parse_vxvm_enclosures(string_table: StringTable) -> VXVMEnclosureSection:
     return vxvm_enclosures
 
 
-register.agent_section(
+agent_section_vxvm_enclosures = AgentSection(
     name="vxvm_enclosures",
     parse_function=parse_vxvm_enclosures,
 )
@@ -66,7 +69,7 @@ def check_vxvm_enclosures(
     )
 
 
-register.check_plugin(
+check_plugin_vxvm_enclosures = CheckPlugin(
     name="vxvm_enclosures",
     service_name="Enclosure %s",
     discovery_function=discover_vxvm_enclosures,

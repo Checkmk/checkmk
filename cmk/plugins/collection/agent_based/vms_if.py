@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.lib import interfaces
 
-from .agent_based_api.v1 import register, type_defs
+from cmk.agent_based.v2 import AgentSection, StringTable
+from cmk.plugins.lib import interfaces
 
 
 def wrap_negative(str_value: str) -> float:
@@ -32,7 +32,7 @@ _VMS_IF_COUNTERS_ORDER = [
 
 
 def parse_vms_if(
-    string_table: type_defs.StringTable,
+    string_table: StringTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
@@ -55,7 +55,7 @@ def parse_vms_if(
     ]
 
 
-register.agent_section(
+agent_section_vms_if = AgentSection(
     name="vms_if",
     parse_function=parse_vms_if,
     parsed_section_name="interfaces",

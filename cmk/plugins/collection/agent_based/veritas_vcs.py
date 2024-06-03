@@ -7,7 +7,16 @@ import functools
 from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import register, Result, Service, State, type_defs
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 # <<<veritas_vcs>>>
 # ClusState        RUNNING
@@ -127,7 +136,7 @@ class ClusterNodeResults(NamedTuple):
     node_summaries: Sequence[str]
 
 
-def parse_veritas_vcs(string_table: type_defs.StringTable) -> Section | None:
+def parse_veritas_vcs(string_table: StringTable) -> Section | None:
     parsed: Section = {}
 
     for line in string_table:
@@ -159,7 +168,7 @@ def parse_veritas_vcs(string_table: type_defs.StringTable) -> Section | None:
     return parsed or None
 
 
-register.agent_section(
+agent_section_veritas_vcs = AgentSection(
     name="veritas_vcs",
     parse_function=parse_veritas_vcs,
 )
@@ -167,7 +176,7 @@ register.agent_section(
 
 def discover_veritas_vcs_subsection(
     subsection: SubSection,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     for item_name in subsection:
         yield Service(item=item_name)
 
@@ -239,7 +248,7 @@ def cluster_check_veritas_vcs_subsection(
     item: str,
     params: Mapping[str, Any],
     subsections: Mapping[str, SubSection],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     cluster_name = None
     node_results = []
     for node_name, node_subsec in subsections.items():
@@ -311,7 +320,7 @@ def cluster_check_veritas_vcs_subsection(
 #   +----------------------------------------------------------------------+
 
 
-def discover_veritas_vcs(section: Section) -> type_defs.DiscoveryResult:
+def discover_veritas_vcs(section: Section) -> DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get("cluster", {}))
 
 
@@ -319,7 +328,7 @@ def check_veritas_vcs(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -331,7 +340,7 @@ def cluster_check_veritas_vcs(
     item: str,
     params: Mapping[str, Any],
     section: ClusterSection,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -343,7 +352,7 @@ def cluster_check_veritas_vcs(
     )
 
 
-register.check_plugin(
+check_plugin_veritas_vcs = CheckPlugin(
     name="veritas_vcs",
     sections=["veritas_vcs"],
     service_name="VCS Cluster %s",
@@ -365,7 +374,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_system(section: Section) -> type_defs.DiscoveryResult:
+def discover_veritas_vcs_system(section: Section) -> DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get("system", {}))
 
 
@@ -373,7 +382,7 @@ def check_veritas_vcs_system(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -385,7 +394,7 @@ def cluster_check_veritas_vcs_system(
     item: str,
     params: Mapping[str, Any],
     section: ClusterSection,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -397,7 +406,7 @@ def cluster_check_veritas_vcs_system(
     )
 
 
-register.check_plugin(
+check_plugin_veritas_vcs_system = CheckPlugin(
     name="veritas_vcs_system",
     sections=["veritas_vcs"],
     service_name="VCS System %s",
@@ -419,7 +428,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_group(section: Section) -> type_defs.DiscoveryResult:
+def discover_veritas_vcs_group(section: Section) -> DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get("group", {}))
 
 
@@ -427,7 +436,7 @@ def check_veritas_vcs_group(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -439,7 +448,7 @@ def cluster_check_veritas_vcs_group(
     item: str,
     params: Mapping[str, Any],
     section: ClusterSection,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -451,7 +460,7 @@ def cluster_check_veritas_vcs_group(
     )
 
 
-register.check_plugin(
+check_plugin_veritas_vcs_servicegroup = CheckPlugin(
     name="veritas_vcs_servicegroup",
     sections=["veritas_vcs"],
     service_name="VCS Service Group %s",
@@ -473,7 +482,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_resource(section: Section) -> type_defs.DiscoveryResult:
+def discover_veritas_vcs_resource(section: Section) -> DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get("resource", {}))
 
 
@@ -481,7 +490,7 @@ def check_veritas_vcs_resource(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -493,7 +502,7 @@ def cluster_check_veritas_vcs_resource(
     item: str,
     params: Mapping[str, Any],
     section: ClusterSection,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -505,7 +514,7 @@ def cluster_check_veritas_vcs_resource(
     )
 
 
-register.check_plugin(
+check_plugin_veritas_vcs_resource = CheckPlugin(
     name="veritas_vcs_resource",
     sections=["veritas_vcs"],
     service_name="VCS Resource %s",

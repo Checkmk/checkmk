@@ -11,10 +11,19 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
-
-from .agent_based_api.v1 import OIDEnd, register, Result, Service, SNMPTree, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class SmokeSensor(NamedTuple):
@@ -35,7 +44,7 @@ def parse_vutlan_ems_smoke(string_table: StringTable) -> SmokeSensorSection:
     return smoke_sensors
 
 
-register.snmp_section(
+snmp_section_vutlan_ems_smoke = SimpleSNMPSection(
     name="vutlan_ems_smoke",
     parse_function=parse_vutlan_ems_smoke,
     detect=DETECT_VUTLAN_EMS,
@@ -73,7 +82,7 @@ def check_vutlan_ems_smoke(item: str, section: SmokeSensorSection) -> CheckResul
     )
 
 
-register.check_plugin(
+check_plugin_vutlan_ems_smoke = CheckPlugin(
     name="vutlan_ems_smoke",
     service_name="Smoke Detector %s",
     discovery_function=discover_vutlan_ems_smoke,

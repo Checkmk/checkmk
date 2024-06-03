@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
-from cmk.base.plugins.agent_based import vms_diskstat
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
-
+from cmk.agent_based.v2 import Service
+from cmk.plugins.collection.agent_based import vms_diskstat
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [

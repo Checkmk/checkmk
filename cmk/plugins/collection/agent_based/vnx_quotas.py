@@ -2,13 +2,22 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import re
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    RuleSetType,
+    Service,
+    StringTable,
+)
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-
-from .agent_based_api.v1 import get_value_store, regex, register, Result, Service
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _MEGA = 1024.0**2
 
@@ -73,7 +82,7 @@ def parse_vnx_quotas(string_table: StringTable) -> Section:
     return section
 
 
-register.agent_section(
+agent_section_vnx_quotas = AgentSection(
     name="vnx_quotas",
     parse_function=parse_vnx_quotas,
 )
@@ -83,9 +92,7 @@ def vnx_quotas_renaming(name: str, mappings: Sequence[tuple[str, str]]) -> str:
     for match, substitution in mappings:
         if match.startswith("~"):
             num_perc_s = substitution.count("%s")
-            reg = regex(match[1:])
-            matchobj = reg.match(name)
-            if matchobj:
+            if matchobj := re.match(match[1:], name):
                 matches = [g and g or "" for g in matchobj.groups()]
                 for num, group in enumerate(matches, start=1):
                     substitution = substitution.replace("%%%d" % num, group)
@@ -145,7 +152,7 @@ def check_vnx_quotas(item: str, params: Mapping[str, Any], section: Section) -> 
             )
 
 
-register.check_plugin(
+check_plugin_vnx_quotas = CheckPlugin(
     name="vnx_quotas",
     service_name="VNX Quota %s",
     discovery_function=discover_vnx_quotas,
@@ -154,7 +161,7 @@ register.check_plugin(
         "mp_names": [],
     },
     discovery_ruleset_name="discovery_rules_vnx_quotas",
-    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_ruleset_type=RuleSetType.ALL,
     check_function=check_vnx_quotas,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

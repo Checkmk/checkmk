@@ -7,14 +7,12 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.vxvm_multipath import (
+from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based.vxvm_multipath import (
     check_vxvm_multipath,
     discover_vxvm_multipath,
     parse_vxvm_multipath,
 )
-
-from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [
     ["san_vc0_0001da", "ENABLED", "SAN_VC", "8", "8", "0", "san_vc0"],

@@ -5,13 +5,16 @@
 from collections.abc import Mapping, MutableMapping
 from typing import NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-
-from .agent_based_api.v1 import register, Result, Service, State
 
 # Example output:
 # <<<vxvm_multipath>>>
@@ -55,7 +58,7 @@ def parse_vxvm_multipath(string_table: StringTable) -> VXVMMultipathSection:
     return vxvm_multipath_disks
 
 
-register.agent_section(
+agent_section_vxvm_multipath = AgentSection(
     name="vxvm_multipath",
     parse_function=parse_vxvm_multipath,
 )
@@ -85,7 +88,7 @@ def check_vxvm_multipath(
     )
 
 
-register.check_plugin(
+check_plugin_vxvm_multipath = CheckPlugin(
     name="vxvm_multipath",
     service_name="Multipath %s",
     discovery_function=discover_vxvm_multipath,

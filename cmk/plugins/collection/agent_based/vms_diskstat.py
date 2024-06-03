@@ -6,15 +6,21 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    RuleSetType,
+    StringTable,
+)
 from cmk.plugins.lib.df import (
     df_check_filesystem_single,
     df_discovery,
     FILESYSTEM_DEFAULT_PARAMS,
     FSBlock,
 )
-
-from .agent_based_api.v1 import get_value_store, register
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, FSBlock]
 
@@ -46,7 +52,7 @@ def parse_vms_diskstat(string_table: StringTable) -> Section:
     }
 
 
-register.agent_section(
+agent_section_vms_diskstat = AgentSection(
     name="vms_diskstat",
     parse_function=parse_vms_diskstat,
 )
@@ -64,14 +70,14 @@ def check_vms_diskstat_df(item: str, params: Mapping[str, Any], section: Section
     yield from df_check_filesystem_single(get_value_store(), *volume, None, None, params)
 
 
-register.check_plugin(
+check_plugin_vms_diskstat_df = CheckPlugin(
     name="vms_diskstat_df",
     sections=["vms_diskstat"],
     service_name="Filesystem %s",
     discovery_function=discover_vms_diskstat_df,
     discovery_default_parameters={"groups": []},
     discovery_ruleset_name="filesystem_groups",
-    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_ruleset_type=RuleSetType.ALL,
     check_function=check_vms_diskstat_df,
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
     check_ruleset_name="filesystem",

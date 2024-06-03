@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
 from tests.unit.conftest import FixRegister
@@ -10,8 +11,8 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.vutlan_ems_smoke import SmokeSensor, SmokeSensorSection
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.collection.agent_based.vutlan_ems_smoke import SmokeSensor, SmokeSensorSection
 
 pytestmark = pytest.mark.checks
 

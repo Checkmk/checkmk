@@ -7,14 +7,12 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.vxvm_enclosures import (
+from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based.vxvm_enclosures import (
     check_vxvm_enclosures,
     discover_vxvm_enclosures,
     parse_vxvm_enclosures,
 )
-
-from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [
     ["san_vc0", "SAN_VC", "02006021c03c", "CONNECTED", "IBMSVC-ALUA", "8", "0000"],

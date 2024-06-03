@@ -9,9 +9,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based import veeam_cdp_jobs
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, type_defs
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based import veeam_cdp_jobs
 
 DATA = [
     ["Test 1", "1632216559.73749", "Running"],
@@ -40,7 +39,7 @@ DATA = [
     ],
 )
 def test_veeam_cdp_jobs_discovery(
-    data: type_defs.StringTable,
+    data: StringTable,
     result: DiscoveryResult,
 ) -> None:
     section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
@@ -118,7 +117,7 @@ def test_veeam_cdp_jobs_discovery(
 def test_veeam_cdp_jobs_check(
     item: str,
     params: veeam_cdp_jobs.CheckParams,
-    data: type_defs.StringTable,
+    data: StringTable,
     result: CheckResult,
 ) -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(1632216660, tz=ZoneInfo("UTC"))):

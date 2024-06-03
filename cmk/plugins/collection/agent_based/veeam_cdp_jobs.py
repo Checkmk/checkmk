@@ -8,8 +8,18 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import NamedTuple, TypedDict
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 class CDPState(Enum):
@@ -41,7 +51,7 @@ class CheckParams(TypedDict):
     age: tuple[float, float]
 
 
-def parse_veeam_cdp_jobs(string_table: type_defs.StringTable) -> Section:
+def parse_veeam_cdp_jobs(string_table: StringTable) -> Section:
     def _sanitize_last_sync(last_sync: str) -> float:
         # Some agent outputs may provide lines like:
         # ['"JOB-NAME"', '1695809510,31277', 'Running']
@@ -57,7 +67,7 @@ def parse_veeam_cdp_jobs(string_table: type_defs.StringTable) -> Section:
     }
 
 
-register.agent_section(
+agent_section_veeam_cdp_jobs = AgentSection(
     name="veeam_cdp_jobs",
     parse_function=parse_veeam_cdp_jobs,
 )
@@ -96,7 +106,7 @@ def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> Ch
     )
 
 
-register.check_plugin(
+check_plugin_veeam_cdp_jobs = CheckPlugin(
     name="veeam_cdp_jobs",
     service_name="VEEAM CDP Job %s",
     discovery_function=discovery_veeam_cdp_jobs,

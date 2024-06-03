@@ -256,6 +256,8 @@ def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) 
 
 
 def inject_dumps(site: Site, dumps_dir: Path) -> None:
+    _dumps_up_to_date(dumps_dir, BaseVersions.MIN_VERSION)
+
     # create dump folder in the test site
     site_dumps_path = site.path("var/check_mk/dumps")
     logger.info('Creating folder "%s"...', site_dumps_path)
@@ -301,3 +303,18 @@ def inject_rules(site: Site) -> None:
             for rule in rules:
                 site.openapi.create_rule(value=rule)
     site.activate_changes_and_wait_for_core_reload()
+
+
+def _dumps_up_to_date(dumps_dir: Path, min_version: CMKVersion) -> None:
+    """Check if the dumps are up-to-date with the minimum-version branch."""
+    dumps = list(dumps_dir.glob("*"))
+    min_version_str = min_version.version
+    min_version_branch = min_version_str[: min_version_str.find("p")]
+    if not dumps:
+        raise FileNotFoundError("No dumps found!")
+    for dump in dumps:
+        if str(min_version_branch) not in dump.name:
+            raise ValueError(
+                f"Dump '{dump.name}' is outdated! "
+                f"Please regenerate it using an agent with version {min_version_branch}."
+            )

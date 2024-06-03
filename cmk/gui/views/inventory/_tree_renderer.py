@@ -304,15 +304,10 @@ class TreeRenderer:
         self._tree_id = tree_id
         self._tree_name = f"inv_{hostname}{tree_id}"
 
-    def _get_header(self, title: str, key_info: str, icon: str | None = None) -> HTML:
+    def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
             header += " " + HTMLWriter.render_span(f"({key_info})", css="muted_text")
-        if icon:
-            header += html.render_img(
-                class_=(["title", "icon"]),
-                src=theme.detect_icon_path(icon, "icon_"),
-            )
         return header
 
     def _show_attributes(
@@ -398,15 +393,20 @@ class TreeRenderer:
         self, node: ImmutableTree | ImmutableDeltaTree, hint: NodeDisplayHint, request_: Request
     ) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
+        title = self._get_header(
+            _replace_title_placeholders(hint.title, hint.path, node.path),
+            ".".join(map(str, node.path)),
+        )
+        if hint.icon:
+            title += html.render_img(
+                class_=(["title", "icon"]),
+                src=theme.detect_icon_path(hint.icon, "icon_"),
+            )
         with foldable_container(
             treename=self._tree_name,
             id_=raw_path,
             isopen=False,
-            title=self._get_header(
-                _replace_title_placeholders(hint.title, hint.path, node.path),
-                ".".join(map(str, node.path)),
-                hint.icon,
-            ),
+            title=title,
             fetch_url=makeuri_contextless(
                 request_,
                 [

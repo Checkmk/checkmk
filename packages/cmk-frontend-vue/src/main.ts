@@ -32,6 +32,8 @@ function setup_vue() {
       const app = createApp(CmkRuleset, {
         id: vueApp.id,
         spec: vueApp.form_spec,
+        // eslint has a false positive: assuming `data` is part of a vue component
+        // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
         data: vueApp.model_value,
         validation: vueApp.validation_messages
       })

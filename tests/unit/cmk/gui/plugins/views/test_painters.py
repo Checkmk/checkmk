@@ -19,8 +19,12 @@ from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request
-from cmk.gui.painter.v0.base import painter_registry
-from cmk.gui.painter.v0.painters import _paint_custom_notes
+from cmk.gui.painter.v0.base import Cell, painter_registry
+from cmk.gui.painter.v0.painters import (
+    _paint_custom_notes,
+    PainterSvcCheckCommand,
+    PainterSvcCheckCommandExpanded,
+)
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
@@ -2120,3 +2124,32 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     expected_string = str(HTML("<hr>".join(expected_notes)))
 
     assert expected_string == notes_as_string
+
+
+@pytest.mark.parametrize(
+    "in_command, in_expanded_command, expected_command, expected_expanded_command",
+    [
+        pytest.param(
+            "check_mk_active-mailboxes!--fetch-protocol=IMAP '--fetch-server=$HOSTADDRESS$' "
+            "--fetch-tls --fetch-username=bla '--fetch-password=\\!password'",
+            "--fetch-protocol=IMAP '--fetch-server=$HOSTADDRESS$' --fetch-tls --fetch-username=bla "
+            "'--fetch-password=\\!password'",
+            "check_mk_active-mailboxes!--fetch-protocol=IMAP '--fetch-server=$HOSTADDRESS$' "
+            "--fetch-tls --fetch-username=bla '--fetch-password=!password'",
+            "--fetch-protocol=IMAP '--fetch-server=$HOSTADDRESS$' --fetch-tls --fetch-username=bla "
+            "'--fetch-password=!password'",
+            id="check_mailboxes active check command with '!'",
+        ),
+    ],
+)
+def test_paint_service_check_command_for_active_check(
+    in_command: str, in_expanded_command: str, expected_command: str, expected_expanded_command: str
+) -> None:
+    assert PainterSvcCheckCommand().render(
+        {"service_check_command": in_command},
+        Cell(None, None),
+    ) == (None, expected_command)
+    assert PainterSvcCheckCommandExpanded().render(
+        {"service_check_command_expanded": in_expanded_command},
+        Cell(None, None),
+    ) == (None, expected_expanded_command)

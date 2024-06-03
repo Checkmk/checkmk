@@ -12,6 +12,7 @@ import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.password_store as password_store
 import cmk.utils.paths
+from cmk.utils.escaping import escape_command_args
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -119,7 +120,7 @@ class ActiveCheck:
         use_new_descriptions_for: Container[CheckPluginNameStr],
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
-        escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
+        escape_func: Callable[[str], str] = escape_command_args,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}

@@ -21,6 +21,7 @@ import cmk.utils.paths
 from cmk.utils import config_warnings, password_store, store, tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.escaping import escape_command_args
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.labels import Labels
@@ -501,7 +502,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         config.use_new_descriptions_for,
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
-        escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
+        escape_func=lambda a: escape_command_args(a.replace("\\", "\\\\")),
     )
 
     active_checks = config_cache.active_checks(hostname)
@@ -580,10 +581,8 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 continue
 
             if command_line:
-                command_line = (
-                    core_config.autodetect_plugin(command_line)
-                    .replace("\\", "\\\\")
-                    .replace("!", "\\!")
+                command_line = escape_command_args(
+                    core_config.autodetect_plugin(command_line).replace("\\", "\\\\")
                 )
 
             if "freshness" in entry:
@@ -1023,7 +1022,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName])
 def _quote_nagios_string(s: str) -> str:
     """Quote string for use in a nagios command execution.  Please note that also
     quoting for ! and backslash for Nagios itself takes place here."""
-    return "'" + s.replace("\\", "\\\\").replace("'", "'\"'\"'").replace("!", "\\!") + "'"
+    return "'" + escape_command_args(s.replace("\\", "\\\\").replace("'", "'\"'\"'")) + "'"
 
 
 def _extra_service_conf_of(

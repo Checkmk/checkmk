@@ -12,6 +12,7 @@ from pathlib import Path
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.escaping import unescape_command_args
 from cmk.utils.labels import Labels
 from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
@@ -841,7 +842,7 @@ class PainterSvcCheckCommand(Painter):
         return ["service_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["service_check_command"])
+        return (None, unescape_command_args(row["service_check_command"]))
 
 
 class PainterSvcCheckCommandExpanded(Painter):
@@ -860,7 +861,7 @@ class PainterSvcCheckCommandExpanded(Painter):
         return ["service_check_command_expanded"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["service_check_command_expanded"])
+        return (None, unescape_command_args(row["service_check_command_expanded"]))
 
 
 class PainterSvcNotesURL(Painter):

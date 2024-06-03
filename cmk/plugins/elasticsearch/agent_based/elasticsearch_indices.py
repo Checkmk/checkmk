@@ -166,8 +166,8 @@ def _accumulate_indices(
 def _do_accumulation(group_members: Sequence[_ElasticIndex]) -> _ElasticIndex | None:
     return (
         _ElasticIndex(
-            count=sum(index.count for index in group_members) / len(group_members),
-            size=sum(index.size for index in group_members) / len(group_members),
+            count=sum(index.count for index in group_members),
+            size=sum(index.size for index in group_members),
         )
         if group_members
         else None

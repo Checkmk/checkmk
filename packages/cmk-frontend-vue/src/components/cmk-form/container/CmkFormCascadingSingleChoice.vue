@@ -56,14 +56,6 @@ const value = computed({
   }
 })
 
-const validation = computed(() => {
-  // If the local validation was never used (null), return the props.validation (backend validation)
-  if (local_validation.value === null) {
-    return props.validation
-  }
-  return local_validation.value
-})
-
 interface ActiveElement {
   spec: VueSchema
   validation: ValidationMessages

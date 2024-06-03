@@ -10,8 +10,8 @@ import datetime
 
 import pytest
 
-from cmk.base.plugins.agent_based import timemachine
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.collection.agent_based import timemachine
 
 NOW = datetime.datetime(2022, 5, 6, 14, 59, 40, 552190)
 

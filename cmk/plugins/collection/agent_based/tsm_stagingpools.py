@@ -6,7 +6,18 @@
 from collections.abc import Mapping
 from typing import Any
 
-from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State, type_defs
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 # <<<tsm_stagingpools>>>
 # tsmfarm2       SL8500_STGPOOL_05       99.9
@@ -29,7 +40,7 @@ TSM_STAGINGPOOLS_DEFAULT_LEVELS = {
 SECTION = dict[str, list[str]]
 
 
-def parse_tsm_stagingpools(string_table: type_defs.StringTable) -> SECTION:
+def parse_tsm_stagingpools(string_table: StringTable) -> SECTION:
     """
     >>> string_table = [
     ...     ["tsmfarm2", "SL8500_STGPOOL_05", "99.9"],
@@ -61,13 +72,13 @@ def parse_tsm_stagingpools(string_table: type_defs.StringTable) -> SECTION:
     return parsed
 
 
-register.agent_section(
+agent_section_tsm_stagingpools = AgentSection(
     name="tsm_stagingpools",
     parse_function=parse_tsm_stagingpools,
 )
 
 
-def discovery_tsm_stagingpools(section: SECTION) -> type_defs.DiscoveryResult:
+def discovery_tsm_stagingpools(section: SECTION) -> DiscoveryResult:
     """
     >>> section={'tsmfarm2 / SL8500_STGPOOL_05': ['99.9', '97.9'], 'foo': ['7.1']}
     >>> for service in discovery_tsm_stagingpools(section): print(service)
@@ -82,7 +93,7 @@ def check_tsm_stagingpools(
     item: str,
     params: Mapping[str, Any],
     section: SECTION,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if item not in section:
         return
 
@@ -120,7 +131,7 @@ def cluster_check_tsm_stagingspools(
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, SECTION | None],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     datasets, nodeinfos = [], []
     for node, data in section.items():
         if data is not None and item in data:
@@ -142,7 +153,7 @@ def cluster_check_tsm_stagingspools(
         yield Result(state=State.UNKNOWN, summary="Cluster: data from nodes are not equal")
 
 
-register.check_plugin(
+check_plugin_tsm_stagingpools = CheckPlugin(
     name="tsm_stagingpools",
     service_name="TSM Stagingpool %s",
     discovery_function=discovery_tsm_stagingpools,

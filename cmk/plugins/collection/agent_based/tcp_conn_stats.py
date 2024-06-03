@@ -5,10 +5,16 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
+)
 from cmk.plugins.lib.tcp_connections import empty_stats, MAP_COUNTER_KEYS, TCPConnections
-
-from .agent_based_api.v1 import check_levels, register, Service
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 def parse_tcp_conn_stats(string_table: StringTable) -> TCPConnections:
@@ -69,7 +75,7 @@ def parse_tcp_conn_stats(string_table: StringTable) -> TCPConnections:
     return section
 
 
-register.agent_section(
+agent_section_tcp_conn_stats = AgentSection(
     name="tcp_conn_stats",
     parse_function=parse_tcp_conn_stats,
 )
@@ -93,7 +99,7 @@ def check_tcp_connections(params: Mapping[str, Any], section: TCPConnections) ->
         )
 
 
-register.check_plugin(
+check_plugin_tcp_conn_stats = CheckPlugin(
     name="tcp_conn_stats",
     service_name="TCP Connections",
     discovery_function=discover_tcp_connections,

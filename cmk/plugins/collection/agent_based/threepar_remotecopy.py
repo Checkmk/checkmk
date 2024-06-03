@@ -6,15 +6,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, Literal
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-
 from cmk.plugins.lib.threepar import parse_3par
-
-from .agent_based_api.v1 import register, Result, Service, State
 
 THREEPAR_REMOTECOPY_DEFAULT_LEVELS: Final[Mapping[str, Literal[0, 1, 2, 3]]] = {
     "1": 0,  # NORMAL
@@ -62,7 +64,7 @@ def parse_threepar_remotecopy(string_table: StringTable) -> ThreeparRemoteCopy:
     )
 
 
-register.agent_section(
+agent_section_3par_remotecopy = AgentSection(
     name="3par_remotecopy",
     parse_function=parse_threepar_remotecopy,
 )
@@ -85,7 +87,7 @@ def check_threepar_remotecopy(
     )
 
 
-register.check_plugin(
+check_plugin_3par_remotecopy = CheckPlugin(
     name="3par_remotecopy",
     service_name="Remote copy",
     discovery_function=discover_threepar_remotecopy,

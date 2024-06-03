@@ -6,16 +6,19 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
+    render,
+    Service,
     StringTable,
 )
-
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.lib.threepar import parse_3par
-
-from .agent_based_api.v1 import check_levels, get_value_store, register, render, Service
 
 
 @dataclass
@@ -41,7 +44,7 @@ def parse_threepar_capacity(string_table: StringTable) -> ThreeParCapacitySectio
     }
 
 
-register.agent_section(
+agent_section_3par_capacity = AgentSection(
     name="3par_capacity",
     parse_function=parse_threepar_capacity,
 )
@@ -83,7 +86,7 @@ def check_threepar_capacity(
     )
 
 
-register.check_plugin(
+check_plugin_3par_capacity = CheckPlugin(
     name="3par_capacity",
     service_name="Capacity %s",
     check_function=check_threepar_capacity,

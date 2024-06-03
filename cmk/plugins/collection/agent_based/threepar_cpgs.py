@@ -7,16 +7,19 @@ from typing import Any
 
 import pydantic
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.lib.threepar import parse_3par
-
-from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 
 
 class SpaceUsage(pydantic.BaseModel):
@@ -61,7 +64,7 @@ def count_threepar_vvs(cpg: ThreeparCPG) -> int:
     return cpg.num_fpvvs + cpg.num_tdvvs + cpg.num_tpvvs
 
 
-register.agent_section(
+agent_section_3par_cpgs = AgentSection(
     name="3par_cpgs",
     parse_function=parse_threepar_cpgs,
 )
@@ -81,7 +84,7 @@ def check_threepar_cpgs(item: str, section: ThreeparCPGSection) -> CheckResult:
     yield Result(state=state, summary=f"{state_readable}, {count_threepar_vvs(cpg)} VVs")
 
 
-register.check_plugin(
+check_plugin_3par_cpgs = CheckPlugin(
     name="3par_cpgs",
     discovery_function=discover_threepar_cpgs,
     check_function=check_threepar_cpgs,
@@ -139,7 +142,7 @@ def check_threepar_cpgs_usage(
             )
 
 
-register.check_plugin(
+check_plugin_3par_cpgs_usage = CheckPlugin(
     name="3par_cpgs_usage",
     discovery_function=discover_threepar_cpgs_usage,
     check_function=check_threepar_cpgs_usage,

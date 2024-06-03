@@ -6,15 +6,17 @@
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-
 from cmk.plugins.lib.threepar import parse_3par
-
-from .agent_based_api.v1 import register, Result, Service, State
 
 THREEPAR_PORTS_DEFAULT_LEVELS = {
     "1_link": 1,
@@ -143,7 +145,7 @@ def parse_3par_ports(string_table: StringTable) -> ThreeParPortsSection:
     return threepar_ports
 
 
-register.agent_section(
+agent_section_3par_ports = AgentSection(
     name="3par_ports",
     parse_function=parse_3par_ports,
 )
@@ -189,7 +191,7 @@ def check_3par_ports(
         )
 
 
-register.check_plugin(
+check_plugin_3par_ports = CheckPlugin(
     name="3par_ports",
     service_name="Port %s",
     check_function=check_3par_ports,

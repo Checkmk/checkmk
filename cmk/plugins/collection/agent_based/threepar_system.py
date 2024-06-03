@@ -6,15 +6,17 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-
 from cmk.plugins.lib.threepar import parse_3par
-
-from .agent_based_api.v1 import register, Result, Service, State
 
 
 @dataclass
@@ -40,7 +42,7 @@ def parse_threepar_system(string_table: StringTable) -> ThreeParSystem:
     )
 
 
-register.agent_section(
+agent_section_3par_system = AgentSection(
     name="3par_system",
     parse_function=parse_threepar_system,
 )
@@ -62,7 +64,7 @@ def check_threepar_system(item: str, section: ThreeParSystem) -> CheckResult:
             yield Result(state=State.CRIT, summary=f"(Node {node} not available)")
 
 
-register.check_plugin(
+check_plugin_3par_system = CheckPlugin(
     name="3par_system",
     check_function=check_threepar_system,
     discovery_function=discover_threepar_system,

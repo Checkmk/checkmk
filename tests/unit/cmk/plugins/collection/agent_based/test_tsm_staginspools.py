@@ -6,9 +6,8 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based import tsm_stagingpools
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.plugins.collection.agent_based import tsm_stagingpools
 
 SECTION = {"bar": ["99.9", "97.9"], "foo": ["7.1"]}
 NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {"foo": ["7.1", "9.3"]}}

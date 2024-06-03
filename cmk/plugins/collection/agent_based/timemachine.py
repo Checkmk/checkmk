@@ -14,15 +14,25 @@ import datetime
 from collections.abc import Mapping
 from typing import Any
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 def parse_timemachine(string_table: StringTable) -> str:
     return " ".join(string_table[0])
 
 
-register.agent_section(
+agent_section_timemachine = AgentSection(
     name="timemachine",
     parse_function=parse_timemachine,
 )
@@ -64,7 +74,7 @@ def _check(now: datetime.datetime, params: Mapping[str, Any], section: str) -> C
     )
 
 
-register.check_plugin(
+check_plugin_timemachine = CheckPlugin(
     name="timemachine",
     check_function=check_timemachine,
     discovery_function=discover_timemachine,

@@ -11,13 +11,16 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based import timesyncd
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
     StringTable,
 )
+from cmk.plugins.collection.agent_based import timesyncd
 
 STRING_TABLE_STANDARD = [
     ["Server:", "91.189.91.157", "(ntp.ubuntu.com)"],

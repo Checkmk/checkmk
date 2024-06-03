@@ -6,14 +6,12 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.threepar_system import (
+from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based.threepar_system import (
     check_threepar_system,
     discover_threepar_system,
     parse_threepar_system,
 )
-
-from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [
     [

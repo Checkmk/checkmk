@@ -6,15 +6,17 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    State,
     StringTable,
 )
-
 from cmk.plugins.lib.threepar import parse_3par
-
-from .agent_based_api.v1 import register, Result, Service, State
 
 
 @dataclass
@@ -43,7 +45,7 @@ def parse_threepar_hosts(string_table: StringTable) -> ThreeParHostsSection:
     }
 
 
-register.agent_section(
+agent_section_3par_hosts = AgentSection(
     name="3par_hosts",
     parse_function=parse_threepar_hosts,
 )
@@ -72,7 +74,7 @@ def check_threepar_hosts(
         yield Result(state=State.OK, summary=f"iSCSI Paths: {host.iscsi_paths_number}")
 
 
-register.check_plugin(
+check_plugin_3par_hosts = CheckPlugin(
     name="3par_hosts",
     service_name="Host %s",
     discovery_function=discover_threepar_hosts,

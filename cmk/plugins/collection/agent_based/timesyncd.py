@@ -10,18 +10,20 @@ from typing import Any, NotRequired, TypedDict
 from dateutil import parser as date_parser
 from dateutil import tz
 
-from cmk.plugins.lib.timesync import tolerance_check
-
-from .agent_based_api.v1 import (
-    check_levels,
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
-    register,
     render,
     Result,
     Service,
     State,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.lib.timesync import tolerance_check
 
 
 class CheckParams(TypedDict):
@@ -256,15 +258,15 @@ def check_timesyncd(
     yield Result(state=State.OK, summary="Synchronized on %s" % server)
 
 
-register.agent_section(
+agent_section_timesyncd = AgentSection(
     name="timesyncd",
     parse_function=parse_timesyncd,
 )
-register.agent_section(
+agent_section_timesyncd_ntpmessage = AgentSection(
     name="timesyncd_ntpmessage",
     parse_function=parse_timesyncd_ntpmessage,
 )
-register.check_plugin(
+check_plugin_timesyncd = CheckPlugin(
     name="timesyncd",
     service_name="Systemd Timesyncd Time",
     sections=["timesyncd", "timesyncd_ntpmessage"],

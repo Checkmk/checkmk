@@ -7,15 +7,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.threepar_ports import (
+from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based.threepar_ports import (
     check_3par_ports,
     discover_3par_ports,
     parse_3par_ports,
     THREEPAR_PORTS_DEFAULT_LEVELS,
 )
-
-from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [
     [

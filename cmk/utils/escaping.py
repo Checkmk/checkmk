@@ -90,3 +90,11 @@ def escape_permissive(text: str, escape_links: bool = True) -> str:
     if not escape_links:
         text = _unescape_link(text)
     return text.replace("&amp;nbsp;", "&nbsp;")
+
+
+def escape_command_args(args: str) -> str:
+    return args.replace("!", "\\!")
+
+
+def unescape_command_args(args: str) -> str:
+    return args.replace("\\!", "!")

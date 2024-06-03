@@ -7,6 +7,8 @@ import re
 import shlex
 from collections.abc import Sequence
 
+from cmk.utils.escaping import unescape_command_args
+
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.site_config import get_site_config
@@ -100,7 +102,7 @@ class MkeventdIcon(Icon):
         title = _("Events of Host %s") % (row["host_name"])
 
         if len(args) >= 2:
-            app = args[1].strip("'").replace("\\\\", "\\").replace("\\!", "!")
+            app = unescape_command_args(args[1].strip("'").replace("\\\\", "\\"))
             title = _('Events of Application "%s" on Host %s') % (app, host)
             url_vars.append(("event_application", app))
 

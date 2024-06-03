@@ -252,7 +252,7 @@ def _parse_node_hint(
         ),
         columns=OrderedDict(
             {
-                key: _parse_column_hint(title, key, columns.get(key, {}))
+                SDKey(key): _parse_column_hint(title, key, columns.get(key, {}))
                 for key in _complete_key_order(table_key_order, set(columns))
             }
         ),

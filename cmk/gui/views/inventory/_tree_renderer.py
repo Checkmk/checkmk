@@ -320,12 +320,11 @@ class TreeRenderer:
         attributes: ImmutableAttributes | ImmutableDeltaAttributes,
         hint: NodeDisplayHint,
     ) -> None:
-        sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
-        key_order = [SDKey(k) for k in hint.attributes]
-        if isinstance(attributes, ImmutableAttributes):
-            sorted_pairs = _sort_pairs(attributes, key_order)
-        else:
-            sorted_pairs = _sort_delta_pairs(attributes, key_order)
+        sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem] = (
+            _sort_pairs(attributes, list(hint.attributes))
+            if isinstance(attributes, ImmutableAttributes)
+            else _sort_delta_pairs(attributes, list(hint.attributes))
+        )
 
         html.open_table()
         for item in sorted_pairs:
@@ -361,12 +360,12 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns = _make_columns(table.rows, [SDKey(k) for k in hint.columns])
-        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
-        if isinstance(table, ImmutableTable):
-            sorted_rows = _sort_rows(table, columns)
-        else:
-            sorted_rows = _sort_delta_rows(table, columns)
+        columns = _make_columns(table.rows, list(hint.columns))
+        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
+            _sort_rows(table, columns)
+            if isinstance(table, ImmutableTable)
+            else _sort_delta_rows(table, columns)
+        )
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")

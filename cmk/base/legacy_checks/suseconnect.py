@@ -52,9 +52,9 @@ from collections.abc import Iterable
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.suseconnect import get_data, Section
 
 from cmk.agent_based.v2 import render
+from cmk.plugins.collection.agent_based.suseconnect import get_data, Section
 
 
 def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:

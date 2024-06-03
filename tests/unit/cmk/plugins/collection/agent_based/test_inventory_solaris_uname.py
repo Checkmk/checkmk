@@ -6,13 +6,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.solaris_uname import (
+from cmk.agent_based.v2 import Attributes
+from cmk.plugins.collection.agent_based.solaris_uname import (
     inventory_solaris_uname,
     parse_solaris_uname,
     Section,
 )
-
-from cmk.agent_based.v2 import Attributes
 
 
 @pytest.fixture(name="section", scope="module")

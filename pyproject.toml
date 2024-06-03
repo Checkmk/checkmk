@@ -18,7 +18,10 @@ ignore = [
   "E741", # ambiguous variable name 'FOO'
   "F821", # undefined name 'FOO'
 ]
-select = ["E", "F", "W"]
+select = ["E", "F", "W", "C90"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 64 # TODO: This is far too much, we need to lower this!
 
 
 [tool.isort]

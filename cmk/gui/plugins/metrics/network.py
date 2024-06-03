@@ -5,8 +5,7 @@
 
 import cmk.utils.render
 
-from cmk.gui.graphing._color import indexed_color, parse_color_into_hexrgb
-from cmk.gui.graphing._utils import graph_info, MAX_NUMBER_HOPS, metric_info
+from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _
 
 # .
@@ -23,55 +22,6 @@ from cmk.gui.i18n import _
 
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
-
-
-def register_hop_metrics():
-    for idx in range(0, MAX_NUMBER_HOPS):
-        if idx:
-            prefix_perf = "hop_%d_" % idx
-            prefix_text = "Hop %d " % idx
-        else:
-            prefix_perf = ""
-            prefix_text = ""
-
-        metric_info["%srta" % prefix_perf] = {
-            "title": _("%sRound trip average") % prefix_text,
-            "unit": "s",
-            "color": "33/a",
-        }
-
-        metric_info["%srtmin" % prefix_perf] = {
-            "title": _("%sRound trip minimum") % prefix_text,
-            "unit": "s",
-            "color": "42/a",
-        }
-
-        metric_info["%srtmax" % prefix_perf] = {
-            "title": _("%sRound trip maximum") % prefix_text,
-            "unit": "s",
-            "color": "42/b",
-        }
-
-        metric_info["%srtstddev" % prefix_perf] = {
-            "title": _("%sRound trip standard devation") % prefix_text,
-            "unit": "s",
-            "color": "16/a",
-        }
-
-        metric_info["%spl" % prefix_perf] = {
-            "title": _("%sPacket loss") % prefix_text,
-            "unit": "%",
-            "color": "#ffc030",
-        }
-
-        metric_info["%sresponse_time" % prefix_perf] = {
-            "title": _("%sResponse time") % prefix_text,
-            "unit": "s",
-            "color": "23/a",
-        }
-
-
-register_hop_metrics()
 
 metric_info["accepted"] = {
     "title": _("Accepted connections"),
@@ -1704,48 +1654,6 @@ graph_info["packet_loss"] = {
         "pl:crit",
     ],
 }
-
-
-def register_hop_graphs():
-    for idx in range(1, MAX_NUMBER_HOPS):
-        graph_info["hop_%d_round_trip_average" % idx] = {
-            "title": _("Hop %d round trip average") % idx,
-            "metrics": [
-                ("hop_%d_rtmax" % idx, "line"),
-                ("hop_%d_rtmin" % idx, "line"),
-                ("hop_%d_rta" % idx, "line"),
-                ("hop_%d_rtstddev" % idx, "line"),
-            ],
-        }
-        graph_info["hop_%d_packet_loss" % idx] = {
-            "title": _("Hop %d packet loss") % idx,
-            "metrics": [
-                ("hop_%d_pl" % idx, "area"),
-            ],
-        }
-
-
-register_hop_graphs()
-
-
-def register_hop_response_graph() -> None:
-    graph_info["hop_response_time"] = {
-        "title": _("Hop response times"),
-        "metrics": [
-            (
-                "hop_%d_response_time%s"
-                % (idx, parse_color_into_hexrgb(indexed_color(idx, MAX_NUMBER_HOPS))),
-                "line",
-            )
-            for idx in range(1, MAX_NUMBER_HOPS)
-        ],
-        "optional_metrics": [
-            "hop_%d_response_time" % (idx + 1) for idx in range(1, MAX_NUMBER_HOPS) if idx > 0
-        ],
-    }
-
-
-register_hop_response_graph()
 
 graph_info["palo_alto_sessions"] = {
     "title": _("Palo Alto sessions"),

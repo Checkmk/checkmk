@@ -38,6 +38,37 @@ PackageUrl = NewType("PackageUrl", str)
 
 # It's ok to make it currently only work on debian based distros
 class CMKVersion:
+    """
+    Compare versions without timestamps.
+    >>> CMKVersion("2.0.0p12", Edition.CEE) < CMKVersion("2.1.0p12", Edition.CEE)
+    True
+    >>> CMKVersion("2.3.0p3", Edition.CEE) > CMKVersion("2.3.0", Edition.CEE)
+    True
+    >>> CMKVersion("2.3.0", Edition.CCE) >= CMKVersion("2.3.0", Edition.CCE)
+    True
+    >>> CMKVersion("2.2.0p11", Edition.CCE) <= CMKVersion("2.2.0p11", Edition.CCE)
+    True
+    >>> try:
+    ...     CMKVersion("2.3.0", Edition.CCE) == CMKVersion("2.3.0", Edition.CEE)
+    ... except Exception as e:
+    ...     isinstance(e, TypeError)
+    True
+
+    Only one of the versions has a timestamp (only daily builds have a timestamp)
+    >>> CMKVersion("2.2.0-2024.05.05", Edition.CEE) > CMKVersion("2.2.0p26", Edition.CEE)
+    True
+    >>> CMKVersion("2.2.0-2024.05.05", Edition.CRE) < CMKVersion("2.3.0p3", Edition.CRE)
+    True
+    >>> CMKVersion("2.1.0-2024.05.05", Edition.CEE) != CMKVersion("2.1.0p18", Edition.CEE)
+    True
+
+    Both the versions have a timestamp (patch versions are always `0`)
+    >>> CMKVersion("2.3.0-2024.05.05", Edition.CEE) > CMKVersion("2.2.0-2024.05.05", Edition.CEE)
+    True
+    >>> CMKVersion("2.2.0-2024.05.05", Edition.CEE) < CMKVersion("2.2.0-2024.05.10", Edition.CEE)
+    True
+    """
+
     DEFAULT = "default"
     DAILY = "daily"
     TIMESTAMP_FORMAT = r"%Y.%m.%d"

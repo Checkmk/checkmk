@@ -290,9 +290,9 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
 
 
-def pytest_sessionstart():
-    """Execute very first steps to setup automation testing."""
-    fake_version_and_paths()
-
+#
+# MAIN
+#
 
 add_python_paths()
+fake_version_and_paths()

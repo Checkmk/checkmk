@@ -6,8 +6,21 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from .agent_based_api.v1 import Attributes, exists, register, Result, Service, SNMPTree, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from cmk.agent_based.v2 import (
+    Attributes,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    exists,
+    InventoryPlugin,
+    InventoryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 
 class Section(NamedTuple):
@@ -22,7 +35,7 @@ def parse_quantum_storage_info(string_table: StringTable) -> Section | None:
     return Section(*string_table[0]) if string_table else None
 
 
-register.snmp_section(
+snmp_section_snmp_quantum_storage_info = SimpleSNMPSection(
     name="snmp_quantum_storage_info",
     parse_function=parse_quantum_storage_info,
     fetch=SNMPTree(
@@ -62,7 +75,7 @@ def check_quantum_storage_status(  # type: ignore[no-untyped-def]
     )
 
 
-register.check_plugin(
+check_plugin_quantum_storage_status = CheckPlugin(
     name="quantum_storage_status",
     sections=["snmp_quantum_storage_info"],
     service_name="Device status",
@@ -94,7 +107,7 @@ def inv_snmp_quantum_storage_info(section: Section) -> InventoryResult:
     )
 
 
-register.inventory_plugin(
+inventory_plugin_snmp_quantum_storage_info = InventoryPlugin(
     name="snmp_quantum_storage_info",
     inventory_function=inv_snmp_quantum_storage_info,
 )

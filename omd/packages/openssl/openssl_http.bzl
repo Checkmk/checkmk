@@ -6,7 +6,7 @@ def openssl():
     http_archive(
         name = "openssl",
         urls = [
-            "https://ftp.openssl.org/source/old/1.1.1/openssl-" + OPENSSL_VERSION + ".tar.gz",
+            "https://openssl.org/source/old/1.1.1/openssl-" + OPENSSL_VERSION + ".tar.gz",
             "https://artifacts.lan.tribe29.com/repository/upstream-archives/openssl-" + OPENSSL_VERSION + ".tar.gz",
         ],
         sha256 = "cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8",

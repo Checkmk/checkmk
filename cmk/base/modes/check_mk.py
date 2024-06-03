@@ -1691,6 +1691,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
     return notify.do_notify(
         options,
         args,
+        define_servicegroups=config.define_servicegroups,
         host_parameters_cb=lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
             hostname, plugin
         ),

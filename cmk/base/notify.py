@@ -206,6 +206,7 @@ def do_notify(
     args: list[str],
     *,
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
@@ -254,6 +255,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 rules=rules,
+                define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -268,6 +270,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                define_servicegroups=define_servicegroups,
                 bulk_interval=bulk_interval,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -288,6 +291,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -304,6 +308,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -319,6 +324,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -338,6 +344,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
@@ -365,6 +372,7 @@ def notify_notify(
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -429,6 +437,7 @@ def notify_notify(
             host_parameters_cb,
             get_http_proxy,
             rules=rules,
+            define_servicegroups=define_servicegroups,
             spooling=spooling,
             config_contacts=config_contacts,
             fallback_email=fallback_email,
@@ -446,6 +455,7 @@ def locally_deliver_raw_context(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     spooling: Literal["local", "remote", "both", "off"],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -460,6 +470,7 @@ def locally_deliver_raw_context(
             enriched_context,
             host_parameters_cb,
             get_http_proxy,
+            define_servicegroups=define_servicegroups,
             spooling=spooling,
             config_contacts=config_contacts,
             fallback_email=fallback_email,
@@ -485,6 +496,7 @@ def notification_replay_backlog(
     nr: int,
     *,
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -503,6 +515,7 @@ def notification_replay_backlog(
         get_http_proxy,
         ensure_nagios,
         rules=rules,
+        define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
@@ -520,6 +533,7 @@ def notification_analyse_backlog(
     nr: int,
     *,
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -538,6 +552,7 @@ def notification_analyse_backlog(
         get_http_proxy,
         ensure_nagios,
         rules=rules,
+        define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
@@ -556,6 +571,7 @@ def notification_test(
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -580,6 +596,7 @@ def notification_test(
         get_http_proxy,
         ensure_nagios,
         rules=rules,
+        define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
         fallback_format=fallback_format,
@@ -613,6 +630,7 @@ def notify_keepalive(
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     fallback_email: str,
     fallback_format: _FallbackFormat,
     config_contacts: ConfigContacts,
@@ -625,6 +643,7 @@ def notify_keepalive(
     events.event_keepalive(
         event_function=partial(
             notify_notify,
+            define_servicegroups=define_servicegroups,
             host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
@@ -666,6 +685,7 @@ def notify_rulebased(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     spooling: Literal["local", "remote", "both", "off"],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -692,7 +712,9 @@ def notify_rulebased(
     for rule in itertools.chain(rules, user_notification_rules(config_contacts=config_contacts)):
         contact_info = _get_contact_info_text(rule)
 
-        why_not = rbn_match_rule(rule, enriched_context, analyse)
+        why_not = rbn_match_rule(
+            rule, enriched_context, define_servicegroups=define_servicegroups, analyse=analyse
+        )
         if why_not:
             logger.log(log.VERBOSE, contact_info)
             logger.log(log.VERBOSE, " -> does not match: %s", why_not)
@@ -1122,12 +1144,19 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
 def rbn_match_rule(
     rule: EventRule,
     enriched_context: EnrichedEventContext,
+    *,
+    define_servicegroups: Mapping[str, str],
     analyse: bool = False,
 ) -> str | None:
     return events.apply_matchers(
         [
             rbn_match_rule_disabled,
-            events.event_match_rule,
+            lambda rule, context, analyse: events.event_match_rule(
+                rule,
+                context,
+                define_servicegroups=define_servicegroups,
+                analyse=analyse,
+            ),
             rbn_match_escalation,
             rbn_match_escalation_throtte,
             rbn_match_host_event,
@@ -1805,6 +1834,7 @@ def handle_spoolfile(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     rules: Iterable[EventRule],
+    define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -1853,6 +1883,7 @@ def handle_spoolfile(
             host_parameters_cb,
             get_http_proxy,
             rules=rules,
+            define_servicegroups=define_servicegroups,
             config_contacts=config_contacts,
             plugin_timeout=plugin_timeout,
             fallback_email=fallback_email,

@@ -50,12 +50,7 @@ sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,INTEGRATIONTESTS,
 CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
 CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
 
-# configuration options compatible with black
-multi_line_output = 3
-include_trailing_comma = "True"
-force_grid_wrap = 0
-use_parentheses = "True"
-ensure_newline_before_comments = "True"
+profile = "black"
 order_by_type = "False"
 line_length = 100
 py_version = "312"

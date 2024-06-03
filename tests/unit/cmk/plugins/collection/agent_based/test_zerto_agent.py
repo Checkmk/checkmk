@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.zerto import check, parse
+from cmk.agent_based.v2 import Result, State
+from cmk.plugins.collection.agent_based.zerto import check, parse
 
 
 def test_parse_errors() -> None:

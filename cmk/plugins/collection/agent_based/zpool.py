@@ -6,15 +6,21 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    RuleSetType,
+    StringTable,
+)
 from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,
     FILESYSTEM_DEFAULT_PARAMS,
     FSBlock,
 )
-
-from .agent_based_api.v1 import get_value_store, register
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, FSBlock]
 
@@ -62,7 +68,7 @@ def parse_zpool(string_table: StringTable) -> Section | None:
     }
 
 
-register.agent_section(
+agent_section_zpool = AgentSection(
     name="zpool",
     parse_function=parse_zpool,
 )
@@ -81,13 +87,13 @@ def check_zpool(item: str, params: Mapping[str, Any], section: Section) -> Check
     )
 
 
-register.check_plugin(
+check_plugin_zpool = CheckPlugin(
     name="zpool",
     service_name="Storage Pool %s",
     discovery_function=discover_zpool,
     discovery_default_parameters={"groups": []},
     discovery_ruleset_name="filesystem_groups",
-    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_ruleset_type=RuleSetType.ALL,
     check_function=check_zpool,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

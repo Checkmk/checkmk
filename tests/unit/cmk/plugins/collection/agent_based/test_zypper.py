@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
-from cmk.base.plugins.agent_based import zypper
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based import zypper
 
 
 @pytest.mark.parametrize("string_table", [None])

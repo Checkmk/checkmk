@@ -6,16 +6,19 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from .agent_based_api.v1 import (
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
     all_of,
-    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     exists,
     not_exists,
-    register,
     Service,
+    SimpleSNMPSection,
     SNMPTree,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Section(NamedTuple):
@@ -45,7 +48,7 @@ def parse_zertificon_mail_queues(string_table: StringTable) -> Section | None:
     )
 
 
-register.snmp_section(
+snmp_section_zertificon_mail_queues = SimpleSNMPSection(
     name="zertificon_mail_queues",
     # This condition will never match, therefore, zertificon_mail_queues is only available as an
     # enforced service. This is necessary because Zertificon appliances cannot be decisively
@@ -143,7 +146,7 @@ def check_zertificon_mail_queues(
     )
 
 
-register.check_plugin(
+check_plugin_zertificon_mail_queues = CheckPlugin(
     name="zertificon_mail_queues",
     service_name="Zertificon Mail Queues",
     discovery_function=discover_zertificon_mail_queues,

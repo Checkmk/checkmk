@@ -7,8 +7,16 @@ import re
 from collections import Counter
 from typing import NamedTuple, TypedDict
 
-from .agent_based_api.v1 import register, Result, Service, State, type_defs
-from .agent_based_api.v1.type_defs import CheckResult
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 class Param(TypedDict):
@@ -37,7 +45,7 @@ DEFAULT_PARAMS = Param(
 )
 
 
-def parse_zypper(string_table: type_defs.StringTable) -> Section:
+def parse_zypper(string_table: StringTable) -> Section:
     patch_types = []
     locks = []
 
@@ -56,7 +64,7 @@ def parse_zypper(string_table: type_defs.StringTable) -> Section:
     return ZypperUpdates(patch_types=patch_types, locks=locks)
 
 
-def discover_zypper(section: Section) -> type_defs.DiscoveryResult:
+def discover_zypper(section: Section) -> DiscoveryResult:
     yield Service()
 
 
@@ -73,12 +81,12 @@ def check_zypper(params: Param, section: Section) -> CheckResult:
         yield Result(state=State(params.get(type_, params["other"])), notice=f"{type_}: {count}")
 
 
-register.agent_section(
+agent_section_zypper = AgentSection(
     name="zypper",
     parse_function=parse_zypper,
 )
 
-register.check_plugin(
+check_plugin_zypper = CheckPlugin(
     name="zypper",
     service_name="Zypper Updates",
     discovery_function=discover_zypper,

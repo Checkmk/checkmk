@@ -6,10 +6,17 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.interfaces import saveint
-
-from .agent_based_api.v1 import register, Result, Service, State, type_defs
-from .agent_based_api.v1.type_defs import CheckResult
 
 
 class ZpoolStatus(NamedTuple):
@@ -38,7 +45,7 @@ state_mappings = {
 
 
 def parse_zpool_status(  # pylint: disable=too-many-branches
-    string_table: type_defs.StringTable,
+    string_table: StringTable,
 ) -> Section | None:
     if not string_table:
         return None
@@ -104,7 +111,7 @@ def parse_zpool_status(  # pylint: disable=too-many-branches
     )
 
 
-def discover_zpool_status(section: Section) -> type_defs.DiscoveryResult:
+def discover_zpool_status(section: Section) -> DiscoveryResult:
     if not section or section.message == "No pools available":
         return
     yield Service()
@@ -146,11 +153,11 @@ def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResu
     yield Result(state=state, summary=", ".join(messages))
 
 
-register.agent_section(
+agent_section_zpool_status = AgentSection(
     name="zpool_status",
     parse_function=parse_zpool_status,
 )
-register.check_plugin(
+check_plugin_zpool_status = CheckPlugin(
     name="zpool_status",
     service_name="zpool status",
     discovery_function=discover_zpool_status,

@@ -4,8 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 @dataclass
@@ -22,7 +30,7 @@ def parse(string_table: StringTable) -> Section:
     return Section(False)
 
 
-register.agent_section(name="zerto_agent", parse_function=parse)
+agent_section_zerto_agent = AgentSection(name="zerto_agent", parse_function=parse)
 
 
 def discovery(section: Section) -> DiscoveryResult:
@@ -40,7 +48,7 @@ def check(section: Section) -> CheckResult:
         yield Result(state=State.OK, summary="Agent started without problem")
 
 
-register.check_plugin(
+check_plugin_zerto_agent = CheckPlugin(
     name="zerto_agent",
     service_name="Zerto Agent Status",
     discovery_function=discovery,

@@ -5,7 +5,7 @@ Component: wato
 Date: 1716912326
 Edition: cre
 Level: 1
-Version: 2.2.0p27
+Version: 2.2.0p28
 
 A certain class of errors, including time out errors appeared at
 the bottom of a page, making the error difficult to notice, especially

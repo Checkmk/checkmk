@@ -5,7 +5,7 @@ Component: checks
 Date: 1716914026
 Edition: cre
 Level: 1
-Version: 2.2.0p27
+Version: 2.2.0p28
 
 A problem in the NetApp Snapshot Reserve rule caused a crash
 when setting the "State when no reserve is configured" option.

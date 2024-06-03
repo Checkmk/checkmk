@@ -356,6 +356,7 @@ class TreeRenderer:
             )
 
         columns = _make_columns(table.rows, list(hint.columns))
+        column_hints = {c: hint.get_column_hint(c) for c in columns}
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
             _sort_rows(table, columns)
             if isinstance(table, ImmutableTable)
@@ -368,7 +369,7 @@ class TreeRenderer:
         for column in columns:
             html.th(
                 self._get_header(
-                    hint.get_column_hint(column).title,
+                    column_hints[column].title,
                     f"{column}*" if column in table.key_columns else column,
                 )
             )
@@ -377,14 +378,14 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                column_hint = hint.get_column_hint(item.key)
+                col_hint = column_hints[item.key]
                 # TODO separate tdclass from rendered value
                 if isinstance(item, _SDDeltaItem):
-                    tdclass, _rendered_value = column_hint.paint_function(item.old or item.new)
+                    tdclass, _rendered_value = col_hint.paint_function(item.old or item.new)
                 else:
-                    tdclass, _rendered_value = column_hint.paint_function(item.value)
+                    tdclass, _rendered_value = col_hint.paint_function(item.value)
                 html.open_td(class_=tdclass)
-                _show_item(item, column_hint)
+                _show_item(item, col_hint)
                 html.close_td()
             html.close_tr()
         html.close_table()

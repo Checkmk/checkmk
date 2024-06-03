@@ -12,22 +12,25 @@ import time
 from collections.abc import Mapping
 from typing import Literal
 
-from .agent_based_api.v1 import (
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
     all_of,
     any_of,
-    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     equals,
     exists,
     get_rate,
     get_value_store,
     GetRateError,
     IgnoreResults,
-    register,
     Service,
+    SimpleSNMPSection,
     SNMPTree,
     startswith,
+    StringTable,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 PortStats = Mapping[str, int]
 
@@ -66,7 +69,7 @@ def check_rmon_stats(item: str, section: Mapping[str, PortStats]) -> CheckResult
             )
 
 
-register.snmp_section(
+snmp_section_rmon_stats = SimpleSNMPSection(
     name="rmon_stats",
     parse_function=parse_rmon_stats,
     fetch=SNMPTree(
@@ -94,7 +97,7 @@ register.snmp_section(
     ),
 )
 
-register.check_plugin(
+check_plugin_rmon_stats = CheckPlugin(
     name="rmon_stats",
     service_name="RMON Stats IF %s",
     discovery_function=discover_rmon_stats,

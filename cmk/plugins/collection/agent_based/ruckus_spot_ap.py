@@ -7,13 +7,15 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any, Final, NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Service,
     StringTable,
 )
-
-from .agent_based_api.v1 import check_levels, register, Service
 
 
 class _Device(NamedTuple):
@@ -74,13 +76,13 @@ def check_ruckus_spot_ap(
         )
 
 
-register.agent_section(
+agent_section_ruckus_spot_ap = AgentSection(
     name="ruckus_spot_ap",
     parse_function=parse_ruckus_spot_ap,
 )
 
 
-register.check_plugin(
+check_plugin_ruckus_spot_ap = CheckPlugin(
     name="ruckus_spot_ap",
     discovery_function=discover_ruckus_spot_ap,
     check_function=check_ruckus_spot_ap,

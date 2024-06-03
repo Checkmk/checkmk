@@ -1,5 +1,5 @@
 @echo off
-set CMK_VERSION="2.1.0p44"
+set CMK_VERSION="2.1.0p45"
 
 REM ***
 REM * Following information concerns only Windows Server <2012R2

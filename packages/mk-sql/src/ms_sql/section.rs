@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::query::UniAnswer;
 use super::sqls::{self, find_known_query};
 use crate::config::section::get_plain_section_names;
 use crate::config::{self, section, section::names};
@@ -11,8 +12,6 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
-
-use tiberius::Row;
 
 #[derive(Debug, PartialEq)]
 pub enum SectionKind {
@@ -159,7 +158,7 @@ impl Section {
         .map(|s| s.to_string())
     }
 
-    pub fn validate_rows(&self, rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+    pub fn validate_rows(&self, rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> {
         const ALLOW_TO_HAVE_EMPTY_OUTPUT: [&str; 2] = [
             section::names::MIRRORING,
             section::names::AVAILABILITY_GROUPS,

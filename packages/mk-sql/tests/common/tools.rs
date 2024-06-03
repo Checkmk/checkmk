@@ -182,14 +182,17 @@ pub fn skip_on_lack_of_ms_sql_endpoint() {
 }
 
 pub async fn run_get_version(client: &mut UniClient) -> Option<String> {
-    let rows = query::run_custom_query(client, "select @@VERSION")
+    let answers = query::run_custom_query(client, "select @@VERSION")
         .await
         .unwrap();
-    let row = &rows[0];
-    row[0]
-        .try_get::<&str, usize>(0)
-        .unwrap()
-        .map(str::to_string)
+    let answer = &answers[0];
+    match answer {
+        query::UniAnswer::Rows(rows) => rows
+            .first()
+            .and_then(|v| v.try_get::<&str, usize>(0).ok()) // drop error
+            .flatten()
+            .map(str::to_string),
+    }
 }
 
 #[allow(dead_code)]

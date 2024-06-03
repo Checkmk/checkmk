@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Final
 
 import pytest
 
@@ -13,129 +14,125 @@ from cmk.base.plugins.agent_based.elasticsearch_indices import (
     _check_elasticsearch_indices,
     _CheckParams,
     _DiscoveryParams,
-    _Section,
     discover_elasticsearch_indices,
     parse_elasticsearch_indices,
 )
 
-
-@pytest.fixture(name="section", scope="module")
-def _section() -> _Section:
-    return parse_elasticsearch_indices(
+SECTION: Final = parse_elasticsearch_indices(
+    [
         [
-            [
-                json.dumps(
-                    {
-                        "my-index-10.2022": {
-                            "uuid": "eZx4bV5_Qta1ErK6wftxHw",
-                            "health": "yellow",
-                            "status": "open",
-                            "primaries": {
-                                "docs": {"count": 28398, "deleted": 0},
-                                "store": {
-                                    "size_in_bytes": 22524354,
-                                    "total_data_set_size_in_bytes": 22524354,
-                                    "reserved_in_bytes": 0,
-                                },
-                            },
-                            "total": {
-                                "docs": {"count": 28398, "deleted": 0},
-                                "store": {
-                                    "size_in_bytes": 22524354,
-                                    "total_data_set_size_in_bytes": 22524354,
-                                    "reserved_in_bytes": 0,
-                                },
+            json.dumps(
+                {
+                    "my-index-10.2022": {
+                        "uuid": "eZx4bV5_Qta1ErK6wftxHw",
+                        "health": "yellow",
+                        "status": "open",
+                        "primaries": {
+                            "docs": {"count": 28398, "deleted": 0},
+                            "store": {
+                                "size_in_bytes": 22524354,
+                                "total_data_set_size_in_bytes": 22524354,
+                                "reserved_in_bytes": 0,
                             },
                         },
-                        "my-index-11.2022": {
-                            "uuid": "gP4TQ0PcSS6p3E0ULgqH5g",
-                            "health": "yellow",
-                            "status": "open",
-                            "primaries": {
-                                "docs": {"count": 2, "deleted": 4},
-                                "store": {
-                                    "size_in_bytes": 35800,
-                                    "total_data_set_size_in_bytes": 35800,
-                                    "reserved_in_bytes": 0,
-                                },
-                            },
-                            "total": {
-                                "docs": {"count": 2, "deleted": 4},
-                                "store": {
-                                    "size_in_bytes": 35800,
-                                    "total_data_set_size_in_bytes": 35800,
-                                    "reserved_in_bytes": 0,
-                                },
+                        "total": {
+                            "docs": {"count": 28398, "deleted": 0},
+                            "store": {
+                                "size_in_bytes": 22524354,
+                                "total_data_set_size_in_bytes": 22524354,
+                                "reserved_in_bytes": 0,
                             },
                         },
-                        "my-other-index-2016-04-12": {
-                            "uuid": "MOEas2q8QyWHKsNFh3_7NA",
-                            "health": "yellow",
-                            "status": "open",
-                            "primaries": {
-                                "docs": {"count": 28248, "deleted": 0},
-                                "store": {
-                                    "size_in_bytes": 35801234,
-                                    "total_data_set_size_in_bytes": 35801234,
-                                    "reserved_in_bytes": 0,
-                                },
-                            },
-                            "total": {
-                                "docs": {"count": 28248, "deleted": 0},
-                                "store": {
-                                    "size_in_bytes": 35801234,
-                                    "total_data_set_size_in_bytes": 35801234,
-                                    "reserved_in_bytes": 0,
-                                },
+                    },
+                    "my-index-11.2022": {
+                        "uuid": "gP4TQ0PcSS6p3E0ULgqH5g",
+                        "health": "yellow",
+                        "status": "open",
+                        "primaries": {
+                            "docs": {"count": 2, "deleted": 4},
+                            "store": {
+                                "size_in_bytes": 35800,
+                                "total_data_set_size_in_bytes": 35800,
+                                "reserved_in_bytes": 0,
                             },
                         },
-                        "my-other-index-2016-04-22": {
-                            "uuid": "VsVq79a4T423GoBwS7hFFw",
-                            "health": "yellow",
-                            "status": "open",
-                            "primaries": {
-                                "docs": {"count": 128248, "deleted": 0},
-                                "store": {
-                                    "size_in_bytes": 69174895,
-                                    "total_data_set_size_in_bytes": 69174895,
-                                    "reserved_in_bytes": 0,
-                                },
-                            },
-                            "total": {
-                                "docs": {"count": 128248, "deleted": 0},
-                                "store": {
-                                    "size_in_bytes": 69174895,
-                                    "total_data_set_size_in_bytes": 69174895,
-                                    "reserved_in_bytes": 0,
-                                },
+                        "total": {
+                            "docs": {"count": 2, "deleted": 4},
+                            "store": {
+                                "size_in_bytes": 35800,
+                                "total_data_set_size_in_bytes": 35800,
+                                "reserved_in_bytes": 0,
                             },
                         },
-                        "yet_another_index": {
-                            "uuid": "cft6yprDQaW9P5ILuFQ0ow",
-                            "health": "yellow",
-                            "status": "open",
-                            "primaries": {
-                                "docs": {"count": 22, "deleted": 0},
-                                "store": {
-                                    "size_in_bytes": 21680,
-                                    "total_data_set_size_in_bytes": 21680,
-                                    "reserved_in_bytes": 0,
-                                },
-                            },
-                            "total": {
-                                "docs": {"count": 22, "deleted": 0},
-                                "store": {
-                                    "size_in_bytes": 21680,
-                                    "total_data_set_size_in_bytes": 21680,
-                                    "reserved_in_bytes": 0,
-                                },
+                    },
+                    "my-other-index-2016-04-12": {
+                        "uuid": "MOEas2q8QyWHKsNFh3_7NA",
+                        "health": "yellow",
+                        "status": "open",
+                        "primaries": {
+                            "docs": {"count": 28248, "deleted": 0},
+                            "store": {
+                                "size_in_bytes": 35801234,
+                                "total_data_set_size_in_bytes": 35801234,
+                                "reserved_in_bytes": 0,
                             },
                         },
-                    }
-                )
-            ]
+                        "total": {
+                            "docs": {"count": 28248, "deleted": 0},
+                            "store": {
+                                "size_in_bytes": 35801234,
+                                "total_data_set_size_in_bytes": 35801234,
+                                "reserved_in_bytes": 0,
+                            },
+                        },
+                    },
+                    "my-other-index-2016-04-22": {
+                        "uuid": "VsVq79a4T423GoBwS7hFFw",
+                        "health": "yellow",
+                        "status": "open",
+                        "primaries": {
+                            "docs": {"count": 128248, "deleted": 0},
+                            "store": {
+                                "size_in_bytes": 69174895,
+                                "total_data_set_size_in_bytes": 69174895,
+                                "reserved_in_bytes": 0,
+                            },
+                        },
+                        "total": {
+                            "docs": {"count": 128248, "deleted": 0},
+                            "store": {
+                                "size_in_bytes": 69174895,
+                                "total_data_set_size_in_bytes": 69174895,
+                                "reserved_in_bytes": 0,
+                            },
+                        },
+                    },
+                    "yet_another_index": {
+                        "uuid": "cft6yprDQaW9P5ILuFQ0ow",
+                        "health": "yellow",
+                        "status": "open",
+                        "primaries": {
+                            "docs": {"count": 22, "deleted": 0},
+                            "store": {
+                                "size_in_bytes": 21680,
+                                "total_data_set_size_in_bytes": 21680,
+                                "reserved_in_bytes": 0,
+                            },
+                        },
+                        "total": {
+                            "docs": {"count": 22, "deleted": 0},
+                            "store": {
+                                "size_in_bytes": 21680,
+                                "total_data_set_size_in_bytes": 21680,
+                                "reserved_in_bytes": 0,
+                            },
+                        },
+                    },
+                }
+            )
         ]
-    )
+    ]
+)
 
 
 @pytest.mark.parametrize(
@@ -186,11 +183,10 @@ def _section() -> _Section:
     ],
 )
 def test_discover(
-    section: _Section,
     params: _DiscoveryParams,
     expected_result: DiscoveryResult,
 ) -> None:
-    assert sorted(discover_elasticsearch_indices(params, section)) == expected_result
+    assert sorted(discover_elasticsearch_indices(params, SECTION)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -215,14 +211,14 @@ def test_discover(
             "my-index",
             {"grouping_regex": "my-index"},
             [
-                Result(state=State.OK, summary="Document count: 14200"),
-                Metric("elasticsearch_count", 14200.0),
-                Result(state=State.OK, summary="Document count rate: -4229/minute"),
-                Metric("elasticsearch_count_rate", -4229.4),
-                Result(state=State.OK, summary="Size: 10.8 MiB"),
-                Metric("elasticsearch_size", 11280077.0),
-                Result(state=State.OK, summary="Size rate: -2.93 MiB/minute"),
-                Metric("elasticsearch_size_rate", -3073283.1),
+                Result(state=State.OK, summary="Document count: 28400"),
+                Metric("elasticsearch_count", 28400.0),
+                Result(state=State.OK, summary="Document count rate: 31/minute"),
+                Metric("elasticsearch_count_rate", 30.6),
+                Result(state=State.OK, summary="Size: 21.5 MiB"),
+                Metric("elasticsearch_size", 22560154.0),
+                Result(state=State.OK, summary="Size rate: 303 KiB/minute"),
+                Metric("elasticsearch_size_rate", 310740.0),
             ],
             id="grouped, without thresholds",
         ),
@@ -260,31 +256,31 @@ def test_discover(
             "my-other-index",
             {
                 "grouping_regex": "my-other-index",
-                "elasticsearch_count_rate": (10, 20, 2),
+                "elasticsearch_count_rate": (20, 30, 2),
                 "elasticsearch_size_rate": (5, 15, 2),
             },
             [
-                Result(state=State.OK, summary="Document count: 78248"),
-                Metric("elasticsearch_count", 78248.0),
+                Result(state=State.OK, summary="Document count: 156496"),
+                Metric("elasticsearch_count", 156496.0),
                 Result(
                     state=State.CRIT,
-                    summary="Document count rate: 14985/minute (warn/crit at 12307/minute/13426/minute)",
+                    summary="Document count rate: 38459/minute (warn/crit at 34459/minute/37330/minute)",
                 ),
                 Metric(
                     "elasticsearch_count_rate",
-                    14985.0,
-                    levels=(12307.351313321942, 13426.201432714844),
+                    38459.4,
+                    levels=(34458.70212755111, 37330.26063818037),
                 ),
-                Result(state=State.OK, summary="Size: 50.1 MiB"),
-                Metric("elasticsearch_size", 52488064.5),
+                Result(state=State.OK, summary="Size: 100 MiB"),
+                Metric("elasticsearch_size", 104976129.0),
                 Result(
                     state=State.CRIT,
-                    summary="Size rate: 8.86 MiB/minute (warn/crit at 6.95 MiB/minute/7.61 MiB/minute)",
+                    summary="Size rate: 23.9 MiB/minute (warn/crit at 18.7 MiB/minute/20.5 MiB/minute)",
                 ),
                 Metric(
                     "elasticsearch_size_rate",
-                    9289113.149999999,
-                    levels=(7282470.220072256, 7976038.812460089),
+                    25035532.5,
+                    levels=(19627333.301984932, 21496603.14026921),
                 ),
             ],
             id="grouped, with thresholds",
@@ -319,7 +315,6 @@ def test_discover(
     ],
 )
 def test_check(
-    section: _Section,
     item: str,
     params: _CheckParams,
     expected_result: CheckResult,
@@ -329,7 +324,7 @@ def test_check(
             _check_elasticsearch_indices(
                 item=item,
                 params=params,
-                section=section,
+                section=SECTION,
                 value_store={
                     "elasticsearch_count": (100.0, 28298.0),
                     "elasticsearch_count.average": (100.0, 100.0, 0.0),

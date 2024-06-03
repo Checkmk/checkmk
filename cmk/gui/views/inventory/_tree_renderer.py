@@ -307,7 +307,7 @@ class TreeRenderer:
     def _get_header(self, title: str, key_info: str, icon: str | None = None) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
-            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted_text")
+            header += " " + HTMLWriter.render_span(f"({key_info})", css="muted_text")
         if icon:
             header += html.render_img(
                 class_=(["title", "icon"]),
@@ -374,7 +374,7 @@ class TreeRenderer:
             html.th(
                 self._get_header(
                     hint.get_column_hint(column).title,
-                    "%s*" % column if column in table.key_columns else column,
+                    f"{column}*" if column in table.key_columns else column,
                 )
             )
         html.close_tr()

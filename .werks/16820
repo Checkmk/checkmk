@@ -1,0 +1,10 @@
+Title: Accumulation of sizes of elasticsearch indices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1717406249
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+When grouping elasticsearch indices using the ruleset <em>Discovery of Elasticsearch indices</em>, the values for document count and size have been averaged instead of summed up.

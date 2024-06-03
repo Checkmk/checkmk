@@ -18,31 +18,81 @@ ignore = [
   "E741", # ambiguous variable name 'FOO'
   "F821", # undefined name 'FOO'
 ]
-select = ["E", "F", "W", "C90"]
+select = ["E", "F", "W", "C90"] # NOTE: No "I" yet due to formatting differences
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
 
+[tool.ruff.lint.isort]
+# combine-as-imports = true # This would arguably be nicer.
+known-first-party = ["cmk"]
+order-by-type = false # TODO: Why do we actually want this?
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "werks",
+  "cmc_proto",
+  "testlib",
+  "integrationtests",
+  "compositiontests",
+  "unittests",
+  "livestatus",
+  "omd",
+  "cmk_utils",
+  "cmk_automations",
+  "cmk_snmplib",
+  "cmk_fetchers",
+  "cmk_checkengine",
+  "cmk_base",
+  "cmk_ec",
+  "cmk_gui",
+  "cmk_cee",
+  "cmk_notification_plugins",
+  "first-party",
+  "local-folder",
+]
+
+[tool.ruff.lint.isort.sections]
+werks = ["werks"]
+cmc_proto = ["cmc_proto"]
+testlib = ["tests.testlib"]
+integrationtests = ["tests.integration"]
+compositiontests = ["tests.composition"]
+unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
+livestatus = ["livestatus"]
+omd = ["omdlib"]
+cmk_utils = ["cmk.utils"]
+cmk_automations = ["cmk.automations"]
+cmk_snmplib = ["cmk.snmplib"]
+cmk_fetchers = ["cmk.fetchers"]
+cmk_checkengine = ["cmk.checkengine"]
+cmk_base = ["cmk.base"]
+cmk_ec = ["cmk.ec"]
+cmk_gui = ["cmk.gui"]
+cmk_cee = ["cmk.cee.dcd", "cmk.cee.liveproxy", "cmk.cee.mknotifyd"]
+cmk_notification_plugins = ["cmk.notification_plugins"]
+
 
 [tool.isort]
+known_werks = "werks"
+known_cmc_proto = "cmc_proto"
 known_testlib = "tests.testlib"
-known_compositiontests = "tests.composition"
 known_integrationtests = "tests.integration"
+known_compositiontests = "tests.composition"
 known_unittests = "tests.unit,tests.plugins_integration,tests.update"
 known_livestatus = "livestatus"
 known_omd = "omdlib"
 known_cmk_utils = "cmk.utils"
 known_cmk_automations = "cmk.automations"
+known_cmk_snmplib = "cmk.snmplib"
+known_cmk_fetchers = "cmk.fetchers"
+known_cmk_checkengine = "cmk.checkengine"
 known_cmk_base = "cmk.base"
-known_cmc_proto = "cmc_proto"
 known_cmk_ec = "cmk.ec"
 known_cmk_gui = "cmk.gui"
 known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
 known_cmk_notification_plugins = "cmk.notification_plugins"
-known_cmk_snmplib = "cmk.snmplib"
-known_cmk_fetchers = "cmk.fetchers"
-known_cmk_checkengine = "cmk.checkengine"
-known_werks = "werks"
 known_first_party = "cmk"
 
 # Order sections according to our layering.

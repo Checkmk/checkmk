@@ -278,9 +278,8 @@ class Request(
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
-    # Disable the limit in werkzeug.sansio.multipart.MultipartDecoder and thus allow arbitrarily
-    # large forms.
-    max_form_parts: int | None = None  # type: ignore[assignment]
+    # TODO investigate why there are so many form_parts
+    max_form_parts = 20000
     meta: dict[str, Any]
 
     # pylint: disable=too-many-ancestors

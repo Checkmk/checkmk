@@ -86,7 +86,8 @@ class CMKVersion:
         self.branch: Final = branch
         self.branch_version: Final = branch_version
 
-    def _get_default_version(self) -> str:
+    @staticmethod
+    def _get_default_version() -> str:
         if os.path.exists("/etc/alternatives/omd"):
             path = os.readlink("/etc/alternatives/omd")
         else:
@@ -101,7 +102,7 @@ class CMKVersion:
             return f"{branch_version}-{date_part}"
 
         if version_spec == self.DEFAULT:
-            return self._get_default_version()
+            return CMKVersion._get_default_version()
 
         if version_spec.lower() == "git":
             raise RuntimeError(

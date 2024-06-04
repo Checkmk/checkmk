@@ -240,18 +240,18 @@ def get_standard_linux_agent_output() -> str:
 
 
 def site_id() -> str:
-    site_id = os.environ.get("OMD_SITE")
-    if site_id is not None:
-        return site_id
+    _site_id = os.environ.get("OMD_SITE")
+    if _site_id is not None:
+        return _site_id
 
     branch_name = branch_from_env(env_var="BRANCH", fallback=current_branch_name)
 
     # Split by / and get last element, remove unwanted chars
     branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
-    site_id = "int_%s" % branch_part
+    _site_id = "int_%s" % branch_part
 
-    os.putenv("OMD_SITE", site_id)
-    return site_id
+    os.putenv("OMD_SITE", _site_id)
+    return _site_id
 
 
 def add_python_paths() -> None:

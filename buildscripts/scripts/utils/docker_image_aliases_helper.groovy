@@ -85,7 +85,6 @@ inside_container = {Map arg1=[:], Closure arg2 ->
             # Bazel creates files without write permission
             chmod -R a+w ${container_shadow_workspace}/cache
         fi
-        rm -rf ${container_shadow_workspace}
         mkdir -p ${container_shadow_workspace}/home
         mkdir -p ${container_shadow_workspace}/home/.cache
         mkdir -p ${container_shadow_workspace}/cache

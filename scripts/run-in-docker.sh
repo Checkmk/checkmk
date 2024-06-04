@@ -62,7 +62,6 @@ if [ -e "${CONTAINER_SHADOW_WORKSPACE}/cache" ]; then
     # Bazel creates files without write permission
     chmod -R a+w "${CONTAINER_SHADOW_WORKSPACE}/cache"
 fi
-rm -rf "${CONTAINER_SHADOW_WORKSPACE}"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/cache"

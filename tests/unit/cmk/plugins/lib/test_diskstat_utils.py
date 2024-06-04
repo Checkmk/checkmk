@@ -50,7 +50,7 @@ def migrated_parameters(p: dict) -> dict:
             [
                 {
                     "summary": True,
-                    "physical": True,
+                    "physical": "name",
                 },
             ],
             [
@@ -63,7 +63,7 @@ def migrated_parameters(p: dict) -> dict:
             [
                 {
                     "summary": True,
-                    "physical": True,
+                    "physical": "wwn",
                     "lvm": True,
                     "vxvm": True,
                     "diskless": True,
@@ -71,8 +71,8 @@ def migrated_parameters(p: dict) -> dict:
             ],
             [
                 Service(item="SUMMARY"),
-                Service(item="disk1"),
-                Service(item="disk2"),
+                Service(item="wwn1"),
+                Service(item="wwn2"),
                 Service(item="LVM disk"),
                 Service(item="VxVM disk"),
                 Service(item="xsd0 disk"),
@@ -86,8 +86,8 @@ def test_discovery_diskstat_generic(params, exp_res) -> None:  # type: ignore[no
             diskstat.discovery_diskstat_generic(
                 params,
                 {
-                    "disk1": {},
-                    "disk2": {},
+                    "disk1:wwn1": {},
+                    "disk2:wwn2": {},
                     "LVM disk": {},
                     "VxVM disk": {},
                     "xsd0 disk": {},

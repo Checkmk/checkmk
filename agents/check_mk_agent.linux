@@ -835,6 +835,15 @@ section_diskstat() {
             echo '[vx_dsk]'
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
+        if [ -d /dev/disk/by-id ]; then
+            echo '[device_wwn]'
+            for F in /dev/disk/by-id/*; do
+                if echo "${F}" | grep -E "nvme-eui|wwn" >/dev/null; then
+                    echo "${F##*/} $(readlink -f "${F}")"
+                fi
+            done
+
+        fi
     else
         echo "<<<docker_container_diskstat${CGROUP_SECTION_SUFFIX}>>>"
         echo "[time]"

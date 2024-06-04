@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 import pytest
 
 from tests.unit.conftest import FixRegister
@@ -350,16 +352,16 @@ def test_docker_container_diskstat(
     ],
 )
 @pytest.mark.parametrize(
-    "discovery_mode, expected_item",
+    "discovery_params, expected_item",
     [
-        ["summary", "SUMMARY"],
-        ["physical", "sda"],
+        [{"summary": True}, "SUMMARY"],
+        [{"physical": "name"}, "sda"],
     ],
 )
 def test_docker_container_diskstat_discovery(
     section_name: str,
     plugin_name: str,
-    discovery_mode: str,
+    discovery_params: Mapping[str, str | bool],
     string_table_0: list[StringTable],
     fix_register: FixRegister,
     expected_item: str,
@@ -371,6 +373,6 @@ def test_docker_container_diskstat_discovery(
     section_0_seconds = agent_section.parse_function(string_table_0)
     assert list(
         plugin.discovery_function(
-            [discovery_mode], section_diskstat=section_0_seconds, section_multipath=None
+            [discovery_params], section_diskstat=section_0_seconds, section_multipath=None
         )
     ) == [Service(item=expected_item)]

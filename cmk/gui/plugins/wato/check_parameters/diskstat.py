@@ -14,64 +14,85 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Age, Dictionary, FixedValue, TextInput, Transform
+from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, FixedValue, TextInput, Transform
 
 from .transforms import scale_levels
 
 
-def _valuespec_diskstat_inventory() -> Dictionary:
-    return Dictionary(
-        title=_("Disk IO discovery"),
-        help=_(
-            "This rule controls which and how many checks will be created "
-            "for monitoring individual physical and logical disks. "
-            "Note: the option <i>Create a summary for all read, one for "
-            "write</i> has been removed. Some checks will still support "
-            "this settings, but it will be removed there soon."
+def migrate_physical(value: dict[str, Any]) -> dict[str, bool | str]:
+    if "physical" not in value:
+        return value
+
+    return {
+        **value,
+        "physical": value["physical"] if value["physical"] in ("wwn", "name") else "name",
+    }
+
+
+def _valuespec_diskstat_inventory() -> Transform:
+    return Transform(
+        Dictionary(
+            title=_("Disk IO discovery"),
+            help=_(
+                "This rule controls which and how many checks will be created "
+                "for monitoring individual physical and logical disks. "
+                "Note: the option <i>Create a summary for all read, one for "
+                "write</i> has been removed. Some checks will still support "
+                "this settings, but it will be removed there soon."
+            ),
+            elements=[
+                (
+                    "summary",
+                    FixedValue(
+                        value=True,
+                        title=_("Summary"),
+                        totext="Create a summary over all physical disks",
+                    ),
+                ),
+                (
+                    "physical",
+                    DropdownChoice(
+                        title=_("Physical disks"),
+                        choices=[
+                            ("wwn", _("Use World Wide Name (WWN) as service description")),
+                            ("name", _("Use device name as service description")),
+                        ],
+                        default_value="wwn",
+                        help=_(
+                            "Using device name as service description isn't recommended. "
+                            "Device names aren't persistent and can change after a reboot or an update. "
+                            "In case WWN is not available, device name will be used."
+                        ),
+                    ),
+                ),
+                (
+                    "lvm",
+                    FixedValue(
+                        value=True,
+                        title=_("LVM volumes (Linux)"),
+                        totext="Create a separate check for each LVM volume (Linux)",
+                    ),
+                ),
+                (
+                    "vxvm",
+                    FixedValue(
+                        value=True,
+                        title=_("VxVM volumes (Linux)"),
+                        totext="Create a separate check for each VxVM volume (Linux)",
+                    ),
+                ),
+                (
+                    "diskless",
+                    FixedValue(
+                        value=True,
+                        title=_("Partitions (XEN)"),
+                        totext="Create a separate check for each partition (XEN)",
+                    ),
+                ),
+            ],
+            default_keys=["summary"],
         ),
-        elements=[
-            (
-                "summary",
-                FixedValue(
-                    value=True,
-                    title=_("Summary"),
-                    totext="Create a summary over all physical disks",
-                ),
-            ),
-            (
-                "physical",
-                FixedValue(
-                    value=True,
-                    title=_("Physical disks"),
-                    totext="Create a separate check for each physical disk",
-                ),
-            ),
-            (
-                "lvm",
-                FixedValue(
-                    value=True,
-                    title=_("LVM volumes (Linux)"),
-                    totext="Create a separate check for each LVM volume (Linux)",
-                ),
-            ),
-            (
-                "vxvm",
-                FixedValue(
-                    value=True,
-                    title=_("VxVM volumes (Linux)"),
-                    totext="Create a separate check for each VxVM volume (Linux)",
-                ),
-            ),
-            (
-                "diskless",
-                FixedValue(
-                    value=True,
-                    title=_("Partitions (XEN)"),
-                    totext="Create a separate check for each partition (XEN)",
-                ),
-            ),
-        ],
-        default_keys=["summary"],
+        forth=migrate_physical,
     )
 
 

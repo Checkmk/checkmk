@@ -224,9 +224,11 @@ def test_parse_diskstat_simple() -> None:
             ["8", "16", "sdb", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
             ["[dmsetup_info]"],
             ["No", "devices", "found"],
+            ["[device_wwn]"],
+            ["wwn-0x60015ee0000b237f", "/dev/sda"],
         ]
     ) == {
-        "sda": {
+        "sda:x60015ee0000b237f": {
             "timestamp": 1439297971,
             "read_ticks": 108.964,
             "write_ticks": 32.372,
@@ -339,9 +341,14 @@ def test_parse_diskstat_dmsetup() -> None:
             ["nvme0n1p3_crypt", "253:0"],
             ["ubuntu--vg-swap_1", "253:2", "ubuntu-vg", "swap_1"],
             ["ubuntu--vg-root", "253:1", "ubuntu-vg", "root"],
+            ["[device_wwn]"],
+            ["nvme-eui.00000000000000008ce38e1000e4b0f9", "/dev/nvme0n1"],
+            ["nvme-eui.00000000000000008ce38e1000e4b0f9-part1", "/dev/nvme0n1p1"],
+            ["nvme-eui.00000000000000008ce38e1000e4b0f9-part2", "/dev/nvme0n1p2"],
+            ["nvme-eui.00000000000000008ce38e1000e4b0f9-part3", "/dev/nvme0n1p3"],
         ]
     ) == {
-        "nvme0n1": {
+        "nvme0n1:8ce38e1000e4b0f9": {
             "timestamp": 1596025224,
             "read_ticks": 1143.198,
             "write_ticks": 1395.234,

@@ -32,6 +32,12 @@
 # [vx_dsk]
 # c7 6978 /dev/vx/dsk/datadg/lalavol
 # c7 6979 /dev/vx/dsk/datadg/oravol
+# [device_wwn]
+# wwn-0x60015ee0000b237f /dev/sda
+# wwn-0x60015ee0000b237f-part2 dev/sda2
+# wwn-0x60015ee0000b237f-part3 dev/sda3
+# wwn-0x60015ee0000b237f-part1 dev/sda1
+# wwn-0x60015ee0000b237f-part4 dev/sda4
 
 # output may have zeros appended
 #
@@ -79,14 +85,16 @@ from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
     IgnoreResultsError,
+    Result,
     RuleSetType,
+    State,
     StringTable,
 )
 from cmk.plugins.lib import diskstat, multipath
 
 
 def parse_diskstat(string_table: StringTable) -> diskstat.Section:
-    timestamp, proc_diskstat, name_info = diskstat_extract_name_info(string_table)
+    timestamp, proc_diskstat, name_info, wwn_info = diskstat_extract_name_info(string_table)
     assert timestamp is not None
 
     # Here we discover real partitions and exclude them:
@@ -147,6 +155,12 @@ def parse_diskstat(string_table: StringTable) -> diskstat.Section:
 
         if major != "None" and minor != "None" and (int(major), int(minor)) in name_info:
             device = name_info[(int(major), int(minor))]
+
+        # service description will be either device or wwn
+        # both are added to the section key to keep the diskstat.Disk type generic
+        # across all disk plugins
+        if (wwn := wwn_info.get(device)) is not None:
+            device = f"{device}:{wwn}"
 
         # There are 1000 ticks per second
         disks[device] = {
@@ -232,39 +246,58 @@ def parse_diskstat(string_table: StringTable) -> diskstat.Section:
 # }
 def diskstat_extract_name_info(
     string_table: StringTable,
-) -> tuple[int | None, StringTable, Mapping[tuple[int, int], str]]:
+) -> tuple[int | None, StringTable, Mapping[tuple[int, int], str], Mapping[str, str]]:
+    """Extract naming related information.
+
+    Returns a 4-tuple:
+    1) timestamp
+    2) device info and metrics
+    3) version to name mapping for LVM and DM devices
+    4) WWN info (since device names aren't persistent, WWN should be used if available)
+
+    """
     name_info = {}  # dict from (major, minor) to itemname
+    wwn_info = {}  # dict from device name to WWN
     timestamp = None
 
     info_plain = []
     phase = "info"
     for line in string_table:
-        if line[0] == "[dmsetup_info]":
-            phase = "dmsetup_info"
-        elif line[0] == "[vx_dsk]":
-            phase = "vx_dsk"
-        elif phase == "info":
-            if len(line) == 1:
-                timestamp = int(line[0])
-            else:
-                info_plain.append(line[:14])
-        elif phase == "dmsetup_info":
-            try:
-                major, minor = map(int, line[1].split(":"))
-                if len(line) == 4:
-                    name = "LVM %s" % line[0]
-                else:
-                    name = "DM %s" % line[0]
-                name_info[major, minor] = name
-            except Exception:
-                pass  # ignore such crap as "No Devices Found"
-        elif phase == "vx_dsk":
-            major = int(line[0], 16)
-            minor = int(line[1], 16)
-            group, disk = line[2].split("/")[-2:]
-            name = f"VxVM {group}-{disk}"
-            name_info[major, minor] = name
-    return timestamp, info_plain, name_info
+        match line[0]:
+            case "[dmsetup_info]":
+                phase = "dmsetup_info"
+            case "[vx_dsk]":
+                phase = "vx_dsk"
+            case "[device_wwn]":
+                phase = "device_wwn"
+            case _:
+                match phase:
+                    case "info":
+                        if len(line) == 1:
+                            timestamp = int(line[0])
+                        else:
+                            info_plain.append(line[:14])
+                    case "dmsetup_info":
+                        try:
+                            major, minor = map(int, line[1].split(":"))
+                            if len(line) == 4:
+                                name = "LVM %s" % line[0]
+                            else:
+                                name = "DM %s" % line[0]
+                            name_info[major, minor] = name
+                        except Exception:
+                            pass  # ignore such crap as "No Devices Found"
+                    case "vx_dsk":
+                        major = int(line[0], 16)
+                        minor = int(line[1], 16)
+                        group, disk = line[2].split("/")[-2:]
+                        name = f"VxVM {group}-{disk}"
+                        name_info[major, minor] = name
+                    case "device_wwn":
+                        disk = line[1].split("/")[-1]
+                        wwn = line[0].replace("wwn-", "").replace("nvme-eui.", "").lstrip("0")
+                        wwn_info[disk] = wwn
+    return timestamp, info_plain, name_info, wwn_info
 
 
 agent_section_diskstat = AgentSection(
@@ -426,13 +459,17 @@ def check_diskstat(
         disk_with_rates = diskstat.summarize_disks(iter(names_and_disks_with_rates.items()))
 
     else:
-        try:
-            disk_with_rates = _compute_rates_single_disk(
-                converted_disks[item],
-                value_store,
-            )
-        except KeyError:
+        if not (disk_data := get_disk_for_item(item, converted_disks)):
             return
+
+        disk_name, disk = disk_data
+        disk_with_rates = _compute_rates_single_disk(
+            disk,
+            value_store,
+        )
+
+        if disk_name != item:
+            yield Result(state=State.OK, summary=f"[{disk_name}]")
 
     yield from diskstat.check_diskstat_dict(
         params=params,
@@ -440,6 +477,21 @@ def check_diskstat(
         value_store=value_store,
         this_time=time.time(),
     )
+
+
+def get_disk_for_item(
+    item: str, converted_disks: diskstat.Section
+) -> tuple[str, diskstat.Disk] | None:
+    if disk := converted_disks.get(item):
+        return item, disk
+
+    for name, disk in converted_disks.items():
+        if ":" in name:
+            disk_name, wwn = name.split(":")
+            if item in (disk_name, wwn):
+                return disk_name, disk
+
+    return None
 
 
 _ItemData = TypeVar("_ItemData")

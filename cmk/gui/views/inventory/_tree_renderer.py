@@ -148,7 +148,7 @@ def compute_cell_spec(
 ) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
     tdclass, code = paint_function(item.value)
-    html_value = HTML(code)
+    html_value = HTML() + code
     if (
         not html_value
         or item.retention_interval is None

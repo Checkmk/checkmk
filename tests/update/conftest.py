@@ -18,6 +18,8 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import _parse_raw_edition, edition_from_env, repo_path, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
+from cmk.utils.version import Edition
+
 logger = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
 RULES_DIR = repo_path() / "tests" / "update" / "rules"
@@ -65,8 +67,6 @@ def pytest_configure(config):
 @dataclasses.dataclass
 class BaseVersions:
     """Get all base versions used for the test."""
-
-    MIN_VERSION = get_min_version()
 
     with open(Path(__file__).parent.resolve() / "base_versions.json") as f:
         BASE_VERSIONS_STR = json.load(f)
@@ -141,7 +141,10 @@ def get_site_status(site: Site) -> str | None:
 
 
 def _get_site(  # pylint: disable=too-many-branches
-    version: CMKVersion, interactive: bool, base_site: Site | None = None
+    version: CMKVersion,
+    interactive: bool,
+    target_edition: Edition,
+    base_site: Site | None = None,
 ) -> Site:
     """Install or update the test site with the given version.
 
@@ -153,7 +156,7 @@ def _get_site(  # pylint: disable=too-many-branches
 
     update = base_site is not None and base_site.exists()
     update_conflict_mode = "keepold"
-    min_version = BaseVersions.MIN_VERSION
+    min_version = get_min_version(target_edition)
     sf = SiteFactory(
         version=CMKVersion(version.version, version.edition),
         prefix=prefix,
@@ -245,7 +248,9 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
         request.config.getoption(name="--disable-interactive-mode") or not interactive_mode
     )
     logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
-    test_site = _get_site(base_version, interactive=not disable_interactive_mode)
+    test_site = _get_site(
+        base_version, interactive=not disable_interactive_mode, target_edition=target_edition
+    )
 
     disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
     if not version_from_env().is_saas_edition():
@@ -262,11 +267,16 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
 def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) -> Site:
     """Update the test site to the target version."""
     logger.info("Updating site (interactive-mode=%s) ...", interactive_mode)
-    return _get_site(target_version, base_site=site, interactive=interactive_mode)
+    return _get_site(
+        target_version,
+        base_site=site,
+        interactive=interactive_mode,
+        target_edition=target_version.edition,
+    )
 
 
 def inject_dumps(site: Site, dumps_dir: Path) -> None:
-    _dumps_up_to_date(dumps_dir, BaseVersions.MIN_VERSION)
+    _dumps_up_to_date(dumps_dir, get_min_version())
 
     # create dump folder in the test site
     site_dumps_path = site.path("var/check_mk/dumps")

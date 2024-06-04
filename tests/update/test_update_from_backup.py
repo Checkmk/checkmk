@@ -18,9 +18,9 @@ from tests.testlib.utils import (
     get_services_with_status,
     qa_test_data_path,
 )
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
-from tests.update.conftest import BaseVersions, DUMPS_DIR, inject_dumps
+from tests.update.conftest import DUMPS_DIR, inject_dumps
 
 from cmk.utils.version import Edition
 
@@ -86,7 +86,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
     )
     assert target_version.edition == Edition.CEE, "This test works with CEE only"
 
-    min_version = BaseVersions.MIN_VERSION
+    min_version = get_min_version()
     target_site = site_factory.interactive_update(base_site, target_version, min_version)
 
     target_services = {}

@@ -134,9 +134,8 @@ def test_has_custom_logo(
     if with_logo:
         logo.parent.mkdir(parents=True, exist_ok=True)
         logo.touch()
-    else:
-        if logo.exists():
-            logo.unlink()
+    elif logo.exists():
+        logo.unlink()
     assert th.has_custom_logo("login_logo") is (
         edition is cmk.utils.version.Edition.CME and with_logo
     )

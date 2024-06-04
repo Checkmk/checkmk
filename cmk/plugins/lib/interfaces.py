@@ -1768,25 +1768,24 @@ def _interface_name(  # pylint: disable=too-many-branches
             info_interface = "[%s]" % bracket_info
         else:
             info_interface = ""
+    # Display port number or alias in summary_interface if that is not part of the service
+    # description anyway
+    elif (
+        (item == attributes.index or item.lstrip("0") == attributes.index)
+        and attributes.alias in (item, "")
+        and attributes.descr in (item, "")
+    ):  # description trivial
+        info_interface = ""
+    elif (
+        item == f"{attributes.alias} {attributes.index}" and attributes.descr != ""
+    ):  # non-unique Alias
+        info_interface = f"[{attributes.alias}/{attributes.descr}]"
+    elif attributes.alias not in (item, ""):  # alias useful
+        info_interface = "[%s]" % attributes.alias
+    elif attributes.descr not in (item, ""):  # description useful
+        info_interface = "[%s]" % attributes.descr
     else:
-        # Display port number or alias in summary_interface if that is not part
-        # of the service description anyway
-        if (
-            (item == attributes.index or item.lstrip("0") == attributes.index)
-            and attributes.alias in (item, "")
-            and attributes.descr in (item, "")
-        ):  # description trivial
-            info_interface = ""
-        elif (
-            item == f"{attributes.alias} {attributes.index}" and attributes.descr != ""
-        ):  # non-unique Alias
-            info_interface = f"[{attributes.alias}/{attributes.descr}]"
-        elif attributes.alias not in (item, ""):  # alias useful
-            info_interface = "[%s]" % attributes.alias
-        elif attributes.descr not in (item, ""):  # description useful
-            info_interface = "[%s]" % attributes.descr
-        else:
-            info_interface = "[%s]" % attributes.index
+        info_interface = "[%s]" % attributes.index
 
     if attributes.node is not None:
         if info_interface:

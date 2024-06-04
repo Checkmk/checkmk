@@ -808,18 +808,17 @@ def hash_of_dict(dict_: dict[str, Any]) -> ETagHash:
         if isinstance(_d, (list, tuple)):
             for value in _d:
                 _update(_hash_obj, value)
+        elif isinstance(_d, dict):
+            for key, value in sorted(_d.items()):
+                _hash_obj.update(key.encode("utf-8"))
+                if isinstance(value, (dict, list, tuple)):
+                    _update(_hash_obj, value)
+                elif isinstance(value, bool):
+                    _hash_obj.update(str(value).lower().encode("utf-8"))
+                else:
+                    _hash_obj.update(str(value).encode("utf-8"))
         else:
-            if isinstance(_d, dict):
-                for key, value in sorted(_d.items()):
-                    _hash_obj.update(key.encode("utf-8"))
-                    if isinstance(value, (dict, list, tuple)):
-                        _update(_hash_obj, value)
-                    elif isinstance(value, bool):
-                        _hash_obj.update(str(value).lower().encode("utf-8"))
-                    else:
-                        _hash_obj.update(str(value).encode("utf-8"))
-            else:
-                _hash_obj.update(str(_d).encode("utf-8"))
+            _hash_obj.update(str(_d).encode("utf-8"))
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)

@@ -1436,9 +1436,8 @@ def IPNetwork(  # pylint: disable=redefined-builtin
         elif issubclass(ip_class, ipaddress.IPv4Network):
             if (e4 := _try(ipaddress.IPv4Network, value)) is not None:
                 raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % e4)
-        else:
-            if (e6 := _try(ipaddress.IPv6Network, value)) is not None:
-                raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
+        elif (e6 := _try(ipaddress.IPv6Network, value)) is not None:
+            raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
 
     return TextInput(
         validate=_validate_value,
@@ -1488,9 +1487,8 @@ def IPAddress(  # pylint: disable=redefined-builtin
         elif issubclass(ip_class, ipaddress.IPv4Address):
             if (e4 := _try(ipaddress.IPv4Address, value)) is not None:
                 raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % e4)
-        else:
-            if (e6 := _try(ipaddress.IPv6Address, value)) is not None:
-                raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
+        elif (e6 := _try(ipaddress.IPv6Address, value)) is not None:
+            raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
 
     return TextInput(
         validate=_validate_value,
@@ -3736,19 +3734,17 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                     except MKUserError:
                         pass  # Fallback to default value here
 
-            else:
-                # Form painted the first time
-                if nr == int(def_val):
-                    # This choice is the one choosen by the given value
-                    if isinstance(value, tuple) and len(value) == 2:
-                        def_val_2 = value[1]
-                    else:
-                        def_val_2 = vs.default_value()
-
-                    show = True
+            elif nr == int(def_val):
+                # This choice is the one choosen by the given value
+                if isinstance(value, tuple) and len(value) == 2:
+                    def_val_2 = value[1]
                 else:
                     def_val_2 = vs.default_value()
-                    show = False
+
+                show = True
+            else:
+                def_val_2 = vs.default_value()
+                show = False
 
             if not self._render_sub_vs_page_name or show:
                 html.open_span(id_="%s_sub" % vp, style="display:%s;" % ("" if show else "none"))
@@ -5841,9 +5837,8 @@ class Tuple(ValueSpec[TT]):
                 else:
                     html.write_text(" ")
 
-            else:
-                if self._orientation == "horizontal":
-                    html.open_td(class_="tuple_td")
+            elif self._orientation == "horizontal":
+                html.open_td(class_="tuple_td")
 
             if self._orientation == "vertical":
                 html.open_td(class_="tuple_right" + (" has_title" if title else ""))

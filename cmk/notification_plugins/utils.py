@@ -396,9 +396,8 @@ def get_sms_message_from_context(raw_context: PluginNotificationContext) -> str:
             message += raw_context["SERVICEOUTPUT"][:avail_len]
         else:
             message += raw_context["SERVICEDESC"]
-    else:
-        if notification_type in ["PROBLEM", "RECOVERY"]:
-            message += "is " + raw_context["HOSTSTATE"]
+    elif notification_type in ["PROBLEM", "RECOVERY"]:
+        message += "is " + raw_context["HOSTSTATE"]
 
     if notification_type.startswith("FLAP"):
         if "START" in notification_type:

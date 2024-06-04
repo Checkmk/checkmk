@@ -672,11 +672,10 @@ class Section:
         for key, value in check_data.items():
             if key not in self._content:
                 self._content[key] = value
+            elif isinstance(value, dict):
+                self._content[key].update(value)
             else:
-                if isinstance(value, dict):
-                    self._content[key].update(value)
-                else:
-                    raise ValueError("Key %s is already present and cannot be merged" % key)
+                raise ValueError("Key %s is already present and cannot be merged" % key)
 
     def output(self) -> str:
         return json.dumps(self._content)

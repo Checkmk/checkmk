@@ -438,12 +438,11 @@ class Mode(Option):
                         options[option.name()] = value + 1
                         continue
                     val = True
-                else:
-                    if option.argument_conv:
-                        try:
-                            val = option.argument_conv(a)
-                        except ValueError:
-                            raise MKGeneralException("%s: Invalid argument" % o)
+                elif option.argument_conv:
+                    try:
+                        val = option.argument_conv(a)
+                    except ValueError:
+                        raise MKGeneralException("%s: Invalid argument" % o)
 
                 options[option.name()] = val
 

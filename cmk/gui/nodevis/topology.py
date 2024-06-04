@@ -1042,16 +1042,15 @@ class Topology:
                     data_folder,
                     add_data_root_node=len(active_layer_ids) > 1,
                 )
-            else:
+            elif layer_id.startswith(_dynamic_network_data_id("")):
                 # Create generic class instances for dynamic layers
-                if layer_id.startswith(_dynamic_network_data_id("")):
-                    layer = GenericNetworkDataGenerator(
-                        layer_id.removeprefix("network@"),
-                        self._root_hostnames_from_core,
-                        self._topology_configuration,
-                        data_folder,
-                        add_data_root_node=len(active_layer_ids) > 1,
-                    )
+                layer = GenericNetworkDataGenerator(
+                    layer_id.removeprefix("network@"),
+                    self._root_hostnames_from_core,
+                    self._topology_configuration,
+                    data_folder,
+                    add_data_root_node=len(active_layer_ids) > 1,
+                )
             if layer:
                 computed_layers[layer_id] = layer
             else:

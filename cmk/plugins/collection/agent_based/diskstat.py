@@ -243,28 +243,27 @@ def diskstat_extract_name_info(
             phase = "dmsetup_info"
         elif line[0] == "[vx_dsk]":
             phase = "vx_dsk"
-        else:
-            if phase == "info":
-                if len(line) == 1:
-                    timestamp = int(line[0])
+        elif phase == "info":
+            if len(line) == 1:
+                timestamp = int(line[0])
+            else:
+                info_plain.append(line[:14])
+        elif phase == "dmsetup_info":
+            try:
+                major, minor = map(int, line[1].split(":"))
+                if len(line) == 4:
+                    name = "LVM %s" % line[0]
                 else:
-                    info_plain.append(line[:14])
-            elif phase == "dmsetup_info":
-                try:
-                    major, minor = map(int, line[1].split(":"))
-                    if len(line) == 4:
-                        name = "LVM %s" % line[0]
-                    else:
-                        name = "DM %s" % line[0]
-                    name_info[major, minor] = name
-                except Exception:
-                    pass  # ignore such crap as "No Devices Found"
-            elif phase == "vx_dsk":
-                major = int(line[0], 16)
-                minor = int(line[1], 16)
-                group, disk = line[2].split("/")[-2:]
-                name = f"VxVM {group}-{disk}"
+                    name = "DM %s" % line[0]
                 name_info[major, minor] = name
+            except Exception:
+                pass  # ignore such crap as "No Devices Found"
+        elif phase == "vx_dsk":
+            major = int(line[0], 16)
+            minor = int(line[1], 16)
+            group, disk = line[2].split("/")[-2:]
+            name = f"VxVM {group}-{disk}"
+            name_info[major, minor] = name
     return timestamp, info_plain, name_info
 
 

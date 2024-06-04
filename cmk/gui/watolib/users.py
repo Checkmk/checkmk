@@ -185,9 +185,8 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
             raise MKUserError("user_id", _("This username is already being used by another user."))
         vs_user_id = UserID(allow_empty=False)
         vs_user_id.validate_value(user_id, "user_id")
-    else:
-        if user_id not in all_users:
-            raise MKUserError(None, _("The user you are trying to edit does not exist."))
+    elif user_id not in all_users:
+        raise MKUserError(None, _("The user you are trying to edit does not exist."))
 
     # Full name
     alias = user_attrs.get("alias")

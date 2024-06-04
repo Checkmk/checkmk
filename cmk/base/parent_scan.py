@@ -198,12 +198,11 @@ def scan_parents_of(
                 routes.append(HostAddress(route))
             elif route == "*":
                 routes.append(None)  # No answer from this router
-            else:
-                if not silent:
-                    console.error(
-                        f"{host}: invalid output line from traceroute: '{line}'",
-                        file=sys.stderr,
-                    )
+            elif not silent:
+                console.error(
+                    f"{host}: invalid output line from traceroute: '{line}'",
+                    file=sys.stderr,
+                )
 
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."

@@ -52,17 +52,16 @@ def parse_df_zos(string_table: StringTable) -> Section:
         elif line[0].startswith("Filesystem"):
             # Ignore header line
             continue
-        else:
-            if usage is None:
-                usage = (line[5], float(line[1]) / 1024.0, float(line[3]) / 1024.0, 0.0)
-            elif not options:
-                # Second line: filesystem options
-                for option in line:
-                    options.add(option.replace(",", ""))
-                if "Read" in options and "Only" in options:
-                    options.remove("Read")
-                    options.remove("Only")
-                    options.add("ReadOnly")
+        elif usage is None:
+            usage = (line[5], float(line[1]) / 1024.0, float(line[3]) / 1024.0, 0.0)
+        elif not options:
+            # Second line: filesystem options
+            for option in line:
+                options.add(option.replace(",", ""))
+            if "Read" in options and "Only" in options:
+                options.remove("Read")
+                options.remove("Only")
+                options.add("ReadOnly")
     return section
 
 

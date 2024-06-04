@@ -421,9 +421,8 @@ class FilterInvHasSoftwarePackage(Filter):
             if isinstance(name, str):
                 if package["name"] != name:
                     continue
-            else:
-                if not name.search(package["name"]):
-                    continue
+            elif not name.search(package["name"]):
+                continue
             if not from_version and not to_version:
                 return True  # version not relevant
             version = package["version"]

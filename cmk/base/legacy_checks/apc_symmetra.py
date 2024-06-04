@@ -235,13 +235,12 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             if battery_capacity < alt_crit_capacity:
                 state = 2
                 levelstxt = " (crit below %d%% in delay after calibration)" % alt_crit_capacity
-        else:
-            if battery_capacity < crit_cap:
-                state = 2
-                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
-            elif battery_capacity < warn_cap:
-                state = 1
-                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
+        elif battery_capacity < crit_cap:
+            state = 2
+            levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
+        elif battery_capacity < warn_cap:
+            state = 1
+            levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
 
         yield state, "Capacity: %d%%%s" % (battery_capacity, levelstxt), [
             ("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)

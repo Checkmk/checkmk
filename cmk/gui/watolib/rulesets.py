@@ -1307,9 +1307,8 @@ class Rule:
         if match_service_conditions:
             if list(matcher.get_service_ruleset_values(match_object, ruleset)):
                 return
-        else:
-            if list(matcher.get_host_values(match_object.host_name, ruleset)):
-                return
+        elif list(matcher.get_host_values(match_object.host_name, ruleset)):
+            return
 
         yield _("The rule does not match")
 

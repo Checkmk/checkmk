@@ -386,9 +386,8 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
     if site_spec.get("proxy") is not None:
         assert site_spec["proxy"] is not None
         copied_site["cache"] = site_spec["proxy"].get("cache", True)
-    else:
-        if isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
-            copied_site["tls"] = cast(NetworkSocketDetails, site_spec["socket"][1])["tls"]
+    elif isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
+        copied_site["tls"] = cast(NetworkSocketDetails, site_spec["socket"][1])["tls"]
     copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec)
 
     return copied_site

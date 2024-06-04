@@ -758,14 +758,13 @@ class HTMLGenerator(HTMLWriter):
                 assert isinstance(size, int)
                 style_size = ["min-width: %d.8ex;" % size]
                 cssclass += " try_max_width"
+            elif size == "max":
+                style_size = ["width: 100%;"]
             else:
-                if size == "max":
-                    style_size = ["width: 100%;"]
-                else:
-                    assert isinstance(size, int)
-                    field_size = "%d" % (size + 1)
-                    if (style is None or "width:" not in style) and not self.mobile:
-                        style_size = ["width: %d.8ex;" % size]
+                assert isinstance(size, int)
+                field_size = "%d" % (size + 1)
+                if (style is None or "width:" not in style) and not self.mobile:
+                    style_size = ["width: %d.8ex;" % size]
 
         attributes: HTMLTagAttributes = {
             "class": cssclass,

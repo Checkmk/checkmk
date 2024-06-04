@@ -238,10 +238,8 @@ class _BIFrozenAggregations(Filter):
             if compiled_aggregation.frozen_info:
                 if show_frozen:
                     new_rows.append(row)
-            else:
-                # dynamic aggregation
-                if show_dynamic:
-                    new_rows.append(row)
+            elif show_dynamic:
+                new_rows.append(row)
 
         return new_rows
 

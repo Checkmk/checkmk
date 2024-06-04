@@ -278,15 +278,12 @@ def _process_icon(  # pylint: disable=too-many-branches
 
         assert isinstance(result, str)
         icon_name = result
+    elif len(result) == 2:
+        icon_name, title = result  # type: ignore[misc]
+    elif len(result) == 3:
+        icon_name, title, url = result  # type: ignore[misc]
     else:
-        # Mypy does not understand the length checking here. Can not easily be fixed, because we
-        # would have to change all the icon plugins.
-        if len(result) == 2:
-            icon_name, title = result  # type: ignore[misc]
-        elif len(result) == 3:
-            icon_name, title, url = result  # type: ignore[misc]
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     yield IconEntry(
         sort_index=icon.sort_index(),

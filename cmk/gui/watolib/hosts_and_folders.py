@@ -3381,10 +3381,9 @@ class Host:
             if not self.attributes.get("inventory_failed"):
                 self.attributes["inventory_failed"] = True
                 self.folder().save_hosts()
-        else:
-            if self.attributes.get("inventory_failed"):
-                del self.attributes["inventory_failed"]
-                self.folder().save_hosts()
+        elif self.attributes.get("inventory_failed"):
+            del self.attributes["inventory_failed"]
+            self.folder().save_hosts()
 
     def rename_cluster_node(self, oldname: HostName, newname: HostName) -> bool:
         # We must not check permissions here. Permissions

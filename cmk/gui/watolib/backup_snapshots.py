@@ -583,9 +583,8 @@ def extract_snapshot(  # pylint: disable=too-many-branches
         if is_pre_restore:
             if "pre_restore" in domain:
                 return domain["pre_restore"]()
-        else:
-            if "post_restore" in domain:
-                return domain["post_restore"]()
+        elif "post_restore" in domain:
+            return domain["post_restore"]()
         return []
 
     total_errors = []

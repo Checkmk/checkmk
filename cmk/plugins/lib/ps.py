@@ -378,14 +378,12 @@ class ProcessAggregator:
         # process.
         if "/" in process_info.cputime:
             elapsed_text = process_info.cputime.split("/")[1]
+        # uptime is a windows only value, introduced in Werk 4029. For future consistency should be
+        # moved to the cputime entry and separated by a /
+        elif process_info.uptime:
+            elapsed_text = process_info.uptime
         else:
-            # uptime is a windows only value, introduced in Werk 4029. For
-            # future consistency should be moved to the cputime entry and
-            # separated by a /
-            if process_info.uptime:
-                elapsed_text = process_info.uptime
-            else:
-                elapsed_text = None
+            elapsed_text = None
 
         if elapsed_text:
             elapsed = parse_ps_time(elapsed_text)

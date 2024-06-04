@@ -355,12 +355,11 @@ def update_schema(
                     raw_schema[key][child].update(upd_values)
                     for val in del_values:
                         raw_schema[key][child].pop(val, None)
-            else:
-                if matching_dict(raw_schema[key], expected):
-                    logger.debug('Patching path "%s" with %s', key_path, upd_values)
-                    raw_schema[key].update(upd_values)
-                    for val in del_values:
-                        raw_schema[key].pop(val, None)
+            elif matching_dict(raw_schema[key], expected):
+                logger.debug('Patching path "%s" with %s', key_path, upd_values)
+                raw_schema[key].update(upd_values)
+                for val in del_values:
+                    raw_schema[key].pop(val, None)
         else:
             update_schema(
                 raw_schema[key],

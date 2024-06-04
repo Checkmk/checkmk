@@ -2671,11 +2671,10 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         elif isinstance(rp := self._rule_packs[self._edit_nr], ec.MkpRulePackProxy):
             rp.rule_pack = self._rule_pack
             _export_mkp_rule_pack(self._rule_pack)
+        elif self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
+            self._rule_packs[self._edit_nr] = self._rule_pack
         else:
-            if self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
-                self._rule_packs[self._edit_nr] = self._rule_pack
-            else:
-                self._rule_packs[self._edit_nr] = self._rule_pack
+            self._rule_packs[self._edit_nr] = self._rule_pack
 
         _save_mkeventd_rules(self._rule_packs)
 

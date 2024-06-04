@@ -40,18 +40,17 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
             if levels is None:
                 state = 1
                 infotext += ", expected paths unknown, please redo service discovery"
-            else:
-                if isinstance(levels, tuple):
-                    warn, crit = levels
-                    warn_num = (warn / 100.0) * total
-                    crit_num = (crit / 100.0) * total
-                    levels = " (Warning/ Critical at %d/ %d)" % (warn_num, crit_num)
-                    info = "paths active: %d" % (operational)
-                    if operational <= crit_num:
-                        return 2, info + levels
-                    if operational <= warn_num:
-                        return 1, info + levels
-                    return 0, info
+            elif isinstance(levels, tuple):
+                warn, crit = levels
+                warn_num = (warn / 100.0) * total
+                crit_num = (crit / 100.0) * total
+                levels = " (Warning/ Critical at %d/ %d)" % (warn_num, crit_num)
+                info = "paths active: %d" % (operational)
+                if operational <= crit_num:
+                    return 2, info + levels
+                if operational <= warn_num:
+                    return 1, info + levels
+                return 0, info
 
             expected = int(levels)  # should be int, just for legacy reasons
             if operational > expected:

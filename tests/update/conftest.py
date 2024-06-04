@@ -226,22 +226,21 @@ def _get_site(  # pylint: disable=too-many-branches
                     )
                 else:
                     raise
-    else:
-        if update:
-            # non-interactive update as site-user
-            sf.update_as_site_user(site, target_version=version, min_version=min_version)
+    elif update:
+        # non-interactive update as site-user
+        sf.update_as_site_user(site, target_version=version, min_version=min_version)
 
-        else:  # use SiteFactory for non-interactive site creation
-            try:
-                site = sf.get_site(sitename, auto_restart_httpd=True)
-            except Exception as e:
-                if f"Version {version.version} could not be installed" in str(e):
-                    pytest.skip(
-                        f"Base-version {version.version} not available in "
-                        f'{os.environ.get("DISTRO")}'
-                    )
-                else:
-                    raise
+    else:  # use SiteFactory for non-interactive site creation
+        try:
+            site = sf.get_site(sitename, auto_restart_httpd=True)
+        except Exception as e:
+            if f"Version {version.version} could not be installed" in str(e):
+                pytest.skip(
+                    f"Base-version {version.version} not available in "
+                    f'{os.environ.get("DISTRO")}'
+                )
+            else:
+                raise
 
     return site
 

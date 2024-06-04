@@ -132,15 +132,14 @@ def check_cbl_airlaser_hw(item, params, section):  # pylint: disable=too-many-br
             if sensor in ["psStatus48V", "psStatus230V"] and val == "warning":
                 state = max(state, 0)
 
+            elif val == "failure":
+                state = 2
+            elif val == "warning":
+                state = max(state, 1)
+            # go here if no explicit error occured,
+            # no handling undefined and not_installed
             else:
-                if val == "failure":
-                    state = 2
-                elif val == "warning":
-                    state = max(state, 1)
-                # go here if no explicit error occured,
-                # no handling undefined and not_installed
-                else:
-                    continue
+                continue
             if state > 0:
                 msgtxt = msgtxt + f"Sensor {sensor} {val}" + state * "!" + " "
 

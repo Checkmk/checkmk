@@ -880,19 +880,18 @@ class EventServer(ECServerThread):
                                 event["phase"] = "closed"
                                 events_to_delete.append((event, "COUNTFAILED"))
 
-                    else:  # algorithm 'interval'
-                        if event["first"] + count["period"] <= now:  # End of period reached
-                            self._logger.info(
-                                "Rule %s/%s: reached only %d out of %d events within %d seconds. "
-                                "Resetting to zero.",
-                                rule["pack"],
-                                rule["id"],
-                                event["count"],
-                                count["count"],
-                                count["period"],
-                            )
-                            event["phase"] = "closed"
-                            events_to_delete.append((event, "COUNTFAILED"))
+                    elif event["first"] + count["period"] <= now:  # End of period reached
+                        self._logger.info(
+                            "Rule %s/%s: reached only %d out of %d events within %d seconds. "
+                            "Resetting to zero.",
+                            rule["pack"],
+                            rule["id"],
+                            event["count"],
+                            count["count"],
+                            count["period"],
+                        )
+                        event["phase"] = "closed"
+                        events_to_delete.append((event, "COUNTFAILED"))
 
             # Handle delayed actions
             elif event["phase"] == "delayed":

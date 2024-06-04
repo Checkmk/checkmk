@@ -36,11 +36,10 @@ def parse_raritan_emx(string_table):
 
         if rack_type in ["binary", ""]:
             rack_value = None
+        elif rack_type == "temp":
+            rack_value = float(value_text) / 10
         else:
-            if rack_type == "temp":
-                rack_value = float(value_text) / 10
-            else:
-                rack_value = int(value_text)
+            rack_value = int(value_text)
 
         parsed[rack_name] = {
             "rack_type": rack_type,

@@ -57,15 +57,12 @@ class SiteStatus(SidebarSnapin):
                 switch = "missing"
                 text = escape_to_html(sitename)
 
+            elif state == "disabled":
+                switch = "on"
+                text = escape_to_html(site["alias"])
             else:
-                if state == "disabled":
-                    switch = "on"
-                    text = escape_to_html(site["alias"])
-                else:
-                    switch = "off"
-                    text = render_link(
-                        site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename
-                    )
+                switch = "off"
+                text = render_link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
 
             html.open_tr()
             html.td(text, class_="left")

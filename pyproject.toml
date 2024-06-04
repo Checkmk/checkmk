@@ -5,6 +5,8 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
+# NOTE: No "I" yet due to various tiny formatting differences
+select = ["E", "F", "W", "C90", "PL"]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long
@@ -24,12 +26,9 @@ ignore = [
   "PLR0913", # Too many arguments in function definition
   "PLR0915", # Too many statements
   "PLR2004", # Magic value used in comparison, consider replacing `FOO` with a constant variable
-  "PLR5501", # Use `elif` instead of `else` then `if`, to reduce indentation
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
 ]
-# NOTE: No "I" yet due to various tiny formatting differences
-select = ["E", "F", "W", "C90", "PL"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

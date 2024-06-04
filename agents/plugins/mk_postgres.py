@@ -136,7 +136,7 @@ def ensure_str(s):
     if sys.version_info[0] >= 3:
         if isinstance(s, bytes):
             return s.decode("utf-8")
-    elif isinstance(s, unicode):  # pylint: disable=undefined-variable
+    elif isinstance(s, unicode):  # pylint: disable=undefined-variable # noqa: F821
         return s.encode("utf-8")
     return s
 

@@ -101,7 +101,7 @@ def _get_parsed_config() -> (
 
 def text_type():
     if sys.version_info[0] == 2:
-        return unicode  # pylint: disable=undefined-variable
+        return unicode  # pylint: disable=undefined-variable # noqa: F821
     return str
 
 

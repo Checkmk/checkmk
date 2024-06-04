@@ -46,7 +46,7 @@ if PY3:
     text_type = str
     binary_type = bytes
 else:
-    text_type = unicode  # pylint: disable=undefined-variable
+    text_type = unicode  # pylint: disable=undefined-variable # noqa: F821
     binary_type = str
 
 

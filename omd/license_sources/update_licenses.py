@@ -629,6 +629,7 @@ def main(args):
     ]
     data_per_section = []
     section_idx = 0
+    start = 0  # dummy value, needed because of the weird code below
     for idx, line in enumerate(old_data):
         needle = section_needles[section_idx]
         if set(needle) <= set(line):  # if A is a subset of B

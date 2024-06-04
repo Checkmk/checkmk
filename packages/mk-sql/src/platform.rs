@@ -4,6 +4,48 @@
 
 use crate::types::{InstanceName, Port};
 
+pub struct Block {
+    pub headline: Vec<String>,
+    pub rows: Vec<Vec<String>>,
+}
+
+impl Block {
+    pub fn is_empty(&self) -> bool {
+        self.rows.is_empty()
+    }
+
+    pub fn first(&self) -> Option<&Vec<String>> {
+        self.rows.first()
+    }
+    pub fn last(&self) -> Option<&Vec<String>> {
+        self.rows.last()
+    }
+
+    pub fn get_value_by_name(&self, row: &[String], idx: &str) -> String {
+        if let Some(index) = self.headline.iter().position(|r| r == idx) {
+            row.get(index).cloned()
+        } else {
+            None
+        }
+        .unwrap_or_default()
+    }
+
+    pub fn get_bigint_by_name(&self, row: &[String], idx: &str) -> String {
+        self.get_value_by_name(row, idx)
+            .parse::<i64>()
+            .unwrap_or_default()
+            .to_string()
+    }
+
+    pub fn get_first_row_column(&self, column: usize) -> Option<String> {
+        self.rows.first().and_then(|r| r.get(column)).cloned()
+    }
+}
+
+pub fn get_row_value_by_idx(row: &[String], idx: usize) -> String {
+    row.get(idx).cloned().unwrap_or_default()
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Transport {
     Tcp,
@@ -90,6 +132,7 @@ mod tests {
 
 #[cfg(windows)]
 pub mod odbc {
+    use super::Block;
     use anyhow::Result;
     use odbc_api::{
         buffers::{ColumnarBuffer, TextColumn, TextRowSet},
@@ -141,11 +184,6 @@ pub mod odbc {
             instance,
             database.unwrap_or("master")
         )
-    }
-
-    pub struct Block {
-        pub headline: Vec<String>,
-        pub rows: Vec<Vec<String>>,
     }
 
     type BufferType = ColumnarBuffer<TextColumn<u8>>;

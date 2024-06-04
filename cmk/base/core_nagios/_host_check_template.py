@@ -15,10 +15,9 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.submitters import get_submitter
 
-import cmk.base.check_api as check_api
-import cmk.base.config as config
 import cmk.base.obsolete_output as out
 import cmk.base.utils
+from cmk.base import check_api, config
 from cmk.base.api.agent_based.register import register_plugin_by_type
 from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import mode_check

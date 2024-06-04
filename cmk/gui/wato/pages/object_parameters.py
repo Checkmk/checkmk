@@ -16,8 +16,8 @@ from cmk.utils.servicename import Item
 
 from cmk.automations.results import AnalyseServiceResult, ServiceInfo
 
-import cmk.gui.forms as forms
 import cmk.gui.view_utils
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError

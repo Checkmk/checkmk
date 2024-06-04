@@ -5,7 +5,7 @@
 
 import re
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _

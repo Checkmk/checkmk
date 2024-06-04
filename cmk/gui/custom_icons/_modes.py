@@ -7,7 +7,7 @@ import os
 from collections.abc import Collection
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.images import CMKImage, ImageType
 
 from cmk.gui.config import active_config

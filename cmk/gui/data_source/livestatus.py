@@ -13,7 +13,7 @@ from livestatus import LivestatusColumn, LivestatusRow, OnlySites, Query, QueryS
 
 from cmk.utils.check_utils import worst_service_state
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html

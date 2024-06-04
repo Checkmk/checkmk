@@ -9,16 +9,14 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from fnmatch import fnmatch
 from pathlib import Path
 
-import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils import man_pages
 from cmk.utils.labels import Labels
 from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
 
-import cmk.gui.metrics as metrics
-import cmk.gui.sites as sites
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import metrics, sites
 from cmk.gui.config import Config
 from cmk.gui.graphing._color import render_color_icon
 from cmk.gui.graphing._type_defs import TranslatedMetric
@@ -44,6 +42,7 @@ from cmk.gui.type_defs import (
     SorterName,
     VisualLinkSpec,
 )
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax

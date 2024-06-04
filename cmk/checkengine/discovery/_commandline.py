@@ -10,7 +10,7 @@ from collections.abc import Callable, Container, Mapping, Sequence
 
 import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel

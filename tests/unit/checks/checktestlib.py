@@ -41,7 +41,9 @@ class BaseCheck(abc.ABC):
 
 class Check(BaseCheck):
     def __init__(self, name: str) -> None:
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+            config,
+        )
         from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
 
         super().__init__(name)
@@ -79,7 +81,9 @@ class Check(BaseCheck):
 
 class ActiveCheck(BaseCheck):
     def __init__(self, name: str) -> None:
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+            config,
+        )
 
         super().__init__(name)
         self.info = config.active_check_info.get(self.name[len("check_") :])
@@ -99,7 +103,9 @@ class ActiveCheck(BaseCheck):
 
 class SpecialAgent:
     def __init__(self, name: str) -> None:
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
+            config,
+        )
 
         super().__init__()
         self.name = name

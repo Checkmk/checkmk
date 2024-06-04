@@ -25,7 +25,7 @@ from typing import Literal, NamedTuple, NoReturn
 from urllib.parse import quote
 from urllib.request import urlopen
 
-import cmk.utils.site as site
+from cmk.utils import site
 from cmk.utils.exceptions import MKException
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 

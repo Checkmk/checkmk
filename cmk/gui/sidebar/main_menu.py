@@ -8,7 +8,7 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 """
 from typing import NamedTuple
 
-import cmk.gui.message as message
+from cmk.gui import message
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.generator import HTMLWriter

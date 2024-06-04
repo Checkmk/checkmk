@@ -44,12 +44,9 @@ from cmk.utils.user import UserId
 from cmk.automations.results import DeleteHostsResult
 
 import cmk.gui.config as config_module
-import cmk.gui.login as login
 import cmk.gui.mkeventd.wato as mkeventd
-import cmk.gui.watolib.activate_changes as activate_changes
-import cmk.gui.watolib.groups as groups
 import cmk.gui.watolib.password_store
-from cmk.gui import hooks, http, main_modules, userdb
+from cmk.gui import hooks, http, login, main_modules, userdb
 from cmk.gui.config import active_config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.session import session, SuperUserContext, UserContext
@@ -58,6 +55,7 @@ from cmk.gui.userdb.session import load_session_infos
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
+from cmk.gui.watolib import activate_changes, groups
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from .users import create_and_destroy_user

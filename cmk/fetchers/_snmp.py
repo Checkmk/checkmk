@@ -10,7 +10,7 @@ from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapp
 from pathlib import Path
 from typing import Any, Final
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.sectionname import SectionMap, SectionName
 

@@ -12,7 +12,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from cmk.utils.structured_data import SDKey, SDPath
 from cmk.utils.user import UserId
 
-import cmk.gui.inventory as inventory
+from cmk.gui import inventory
 from cmk.gui.data_source import data_source_registry, DataSourceRegistry
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvText

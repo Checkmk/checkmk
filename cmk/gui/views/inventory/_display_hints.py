@@ -12,7 +12,7 @@ from typing import Literal
 
 from cmk.utils.structured_data import SDKey, SDPath
 
-import cmk.gui.inventory as inventory
+from cmk.gui import inventory
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import (
     FilterInvBool,

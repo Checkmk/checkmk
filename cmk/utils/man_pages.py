@@ -24,7 +24,7 @@ from typing import Final
 
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 

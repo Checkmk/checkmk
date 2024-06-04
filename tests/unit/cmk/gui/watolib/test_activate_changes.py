@@ -20,9 +20,9 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.utils
 from cmk.gui.http import Request
+from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
 

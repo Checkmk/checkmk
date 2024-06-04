@@ -11,7 +11,7 @@ from typing import Literal
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.paths import tmp_dir
@@ -36,9 +36,8 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION
 
 import cmk.base.core
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
-import cmk.base.sources as sources
+from cmk.base import ip_lookup, sources
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,

@@ -42,18 +42,13 @@ import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
 import cmk.utils.config_path
-import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
-import cmk.utils.password_store as password_store
 import cmk.utils.paths
-import cmk.utils.piggyback as piggyback
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
-import cmk.utils.store as store
 import cmk.utils.store.host_storage
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
+from cmk.utils import config_warnings, password_store, piggyback, store
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
@@ -66,7 +61,7 @@ from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
-from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, RulesetName, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
@@ -121,8 +116,7 @@ from cmk.checkengine.parser import (
 from cmk.checkengine.summarize import SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.default_config as default_config
-import cmk.base.ip_lookup as ip_lookup
+from cmk.base import default_config, ip_lookup
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy

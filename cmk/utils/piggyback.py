@@ -19,7 +19,7 @@ from typing import Final, NamedTuple, Self
 
 import cmk.utils
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 

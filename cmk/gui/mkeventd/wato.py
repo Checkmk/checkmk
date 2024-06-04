@@ -34,8 +34,8 @@ from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.render
-import cmk.utils.store as store
 import cmk.utils.translations
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
@@ -45,12 +45,8 @@ from cmk.utils.version import edition, Edition
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.forms as forms
-import cmk.gui.hooks as hooks
-import cmk.gui.log as log
-import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms, hooks, log, sites, watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL

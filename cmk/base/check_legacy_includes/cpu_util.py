@@ -12,8 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
 )
 
-import cmk.plugins.lib.cpu_util as cpu_util
 from cmk.agent_based.v2 import render
+from cmk.plugins.lib import cpu_util
 
 # Common file for all (modern) checks that check CPU utilization (not load!)
 

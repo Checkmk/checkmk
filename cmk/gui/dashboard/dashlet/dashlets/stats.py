@@ -10,8 +10,7 @@ from typing import Generic, NamedTuple, TypeVar
 
 from livestatus import MKLivestatusNotFoundError
 
-import cmk.gui.sites as sites
-import cmk.gui.visuals as visuals
+from cmk.gui import sites, visuals
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
 from cmk.gui.figures import FigureResponseData
 from cmk.gui.http import request

@@ -13,8 +13,8 @@ import pytest
 
 from cmk.utils.crash_reporting import crash_report_registry, CrashReportStore
 
-import cmk.gui.crash_reporting.pages as pages
 from cmk.gui.crash_handler import GUICrashReport
+from cmk.gui.crash_reporting import pages
 
 
 def test_gui_crash_report_registry() -> None:

@@ -12,7 +12,7 @@ from livestatus import LivestatusResponse, OnlySites
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import RetentionInterval, SDValue
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.display_options import display_options

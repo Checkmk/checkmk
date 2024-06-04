@@ -19,8 +19,8 @@ from uuid import UUID
 
 import livestatus
 
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,

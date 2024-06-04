@@ -15,7 +15,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.user import UserId
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
@@ -42,6 +41,7 @@ from cmk.gui.type_defs import (
     VisualContext,
     VisualLinkSpec,
 )
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.theme import Theme
@@ -963,7 +963,7 @@ def render_delete_event_icons(  # pylint: disable=redefined-outer-name
     if _is_rendered_from_view_dashlet():
         ident = request.get_integer_input_mandatory("id")
 
-        import cmk.gui.dashboard as dashboard
+        from cmk.gui import dashboard
 
         # With the typed dicts we currently don't have an easy way of determining the type
         dashlet_config = dashboard.get_dashlet(request.get_str_input_mandatory("name"), ident)

@@ -15,7 +15,7 @@ import recurring_ical_events  # type: ignore[import-untyped]
 from icalendar import Calendar, Event  # type: ignore[import-untyped]
 from icalendar.prop import vDDDTypes  # type: ignore[import-untyped]
 
-import cmk.utils.dateutils as dateutils
+from cmk.utils import dateutils
 from cmk.utils.timeperiod import (
     builtin_timeperiods,
     load_timeperiods,
@@ -24,9 +24,7 @@ from cmk.utils.timeperiod import (
     TimeperiodSpec,
 )
 
-import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
-import cmk.gui.watolib.groups as groups
+from cmk.gui import forms, watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
@@ -60,6 +58,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib import groups
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode

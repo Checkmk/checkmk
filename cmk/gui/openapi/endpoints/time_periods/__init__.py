@@ -16,7 +16,7 @@ import http.client
 from collections.abc import Mapping
 from typing import Any, cast
 
-import cmk.utils.dateutils as dateutils
+from cmk.utils import dateutils
 from cmk.utils.timeperiod import load_timeperiods, TimeperiodSpec
 
 from cmk.gui.http import Response

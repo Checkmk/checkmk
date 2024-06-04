@@ -8,7 +8,7 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value

@@ -18,8 +18,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
 from cmk.utils.user import UserId
 
-import cmk.gui.crash_handler as crash_handler
-import cmk.gui.visuals as visuals
+from cmk.gui import crash_handler, visuals
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError

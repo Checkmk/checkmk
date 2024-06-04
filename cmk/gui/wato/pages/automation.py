@@ -12,17 +12,17 @@ from contextlib import nullcontext
 from datetime import datetime
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
-import cmk.gui.userdb as userdb
 import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
+from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response

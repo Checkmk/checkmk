@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils.render
 
-import cmk.gui.availability as availability
+from cmk.gui import availability
 
 
 @pytest.mark.parametrize(

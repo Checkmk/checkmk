@@ -29,10 +29,8 @@ import requests
 import livestatus
 
 import cmk.utils.paths
-import cmk.utils.site as site
-import cmk.utils.store as store
-import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils import site, store, tty
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.diagnostics import (
     CheckmkFileEncryption,

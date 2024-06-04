@@ -13,7 +13,7 @@ from typing import Any, Self, TypedDict
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
-import cmk.gui.pagetypes as pagetypes
+from cmk.gui import pagetypes
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import request

@@ -28,8 +28,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
-import cmk.base.config as config
-import cmk.base.core_nagios as core_nagios
+from cmk.base import config, core_nagios
 
 
 def ip_address_of_never_called(

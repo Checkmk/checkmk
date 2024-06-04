@@ -15,7 +15,7 @@ from typing import Any, assert_never, TypeVar
 
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
 from cmk.utils.rulesets import RuleSetName

@@ -13,8 +13,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.sites as sites
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.forms import open_submit_button_container_div
@@ -31,6 +30,7 @@ from cmk.gui.permissions import (
     PermissionSectionRegistry,
 )
 from cmk.gui.type_defs import Choices, Row, Rows
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.time import timezone_utc_offset_str

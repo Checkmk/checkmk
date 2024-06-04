@@ -41,7 +41,7 @@ from typing import assert_never, NamedTuple, TypeAlias
 
 import cryptography
 import cryptography.hazmat.primitives.asymmetric as asym
-import cryptography.x509 as x509
+from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 

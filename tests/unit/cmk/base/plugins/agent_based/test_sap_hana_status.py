@@ -5,7 +5,7 @@
 
 import pytest
 
-import cmk.base.plugins.agent_based.sap_hana_status as sap_hana_status
+from cmk.base.plugins.agent_based import sap_hana_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Result,

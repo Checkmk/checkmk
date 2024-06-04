@@ -11,9 +11,8 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID
 from cmk.utils.user import UserId
 
-import cmk.gui.hooks as hooks
-import cmk.gui.userdb as userdb
 from cmk.gui import fields as gui_fields
+from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _

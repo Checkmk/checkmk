@@ -16,9 +16,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import host_state_name, service_state_name
 
-import cmk.gui.availability as availability
-import cmk.gui.bi as bi
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import availability, bi
 from cmk.gui.availability import (
     AVData,
     AVEntry,
@@ -57,6 +55,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
+from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel

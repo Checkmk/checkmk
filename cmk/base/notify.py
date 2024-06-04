@@ -31,9 +31,8 @@ from pathlib import Path
 from typing import Any, Callable, cast, Literal, overload, TypeAlias
 
 import cmk.utils.debug
-import cmk.utils.log as log
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import log, store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
@@ -77,13 +76,12 @@ from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, load_timeperiods, timeperiod_active
 
-import cmk.base.config as config
-import cmk.base.events as events
 import cmk.base.obsolete_output as out
 import cmk.base.utils
+from cmk.base import config, events
 
 try:
-    import cmk.base.cee.keepalive as keepalive
+    from cmk.base.cee import keepalive
 except ImportError:
     # Edition layering...
     keepalive: TypeAlias = None  # type: ignore[no-redef]

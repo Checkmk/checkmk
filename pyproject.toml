@@ -19,7 +19,6 @@ ignore = [
   "F821", # undefined name 'FOO'
   # pylint doesn't complain about these
   "PLC0414", # Import alias does not rename original package
-  "PLR0402", # Use `from FOO import BAR` in lieu of alias
   "PLR0911", # Too many return statements
   "PLR0912", # Too many branches
   "PLR0913", # Too many arguments in function definition

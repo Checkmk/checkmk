@@ -38,10 +38,8 @@ import cmk.utils.caching
 import cmk.utils.crypto.password_hashing
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.redis as redis
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils import tty
+from cmk.utils import redis, store, tty
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.licensing.handler import (
     LicenseState,
@@ -267,9 +265,13 @@ class FixRegister:
 
     def __init__(self) -> None:
         # Local import to have faster pytest initialization
-        import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-        import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+            check_api,
+            config,
+        )
+        from cmk.base.api.agent_based import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+            register,
+        )
 
         config._initialize_data_structures()
         assert not config.check_info
@@ -307,7 +309,9 @@ class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
     def __init__(self, fixed_register: FixRegister) -> None:
-        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+            config,
+        )
 
         assert isinstance(fixed_register, FixRegister)  # make sure plug-ins are loaded
 

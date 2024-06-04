@@ -5,7 +5,6 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.bgp_peer as bgp_peer
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -16,6 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringByteTable,
 )
+from cmk.plugins.collection.agent_based import bgp_peer
 
 DATA_SIMPLE: StringByteTable = [
     [

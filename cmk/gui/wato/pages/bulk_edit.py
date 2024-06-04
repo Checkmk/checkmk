@@ -9,7 +9,7 @@ values."""
 from collections.abc import Collection, Sequence
 from hashlib import sha256
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

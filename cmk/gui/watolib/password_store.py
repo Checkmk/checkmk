@@ -10,7 +10,7 @@ from pathlib import Path
 from cmk.utils import password_store, store
 from cmk.utils.password_store import Password
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices

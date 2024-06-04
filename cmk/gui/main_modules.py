@@ -14,7 +14,7 @@ from types import ModuleType
 import cmk.utils.version as cmk_version
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.log import logger
 
 

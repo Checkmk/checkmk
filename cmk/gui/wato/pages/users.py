@@ -10,17 +10,13 @@ import traceback
 from collections.abc import Collection, Iterable, Iterator
 from typing import cast, Literal, overload
 
-import cmk.utils.render as render
+from cmk.utils import render
 from cmk.utils.crypto.password import Password
 from cmk.utils.timeperiod import load_timeperiods
 from cmk.utils.user import UserId
 from cmk.utils.version import Edition, edition
 
-import cmk.gui.background_job as background_job
-import cmk.gui.forms as forms
-import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.userdb as userdb
-import cmk.gui.weblib as weblib
+from cmk.gui import background_job, forms, gui_background_job, userdb, weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.customer import ABCCustomerAPI, customer_api

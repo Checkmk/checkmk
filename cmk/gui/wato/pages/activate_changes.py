@@ -18,16 +18,15 @@ from six import ensure_str
 
 from livestatus import SiteConfiguration, SiteId
 
-import cmk.utils.render as render
+from cmk.utils import render
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import edition, Edition, edition_has_enforced_licensing
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
-import cmk.gui.weblib as weblib
+from cmk.gui import forms, weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options

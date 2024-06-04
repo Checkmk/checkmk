@@ -23,8 +23,8 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, Generic, TypeVar
 
-import cmk.utils.render as render
 import cmk.utils.version as cmk_version
+from cmk.utils import render
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
 from cmk.utils.backup.targets import TargetId
@@ -54,8 +54,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
 from cmk.utils.site import omd_site
 
-import cmk.gui.forms as forms
-import cmk.gui.key_mgmt as key_mgmt
+from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter

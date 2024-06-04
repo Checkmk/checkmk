@@ -23,15 +23,14 @@ from livestatus import (
     SiteId,
 )
 
-import cmk.utils.dateutils as dateutils
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import dateutils, store
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.bi import BIManager
 from cmk.gui.data_source import query_livestatus
 from cmk.gui.exceptions import MKUserError

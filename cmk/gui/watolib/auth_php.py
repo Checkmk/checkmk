@@ -38,9 +38,9 @@ import copy
 from pathlib import Path
 from typing import Any, Literal
 
-import cmk.utils.store as store
+from cmk.utils import store
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.groups import GroupName
 from cmk.gui.hooks import ClearEvent

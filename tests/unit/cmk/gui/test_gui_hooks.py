@@ -13,7 +13,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.hooks as hooks
+from cmk.gui import hooks
 from cmk.gui.pages import Page, page_registry
 
 

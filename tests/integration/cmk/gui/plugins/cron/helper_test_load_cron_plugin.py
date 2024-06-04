@@ -5,6 +5,6 @@
 from cmk.gui import main_modules
 
 main_modules.load_plugins()
-import cmk.gui.cron as cron
+from cmk.gui import cron
 
 print("x" in [f.__name__ for f in cron.multisite_cronjobs])

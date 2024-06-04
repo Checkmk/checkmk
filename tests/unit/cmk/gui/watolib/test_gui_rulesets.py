@@ -14,21 +14,21 @@ from pytest import FixtureRequest
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils import version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.redis import disable_redis
+from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.user import UserId
 
 import cmk.gui.utils
-import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.utils.rule_specs import legacy_converter
+from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
 

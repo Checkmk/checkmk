@@ -7,7 +7,7 @@
 import time
 from collections.abc import Collection, Iterator
 
-import cmk.utils.render as render
+from cmk.utils import render
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.display_options import display_options

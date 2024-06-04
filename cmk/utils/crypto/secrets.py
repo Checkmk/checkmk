@@ -16,7 +16,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import AnyStr
 
-import cmk.utils.paths as paths
+from cmk.utils import paths
 from cmk.utils.user import UserId
 
 

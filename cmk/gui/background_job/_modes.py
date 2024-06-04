@@ -7,7 +7,7 @@ import json
 import traceback
 from collections.abc import Collection, Iterator
 
-import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui import gui_background_job
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html

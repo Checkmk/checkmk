@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Any
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.pages
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.http import response
 from cmk.gui.log import logger
 from cmk.gui.pages import PageRegistry

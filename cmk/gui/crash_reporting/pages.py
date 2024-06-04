@@ -21,9 +21,7 @@ import cmk.utils.crash_reporting
 import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import CrashInfo
 
-import cmk.gui.forms as forms
-import cmk.gui.userdb as userdb
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -50,6 +48,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars

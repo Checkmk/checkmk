@@ -15,7 +15,7 @@ import re
 from collections.abc import Collection, Mapping, Sequence
 from typing import overload, TypedDict, Union
 
-import cmk.utils.man_pages as man_pages
+from cmk.utils import man_pages
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem

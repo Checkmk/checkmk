@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
 from cmk.utils.user import UserId
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig

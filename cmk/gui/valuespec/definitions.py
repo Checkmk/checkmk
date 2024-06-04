@@ -61,13 +61,12 @@ from six import ensure_str
 
 from livestatus import SiteId
 
-import cmk.utils.crypto.certificate as certificate
-import cmk.utils.crypto.keys as keys
-import cmk.utils.dateutils as dateutils
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
+from cmk.utils import dateutils
+from cmk.utils.crypto import certificate, keys
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.images import CMKImage, ImageType
@@ -77,11 +76,7 @@ from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 from cmk.utils.version import Version
 
-import cmk.gui.forms as forms
-import cmk.gui.site_config as site_config
-import cmk.gui.user_sites as user_sites
-import cmk.gui.utils as utils
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import forms, site_config, user_sites, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -100,6 +95,7 @@ from cmk.gui.type_defs import (
     GroupedChoices,
     Icon,
 )
+from cmk.gui.utils import escaping
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.html import HTML

@@ -21,8 +21,8 @@ import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.redis import get_redis_client
 
-import cmk.gui.sites as sites
 import cmk.gui.utils
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g

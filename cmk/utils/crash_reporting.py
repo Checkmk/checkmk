@@ -25,8 +25,8 @@ from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.plugin_registry
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.exceptions import MKParseFunctionError
 
 CrashInfo = dict[str, Any]  # TODO: improve this type

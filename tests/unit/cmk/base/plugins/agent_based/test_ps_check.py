@@ -15,9 +15,15 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    type_defs,
+)
 
 from cmk.plugins.lib import ps as ps_utils
 

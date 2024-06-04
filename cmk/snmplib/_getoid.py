@@ -9,7 +9,7 @@ from contextlib import suppress
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.sectionname import SectionName
 

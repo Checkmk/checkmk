@@ -11,7 +11,7 @@ from livestatus import LivestatusColumn, MultiSiteConnection
 import cmk.utils.version as cmk_version
 from cmk.utils.regex import regex
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _

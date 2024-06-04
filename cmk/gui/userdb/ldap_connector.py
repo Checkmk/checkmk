@@ -48,10 +48,9 @@ import ldap.filter  # type: ignore[import-untyped]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import-untyped]
 from six import ensure_str
 
-import cmk.utils.password_store as password_store
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import password_store, store
 from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log.security_event import log_security_event
@@ -59,9 +58,7 @@ from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.hooks as hooks
-import cmk.gui.log as log
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import hooks, log
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
@@ -70,6 +67,7 @@ from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
+from cmk.gui.utils import escaping
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,

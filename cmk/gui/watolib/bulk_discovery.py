@@ -8,7 +8,7 @@ from typing import NamedTuple, NewType, TypedDict
 
 from livestatus import SiteId
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult

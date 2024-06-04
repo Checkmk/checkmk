@@ -18,7 +18,7 @@ import livestatus
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.pdf as pdf
+from cmk.gui import pdf
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification

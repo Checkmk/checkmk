@@ -14,7 +14,7 @@ from livestatus import SiteId
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,

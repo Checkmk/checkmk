@@ -34,15 +34,13 @@ from typing import Generic, Literal, Self, TypeVar
 from pydantic import BaseModel as PydanticBaseModel
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
 from cmk.utils.version import edition, Edition
 
 import cmk.gui.pages
-import cmk.gui.sites as sites
-import cmk.gui.userdb as userdb
-import cmk.gui.weblib as weblib
+from cmk.gui import sites, userdb, weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion

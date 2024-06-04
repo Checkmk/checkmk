@@ -7,7 +7,7 @@ import subprocess
 from collections.abc import Iterable
 from typing import assert_never, Literal, TypeAlias
 
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.sectionname import SectionName

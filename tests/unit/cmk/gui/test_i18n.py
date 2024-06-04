@@ -18,7 +18,7 @@ from tests.testlib.utils import repo_path
 
 import cmk.utils.paths
 
-import cmk.gui.i18n as i18n
+from cmk.gui import i18n
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 

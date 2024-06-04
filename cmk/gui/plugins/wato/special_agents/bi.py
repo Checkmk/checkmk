@@ -7,7 +7,7 @@ from typing import Literal
 
 from cmk.utils.rulesets.definition import RuleGroup
 
-import cmk.gui.bi as bi
+from cmk.gui import bi
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,

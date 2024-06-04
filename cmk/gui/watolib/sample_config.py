@@ -442,7 +442,7 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
 
     def generate(self) -> None:
         # Local import has been added to quick-fix an import cycle between cmk.gui.werks and watolib
-        import cmk.gui.werks as werks
+        from cmk.gui import werks
 
         werks.acknowledge_all_werks(check_permission=False)
 

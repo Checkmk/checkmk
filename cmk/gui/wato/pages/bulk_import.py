@@ -17,13 +17,12 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
-import cmk.gui.watolib.bakery as bakery
-import cmk.gui.weblib as weblib
+from cmk.gui import weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -54,6 +53,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode

@@ -5,7 +5,7 @@
 """Setup can be set into read only mode manually."""
 import time
 
-import cmk.utils.render as render
+from cmk.utils import render
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request

@@ -13,8 +13,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 from cmk.utils.version import edition_supports_nagvis
 
-import cmk.gui.background_job as background_job
-import cmk.gui.forms as forms
+from cmk.gui import background_job, forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter

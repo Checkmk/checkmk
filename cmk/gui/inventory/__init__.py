@@ -22,7 +22,7 @@ from cmk.utils.exceptions import MKException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.structured_data import SDRawTree
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.cron import register_job
 from cmk.gui.exceptions import MKAuthException, MKUserError

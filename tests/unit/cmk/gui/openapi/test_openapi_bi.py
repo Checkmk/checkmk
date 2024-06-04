@@ -14,7 +14,7 @@ from tests.unit.cmk.gui.conftest import SetConfig
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-import cmk.gui.watolib.activate_changes as activate_changes
+from cmk.gui.watolib import activate_changes
 
 
 def test_get_bi_packs(clients: ClientRegistry) -> None:

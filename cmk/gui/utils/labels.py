@@ -14,7 +14,7 @@ from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
 
 from cmk.utils.labels import AndOrNotLiteral, LabelGroups, single_label_group_from_labels
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

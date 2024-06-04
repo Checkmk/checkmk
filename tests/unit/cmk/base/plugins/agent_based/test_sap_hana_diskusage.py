@@ -15,7 +15,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-import cmk.base.plugins.agent_based.sap_hana_diskusage as sap_hana_diskusage
+from cmk.base.plugins.agent_based import sap_hana_diskusage
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,

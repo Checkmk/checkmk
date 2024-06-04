@@ -16,7 +16,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.piggyback as piggyback
+from cmk.utils import piggyback
 from cmk.utils.hostaddress import HostName
 
 _PIGGYBACK_MAX_CACHEFILE_AGE = 3600

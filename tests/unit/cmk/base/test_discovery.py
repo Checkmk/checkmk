@@ -72,7 +72,7 @@ from cmk.checkengine.sectionparser import (
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
+from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import SectionPlugin as SectionPluginAPI
 from cmk.base.checkers import (
     CMKFetcher,

@@ -10,9 +10,9 @@ from contextlib import nullcontext as does_not_raise
 from datetime import datetime, timezone
 from pathlib import Path
 
-import cryptography.x509 as x509
 import pytest
 import time_machine
+from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
 from tests.unit.cmk.utils.crypto.certs import rsa_private_keys_equal

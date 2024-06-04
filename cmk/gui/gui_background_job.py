@@ -12,8 +12,8 @@ import cmk.utils.plugin_registry
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.log as log
 from cmk.gui import background_job as background_job
+from cmk.gui import log
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter

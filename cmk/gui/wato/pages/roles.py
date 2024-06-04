@@ -22,9 +22,8 @@ from collections.abc import Collection
 
 from marshmallow import ValidationError
 
-import cmk.gui.forms as forms
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError

@@ -19,7 +19,7 @@ if sys.version_info[0] == 2:
 else:
     from unittest.mock import Mock
 
-    import agents.plugins.apache_status as apache_status
+    from agents.plugins import apache_status
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 

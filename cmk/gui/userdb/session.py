@@ -24,7 +24,7 @@ from cmk.utils.crypto.secrets import AuthenticationSecret
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _

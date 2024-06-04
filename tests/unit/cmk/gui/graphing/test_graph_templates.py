@@ -16,7 +16,7 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.metrics as metrics
+from cmk.gui import metrics
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing import perfometer_info

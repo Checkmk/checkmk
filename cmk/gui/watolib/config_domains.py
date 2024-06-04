@@ -23,8 +23,8 @@ from cryptography.x509.oid import NameOID
 from livestatus import SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
@@ -32,7 +32,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.process import pid_from_file, send_signal
 
-import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKUserError
@@ -42,6 +41,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import TrustedCertificateAuthorities
 from cmk.gui.userdb import load_users, save_users
+from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,

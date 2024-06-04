@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from livestatus import SiteId
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import FilterHeader, VisualContext
 from cmk.gui.utils.user_errors import user_errors

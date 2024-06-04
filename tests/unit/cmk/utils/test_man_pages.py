@@ -15,7 +15,7 @@ from tests.testlib.utils import repo_path
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
-import cmk.utils.man_pages as man_pages
+from cmk.utils import man_pages
 
 from cmk.base.server_side_calls import load_active_checks
 

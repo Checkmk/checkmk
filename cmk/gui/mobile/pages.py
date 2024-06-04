@@ -5,9 +5,8 @@
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
-import cmk.gui.visuals as visuals
+from cmk.gui import visuals
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
@@ -24,6 +23,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import get_active_saml_connections
+from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors

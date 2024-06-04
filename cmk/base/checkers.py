@@ -22,8 +22,7 @@ import livestatus
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.resulttype as result
-import cmk.utils.tty as tty
-from cmk.utils import password_store
+from cmk.utils import password_store, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError

@@ -8,8 +8,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-import cmk.gui.utils as utils
-import cmk.gui.visuals as visuals
+from cmk.gui import utils, visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.graphing import PerfometerSpec
 from cmk.gui.graphing._type_defs import TranslatedMetric
@@ -100,15 +99,11 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plug-in loading order
-    import cmk.gui.data_source as data_source
-    import cmk.gui.exporter as exporter
     import cmk.gui.painter.v0.base as painter_base
     import cmk.gui.painter.v0.helpers as painter_helpers
     import cmk.gui.painter.v1.helpers as painter_v1_helpers
-    import cmk.gui.painter_options as painter_options
     import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
-    import cmk.gui.visual_link as visual_link
-    from cmk.gui import display_options
+    from cmk.gui import data_source, display_options, exporter, painter_options, visual_link
     from cmk.gui.plugins.views import icons  # pylint: disable=cmk-module-layer-violation
 
     from . import command, layout, sorter, store

@@ -6,7 +6,7 @@
 from logging import Logger
 from typing import Final
 
-import cmk.utils.paths as paths
+from cmk.utils import paths
 from cmk.utils.redis import disable_redis
 
 import cmk.base.config as base_config

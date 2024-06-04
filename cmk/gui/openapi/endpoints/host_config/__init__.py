@@ -45,7 +45,6 @@ from urllib.parse import urlparse
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -77,6 +76,7 @@ from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob

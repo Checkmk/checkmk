@@ -20,7 +20,7 @@ from cmk.utils.structured_data import (
     SDValue,
 )
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from livestatus import SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.hostaddress import HostName
 from cmk.utils.notify_types import EventRule

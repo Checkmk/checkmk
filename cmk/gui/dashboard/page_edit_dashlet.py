@@ -7,8 +7,7 @@
 
 from collections.abc import Callable
 
-import cmk.gui.visuals as visuals
-from cmk.gui import forms
+from cmk.gui import forms, visuals
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,

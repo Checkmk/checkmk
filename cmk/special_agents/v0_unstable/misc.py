@@ -24,7 +24,7 @@ from typing import Any
 
 import requests
 
-import cmk.utils.store as store
+from cmk.utils import store
 
 LOG = logging.getLogger(__name__)
 

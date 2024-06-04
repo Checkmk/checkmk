@@ -6,7 +6,7 @@
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.utils.diagnostics as diagnostics
+from cmk.utils import diagnostics
 
 
 def test_diagnostics_serialize_wato_parameters_boolean() -> None:

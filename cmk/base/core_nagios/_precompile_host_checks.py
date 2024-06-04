@@ -22,8 +22,7 @@ from pathlib import Path
 import cmk.utils.config_path
 import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.store as store
-import cmk.utils.tty as tty
+from cmk.utils import store, tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -33,9 +32,8 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
-import cmk.base.server_side_calls as server_side_calls
 import cmk.base.utils
+from cmk.base import config, server_side_calls
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import IPStackConfig
 

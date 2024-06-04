@@ -19,7 +19,7 @@ from typing import Any, Final, TypeVar
 
 import cmk.utils.cleanup
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import logger

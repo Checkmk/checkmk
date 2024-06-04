@@ -20,7 +20,7 @@ import livestatus
 
 import cmk.utils.paths
 
-import cmk.base.diagnostics as diagnostics
+from cmk.base import diagnostics
 
 
 @pytest.fixture(autouse=True)

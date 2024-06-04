@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from cmk.utils.user import UserId
 
-import cmk.gui.pagetypes as pagetypes
+from cmk.gui import pagetypes
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.hooks import request_memoize

@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast, Literal, NotRequired, TypedDict
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.config_validation_layer.user_connections import PrivateKeyPath, PublicKeyPath
 
 from cmk.gui.config import active_config

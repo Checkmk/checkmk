@@ -19,7 +19,7 @@ import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.user import UserId
 
-import cmk.gui.permissions as permissions
+from cmk.gui import permissions
 from cmk.gui.config import (
     active_config,
     builtin_role_ids,

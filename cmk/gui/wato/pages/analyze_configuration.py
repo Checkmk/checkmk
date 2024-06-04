@@ -20,11 +20,10 @@ from collections.abc import Collection
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.log as log
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import log
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -44,6 +43,7 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils import escaping
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri
 from cmk.gui.watolib.analyze_configuration import (

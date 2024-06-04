@@ -7,7 +7,7 @@ import time
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
-import cmk.utils.oracle_constants as oracle_constants  # pylint: disable=cmk-module-layer-violation
+from cmk.utils import oracle_constants  # pylint: disable=cmk-module-layer-violation
 
 from cmk.plugins.lib.oracle import InstancePerformance, SectionPerformance
 

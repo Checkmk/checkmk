@@ -16,15 +16,8 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.background_job as background_job
-import cmk.gui.forms as forms
-import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.sites as sites
-import cmk.gui.userdb as userdb
-import cmk.gui.utils as utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_domain_name
@@ -40,7 +33,7 @@ import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
-import cmk.gui.weblib as weblib
+from cmk.gui import background_job, forms, gui_background_job, sites, userdb, utils, watolib, weblib
 from cmk.gui.cron import register_job
 from cmk.gui.hooks import register_hook as register_hook
 from cmk.gui.htmllib.html import html

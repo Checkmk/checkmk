@@ -6,8 +6,7 @@
 from collections.abc import Callable, Iterable
 from typing import TypedDict
 
-import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
+from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.htmllib.foldable_container import foldable_container

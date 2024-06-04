@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-import cmk.gui.visuals as visuals
+from cmk.gui import visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.hooks import request_memoize
 from cmk.gui.type_defs import (

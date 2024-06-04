@@ -14,20 +14,17 @@ from typing import Any, cast, Literal, NamedTuple, overload
 
 from livestatus import LivestatusResponse, SiteId
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.utils.user import UserId
 from cmk.utils.version import edition, Edition
 
-import cmk.gui.forms as forms
-import cmk.gui.permissions as permissions
-import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
-from cmk.gui import sites
+from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError

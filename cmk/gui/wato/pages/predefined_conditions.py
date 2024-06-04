@@ -6,7 +6,7 @@
 
 from collections.abc import Collection
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec
 from cmk.gui.htmllib.html import html

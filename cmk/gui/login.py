@@ -21,7 +21,7 @@ from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 import cmk.gui.mobile
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config

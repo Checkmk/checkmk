@@ -19,8 +19,8 @@ from typing import NamedTuple
 from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.i18n import _

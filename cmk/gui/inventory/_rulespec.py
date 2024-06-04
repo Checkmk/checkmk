@@ -6,7 +6,7 @@
 import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
 
-import cmk.gui.ifaceoper as ifaceoper
+from cmk.gui import ifaceoper
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,

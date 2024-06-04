@@ -6,7 +6,7 @@
 import sys
 from logging import Formatter, getLogger, StreamHandler
 
-import cmk.utils.log as log
+from cmk.utils import log
 
 logger = getLogger("cmk.post_rename_site")
 

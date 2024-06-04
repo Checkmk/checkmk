@@ -7,10 +7,10 @@ import abc
 import copy
 from typing import Any
 
-import cmk.utils.plugin_registry as plugin_registry
+from cmk.utils import plugin_registry
 from cmk.utils.statename import short_service_state_name
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

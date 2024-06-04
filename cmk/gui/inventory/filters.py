@@ -7,7 +7,7 @@ import re
 from collections.abc import Callable
 from functools import partial
 
-import cmk.gui.query_filters as query_filters
+from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l

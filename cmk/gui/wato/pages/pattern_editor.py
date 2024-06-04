@@ -15,7 +15,7 @@ from cmk.utils.servicename import Item, ServiceName
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -188,7 +188,7 @@ class ModePatternEditor(WatoMode):
         return ConfigHostname()
 
     def _show_patterns(self):  # pylint: disable=too-many-branches
-        import cmk.gui.logwatch as logwatch
+        from cmk.gui import logwatch
 
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively("logwatch_rules").get(
             "logwatch_rules"

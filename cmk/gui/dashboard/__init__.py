@@ -5,8 +5,7 @@
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.utils as utils
-import cmk.gui.visuals as visuals
+from cmk.gui import utils, visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission, permission_registry

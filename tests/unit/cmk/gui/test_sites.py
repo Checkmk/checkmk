@@ -11,8 +11,7 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 
-import cmk.gui.sites as sites
-import cmk.gui.user_sites as user_sites
+from cmk.gui import sites, user_sites
 from cmk.gui.logged_in import user
 
 from cmk.livestatus_client import NetworkSocketDetails, UnixSocketDetails

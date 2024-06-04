@@ -26,7 +26,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.config import Config
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info

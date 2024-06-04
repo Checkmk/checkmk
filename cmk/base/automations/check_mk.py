@@ -28,13 +28,10 @@ from typing import Any
 
 import livestatus
 
-import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
-import cmk.utils.log as log
-import cmk.utils.man_pages as man_pages
 import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import config_warnings, log, man_pages, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
@@ -144,17 +141,19 @@ from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_api as check_api
-import cmk.base.config as config
 import cmk.base.core
-import cmk.base.core_config as core_config
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
-import cmk.base.notify as notify
 import cmk.base.parent_scan
-import cmk.base.server_side_calls as server_side_calls
-import cmk.base.sources as sources
-from cmk.base import plugin_contexts
+from cmk.base import (
+    check_api,
+    config,
+    core_config,
+    ip_lookup,
+    notify,
+    plugin_contexts,
+    server_side_calls,
+    sources,
+)
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (

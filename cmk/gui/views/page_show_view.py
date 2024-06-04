@@ -22,8 +22,7 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.log as log
-import cmk.gui.visuals as visuals
+from cmk.gui import log, visuals
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import data_source_registry

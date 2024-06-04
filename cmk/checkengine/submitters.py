@@ -15,7 +15,7 @@ from random import Random
 from typing import final, Final, IO, Literal
 
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console

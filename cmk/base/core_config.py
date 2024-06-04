@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import Literal
 
 import cmk.utils.config_path
-import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
+from cmk.utils import config_warnings
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -32,8 +32,8 @@ from cmk.checkengine.checking import CheckPluginName, ConfiguredService, Service
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 import cmk.base.obsolete_output as out
+from cmk.base import config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
@@ -285,7 +285,9 @@ def _bake_on_restart(
 ) -> None:
     try:
         # Local import is needed, because this is not available in all environments
-        import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        from cmk.base.cee.bakery import (
+            agent_bakery,  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        )
 
         from cmk.cee.bakery.type_defs import (  # pylint: disable=redefined-outer-name,import-outside-toplevel
             BakeRevisionMode,

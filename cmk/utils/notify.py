@@ -16,8 +16,7 @@ from typing import Final, Literal, NewType, TypedDict
 
 import livestatus
 
-import cmk.utils.statename as statename
-from cmk.utils import store
+from cmk.utils import statename, store
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName

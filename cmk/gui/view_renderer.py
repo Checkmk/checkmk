@@ -12,10 +12,8 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
-import cmk.gui.sites as sites
 import cmk.gui.view_utils
-import cmk.gui.visuals as visuals
-import cmk.gui.weblib as weblib
+from cmk.gui import sites, visuals, weblib
 from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config

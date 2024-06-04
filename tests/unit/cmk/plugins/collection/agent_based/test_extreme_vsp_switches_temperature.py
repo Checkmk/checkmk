@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 import pytest
 
-import cmk.plugins.collection.agent_based.extreme_vsp_switches_temperature as extreme_vsp_switches_temperature
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based import extreme_vsp_switches_temperature
 from cmk.plugins.collection.agent_based.extreme_vsp_switches_temperature import (
     check_vsp_switches_temperature,
     discover_vsp_switches_temperature,

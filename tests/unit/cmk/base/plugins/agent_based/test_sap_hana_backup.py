@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-import cmk.base.plugins.agent_based.sap_hana_backup as sap_hana_backup
+from cmk.base.plugins.agent_based import sap_hana_backup
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,

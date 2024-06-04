@@ -10,8 +10,8 @@ from collections.abc import Collection, Iterable
 from datetime import datetime
 from typing import Generic, TypeVar
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html

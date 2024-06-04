@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.tags
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID

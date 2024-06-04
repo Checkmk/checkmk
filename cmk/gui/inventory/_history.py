@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, load_tree, SDFilterChoice

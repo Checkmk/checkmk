@@ -9,9 +9,7 @@ from typing import ContextManager
 
 from livestatus import SiteId
 
-import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
-import cmk.gui.user_sites as user_sites
+from cmk.gui import site_config, sites, user_sites
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response

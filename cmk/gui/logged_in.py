@@ -15,15 +15,13 @@ from typing import Any, Final
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
 from cmk.utils.version import __version__, Version
 
-import cmk.gui.permissions as permissions
-import cmk.gui.site_config as site_config
-from cmk.gui import hooks
+from cmk.gui import hooks, permissions, site_config
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException

@@ -10,7 +10,7 @@ from typing import Any, Literal
 import livestatus
 from livestatus import MKLivestatusNotFoundError, OnlySites, SiteId
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.data_source import ABCDataSource, DataSourceLivestatus, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

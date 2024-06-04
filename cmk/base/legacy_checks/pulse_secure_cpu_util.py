@@ -11,8 +11,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
-import cmk.plugins.lib.pulse_secure as pulse_secure
 from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib import pulse_secure
 
 Section = Mapping[str, int]
 

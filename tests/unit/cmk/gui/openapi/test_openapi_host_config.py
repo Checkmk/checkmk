@@ -25,8 +25,8 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.custom_attributes import (
     CustomAttrSpecs,
     CustomHostAttrSpec,

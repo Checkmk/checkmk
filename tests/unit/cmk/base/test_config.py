@@ -19,8 +19,8 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
+from cmk.utils import piggyback
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
@@ -41,7 +41,7 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
+from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure

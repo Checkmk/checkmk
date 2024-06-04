@@ -7,8 +7,7 @@ from collections.abc import Iterator
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.visuals as visuals
+from cmk.gui import pagetypes, visuals
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource

@@ -11,7 +11,7 @@ import pytest
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
-import cmk.base.ip_lookup as ip_lookup
+from cmk.base import ip_lookup
 
 from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, IPv4Config, IPv6Config
 

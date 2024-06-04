@@ -18,14 +18,14 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final
 
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.config_validation_layer.rules import validate_rulesets
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
+from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import (

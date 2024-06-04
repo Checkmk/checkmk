@@ -26,7 +26,7 @@ from livestatus import SiteId
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
 
-import cmk.gui.i18n as i18n
+from cmk.gui import i18n
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit

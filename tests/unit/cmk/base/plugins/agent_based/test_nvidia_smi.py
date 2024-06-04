@@ -6,7 +6,7 @@ import datetime
 
 import pytest
 
-import cmk.base.plugins.agent_based.nvidia_smi as nvidia_smi
+from cmk.base.plugins.agent_based import nvidia_smi
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,

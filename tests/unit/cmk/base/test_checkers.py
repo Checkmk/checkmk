@@ -20,8 +20,7 @@ from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceC
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
-import cmk.base.checkers as checkers
-import cmk.base.config as config
+from cmk.base import checkers, config
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 from cmk.agent_based.prediction_backend import (

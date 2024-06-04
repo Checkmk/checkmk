@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 import pytest
 
-import cmk.base.plugins.agent_based.oracle_tablespaces as oracle_tablespaces
+from cmk.base.plugins.agent_based import oracle_tablespaces
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,

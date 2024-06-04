@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.version import edition, Edition
 

@@ -11,15 +11,15 @@ from typing import Any, cast, NamedTuple
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
 
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.site import omd_site
 
-import cmk.gui.hooks as hooks
 import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.sidebar_reload
+from cmk.gui import hooks
 from cmk.gui.config import (
     active_config,
     default_single_site_configuration,

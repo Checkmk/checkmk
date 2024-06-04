@@ -13,10 +13,8 @@ from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 
-import cmk.plugins.collection.agent_based.cmciii as cmciii
-import cmk.plugins.collection.agent_based.cmciii_phase as cmciii_phase
-import cmk.plugins.collection.agent_based.cmciii_status as cmciii_status
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
+from cmk.plugins.collection.agent_based import cmciii, cmciii_phase, cmciii_status
 from cmk.plugins.lib.cmciii import SensorType, Variable
 
 

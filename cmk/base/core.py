@@ -14,14 +14,13 @@ from typing import Literal
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.store as store
-import cmk.utils.tty as tty
+from cmk.utils import store, tty
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.hostaddress import HostName
 
-import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
+from cmk.base import core_config
 from cmk.base.config import ConfigCache, IPLookup
 from cmk.base.core_config import MonitoringCore
 

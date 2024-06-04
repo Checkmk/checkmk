@@ -22,9 +22,9 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
+from cmk.gui import userdb
 from cmk.gui.backup.handler import Config as BackupConfig
 from cmk.gui.config import active_config
 from cmk.gui.http import request

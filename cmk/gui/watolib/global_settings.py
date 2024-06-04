@@ -8,9 +8,9 @@ from typing import Any
 
 from cmk.utils.version import edition, Edition
 
-import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,

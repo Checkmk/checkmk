@@ -30,11 +30,10 @@ from cmk.utils.licensing.registry import is_free
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.forms as forms
-import cmk.gui.log as log
 import cmk.gui.sites
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms, log
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError

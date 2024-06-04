@@ -28,12 +28,9 @@ from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.checkengine.checking import CheckPluginName
 
-import cmk.base.config as config
-import cmk.base.core_config as core_config
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
-import cmk.base.server_side_calls as server_side_calls
 import cmk.base.utils
+from cmk.base import config, core_config, ip_lookup, server_side_calls
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,

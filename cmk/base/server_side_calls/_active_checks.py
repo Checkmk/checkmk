@@ -8,10 +8,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
-import cmk.utils.password_store as password_store
 import cmk.utils.paths
+from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 

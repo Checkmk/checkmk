@@ -19,7 +19,7 @@ if sys.version_info[0] == 2:
 else:
     from unittest.mock import Mock, patch
 
-    import agents.plugins.mk_postgres as mk_postgres
+    from agents.plugins import mk_postgres
 
 
 #   .--defines-------------------------------------------------------------.

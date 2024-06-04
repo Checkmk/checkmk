@@ -8,7 +8,7 @@ from typing import Literal
 
 from livestatus import SiteId
 
-import cmk.gui.weblib as weblib
+from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.display_options import display_options

@@ -41,7 +41,7 @@ from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
 import cmk.utils.password_store
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKException
 from cmk.utils.paths import tmp_dir
 

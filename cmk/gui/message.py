@@ -11,12 +11,11 @@ from email.mime.text import MIMEText
 from typing import Any
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
-import cmk.gui.utils as utils
+from cmk.gui import userdb, utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.default_permissions import PermissionSectionGeneral

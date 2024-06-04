@@ -13,8 +13,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.discovery import DiscoverySettings
 
-import cmk.gui.forms as forms
-import cmk.gui.sites as sites
+from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError

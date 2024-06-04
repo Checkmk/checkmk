@@ -12,7 +12,7 @@ from typing import Any
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import escape_regex_chars
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.exporter import output_csv_headers

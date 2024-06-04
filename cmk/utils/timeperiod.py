@@ -14,7 +14,7 @@ import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.caching import cache_manager
 from cmk.utils.config_validation_layer.timeperiods import validate_timeperiods
 from cmk.utils.dateutils import Weekday

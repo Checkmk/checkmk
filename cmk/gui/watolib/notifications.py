@@ -29,11 +29,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.notify_types import EventRule, NotificationRuleID, NotifyBulkType, NotifyPlugin
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.i18n import _
 from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,

@@ -16,12 +16,12 @@ from typing import Any
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
-import cmk.gui.log as log
+from cmk.gui import log
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,

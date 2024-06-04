@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 
-import cmk.plugins.collection.agent_based.kube_replicas as kube_replicas
 from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.collection.agent_based import kube_replicas
 from cmk.plugins.collection.agent_based.kube_replicas import (
     _check_kube_replicas,
     check_kube_replicas,

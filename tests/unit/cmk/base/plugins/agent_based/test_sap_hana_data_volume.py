@@ -9,7 +9,7 @@ from datetime import datetime
 import pytest
 import time_machine
 
-import cmk.base.plugins.agent_based.sap_hana_data_volume as sap_hana_data_volume
+from cmk.base.plugins.agent_based import sap_hana_data_volume
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     IgnoreResultsError,
@@ -19,9 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 
-import cmk.plugins.lib.df as df
-import cmk.plugins.lib.sap_hana as sap_hana
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib import df, sap_hana
 
 NOW_SIMULATED = datetime.fromisoformat("1988-06-08 17:00:00.000000Z")
 

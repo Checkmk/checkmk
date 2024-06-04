@@ -24,7 +24,7 @@ from cmk.utils.structured_data import (
     SDPath,
 )
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user

@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import cryptography.x509 as x509
 import time_machine
+from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
 from tests.unit.cmk.utils.crypto.certs import rsa_private_keys_equal

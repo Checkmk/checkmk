@@ -8,8 +8,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Protocol
 
-import cmk.utils.config_warnings as config_warnings
-from cmk.utils import password_store
+from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.servicename import ServiceName
 

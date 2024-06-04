@@ -19,8 +19,7 @@ import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site, url_prefix
 
-import cmk.gui.log as log
-import cmk.gui.utils as utils
+from cmk.gui import log, utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _

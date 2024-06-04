@@ -10,8 +10,7 @@ from pathlib import Path
 
 import pytest
 
-import cmk.utils.daemon as daemon
-import cmk.utils.store as store
+from cmk.utils import daemon, store
 from cmk.utils.exceptions import MKGeneralException
 
 

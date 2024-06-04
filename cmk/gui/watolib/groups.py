@@ -14,7 +14,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
 from cmk.utils.timeperiod import load_timeperiods, timeperiod_spec_alias
 
-import cmk.gui.hooks as hooks
+from cmk.gui import hooks
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType

@@ -5,7 +5,6 @@
 
 from collections.abc import Sequence
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import response
@@ -15,6 +14,7 @@ from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.graph import cmk_graph_url

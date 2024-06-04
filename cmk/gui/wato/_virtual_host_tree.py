@@ -9,7 +9,7 @@ from typing import ContextManager, TypedDict
 
 from cmk.utils.tags import TagGroup, TagID
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container

@@ -34,8 +34,7 @@ from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
-import cmk.gui.hooks as hooks
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import hooks
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -51,6 +50,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config
+from cmk.gui.utils import escaping
 from cmk.gui.utils.compatibility import (
     EditionsIncompatible,
     is_distributed_setup_compatible_for_licensing,

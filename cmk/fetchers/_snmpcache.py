@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 import cmk.utils.cleanup
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import OID, SNMPDecodedString

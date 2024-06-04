@@ -10,8 +10,7 @@ from livestatus import SiteId
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.visuals as visuals
+from cmk.gui import pagetypes, visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry

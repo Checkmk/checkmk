@@ -9,10 +9,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
-import cmk.utils.crash_reporting as crash_reporting
 import cmk.utils.debug
 import cmk.utils.encoding
 import cmk.utils.paths
+from cmk.utils import crash_reporting
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
 from cmk.utils.piggyback import get_source_hostnames

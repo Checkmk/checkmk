@@ -19,7 +19,7 @@ from omdlib.contexts import SiteContext  # pylint: disable=wrong-import-order
 
 from cmk.utils.store import load_text_from_file
 
-import cmk.gui.watolib.config_domains as config_domains
+from cmk.gui.watolib import config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 
 remote1_newer = (

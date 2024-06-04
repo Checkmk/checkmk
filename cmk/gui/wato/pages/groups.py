@@ -10,9 +10,7 @@ import cmk.utils.paths
 from cmk.utils.user import UserId
 from cmk.utils.version import edition_supports_nagvis
 
-import cmk.gui.forms as forms
-import cmk.gui.userdb as userdb
-import cmk.gui.watolib.groups as groups
+from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupName, GroupSpec, GroupType
@@ -43,6 +41,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
 )
+from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups_io import (
     load_contact_group_information,
     load_host_group_information,

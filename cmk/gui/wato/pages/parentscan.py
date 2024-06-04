@@ -8,7 +8,7 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from typing import cast, Literal
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError

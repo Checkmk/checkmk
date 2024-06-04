@@ -10,7 +10,7 @@ from typing import Literal, NotRequired, TypedDict
 from uuid import uuid4
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.crypto.secrets import PasswordStoreSecret
 from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext

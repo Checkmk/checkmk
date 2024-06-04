@@ -7,10 +7,9 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
-import cmk.utils.password_store as password_store
 import cmk.utils.paths
+from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation

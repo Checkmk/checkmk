@@ -26,9 +26,8 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters
 
-import cmk.base.config as config
-import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
+from cmk.base import config, core_config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_labels_from_attributes
 from cmk.base.core_factory import create_core

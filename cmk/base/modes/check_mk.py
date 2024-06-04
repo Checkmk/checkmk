@@ -19,15 +19,11 @@ from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, Ty
 import livestatus
 
 import cmk.utils.cleanup
-import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
-import cmk.utils.log as log
 import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.piggyback as piggyback
-import cmk.utils.store as store
-import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils import config_warnings, log, piggyback, store, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
@@ -78,7 +74,7 @@ from cmk.fetchers import SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-import cmk.checkengine.inventory as inventory
+from cmk.checkengine import inventory
 from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
@@ -99,17 +95,13 @@ from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios
 import cmk.base.diagnostics
 import cmk.base.dump_host
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
-import cmk.base.profiling as profiling
-import cmk.base.sources as sources
-from cmk.base import plugin_contexts
+from cmk.base import config, ip_lookup, plugin_contexts, profiling, sources
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
@@ -457,7 +449,7 @@ modes.register(
 
 
 def mode_list_checks() -> None:
-    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
+    from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
@@ -1510,7 +1502,7 @@ modes.register(
 
 
 def mode_man(options: Mapping[str, str], args: list[str]) -> None:
-    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
+    from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
@@ -1580,7 +1572,7 @@ modes.register(
 
 
 def mode_browse_man() -> None:
-    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
+    from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
     man_pages.print_man_page_browser(
         man_pages.load_man_page_catalog(
@@ -1612,7 +1604,7 @@ modes.register(
 
 
 def mode_automation(args: list[str]) -> None:
-    import cmk.base.automations as automations  # pylint: disable=import-outside-toplevel
+    from cmk.base import automations  # pylint: disable=import-outside-toplevel
 
     if not args:
         raise automations.MKAutomationError("You need to provide arguments")
@@ -1660,7 +1652,7 @@ modes.register(
 
 
 def mode_notify(options: dict, args: list[str]) -> int | None:
-    import cmk.base.notify as notify  # pylint: disable=import-outside-toplevel
+    from cmk.base import notify  # pylint: disable=import-outside-toplevel
 
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)

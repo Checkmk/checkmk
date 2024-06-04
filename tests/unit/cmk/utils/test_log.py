@@ -13,7 +13,7 @@ from pathlib import Path
 
 from pytest import CaptureFixture
 
-import cmk.utils.log as log
+from cmk.utils import log
 from cmk.utils.log.security_event import log_security_event, SecurityEvent
 
 

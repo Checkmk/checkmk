@@ -6,7 +6,7 @@
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.notification_plugins.mail as mail
+from cmk.notification_plugins import mail
 
 
 @pytest.mark.parametrize(

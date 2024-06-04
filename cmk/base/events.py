@@ -31,7 +31,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
 
-import cmk.base.config as config
+from cmk.base import config
 
 ContactList = list  # TODO Improve this
 

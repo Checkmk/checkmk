@@ -18,9 +18,8 @@ from cmk.automations.results import DiagHostResult
 
 from cmk.fetchers import PiggybackFetcher
 
-import cmk.base.automations.check_mk as check_mk
-import cmk.base.config as config
-import cmk.base.core_config as core_config
+from cmk.base import config, core_config
+from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
 
 

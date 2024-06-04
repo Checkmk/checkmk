@@ -8,7 +8,7 @@ from typing import Callable, cast, Generic, Mapping, TypeAlias, TypeVar
 
 from pydantic import TypeAdapter, ValidationError
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry

@@ -56,8 +56,7 @@ from cmk.utils.user import UserId
 
 from cmk.automations.results import ABCAutomationResult
 
-import cmk.gui.hooks as hooks
-import cmk.gui.userdb as userdb
+from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g

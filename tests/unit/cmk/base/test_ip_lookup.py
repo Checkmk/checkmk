@@ -18,8 +18,7 @@ from cmk.utils.exceptions import MKIPAddressLookupError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
 
-import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
+from cmk.base import config, ip_lookup
 
 _PersistedCache: TypeAlias = Mapping[
     tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None

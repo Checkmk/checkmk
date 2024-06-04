@@ -5,7 +5,7 @@
 
 import pytest
 
-import cmk.utils.escaping as escaping
+from cmk.utils import escaping
 
 
 def test_empty() -> None:

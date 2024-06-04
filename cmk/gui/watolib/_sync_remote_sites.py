@@ -12,7 +12,7 @@ from pathlib import Path
 
 from livestatus import SiteId
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.site import omd_site
 
 from cmk.gui.background_job import (

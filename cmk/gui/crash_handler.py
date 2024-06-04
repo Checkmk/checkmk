@@ -6,7 +6,6 @@
 from cmk.utils.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
 from cmk.utils.site import omd_site
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -14,6 +13,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, get_current_language
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.utils import escaping
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, requested_file_name
 

@@ -14,7 +14,7 @@ import pytest
 if sys.version_info[0] == 2:
     import agents.plugins.mk_jolokia_2 as mk_jolokia  # pylint: disable=syntax-error
 else:
-    import agents.plugins.mk_jolokia as mk_jolokia
+    from agents.plugins import mk_jolokia
 
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])

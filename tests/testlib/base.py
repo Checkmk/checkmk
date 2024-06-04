@@ -19,7 +19,7 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
 
-import cmk.base.config as config
+from cmk.base import config
 from cmk.base.config import ConfigCache
 
 

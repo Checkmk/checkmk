@@ -37,9 +37,8 @@ from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
-import cmk.gui.hooks as hooks
 import cmk.gui.pages
-import cmk.gui.utils as utils
+from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html

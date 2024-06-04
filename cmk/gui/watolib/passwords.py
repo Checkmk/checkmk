@@ -5,7 +5,7 @@
 
 from cmk.utils.password_store import Password
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainCore

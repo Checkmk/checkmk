@@ -14,7 +14,7 @@ from typing import Any, assert_never, Literal, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.caching import cache_manager
 from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.hostaddress import HostAddress, HostName

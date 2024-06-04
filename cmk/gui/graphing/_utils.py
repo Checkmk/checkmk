@@ -19,7 +19,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
 from cmk.utils.plugin_registry import Registry
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.i18n import _, translate_to_current_language

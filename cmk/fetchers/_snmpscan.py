@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.utils.regex import regex
 from cmk.utils.sectionname import SectionName

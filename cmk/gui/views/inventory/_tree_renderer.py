@@ -27,7 +27,7 @@ from cmk.utils.structured_data import (
     SDValue,
 )
 
-import cmk.gui.inventory as inventory
+from cmk.gui import inventory
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container

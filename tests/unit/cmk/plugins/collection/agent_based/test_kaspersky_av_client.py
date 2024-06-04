@@ -12,8 +12,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-import cmk.plugins.collection.agent_based.kaspersky_av_client as kaspersky_av_client
 from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.plugins.collection.agent_based import kaspersky_av_client
 
 
 @pytest.fixture(scope="module", autouse=True)

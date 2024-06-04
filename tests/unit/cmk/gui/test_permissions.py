@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib.plugin_registry import reset_registries
 
-import cmk.gui.permissions as permissions
+from cmk.gui import permissions
 from cmk.gui.permissions import permission_registry, permission_section_registry
 
 

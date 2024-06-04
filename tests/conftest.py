@@ -53,7 +53,7 @@ pytest.register_assert_rewrite(
 
 pytest_plugins = ("tests.testlib.playwright.plugin",)
 
-from tests.testlib.utils import (
+from tests.testlib.repo import (
     add_python_paths,
     current_base_branch_name,
     is_cloud_repo,

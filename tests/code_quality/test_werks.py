@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.utils import repo_path
+from tests.testlib.repo import repo_path
 
 import cmk.utils.version as cmk_version
 import cmk.utils.werks

@@ -18,14 +18,16 @@ import git
 import requests
 from packaging.version import Version
 
-from tests.testlib.utils import (
+from tests.testlib.repo import (
     branch_from_env,
     current_base_branch_name,
     current_branch_version,
+    repo_path,
+)
+from tests.testlib.utils import (
     edition_from_env,
     get_cmk_download_credentials,
     package_hash_path,
-    repo_path,
     version_spec_from_env,
 )
 

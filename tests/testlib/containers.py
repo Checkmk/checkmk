@@ -24,13 +24,8 @@ import dockerpty  # type: ignore[import-untyped]
 import requests
 from docker.models.images import Image  # type: ignore[import-untyped]
 
-from tests.testlib.utils import (
-    get_cmk_download_credentials,
-    git_commit_id,
-    git_essential_directories,
-    package_hash_path,
-    repo_path,
-)
+from tests.testlib.repo import git_commit_id, git_essential_directories, repo_path
+from tests.testlib.utils import get_cmk_download_credentials, package_hash_path
 from tests.testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"

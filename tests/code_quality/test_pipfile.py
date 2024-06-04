@@ -22,7 +22,7 @@ import isort
 import pytest
 from pipfile import Pipfile  # type: ignore[import-untyped]
 
-from tests.testlib.utils import (
+from tests.testlib.repo import (
     branch_from_env,
     current_base_branch_name,
     is_enterprise_repo,

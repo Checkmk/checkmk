@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-from tests.testlib.utils import is_enterprise_repo, is_managed_repo
+from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from livestatus import SiteConfiguration, SiteId
 

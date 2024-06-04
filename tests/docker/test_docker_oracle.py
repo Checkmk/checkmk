@@ -30,7 +30,8 @@ from tests.testlib.docker import (
     resolve_image_alias,
 )
 from tests.testlib.pytest_helpers.marks import skip_if_not_enterprise_edition
-from tests.testlib.utils import repo_path, wait_until
+from tests.testlib.repo import repo_path
+from tests.testlib.utils import wait_until
 
 logger = logging.getLogger()
 

@@ -12,8 +12,9 @@ import pytest
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.pom.login import LoginPage
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
-from tests.testlib.utils import makedirs, repo_path
+from tests.testlib.utils import makedirs
 
 logger = logging.getLogger(__name__)
 

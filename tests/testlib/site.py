@@ -25,16 +25,15 @@ import pytest
 import pytest_check  # type: ignore[import-untyped]
 
 from tests.testlib.openapi_session import CMKOpenApiSession
+from tests.testlib.repo import current_base_branch_name, repo_path
 from tests.testlib.utils import (
     check_output,
     cse_create_onboarding_dummies,
     cse_openid_oauth_provider,
-    current_base_branch_name,
     execute,
     is_containerized,
     makedirs,
     PExpectDialog,
-    repo_path,
     restart_httpd,
     ServiceInfo,
     spawn_expect_process,

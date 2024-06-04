@@ -14,8 +14,8 @@ import pytest
 from pipfile import Pipfile  # type: ignore[import-untyped]
 from semver import VersionInfo
 
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
-from tests.testlib.utils import repo_path
 
 ImportName = NewType("ImportName", "str")
 

@@ -9,7 +9,7 @@ import os
 import sys
 from types import ModuleType
 
-from tests.testlib.utils import repo_path
+from tests.testlib.repo import repo_path
 
 
 def import_module_hack(pathname: str) -> ModuleType:

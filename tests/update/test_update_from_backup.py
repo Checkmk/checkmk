@@ -12,12 +12,9 @@ from pathlib import Path
 import pytest
 
 from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
+from tests.testlib.repo import current_base_branch_name, qa_test_data_path
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import (
-    current_base_branch_name,
-    get_services_with_status,
-    qa_test_data_path,
-)
+from tests.testlib.utils import get_services_with_status
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from tests.update.conftest import DUMPS_DIR, inject_dumps

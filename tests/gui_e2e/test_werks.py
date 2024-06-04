@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.playwright.pom.werks import Werks
-from tests.testlib.utils import repo_path
+from tests.testlib.repo import repo_path
 
 import cmk.utils.werks
 

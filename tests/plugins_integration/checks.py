@@ -18,8 +18,9 @@ from typing import Any
 import pytest
 import yaml
 
+from tests.testlib.repo import qa_test_data_path
 from tests.testlib.site import Site
-from tests.testlib.utils import qa_test_data_path, run
+from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 

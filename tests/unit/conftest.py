@@ -14,7 +14,7 @@ from unittest.mock import patch
 import pytest
 from fakeredis import FakeRedis
 
-from tests.testlib.utils import (
+from tests.testlib.repo import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,

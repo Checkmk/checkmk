@@ -9,8 +9,8 @@ from typing import Final
 
 import pytest
 
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
-from tests.testlib.utils import repo_path
 
 from cmk.utils import msi_engine
 

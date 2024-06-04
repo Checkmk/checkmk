@@ -27,7 +27,6 @@ import * as transfer from "transfer";
 import * as backup from "backup";
 import * as background_job from "background_job";
 import * as hover from "hover";
-import * as layout from "layout";
 import * as service_discovery from "service_discovery";
 import * as sidebar from "sidebar";
 import * as quicksearch from "quicksearch";
@@ -138,7 +137,6 @@ export const cmk_export = {
         backup: backup,
         background_job: background_job,
         hover: hover,
-        layout: layout,
         service_discovery: service_discovery,
         sites: sites,
         sidebar: sidebar /* needed for add snapin page */,

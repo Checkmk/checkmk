@@ -25,7 +25,7 @@ from omdlib.utils import (
 )
 from omdlib.version_info import VersionInfo
 
-import cmk.utils.tty as tty
+from cmk.utils import tty
 
 
 def tmpfs_mounted(sitename: str) -> bool:

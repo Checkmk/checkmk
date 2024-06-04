@@ -275,11 +275,10 @@ def update_watched_folders():
         if attributes.get("watch_descriptor"):
             if not wm.get_path(attributes["watch_descriptor"].get(folder)):
                 del attributes["watch_descriptor"]
-        else:
-            if os.path.exists(folder):
-                new_wd = wm.add_watch(folder, attributes["mask"], rec=True)
-                if new_wd.get(folder) > 0:
-                    attributes["watch_descriptor"] = new_wd
+        elif os.path.exists(folder):
+            new_wd = wm.add_watch(folder, attributes["mask"], rec=True)
+            if new_wd.get(folder) > 0:
+                attributes["watch_descriptor"] = new_wd
 
 
 def main():  # pylint: disable=too-many-branches

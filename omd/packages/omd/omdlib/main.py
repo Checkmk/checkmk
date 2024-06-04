@@ -122,7 +122,7 @@ from omdlib.version import (
 from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.password_hashing import hash_password
@@ -1210,29 +1210,28 @@ def update_file(  # pylint: disable=too-many-branches
             )
 
     # 11) This case should never happen, if I've not lost something
+    elif user_confirms(
+        site,
+        conflict_mode,
+        "Something nasty happened at " + relpath,
+        "You somehow fiddled along with "
+        "%s, and I do not have the "
+        "slightest idea what's going on here. May "
+        "I please install the new default %s "
+        "here, or do you want to keep your %s?" % (relpath, new_type, user_type),
+        relpath,
+        "keep",
+        "Keep your %s" % user_type,
+        "replace",
+        "Replace it with the new %s" % new_type,
+    ):
+        sys.stdout.write(StateMarkers.warn + f" Keeping your {user_type} {fn}.\n")
     else:
-        if user_confirms(
-            site,
-            conflict_mode,
-            "Something nasty happened at " + relpath,
-            "You somehow fiddled along with "
-            "%s, and I do not have the "
-            "slightest idea what's going on here. May "
-            "I please install the new default %s "
-            "here, or do you want to keep your %s?" % (relpath, new_type, user_type),
-            relpath,
-            "keep",
-            "Keep your %s" % user_type,
-            "replace",
-            "Replace it with the new %s" % new_type,
-        ):
-            sys.stdout.write(StateMarkers.warn + f" Keeping your {user_type} {fn}.\n")
-        else:
-            create_skeleton_file(new_skel, site.dir, relpath, new_replacements, new_permissions)
-            sys.stdout.write(
-                StateMarkers.warn
-                + f" Delete your {user_type} and created new default {new_type} {fn}.\n"
-            )
+        create_skeleton_file(new_skel, site.dir, relpath, new_replacements, new_permissions)
+        sys.stdout.write(
+            StateMarkers.warn
+            + f" Delete your {user_type} and created new default {new_type} {fn}.\n"
+        )
 
     # Now the new file/link/directory is in place, deleted or whatever. The
     # user might have interferred and changed things. We need to make sure

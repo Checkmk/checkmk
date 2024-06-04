@@ -64,9 +64,8 @@ def find(pattern, path, find_dirs=False) -> list[str]:
                 for patt in pattern:
                     if fnmatch.fnmatch(name, patt):
                         result.append(full_path_str.replace("%s/" % path, ""))
-            else:
-                if fnmatch.fnmatch(name, pattern):
-                    result.append(full_path_str.replace("%s/" % path, ""))
+            elif fnmatch.fnmatch(name, pattern):
+                result.append(full_path_str.replace("%s/" % path, ""))
     return result
 
 

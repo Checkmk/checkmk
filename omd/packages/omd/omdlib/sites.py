@@ -10,7 +10,7 @@ from pathlib import Path
 
 from omdlib.version import default_version, version_from_site_dir
 
-import cmk.utils.tty as tty
+from cmk.utils import tty
 
 
 def main_sites(

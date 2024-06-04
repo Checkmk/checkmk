@@ -1,0 +1,37 @@
+Title: XSS in inventory tree
+Class: security
+Compatible: compat
+Component: inv
+Date: 1717744837
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Prior to this Werk an attacker with control over an agent was able to inject HTML in the output which was then rendered in the inventory tree of the coresponding host.
+
+This problem exists only if the rule <em>Do hardware/software inventory</em> is set for the compromised agent/host.
+
+We found this vulnerability internally.
+
+<strong>Affected Versions:</strong>
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0
+
+<strong>Mitigations</strong>:
+If you are unable to patch you can disable inventory scanning for all hosts.
+
+<strong>Indicators of Compromise:</strong>
+You can check <code>var/check_mk/inventory/</code> for inventories with embedded HTML.
+This only indicates current 'attacks'.
+Previous attacks (where the agent does not output the payload anymore) are not discoverable after some time (caching).
+
+<strong>Vulnerability Management:</strong>
+We have rated the issue with a CVSS Score of 6.5 (Medium) with the following CVSS vector:
+<code>CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:L</code>
+We assigned CVE-2024-5741 to this vulnerability.
+
+<strong>Changes:</strong>
+This Werk adds sanitation to the HTML output.

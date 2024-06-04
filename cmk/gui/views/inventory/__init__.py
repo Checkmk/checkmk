@@ -2217,7 +2217,7 @@ def _compute_cell_spec(
         html_value = value
     else:
         tdclass, code = hint.paint_function(value)
-        html_value = HTML(code)
+        html_value = HTML() + code
 
     if not html_value or retention_intervals is None or retention_intervals.source == "current":
         return tdclass, html_value

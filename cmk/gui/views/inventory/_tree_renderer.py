@@ -43,6 +43,7 @@ from cmk.gui.utils.user_errors import user_errors
 from ._display_hints import (
     AttributeDisplayHint,
     ColumnDisplayHint,
+    DisplayHints,
     inv_display_hints,
     NodeDisplayHint,
 )
@@ -262,7 +263,13 @@ def ajax_inv_render_tree() -> None:
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
-    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree, request)
+    TreeRenderer(
+        site_id,
+        host_name,
+        inv_display_hints,
+        show_internal_tree_paths,
+        tree_id,
+    ).show(tree, request)
 
 
 def _replace_title_placeholders(title: str, abc_path: SDPath, path: SDPath) -> str:
@@ -278,11 +285,13 @@ class TreeRenderer:
         self,
         site_id: SiteId,
         hostname: HostName,
+        hints: DisplayHints,
         show_internal_tree_paths: bool = False,
         tree_id: str = "",
     ) -> None:
         self._site_id = site_id
         self._hostname = hostname
+        self._hints = hints
         self._show_internal_tree_paths = show_internal_tree_paths
         self._tree_id = tree_id
         self._tree_name = f"inv_{hostname}{tree_id}"
@@ -377,10 +386,8 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_node(
-        self, node: ImmutableTree | ImmutableDeltaTree, hint: NodeDisplayHint, request_: Request
-    ) -> None:
-        raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
+    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree, request_: Request) -> None:
+        hint = self._hints.get_node_hint(node.path)
         title = self._get_header(
             _replace_title_placeholders(hint.title, hint.path, node.path),
             ".".join(map(str, node.path)),
@@ -390,6 +397,7 @@ class TreeRenderer:
                 class_=(["title", "icon"]),
                 src=theme.detect_icon_path(hint.icon, "icon_"),
             )
+        raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
         with foldable_container(
             treename=self._tree_name,
             id_=raw_path,
@@ -411,15 +419,12 @@ class TreeRenderer:
                 self.show(node, request_)
 
     def show(self, tree: ImmutableTree | ImmutableDeltaTree, request_: Request) -> None:
-        node_hint = inv_display_hints.get_node_hint(tree.path)
-
+        hint = self._hints.get_node_hint(tree.path)
         if tree.attributes:
-            self._show_attributes(tree.attributes, node_hint)
-
+            self._show_attributes(tree.attributes, hint)
         if tree.table:
-            self._show_table(tree.table, node_hint, request_)
-
+            self._show_table(tree.table, hint, request_)
         for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, inv_display_hints.get_node_hint(node.path), request_)
+                self._show_node(node, request_)

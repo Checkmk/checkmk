@@ -33,7 +33,12 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 
-from ._display_hints import AttributeDisplayHint, ColumnDisplayHint, NodeDisplayHint
+from ._display_hints import (
+    AttributeDisplayHint,
+    ColumnDisplayHint,
+    inv_display_hints,
+    NodeDisplayHint,
+)
 from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
 
 
@@ -118,6 +123,7 @@ class PainterInventoryTree(Painter):
         tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
+            inv_display_hints,
             show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
         )
 
@@ -193,6 +199,7 @@ class PainterInvhistDelta(Painter):
         tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
+            inv_display_hints,
             tree_id=str(row["invhist_time"]),
         )
 
@@ -440,6 +447,7 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
     tree_renderer = TreeRenderer(
         row["site"],
         row["host_name"],
+        inv_display_hints,
         show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
     )
 

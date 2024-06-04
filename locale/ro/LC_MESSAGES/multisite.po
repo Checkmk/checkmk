@@ -49685,8 +49685,10 @@ msgstr "Trimiteți notificări către Consola de evenimente"
 msgid "Send notifications to remote Event Console"
 msgstr "Trimiteți notificări către consola de evenimente la distanță"
 
+#, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr ""
 "Trimiteți notificări în conformitate cu regulile de notificare (debifați "
 "pentru a evita spam-ul)"

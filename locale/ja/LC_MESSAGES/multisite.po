@@ -48654,7 +48654,8 @@ msgstr "リモートイベントコンソールに通知を送信する"
 
 #, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr "通知は、通知ルールに従って送信されます"
 
 msgid ""

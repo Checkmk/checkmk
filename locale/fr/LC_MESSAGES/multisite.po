@@ -50140,7 +50140,8 @@ msgstr "Envoyer des notifications à la console d'événements distante"
 
 #, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr "Ordre de tri des notifications pour les notifications groupées"
 
 msgid ""

@@ -48955,8 +48955,10 @@ msgstr "Benachrichtigungen an Event Console senden"
 msgid "Send notifications to remote Event Console"
 msgstr "Benachrichtigungen an Remote Event Console senden"
 
+#, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr ""
 "Benachrichtigung gemäß den Benachrichtigungsregeln verschicken "
 "(deaktivieren, um Spam zu vermeiden)"

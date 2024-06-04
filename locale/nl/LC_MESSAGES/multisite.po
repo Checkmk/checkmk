@@ -49642,7 +49642,8 @@ msgstr "Meldingen verzenden naar externe gebeurtenissenconsole"
 
 #, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr "Sorteervolgorde voor bulkmeldingen"
 
 msgid ""

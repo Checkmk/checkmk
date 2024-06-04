@@ -878,10 +878,6 @@ msgstr "(intégré)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(la valeur par défaut est %r pour %s/TLS)"
 
-#, fuzzy
-msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
-msgstr "Surveillance des services Web d'Amazon (AWS)"
-
 msgid "(disabled)"
 msgstr "(désactivé)"
 
@@ -1270,26 +1266,6 @@ msgstr ""
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr ""
 "<b>Attention:</b> Cela laissera votre environnement dans un état indéfini."
-
-msgid ""
-"<b>Gather all service instances and restrict by overall tags:</b><br>If "
-"overall tags are specified above, then all service instances will be "
-"filtered by those tags. Otherwise, all instances will be collected."
-"<br><br><b>Explicit service tags and overwrite overall tags:</b><br>Specify "
-"explicit tags for these services. The overall tags will be ignored for these "
-"services.<br><br><b>Explicit service names and ignore overall tags:</"
-"b><br>Use this option to specify explicit names. The overall tags will be "
-"ignored for these services."
-msgstr ""
-"<b>Rassembler toutes les instances de service et les restreindre par les "
-"balises globales:</b><br>Si les balises globales sont spécifiées ci-dessus, "
-"alors toutes les instances de service seront filtrées par ces balises. "
-"Sinon, toutes les instances seront collectées.<br><br><b>Balises explicites "
-"de service et écrasement des balises globales:</b><br>Spécifiez des balises "
-"explicites pour ces services. Les balises globales seront ignorées pour ces "
-"services.<br><br><b>Noms de services explicites et ignorer les balises "
-"globales:</b><br>Utilisez cette option pour spécifier des noms explicites. "
-"Les balises globales seront ignorées pour ces services."
 
 msgid "<b>Keyword</b> pattern"
 msgstr "<b>Mots-clés</b> modèle"
@@ -2687,9 +2663,6 @@ msgstr "AWS S3 (stockage des objets)"
 
 msgid "AWS S3 Bucket"
 msgstr "AWS S3 Bucket"
-
-msgid "AWS Tags"
-msgstr "Tags AWS"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Coûts et utilisation de l'AWS/CE"
@@ -19134,9 +19107,6 @@ msgstr "N'utilisez pas le préfixe \"aws :\" pour la clé."
 msgid "Do not use 'aws:' prefix for the value."
 msgstr "N'utilisez pas le préfixe \"aws :\" pour les valeurs."
 
-msgid "Do not use 'aws:' prefix for the values."
-msgstr "N'utilisez pas le préfixe \"aws :\" pour les valeurs."
-
 msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "N'utilisez pas Checkmk Python, même s'il a été installé"
 
@@ -19813,21 +19783,6 @@ msgstr "EXITED"
 
 #, fuzzy
 msgid ""
-"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
-"name is pingable and changing the piggyback name will reset the piggyback "
-"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
-"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
-"the EC2 instance. It is not possible to ping this host name."
-msgstr ""
-"Chaque instance EC2 crée un hôte piggyback.<br><b>Note:</b> ; Tous les noms "
-"d'hôtes ne sont pas pingables et changer le nom piggyback réinitialisera "
-"l'hôte piggyback.IP - Région - ID d'instance:</b><br>Le nom se compose de "
-"\"{Private IPv4 address}-{Region}-{Instance ID}\". Il identifie de manière "
-"unique l'instance EC2. Il n'est pas possible d'envoyer un ping à ce nom "
-"d'hôte."
-
-#, fuzzy
-msgid ""
 "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
 "hostname is pingable and changing the piggyback name will reset the "
 "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
@@ -19964,10 +19919,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Each tag key must be unique and cannot be used multiple times."
-msgstr ""
-"Chaque étiquette doit être unique et ne peut être utilisée plusieurs fois"
-
-msgid "Each tag must be unique and cannot be used multiple times"
 msgstr ""
 "Chaque étiquette doit être unique et ne peut être utilisée plusieurs fois"
 
@@ -24420,14 +24371,6 @@ msgstr "Passerelle"
 msgid "Gateway route"
 msgstr "Route de la passerelle"
 
-msgid "Gather all"
-msgstr "Rassemblez tous les"
-
-msgid "Gather all service instances and restrict by overall AWS tags"
-msgstr ""
-"Rassemblez toutes les instances de service et limitez-les par des étiquettes "
-"AWS globales"
-
 msgid "Gathered container information (piggybacked)"
 msgstr "Collecte d'informations sur les conteneurs (piggybacked)"
 
@@ -27892,9 +27835,6 @@ msgstr ""
 msgid "IP - Region - Instance ID"
 msgstr "IP - région - ID de l'instance"
 
-msgid "IP - region - instance ID"
-msgstr "IP - région - ID de l'instance"
-
 msgid "IP Address"
 msgstr "Adresse IP"
 
@@ -28452,14 +28392,6 @@ msgstr ""
 "Si, dans cet intervalle de temps, le nombre configuré de fois que la règle "
 "est déclenchée, un événement est créé. Si le nombre requis n'est pas "
 "atteint, le compte est remis à zéro."
-
-msgid ""
-"If limits are enabled, all instances will be fetched regardless of any name "
-"or tag restrictions that may have been configured."
-msgstr ""
-"Si les limites sont activées, toutes les instances seront récupérées sans "
-"tenir compte des restrictions de nom ou de balise qui ont pu être "
-"configurées."
 
 #, fuzzy
 msgid ""
@@ -37721,9 +37653,6 @@ msgstr "Surveiller les appareils Android"
 msgid "Monitor CloudFront WAFs"
 msgstr "Surveiller les WAFs de CloudFront"
 
-msgid "Monitor Route53"
-msgstr "Surveiller Route53"
-
 msgid "Monitor all files in folder"
 msgstr "Surveiller tous les fichiers du dossier"
 
@@ -37741,9 +37670,6 @@ msgstr "Surveiller toutes les instances trouvées"
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr ""
 "Surveillez et représentez graphiquement les voies, si le port a de multiples"
-
-msgid "Monitor costs and usage"
-msgstr "Suivre les coûts et l'utilisation"
 
 #, fuzzy
 msgid "Monitor databases"
@@ -37815,9 +37741,6 @@ msgstr "Moniteur autre qu'un appareil Android ou iOS"
 
 msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
 msgstr ""
-
-msgid "Monitor service limits"
-msgstr "Surveiller les limites du service"
 
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr "Surveiller des connexions et des auditeurs TCP/UDP spécifiques"
@@ -40136,6 +40059,10 @@ msgstr "Commentaire sur la notification"
 
 msgid "Notification configuration"
 msgstr "Configuration des notifications"
+
+#, fuzzy
+msgid "Notification delivery rate"
+msgstr "Système de notification"
 
 msgid "Notification events of hosts."
 msgstr "Événements de notification des hôtes."
@@ -51019,9 +50946,6 @@ msgstr ""
 msgid "Selection"
 msgstr "Sélection"
 
-msgid "Selection of alarms"
-msgstr "Sélection d'alarmes"
-
 msgid "Selection of hosts to activate agent updates for"
 msgstr "Sélection des hôtes pour lesquels activer les mises à jour de l'agent"
 
@@ -51030,9 +50954,6 @@ msgstr "Sélection de plusieurs groupes d'accueil"
 
 msgid "Selection of multiple service groups"
 msgstr "Sélection de plusieurs groupes de services"
-
-msgid "Selection of service instances"
-msgstr "Sélection des instances de service"
 
 msgid "Selection of site is enforced, use this filter for joining"
 msgstr ""
@@ -51106,7 +51027,8 @@ msgstr "Envoyer des notifications à la console d'événements distante"
 
 #, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr "Ordre de tri des notifications pour les notifications groupées"
 
 msgid ""
@@ -72678,20 +72600,8 @@ msgstr ""
 msgid "Use environment variables from host"
 msgstr "Utiliser les variables d'environnement de l'hôte"
 
-msgid "Use explicit AWS service tags and overrule overall AWS tags"
-msgstr ""
-"Utilisez des balises de service AWS explicites et remplacez les balises AWS "
-"générales"
-
-msgid "Use explicit names"
-msgstr "Utiliser des noms explicites"
-
 msgid "Use explicit proxy settings"
 msgstr "Utiliser des paramètres proxy explicites"
-
-msgid "Use explicit service names and ignore overall AWS tags"
-msgstr ""
-"Utilisez des noms de service explicites et ignorez les balises AWS générales"
 
 msgid "Use fixed width (relative to font size)"
 msgstr "Utiliser une largeur fixe (par rapport à la taille de la police)"
@@ -81076,11 +80986,6 @@ msgstr "en haut"
 msgid "upper limit"
 msgstr "limite supérieure"
 
-msgid ""
-"us-gov-* or cn-* regions have their own global services and may not reach "
-"the default one."
-msgstr ""
-
 msgid "use SSL"
 msgstr "utiliser SSL"
 
@@ -81251,6 +81156,104 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#, fuzzy
+#~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
+#~ msgstr "Surveillance des services Web d'Amazon (AWS)"
+
+#~ msgid ""
+#~ "<b>Gather all service instances and restrict by overall tags:</b><br>If "
+#~ "overall tags are specified above, then all service instances will be "
+#~ "filtered by those tags. Otherwise, all instances will be collected."
+#~ "<br><br><b>Explicit service tags and overwrite overall tags:</"
+#~ "b><br>Specify explicit tags for these services. The overall tags will be "
+#~ "ignored for these services.<br><br><b>Explicit service names and ignore "
+#~ "overall tags:</b><br>Use this option to specify explicit names. The "
+#~ "overall tags will be ignored for these services."
+#~ msgstr ""
+#~ "<b>Rassembler toutes les instances de service et les restreindre par les "
+#~ "balises globales:</b><br>Si les balises globales sont spécifiées ci-"
+#~ "dessus, alors toutes les instances de service seront filtrées par ces "
+#~ "balises. Sinon, toutes les instances seront collectées.<br><br><b>Balises "
+#~ "explicites de service et écrasement des balises globales:</"
+#~ "b><br>Spécifiez des balises explicites pour ces services. Les balises "
+#~ "globales seront ignorées pour ces services.<br><br><b>Noms de services "
+#~ "explicites et ignorer les balises globales:</b><br>Utilisez cette option "
+#~ "pour spécifier des noms explicites. Les balises globales seront ignorées "
+#~ "pour ces services."
+
+#~ msgid "AWS Tags"
+#~ msgstr "Tags AWS"
+
+#~ msgid "Do not use 'aws:' prefix for the values."
+#~ msgstr "N'utilisez pas le préfixe \"aws :\" pour les valeurs."
+
+#, fuzzy
+#~ msgid ""
+#~ "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+#~ "host name is pingable and changing the piggyback name will reset the "
+#~ "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+#~ "consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This "
+#~ "uniquely identifies the EC2 instance. It is not possible to ping this "
+#~ "host name."
+#~ msgstr ""
+#~ "Chaque instance EC2 crée un hôte piggyback.<br><b>Note:</b> ; Tous les "
+#~ "noms d'hôtes ne sont pas pingables et changer le nom piggyback "
+#~ "réinitialisera l'hôte piggyback.IP - Région - ID d'instance:</b><br>Le "
+#~ "nom se compose de \"{Private IPv4 address}-{Region}-{Instance ID}\". Il "
+#~ "identifie de manière unique l'instance EC2. Il n'est pas possible "
+#~ "d'envoyer un ping à ce nom d'hôte."
+
+#~ msgid "Each tag must be unique and cannot be used multiple times"
+#~ msgstr ""
+#~ "Chaque étiquette doit être unique et ne peut être utilisée plusieurs fois"
+
+#~ msgid "Gather all"
+#~ msgstr "Rassemblez tous les"
+
+#~ msgid "Gather all service instances and restrict by overall AWS tags"
+#~ msgstr ""
+#~ "Rassemblez toutes les instances de service et limitez-les par des "
+#~ "étiquettes AWS globales"
+
+#~ msgid "IP - region - instance ID"
+#~ msgstr "IP - région - ID de l'instance"
+
+#~ msgid ""
+#~ "If limits are enabled, all instances will be fetched regardless of any "
+#~ "name or tag restrictions that may have been configured."
+#~ msgstr ""
+#~ "Si les limites sont activées, toutes les instances seront récupérées sans "
+#~ "tenir compte des restrictions de nom ou de balise qui ont pu être "
+#~ "configurées."
+
+#~ msgid "Monitor Route53"
+#~ msgstr "Surveiller Route53"
+
+#~ msgid "Monitor costs and usage"
+#~ msgstr "Suivre les coûts et l'utilisation"
+
+#~ msgid "Monitor service limits"
+#~ msgstr "Surveiller les limites du service"
+
+#~ msgid "Selection of alarms"
+#~ msgstr "Sélection d'alarmes"
+
+#~ msgid "Selection of service instances"
+#~ msgstr "Sélection des instances de service"
+
+#~ msgid "Use explicit AWS service tags and overrule overall AWS tags"
+#~ msgstr ""
+#~ "Utilisez des balises de service AWS explicites et remplacez les balises "
+#~ "AWS générales"
+
+#~ msgid "Use explicit names"
+#~ msgstr "Utiliser des noms explicites"
+
+#~ msgid "Use explicit service names and ignore overall AWS tags"
+#~ msgstr ""
+#~ "Utilisez des noms de service explicites et ignorez les balises AWS "
+#~ "générales"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

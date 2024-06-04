@@ -879,10 +879,6 @@ msgstr "(mitgeliefert)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(Standard ist %r für %s/TLS)"
 
-#, fuzzy
-msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
-msgstr "Amazon Web Services (AWS) Monitoring"
-
 msgid "(disabled)"
 msgstr "(deaktiviert)"
 
@@ -1261,26 +1257,6 @@ msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr ""
 "<b>Achtung:</b>Dies wird - Ihre Umgebung in einem undefinierten Zustand "
 "lassen."
-
-msgid ""
-"<b>Gather all service instances and restrict by overall tags:</b><br>If "
-"overall tags are specified above, then all service instances will be "
-"filtered by those tags. Otherwise, all instances will be collected."
-"<br><br><b>Explicit service tags and overwrite overall tags:</b><br>Specify "
-"explicit tags for these services. The overall tags will be ignored for these "
-"services.<br><br><b>Explicit service names and ignore overall tags:</"
-"b><br>Use this option to specify explicit names. The overall tags will be "
-"ignored for these services."
-msgstr ""
-"<b>Sammeln Sie alle Service-Instanzen und schränken Sie durch übergreifende "
-"Tags ein:</b><br>Wenn übergreifende Tags vorab spezifiziert werden, werden "
-"alle Service-Instanzen nach diesen Tags gefiltert. Andernfalls werden alle "
-"Instanzen gesammelt.<br><br><b>Explizite Service-Tags und Überschreiben von "
-"übergreifenden Tags:</b><br> Spezifizieren Sie explizite Tags für diese "
-"Services. Die übergreifenden Tags werden für diese Services ignoriert. "
-"<br><br><b>Explizite Service-Namen und Ignorieren von übergreifenden Tags:</"
-"b><br> Nutzen Sie diese Option, um explizite Namen anzugeben. Die "
-"übergreifenden Tags werden für diese Services ignoriert."
 
 msgid "<b>Keyword</b> pattern"
 msgstr "<b>Stichwort</b>muster"
@@ -2649,9 +2625,6 @@ msgstr "AWS S3 (Objektspeicher)"
 
 msgid "AWS S3 Bucket"
 msgstr "AWS S3 Bucket"
-
-msgid "AWS Tags"
-msgstr "AWS-Tags"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
@@ -18626,9 +18599,6 @@ msgstr "Verwenden Sie kein 'aws:'-Präfix für den Schlüssel."
 msgid "Do not use 'aws:' prefix for the value."
 msgstr "Verwenden Sie für die Werte kein 'aws:'-Präfix."
 
-msgid "Do not use 'aws:' prefix for the values."
-msgstr "Verwenden Sie für die Werte kein 'aws:'-Präfix."
-
 msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "Verwende Checkmk Python nicht, auch wenn es installiert wurde"
 
@@ -19303,20 +19273,6 @@ msgstr "EWS"
 msgid "EXITED"
 msgstr "EXITED"
 
-msgid ""
-"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
-"name is pingable and changing the piggyback name will reset the piggyback "
-"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
-"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
-"the EC2 instance. It is not possible to ping this host name."
-msgstr ""
-"Jede EC2 Instanz erstellt einen Piggyback-Host.<br><b>Hinweis:</b> Nicht "
-"jeder Host-Name ist pingbar und ändern des Piggyback-Namens setzt den "
-"Piggyback-Host zurück.<br><br><b>IP - Region - Instance ID:</b><br>Der Name "
-"setzt sich zusammen aus \"{Private IPv4 address}-{Region}-{Instance ID}\". "
-"Dies identifiziert die EC2-Instanz eindeutig. Es ist nicht möglich, diesen "
-"Host-Namen anzupingen."
-
 #, fuzzy
 msgid ""
 "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
@@ -19462,9 +19418,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Each tag key must be unique and cannot be used multiple times."
-msgstr "Jedes Tag muss eindeutig sein und darf nicht mehrfach verwendet werden"
-
-msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Jedes Tag muss eindeutig sein und darf nicht mehrfach verwendet werden"
 
 msgid ""
@@ -23839,13 +23792,6 @@ msgstr "Gateway"
 msgid "Gateway route"
 msgstr "Gatewayroute"
 
-msgid "Gather all"
-msgstr "Alle einsammeln"
-
-msgid "Gather all service instances and restrict by overall AWS tags"
-msgstr ""
-"Sammle alle Service-Instanzen und schränke sie nach allgemeinen AWS-Tags ein"
-
 msgid "Gathered container information (piggybacked)"
 msgstr "Sammeln von Containerinformationen"
 
@@ -27194,9 +27140,6 @@ msgstr "IOPS"
 msgid "IP - Region - Instance ID"
 msgstr "IP - Region - Instanz-ID"
 
-msgid "IP - region - instance ID"
-msgstr "IP - Region - Instanz-ID"
-
 msgid "IP Address"
 msgstr "IP-Adresse"
 
@@ -27756,13 +27699,6 @@ msgstr ""
 "Wenn in dem Zeitraum die Regel ausgelöst wird, dann wird ein Ereignis "
 "erstellt. Wenn die erforderliche Anzahl nicht erreicht wird, dann wird der "
 "Zähler auf <tt>0</tt> zurückgesetzt."
-
-msgid ""
-"If limits are enabled, all instances will be fetched regardless of any name "
-"or tag restrictions that may have been configured."
-msgstr ""
-"Wenn Limits aktiviert sind, werden alle Instanzen geholt, unabhängig von "
-"einer eventuell konfigurierten Einschränkung auf Namen oder Tags."
 
 #, fuzzy
 msgid ""
@@ -36848,9 +36784,6 @@ msgstr "Überwache Android-Geräte"
 msgid "Monitor CloudFront WAFs"
 msgstr "Cloudfront WAFs überwachen"
 
-msgid "Monitor Route53"
-msgstr "Route53 überwachen"
-
 msgid "Monitor all files in folder"
 msgstr "Alle Dateien im Verzeichnis überwachen"
 
@@ -36866,9 +36799,6 @@ msgstr "Alle gefundenen Instanzen überwachen"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
-
-msgid "Monitor costs and usage"
-msgstr "Überwachung von Kosten und Nutzung"
 
 msgid "Monitor databases"
 msgstr "Datenbanken überwachen"
@@ -36937,9 +36867,6 @@ msgstr "Andere Geräte als Android oder iOS überwachen"
 
 msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
 msgstr "Überwachung der Anfragemetriken mit dem Filter <tt>EntireBucket</tt>"
-
-msgid "Monitor service limits"
-msgstr "Überwache Service-Limits"
 
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr "Überwache spezifische TCP/UDP-Verbindungen oder Sockets"
@@ -39211,6 +39138,10 @@ msgstr "Benachrichtigungskommentar"
 
 msgid "Notification configuration"
 msgstr "Benachrichtigungskonfiguration"
+
+#, fuzzy
+msgid "Notification delivery rate"
+msgstr "Benachrichtigungssystem"
 
 msgid "Notification events of hosts."
 msgstr "Benachrichtigungsereignisse von Hosts."
@@ -49856,9 +49787,6 @@ msgstr ""
 msgid "Selection"
 msgstr "Auswahl"
 
-msgid "Selection of alarms"
-msgstr "Auswahl der Alarme"
-
 msgid "Selection of hosts to activate agent updates for"
 msgstr "Auswahl von Hosts, für die Aktivierung der Agentenupdates"
 
@@ -49867,9 +49795,6 @@ msgstr "Auswahl von mehreren Host-Gruppen"
 
 msgid "Selection of multiple service groups"
 msgstr "Auswahl von mehreren Service-Gruppen"
-
-msgid "Selection of service instances"
-msgstr "Auswahl der Service-Instanzen"
 
 msgid "Selection of site is enforced, use this filter for joining"
 msgstr ""
@@ -49939,8 +49864,10 @@ msgstr "Benachrichtigungen an Event Console senden"
 msgid "Send notifications to remote Event Console"
 msgstr "Benachrichtigungen an Remote Event Console senden"
 
+#, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr ""
 "Benachrichtigung gemäß den Benachrichtigungsregeln verschicken "
 "(deaktivieren, um Spam zu vermeiden)"
@@ -70724,19 +70651,8 @@ msgstr ""
 msgid "Use environment variables from host"
 msgstr "Verwende Umgebungsvariablen vom Host"
 
-msgid "Use explicit AWS service tags and overrule overall AWS tags"
-msgstr ""
-"Explizite AWS-Service-Tags verwenden und allgemeine AWS-Tags außer Kraft "
-"setzen"
-
-msgid "Use explicit names"
-msgstr "Verwenden Sie explizite Namen"
-
 msgid "Use explicit proxy settings"
 msgstr "Explizite Proxy-Einstellungen verwenden"
-
-msgid "Use explicit service names and ignore overall AWS tags"
-msgstr "Explizite Service-Namen verwenden und allgemeine AWS-Tags ignorieren"
 
 msgid "Use fixed width (relative to font size)"
 msgstr "Feste Breite (relativ zur Schriftgröße) verwenden"
@@ -78972,13 +78888,6 @@ msgstr "ein"
 msgid "upper limit"
 msgstr "Oberer Grenze"
 
-msgid ""
-"us-gov-* or cn-* regions have their own global services and may not reach "
-"the default one."
-msgstr ""
-"us-gov-* und cn-* Regionen haben ihre eigenen globalen Dienste und erreichen "
-"möglicherweise nicht den Standarddienst."
-
 msgid "use SSL"
 msgstr "SSL verwenden"
 
@@ -79149,6 +79058,108 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
+#~ msgstr "Amazon Web Services (AWS) Monitoring"
+
+#~ msgid ""
+#~ "<b>Gather all service instances and restrict by overall tags:</b><br>If "
+#~ "overall tags are specified above, then all service instances will be "
+#~ "filtered by those tags. Otherwise, all instances will be collected."
+#~ "<br><br><b>Explicit service tags and overwrite overall tags:</"
+#~ "b><br>Specify explicit tags for these services. The overall tags will be "
+#~ "ignored for these services.<br><br><b>Explicit service names and ignore "
+#~ "overall tags:</b><br>Use this option to specify explicit names. The "
+#~ "overall tags will be ignored for these services."
+#~ msgstr ""
+#~ "<b>Sammeln Sie alle Service-Instanzen und schränken Sie durch "
+#~ "übergreifende Tags ein:</b><br>Wenn übergreifende Tags vorab spezifiziert "
+#~ "werden, werden alle Service-Instanzen nach diesen Tags gefiltert. "
+#~ "Andernfalls werden alle Instanzen gesammelt.<br><br><b>Explizite Service-"
+#~ "Tags und Überschreiben von übergreifenden Tags:</b><br> Spezifizieren Sie "
+#~ "explizite Tags für diese Services. Die übergreifenden Tags werden für "
+#~ "diese Services ignoriert. <br><br><b>Explizite Service-Namen und "
+#~ "Ignorieren von übergreifenden Tags:</b><br> Nutzen Sie diese Option, um "
+#~ "explizite Namen anzugeben. Die übergreifenden Tags werden für diese "
+#~ "Services ignoriert."
+
+#~ msgid "AWS Tags"
+#~ msgstr "AWS-Tags"
+
+#~ msgid "Do not use 'aws:' prefix for the values."
+#~ msgstr "Verwenden Sie für die Werte kein 'aws:'-Präfix."
+
+#~ msgid ""
+#~ "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+#~ "host name is pingable and changing the piggyback name will reset the "
+#~ "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+#~ "consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This "
+#~ "uniquely identifies the EC2 instance. It is not possible to ping this "
+#~ "host name."
+#~ msgstr ""
+#~ "Jede EC2 Instanz erstellt einen Piggyback-Host.<br><b>Hinweis:</b> Nicht "
+#~ "jeder Host-Name ist pingbar und ändern des Piggyback-Namens setzt den "
+#~ "Piggyback-Host zurück.<br><br><b>IP - Region - Instance ID:</b><br>Der "
+#~ "Name setzt sich zusammen aus \"{Private IPv4 address}-{Region}-{Instance "
+#~ "ID}\". Dies identifiziert die EC2-Instanz eindeutig. Es ist nicht "
+#~ "möglich, diesen Host-Namen anzupingen."
+
+#~ msgid "Each tag must be unique and cannot be used multiple times"
+#~ msgstr ""
+#~ "Jedes Tag muss eindeutig sein und darf nicht mehrfach verwendet werden"
+
+#~ msgid "Gather all"
+#~ msgstr "Alle einsammeln"
+
+#~ msgid "Gather all service instances and restrict by overall AWS tags"
+#~ msgstr ""
+#~ "Sammle alle Service-Instanzen und schränke sie nach allgemeinen AWS-Tags "
+#~ "ein"
+
+#~ msgid "IP - region - instance ID"
+#~ msgstr "IP - Region - Instanz-ID"
+
+#~ msgid ""
+#~ "If limits are enabled, all instances will be fetched regardless of any "
+#~ "name or tag restrictions that may have been configured."
+#~ msgstr ""
+#~ "Wenn Limits aktiviert sind, werden alle Instanzen geholt, unabhängig von "
+#~ "einer eventuell konfigurierten Einschränkung auf Namen oder Tags."
+
+#~ msgid "Monitor Route53"
+#~ msgstr "Route53 überwachen"
+
+#~ msgid "Monitor costs and usage"
+#~ msgstr "Überwachung von Kosten und Nutzung"
+
+#~ msgid "Monitor service limits"
+#~ msgstr "Überwache Service-Limits"
+
+#~ msgid "Selection of alarms"
+#~ msgstr "Auswahl der Alarme"
+
+#~ msgid "Selection of service instances"
+#~ msgstr "Auswahl der Service-Instanzen"
+
+#~ msgid "Use explicit AWS service tags and overrule overall AWS tags"
+#~ msgstr ""
+#~ "Explizite AWS-Service-Tags verwenden und allgemeine AWS-Tags außer Kraft "
+#~ "setzen"
+
+#~ msgid "Use explicit names"
+#~ msgstr "Verwenden Sie explizite Namen"
+
+#~ msgid "Use explicit service names and ignore overall AWS tags"
+#~ msgstr ""
+#~ "Explizite Service-Namen verwenden und allgemeine AWS-Tags ignorieren"
+
+#~ msgid ""
+#~ "us-gov-* or cn-* regions have their own global services and may not reach "
+#~ "the default one."
+#~ msgstr ""
+#~ "us-gov-* und cn-* Regionen haben ihre eigenen globalen Dienste und "
+#~ "erreichen möglicherweise nicht den Standarddienst."
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

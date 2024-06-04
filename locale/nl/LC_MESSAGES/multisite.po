@@ -875,10 +875,6 @@ msgstr "(ingebouwd)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(standaard is %r voor %s/TLS)"
 
-#, fuzzy
-msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
-msgstr "Toezicht op Amazon Web Services (AWS)"
-
 msgid "(disabled)"
 msgstr "(uitgeschakeld)"
 
@@ -1261,25 +1257,6 @@ msgstr ""
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr ""
 "<b> Let op: </b> Dit laat je omgeving in een ongedefinieerde staat achter."
-
-msgid ""
-"<b>Gather all service instances and restrict by overall tags:</b><br>If "
-"overall tags are specified above, then all service instances will be "
-"filtered by those tags. Otherwise, all instances will be collected."
-"<br><br><b>Explicit service tags and overwrite overall tags:</b><br>Specify "
-"explicit tags for these services. The overall tags will be ignored for these "
-"services.<br><br><b>Explicit service names and ignore overall tags:</"
-"b><br>Use this option to specify explicit names. The overall tags will be "
-"ignored for these services."
-msgstr ""
-"<b>Alle dienstinstanties verzamelen en beperken door algemene tags:</"
-"b><br>Als algemene tags hierboven zijn gespecificeerd, dan worden alle "
-"dienstinstanties op die tags gefilterd. Anders worden alle instanties "
-"verzameld.<br><br><b>Expliciete diensttags en overschrijven algemene tags:</"
-"b><br>Specificeer expliciete tags voor deze diensten. De algemene tags "
-"worden voor deze diensten genegeerd.<br><br><b>Expliciete dienstnamen en "
-"algemene tags negeren:</b><br>Gebruik deze optie om expliciete namen op te "
-"geven. De algemene tags worden voor deze diensten genegeerd."
 
 #, fuzzy
 msgid "<b>Keyword</b> pattern"
@@ -2644,9 +2621,6 @@ msgstr "Toegewezen opslag"
 
 msgid "AWS S3 Bucket"
 msgstr "AWS S3 emmer"
-
-msgid "AWS Tags"
-msgstr "AWS Tags"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Kosten en gebruik van AWS/CE"
@@ -18968,9 +18942,6 @@ msgstr "Gebruik niet het voorvoegsel \"aws:\" voor de sleutel."
 msgid "Do not use 'aws:' prefix for the value."
 msgstr "Gebruik niet het voorvoegsel \"aws:\" voor de waarden."
 
-msgid "Do not use 'aws:' prefix for the values."
-msgstr "Gebruik niet het voorvoegsel \"aws:\" voor de waarden."
-
 msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "Gebruik geen Checkmk Python, zelfs niet als het geïnstalleerd is"
 
@@ -19641,21 +19612,6 @@ msgstr "EXITED"
 
 #, fuzzy
 msgid ""
-"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
-"name is pingable and changing the piggyback name will reset the piggyback "
-"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
-"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
-"the EC2 instance. It is not possible to ping this host name."
-msgstr ""
-"Elke EC2 instance creëert een piggyback host.<br><b>Opmerking:</b> Niet elke "
-"hostnaam is pingable en het wijzigen van de piggyback naam zal de piggyback "
-"host resetten.<br><br><b>IP - Region - Instance ID:</b><br>De naam bestaat "
-"uit \"{Private IPv4 address}-{Region}-{Instance ID}\". Dit identificeert de "
-"EC2-instantie op unieke wijze. Het is niet mogelijk om deze hostnaam te "
-"pingen."
-
-#, fuzzy
-msgid ""
 "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
 "hostname is pingable and changing the piggyback name will reset the "
 "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
@@ -19788,9 +19744,6 @@ msgstr "Elke tag groep zal een dropdown keuze creëren in de host configuratie."
 
 #, fuzzy
 msgid "Each tag key must be unique and cannot be used multiple times."
-msgstr "Elke tag moet uniek zijn en kan niet meerdere keren worden gebruikt"
-
-msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Elke tag moet uniek zijn en kan niet meerdere keren worden gebruikt"
 
 #, fuzzy
@@ -24205,12 +24158,6 @@ msgstr "Gateway"
 msgid "Gateway route"
 msgstr "Gateway route"
 
-msgid "Gather all"
-msgstr "Verzamel alle"
-
-msgid "Gather all service instances and restrict by overall AWS tags"
-msgstr "Verzamel alle service instances en beperk door algemene AWS tags"
-
 msgid "Gathered container information (piggybacked)"
 msgstr "Verzamelde container informatie (piggybacked)"
 
@@ -27629,9 +27576,6 @@ msgstr ""
 msgid "IP - Region - Instance ID"
 msgstr "IP - regio - instantie-ID"
 
-msgid "IP - region - instance ID"
-msgstr "IP - regio - instantie-ID"
-
 msgid "IP Address"
 msgstr "IP-adres"
 
@@ -28184,13 +28128,6 @@ msgstr ""
 "Als in dit tijdsbereik het geconfigureerde aantal keren de regel wordt "
 "getriggerd, wordt een gebeurtenis aangemaakt. Als de vereiste telling niet "
 "wordt bereikt, wordt de telling op nul gezet."
-
-msgid ""
-"If limits are enabled, all instances will be fetched regardless of any name "
-"or tag restrictions that may have been configured."
-msgstr ""
-"Als beperkingen zijn ingeschakeld, worden alle instanties opgehaald, "
-"ongeacht eventuele naam- of tagbeperkingen die zijn geconfigureerd."
 
 #, fuzzy
 msgid ""
@@ -37375,9 +37312,6 @@ msgstr "Monitor Android-apparaten"
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAF's monitoren"
 
-msgid "Monitor Route53"
-msgstr "Bewaak Route53"
-
 msgid "Monitor all files in folder"
 msgstr "Bewaak alle bestanden in de map"
 
@@ -37394,9 +37328,6 @@ msgstr "Controleer alle gevonden gevallen"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Monitor en maak een grafiek van de lanes, als de poort meerdere"
-
-msgid "Monitor costs and usage"
-msgstr "Bewaking van kosten en gebruik"
 
 #, fuzzy
 msgid "Monitor databases"
@@ -37464,9 +37395,6 @@ msgstr "Monitor andere dan Android- of iOS-apparaten"
 
 msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
 msgstr ""
-
-msgid "Monitor service limits"
-msgstr "Bewaak de servicelimieten"
 
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr "Specifieke TCP/UDP verbindingen en luisteraars monitoren"
@@ -39768,6 +39696,10 @@ msgstr "Kennisgeving Commentaar"
 
 msgid "Notification configuration"
 msgstr "Kennisgeving configuratie"
+
+#, fuzzy
+msgid "Notification delivery rate"
+msgstr "Kennisgevingssysteem"
 
 msgid "Notification events of hosts."
 msgstr "Meldingsgebeurtenissen van hosts."
@@ -50521,9 +50453,6 @@ msgstr ""
 msgid "Selection"
 msgstr "Selectie"
 
-msgid "Selection of alarms"
-msgstr "Selectie van alarmen"
-
 msgid "Selection of hosts to activate agent updates for"
 msgstr "Selectie van hosts om agent updates te activeren voor"
 
@@ -50532,9 +50461,6 @@ msgstr "Selectie van meerdere gastgroepen"
 
 msgid "Selection of multiple service groups"
 msgstr "Selectie van meerdere dienstengroepen"
-
-msgid "Selection of service instances"
-msgstr "Selectie van dienstinstanties"
 
 msgid "Selection of site is enforced, use this filter for joining"
 msgstr "Selectie van site is afgedwongen, gebruik dit filter voor toetreding"
@@ -50607,7 +50533,8 @@ msgstr "Meldingen verzenden naar externe gebeurtenissenconsole"
 
 #, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr "Sorteervolgorde voor bulkmeldingen"
 
 msgid ""
@@ -71947,17 +71874,8 @@ msgstr ""
 msgid "Use environment variables from host"
 msgstr "Gebruik omgevingsvariabelen van host"
 
-msgid "Use explicit AWS service tags and overrule overall AWS tags"
-msgstr "Gebruik expliciete AWS service tags en overrul algemene AWS tags"
-
-msgid "Use explicit names"
-msgstr "Gebruik expliciete namen"
-
 msgid "Use explicit proxy settings"
 msgstr "Gebruik expliciete proxy-instellingen"
-
-msgid "Use explicit service names and ignore overall AWS tags"
-msgstr "Gebruik expliciete dienstnamen en negeer algemene AWS-tags"
 
 msgid "Use fixed width (relative to font size)"
 msgstr "Gebruik vaste breedte (ten opzichte van lettergrootte)"
@@ -80225,11 +80143,6 @@ msgstr "omhoog"
 msgid "upper limit"
 msgstr "bovengrens"
 
-msgid ""
-"us-gov-* or cn-* regions have their own global services and may not reach "
-"the default one."
-msgstr ""
-
 msgid "use SSL"
 msgstr "SSL gebruiken"
 
@@ -80400,6 +80313,94 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
+#~ msgstr "Toezicht op Amazon Web Services (AWS)"
+
+#~ msgid ""
+#~ "<b>Gather all service instances and restrict by overall tags:</b><br>If "
+#~ "overall tags are specified above, then all service instances will be "
+#~ "filtered by those tags. Otherwise, all instances will be collected."
+#~ "<br><br><b>Explicit service tags and overwrite overall tags:</"
+#~ "b><br>Specify explicit tags for these services. The overall tags will be "
+#~ "ignored for these services.<br><br><b>Explicit service names and ignore "
+#~ "overall tags:</b><br>Use this option to specify explicit names. The "
+#~ "overall tags will be ignored for these services."
+#~ msgstr ""
+#~ "<b>Alle dienstinstanties verzamelen en beperken door algemene tags:</"
+#~ "b><br>Als algemene tags hierboven zijn gespecificeerd, dan worden alle "
+#~ "dienstinstanties op die tags gefilterd. Anders worden alle instanties "
+#~ "verzameld.<br><br><b>Expliciete diensttags en overschrijven algemene tags:"
+#~ "</b><br>Specificeer expliciete tags voor deze diensten. De algemene tags "
+#~ "worden voor deze diensten genegeerd.<br><br><b>Expliciete dienstnamen en "
+#~ "algemene tags negeren:</b><br>Gebruik deze optie om expliciete namen op "
+#~ "te geven. De algemene tags worden voor deze diensten genegeerd."
+
+#~ msgid "AWS Tags"
+#~ msgstr "AWS Tags"
+
+#~ msgid "Do not use 'aws:' prefix for the values."
+#~ msgstr "Gebruik niet het voorvoegsel \"aws:\" voor de waarden."
+
+#, fuzzy
+#~ msgid ""
+#~ "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+#~ "host name is pingable and changing the piggyback name will reset the "
+#~ "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+#~ "consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This "
+#~ "uniquely identifies the EC2 instance. It is not possible to ping this "
+#~ "host name."
+#~ msgstr ""
+#~ "Elke EC2 instance creëert een piggyback host.<br><b>Opmerking:</b> Niet "
+#~ "elke hostnaam is pingable en het wijzigen van de piggyback naam zal de "
+#~ "piggyback host resetten.<br><br><b>IP - Region - Instance ID:</b><br>De "
+#~ "naam bestaat uit \"{Private IPv4 address}-{Region}-{Instance ID}\". Dit "
+#~ "identificeert de EC2-instantie op unieke wijze. Het is niet mogelijk om "
+#~ "deze hostnaam te pingen."
+
+#~ msgid "Each tag must be unique and cannot be used multiple times"
+#~ msgstr "Elke tag moet uniek zijn en kan niet meerdere keren worden gebruikt"
+
+#~ msgid "Gather all"
+#~ msgstr "Verzamel alle"
+
+#~ msgid "Gather all service instances and restrict by overall AWS tags"
+#~ msgstr "Verzamel alle service instances en beperk door algemene AWS tags"
+
+#~ msgid "IP - region - instance ID"
+#~ msgstr "IP - regio - instantie-ID"
+
+#~ msgid ""
+#~ "If limits are enabled, all instances will be fetched regardless of any "
+#~ "name or tag restrictions that may have been configured."
+#~ msgstr ""
+#~ "Als beperkingen zijn ingeschakeld, worden alle instanties opgehaald, "
+#~ "ongeacht eventuele naam- of tagbeperkingen die zijn geconfigureerd."
+
+#~ msgid "Monitor Route53"
+#~ msgstr "Bewaak Route53"
+
+#~ msgid "Monitor costs and usage"
+#~ msgstr "Bewaking van kosten en gebruik"
+
+#~ msgid "Monitor service limits"
+#~ msgstr "Bewaak de servicelimieten"
+
+#~ msgid "Selection of alarms"
+#~ msgstr "Selectie van alarmen"
+
+#~ msgid "Selection of service instances"
+#~ msgstr "Selectie van dienstinstanties"
+
+#~ msgid "Use explicit AWS service tags and overrule overall AWS tags"
+#~ msgstr "Gebruik expliciete AWS service tags en overrul algemene AWS tags"
+
+#~ msgid "Use explicit names"
+#~ msgstr "Gebruik expliciete namen"
+
+#~ msgid "Use explicit service names and ignore overall AWS tags"
+#~ msgstr "Gebruik expliciete dienstnamen en negeer algemene AWS-tags"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

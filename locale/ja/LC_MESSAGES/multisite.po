@@ -871,10 +871,6 @@ msgstr "(組み込み)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(デフォルトは %r for %s/TLS)"
 
-#, fuzzy
-msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
-msgstr "Amazon Web Services (AWS)監視"
-
 msgid "(disabled)"
 msgstr "(無効)"
 
@@ -1253,25 +1249,6 @@ msgstr ""
 
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr "<b>注意:</b>これにより、環境が未定義の状態のままになります。"
-
-msgid ""
-"<b>Gather all service instances and restrict by overall tags:</b><br>If "
-"overall tags are specified above, then all service instances will be "
-"filtered by those tags. Otherwise, all instances will be collected."
-"<br><br><b>Explicit service tags and overwrite overall tags:</b><br>Specify "
-"explicit tags for these services. The overall tags will be ignored for these "
-"services.<br><br><b>Explicit service names and ignore overall tags:</"
-"b><br>Use this option to specify explicit names. The overall tags will be "
-"ignored for these services."
-msgstr ""
-"<b>すべてのサービスインスタンスを収集し、タグ全体で制限する：</b><br>タグ全体"
-"が上記で指定されている場合、すべてのサービスインスタンスはそれらのタグでフィ"
-"ルタリングされます。そうでない場合、すべてのインスタンスが収集されます。"
-"<br><br><b>明示的なサービスタグを使用し、タグ全体を上書きする：</b><br>これら"
-"のサービスに明示的なタグを指定します。これらのサービスでは、タグ全体が無視さ"
-"れます<br><br><b>明示的なサービス名を使用し、タグ全体を無視する：</b><br>この"
-"オプションを使用して指定します。これらのサービスでは、タグ全体が無視されま"
-"す。"
 
 msgid "<b>Keyword</b> pattern"
 msgstr "<b>キーワード</b>パターン"
@@ -2576,9 +2553,6 @@ msgstr "AWS S3 (オブジェクトストレージ)"
 
 msgid "AWS S3 Bucket"
 msgstr "AWS S3 バケット"
-
-msgid "AWS Tags"
-msgstr "AWSタグ"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CEのコストと使用法"
@@ -18544,9 +18518,6 @@ msgstr "キーに'aws:' プレフィックスを使用しないでください�
 msgid "Do not use 'aws:' prefix for the value."
 msgstr "値に\"aws:\"プレフィックスを使用しないでください。"
 
-msgid "Do not use 'aws:' prefix for the values."
-msgstr "値に\"aws:\"プレフィックスを使用しないでください。"
-
 msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "Checkmk Pythonがインストールされている場合でも、使用しないでください"
 
@@ -19206,20 +19177,6 @@ msgstr "EXITED"
 
 #, fuzzy
 msgid ""
-"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
-"name is pingable and changing the piggyback name will reset the piggyback "
-"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
-"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
-"the EC2 instance. It is not possible to ping this host name."
-msgstr ""
-"各EC2インスタンスはピギーバックホストを作成します。<br><b>注意:</b>すべてのホ"
-"スト名がping可能なわけではなく、ピギーバック名を変更するとピギーバックホスト"
-"はリセットされます。<br><br><b>- Region - インスタンスID:</b><br>名前は「{プ"
-"ライベートIPv4アドレス}-{地域}-{インスタンスID}」で構成されます。これはEC2イ"
-"ンスタンスを一意に識別します。このホスト名にpingを打つことはできません。"
-
-#, fuzzy
-msgid ""
 "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
 "hostname is pingable and changing the piggyback name will reset the "
 "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
@@ -19346,9 +19303,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Each tag key must be unique and cannot be used multiple times."
-msgstr "各タグは一意である必要があり、複数回使用することはできません"
-
-msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "各タグは一意である必要があり、複数回使用することはできません"
 
 #, fuzzy
@@ -23697,12 +23651,6 @@ msgstr "ゲートウェイ"
 msgid "Gateway route"
 msgstr "ゲートウェイルート"
 
-msgid "Gather all"
-msgstr "すべてを集める"
-
-msgid "Gather all service instances and restrict by overall AWS tags"
-msgstr "すべてのサービスインスタンスを収集し、AWSタグ全体で制限します"
-
 msgid "Gathered container information (piggybacked)"
 msgstr "収集されたコンテナ情報(ピギーバック)"
 
@@ -27068,9 +27016,6 @@ msgstr "IOPS"
 msgid "IP - Region - Instance ID"
 msgstr "IP - 範囲 - インスタンスID"
 
-msgid "IP - region - instance ID"
-msgstr "IP - 範囲 - インスタンスID"
-
 msgid "IP Address"
 msgstr "IPアドレス"
 
@@ -27609,13 +27554,6 @@ msgid ""
 msgstr ""
 "この時間範囲内で、設定された回数ルールがトリガされると、イベントが作成されま"
 "す。この期間内に必要な回数に達しない場合、カウントはゼロにリセットされます。"
-
-msgid ""
-"If limits are enabled, all instances will be fetched regardless of any name "
-"or tag restrictions that may have been configured."
-msgstr ""
-"制限が有効な場合、設定されている名前やタグの制限に関係なく、すべてのインスタ"
-"ンスがフェッチされます。"
 
 #, fuzzy
 msgid ""
@@ -36586,9 +36524,6 @@ msgstr "Android端末の監視"
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAFを監視する"
 
-msgid "Monitor Route53"
-msgstr "モニターRoute53"
-
 msgid "Monitor all files in folder"
 msgstr "フォルダ内のすべてのファイルを監視します"
 
@@ -36605,9 +36540,6 @@ msgstr "見つかったすべてのインスタンスを監視する"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "ポートが複数ある場合は、レーンを監視してグラフ化します"
-
-msgid "Monitor costs and usage"
-msgstr "コストと使用状況を監視する"
 
 #, fuzzy
 msgid "Monitor databases"
@@ -36675,9 +36607,6 @@ msgstr "Android、iOS端末以外のモニター"
 msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
 msgstr ""
 "フィルタ<tt>EntireBucket</tt>を使用して、リクエストメトリクスを監視する"
-
-msgid "Monitor service limits"
-msgstr "サービス制限を監視する"
 
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr "特定のTCP/UDP接続とリスナーを監視する"
@@ -38940,6 +38869,10 @@ msgstr "通知コメント"
 
 msgid "Notification configuration"
 msgstr "通知設定"
+
+#, fuzzy
+msgid "Notification delivery rate"
+msgstr "通知システム"
 
 msgid "Notification events of hosts."
 msgstr "ホストの通知イベント。"
@@ -49535,9 +49468,6 @@ msgstr "このオプションを選択すると、ルールは無効になりま
 msgid "Selection"
 msgstr "選択"
 
-msgid "Selection of alarms"
-msgstr "アラームの選択"
-
 msgid "Selection of hosts to activate agent updates for"
 msgstr "エージェントアップデートを有効にするホストの選択"
 
@@ -49546,9 +49476,6 @@ msgstr "複数のホストグループの選択"
 
 msgid "Selection of multiple service groups"
 msgstr "複数のサービスグループの選択"
-
-msgid "Selection of service instances"
-msgstr "サービスインスタンスの選択"
 
 msgid "Selection of site is enforced, use this filter for joining"
 msgstr "サイトの選択が強制され、このフィルタを使用する"
@@ -49619,7 +49546,8 @@ msgstr "リモートイベントコンソールに通知を送信する"
 
 #, fuzzy
 msgid ""
-"Send out notification according to notification rules (uncheck to avoid spam)"
+"Send out HTML/ASCII Email notification according to notification rules "
+"(uncheck to avoid spam)"
 msgstr "通知は、通知ルールに従って送信されます"
 
 msgid ""
@@ -70272,17 +70200,8 @@ msgstr "二重引用符を使用し、円記号で含まれている引用符を
 msgid "Use environment variables from host"
 msgstr "ホストからの環境変数を使用する"
 
-msgid "Use explicit AWS service tags and overrule overall AWS tags"
-msgstr "明示的なAWSサービスタグを使用し、AWSタグ全体を無効にする"
-
-msgid "Use explicit names"
-msgstr "明示的な名前を使用する"
-
 msgid "Use explicit proxy settings"
 msgstr "明示的なプロキシ設定を使用する"
-
-msgid "Use explicit service names and ignore overall AWS tags"
-msgstr "明示的なサービス名を使用し、AWSタグ全体を無視します"
 
 msgid "Use fixed width (relative to font size)"
 msgstr "固定幅を使用(フォントサイズに対して)"
@@ -78252,13 +78171,6 @@ msgstr "アップ"
 msgid "upper limit"
 msgstr "上限"
 
-msgid ""
-"us-gov-* or cn-* regions have their own global services and may not reach "
-"the default one."
-msgstr ""
-"us-gov-*またはcn-*リージョンには独自のグローバルサービスがあり、デフォルトの"
-"サービスには到達しない可能性があります。"
-
 msgid "use SSL"
 msgstr "SSLを使用する"
 
@@ -78428,6 +78340,101 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy
+#~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
+#~ msgstr "Amazon Web Services (AWS)監視"
+
+#~ msgid ""
+#~ "<b>Gather all service instances and restrict by overall tags:</b><br>If "
+#~ "overall tags are specified above, then all service instances will be "
+#~ "filtered by those tags. Otherwise, all instances will be collected."
+#~ "<br><br><b>Explicit service tags and overwrite overall tags:</"
+#~ "b><br>Specify explicit tags for these services. The overall tags will be "
+#~ "ignored for these services.<br><br><b>Explicit service names and ignore "
+#~ "overall tags:</b><br>Use this option to specify explicit names. The "
+#~ "overall tags will be ignored for these services."
+#~ msgstr ""
+#~ "<b>すべてのサービスインスタンスを収集し、タグ全体で制限する：</b><br>タグ"
+#~ "全体が上記で指定されている場合、すべてのサービスインスタンスはそれらのタグ"
+#~ "でフィルタリングされます。そうでない場合、すべてのインスタンスが収集されま"
+#~ "す。<br><br><b>明示的なサービスタグを使用し、タグ全体を上書きする：</"
+#~ "b><br>これらのサービスに明示的なタグを指定します。これらのサービスでは、タ"
+#~ "グ全体が無視されます<br><br><b>明示的なサービス名を使用し、タグ全体を無視"
+#~ "する：</b><br>このオプションを使用して指定します。これらのサービスでは、タ"
+#~ "グ全体が無視されます。"
+
+#~ msgid "AWS Tags"
+#~ msgstr "AWSタグ"
+
+#~ msgid "Do not use 'aws:' prefix for the values."
+#~ msgstr "値に\"aws:\"プレフィックスを使用しないでください。"
+
+#, fuzzy
+#~ msgid ""
+#~ "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+#~ "host name is pingable and changing the piggyback name will reset the "
+#~ "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+#~ "consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This "
+#~ "uniquely identifies the EC2 instance. It is not possible to ping this "
+#~ "host name."
+#~ msgstr ""
+#~ "各EC2インスタンスはピギーバックホストを作成します。<br><b>注意:</b>すべて"
+#~ "のホスト名がping可能なわけではなく、ピギーバック名を変更するとピギーバック"
+#~ "ホストはリセットされます。<br><br><b>- Region - インスタンスID:</b><br>名"
+#~ "前は「{プライベートIPv4アドレス}-{地域}-{インスタンスID}」で構成されます。"
+#~ "これはEC2インスタンスを一意に識別します。このホスト名にpingを打つことはで"
+#~ "きません。"
+
+#~ msgid "Each tag must be unique and cannot be used multiple times"
+#~ msgstr "各タグは一意である必要があり、複数回使用することはできません"
+
+#~ msgid "Gather all"
+#~ msgstr "すべてを集める"
+
+#~ msgid "Gather all service instances and restrict by overall AWS tags"
+#~ msgstr "すべてのサービスインスタンスを収集し、AWSタグ全体で制限します"
+
+#~ msgid "IP - region - instance ID"
+#~ msgstr "IP - 範囲 - インスタンスID"
+
+#~ msgid ""
+#~ "If limits are enabled, all instances will be fetched regardless of any "
+#~ "name or tag restrictions that may have been configured."
+#~ msgstr ""
+#~ "制限が有効な場合、設定されている名前やタグの制限に関係なく、すべてのインス"
+#~ "タンスがフェッチされます。"
+
+#~ msgid "Monitor Route53"
+#~ msgstr "モニターRoute53"
+
+#~ msgid "Monitor costs and usage"
+#~ msgstr "コストと使用状況を監視する"
+
+#~ msgid "Monitor service limits"
+#~ msgstr "サービス制限を監視する"
+
+#~ msgid "Selection of alarms"
+#~ msgstr "アラームの選択"
+
+#~ msgid "Selection of service instances"
+#~ msgstr "サービスインスタンスの選択"
+
+#~ msgid "Use explicit AWS service tags and overrule overall AWS tags"
+#~ msgstr "明示的なAWSサービスタグを使用し、AWSタグ全体を無効にする"
+
+#~ msgid "Use explicit names"
+#~ msgstr "明示的な名前を使用する"
+
+#~ msgid "Use explicit service names and ignore overall AWS tags"
+#~ msgstr "明示的なサービス名を使用し、AWSタグ全体を無視します"
+
+#~ msgid ""
+#~ "us-gov-* or cn-* regions have their own global services and may not reach "
+#~ "the default one."
+#~ msgstr ""
+#~ "us-gov-*またはcn-*リージョンには独自のグローバルサービスがあり、デフォルト"
+#~ "のサービスには到達しない可能性があります。"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

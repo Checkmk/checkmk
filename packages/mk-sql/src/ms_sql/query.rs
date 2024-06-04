@@ -191,21 +191,32 @@ async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>>
         UniClient::Std(client) => {
             let stream = Query::new(query).query(client).await?;
             let tiberius_rows: Vec<Vec<Row>> = stream.into_results().await?;
-            let rows: Vec<UniAnswer> = tiberius_rows.into_iter().map(UniAnswer::Rows).collect();
-            Ok(rows)
+            let answers: Vec<UniAnswer> = tiberius_rows.into_iter().map(UniAnswer::Rows).collect();
+            Ok(answers)
         }
-        UniClient::Odbc(conn_str) => {
+        UniClient::Odbc(client) => {
             #[cfg(windows)]
             {
-                let blocks = odbc::execute(
-                    conn_str,
-                    sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
-                )?;
-                let rows: Vec<UniAnswer> = blocks.into_iter().map(UniAnswer::Block).collect();
-                Ok(rows)
+                let queries = query.split(';').collect::<Vec<&str>>();
+                if queries.len() == 3 && queries[2].is_empty() {
+                    log::debug!("ODBC does not support multiple queries in one call");
+                    let blocks_0 = odbc::execute(client.conn_string(), queries[0])?;
+                    let blocks_1 = odbc::execute(client.conn_string(), queries[1])?;
+                    let answers: Vec<UniAnswer> = blocks_0
+                        .into_iter()
+                        .chain(blocks_1.into_iter())
+                        .map(UniAnswer::Block)
+                        .collect();
+                    Ok(answers)
+                } else {
+                    let blocks = odbc::execute(client.conn_string(), query)?;
+                    let answers: Vec<UniAnswer> =
+                        blocks.into_iter().map(UniAnswer::Block).collect();
+                    Ok(answers)
+                }
             }
             #[cfg(unix)]
-            anyhow::bail!("ODBC is not supported for now `{}`", conn_str);
+            anyhow::bail!("ODBC is not supported for now `{}`", client.conn_string());
         }
     }
 }

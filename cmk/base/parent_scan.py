@@ -8,6 +8,7 @@ import socket
 import subprocess
 import sys
 from collections.abc import Iterable, Mapping, Sequence
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -21,7 +22,6 @@ from cmk.utils.log import console
 
 from cmk.automations.results import Gateway, GatewayResult
 
-import cmk.base.obsolete_output as out
 from cmk.base.ip_lookup import IPStackConfig
 
 
@@ -123,7 +123,8 @@ def scan_parents_of(
     # Output marks with status of each single scan
     def dot(color: str, dot: str = "o") -> None:
         if not silent:
-            out.output(tty.bold + color + dot + tty.normal)
+            with suppress(IOError):
+                print(tty.bold + color + dot + tty.normal, end="", flush=True, file=sys.stdout)
 
     # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output

@@ -7,8 +7,10 @@
 import base64
 import itertools
 import socket
+import sys
 from collections import Counter
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from io import StringIO
 from typing import Any, cast, IO, Literal
 
@@ -28,7 +30,6 @@ from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.checkengine.checking import CheckPluginName
 
-import cmk.base.obsolete_output as out
 import cmk.base.utils
 from cmk.base import config, core_config, ip_lookup, server_side_calls
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
@@ -104,9 +105,11 @@ class NagiosCore(core_config.MonitoringCore):
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
     def _precompile_hostchecks(self, config_path: VersionedConfigPath) -> None:
-        out.output("Precompiling host checks...")
+        with suppress(IOError):
+            print("Precompiling host checks...", end="", flush=True, file=sys.stdout)
         precompile_hostchecks(config_path, self._config_cache)
-        out.output(tty.ok + "\n")
+        with suppress(IOError):
+            print(tty.ok + "\n", end="", flush=True, file=sys.stdout)
 
 
 #   .--Create config-------------------------------------------------------.

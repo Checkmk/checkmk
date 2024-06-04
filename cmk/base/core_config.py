@@ -9,8 +9,9 @@ import abc
 import os
 import shutil
 import socket
+import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from typing import Literal
 
@@ -32,7 +33,6 @@ from cmk.checkengine.checking import CheckPluginName, ConfiguredService, Service
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.obsolete_output as out
 from cmk.base import config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
@@ -261,7 +261,13 @@ def do_create_config(
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
     and available for starting the monitoring.
     """
-    out.output("Generating configuration for core (type %s)...\n" % core.name())
+    with suppress(IOError):
+        print(
+            "Generating configuration for core (type %s)...\n" % core.name(),
+            end="",
+            flush=True,
+            file=sys.stdout,
+        )
 
     try:
         _create_core_config(

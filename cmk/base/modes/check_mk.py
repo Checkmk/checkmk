@@ -99,7 +99,6 @@ import cmk.base.core
 import cmk.base.core_nagios
 import cmk.base.diagnostics
 import cmk.base.dump_host
-import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 from cmk.base import config, ip_lookup, plugin_contexts, profiling, sources
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
@@ -150,6 +149,11 @@ from ._localize import do_localize
 #   '----------------------------------------------------------------------'
 
 _verbosity = 0
+
+
+def print_(txt: str) -> None:
+    with suppress(IOError):
+        print(txt, end="", flush=True, file=sys.stdout)
 
 
 def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
@@ -318,9 +322,8 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
         args,
         options,
     )
-    out.output("\n".join(hosts))
-    if hosts:
-        out.output("\n")
+    with suppress(IOError):
+        print("\n".join(hosts), flush=True, file=sys.stdout)
 
 
 # TODO: Does not care about internal group "check_mk"
@@ -398,9 +401,9 @@ modes.register(
 
 def mode_list_tag(args: list[str]) -> None:
     hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args))
-    out.output("\n".join(sorted(hosts)))
+    print_("\n".join(sorted(hosts)))
     if hosts:
-        out.output("\n")
+        print_("\n")
 
 
 def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
@@ -477,7 +480,7 @@ def mode_list_checks() -> None:
         except KeyError:
             title = "(no man page present)"
 
-        out.output(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
+        print_(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
 
 
 def _get_ds_protocol(check_name: CheckPluginName | str) -> str:
@@ -653,7 +656,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 assert raw_data.ok is not None
                 output.append(raw_data.ok)
 
-        out.output(b"".join(output).decode(errors="surrogateescape"))
+        print_(b"".join(output).decode(errors="surrogateescape"))
         if has_errors:
             sys.exit(1)
     except Exception as e:
@@ -1163,13 +1166,13 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
         )
 
     for host in hosts:
-        out.output("%-20s: " % host)
+        print_("%-20s: " % host)
         flushed = False
 
         # counters
         try:
             os.remove(cmk.utils.paths.counters_dir + "/" + host)
-            out.output(tty.bold + tty.blue + " counters")
+            print_(tty.bold + tty.blue + " counters")
             flushed = True
         except OSError:
             pass
@@ -1187,14 +1190,14 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
                     except OSError:
                         pass
             if d == 1:
-                out.output(tty.bold + tty.green + " cache")
+                print_(tty.bold + tty.green + " cache")
             elif d > 1:
-                out.output(tty.bold + tty.green + " cache(%d)" % d)
+                print_(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
         d = piggyback.remove_source_status_file(host)
         if d:
-            out.output(tty.bold + tty.magenta + " piggyback(1)")
+            print_(tty.bold + tty.magenta + " piggyback(1)")
 
         # logfiles
         log_dir = cmk.utils.paths.logwatch_dir + "/" + host
@@ -1209,7 +1212,7 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
                     except OSError:
                         pass
             if d > 0:
-                out.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
+                print_(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
         count = sum(
@@ -1224,18 +1227,18 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
         # config_cache.remove_autochecks(host)
         if count:
             flushed = True
-            out.output(tty.bold + tty.cyan + " autochecks(%d)" % count)
+            print_(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
         path = cmk.utils.paths.var_dir + "/inventory/" + host
         if os.path.exists(path):
             os.remove(path)
-            out.output(tty.bold + tty.yellow + " inventory")
+            print_(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
-            out.output("(nothing)")
+            print_("(nothing)")
 
-        out.output(tty.normal + "\n")
+        print_(tty.normal + "\n")
 
 
 modes.register(
@@ -2989,7 +2992,7 @@ modes.register(
 
 
 def mode_version() -> None:
-    out.output(
+    print_(
         """This is Check_MK version %s %s
 Copyright (C) 2009 Mathias Kettner
 
@@ -3008,9 +3011,11 @@ Copyright (C) 2009 Mathias Kettner
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
 
-""",
-        cmk_version.__version__,
-        cmk_version.edition().short.upper(),
+"""
+        % (
+            cmk_version.__version__,
+            cmk_version.edition().short.upper(),
+        )
     )
 
 
@@ -3037,7 +3042,7 @@ modes.register(
 
 
 def mode_help() -> None:
-    out.output(
+    print_(
         """WAYS TO CALL:
 %s
 

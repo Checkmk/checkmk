@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+import sys
 import time
+from contextlib import suppress
 from pathlib import Path
 from typing import Literal
 
@@ -36,7 +38,6 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION
 
 import cmk.base.core
-import cmk.base.obsolete_output as out
 from cmk.base import ip_lookup, sources
 from cmk.base.config import (
     ConfigCache,
@@ -116,6 +117,11 @@ def _agent_description(cds: ComputedDataSources) -> str:
     return "No agent"
 
 
+def print_(txt: str) -> None:
+    with suppress(IOError):
+        print(txt, end="", flush=True, file=sys.stdout)
+
+
 def dump_host(
     config_cache: ConfigCache,
     hostname: HostName,
@@ -123,7 +129,7 @@ def dump_host(
     simulation_mode: bool,
 ) -> None:
     # pylint: disable=too-many-branches
-    out.output("\n")
+    print_("\n")
     hosts_config = config_cache.hosts_config
     if hostname in hosts_config.clusters:
         assert config_cache.nodes(hostname)
@@ -132,7 +138,7 @@ def dump_host(
     else:
         color = tty.bgblue
         add_txt = ""
-    out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
+    print_("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ip_stack_config = ConfigCache.ip_stack_config(hostname)
     ipaddress = (
@@ -168,7 +174,7 @@ def dump_host(
         else:
             addresses += " (Primary: IPv4)"
 
-    out.output(
+    print_(
         tty.yellow
         + "Addresses:              "
         + tty.normal
@@ -178,10 +184,10 @@ def dump_host(
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
     tags = [(tag_template % ":".join(t)) for t in sorted(config_cache.tags(hostname).items())]
-    out.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
+    print_(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
     labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
-    out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
+    print_(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     if hostname in hosts_config.clusters:
         parents_list = config_cache.nodes(hostname)
@@ -189,17 +195,17 @@ def dump_host(
         parents_list = config_cache.parents(hostname)
 
     if parents_list:
-        out.output(
+        print_(
             tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n"
         )
-    out.output(
+    print_(
         tty.yellow
         + "Host groups:            "
         + tty.normal
         + ", ".join(config_cache.hostgroups(hostname))
         + "\n"
     )
-    out.output(
+    print_(
         tty.yellow
         + "Contact groups:         "
         + tty.normal
@@ -267,17 +273,17 @@ def dump_host(
     if config_cache.is_ping_host(hostname):
         agenttypes.append("PING only")
 
-    out.output(tty.yellow + "Agent mode:             " + tty.normal)
-    out.output(_agent_description(config_cache.computed_datasources(hostname)) + "\n")
+    print_(tty.yellow + "Agent mode:             " + tty.normal)
+    print_(_agent_description(config_cache.computed_datasources(hostname)) + "\n")
 
-    out.output(tty.yellow + "Type of agent:          " + tty.normal)
+    print_(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:
-        out.output(agenttypes[0] + "\n")
+        print_(agenttypes[0] + "\n")
     else:
-        out.output("\n  ")
-        out.output("\n  ".join(agenttypes) + "\n")
+        print_("\n  ")
+        print_("\n  ".join(agenttypes) + "\n")
 
-    out.output(tty.yellow + "Services:" + tty.normal + "\n")
+    print_(tty.yellow + "Services:" + tty.normal + "\n")
 
     headers = ["checktype", "item", "params", "description", "groups"]
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]

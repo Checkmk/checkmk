@@ -26,6 +26,7 @@ import time
 import traceback
 import uuid
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from functools import cache, partial
 from pathlib import Path
 from typing import Any, Callable, cast, Literal, overload, TypeAlias
@@ -76,7 +77,6 @@ from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, load_timeperiods, timeperiod_active
 
-import cmk.base.obsolete_output as out
 import cmk.base.utils
 from cmk.base import config, events
 
@@ -1617,7 +1617,8 @@ def call_notification_script(
                     plugin_log("Output: %s" % output)
                     output_lines.append(output)
                     if _log_to_stdout:
-                        out.output(line)
+                        with suppress(IOError):
+                            print(line, end="", flush=True, file=sys.stdout)
             except MKTimeout:
                 plugin_log(
                     "Notification plug-in did not finish within %d seconds. Terminating."

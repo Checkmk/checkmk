@@ -7,7 +7,7 @@ import abc
 import os
 import signal
 import sys
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, suppress
 from types import FrameType
 from typing import Any, NoReturn
 
@@ -20,7 +20,6 @@ from cmk.utils.plugin_loader import import_plugins
 
 from cmk.automations.results import ABCAutomationResult
 
-import cmk.base.obsolete_output as out
 from cmk.base import check_api, config, profiling
 
 
@@ -77,8 +76,12 @@ class Automations:
         finally:
             profiling.output_profile()
 
-        out.output(result.serialize(cmk_version.Version.from_str(cmk_version.__version__)))
-        out.output("\n")
+        with suppress(IOError):
+            print(
+                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)),
+                flush=True,
+                file=sys.stdout,
+            )
 
         return 0
 

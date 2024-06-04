@@ -5,6 +5,7 @@
 
 
 import sys
+from contextlib import suppress
 from importlib import import_module
 
 import cmk.utils.debug
@@ -15,7 +16,6 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.submitters import get_submitter
 
-import cmk.base.obsolete_output as out
 import cmk.base.utils
 from cmk.base import check_api, config
 from cmk.base.api.agent_based.register import register_plugin_by_type
@@ -107,7 +107,8 @@ def main() -> int:
             precompiled_host_check=True,
         )
     except MKTerminate:
-        out.output("<Interrupted>\n", stream=sys.stderr)
+        with suppress(IOError):
+            print("<Interrupted>\n", end="", flush=True, file=sys.stderr)
         return 1
     except Exception as e:
         import traceback

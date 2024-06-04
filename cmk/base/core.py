@@ -7,8 +7,9 @@
 import enum
 import os
 import subprocess
+import sys
 from collections.abc import Iterable, Iterator, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Literal
 
 import cmk.utils.cleanup
@@ -19,7 +20,6 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.base.nagios_utils
-import cmk.base.obsolete_output as out
 from cmk.base import core_config
 from cmk.base.config import ConfigCache, IPLookup
 from cmk.base.core_config import MonitoringCore
@@ -131,13 +131,18 @@ def activation_lock(mode: Literal["abort", "wait"] | None) -> Iterator[None]:
     raise ValueError(f"Invalid lock mode: {mode}")
 
 
+def print_(txt: str) -> None:
+    with suppress(IOError):
+        print(txt, end="", flush=True, file=sys.stdout)
+
+
 def do_core_action(
     action: CoreAction,
     monitoring_core: Literal["nagios", "cmc"],
     quiet: bool = False,
 ) -> None:
     if not quiet:
-        out.output("%sing monitoring core..." % action.value.title())
+        print_("%sing monitoring core..." % action.value.title())
 
     if monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
@@ -154,9 +159,9 @@ def do_core_action(
     )
     if completed_process.returncode != 0:
         if not quiet:
-            out.output("ERROR: %r\n" % completed_process.stdout)
+            print_("ERROR: %r\n" % completed_process.stdout)
         raise MKGeneralException(
             f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
         )
     if not quiet:
-        out.output(tty.ok + "\n")
+        print_(tty.ok + "\n")

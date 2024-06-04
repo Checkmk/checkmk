@@ -14,7 +14,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar
+from typing import Final, Literal, NamedTuple, overload, Protocol, TypeAlias, TypedDict, TypeVar
 
 import livestatus
 
@@ -124,6 +124,7 @@ from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
+from cmk.base.utils import register_sigint_handler
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
@@ -1665,7 +1666,14 @@ modes.register(
 
 
 def mode_notify(options: dict, args: list[str]) -> int | None:
-    from cmk.base import notify  # pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel
+    from cmk.base import notify
+
+    try:
+        from cmk.base.cee import keepalive as keepalive_mod
+    except ImportError:
+        # Edition layering...
+        keepalive_mod: TypeAlias = None  # type: ignore[no-redef]
 
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)
@@ -1673,6 +1681,12 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
     def ensure_nagios(msg: str) -> None:
         if config.is_cmc():
             raise RuntimeError(msg)
+
+    keepalive = False
+    if keepalive_mod and "keepalive" in options:
+        keepalive_mod.enable()
+        register_sigint_handler()
+        keepalive = True
 
     return notify.do_notify(
         options,
@@ -1691,6 +1705,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         spooling=ConfigCache.notification_spooling(),
         backlog_size=config.notification_backlog,
         logging_level=ConfigCache.notification_logging_level(),
+        keepalive=keepalive,
     )
 
 

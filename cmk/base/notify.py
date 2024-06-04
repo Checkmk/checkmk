@@ -30,7 +30,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, cast, Literal, overload, TypeAlias
+from typing import Any, Callable, cast, Literal, overload
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -79,15 +79,7 @@ from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, load_timeperiods, timeperiod_active
 
-import cmk.base.utils
 from cmk.base import events
-
-try:
-    from cmk.base.cee import keepalive
-except ImportError:
-    # Edition layering...
-    keepalive: TypeAlias = None  # type: ignore[no-redef]
-
 
 logger = logging.getLogger("cmk.base.notify")
 
@@ -225,6 +217,7 @@ def do_notify(
     spooling: Literal["local", "remote", "both", "off"],
     backlog_size: int,
     logging_level: int,
+    keepalive: bool,
 ) -> int | None:
     # pylint: disable=too-many-branches
     global _log_to_stdout, notify_mode
@@ -235,9 +228,6 @@ def do_notify(
     if not os.path.exists(notification_spooldir):
         os.makedirs(notification_spooldir)
     _initialize_logging(logging_level)
-
-    if keepalive and "keepalive" in options:
-        keepalive.enable()
 
     try:
         notify_mode = "notify"
@@ -272,7 +262,7 @@ def do_notify(
                 backlog_size=backlog_size,
             )
 
-        if keepalive and keepalive.enabled():
+        if keepalive:
             notify_keepalive(
                 host_parameters_cb,
                 get_http_proxy,
@@ -632,7 +622,6 @@ def notify_keepalive(
     backlog_size: int,
     logging_level: int,
 ) -> None:
-    cmk.base.utils.register_sigint_handler()
     events.event_keepalive(
         event_function=partial(
             notify_notify,

@@ -190,54 +190,27 @@ class ConnectionConfig:
 
         dir_type: ACTIVE_DIR | OPEN_LDAP | DIR_SERVER_389
 
-        match api_dir_type:
-            case {
-                "type": "active_directory_automatic",
-                "domain": str() as domain,
-            }:
-                ad_discover = LDAPConnectionConfigDiscover(
-                    connect_to=("discover", Discover(domain=domain))
-                )
-                dir_type = ("ad", ad_discover)
+        if api_dir_type["type"] == "active_directory_automatic":
+            ad_discover = LDAPConnectionConfigDiscover(
+                connect_to=("discover", Discover(domain=api_dir_type["domain"]))
+            )
+            dir_type = ("ad", ad_discover)
 
-            case {
-                "type": "active_directory_manual",
-                "ldap_server": str() as server,
-                "failover_servers": list() as failover_servers,
-            }:
-                ad_fixed = LDAPConnectionConfigFixed(
-                    connect_to=(
-                        "fixed_list",
-                        Fixed(server=server, failover_servers=failover_servers),
-                    )
-                )
-                dir_type = ("ad", ad_fixed)
+        else:
+            fixed = Fixed(server=api_dir_type["ldap_server"])
+            if failover_servers := api_dir_type.get("failover_servers"):
+                fixed["failover_servers"] = failover_servers
 
-            case {
-                "type": "open_ladp",
-                "ldap_server": str() as server,
-                "failover_servers": list() as failover_servers,
-            }:
-                ol_fixed = LDAPConnectionConfigFixed(
-                    connect_to=(
-                        "fixed_list",
-                        Fixed(server=server, failover_servers=failover_servers),
-                    )
-                )
-                dir_type = ("openldap", ol_fixed)
+            fixed_connection = LDAPConnectionConfigFixed(connect_to=("fixed_list", fixed))
 
-            case {
-                "type": "389_directory_server",
-                "ldap_server": str() as server,
-                "failover_servers": list() as failover_servers,
-            }:
-                se_fixed = LDAPConnectionConfigFixed(
-                    connect_to=(
-                        "fixed_list",
-                        Fixed(server=server, failover_servers=failover_servers),
-                    )
-                )
-                dir_type = ("389directoryserver", se_fixed)
+            if api_dir_type["type"] == "active_directory_manual":
+                dir_type = ("ad", fixed_connection)
+
+            elif api_dir_type["type"] == "open_ldap":
+                dir_type = ("openldap", fixed_connection)
+
+            else:
+                dir_type = ("389directoryserver", fixed_connection)
 
         bind_credentials: tuple[str, tuple[Literal["password", "store"], str]] | None
         if config["bind_credentials"]["state"] == "enabled":

@@ -6,7 +6,7 @@
 # pylint: disable=protected-access
 
 import datetime
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Literal
 
@@ -16,6 +16,7 @@ import time_machine
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
+from cmk.base.plugin_contexts import current_host
 from cmk.base.plugins.agent_based import logwatch_ec
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -27,6 +28,13 @@ from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
 from cmk.base.plugins.agent_based.utils import logwatch as logwatch_
 
 import cmk.ec.export as ec
+
+
+@pytest.fixture(name="test_host", scope="module")
+def _test_host() -> Iterator[None]:
+    with current_host("test-host"):
+        yield
+
 
 _STRING_TABLE_NO_MESSAGES = [
     ["[[[log1]]]"],
@@ -173,6 +181,7 @@ def test_logwatch_ec_inventory_single(
     info: StringTable,
     fwd_rule: Mapping[str, object],
     expected_result: DiscoveryResult,
+    test_host: None,
 ) -> None:
     parsed = parse_logwatch(info)
 
@@ -209,6 +218,7 @@ def test_logwatch_ec_inventory_groups(
     info: StringTable,
     fwd_rule: Mapping[str, object],
     expected_result: DiscoveryResult,
+    test_host: None,
 ) -> None:
     parsed = parse_logwatch(info)
 
@@ -264,6 +274,7 @@ def test_check_logwatch_ec_common_single_node(
     params: logwatch_.ParameterLogwatchEc,
     parsed: logwatch_.ClusterSection,
     expected_result: CheckResult,
+    test_host: None,
 ) -> None:
     assert (
         list(
@@ -280,7 +291,7 @@ def test_check_logwatch_ec_common_single_node(
     )
 
 
-def test_check_logwatch_ec_common_single_node_item_missing() -> None:
+def test_check_logwatch_ec_common_single_node_item_missing(test_host: None) -> None:
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
@@ -295,7 +306,7 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
     )
 
 
-def test_check_logwatch_ec_common_single_node_log_missing() -> None:
+def test_check_logwatch_ec_common_single_node_log_missing(test_host: None) -> None:
     actual_result = list(
         logwatch_ec.check_logwatch_ec_common(
             "log3",
@@ -364,6 +375,7 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
 def test_check_logwatch_ec_common_multiple_nodes_grouped(
     cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,
+    test_host: None,
 ) -> None:
     assert (
         list(
@@ -466,6 +478,7 @@ def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
     params: logwatch_.ParameterLogwatchEc,
     cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,
+    test_host: None,
 ) -> None:
     assert (
         list(
@@ -482,7 +495,7 @@ def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
     )
 
 
-def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> None:
+def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing(test_host: None) -> None:
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
@@ -498,7 +511,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
     )
 
 
-def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> None:
+def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing(test_host: None) -> None:
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
@@ -517,7 +530,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     ]
 
 
-def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
+def test_check_logwatch_ec_common_multiple_nodes_logfile_missing(test_host: None) -> None:
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log3",
@@ -544,7 +557,7 @@ def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
     ]
 
 
-def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch, test_host: None) -> None:
     monkeypatch.setattr(logwatch_ec, "_MAX_SPOOL_SIZE", 32)
     assert list(
         logwatch_ec.check_logwatch_ec_common(
@@ -611,7 +624,7 @@ def _forward_message(
     return result, messages_forwarded
 
 
-def test_forward_tcp_message_forwarded_ok() -> None:
+def test_forward_tcp_message_forwarded_ok(test_host: None) -> None:
     result, messages_forwarded = _forward_message(tcp_result="ok")
     assert result == logwatch_ec.LogwatchForwardedResult(
         num_forwarded=1,
@@ -628,7 +641,7 @@ def test_forward_tcp_message_forwarded_ok() -> None:
     )
 
 
-def test_forward_tcp_message_forwarded_nok_1() -> None:
+def test_forward_tcp_message_forwarded_nok_1(test_host: None) -> None:
     result, messages_forwarded = _forward_message(tcp_result="set exception")
 
     assert result.num_forwarded == 0
@@ -639,7 +652,7 @@ def test_forward_tcp_message_forwarded_nok_1() -> None:
     assert len(messages_forwarded) == 0
 
 
-def test_forward_tcp_message_forwarded_nok_2() -> None:
+def test_forward_tcp_message_forwarded_nok_2(test_host: None) -> None:
     result, messages_forwarded = _forward_message(tcp_result="raise exception")
 
     assert result.num_forwarded == 0
@@ -660,7 +673,7 @@ SPOOL_METHOD = (
 )
 
 
-def test_forward_tcp_message_forwarded_spool() -> None:
+def test_forward_tcp_message_forwarded_spool(test_host: None) -> None:
     # could not send message, so spool it
     result, messages_forwarded = _forward_message(
         tcp_result="set exception", method=SPOOL_METHOD, text="spooled"
@@ -695,7 +708,7 @@ def test_forward_tcp_message_forwarded_spool() -> None:
     assert messages_forwarded[0][2][0].rsplit(" ", 1)[-1] == "directly_sent_2"
 
 
-def test_forward_tcp_message_forwarded_spool_twice() -> None:
+def test_forward_tcp_message_forwarded_spool_twice(test_host: None) -> None:
     # we delete the original spool file after reading it.
     # here we want to make sure, that the spool file is recreated. otherwise messages from different
     # time would land into the same spool file and may not be correctly cleaned up.
@@ -733,7 +746,7 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     }
 
 
-def test_forward_tcp_message_update_old_spoolfiles() -> None:
+def test_forward_tcp_message_update_old_spoolfiles(test_host: None) -> None:
     # can be removed with checkmk 2.4.0
     spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
     # logwatch_ec with separate_checks = True creates one service per syslog application, but they
@@ -794,7 +807,7 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
     assert not list(f.name for f in (spool_dir / "item_item_name_1").iterdir())
 
 
-def test_logwatch_spool_path_is_escaped():
+def test_logwatch_spool_path_is_escaped(test_host: None) -> None:
     # item may contain slashes or other stuff, we want to make sure
     # that this is transformed to a single folder name:
     get_spool_path = logwatch_ec.MessageForwarder._get_spool_path
@@ -806,7 +819,7 @@ def test_logwatch_spool_path_is_escaped():
     assert get_spool_path(HostName("short"), "..").name == "item_.."
 
 
-def test_check_logwatch_ec_common_batch_stored() -> None:
+def test_check_logwatch_ec_common_batch_stored(test_host: None) -> None:
     """Multiple logfiles with different batches. All must be remembered as "seen_batches".
 
     Failing to do so leads to messages being processed multiple times.

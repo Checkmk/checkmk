@@ -2719,6 +2719,20 @@ def test_dictionary_groups_dict_element_properties(
     )
 
 
+def _inner_migration(values: object) -> dict[str, object]:
+    assert isinstance(values, dict)
+    if "a" in values:
+        values["b"] = values.pop("a")
+    return values
+
+
+def _out_migration(values: object) -> dict[str, object]:
+    assert isinstance(values, dict)
+    if "foo" in values:
+        values["bar"] = values.pop("foo")
+    return values
+
+
 @pytest.mark.parametrize(
     ["to_convert", "value_to_migrate", "expected"],
     [
@@ -2745,6 +2759,55 @@ def test_dictionary_groups_dict_element_properties(
             {"a": {"a_nested": 1}, "b": 2},
             {"a": {"a_nested": 2}, "b": 4},
             id="outermost migration",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                migrate=_out_migration,
+                elements={
+                    "bar": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "b": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.FixedValue(value=1),
+                                ),
+                            },
+                            migrate=_inner_migration,
+                        ),
+                    ),
+                },
+            ),
+            {"foo": {"a": 1}},
+            {"bar": {"b": 1}},
+            id="nested key migration",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                migrate=_out_migration,
+                elements={
+                    "bar": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            migrate=_inner_migration,
+                            elements={
+                                "b": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Dictionary(
+                                        migrate=_inner_migration,
+                                        elements={
+                                            "b": api_v1.form_specs.DictElement(
+                                                group=api_v1.form_specs.DictGroup(),
+                                                parameter_form=api_v1.form_specs.String(),
+                                                required=True,
+                                            )
+                                        },
+                                    )
+                                )
+                            },
+                        ),
+                    )
+                },
+            ),
+            {"foo": {"a": {"a": ""}}},
+            {"bar": {"b": {"b": ""}}},
+            id="migration of nested dictionary with inner group",
         ),
         pytest.param(
             api_v1.form_specs.Dictionary(

@@ -36,6 +36,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils import log, store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -87,7 +88,6 @@ except ImportError:
     # Edition layering...
     keepalive: TypeAlias = None  # type: ignore[no-redef]
 
-from cmk.utils.hostaddress import HostName
 
 logger = logging.getLogger("cmk.base.notify")
 

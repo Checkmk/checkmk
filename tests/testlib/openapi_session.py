@@ -15,8 +15,6 @@ from tests.testlib.rest_api_client import RequestHandler, Response
 from tests.testlib.utils import current_base_branch_name, current_branch_version
 from tests.testlib.version import CMKVersion
 
-from cmk.utils.version import Edition
-
 from cmk.gui.http import HTTPMethod
 
 logger = logging.getLogger("rest-session")
@@ -462,7 +460,7 @@ class CMKOpenApiSession(requests.Session):
         }
 
         if self.site_version >= CMKVersion(
-            "2.3.0", Edition.CEE, current_base_branch_name(), current_branch_version()
+            "2.3.0", self.site_version.edition, current_base_branch_name(), current_branch_version()
         ):
             body["options"] = {
                 "monitor_undecided_services": monitor_undecided_services,

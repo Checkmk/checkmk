@@ -143,7 +143,7 @@ numpy = "==1.26.4"  # needed by GUI (metrics)
 reportlab = "==4.1.0"  # needed by GUI (reporting)
 pypdf = "==4.2.0"  # needed by GUI (reporting)
 roman = "==4.0"  # needed by GUI (reporting)
-google-auth = "==2.17.1"  # needed by kubernetes
+google-auth = "*"  # needed by kubernetes
 websocket-client = "==1.5.1"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes
 jmespath = "==1.0.1"  # needed by boto3 (aws)

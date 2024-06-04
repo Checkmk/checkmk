@@ -26,5 +26,5 @@ const value_as_json = computed(() => {
     <!-- This input field contains the computed json value which is sent when the form is submitted -->
     <input v-model="value_as_json" :name="id" type="hidden" />
   </table>
-  <pre>{{ value_as_json }}</pre>
+  <pre>{{ data }}</pre>
 </template>

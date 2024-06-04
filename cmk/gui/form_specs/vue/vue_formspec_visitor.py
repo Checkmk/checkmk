@@ -6,6 +6,7 @@
 import json
 import pprint
 import traceback
+import uuid
 from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
@@ -15,6 +16,7 @@ from typing import Any, Sequence, TypeVar
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
 from cmk.gui.form_specs.vue.type_defs.vue_formspec_components import (
     VueCascadingSingleChoice,
@@ -23,6 +25,7 @@ from cmk.gui.form_specs.vue.type_defs.vue_formspec_components import (
     VueDictionaryElement,
     VueFloat,
     VueInteger,
+    VueLegacyValuespec,
     VueList,
     VueSchema,
     VueSingleChoice,
@@ -34,9 +37,11 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.log import logger
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.rule_specs.legacy_converter import _convert_to_legacy_valuespec
 from cmk.gui.utils.user_errors import user_errors
 
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     DefaultValue,
@@ -46,7 +51,7 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     Integer,
     List,
-    ServiceState,
+    Percentage,
     SingleChoice,
     String,
 )
@@ -414,6 +419,8 @@ def _visit_list(
     if isinstance(value, DEFAULT_VALUE):
         value = []
 
+    value = [2, 4, 6, 8]
+
     element_schema, element_vue_default_value, _element_vue_validation, _element_disk_value = (
         _visit(visitor_options, form_spec.element_template, _default_value)
     )
@@ -454,6 +461,70 @@ def _visit_list(
     )
 
 
+def _visit_legacyvaluespec(
+    _visitor_options: VisitorOptions, form_spec: LegacyValueSpec, value: Any
+) -> VueVisitorMethodResult:
+    """
+    The legacy valuespec requires a special handling to compute the actual value
+    If the value contains the key 'input_context' it comes from the frontend form.
+    This requires the value to be evaluated with the legacy valuespec and the varprefix system.
+    """
+
+    if isinstance(value, DEFAULT_VALUE):
+        value = form_spec.valuespec.default_value()
+
+    title, help_text = _get_title_and_help(form_spec)
+
+    config: dict[str, Any] = {}
+    if isinstance(value, dict) and "input_context" in value:
+        with request.stashed_vars():
+            varprefix = value.get("varprefix", "")
+            for url_key, url_value in value.get("input_context", {}).items():
+                request.set_var(url_key, url_value)
+
+            try:
+                value = form_spec.valuespec.from_html_vars(varprefix)
+                form_spec.valuespec.validate_datatype(value, varprefix)
+                form_spec.valuespec.validate_value(value, varprefix)
+            except MKUserError as e:
+                user_errors.add(e)
+                validation_errors = [Validation(location=[""], message=str(e))]
+                with output_funnel.plugged():
+                    # Keep in mind that this default value is actually not used,
+                    # but replaced by the request vars
+                    form_spec.valuespec.render_input(varprefix, form_spec.valuespec.default_value())
+                    return (
+                        VueLegacyValuespec(
+                            title=title,
+                            help=help_text,
+                            html=output_funnel.drain(),
+                            varprefix=varprefix,
+                        ),
+                        None,
+                        validation_errors,
+                        value,
+                    )
+
+    varprefix = f"legacy_varprefix_{uuid.uuid4()}"
+    with output_funnel.plugged():
+        validation_errors = []
+        try:
+            form_spec.valuespec.render_input(varprefix, value)
+        except MKUserError as e:
+            validation_errors = [Validation(location=[""], message=str(e))]
+        return (
+            VueLegacyValuespec(
+                title=title,
+                help=help_text,
+                html=output_funnel.drain(),
+                varprefix=varprefix,
+            ),
+            config,
+            validation_errors,
+            value,
+        )
+
+
 _form_specs_visitor_registry: dict[type, VueFormSpecVisitorMethod] = {}
 
 
@@ -470,12 +541,13 @@ def register_form_specs():
     register_class(SingleChoice, _visit_single_choice)
     register_class(CascadingSingleChoice, _visit_cascading_single_choice)
     register_class(List, _visit_list)
+    register_class(LegacyValueSpec, _visit_legacyvaluespec)
 
 
 register_form_specs()
 
 # Vue is able to render these types in the frontend directly
-VueFormSpecTypes = (
+NativeVueFormSpecTypes = (
     Integer
     | Float
     | String
@@ -483,23 +555,49 @@ VueFormSpecTypes = (
     | CascadingSingleChoice
     | Dictionary
     | List
-    #    | ValueSpecFormSpec
+    | LegacyValueSpec
 )
 
+ConvertableVueFormSpecTypes = Percentage
 
-def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTypes:
-    if isinstance(custom_form_spec, VueFormSpecTypes):  # type: ignore[misc, arg-type]
-        # These FormSpec types can be rendered by vue natively
+
+def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> NativeVueFormSpecTypes:
+    # TODO: switch to match statement
+    if isinstance(custom_form_spec, NativeVueFormSpecTypes):  # type: ignore[misc, arg-type]
+        # This FormSpec type can be rendered by vue natively
         return custom_form_spec  # type: ignore[return-value]
 
-    # All other types require a conversion to the basic types
-    if isinstance(custom_form_spec, ServiceState):
-        # TODO handle ServiceState
-        String(title=Title("UNKNOWN custom_form_spec ServiceState"))
+    try:
+        # Convert custom_form_spec to valuespec and feed it to LegacyValueSpec
+        valuespec = _convert_to_legacy_valuespec(custom_form_spec, translate_to_current_language)
+        return LegacyValueSpec(
+            title=Title(  # pylint: disable=localization-of-non-literal-string
+                str(valuespec.title() or "")
+            ),
+            help_text=Help(  # pylint: disable=localization-of-non-literal-string
+                str(valuespec.help() or "")
+            ),
+            valuespec=valuespec,
+        )
+    except Exception:
+        pass
 
-    # If no explicit conversion exist, create an ugly valuespec
-    # TODO: raise an exception
-    return String(title=Title("UNKNOWN custom_form_spec %s") % str(custom_form_spec))
+    # Raise an error if the custom_form_spec is not supported
+    raise MKUserError("", f"UNKNOWN/unconvertable custom_form_spec {custom_form_spec}")
+
+
+def _convert_to_native_form_spec(
+    custom_form_spec: ConvertableVueFormSpecTypes,
+) -> NativeVueFormSpecTypes:
+    if isinstance(custom_form_spec, Percentage):
+        return Float(
+            title=custom_form_spec.title,
+            help_text=custom_form_spec.help_text,
+            label=custom_form_spec.label,
+            prefill=custom_form_spec.prefill,
+            unit_symbol="%",
+        )
+    raise MKUserError("", f"Unsupported native conversion for {custom_form_spec}")
 
 
 def _process_validation_errors(validation_errors: list[Validation]) -> None:
@@ -511,10 +609,10 @@ def _process_validation_errors(validation_errors: list[Validation]) -> None:
     if not validation_errors:
         return
 
-    # Our current error handling can only show one error at a time in the red error box.
-    # This is just a quickfix
-    for error in validation_errors[1:]:
-        user_errors.add(MKUserError("", error.message))
+    ## Our current error handling can only show one error at a time in the red error box.
+    ## This is just a quickfix
+    # for error in validation_errors[1:]:
+    #    user_errors.add(MKUserError("", error.message))
 
     first_error = validation_errors[0]
     raise MKUserError("", first_error.message)
@@ -544,7 +642,7 @@ def render_form_spec(form_spec: FormSpec, field_id: str, default_value: Any) -> 
         )
         logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220))
         logger.warning("Vue value:\n%s", pprint.pformat(vue_value, width=220))
-        logger.warning("Vue value:\n%s", pprint.pformat(validation, width=220))
+        logger.warning("Vue validation:\n%s", pprint.pformat(validation, width=220))
         html.div("", data_cmk_vue_app=json.dumps(vue_app_config))
     except Exception as e:
         logger.warning("".join(traceback.format_exception(e)))

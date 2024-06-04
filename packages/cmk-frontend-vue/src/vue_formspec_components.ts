@@ -66,6 +66,8 @@ export type VueDictionary = VueDictionary1 & {
 export type VueDictionary1 = VueBase
 export type VueLegacyValuespec = VueLegacyValuespec1 & {
   vue_type?: 'legacy_valuespec'
+  html: string
+  varprefix: string
 }
 export type VueLegacyValuespec1 = VueBase
 

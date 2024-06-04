@@ -8,6 +8,7 @@ import type { ValidationMessages } from '@/utils'
 import type { VueSchema } from '@/vue_formspec_components'
 import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
 import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
+import CmkFormLegacyValueSpec from '@/components/cmk-form/element/CmkFormLegacyValueSpec.vue'
 
 const props = defineProps<{
   spec: VueSchema
@@ -24,8 +25,8 @@ const components: Record<string, unknown> = {
   float: CmkFormFloat,
   single_choice: CmkFormSingleChoice,
   cascading_single_choice: CmkFormCascadingSingleChoice,
-  list: CmkFormList
-  //  legacy_valuespec: CmkFormLegacyValueSpec
+  list: CmkFormList,
+  legacy_valuespec: CmkFormLegacyValueSpec
 }
 
 // TODO: we should enforce an interface as return value?!

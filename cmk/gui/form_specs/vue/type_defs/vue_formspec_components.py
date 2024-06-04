@@ -34,6 +34,8 @@ class VueFloat(VueBase):
 @dataclass
 class VueLegacyValuespec(VueBase):
     vue_type: str = "legacy_valuespec"
+    html: str = ""
+    varprefix: str = ""
 
 
 @dataclass

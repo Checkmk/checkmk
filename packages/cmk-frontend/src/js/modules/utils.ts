@@ -812,7 +812,12 @@ export function content_scrollbar(scrollable_id: string) {
     return g_content_scrollbar;
 }
 
-export function set_focus_by_name(form_name: string, field_name: number) {
+export function set_focus_by_name(
+    form_name: string | undefined,
+    field_name: number
+) {
+    if (form_name === null) return;
+
     set_focus(
         (document.getElementById("form_" + form_name) as HTMLFormElement)
             .elements[field_name] as HTMLElement | null

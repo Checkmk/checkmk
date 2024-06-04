@@ -108,7 +108,7 @@ def summarize_piggyback(
     time_settings: PiggybackTimeSettings,
     expect_data: bool,
 ) -> Sequence[ActiveCheckResult]:
-    summary_section = SectionName("piggypack_source_summary")
+    summary_section = SectionName("piggyback_source_summary")
     if meta_infos := [
         PiggybackFileInfo.deserialize(raw_file_info)
         for (raw_file_info,) in host_sections.sections.get(summary_section, [])

@@ -94,6 +94,8 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         to the sources (other than one single exception).
         Since we're adding payload anyway, we add this section as well, to be consumed by the summarizer.
         """
+        if not self._sources:
+            return b""
         return f"<<<piggyback_source_summary:sep(0)>>>\n{'\n'.join(s.info.serialize() for s in self._sources)}\n".encode(
             "utf-8"
         )

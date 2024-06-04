@@ -45,6 +45,7 @@ def test_selector_one_metric_per_pod(size: int) -> None:
     )
 
     assert len(sections) == 1
+    assert isinstance(sections[0].section, int)
     assert sections[0].section == size
 
 

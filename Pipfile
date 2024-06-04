@@ -158,9 +158,9 @@ apispec = "==6.4.0"  # direct dependency
 marshmallow = "==3.21.1"  # direct dependency
 marshmallow-oneofschema = "==3.1.1"  # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
-pydantic = "==2.5.2"
-pydantic_core = "==2.14.5"  # used by pydantic and by us
-annotated-types = "==0.6.0"  # provides validators for pydantic2
+pydantic = "~=2.7"
+pydantic_core = "~=2.18"  # used by pydantic and by us
+annotated-types = "~=0.7"  # provides validators for pydantic2
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==2.0.1"
 rrdtool = "==0.1.16"  # Actually we ship the binding which comes with rrdtool itself...

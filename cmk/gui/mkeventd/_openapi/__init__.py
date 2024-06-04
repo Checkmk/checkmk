@@ -96,6 +96,7 @@ class FilterEventsByQuery(BaseSchema):
     query = gui_fields.query_field(
         Eventconsoleevents,
         required=False,
+        example='{"op": "=", "left": "eventconsoleevents.event_host", "right": "test_host"}',
     )
 
 

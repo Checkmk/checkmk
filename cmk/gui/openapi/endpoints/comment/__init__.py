@@ -141,7 +141,11 @@ OPTIONAL_SITE_ID = {
 
 
 class GetCommentsByQuery(BaseSchema):
-    query = gui_fields.query_field(Comments, required=False)
+    query = gui_fields.query_field(
+        Comments,
+        required=False,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 @Endpoint(

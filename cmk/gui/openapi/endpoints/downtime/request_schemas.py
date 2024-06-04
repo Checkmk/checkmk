@@ -181,7 +181,11 @@ class CreateHostQueryDowntime(CreateHostDowntimeBase):
 
 
 class CreateServiceQueryDowntime(CreateServiceDowntimeBase):
-    query = gui_fields.query_field(tables.Services, required=True)
+    query = gui_fields.query_field(
+        tables.Services,
+        required=True,
+        example='{"op": "=", "left": "description", "right": "Service description"}',
+    )
     duration = SERVICE_DURATION
 
 
@@ -241,7 +245,11 @@ class DeleteDowntimeByName(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByQuery(DeleteDowntimeBase):
-    query = gui_fields.query_field(tables.Downtimes, required=True)
+    query = gui_fields.query_field(
+        tables.Downtimes,
+        required=True,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 class DeleteDowntimeByHostGroup(DeleteDowntimeBase):
@@ -367,7 +375,11 @@ class ModifyDowntimeById(ModifyDowntimeFieldsSchema):
 
 
 class ModifyDowntimeByQuery(ModifyDowntimeFieldsSchema):
-    query = gui_fields.query_field(tables.Downtimes, required=True)
+    query = gui_fields.query_field(
+        tables.Downtimes,
+        required=True,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 class ModifyDowntimeByName(ModifyDowntimeFieldsSchema):

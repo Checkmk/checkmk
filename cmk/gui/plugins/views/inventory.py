@@ -2171,17 +2171,14 @@ class ABCNodeRenderer(abc.ABC):
         elif isinstance(value, float):
             value = "%.2f" % value
         elif isinstance(value, HTML):
-            value = value.value
+            pass
         elif value is not None:
             value = str(value)
 
-        if not isinstance(value, HTML):
-            value = HTML(value)
-
         if self._is_outdated(retention_intervals):
-            html.write_html(html.render_span(value.value, style=f"color: {_GRAY}"))
+            html.write_html(html.render_span(value, style=f"color: {_GRAY}"))
         else:
-            html.write_html(value)
+            html.write_html(HTML() + value)
 
     def _is_outdated(
         self,

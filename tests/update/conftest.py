@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import edition_from_env, repo_path, restart_httpd, run
+from tests.testlib.utils import _parse_raw_edition, edition_from_env, repo_path, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 logger = logging.getLogger(__name__)
@@ -47,6 +47,12 @@ def pytest_addoption(parser):
         action="store_true",
         default=False,
         help="Disable rules' injection in the test-site.",
+    )
+    parser.addoption(
+        "--target-edition",
+        action="store",
+        default=None,
+        help="Edition for the target test-site; Options: CRE, CEE, CCE, CSE, CME.",
     )
 
 
@@ -225,6 +231,10 @@ def _get_site(  # pylint: disable=too-many-branches
 def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     """Install the test site with the base version."""
     base_version, interactive_mode = request.param
+    target_edition_raw = request.config.getoption(name="--target-edition")
+    target_edition = (
+        _parse_raw_edition(target_edition_raw) if target_edition_raw else edition_from_env()
+    )
     if (
         request.config.getoption(name="--latest-base-version")
         and base_version.version != BaseVersions.BASE_VERSIONS[-1].version
@@ -244,7 +254,7 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
         if not disable_rules_injection:
             inject_rules(test_site)
 
-    yield test_site, disable_interactive_mode
+    yield test_site, target_edition, disable_interactive_mode
     logger.info("Removing test-site...")
     test_site.rm()
 

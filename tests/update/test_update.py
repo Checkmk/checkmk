@@ -7,7 +7,7 @@ import logging
 import pytest
 
 from tests.testlib.site import Site
-from tests.testlib.utils import current_base_branch_name, get_services_with_status
+from tests.testlib.utils import get_services_with_status, version_spec_from_env
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.hostaddress import HostName
@@ -20,10 +20,8 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.cse
 @pytest.mark.cee
-def test_update(
-    test_setup: tuple[Site, bool],
-) -> None:
-    test_site, disable_interactive_mode = test_setup
+def test_update(test_setup: tuple[Site, Edition, bool]) -> None:
+    test_site, target_edition, disable_interactive_mode = test_setup
     base_version = test_site.version
     hostname = HostName("test-host")
     ip_address = "127.0.0.1"
@@ -48,11 +46,7 @@ def test_update(
         base_ok_services = get_services_with_status(base_data, 0)
         assert len(base_ok_services) > 0
 
-    target_version = version_from_env(
-        fallback_version_spec=CMKVersion.DAILY,
-        fallback_edition=Edition.CEE,
-        fallback_branch=current_base_branch_name(),
-    )
+    target_version = CMKVersion(version_spec_from_env(CMKVersion.DAILY), target_edition)
     target_site = update_site(test_site, target_version, not disable_interactive_mode)
 
     # get the service status codes and check them

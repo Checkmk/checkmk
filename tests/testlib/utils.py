@@ -274,7 +274,7 @@ def version_spec_from_env(fallback: str | None = None) -> str:
     raise RuntimeError("VERSION environment variable, e.g. 2016.12.22, is missing")
 
 
-def _parse_raw_edition(raw_edition: str) -> Edition:
+def parse_raw_edition(raw_edition: str) -> Edition:
     try:
         return Edition[raw_edition.upper()]
     except KeyError:
@@ -286,7 +286,7 @@ def _parse_raw_edition(raw_edition: str) -> Edition:
 
 def edition_from_env(fallback: Edition | None = None) -> Edition:
     if raw_editon := os.environ.get("EDITION"):
-        return _parse_raw_edition(raw_editon)
+        return parse_raw_edition(raw_editon)
     if fallback:
         return fallback
     raise RuntimeError("EDITION environment variable, e.g. cre or enterprise, is missing")

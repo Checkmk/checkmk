@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import _parse_raw_edition, edition_from_env, repo_path, restart_httpd, run
+from tests.testlib.utils import edition_from_env, parse_raw_edition, repo_path, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.utils.version import Edition
@@ -236,7 +236,7 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     base_version, interactive_mode = request.param
     target_edition_raw = request.config.getoption(name="--target-edition")
     target_edition = (
-        _parse_raw_edition(target_edition_raw) if target_edition_raw else edition_from_env()
+        parse_raw_edition(target_edition_raw) if target_edition_raw else edition_from_env()
     )
     if (
         request.config.getoption(name="--latest-base-version")

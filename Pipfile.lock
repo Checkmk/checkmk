@@ -751,11 +751,11 @@
                 "grpc"
             ],
             "hashes": [
-                "sha256:17ad01b11d5f1d0171c06d3ba5c04c54474e883b66b949722b4938ee2694ef4e",
-                "sha256:ae45f75702f7c08b541f750854a678bd8f534a1a6bace6afe975f1d0a82d6632"
+                "sha256:0e1c2cdfcbc354b76e4a211a35ea35d6926a835cba1377073c4861db904a1877",
+                "sha256:c6442f7a0a6b2a80369457d79e6672bb7dcbaab88e0848302497e3ec80780a6a"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==1.63.0"
+            "version": "==1.63.1"
         },
         "grpc-google-iam-v1": {
             "hashes": [
@@ -767,12 +767,12 @@
         },
         "grpcio": {
             "hashes": [
-                "sha256:257baf07f53a571c215eebe9679c3058a313fd1d1f7c4eede5a8660108c52d9c",
-                "sha256:a54362f03d4dcfae63be455d0a7d4c1403673498b92c6bfe22157d935b57c7a9"
+                "sha256:39b9d0acaa8d835a6566c640f48b50054f422d03e77e49716d4c4e8e279665a1",
+                "sha256:8d51dd1c59d5fa0f34266b80a3805ec29a1f26425c2a54736133f6d87fc4968a"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.64.0"
+            "version": "==1.64.1"
         },
         "grpcio-status": {
             "hashes": [
@@ -3103,11 +3103,11 @@
         },
         "faker": {
             "hashes": [
-                "sha256:0158d47e955b6ec22134c0a74ebb7ed34fe600896208bafbf1008db831b17f04",
-                "sha256:bcbe31eee5ef4bbf87ce36c4eba53c01e2a1d912fde2a4d3528b430d2beb784f"
+                "sha256:2baf32ca8a9e6870445f2248c99b210e5d0e5eadaba5936b407f6eb9d63cb96a",
+                "sha256:c6c2a937c59f12ee9878434c6ad3d6eca5d429d50a9b7c5923d99aa1a7ba5fba"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==25.3.0"
+            "version": "==25.4.0"
         },
         "fakeredis": {
             "extras": [
@@ -4586,12 +4586,12 @@
         },
         "sphinx-autodoc-typehints": {
             "hashes": [
-                "sha256:46f1a710b3ed35904f63a77c5e68334c5ee1c2e22828b75fdcd147f1c52c199b",
-                "sha256:51bf8dc77c4fba747e32f0735002a91500747d0553cae616863848e8f5e49fe8"
+                "sha256:0072b65f5ab2818c229d6d6c2cc993770af55d36bb7bfb16001e2fce4d14880c",
+                "sha256:22427d74786274add2b6d4afccb8b3c8c1843f48a704550f15a35fd948f8a4de"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==2.1.0"
+            "version": "==2.1.1"
         },
         "sphinx-rtd-theme": {
             "hashes": [

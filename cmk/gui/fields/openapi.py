@@ -148,5 +148,25 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
         return super().nested2properties(field, ret)
 
 
+class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-defined]
+
+    def resolve_parameters(self, parameters: list[object]) -> list[object]:
+        parameters = super().resolve_parameters(parameters)
+
+        # wrap object parameters in content.application/json to keep them as str/json in swagger
+        # see: https://swagger.io/docs/specification/describing-parameters/#schema-vs-content
+        for parameter in parameters:
+            if (
+                isinstance(parameter, dict)
+                and "schema" in parameter
+                and "type" not in parameter["schema"]
+            ):
+                content = parameter.setdefault("content", {}).setdefault("application/json", {})
+                content["schema"] = parameter.pop("schema")
+
+        return parameters
+
+
 class CheckmkMarshmallowPlugin(marshmallow.MarshmallowPlugin):
     Converter = CheckmkOpenAPIConverter
+    Resolver = CheckmkOpenAPIResolver

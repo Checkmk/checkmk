@@ -195,7 +195,7 @@ class VSTransformer(cst.CSTTransformer):
     def _extract_required_keys(args: dict[str, cst.BaseExpression]) -> set[str]:
         if "required_keys" in args:
             return {
-                cst.ensure_type(elem, cst.SimpleString).value
+                cst.ensure_type(elem.value, cst.SimpleString).value
                 for elem in cst.ensure_type(args["required_keys"], cst.List).elements
             }
 

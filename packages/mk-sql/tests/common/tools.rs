@@ -192,6 +192,7 @@ pub async fn run_get_version(client: &mut UniClient) -> Option<String> {
             .and_then(|v| v.try_get::<&str, usize>(0).ok()) // drop error
             .flatten()
             .map(str::to_string),
+        query::UniAnswer::Block(block) => block.get_first_row_column(0),
     }
 }
 

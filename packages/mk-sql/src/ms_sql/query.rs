@@ -2,6 +2,11 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::platform::Block;
+
+#[cfg(windows)]
+use crate::platform::odbc;
+
 use crate::types::{ComputerName, InstanceName};
 
 use super::sqls::find_known_query;
@@ -16,18 +21,14 @@ use tiberius::{ColumnData, Query, Row};
 pub type SqlRows = Vec<Row>;
 pub enum UniAnswer {
     Rows(SqlRows),
+    Block(Block),
 }
 
 impl UniAnswer {
     pub fn is_empty(&self) -> bool {
         match self {
             UniAnswer::Rows(rows) => rows.is_empty(),
-        }
-    }
-
-    pub fn get_rows(&self) -> &SqlRows {
-        match self {
-            UniAnswer::Rows(rows) => rows,
+            UniAnswer::Block(block) => block.is_empty(),
         }
     }
 
@@ -36,28 +37,30 @@ impl UniAnswer {
             UniAnswer::Rows(rows) => rows
                 .iter()
                 .map(|r| r.get_value_by_name("nodename"))
-                .collect::<Vec<String>>()
-                .join(","),
+                .collect::<Vec<String>>(),
+            UniAnswer::Block(block) => block
+                .rows
+                .iter()
+                .map(|r| block.get_value_by_name(r, "nodename"))
+                .collect::<Vec<String>>(),
         }
+        .join(",")
     }
     pub fn get_active_node(&self) -> String {
         match self {
-            UniAnswer::Rows(rows) => rows
-                .last()
-                .map(|r| r.get_value_by_name("active_node"))
-                .unwrap_or_default(),
+            UniAnswer::Rows(rows) => rows.last().map(|r| r.get_value_by_name("active_node")),
+            UniAnswer::Block(b) => b.last().map(|r| b.get_value_by_name(r, "active_node")),
         }
+        .unwrap_or_default()
     }
 
     pub fn get_is_clustered(&self) -> bool {
         match self {
-            UniAnswer::Rows(rows) => {
-                rows.first()
-                    .map(|r| r.get_value_by_name("is_clustered"))
-                    .unwrap_or("0".to_owned())
-                    != "0"
-            }
+            UniAnswer::Rows(rows) => rows.first().map(|r| r.get_value_by_name("is_clustered")),
+            UniAnswer::Block(b) => b.first().map(|r| b.get_value_by_name(r, "is_clustered")),
         }
+        .unwrap_or("0".to_owned())
+            != "0"
     }
 }
 
@@ -190,6 +193,19 @@ async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>>
             let rows: Vec<UniAnswer> = tiberius_rows.into_iter().map(UniAnswer::Rows).collect();
             Ok(rows)
         }
+        UniClient::Odbc(conn_str) => {
+            #[cfg(windows)]
+            {
+                let blocks = odbc::execute(
+                    conn_str,
+                    sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
+                )?;
+                let rows: Vec<UniAnswer> = blocks.into_iter().map(UniAnswer::Block).collect();
+                Ok(rows)
+            }
+            #[cfg(unix)]
+            anyhow::bail!("ODBC is not supported for now `{}`", conn_str);
+        }
     }
 }
 
@@ -203,6 +219,7 @@ pub async fn obtain_computer_name(client: &mut UniClient) -> Result<Option<Compu
     let answers = run_known_query(client, sqls::Id::ComputerName).await?;
     let result = match answers.first() {
         Some(UniAnswer::Rows(rows)) => get_first_row_column(rows, 0),
+        Some(UniAnswer::Block(block)) => block.get_first_row_column(0),
         None => None,
     };
     if result.is_none() {
@@ -216,6 +233,7 @@ pub async fn obtain_instance_name(client: &mut UniClient) -> Result<Option<Insta
 
     let result = match answers.first() {
         Some(UniAnswer::Rows(rows)) => get_first_row_column(rows, 0),
+        Some(UniAnswer::Block(block)) => block.get_first_row_column(0),
         None => None,
     };
 
@@ -229,6 +247,7 @@ pub async fn obtain_system_user(client: &mut UniClient) -> Result<Option<String>
     let answers = run_custom_query(client, "select System_User").await?;
     let result = match answers.first() {
         Some(UniAnswer::Rows(rows)) => get_first_row_column(rows, 0),
+        Some(UniAnswer::Block(block)) => block.get_first_row_column(0),
         None => None,
     };
     if result.is_none() {

@@ -32,6 +32,7 @@ use futures::stream::{self, StreamExt};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+use crate::platform::{get_row_value_by_idx, Block};
 use tiberius::Row;
 
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
@@ -113,7 +114,7 @@ impl SqlInstanceBuilder {
         self
     }
 
-    pub fn row(self, row: &Row) -> Self {
+    pub fn from_row(self, row: &Row) -> Self {
         self.name(row.get_value_by_idx(0))
             .id(row.get_value_by_idx(1))
             .edition(&row.get_value_by_idx(2).into())
@@ -129,6 +130,16 @@ impl SqlInstanceBuilder {
                     .and_then(|s| s.parse::<u16>().ok())
                     .map(Port),
             )
+    }
+
+    pub fn from_strings(self, row: &[String]) -> Self {
+        self.name(get_row_value_by_idx(row, 0))
+            .id(get_row_value_by_idx(row, 1))
+            .edition(&get_row_value_by_idx(row, 2).into())
+            .version(&get_row_value_by_idx(row, 3).into())
+            .cluster(row.get(4).map(|s| s.to_string().into()))
+            .port(row.get(5).and_then(|s| s.parse::<u16>().ok()).map(Port))
+            .dynamic_port(row.get(6).and_then(|s| s.parse::<u16>().ok()).map(Port))
     }
 
     pub fn get_name(&self) -> InstanceName {
@@ -604,12 +615,24 @@ impl SqlInstance {
     }
 
     fn process_counters_rows(&self, answer: &UniAnswer, sep: char) -> Result<String> {
-        match answer {
-            UniAnswer::Rows(rows) => {
-                let z: Vec<String> = rows.iter().map(|row| to_counter_entry(row, sep)).collect();
-                Ok(z.join(""))
-            }
-        }
+        let z: Vec<String> = match answer {
+            UniAnswer::Rows(rows) => rows
+                .iter()
+                .map(|row| {
+                    let counter = Counter::from_row(row);
+                    counter.into_string(sep)
+                })
+                .collect(),
+            UniAnswer::Block(block) => block
+                .rows
+                .iter()
+                .map(|row| {
+                    let counter = Counter::from_block(row);
+                    counter.into_string(sep)
+                })
+                .collect(),
+        };
+        Ok(z.join(""))
     }
 
     pub async fn generate_sessions_section(
@@ -928,6 +951,22 @@ impl SqlInstance {
                 })
                 .collect::<Vec<String>>()
                 .join(""),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .map(|row| {
+                    format!(
+                        "{}{sep}{}{sep}{}\n",
+                        self.name,
+                        get_row_value_by_idx(row, 0).replace(' ', "_"), // for unknown reason we can't get it by name
+                        block
+                            .get_value_by_name(row, "NumberOfConnections")
+                            .parse::<i64>()
+                            .unwrap_or_default()
+                    )
+                })
+                .collect::<Vec<String>>()
+                .join(""),
             None => String::new(),
         }
     }
@@ -1008,6 +1047,12 @@ impl SqlInstance {
                 .map(|r| r.get_all(sep))
                 .collect::<Vec<String>>()
                 .join("\n"),
+            UniAnswer::Block(block) => block
+                .rows
+                .iter()
+                .map(|r| r.join(&sep.to_string()))
+                .collect::<Vec<String>>()
+                .join("\n"),
         };
 
         if result.is_empty() {
@@ -1024,6 +1069,12 @@ impl SqlInstance {
                 .map(|row| to_blocked_session_entry(&self.name, row, sep))
                 .collect::<Vec<String>>()
                 .join(""),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .map(|row| to_blocked_session_entry_odbc(&self.name, row, sep))
+                .collect::<Vec<String>>()
+                .join(""),
             None => {
                 log::error!("Process blocked sessions answer is empty");
                 String::new()
@@ -1032,12 +1083,14 @@ impl SqlInstance {
     }
 
     fn process_utc_rows(&self, answer: &UniAnswer, sep: char) -> Result<String> {
-        match answer {
-            UniAnswer::Rows(rows) => {
-                let utc = rows[0].get_value_by_name(sqls::UTC_DATE_FIELD);
-                Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
-            }
-        }
+        let utc = match answer {
+            UniAnswer::Rows(rows) => rows[0].get_value_by_name(sqls::UTC_DATE_FIELD),
+            UniAnswer::Block(block) => block.get_value_by_name(
+                block.first().unwrap_or(&Vec::<String>::new()),
+                sqls::UTC_DATE_FIELD,
+            ),
+        };
+        Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
     }
 
     fn process_databases_rows(&self, answers: &[UniAnswer]) -> Vec<String> {
@@ -1045,6 +1098,11 @@ impl SqlInstance {
             Some(UniAnswer::Rows(rows)) => rows
                 .iter()
                 .map(|row| row.get_value_by_idx(0))
+                .collect::<Vec<String>>(),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .map(|row| row.get(0).cloned().unwrap_or_default())
                 .collect::<Vec<String>>(),
             None => {
                 log::error!("Databases answer is empty");
@@ -1086,6 +1144,19 @@ impl SqlInstance {
                     if only_databases.contains(&backup_database) {
                         only_databases.remove(&backup_database);
                         to_backup_entry(&self.mssql_name(), &backup_database, row, sep)
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+            Some(UniAnswer::Block(block)) => block
+                .rows
+                .iter()
+                .filter_map(|row| {
+                    let backup_database = block.get_value_by_name(row, "database_name");
+                    if only_databases.contains(&backup_database) {
+                        only_databases.remove(&backup_database);
+                        to_backup_entry_odbc(&self.mssql_name(), &backup_database, block, row, sep)
                     } else {
                         None
                     }
@@ -1152,6 +1223,30 @@ impl From<&UniAnswer> for SqlInstanceProperties {
                     net_bios,
                 }
             }
+            UniAnswer::Block(block) => {
+                let row = block.first().unwrap();
+                let name = block.get_value_by_name(row, "InstanceName");
+                let version: InstanceVersion =
+                    block.get_value_by_name(row, "ProductVersion").into();
+                let computer_name: ComputerName =
+                    block.get_value_by_name(row, "MachineName").into();
+                let edition: InstanceEdition = block.get_value_by_name(row, "Edition").into();
+                let product_level = block.get_value_by_name(row, "ProductLevel");
+                let net_bios = block.get_value_by_name(row, "NetBios");
+                Self {
+                    name: (if name.is_empty() {
+                        "MSSQLSERVER".to_string()
+                    } else {
+                        name.to_uppercase()
+                    })
+                    .into(),
+                    version,
+                    computer_name,
+                    edition,
+                    product_level,
+                    net_bios,
+                }
+            }
         }
     }
 }
@@ -1194,6 +1289,10 @@ fn to_table_spaces_entry(
         }
         match &answers[part] {
             UniAnswer::Rows(rows) => rows[0].get_value_by_name(name).trim().to_string(),
+            UniAnswer::Block(b) => b
+                .get_value_by_name(b.first().unwrap_or(&Vec::<String>::new()), name)
+                .trim()
+                .to_string(),
         }
     };
     let db_size = extract(answers, 0, "database_size");
@@ -1230,6 +1329,14 @@ fn to_transaction_logs_entries(
             .map(|row| to_transaction_logs_entry(row, instance_name, database_name, sep))
             .collect::<Vec<String>>()
             .join(""),
+        UniAnswer::Block(block) => block
+            .rows
+            .iter()
+            .map(|row| {
+                to_transaction_logs_entry_odbc(block, row, instance_name, database_name, sep)
+            })
+            .collect::<Vec<String>>()
+            .join(""),
     }
 }
 
@@ -1258,6 +1365,32 @@ fn to_transaction_logs_entry(
     )
 }
 
+fn to_transaction_logs_entry_odbc(
+    block: &Block,
+    row: &[String],
+    instance_name: &InstanceName,
+    database_name: &str,
+    sep: char,
+) -> String {
+    let name = block.get_value_by_name(row, "name");
+    let physical_name = block.get_value_by_name(row, "physical_name");
+    let max_size = block.get_bigint_by_name(row, "MaxSize");
+    let allocated_size = block.get_bigint_by_name(row, "AllocatedSize");
+    let used_size = block.get_bigint_by_name(row, "UsedSize");
+    let unlimited = block.get_value_by_name(row, "Unlimited");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        name.replace(' ', "_"),
+        physical_name.replace(' ', "_"),
+        max_size,
+        allocated_size,
+        used_size,
+        unlimited
+    )
+}
+
 fn to_datafiles_entries(
     instance_name: &InstanceName,
     database_name: &str,
@@ -1271,6 +1404,12 @@ fn to_datafiles_entries(
         UniAnswer::Rows(rows) => rows
             .iter()
             .map(|row| to_datafiles_entry(row, instance_name, database_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+        UniAnswer::Block(block) => block
+            .rows
+            .iter()
+            .map(|row| to_datafiles_entry_odbc(block, row, instance_name, database_name, sep))
             .collect::<Vec<String>>()
             .join(""),
     }
@@ -1301,6 +1440,32 @@ fn to_datafiles_entry(
     )
 }
 
+fn to_datafiles_entry_odbc(
+    block: &Block,
+    row: &[String],
+    instance_name: &InstanceName,
+    database_name: &str,
+    sep: char,
+) -> String {
+    let name = block.get_value_by_name(row, "name");
+    let physical_name = block.get_value_by_name(row, "physical_name");
+    let max_size = block.get_bigint_by_name(row, "MaxSize");
+    let allocated_size = block.get_bigint_by_name(row, "AllocatedSize");
+    let used_size = block.get_bigint_by_name(row, "UsedSize");
+    let unlimited = block.get_value_by_name(row, "Unlimited");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        name.replace(' ', "_"),
+        physical_name.replace(' ', "_"),
+        max_size,
+        allocated_size,
+        used_size,
+        unlimited
+    )
+}
+
 fn to_databases_entries(instance_name: &InstanceName, answers: &[UniAnswer], sep: char) -> String {
     if answers.is_empty() {
         return String::new();
@@ -1309,6 +1474,12 @@ fn to_databases_entries(instance_name: &InstanceName, answers: &[UniAnswer], sep
         UniAnswer::Rows(rows) => rows
             .iter()
             .map(|row| to_databases_entry(row, instance_name, sep))
+            .collect::<Vec<String>>()
+            .join(""),
+        UniAnswer::Block(block) => block
+            .rows
+            .iter()
+            .map(|row| to_databases_entry_odbc(block, row, instance_name, sep))
             .collect::<Vec<String>>()
             .join(""),
     }
@@ -1320,6 +1491,28 @@ fn to_databases_entry(row: &Row, instance_name: &InstanceName, sep: char) -> Str
     let recovery = row.get_value_by_name("Recovery");
     let auto_close = row.get_bigint_by_name("auto_close");
     let auto_shrink = row.get_bigint_by_name("auto_shrink");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        name.replace(' ', "_").trim(),
+        status.trim(),
+        recovery.trim(),
+        auto_close,
+        auto_shrink,
+    )
+}
+
+fn to_databases_entry_odbc(
+    block: &Block,
+    row: &[String],
+    instance_name: &InstanceName,
+    sep: char,
+) -> String {
+    let name = block.get_value_by_name(row, "name");
+    let status = block.get_value_by_name(row, "Status");
+    let recovery = block.get_value_by_name(row, "Recovery");
+    let auto_close = block.get_bigint_by_name(row, "auto_close");
+    let auto_shrink = block.get_bigint_by_name(row, "auto_shrink");
     format!(
         "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
         instance_name,
@@ -1366,6 +1559,48 @@ fn to_backup_entry(
     }
 }
 
+fn to_backup_entry_odbc(
+    instance_name: &str,
+    database_name: &str,
+    block: &Block,
+    row: &[String],
+    sep: char,
+) -> Option<String> {
+    let last_backup_date = block
+        .get_value_by_name(row, "last_backup_date")
+        .trim()
+        .to_string();
+    if last_backup_date.is_empty() {
+        return None;
+    }
+    let backup_type = block.get_value_by_name(row, "type").trim().to_string();
+    let backup_type = if backup_type.is_empty() {
+        "-".to_string()
+    } else {
+        backup_type
+    };
+    let replica_id = block
+        .get_value_by_name(row, "replica_id")
+        .trim()
+        .to_string();
+    let is_primary_replica = block
+        .get_value_by_name(row, "is_primary_replica")
+        .trim()
+        .to_string();
+    if replica_id.is_empty() && is_primary_replica == "True" {
+        format!(
+            "{}{sep}{}{sep}{}{sep}{}\n",
+            instance_name,
+            database_name.replace(' ', "_"),
+            last_backup_date.replace(' ', "|"),
+            backup_type,
+        )
+        .into()
+    } else {
+        None
+    }
+}
+
 struct Counter {
     name: String,
     object: String,
@@ -1373,8 +1608,8 @@ struct Counter {
     value: String,
 }
 
-impl From<&Row> for Counter {
-    fn from(row: &Row) -> Self {
+impl Counter {
+    pub fn from_row(row: &Row) -> Self {
         let instance = row.get_value_by_idx(2).trim().replace(' ', "_").to_string();
         Self {
             name: row
@@ -1396,6 +1631,30 @@ impl From<&Row> for Counter {
             value: row.get_bigint_by_idx(3).to_string(),
         }
     }
+
+    pub fn from_block(values: &[String]) -> Self {
+        let instance = get_row_value_by_idx(values, 2)
+            .trim()
+            .replace(' ', "_")
+            .to_string();
+        Self {
+            name: get_row_value_by_idx(values, 0)
+                .trim()
+                .replace(' ', "_")
+                .to_string()
+                .to_lowercase(),
+            object: get_row_value_by_idx(values, 1)
+                .trim()
+                .replace([' ', '$'], "_")
+                .to_string(),
+            instance: if instance.is_empty() {
+                "None".to_string()
+            } else {
+                instance
+            },
+            value: values.get(3).cloned().unwrap_or("0".to_string()),
+        }
+    }
 }
 
 impl Counter {
@@ -1414,16 +1673,26 @@ impl Counter {
     }
 }
 
-fn to_counter_entry(row: &Row, sep: char) -> String {
-    let counter = Counter::from(row);
-    counter.into_string(sep)
-}
-
 fn to_blocked_session_entry(instance_name: &InstanceName, row: &Row, sep: char) -> String {
     let session_id = row.get_value_by_idx(0).trim().to_string();
     let wait_duration_ms = row.get_bigint_by_idx(1).to_string();
     let wait_type = row.get_value_by_idx(2).trim().to_string();
     let blocking_session_id = row.get_value_by_idx(3).trim().to_string();
+    format!("{instance_name}{sep}{session_id}{sep}{wait_duration_ms}{sep}{wait_type}{sep}{blocking_session_id}\n",)
+}
+
+fn to_blocked_session_entry_odbc(
+    instance_name: &InstanceName,
+    row: &[String],
+    sep: char,
+) -> String {
+    let session_id = get_row_value_by_idx(row, 0).trim().to_string();
+    let wait_duration_ms = get_row_value_by_idx(row, 1)
+        .parse::<i64>()
+        .unwrap_or_default()
+        .to_string();
+    let wait_type = get_row_value_by_idx(row, 2).trim().to_string();
+    let blocking_session_id = get_row_value_by_idx(row, 3).trim().to_string();
     format!("{instance_name}{sep}{session_id}{sep}{wait_duration_ms}{sep}{wait_type}{sep}{blocking_session_id}\n",)
 }
 
@@ -1587,8 +1856,8 @@ async fn find_usable_instances(
 async fn find_usable_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    Ok(find_all_instance_builders(ms_sql)
-        .await?
+    let builders = find_all_instance_builders(ms_sql).await?;
+    Ok(builders
         .into_iter()
         .filter(|i| ms_sql.is_instance_allowed(&i.get_name()))
         .collect::<Vec<SqlInstanceBuilder>>())
@@ -2032,7 +2301,13 @@ fn to_sql_instance(answers: &UniAnswer) -> Vec<SqlInstanceBuilder> {
     match answers {
         UniAnswer::Rows(rows) => rows
             .iter()
-            .map(|r| SqlInstanceBuilder::new().row(r))
+            .map(|r| SqlInstanceBuilder::new().from_row(r))
+            .collect::<Vec<SqlInstanceBuilder>>()
+            .to_vec(),
+        UniAnswer::Block(block) => block
+            .rows
+            .iter()
+            .map(|r| SqlInstanceBuilder::new().from_strings(r))
             .collect::<Vec<SqlInstanceBuilder>>()
             .to_vec(),
     }

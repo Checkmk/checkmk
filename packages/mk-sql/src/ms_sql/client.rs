@@ -20,6 +20,7 @@ pub type StdClient = tiberius::Client<Compat<TcpStream>>;
 #[derive(Debug)]
 pub enum UniClient {
     Std(StdClient),
+    Odbc(String),
 }
 
 pub struct RemoteConnection<'a> {

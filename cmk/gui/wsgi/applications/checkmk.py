@@ -122,13 +122,15 @@ def _render_exception(e: Exception, title: str) -> Response:
         )
 
     if not fail_silently():
-        html.open_div(id="page_handler_error")
         make_header(html, title, Breadcrumb())
+        html.open_ts_container(
+            container="div",
+            function_name="insert_before",
+            options={"targetElementId": "main_page_content"},
+        )
         html.show_error(str(e))
-        html.footer()
         html.close_div()
-
-        html.javascript("cmk.layout.insertBefore('page_handler_error', 'main_page_content');")
+        html.footer()
 
     return response
 

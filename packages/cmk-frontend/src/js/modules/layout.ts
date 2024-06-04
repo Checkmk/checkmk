@@ -4,16 +4,22 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-export function insertBefore(newElementId: string, targetElementId: string) {
-    const newElement = document.getElementById(newElementId);
+export async function insert_before(
+    elementToMove: HTMLElement,
+    options: {[key: string]: string}
+) {
+    if (!("targetElementId" in options)) {
+        throw new Error("Missing required option 'targetElementId'");
+    }
+    const targetElementId = options["targetElementId"];
     const targetElement = document.getElementById(targetElementId);
     const parentElement = targetElement?.parentNode;
     if (
         parentElement &&
-        newElement &&
+        elementToMove &&
         targetElement &&
-        newElement !== parentElement
+        elementToMove !== parentElement
     ) {
-        parentElement.insertBefore(newElement, targetElement);
+        parentElement.insertBefore(elementToMove, targetElement);
     }
 }

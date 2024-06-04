@@ -52,6 +52,7 @@ FinalJavaScript = typing.Callable[[], str] | str
 KnownTSFunction = typing.Literal[
     "render_qr_code",
     "render_stats_table",
+    "insert_before",
 ]
 
 
@@ -627,6 +628,16 @@ class HTMLWriter:
         function_name: KnownTSFunction,
         options: dict[str, str] | None = None,
     ) -> None:
+        self.open_ts_container(container=container, function_name=function_name, options=options)
+        self.write_html(render_end_tag(container))
+
+    def open_ts_container(
+        self,
+        *,
+        container: str,
+        function_name: KnownTSFunction,
+        options: dict[str, str] | None = None,
+    ) -> None:
         json_options: str
         if options is None:
             json_options = "{}"
@@ -639,7 +650,6 @@ class HTMLWriter:
                 data_cmk_call_ts_options=json_options,
             )
         )
-        self.write_html(render_end_tag(container))
 
     def open_div(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("div", close_tag=False, **kwargs))

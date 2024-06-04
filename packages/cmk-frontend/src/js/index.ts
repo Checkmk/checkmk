@@ -35,7 +35,7 @@ import * as host_diagnose from "./modules/host_diagnose";
 import * as hover from "./modules/hover";
 import * as jira_issue from "./modules/jira_issue";
 import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
-import * as layout from "./modules/layout";
+import {insert_before} from "./modules/layout";
 import * as nodevis from "./modules/nodevis/main";
 import * as number_format from "./modules/number_format";
 import * as page_menu from "./modules/page_menu";
@@ -111,6 +111,7 @@ type CallableFunction = (
 const callable_functions: {[name: string]: CallableFunction} = {
     render_stats_table: render_stats_table,
     render_qr_code: render_qr_code,
+    insert_before: insert_before,
 };
 
 $(() => {
@@ -174,7 +175,6 @@ export const cmk_export = {
         hover: hover,
         jira_issue: jira_issue,
         keyboard_shortcuts: keyboard_shortcuts,
-        layout: layout,
         license_usage: {
             timeseries_graph: license_usage_timeseries_graph,
         },

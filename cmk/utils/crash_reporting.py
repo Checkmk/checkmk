@@ -27,7 +27,6 @@ import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.version as cmk_version
 from cmk.utils import store
-from cmk.utils.exceptions import MKParseFunctionError
 
 CrashInfo = dict[str, Any]  # TODO: improve this type
 
@@ -226,17 +225,6 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
     tb_list = traceback.extract_tb(exc_traceback)
-
-    # TODO: This ma be cleaned up by using reraising with python 3
-    # MKParseFunctionError() are re raised exceptions originating from the
-    # parse functions of checks. They have the original traceback object saved.
-    # The formated stack of these tracebacks is somehow relative to the calling
-    # function. To get the full stack trace instead of this relative one we need
-    # to concatenate the traceback of the MKParseFunctionError() and the original
-    # exception.
-    # Re-raising exceptions will be much easier with Python 3.x.
-    if isinstance(exc_value, MKParseFunctionError):
-        tb_list += traceback.extract_tb(exc_value.exc_info()[2])
 
     # Unify different string types from exception messages to a unicode string
     # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.

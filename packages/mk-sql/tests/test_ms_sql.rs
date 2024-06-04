@@ -19,6 +19,9 @@ use mk_sql::ms_sql::{
     sqls::{self, find_known_query},
 };
 
+#[cfg(windows)]
+use mk_sql::ms_sql::instance::{create_odbc_client, obtain_properties};
+
 use mk_sql::setup::Env;
 
 use common::tools::{self, SqlDbEndpoint};
@@ -1445,4 +1448,23 @@ fn test_odbc() {
     assert_eq!(r.len(), 1);
     assert_eq!(r[0].headline[0], "MachineName");
     assert!(!r[0].rows[0][0].is_empty());
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_odbc_high_level() {
+    use mk_sql::ms_sql::instance::SqlInstanceProperties;
+
+    async fn get(name: &str) -> Option<SqlInstanceProperties> {
+        let instance_name = InstanceName::from(name.to_string());
+        let mut client = create_odbc_client(&instance_name, None).unwrap();
+        obtain_properties(&mut client, &instance_name).await
+    }
+
+    let odbc_name = get("SQLEXPRESS_NAME").await;
+    assert!(odbc_name.is_some());
+    let odbc_wow = get("SQLEXPRESS_WOW").await;
+    assert!(odbc_wow.is_some());
+    let odbc_main = get("MSSQLSERVER").await;
+    assert!(odbc_main.is_some());
 }

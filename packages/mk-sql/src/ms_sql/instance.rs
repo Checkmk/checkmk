@@ -2,10 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+#[cfg(windows)]
+use super::client::OdbcClient;
 use super::client::{self, UniClient};
 use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
-use crate::config::ms_sql::is_use_tcp;
+use crate::config::ms_sql::{is_local_host, is_use_tcp};
 use crate::config::section;
 use crate::config::{
     self,
@@ -19,6 +21,8 @@ use crate::ms_sql::query::{
     run_known_query, Column, UniAnswer,
 };
 use crate::ms_sql::sqls;
+#[cfg(windows)]
+use crate::platform::odbc;
 use crate::setup::Env;
 use crate::types::{
     ComputerName, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
@@ -424,26 +428,11 @@ impl SqlInstance {
         database: Option<String>,
     ) -> Result<UniClient> {
         log::info!("create client {}", self.name);
-        let (auth, conn) = endpoint.split();
-        let client = match auth.auth_type() {
-            AuthType::SqlServer | AuthType::Windows => {
-                if let Some(credentials) = client::obtain_config_credentials(auth) {
-                    client::ClientBuilder::new()
-                        .logon_on_port(&conn.hostname(), self.port(), credentials)
-                        .database(database)
-                } else {
-                    anyhow::bail!("Not provided credentials")
-                }
-            }
-
-            #[cfg(windows)]
-            AuthType::Integrated => client::ClientBuilder::new()
-                .local_by_port(self.port(), Some(conn.hostname()))
-                .database(database),
-
-            _ => anyhow::bail!("Not supported authorization type"),
-        };
-        client.build().await
+        if self.tcp {
+            create_tcp_client(endpoint, database, self.port()).await
+        } else {
+            create_odbc_client(&self.name, database)
+        }
     }
 
     pub async fn generate_details_entry(&self, client: &mut UniClient, sep: char) -> String {
@@ -1188,6 +1177,47 @@ impl SqlInstance {
     }
 }
 
+pub async fn create_tcp_client(
+    endpoint: &Endpoint,
+    database: Option<String>,
+    port: Option<Port>,
+) -> Result<UniClient> {
+    let (auth, conn) = endpoint.split();
+    let client = match auth.auth_type() {
+        AuthType::SqlServer | AuthType::Windows => {
+            if let Some(credentials) = client::obtain_config_credentials(auth) {
+                client::ClientBuilder::new()
+                    .logon_on_port(&conn.hostname(), port, credentials)
+                    .database(database)
+            } else {
+                anyhow::bail!("Not provided credentials")
+            }
+        }
+
+        #[cfg(windows)]
+        AuthType::Integrated => client::ClientBuilder::new()
+            .local_by_port(port, Some(conn.hostname()))
+            .database(database),
+
+        _ => anyhow::bail!("Not supported authorization type"),
+    };
+    client.build().await
+}
+
+pub fn create_odbc_client(
+    instance_name: &InstanceName,
+    database: Option<String>,
+) -> Result<UniClient> {
+    #[cfg(unix)]
+    anyhow::bail!("ODBC Not supported `{}` db:`{:?}`", instance_name, database);
+    #[cfg(windows)]
+    {
+        let connection_string =
+            odbc::make_connection_string(instance_name, database.as_deref(), None);
+        Ok(UniClient::Odbc(OdbcClient::new(connection_string)))
+    }
+}
+
 #[derive(Debug)]
 pub struct SqlInstanceProperties {
     pub name: InstanceName,
@@ -1773,21 +1803,20 @@ fn generate_signaling_block(
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Result<String> {
-    let instances = find_usable_instances(ms_sql, environment).await?;
+    let instances = find_working_instances(ms_sql, environment).await?;
     if instances.is_empty() {
         return Ok(generate_signaling_block(ms_sql, &None)
             + "ERROR: Failed to gather SQL server instances\n");
-    } else {
-        log::info!(
-            "Found {} SQL server instances: [ {} ]",
-            instances.len(),
-            instances
-                .iter()
-                .map(|i| format!("{}", i))
-                .collect::<Vec<_>>()
-                .join(", ")
-        );
     }
+    log::info!(
+        "Found {} SQL server instances: [ {} ]",
+        instances.len(),
+        instances
+            .iter()
+            .map(|i| format!("{}", i))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 
     let sections = ms_sql
         .valid_sections()
@@ -1831,18 +1860,17 @@ fn generate_instance_entry<P: AsRef<SqlInstance>>(instance: &P) -> String {
     .join("")
 }
 
-async fn find_usable_instances(
+async fn find_working_instances(
     ms_sql: &config::ms_sql::Config,
     environment: &Env,
 ) -> Result<Vec<SqlInstance>> {
-    let builders = find_usable_instance_builders(ms_sql).await?;
+    let builders = find_allowed_instance_builders(ms_sql).await?;
     if builders.is_empty() {
-        log::warn!("Found NO usable SQL server instances");
+        log::warn!("Found NO allowed SQL server instances");
         return Ok(Vec::new());
-    } else {
-        log::info!("Found {} usable SQL server instances", builders.len());
     }
 
+    log::info!("Found {} working SQL server instances", builders.len());
     Ok(builders
         .into_iter()
         .map(|b: SqlInstanceBuilder| {
@@ -1853,7 +1881,7 @@ async fn find_usable_instances(
         .collect::<Vec<SqlInstance>>())
 }
 
-async fn find_usable_instance_builders(
+async fn find_allowed_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let builders = find_all_instance_builders(ms_sql).await?;
@@ -1934,8 +1962,22 @@ async fn get_custom_instance_builder(
     builder: &SqlInstanceBuilder,
     endpoint: &Endpoint,
 ) -> Option<SqlInstanceBuilder> {
-    let port = get_reasonable_port(builder, endpoint);
     let instance_name = &builder.get_name();
+    let auth = endpoint.auth();
+    let conn = endpoint.conn();
+    if is_local_host(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
+        if let Ok(mut client) = create_odbc_client(instance_name, None) {
+            log::debug!("Trying to connect to `{instance_name}` using ODBC");
+            let b = obtain_properties(&mut client, instance_name)
+                .await
+                .map(|p| to_instance_builder(endpoint, &p));
+            return b;
+        } else {
+            log::error!("Can't use ODBC for `{instance_name}`");
+            return None;
+        }
+    }
+    let port = get_reasonable_port(builder, endpoint);
     log::debug!("Trying to connect to `{instance_name}` using config port {port}");
     let result = match client::connect_custom_endpoint(endpoint, port.clone()).await {
         Ok(mut client) => {
@@ -2038,7 +2080,7 @@ fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> Por
     }
 }
 
-async fn obtain_properties(
+pub async fn obtain_properties(
     client: &mut UniClient,
     name: &InstanceName,
 ) -> Option<SqlInstanceProperties> {

@@ -16,11 +16,26 @@ use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
 use super::defaults;
 pub type StdClient = tiberius::Client<Compat<TcpStream>>;
+#[derive(Debug)]
+pub struct OdbcClient {
+    conn_string: String,
+}
+
+impl OdbcClient {
+    pub fn new(conn_string: impl ToString) -> Self {
+        Self {
+            conn_string: conn_string.to_string(),
+        }
+    }
+    pub fn conn_string(&self) -> &str {
+        &self.conn_string
+    }
+}
 
 #[derive(Debug)]
 pub enum UniClient {
     Std(StdClient),
-    Odbc(String),
+    Odbc(OdbcClient),
 }
 
 pub struct RemoteConnection<'a> {

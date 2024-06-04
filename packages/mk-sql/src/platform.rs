@@ -179,9 +179,13 @@ pub mod odbc {
         driver: Option<&str>,
     ) -> String {
         format!(
-            "Driver={{{}}};SERVER=(local)\\{};Initial Catalog={};Integrated Security=SSPI;Trusted_Connection=yes;",
+            "Driver={{{}}};SERVER=(local){};Database={};Integrated Security=SSPI;Trusted_Connection=yes;",
             driver.unwrap_or(&ODBC_DRIVER.clone()),
-            instance,
+            if instance.to_string().to_uppercase() == *"MSSQLSERVER" {
+                "".to_string()
+            } else {
+                format!("\\{}", instance)
+            },
             database.unwrap_or("master")
         )
     }
@@ -255,14 +259,19 @@ pub mod odbc {
                 &InstanceName::from("SQLEXPRESS_NAME".to_string()),
                 None,
                 None),
-                format!("Driver={{{}}};SERVER=(local)\\SQLEXPRESS_NAME;Initial Catalog=master;Integrated Security=SSPI;Trusted_Connection=yes;", ODBC_DRIVER.clone()));
+                format!("Driver={{{}}};SERVER=(local)\\SQLEXPRESS_NAME;Database=master;Integrated Security=SSPI;Trusted_Connection=yes;", ODBC_DRIVER.clone()));
             assert_eq!(
                 odbc::make_connection_string(
                     &InstanceName::from("Instance".to_string()),
                     Some("db"),
                     Some("driver")),
-                "Driver={driver};SERVER=(local)\\Instance;Initial Catalog=db;Integrated Security=SSPI;Trusted_Connection=yes;"
+                "Driver={driver};SERVER=(local)\\Instance;Database=db;Integrated Security=SSPI;Trusted_Connection=yes;"
             );
+            assert_eq!( odbc::make_connection_string(
+                    &InstanceName::from("mssqlserver".to_string()),
+                    None,
+                    None),
+                    format!("Driver={{{}}};SERVER=(local);Database=master;Integrated Security=SSPI;Trusted_Connection=yes;", ODBC_DRIVER.clone()));
         }
     }
 }

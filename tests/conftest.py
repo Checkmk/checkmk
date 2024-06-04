@@ -98,6 +98,7 @@ test_types = [
     "schemathesis_openapi",
     "plugins_integration",
     "extension_compatibility",
+    "testlib",
 ]
 
 

@@ -121,6 +121,8 @@ help:
 	@echo "test-unit-shell-docker              - Run shell unit tests in docker"
 	@echo "test-unit-xdist                     - Run parallelized unit tests"
 	@echo "test-unit-xdist-docker              - Run parallelized unit tests in docker"
+	@echo "test-unit-testlib                   - Run doctests present in testlib-modules"
+	@echo "test-unit-testlib-docker            - Run doctests present in testlib-modules within docker container."
 	@echo "test-werks                          - Run Werks tests"
 	@echo "test-werks-docker                   - Run Werks tests in docker"
 
@@ -429,6 +431,21 @@ test-unit-resilience: prepare-protobuf-files
 
 test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
+
+test-unit-testlib:
+	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T testlib \
+		--config-file=pyproject.toml \
+		--doctest-modules \
+		--override-ini="pythonpath=." \
+		--override-ini="consider_namespace_packages=true" \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		-- \
+		tests/testlib/
+
+test-unit-testlib-docker:
+	../scripts/run-in-docker.sh make test-unit-testlib
 
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)

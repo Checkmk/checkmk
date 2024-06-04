@@ -2224,7 +2224,7 @@ def _sort_delta_rows(
 def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHint) -> HTML:
     # TODO separate tdclass from rendered value
     _tdclass, code = hint.paint_function(value)
-    return HTML(code)
+    return HTML() + code
 
 
 def _compute_cell_spec(
@@ -2233,7 +2233,7 @@ def _compute_cell_spec(
 ) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
     tdclass, code = hint.paint_function(value_info.value)
-    html_value = HTML(code)
+    html_value = HTML() + code
     if (
         not html_value
         or value_info.retention_interval is None

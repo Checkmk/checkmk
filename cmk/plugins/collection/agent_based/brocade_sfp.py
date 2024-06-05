@@ -13,6 +13,7 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     get_value_store,
     OIDCached,
+    OIDEnd,
     Service,
     SNMPSection,
     SNMPTree,
@@ -48,26 +49,33 @@ def parse_brocade_sfp(string_table: Sequence[StringTable]) -> Section:
 
     isl_ports = [int(x[0]) for x in string_table[1]]
 
-    for fcport_info, values in zip(string_table[0], string_table[2]):
+    values_infos = {}
+    for values in string_table[2]:
         # Observed in the wild: Either all of the values are present
         # or none of them.
-        if values[0] == "NA":
+        port_index = int(values[0].split(".")[-1])
+        if values[1] == "NA":
             continue
 
-        port_index = int(fcport_info[0])
-
-        parsed[port_index] = {
-            "port_name": fcport_info[4],
-            "temp": int(values[0]),  # °C
-            "phystate": int(fcport_info[1]),
-            "opstate": int(fcport_info[2]),
-            "admstate": int(fcport_info[3]),
-            "voltage": float(values[1]) / 1000,  # mV -> V
-            "current": float(values[2]) / 1000,  # mA -> A
-            "rx_power": float(values[3]),  # dBm
-            "tx_power": float(values[4]),  # dBm
-            "is_isl": bool(port_index in isl_ports),
+        values_infos[port_index] = {
+            "temp": int(values[1]),
+            "voltage": float(values[2]) / 1000,
+            "current": float(values[3]) / 1000,
+            "rx_power": float(values[4]),
+            "tx_power": float(values[5]),
         }
+
+    for fcport_info in string_table[0]:
+        port_index = int(fcport_info[0])
+        if values_infos.get(port_index):
+            parsed[port_index] = {
+                "port_name": fcport_info[4],
+                "phystate": int(fcport_info[1]),
+                "opstate": int(fcport_info[2]),
+                "admstate": int(fcport_info[3]),
+                "is_isl": port_index in isl_ports,
+            }
+            parsed[port_index].update(values_infos.get(port_index))
 
     return parsed
 
@@ -106,6 +114,7 @@ snmp_section_brocade_sfp = SNMPSection(
             base=".1.3.6.1.4.1.1588.2.1.1.1.28.1.1",
             oids=[  # FA-EXT-MIB::swSfpStatEntry
                 # AUGMENTS {connUnitPortEntry}
+                OIDEnd(),
                 "1",  # swSfpTemperature
                 "2",  # swSfpVoltage
                 "3",  # swSfpCurrent

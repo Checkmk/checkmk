@@ -231,15 +231,6 @@ def verify_virtualenv():
         )
 
 
-_UNPATCHED_PATHS: Final = {
-    # FIXME :-(
-    # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
-    "local_dashboards_dir",
-    "local_views_dir",
-    "local_reports_dir",
-}
-
-
 # Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
@@ -269,10 +260,18 @@ def fake_version_and_paths() -> None:
         cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
     )
 
+    unpatched_paths: Final = {
+        # FIXME :-(
+        # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
+        "local_dashboards_dir",
+        "local_views_dir",
+        "local_reports_dir",
+    }
+
     # Unit test context: load all available modules
     original_omd_root = Path(cmk.utils.paths.omd_root)
     for name, value in vars(cmk.utils.paths).items():
-        if name.startswith("_") or not isinstance(value, (str, Path)) or name in _UNPATCHED_PATHS:
+        if name.startswith("_") or not isinstance(value, (str, Path)) or name in unpatched_paths:
             continue
 
         try:

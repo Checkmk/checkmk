@@ -33,7 +33,6 @@ def monitoring_state(last_state: str, last_result: str, type_: str) -> State:
         if last_state in ["Starting", "Working", "Postprocessing"]:
             return State.OK
         if last_state == "Idle" and type_ == "BackupSync":
-            # A sync is always idle
             return State.OK
     if last_result == "Success":
         return State.OK

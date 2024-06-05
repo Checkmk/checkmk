@@ -224,6 +224,18 @@ def parse_raw_graph_specification(raw: object) -> GraphSpecification:
     raise TypeError(raw)
 
 
+class FixedVerticalRange(BaseModel, frozen=True):
+    type: Literal["fixed"] = "fixed"
+    min: float | None
+    max: float | None
+
+
+class MinimalVerticalRange(BaseModel, frozen=True):
+    type: Literal["minimal"] = "minimal"
+    min: float | None
+    max: float | None
+
+
 class GraphDataRange(BaseModel, frozen=True):
     time_range: tuple[int, int]
     # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
@@ -240,7 +252,7 @@ class AdditionalGraphHTML(BaseModel, frozen=True):
 class GraphRecipe(BaseModel, frozen=True):
     title: str
     unit: str
-    explicit_vertical_range: tuple[float | None, float | None]
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool
     consolidation_function: GraphConsoldiationFunction | None

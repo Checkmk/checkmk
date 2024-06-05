@@ -26,7 +26,14 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 from cmk.graphing.v1.metrics import AutoPrecision
 
 from ._color import fade_color, parse_color, render_color
-from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe, HorizontalRule
+from ._graph_specification import (
+    FixedVerticalRange,
+    GraphDataRange,
+    GraphMetric,
+    GraphRecipe,
+    HorizontalRule,
+    MinimalVerticalRange,
+)
 from ._loader import get_unit_info
 from ._parser import (
     DecimalFormatter,
@@ -113,7 +120,7 @@ class GraphArtwork(BaseModel):
     start_time: Timestamp
     end_time: Timestamp
     step: Seconds
-    explicit_vertical_range: tuple[float | None, float | None]
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     requested_vrange: tuple[float, float] | None
     requested_start_time: Timestamp
     requested_end_time: Timestamp
@@ -728,28 +735,29 @@ def _apply_mirrored(min_value: float, max_value: float) -> tuple[float, float]:
 
 
 def _compute_min_max(
-    explicit_vertical_range: tuple[float | None, float | None],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     layouted_curves_range: tuple[float | None, float | None],
     mirrored: bool,
 ) -> tuple[float, float]:
-    min_values = [0.0]
+    min_values = []
     max_values = []
-
-    # Apply explicit range if defined in graph
-    explicit_min_value, explicit_max_value = explicit_vertical_range
-    if explicit_min_value is not None:
-        min_values.append(explicit_min_value)
-    if explicit_max_value is not None:
-        max_values.append(explicit_max_value)
-
     lc_min_value, lc_max_value = layouted_curves_range
-    if lc_min_value is not None:
-        min_values.append(lc_min_value)
-    if lc_max_value is not None:
-        max_values.append(lc_max_value)
 
-    min_value = min(min_values)
-    max_value = max(max_values) if max_values else 1.0
+    match explicit_vertical_range:
+        case FixedVerticalRange(min=min_value, max=max_value):
+            min_values = [min_value if min_value is not None else lc_min_value]
+            max_values = [max_value if max_value is not None else lc_max_value]
+        case MinimalVerticalRange(min=min_value, max=max_value):
+            min_values = [min_value, lc_min_value]
+            max_values = [max_value, lc_max_value]
+        case None:
+            min_values = [lc_min_value]
+            max_values = [lc_max_value]
+        case _:
+            assert_never(explicit_vertical_range)
+
+    min_value = min([min_value for min_value in min_values if min_value is not None] or [0.0])
+    max_value = max([max_value for max_value in max_values if max_value is not None] or [1.0])
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
@@ -758,7 +766,7 @@ def _compute_min_max(
 
 
 def _compute_v_axis_min_max(
-    explicit_vertical_range: tuple[float | None, float | None],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     layouted_curves_range: tuple[float | None, float | None],
     graph_data_vrange: tuple[float, float] | None,
     mirrored: bool,

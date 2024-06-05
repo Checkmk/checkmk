@@ -6,7 +6,13 @@
 from collections.abc import Sequence
 from typing import Literal
 
-from ._graph_specification import GraphMetric, GraphRecipe, GraphSpecification, HorizontalRule
+from ._graph_specification import (
+    FixedVerticalRange,
+    GraphMetric,
+    GraphRecipe,
+    GraphSpecification,
+    HorizontalRule,
+)
 from ._type_defs import GraphConsoldiationFunction
 
 
@@ -30,7 +36,10 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
                 title=self.title,
                 unit=self.unit,
                 consolidation_function=self.consolidation_function,
-                explicit_vertical_range=self.explicit_vertical_range,
+                explicit_vertical_range=FixedVerticalRange(
+                    min=self.explicit_vertical_range[0],
+                    max=self.explicit_vertical_range[1],
+                ),
                 omit_zero_metrics=self.omit_zero_metrics,
                 horizontal_rules=self.horizontal_rules,
                 metrics=list(self.metrics),  # TODO: pydantic-9319

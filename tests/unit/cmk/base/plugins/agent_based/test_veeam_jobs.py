@@ -136,7 +136,7 @@ def test_check_veeam_jobs() -> None:
         (
             "starting_and_failed",
             [
-                Result(state=State.OK, summary="State: Starting, Result: Failed"),
+                Result(state=State.CRIT, summary="State: Starting, Result: Failed"),
                 Result(state=State.OK, summary="Creation time: 26.10.2013 23:13:13"),
                 Result(state=State.OK, summary="End time: 27.10.2013 00:51:17"),
                 Result(state=State.OK, summary="Type: Backup"),

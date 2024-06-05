@@ -29,16 +29,17 @@ def discovery_veeam_jobs(section: Mapping[str, Job | None]) -> DiscoveryResult:
 
 
 def monitoring_state(last_state: str, last_result: str, type_: str) -> State:
-    if last_state in ["Starting", "Working", "Postprocessing"]:
-        return State.OK
+    if last_result == "None":
+        if last_state in ["Starting", "Working", "Postprocessing"]:
+            return State.OK
+        if last_state == "Idle" and type_ == "BackupSync":
+            # A sync is always idle
+            return State.OK
     if last_result == "Success":
-        return State.OK
-    if last_state == "Idle" and type_ == "BackupSync":
-        # A sync is always idle
         return State.OK
     if last_result == "Failed":
         return State.CRIT
-    if last_state == "Stopped" and last_result == "Warning":
+    if last_result == "Warning":
         return State.WARN
     return State.UNKNOWN
 

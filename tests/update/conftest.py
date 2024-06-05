@@ -18,7 +18,7 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, parse_raw_edition, repo_path, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
 RULES_DIR = repo_path() / "tests" / "update" / "rules"
 
@@ -70,7 +70,7 @@ class BaseVersions:
         BASE_VERSIONS_STR = json.load(f)
 
     if version_from_env().is_saas_edition():
-        BASE_VERSIONS = [CMKVersion(CMKVersion.DAILY, edition_from_env(), "2.3.0", "2.3.0")]
+        BASE_VERSIONS = [CMKVersion(CMKVersion.DAILY, edition_from_env())]
     else:
         BASE_VERSIONS = [
             CMKVersion(base_version_str, edition_from_env())
@@ -125,7 +125,7 @@ def _get_omd_status(site: Site) -> dict[str, str]:
 def get_site_status(site: Site) -> str | None:
     """Get the overall status of the given site."""
     service_status = _get_omd_status(site)
-    logger.debug("Status codes: %s", service_status)
+    LOGGER.debug("Status codes: %s", service_status)
     if len(service_status) > 0:
         status = list(service_status.values())[-1]
         if status == "partially running":
@@ -134,7 +134,7 @@ def get_site_status(site: Site) -> str | None:
             value == status for value in service_status.values()
         ):
             return status
-        logger.error("Invalid service status: %s", service_status)
+        LOGGER.error("Invalid service status: %s", service_status)
     return None
 
 
@@ -150,16 +150,16 @@ def _create_site(base_version: CMKVersion, interactive: bool) -> Site:
     site_name = "central"
     site_factory = _get_site_factory(base_version)
     site = site_factory.get_existing_site(site_name)
-    logger.info("Site exists: %s", site.exists())
+    LOGGER.info("Site exists: %s", site.exists())
     if site.exists():
-        logger.info("Dropping existing site ...")
+        LOGGER.info("Dropping existing site ...")
         site.rm()
     elif site.is_running():
-        logger.info("Stopping running site before update ...")
+        LOGGER.info("Stopping running site before update ...")
         site.stop()
         assert get_site_status(site) == "stopped"
     assert not site.exists(), "Trying to install existing site!"
-    logger.info("Creating new site")
+    LOGGER.info("Creating new site")
 
     if interactive:
         if not os.getenv("CI", "").strip().lower() == "true":
@@ -232,7 +232,7 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     disable_interactive_mode = (
         request.config.getoption(name="--disable-interactive-mode") or not interactive_mode
     )
-    logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
+    LOGGER.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
     test_site = _create_site(base_version, interactive=not disable_interactive_mode)
 
     disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
@@ -243,7 +243,7 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
             inject_rules(test_site)
 
     yield test_site, target_edition, disable_interactive_mode
-    logger.info("Removing test-site...")
+    LOGGER.info("Removing test-site...")
     test_site.rm()
 
 
@@ -252,11 +252,11 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
 
     # create dump folder in the test site
     site_dumps_path = site.path("var/check_mk/dumps")
-    logger.info('Creating folder "%s"...', site_dumps_path)
+    LOGGER.info('Creating folder "%s"...', site_dumps_path)
     rc = site.execute(["mkdir", "-p", site_dumps_path]).wait()
     assert rc == 0
 
-    logger.info("Injecting agent-output...")
+    LOGGER.info("Injecting agent-output...")
 
     for dump_name in list(os.listdir(dumps_dir)):
         assert (
@@ -273,9 +273,9 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
         )
 
     ruleset_name = "datasource_programs"
-    logger.info('Creating rule "%s"...', ruleset_name)
+    LOGGER.info('Creating rule "%s"...', ruleset_name)
     site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
-    logger.info('Rule "%s" created!', ruleset_name)
+    LOGGER.info('Rule "%s" created!', ruleset_name)
 
 
 def inject_rules(site: Site) -> None:
@@ -290,7 +290,7 @@ def inject_rules(site: Site) -> None:
     for rules_file_name in rules_file_names:
         rules_file_path = RULES_DIR / rules_file_name
         with open(rules_file_path, "r", encoding="UTF-8") as ruleset_file:
-            logger.info('Importing rules file "%s"...', rules_file_path)
+            LOGGER.info('Importing rules file "%s"...', rules_file_path)
             rules = json.load(ruleset_file)
             for rule in rules:
                 site.openapi.create_rule(value=rule)

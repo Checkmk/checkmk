@@ -2210,21 +2210,21 @@ class AutomationDiagHost(Automation):
             return 1, "Cannot find binary <tt>traceroute</tt>."
         return completed_process.returncode, completed_process.stdout
 
-    def _execute_snmp(  # type: ignore[no-untyped-def]  # pylint: disable=too-many-branches
+    def _execute_snmp(  # pylint: disable=too-many-branches
         self,
         test: str,
         snmp_config: SNMPHostConfig,
         hostname: HostName,
         ipaddress: HostAddress,
-        snmp_community,
-        snmp_timeout,
-        snmp_retries,
-        snmpv3_use,
-        snmpv3_auth_proto,
-        snmpv3_security_name,
-        snmpv3_security_password,
-        snmpv3_privacy_proto,
-        snmpv3_privacy_password,
+        snmp_community: str,
+        snmp_timeout: int,
+        snmp_retries: int,
+        snmpv3_use: str | None,
+        snmpv3_auth_proto: str | None,
+        snmpv3_security_name: str | None,
+        snmpv3_security_password: str | None,
+        snmpv3_privacy_proto: str | None,
+        snmpv3_privacy_password: str | None,
     ) -> tuple[int, str]:
         # SNMPv3 tuples
         # ('noAuthNoPriv', "username")

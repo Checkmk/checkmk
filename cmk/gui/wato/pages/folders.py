@@ -306,6 +306,13 @@ class ModeFolder(WatoMode):
 
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
         folder_has_hosts = self._folder.has_hosts()
+        folder_or_subfolder_has_hosts = folder_has_hosts or (  # has hosts in any of its subfolders
+            isinstance(self._folder, Folder)
+            and any(sub.has_hosts() for sub in self._folder.subfolders())
+        )
+        add_host_tooltip_text = _("Add host to use this action")
+        add_host_or_subfolder_tooltip_text = _("Add host/subfolder to use this action")
+
         if (
             not self._folder.locked_hosts()
             and user.may("wato.manage_hosts")
@@ -334,12 +341,8 @@ class ModeFolder(WatoMode):
                 title=_("Run bulk service discovery"),
                 icon_name="services",
                 item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
-                disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=folder_has_hosts
-                or (  # has hosts in any of its subfolders
-                    isinstance(self._folder, Folder)
-                    and any(sub.has_hosts() for sub in self._folder.subfolders())
-                ),
+                disabled_tooltip=add_host_tooltip_text,
+                is_enabled=folder_or_subfolder_has_hosts,
             )
 
         if user.may("wato.rename_hosts"):
@@ -347,8 +350,8 @@ class ModeFolder(WatoMode):
                 title=_("Rename multiple hosts"),
                 icon_name="rename_host",
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
-                disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=folder_has_hosts,
+                disabled_tooltip=add_host_tooltip_text,
+                is_enabled=folder_or_subfolder_has_hosts,
             )
 
         if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
@@ -366,7 +369,7 @@ class ModeFolder(WatoMode):
                     confirm_button=_("Remove"),
                     warning=True,
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=folder_has_hosts,
             )
 
@@ -379,8 +382,8 @@ class ModeFolder(WatoMode):
                 title=_("Detect network parent hosts"),
                 icon_name="parentscan",
                 item=make_simple_link(self._folder.url([("mode", "parentscan"), ("all", "1")])),
-                disabled_tooltip="Add host/subfolder to use this action",
-                is_enabled=folder_has_hosts,
+                disabled_tooltip=add_host_tooltip_text,
+                is_enabled=folder_or_subfolder_has_hosts,
             )
 
         if user.may("wato.random_hosts"):
@@ -397,6 +400,7 @@ class ModeFolder(WatoMode):
             return
 
         is_enabled = self._folder.has_hosts()
+        add_host_or_subfolder_tooltip_text = _("Add host/subfolder to use this action")
 
         if not self._folder.locked_hosts() and user.may("wato.edit_hosts"):
             yield PageMenuEntry(
@@ -406,7 +410,7 @@ class ModeFolder(WatoMode):
                     form_name="hosts",
                     button_name="_bulk_edit",
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
 
@@ -418,7 +422,7 @@ class ModeFolder(WatoMode):
                     form_name="hosts",
                     button_name="_bulk_inventory",
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
 
@@ -429,7 +433,7 @@ class ModeFolder(WatoMode):
                     icon_name="move",
                     name="move_rules",
                     item=PageMenuPopup(self._render_bulk_move_form()),
-                    disabled_tooltip="Add host/subfolder to use this action",
+                    disabled_tooltip=add_host_or_subfolder_tooltip_text,
                     is_enabled=is_enabled,
                 )
 
@@ -441,7 +445,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_parentscan",
                     ),
-                    disabled_tooltip="Add host/subfolder to use this action",
+                    disabled_tooltip=add_host_or_subfolder_tooltip_text,
                     is_enabled=is_enabled,
                 )
 
@@ -453,7 +457,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_bulk_cleanup",
                     ),
-                    disabled_tooltip="Add host/subfolder to use this action",
+                    disabled_tooltip=add_host_or_subfolder_tooltip_text,
                     is_enabled=is_enabled,
                 )
 
@@ -469,7 +473,7 @@ class ModeFolder(WatoMode):
                     confirm_button=_("Remove"),
                     warning=True,
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
 
@@ -482,7 +486,7 @@ class ModeFolder(WatoMode):
                     button_name="_bulk_delete",
                     title=_("Delete selected hosts"),
                 ),
-                disabled_tooltip="Add host/subfolder to use this action",
+                disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
 

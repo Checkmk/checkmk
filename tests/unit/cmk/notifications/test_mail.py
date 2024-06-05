@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import binascii
+from typing import Self
+from unittest.mock import patch
 
 import pytest
 from pytest_mock import MockerFixture
@@ -491,3 +494,73 @@ def test_mail_content_from_host_context(mocker: MockerFixture) -> None:
     assert content.reply_to == ""
     assert content.content_txt == HOST_CONTENT_TXT
     assert content.attachments == []
+
+
+class SiteMock:
+    def get_apache_port(self, _omd_root: object) -> int:
+        return 80
+
+
+class UrllibMock:
+
+    def __init__(self) -> None:
+        self.data: str = ""
+        self.side_effect: type[Exception] | None = None
+
+    def __call__(self, url: str, timeout: int) -> Self:
+        self.url = url
+        self.timeout = timeout
+        return self
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        pass
+
+    def read(self) -> str:
+        if self.side_effect:
+            # pylint thinks this could be None here but it cannot...
+            raise self.side_effect  # pylint: disable=raising-bad-type
+        return self.data
+
+
+@patch("cmk.notification_plugins.mail.site", new=SiteMock())
+def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:
+    context = {
+        "HOSTNAME": "heute",
+        "PARAMETER_GRAPHS_PER_NOTIFICATION": "1",
+        "WHAT": "HOST",
+    }
+    with patch("cmk.notification_plugins.mail.urlopen", new=UrllibMock()):
+        assert mail.render_cmk_graphs(context=context, is_bulk=False) == []
+
+    with patch("cmk.notification_plugins.mail.urlopen", new=UrllibMock()) as mock:
+        mock.side_effect = TimeoutError
+        # Bug
+        with pytest.raises(TypeError, match="%d format: a real number is required, not str"):
+            mail.render_cmk_graphs(context=context, is_bulk=False)
+
+    with patch("cmk.notification_plugins.mail.urlopen", new=UrllibMock()) as mock:
+        mock.data = "foo"
+        assert mail.render_cmk_graphs(context=context, is_bulk=False) == []
+        assert capsys.readouterr().err == (
+            "ERROR: Failed to decode graphs: Expecting value: line 1 column 1 (char 0)\n"
+            "URL: http://localhost:80/NO_SITE/check_mk/ajax_graph_images.py?host=heute&service=_HOST_&num_graphs=1\n"
+            "Data: 'foo'\n"
+        )
+
+    with patch("cmk.notification_plugins.mail.urlopen", new=UrllibMock()) as mock:
+        mock.data = '["foo"]'
+        with pytest.raises(binascii.Error):
+            mail.render_cmk_graphs(context=context, is_bulk=False)
+
+    with patch("cmk.notification_plugins.mail.urlopen", new=UrllibMock()) as mock:
+        mock.data = '[""]'
+        assert mail.render_cmk_graphs(context=context, is_bulk=False) == [b""]
+        assert capsys.readouterr().err == ""
+
+    with patch("cmk.notification_plugins.mail.urlopen", new=UrllibMock()) as mock:
+        mock.data = '["YQ==", "Yg==", "Yw=="]'
+        assert mail.render_cmk_graphs(context=context, is_bulk=False) == [b"a", b"b", b"c"]
+        assert capsys.readouterr().err == ""

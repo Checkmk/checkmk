@@ -8,7 +8,6 @@ import os
 import subprocess
 import sys
 import time
-from types import TracebackType
 
 from psutil import Process
 
@@ -44,12 +43,7 @@ class WatchLog:
 
         return self
 
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         if self._tail_process is not None:
             for c in Process(self._tail_process.pid).children(recursive=True):
                 if c.name() == "tail":

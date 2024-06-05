@@ -17,7 +17,7 @@ from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.tags import TagConfigFile
 
 from cmk.update_config.plugins.actions.tag_conditions import (
-    _transform_host_tags,
+    transform_host_tags,
     UpdateTagConditions,
 )
 
@@ -43,7 +43,7 @@ def test_tag_conditions_with_builtin_tags(
     tags_as_dict: MutableMapping[TagGroupID, TagCondition],
 ) -> None:
     assert (
-        _transform_host_tags(
+        transform_host_tags(
             tags_as_list, BuiltinTagConfig().tag_groups, BuiltinTagConfig().aux_tag_list
         )
         == tags_as_dict
@@ -152,7 +152,7 @@ def test_tag_conditions_with_mixed_tags(
     tags_as_dict: MutableMapping[TagGroupID, TagCondition],
 ) -> None:
     assert (
-        _transform_host_tags(tags_as_list, test_tag_cfg.tag_groups, test_tag_cfg.aux_tag_list)
+        transform_host_tags(tags_as_list, test_tag_cfg.tag_groups, test_tag_cfg.aux_tag_list)
         == tags_as_dict
     )
 

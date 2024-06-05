@@ -17,9 +17,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 class UpdateTagConditions(UpdateAction):
     def __call__(self, logger: Logger) -> None:
-        hosttags_config = TagConfig().from_config(TagConfigFile().load_for_modification())
-        tag_groups = BuiltinTagConfig().tag_groups + hosttags_config.tag_groups
-        aux_tag_list = list(BuiltinTagConfig().aux_tag_list) + list(hosttags_config.aux_tag_list)
+        tag_groups, aux_tag_list = get_tag_config()
         for rule in (notification_rules := NotificationRuleConfigFile().load_for_modification()):
             if not "match_hosttags" in rule:
                 continue
@@ -27,11 +25,18 @@ class UpdateTagConditions(UpdateAction):
             if isinstance(host_tags := rule["match_hosttags"], dict):
                 continue
             assert isinstance(host_tags, list)
-            rule["match_hosttags"] = _transform_host_tags(host_tags, tag_groups, aux_tag_list)
+            rule["match_hosttags"] = transform_host_tags(host_tags, tag_groups, aux_tag_list)
         NotificationRuleConfigFile().save(notification_rules)
 
 
-def _transform_host_tags(
+def get_tag_config() -> tuple[Sequence[TagGroup], AuxTagList]:
+    hosttags_config = TagConfig().from_config(TagConfigFile().load_for_modification())
+    return BuiltinTagConfig().tag_groups + hosttags_config.tag_groups, AuxTagList(
+        list(BuiltinTagConfig().aux_tag_list) + list(hosttags_config.aux_tag_list)
+    )
+
+
+def transform_host_tags(
     host_tags: list[str],
     tag_groups: Sequence[TagGroup],
     aux_tag_list: AuxTagList,

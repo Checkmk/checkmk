@@ -1006,9 +1006,10 @@ class EnableSynchronousDeliveryViaSMTP(BaseSchema):
         AuthenticationValue,
     )
     encryption = fields.String(
+        enum=["ssl_tls", "starttls"],
         required=False,
-        description="",
-        example="ssl/tls",
+        description="The encryption type for the SMTP connection.",
+        example="ssl_tls",
     )
     port = fields.Integer(
         required=False,

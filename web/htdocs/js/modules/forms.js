@@ -302,7 +302,20 @@ export function add_confirm_on_submit(form_id, message) {
 // Used as onclick handler on links to confirm following the link or not
 export function confirm_link(url, message) {
     confirm_dialog({html: message}, () => {
-        location.href = url;
+        const form = Object.assign(document.createElement("form"), {
+            method: "POST",
+            action: url,
+        });
+        const csrf_token_input = Object.assign(document.createElement("input"), {
+            type: "hidden",
+            name: "csrf_token",
+            value: global_csrf_token,
+        });
+
+        form.appendChild(csrf_token_input);
+        document.body.appendChild(form);
+
+        form.submit();
     });
 }
 

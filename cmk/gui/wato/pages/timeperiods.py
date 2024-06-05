@@ -44,6 +44,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -908,6 +909,8 @@ class ModeEditTimeperiod(WatoMode):
         return False
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 

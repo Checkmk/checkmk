@@ -103,6 +103,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.sites import get_enabled_sites, get_event_console_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import (
     make_confirm_link,
@@ -2057,6 +2058,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
@@ -2995,6 +2998,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -3166,6 +3171,8 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not request.uploaded_file("_upload_mib"):
             return None
 

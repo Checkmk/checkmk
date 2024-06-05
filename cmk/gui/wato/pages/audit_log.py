@@ -39,6 +39,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils import escaping
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -212,6 +213,11 @@ class ModeAuditLog(WatoMode):
         return self._store.exists()
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
+        if not transactions.check_transaction():
+            return None
+
         if request.var("_action") == "clear":
             user.need_permission("wato.auditlog")
             user.need_permission("wato.clear_auditlog")

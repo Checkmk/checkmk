@@ -17,6 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,
@@ -51,6 +52,8 @@ class ModeManageReadOnly(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         settings = self._vs().from_html_vars("_read_only")
         self._vs().validate_value(settings, "_read_only")
         self._settings = settings

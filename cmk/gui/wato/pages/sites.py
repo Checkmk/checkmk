@@ -45,6 +45,7 @@ from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariab
 from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site, site_is_local, SiteStatus
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, UserId
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import (
     DocReference,
@@ -559,6 +560,8 @@ class ModeDistributedMonitoring(WatoMode):
         return page_menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         delete_id = request.get_ascii_input("_delete")
         if delete_id and transactions.check_transaction():
             self._action_delete(delete_id)

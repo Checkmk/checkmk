@@ -38,6 +38,7 @@ from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import make_confirm_link, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -458,6 +459,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         return []
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.transaction_valid():
             return redirect(mode_url(self._mode_type.list_mode_name()))
 

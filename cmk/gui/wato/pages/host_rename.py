@@ -33,6 +33,7 @@ from cmk.gui.plugins.wato.utils import flash, mode_registry, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -138,6 +139,8 @@ class ModeBulkRenameHost(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
         renamings = self._collect_host_renamings(renaming_config)

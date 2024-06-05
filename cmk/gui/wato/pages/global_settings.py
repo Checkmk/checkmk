@@ -41,6 +41,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariableGroup,
 )
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
@@ -296,6 +297,8 @@ class ABCEditGlobalSettingMode(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if request.var("_reset"):
             if not transactions.check_transaction():
                 return None

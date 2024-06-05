@@ -19,6 +19,7 @@ from cmk.gui.log import logger
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import get_hostnames_from_checkboxes, mode_registry, WatoMode
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
@@ -100,6 +101,8 @@ class ModeBulkDiscovery(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         user.need_permission("wato.services")
 
         try:

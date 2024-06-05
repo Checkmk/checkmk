@@ -525,6 +525,8 @@ class ModeFolder(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if request.var("_search"):  # just commit to search form
             return None
 
@@ -1231,6 +1233,8 @@ class ABCFolderMode(WatoMode, abc.ABC):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if request.has_var("backfolder"):
             # Edit icon on subfolder preview should bring user back to parent folder
             folder = watolib.Folder.folder(request.var("backfolder"))

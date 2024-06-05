@@ -54,6 +54,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.sites import get_configured_site_choices
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, UserSpec
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
@@ -199,6 +200,8 @@ class ModeUsers(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -722,6 +725,8 @@ class ModeEditUser(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         def read_password_or_none(field: str) -> Optional[Password]:
             # make a Password type only if the field has a non-"" value
             # this is here because we don't have get_validated_type_input on 2.1 yet.

@@ -1,0 +1,25 @@
+Title: Fix Various CSRF Issues
+Class: security
+Compatible: compat
+Component: wato
+Date: 1718958734
+Edition: cre
+Level: 1
+Version: 2.1.0p45
+
+This Werk adds priviously missing CSRF-Token validation to various endpoints in WATO.
+The lack of CSRF-Token validation could allow an attacker to perform actions on behalf of a user without their consent, by tricking the user into visiting clicking on a malicious link.
+
+This vulnerability was identified during a commissioned penetration test conducted by PS Positive Security GmbH.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 8.8 High with the following CVSS vector: <code>CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H</code>.
+and assigned CVE <code>CVE-2024-28828</code>.

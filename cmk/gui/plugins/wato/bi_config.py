@@ -79,6 +79,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import (
     make_confirm_link,
     makeactionuri,
@@ -281,6 +282,8 @@ class ModeBIEditPack(ABCBIMode):
         return super().title() + " - " + _("Add BI Pack")
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.check_transaction():
             vs_config = self._vs_pack().from_html_vars("bi_pack")
             self._vs_pack().validate_value(vs_config, "bi_pack")
@@ -1077,6 +1080,8 @@ class ModeBIEditRule(ABCBIMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
@@ -1620,6 +1625,8 @@ class BIModeEditAggregation(ABCBIMode):
         return ids
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         self.verify_pack_permission(self.bi_pack)
         if not transactions.check_transaction():
             return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))

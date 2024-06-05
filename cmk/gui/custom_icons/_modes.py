@@ -18,6 +18,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
@@ -87,6 +88,8 @@ class ModeIcons(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 

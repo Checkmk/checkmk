@@ -30,6 +30,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.userdb.store import load_users
 from cmk.gui.utils import escaping
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -262,6 +263,8 @@ class ModeAuditLog(WatoMode):
             return HTML.without_escaping(output_funnel.drain())
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 

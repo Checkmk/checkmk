@@ -472,7 +472,23 @@ export function confirm_link(
     custom_args: ConfirmLinkCustomArgs
 ) {
     confirm_dialog({...custom_args, html: message}, () => {
-        location.href = url;
+        const form = Object.assign(document.createElement("form"), {
+            method: "POST",
+            action: url,
+        });
+        const csrf_token_input = Object.assign(
+            document.createElement("input"),
+            {
+                type: "hidden",
+                name: "csrf_token",
+                value: global_csrf_token,
+            }
+        );
+
+        form.appendChild(csrf_token_input);
+        document.body.appendChild(form);
+
+        form.submit();
     });
 }
 

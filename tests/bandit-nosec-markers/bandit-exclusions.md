@@ -19,7 +19,6 @@ Note that Bandit is picky about the exact format.
 | `BNS:e9bfaa` | `B303` | Only used to display fingerprints and in testing. |
 | `BNS:02774b` | `B303` | SHA1 is still used by the agent bakery and mkbackup for compatibility reasons. Switching is planned. |
 | `BNS:6b61d9` | `B310` | The URL is explicitly validated. |
-| `BNS:28af27` | `B310` | The URL or the scheme is hardcoded, so the scheme cannot change. |
 | `BNS:97f639` | `B321`, `B402` | The checked service requires FTP. |
 | `BNS:501305` | `B323` | Intended behaviour and configurable via option. |
 | `BNS:eb967b` | `B324` | SHA1 HMAC is fine and is the preferred standard for TOTP, bandit only sees the use of SHA1. |

@@ -11,7 +11,6 @@
 # attached graphs and such neat stuff. Sweet!
 
 import base64
-import json
 import os
 import socket
 import sys
@@ -22,8 +21,8 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Literal, NamedTuple, NoReturn
-from urllib.parse import quote
-from urllib.request import urlopen
+
+import requests
 
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.paths import omd_root
@@ -702,41 +701,42 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
     else:
         svc_desc = context["SERVICEDESC"]
 
-    url = (
-        "http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s&num_graphs=%s"
-        % (
-            site.get_apache_port(omd_root),
-            os.environ["OMD_SITE"],
-            quote(context["HOSTNAME"]),
-            quote(svc_desc),
-            quote(context["PARAMETER_GRAPHS_PER_NOTIFICATION"]),
-        )
-    )
+    request = requests.Request(
+        "GET",
+        f"http://localhost:{site.get_apache_port(omd_root)}/{os.environ['OMD_SITE']}/check_mk/ajax_graph_images.py",
+        params={
+            "host": context["HOSTNAME"],
+            "service": svc_desc,
+            "num_graphs": context["PARAMETER_GRAPHS_PER_NOTIFICATION"],
+        },
+    ).prepare()
 
     timeout = 10
+
     try:
-        with urlopen(url, timeout=timeout) as opened_file:  # nosec B310 # BNS:28af27
-            json_data = opened_file.read()
-    except TimeoutError:
+        response = requests.Session().send(
+            request,
+            timeout=timeout,
+        )
+        base64_strings = response.json()
+    except requests.exceptions.ReadTimeout:
         if opt_debug:
             raise
-        sys.stderr.write(f"ERROR: Timed out fetching graphs ({timeout} sec)\nURL: {url}\n")
+        sys.stderr.write(f"ERROR: Timed out fetching graphs ({timeout} sec)\nURL: {request.url}\n")
+        return []
+    except requests.exceptions.JSONDecodeError as e:
+        if response.text == "":
+            return []
+        if opt_debug:
+            raise
+        sys.stderr.write(
+            f"ERROR: Failed to decode graphs: {e}\nURL: {request.url}\nData: {response.text!r}\n"
+        )
         return []
     except Exception as e:
         if opt_debug:
             raise
-        sys.stderr.write(f"ERROR: Failed to fetch graphs: {e}\nURL: {url}\n")
-        return []
-
-    if not json_data:
-        return []
-
-    try:
-        base64_strings = json.loads(json_data)
-    except Exception as e:
-        if opt_debug:
-            raise
-        sys.stderr.write(f"ERROR: Failed to decode graphs: {e}\nURL: {url}\nData: {json_data!r}\n")
+        sys.stderr.write(f"ERROR: Failed to fetch graphs: {e}\nURL: {request.url}\n")
         return []
 
     return [base64.b64decode(s) for s in base64_strings]

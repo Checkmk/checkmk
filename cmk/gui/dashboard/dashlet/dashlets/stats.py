@@ -333,9 +333,7 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
     def _get_stats(
         cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
     ) -> S:
-        filter_headers, only_sites = visuals.get_filter_headers(
-            table=cls._livestatus_table(), infos=infos, context=context
-        )
+        filter_headers, only_sites = visuals.get_filter_headers(infos=infos, context=context)
         query = cls._stats_query() + "\n" + filter_headers
         try:
             with sites.only_sites(only_sites):

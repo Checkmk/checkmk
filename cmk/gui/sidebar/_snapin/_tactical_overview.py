@@ -349,21 +349,21 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         query: str | livestatus.Query
         if what == "hosts":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="hosts", infos=["host"], context=context
+                infos=["host"], context=context
             )
 
             query = self._get_host_stats_query(context_filters)
 
         elif what == "services":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="services", infos=["host", "service"], context=context
+                infos=["host", "service"], context=context
             )
 
             query = self._get_service_stats_query(context_filters)
 
         elif what == "events":
             context_filters, only_sites = visuals.get_filter_headers(
-                table="eventconsoleevents", infos=["host", "event"], context=context
+                infos=["host", "event"], context=context
             )
 
             query = self._get_event_stats_query(context_filters)

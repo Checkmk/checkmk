@@ -21,7 +21,7 @@ from .filter import Filter
 # the only_sites list and a string with the filter headers
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
-def get_filter_headers(table, infos, context: VisualContext):  # type: ignore[no-untyped-def]
+def get_filter_headers(infos, context: VisualContext):  # type: ignore[no-untyped-def]
     filter_headers = "".join(get_livestatus_filter_headers(context, collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
 

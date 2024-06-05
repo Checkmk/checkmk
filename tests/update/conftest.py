@@ -18,8 +18,6 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, parse_raw_edition, repo_path, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
-from cmk.utils.version import Edition
-
 logger = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
 RULES_DIR = repo_path() / "tests" / "update" / "rules"
@@ -140,48 +138,30 @@ def get_site_status(site: Site) -> str | None:
     return None
 
 
-def _get_site(  # pylint: disable=too-many-branches
-    version: CMKVersion,
-    interactive: bool,
-    target_edition: Edition,
-    base_site: Site | None = None,
-) -> Site:
-    """Install or update the test site with the given version.
-
-    An update installation is done automatically when an optional base_site is given.
-    By default, both installing and updating is done directly via spawn_expect_process().
-    """
-    prefix = "update_"
-    sitename = "central"
-
-    update = base_site is not None and base_site.exists()
-    update_conflict_mode = "keepold"
-    min_version = get_min_version(target_edition)
-    sf = SiteFactory(
+def _get_site_factory(version: CMKVersion) -> SiteFactory:
+    return SiteFactory(
         version=CMKVersion(version.version, version.edition),
-        prefix=prefix,
-        update=update,
-        update_conflict_mode=update_conflict_mode,
+        prefix="update_",
         enforce_english_gui=False,
     )
-    site = sf.get_existing_site(sitename)
 
+
+def _create_site(base_version: CMKVersion, interactive: bool) -> Site:
+    site_name = "central"
+    site_factory = _get_site_factory(base_version)
+    site = site_factory.get_existing_site(site_name)
     logger.info("Site exists: %s", site.exists())
-    if site.exists() and not update:
+    if site.exists():
         logger.info("Dropping existing site ...")
         site.rm()
     elif site.is_running():
         logger.info("Stopping running site before update ...")
         site.stop()
         assert get_site_status(site) == "stopped"
-    assert site.exists() == update, (
-        "Trying to update non-existing site!" if update else "Trying to install existing site!"
-    )
-    logger.info("Updating existing site" if update else "Creating new site")
+    assert not site.exists(), "Trying to install existing site!"
+    logger.info("Creating new site")
 
     if interactive:
-        logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
-
         if not os.getenv("CI", "").strip().lower() == "true":
             print(
                 "\033[91m"
@@ -191,43 +171,48 @@ def _get_site(  # pylint: disable=too-many-branches
                 "#######################################################################"
                 "\033[0m"
             )
-
-        if update:
-            sf.interactive_update(
-                base_site,  # type: ignore
-                target_version=version,
-                min_version=min_version,
-                timeout=60,
-            )
-        else:  # interactive site creation
-            try:
-                site = sf.interactive_create(site.id, logfile_path, timeout=60)
-                restart_httpd()
-            except Exception as e:
-                if f"Version {version.version} could not be installed" in str(e):
-                    pytest.skip(
-                        f"Base-version {version.version} not available in "
-                        f'{os.environ.get("DISTRO")}'
-                    )
-                else:
-                    raise
-    elif update:
-        # non-interactive update as site-user
-        sf.update_as_site_user(site, target_version=version, min_version=min_version)
-
-    else:  # use SiteFactory for non-interactive site creation
         try:
-            site = sf.get_site(sitename, auto_restart_httpd=True)
+            site = site_factory.interactive_create(site.id, timeout=60)
+            restart_httpd()
         except Exception as e:
-            if f"Version {version.version} could not be installed" in str(e):
+            if f"Version {base_version.version} could not be installed" in str(e):
                 pytest.skip(
-                    f"Base-version {version.version} not available in "
+                    f"Base-version {base_version.version} not available in "
+                    f'{os.environ.get("DISTRO")}'
+                )
+            else:
+                raise
+    else:
+        try:
+            site = site_factory.get_site(site_name, auto_restart_httpd=True)
+        except Exception as e:
+            if f"Version {base_version.version} could not be installed" in str(e):
+                pytest.skip(
+                    f"Base-version {base_version.version} not available in "
                     f'{os.environ.get("DISTRO")}'
                 )
             else:
                 raise
 
     return site
+
+
+def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) -> Site:
+    site_factory = _get_site_factory(target_version)
+    min_version = get_min_version(base_site.version.edition)
+    if interactive:
+        target_site = site_factory.interactive_update(
+            base_site,
+            target_version=target_version,
+            min_version=min_version,
+            timeout=60,
+        )
+    else:
+        target_site = site_factory.update_as_site_user(
+            base_site, target_version=target_version, min_version=min_version
+        )
+
+    return target_site
 
 
 @pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")
@@ -248,9 +233,7 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
         request.config.getoption(name="--disable-interactive-mode") or not interactive_mode
     )
     logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
-    test_site = _get_site(
-        base_version, interactive=not disable_interactive_mode, target_edition=target_edition
-    )
+    test_site = _create_site(base_version, interactive=not disable_interactive_mode)
 
     disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
     if not version_from_env().is_saas_edition():
@@ -262,17 +245,6 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     yield test_site, target_edition, disable_interactive_mode
     logger.info("Removing test-site...")
     test_site.rm()
-
-
-def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) -> Site:
-    """Update the test site to the target version."""
-    logger.info("Updating site (interactive-mode=%s) ...", interactive_mode)
-    return _get_site(
-        target_version,
-        base_site=site,
-        interactive=interactive_mode,
-        target_edition=target_version.edition,
-    )
 
 
 def inject_dumps(site: Site, dumps_dir: Path) -> None:

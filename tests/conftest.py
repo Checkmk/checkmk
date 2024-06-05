@@ -19,6 +19,18 @@ import pytest
 import pytest_check  # type: ignore[import-untyped]
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
+from tests.testlib.repo import (
+    add_python_paths,
+    current_base_branch_name,
+    is_cloud_repo,
+    is_enterprise_repo,
+    is_managed_repo,
+    is_saas_repo,
+    repo_path,
+)
+
+_logger = logging.getLogger(__name__)
+
 
 @pytest.fixture(scope="function", autouse=True)
 def fail_on_log_exception(
@@ -52,16 +64,6 @@ pytest.register_assert_rewrite(
 )
 
 pytest_plugins = ("tests.testlib.playwright.plugin",)
-
-from tests.testlib.repo import (
-    add_python_paths,
-    current_base_branch_name,
-    is_cloud_repo,
-    is_enterprise_repo,
-    is_managed_repo,
-    is_saas_repo,
-    repo_path,
-)
 
 collect_ignore: list[str] = []
 
@@ -235,14 +237,11 @@ def verify_virtualenv():
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
-def fake_version_and_paths() -> None:
+def _fake_version_and_paths() -> None:
     from pytest import MonkeyPatch  # pylint: disable=import-outside-toplevel
 
     monkeypatch = MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
-
-    import cmk.utils.paths  # pylint: disable=import-outside-toplevel
-    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
 
     if is_managed_repo():
         edition_short = "cme"
@@ -255,11 +254,6 @@ def fake_version_and_paths() -> None:
     else:
         edition_short = "cre"
 
-    monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
-    monkeypatch.setattr(
-        cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
-    )
-
     unpatched_paths: Final = {
         # FIXME :-(
         # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
@@ -267,6 +261,10 @@ def fake_version_and_paths() -> None:
         "local_views_dir",
         "local_reports_dir",
     }
+
+    # patch `cmk.utils.paths` before `cmk.utils.versions`
+    _logger.info("Patching `cmk.utils.paths`.")
+    import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
     # Unit test context: load all available modules
     original_omd_root = Path(cmk.utils.paths.omd_root)
@@ -289,10 +287,33 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
 
+    # patch `cmk.utils.versions`
+    _logger.info("Patching `cmk.utils.versions`.")
+    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
+
+    monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
+    monkeypatch.setattr(
+        cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
+    )
+
+
+def _patch_cmk_utils() -> bool:
+    """Patch `cmk.utils` for unit testing.
+
+    `unit tests` can be identified by parsing value of `-T` within pytest commandline, or
+    detecting whether the test run is an `xdist` based run (parallel unit-test runs).
+    """
+    try:
+        is_unit_test = sys.argv[sys.argv.index("-T") + 1] == "unit"
+    except ValueError as _:
+        # default pytest '-T' value is 'unit'
+        is_unit_test = True
+    return is_unit_test or bool(os.getenv("PYTEST_XDIST_TESTRUNUID", ""))
+
 
 #
 # MAIN
 #
-
+if _patch_cmk_utils():
+    _fake_version_and_paths()
 add_python_paths()
-fake_version_and_paths()

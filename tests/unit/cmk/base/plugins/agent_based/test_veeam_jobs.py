@@ -113,10 +113,11 @@ def test_check_veeam_jobs() -> None:
         (
             "backup_sync_job",
             [
-                Result(
-                    state=State.OK,
-                    summary="Running since 20.07.2017 08:25:09 (current state is: Working)",
-                ),
+                Result(state=State.OK, summary="State: Working"),
+                Result(state=State.OK, summary="Result: None"),
+                Result(state=State.OK, summary="Creation time: 20.07.2017 08:25:09"),
+                Result(state=State.OK, summary="End time: 20.07.2017 08:25:29"),
+                Result(state=State.OK, summary="Type: BackupSync"),
             ],
         ),
         ("backup_stopped", []),
@@ -133,10 +134,11 @@ def test_check_veeam_jobs() -> None:
         (
             "starting_and_failed",
             [
-                Result(
-                    state=State.OK,
-                    summary="Running since 26.10.2013 23:13:13 (current state is: Starting)",
-                ),
+                Result(state=State.OK, summary="State: Starting"),
+                Result(state=State.OK, summary="Result: Failed"),
+                Result(state=State.OK, summary="Creation time: 26.10.2013 23:13:13"),
+                Result(state=State.OK, summary="End time: 27.10.2013 00:51:17"),
+                Result(state=State.OK, summary="Type: Backup"),
             ],
         ),
         ("Lehrer Rechner", []),

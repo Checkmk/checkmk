@@ -32,12 +32,10 @@ def check_veeam_jobs(item: str, section: Mapping[str, Job | None]) -> CheckResul
     if (job := section.get(item)) is None:
         return
 
+    yield Result(state=State.OK, summary=f"State: {job.last_state}")
     if job.last_state in ["Starting", "Working", "Postprocessing"]:
-        summary = f"Running since {job.creation_time} (current state is: {job.last_state})"
-        yield Result(state=State.OK, summary=summary)
-        return
-
-    if job.last_result == "Success":
+        state = State.OK
+    elif job.last_result == "Success":
         state = State.OK
     elif job.last_state == "Idle" and job.type_ == "BackupSync":
         # A sync job is always idle
@@ -49,7 +47,6 @@ def check_veeam_jobs(item: str, section: Mapping[str, Job | None]) -> CheckResul
     else:
         state = State.UNKNOWN
 
-    yield Result(state=State.OK, summary=f"State: {job.last_state}")
     yield Result(state=state, summary=f"Result: {job.last_result}")
     yield Result(state=State.OK, summary=f"Creation time: {job.creation_time}")
     yield Result(state=State.OK, summary=f"End time: {job.end_time}")

@@ -28,26 +28,29 @@ def discovery_veeam_jobs(section: Mapping[str, Job | None]) -> DiscoveryResult:
     yield from (Service(item=item) for item in section.keys())
 
 
+def monitoring_state(last_state: str, last_result: str, type_: str) -> State:
+    if last_state in ["Starting", "Working", "Postprocessing"]:
+        return State.OK
+    if last_result == "Success":
+        return State.OK
+    if last_state == "Idle" and type_ == "BackupSync":
+        # A sync is always idle
+        return State.OK
+    if last_result == "Failed":
+        return State.CRIT
+    if last_state == "Stopped" and last_result == "Warning":
+        return State.WARN
+    return State.UNKNOWN
+
+
 def check_veeam_jobs(item: str, section: Mapping[str, Job | None]) -> CheckResult:
     if (job := section.get(item)) is None:
         return
 
-    yield Result(state=State.OK, summary=f"State: {job.last_state}")
-    if job.last_state in ["Starting", "Working", "Postprocessing"]:
-        state = State.OK
-    elif job.last_result == "Success":
-        state = State.OK
-    elif job.last_state == "Idle" and job.type_ == "BackupSync":
-        # A sync job is always idle
-        state = State.OK
-    elif job.last_result == "Failed":
-        state = State.CRIT
-    elif job.last_state == "Stopped" and job.last_result == "Warning":
-        state = State.WARN
-    else:
-        state = State.UNKNOWN
-
-    yield Result(state=state, summary=f"Result: {job.last_result}")
+    yield Result(
+        state=monitoring_state(job.last_state, job.last_result, job.type_),
+        summary=f"State: {job.last_state}, Result: {job.last_result}",
+    )
     yield Result(state=State.OK, summary=f"Creation time: {job.creation_time}")
     yield Result(state=State.OK, summary=f"End time: {job.end_time}")
     yield Result(state=State.OK, summary=f"Type: {job.type_}")

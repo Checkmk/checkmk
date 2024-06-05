@@ -60,6 +60,7 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, UserId
 from cmk.gui.utils.compatibility import make_site_version_info
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -581,6 +582,8 @@ class ModeDistributedMonitoring(WatoMode):
         return page_menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         delete_id = request.get_ascii_input("_delete")
         if delete_id and transactions.check_transaction():
             self._action_delete(delete_id)

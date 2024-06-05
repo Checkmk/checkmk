@@ -57,6 +57,7 @@ from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject,
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
@@ -232,6 +233,8 @@ class ModeUsers(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -718,6 +721,8 @@ class ModeEditUser(WatoMode):
             )
 
     def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(mode_url("users"))
 

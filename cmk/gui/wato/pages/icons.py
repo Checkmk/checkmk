@@ -22,6 +22,7 @@ from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import make_confirm_delete_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
@@ -96,6 +97,8 @@ class ModeIcons(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 

@@ -44,6 +44,7 @@ from cmk.gui.userdb.ldap_connector import (
     LDAPAttributePluginGroupsToRoles,
     LDAPUserConnector,
 )
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -786,6 +787,8 @@ class ModeEditLDAPConnection(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 

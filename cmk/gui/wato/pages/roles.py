@@ -56,6 +56,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
@@ -226,6 +227,8 @@ class ModeEditRole(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if html.form_submitted("search"):
             return None
 

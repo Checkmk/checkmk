@@ -54,6 +54,7 @@ from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri, makeuri
 from cmk.gui.valuespec import (
@@ -617,6 +618,8 @@ class ModeNotifications(ABCNotificationsMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if request.has_var("_show_user"):
             if transactions.check_transaction():
                 self._show_user_rules = bool(request.var("_show_user"))
@@ -1629,6 +1632,8 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return self._back_mode()
 

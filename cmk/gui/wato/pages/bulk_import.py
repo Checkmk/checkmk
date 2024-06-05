@@ -37,6 +37,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -125,6 +126,8 @@ class ModeBulkImport(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.transaction_valid():
             if request.has_var("_do_upload"):
                 self._upload_csv_file()

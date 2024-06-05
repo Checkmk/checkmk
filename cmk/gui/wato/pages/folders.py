@@ -545,6 +545,8 @@ class ModeFolder(WatoMode):
             )
 
     def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+        check_csrf_token()
+
         if request.var("_search"):  # just commit to search form
             return None
 
@@ -1276,6 +1278,8 @@ class ABCFolderMode(WatoMode, abc.ABC):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if (backfolder := request.var("backfolder")) is not None:
             # Edit icon on subfolder preview should bring user back to parent folder
             folder = Folder.folder(backfolder)

@@ -39,6 +39,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Key
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -163,6 +164,8 @@ class PageKeyManagement:
         return True
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if self._may_edit_config() and request.has_var("_delete"):
             key_id_as_str = request.var("_delete")
             if key_id_as_str is None:
@@ -246,6 +249,8 @@ class PageEditKey:
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
@@ -330,6 +335,8 @@ class PageUploadKey:
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
             request.del_var("key_p_passphrase")
@@ -442,6 +449,8 @@ class PageDownloadKey:
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if transactions.check_transaction():
             keys = self.key_store.load()
 

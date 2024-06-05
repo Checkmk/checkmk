@@ -28,6 +28,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.userdb.utils import connections_by_type, ConnectorType, get_connection
 from cmk.gui.plugins.wato.utils import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName, Users
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -160,6 +161,8 @@ class ModeUserMigrate(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 

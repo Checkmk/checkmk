@@ -45,6 +45,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
@@ -675,6 +676,8 @@ class ModeEditTimeperiod(WatoMode):
         return False
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return None
 

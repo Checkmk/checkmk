@@ -1,7 +1,7 @@
 [project]
 name = "cmk-shared-typing"
 version = "1.0.0"
-dependencies = ["datamodel-code-generator"]
+dependencies = ["datamodel-code-generator", "libcst", "black"]
 
 [build-system]
 requires = ["setuptools"]

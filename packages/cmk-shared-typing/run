@@ -115,27 +115,26 @@ run_clean() {
     find cmk tests -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
 }
 
-run_check_format() {
-    setup_venv
-    isort --check-only --diff cmk tests
-    black --check --diff cmk tests
-}
-
-run_format() {
-    setup_venv
-    isort cmk tests
-    black cmk tests
-}
-
 run_build() {
-    for filename in $(
-        cd source
-        ls ./*
-    ); do
-        target_file=${filename%.json}
-        echo "Processing $target_file"
-        datamodel-codegen --input "source/${filename}" --input-file-type jsonschema --output "python/${target_file}.py" --target-python-version 3.12 --output-model-type=dataclasses.dataclass
-        ./node_modules/.bin/json2ts "source/${filename}" --additionalProperties=false >"typescript/${target_file}.ts"
+    mkdir -p python typescript
+    cwd=$(pwd)
+    export PYTHONPATH="$PYTHONPATH:$cwd"
+    for file in source/*.json; do
+        target_base=$(basename "${file}" .json)
+        echo "Processing $file"
+
+        datamodel-codegen --input "$file" \
+            --input-file-type jsonschema \
+            --output "python/${target_base}.py" \
+            --target-python-version 3.12 \
+            --output-model-type=dataclasses.dataclass \
+            --use-double-quotes \
+            --use-default \
+            --use-standard-collections \
+            --use-one-literal-as-default \
+            --use-subclass-enum \
+            --custom-formatters "utils.format"
+        npm run json2ts "${file}" -o "typescript/${target_base}.ts"
     done
 }
 

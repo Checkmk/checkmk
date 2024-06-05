@@ -755,30 +755,6 @@ msgstr "%s: Servizi: %s, Etichette host: %s"
 msgid "%s: Uses SSL"
 msgstr "%s: Utilizza SSL"
 
-#, python-format
-msgid "%sPacket loss"
-msgstr "%sPerdita di pacchetti"
-
-#, python-format
-msgid "%sResponse time"
-msgstr "%sTempo di risposta"
-
-#, python-format
-msgid "%sRound trip average"
-msgstr "%sViaggio medio di andata e ritorno"
-
-#, python-format
-msgid "%sRound trip maximum"
-msgstr "%sRound trip massimo"
-
-#, python-format
-msgid "%sRound trip minimum"
-msgstr "%sRound trip minimo"
-
-#, python-format
-msgid "%sRound trip standard devation"
-msgstr "%sDeviazione standard del viaggio di andata e ritorno"
-
 msgid ""
 "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 msgstr ""
@@ -9272,6 +9248,11 @@ msgstr ""
 "filesystem in un singolo servizio. I filesystem che corrispondono a uno "
 "degli schemi di esclusione saranno esclusi dal gruppo e monitorati "
 "individualmente."
+
+msgid ""
+"By default, the ntopng host filter is enabled, however, disabling this can "
+"have a positive impact on the performance of the ntopng integration"
+msgstr ""
 
 msgid ""
 "By enabling this option notifications will be bulked only if the specified "
@@ -20325,6 +20306,10 @@ msgstr "Abilitare le notifiche di servizio"
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Abilitare la consegna sincrona via SMTP"
 
+#, fuzzy
+msgid "Enable the ntopng host filter"
+msgstr "Abilita questa istanza di ntopng"
+
 msgid "Enable this ntopng instance"
 msgstr "Abilita questa istanza di ntopng"
 
@@ -26045,13 +26030,1065 @@ msgstr "Homepage / Download - URL di questo pacchetto"
 msgid "Honor scheduled downtimes"
 msgstr "Onorare i tempi di inattività programmati"
 
-#, fuzzy, python-format
-msgid "Hop %d packet loss"
+#, fuzzy
+msgid "Hop 1 packet loss"
 msgstr "Hop %d Perdita di pacchetti"
 
-#, fuzzy, python-format
-msgid "Hop %d round trip average"
+#, fuzzy
+msgid "Hop 1 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 1 round trip average"
 msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 1 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 1 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 1 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 10 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 10 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 10 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 10 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 10 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 10 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 11 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 11 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 11 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 11 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 11 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 11 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 12 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 12 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 12 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 12 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 12 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 12 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 13 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 13 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 13 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 13 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 13 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 13 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 14 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 14 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 14 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 14 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 14 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 14 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 15 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 15 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 15 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 15 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 15 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 15 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 16 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 16 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 16 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 16 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 16 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 16 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 17 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 17 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 17 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 17 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 17 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 17 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 18 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 18 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 18 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 18 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 18 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 18 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 19 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 19 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 19 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 19 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 19 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 19 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 2 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 2 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 2 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 2 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 2 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 2 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 20 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 20 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 20 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 20 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 20 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 20 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 21 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 21 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 21 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 21 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 21 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 21 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 22 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 22 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 22 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 22 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 22 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 22 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 23 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 23 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 23 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 23 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 23 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 23 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 24 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 24 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 24 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 24 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 24 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 24 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 25 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 25 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 25 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 25 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 25 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 25 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 26 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 26 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 26 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 26 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 26 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 26 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 27 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 27 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 27 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 27 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 27 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 27 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 28 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 28 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 28 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 28 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 28 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 28 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 29 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 29 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 29 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 29 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 29 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 29 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 3 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 3 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 3 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 3 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 3 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 3 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 30 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 30 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 30 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 30 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 30 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 30 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 31 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 31 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 31 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 31 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 31 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 31 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 32 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 32 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 32 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 32 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 32 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 32 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 33 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 33 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 33 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 33 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 33 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 33 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 34 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 34 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 34 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 34 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 34 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 34 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 35 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 35 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 35 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 35 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 35 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 35 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 36 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 36 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 36 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 36 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 36 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 36 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 37 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 37 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 37 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 37 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 37 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 37 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 38 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 38 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 38 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 38 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 38 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 38 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 39 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 39 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 39 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 39 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 39 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 39 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 4 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 4 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 4 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 4 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 4 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 4 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 40 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 40 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 40 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 40 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 40 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 40 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 41 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 41 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 41 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 41 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 41 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 41 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 42 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 42 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 42 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 42 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 42 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 42 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 43 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 43 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 43 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 43 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 43 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 43 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 44 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 44 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 44 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 44 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 44 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 44 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 5 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 5 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 5 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 5 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 5 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 5 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 6 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 6 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 6 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 6 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 6 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 6 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 7 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 7 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 7 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 7 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 7 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 7 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 8 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 8 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 8 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 8 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 8 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 8 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 9 packet loss"
+msgstr "Hop %d Perdita di pacchetti"
+
+#, fuzzy
+msgid "Hop 9 response time"
+msgstr "Tempi di risposta del luppolo"
+
+#, fuzzy
+msgid "Hop 9 round trip average"
+msgstr "Hop %d Media del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop 9 round trip maximum"
+msgstr "%sRound trip massimo"
+
+#, fuzzy
+msgid "Hop 9 round trip minimum"
+msgstr "%sRound trip minimo"
+
+#, fuzzy
+msgid "Hop 9 round trip standard devation"
+msgstr "%sDeviazione standard del viaggio di andata e ritorno"
+
+#, fuzzy
+msgid "Hop response time"
+msgstr "Tempi di risposta del luppolo"
 
 msgid "Hop response times"
 msgstr "Tempi di risposta del luppolo"
@@ -34976,6 +36013,10 @@ msgid "Manage users of the monitoring system."
 msgstr "Gestire gli utenti del sistema di monitoraggio."
 
 #, fuzzy
+msgid "Managed Robot"
+msgstr "Oggetti gestiti"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "Oggetti gestiti"
 
@@ -34995,6 +36036,10 @@ msgid "Managing licenses"
 msgstr "Gestione delle licenze"
 
 msgid "Manual"
+msgstr "Manuale"
+
+#, fuzzy
+msgid "Manual Robot"
 msgstr "Manuale"
 
 msgid "Manual check"
@@ -39477,6 +40522,10 @@ msgid "Ntopng (chargeable add-on)"
 msgstr "Ntopng (add-on a pagamento)"
 
 msgid "Ntopng host"
+msgstr "Host Ntopng"
+
+#, fuzzy
+msgid "Ntopng host filter"
 msgstr "Host Ntopng"
 
 msgid "Ntopng integration"
@@ -47566,6 +48615,10 @@ msgid "Request metrics"
 msgstr "Richiesta di metrica"
 
 msgid "Request rate"
+msgstr "Tasso di richiesta"
+
+#, fuzzy
+msgid "Request too large"
 msgstr "Tasso di richiesta"
 
 msgid "Request transfer rate"
@@ -79518,6 +80571,18 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#, python-format
+#~ msgid "%sPacket loss"
+#~ msgstr "%sPerdita di pacchetti"
+
+#, python-format
+#~ msgid "%sResponse time"
+#~ msgstr "%sTempo di risposta"
+
+#, python-format
+#~ msgid "%sRound trip average"
+#~ msgstr "%sViaggio medio di andata e ritorno"
 
 #, fuzzy
 #~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"

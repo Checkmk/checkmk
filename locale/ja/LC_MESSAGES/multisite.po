@@ -758,30 +758,6 @@ msgstr "%s: サービス:%s、ホストラベル:%s"
 msgid "%s: Uses SSL"
 msgstr "%s: SSLを使用"
 
-#, python-format
-msgid "%sPacket loss"
-msgstr "%sパケット損失"
-
-#, python-format
-msgid "%sResponse time"
-msgstr "%s応答時間"
-
-#, python-format
-msgid "%sRound trip average"
-msgstr "%sラウンドトリップ平均"
-
-#, python-format
-msgid "%sRound trip maximum"
-msgstr "%s ラウンドトリップの最大値"
-
-#, python-format
-msgid "%sRound trip minimum"
-msgstr "%s往復の最小値"
-
-#, python-format
-msgid "%sRound trip standard devation"
-msgstr "%s 往復標準偏差"
-
 msgid ""
 "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 msgstr ""
@@ -9113,6 +9089,11 @@ msgstr ""
 "ことができます。包含パターンの1つに一致するファイルシステムは、1つのサービス"
 "における1つの大きなファイルシステムのように監視されます。除外パターンのいずれ"
 "かに一致するファイルシステムは、グループから除外され、個別に監視されます。"
+
+msgid ""
+"By default, the ntopng host filter is enabled, however, disabling this can "
+"have a positive impact on the performance of the ntopng integration"
+msgstr ""
 
 msgid ""
 "By enabling this option notifications will be bulked only if the specified "
@@ -20077,6 +20058,10 @@ msgstr "サービス通知を有効にする"
 msgid "Enable synchronous delivery via SMTP"
 msgstr "SMTP経由の同期配信を有効にする"
 
+#, fuzzy
+msgid "Enable the ntopng host filter"
+msgstr "このntopngインスタンスを有効にします"
+
 msgid "Enable this ntopng instance"
 msgstr "このntopngインスタンスを有効にします"
 
@@ -25751,13 +25736,1065 @@ msgstr "ホームページ/ダウンロード-このパッケージのURL"
 msgid "Honor scheduled downtimes"
 msgstr "スケジュールされたダウンタイムを尊重する"
 
-#, fuzzy, python-format
-msgid "Hop %d packet loss"
+#, fuzzy
+msgid "Hop 1 packet loss"
 msgstr "ホップ%dパケット損失"
 
-#, fuzzy, python-format
-msgid "Hop %d round trip average"
+#, fuzzy
+msgid "Hop 1 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 1 round trip average"
 msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 1 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 1 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 1 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 10 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 10 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 10 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 10 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 10 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 10 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 11 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 11 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 11 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 11 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 11 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 11 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 12 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 12 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 12 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 12 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 12 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 12 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 13 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 13 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 13 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 13 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 13 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 13 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 14 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 14 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 14 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 14 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 14 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 14 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 15 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 15 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 15 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 15 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 15 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 15 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 16 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 16 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 16 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 16 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 16 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 16 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 17 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 17 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 17 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 17 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 17 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 17 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 18 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 18 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 18 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 18 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 18 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 18 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 19 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 19 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 19 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 19 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 19 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 19 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 2 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 2 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 2 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 2 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 2 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 2 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 20 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 20 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 20 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 20 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 20 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 20 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 21 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 21 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 21 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 21 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 21 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 21 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 22 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 22 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 22 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 22 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 22 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 22 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 23 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 23 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 23 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 23 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 23 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 23 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 24 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 24 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 24 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 24 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 24 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 24 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 25 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 25 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 25 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 25 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 25 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 25 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 26 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 26 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 26 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 26 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 26 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 26 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 27 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 27 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 27 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 27 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 27 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 27 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 28 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 28 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 28 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 28 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 28 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 28 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 29 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 29 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 29 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 29 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 29 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 29 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 3 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 3 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 3 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 3 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 3 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 3 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 30 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 30 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 30 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 30 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 30 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 30 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 31 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 31 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 31 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 31 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 31 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 31 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 32 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 32 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 32 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 32 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 32 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 32 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 33 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 33 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 33 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 33 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 33 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 33 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 34 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 34 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 34 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 34 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 34 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 34 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 35 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 35 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 35 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 35 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 35 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 35 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 36 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 36 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 36 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 36 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 36 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 36 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 37 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 37 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 37 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 37 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 37 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 37 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 38 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 38 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 38 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 38 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 38 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 38 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 39 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 39 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 39 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 39 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 39 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 39 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 4 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 4 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 4 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 4 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 4 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 4 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 40 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 40 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 40 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 40 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 40 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 40 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 41 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 41 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 41 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 41 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 41 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 41 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 42 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 42 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 42 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 42 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 42 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 42 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 43 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 43 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 43 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 43 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 43 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 43 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 44 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 44 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 44 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 44 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 44 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 44 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 5 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 5 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 5 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 5 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 5 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 5 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 6 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 6 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 6 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 6 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 6 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 6 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 7 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 7 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 7 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 7 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 7 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 7 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 8 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 8 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 8 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 8 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 8 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 8 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop 9 packet loss"
+msgstr "ホップ%dパケット損失"
+
+#, fuzzy
+msgid "Hop 9 response time"
+msgstr "ホップの応答時間"
+
+#, fuzzy
+msgid "Hop 9 round trip average"
+msgstr "ホップ %d 往復平均"
+
+#, fuzzy
+msgid "Hop 9 round trip maximum"
+msgstr "%s ラウンドトリップの最大値"
+
+#, fuzzy
+msgid "Hop 9 round trip minimum"
+msgstr "%s往復の最小値"
+
+#, fuzzy
+msgid "Hop 9 round trip standard devation"
+msgstr "%s 往復標準偏差"
+
+#, fuzzy
+msgid "Hop response time"
+msgstr "ホップの応答時間"
 
 msgid "Hop response times"
 msgstr "ホップの応答時間"
@@ -34554,6 +35591,10 @@ msgid "Manage users of the monitoring system."
 msgstr "監視システムのユーザーを管理します。"
 
 #, fuzzy
+msgid "Managed Robot"
+msgstr "管理対象オブジェクト"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "管理対象オブジェクト"
 
@@ -34573,6 +35614,10 @@ msgid "Managing licenses"
 msgstr "ライセンスの管理"
 
 msgid "Manual"
+msgstr "マニュアル"
+
+#, fuzzy
+msgid "Manual Robot"
 msgstr "マニュアル"
 
 msgid "Manual check"
@@ -39045,6 +40090,10 @@ msgstr "Ntopng(有料アドオン)"
 
 #, fuzzy
 msgid "Ntopng host"
+msgstr "Ntopホスト"
+
+#, fuzzy
+msgid "Ntopng host filter"
 msgstr "Ntopホスト"
 
 msgid "Ntopng integration"
@@ -47078,6 +48127,10 @@ msgid "Request metrics"
 msgstr "メトリックを要求する"
 
 msgid "Request rate"
+msgstr "リクエストレート"
+
+#, fuzzy
+msgid "Request too large"
 msgstr "リクエストレート"
 
 #, fuzzy
@@ -78340,6 +79393,18 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid "%sPacket loss"
+#~ msgstr "%sパケット損失"
+
+#, python-format
+#~ msgid "%sResponse time"
+#~ msgstr "%s応答時間"
+
+#, python-format
+#~ msgid "%sRound trip average"
+#~ msgstr "%sラウンドトリップ平均"
 
 #, fuzzy
 #~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"

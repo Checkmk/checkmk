@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
-from typing import cast, Literal, Required, TypedDict
+from typing import cast, Literal, NotRequired, Required, TypedDict
 
 from cmk.utils.notify_types import (
     AlwaysBulkParameters,
@@ -488,46 +488,15 @@ class API_AuthValueType(CheckboxStateType, total=False):
     value: SMTPAuthAttrs
 
 
-class API_EnableSyncViaSMTPAttrs(TypedDict, total=False):
+class API_EnableSyncViaSMTPAttrs(TypedDict):
     auth: API_AuthValueType
-    encryption: Literal["ssl_tls", "starttls"]
+    encryption: NotRequired[Literal["ssl_tls", "starttls"]]
     port: int
     smarthosts: list[str]
 
 
 class API_EnableSyncViaSMTPValueType(CheckboxStateType, total=False):
     value: API_EnableSyncViaSMTPAttrs
-
-
-@dataclass
-class SMTPAuth:
-    value: SMTPAuthAttrs | None = None
-
-    @classmethod
-    def from_mk_file_format(cls, data: SMTPAuthAttrs | None) -> SMTPAuth:
-        return cls(value=data)
-
-    @classmethod
-    def from_api_request(cls, data: API_AuthValueType) -> SMTPAuth:
-        if data["state"] == "disabled":
-            return cls()
-        return cls(value=data["value"])
-
-    def api_response(self) -> API_AuthValueType:
-        state: CheckboxState = "disabled" if self.value is None else "enabled"
-        r: API_AuthValueType = {"state": state}
-        if self.value is not None:
-            r["value"] = self.value
-        return r
-
-    def to_mk_file_format(self) -> SMTPAuthAttrs | None:
-        if self.value is None:
-            return None
-
-        return self.value
-
-
-# ----------------------------------------------------------------
 
 
 @dataclass
@@ -554,8 +523,8 @@ class EnableSyncDeliveryViaSMTP:
             smarthosts=smarthosts,
         )
 
-        if (auth := SMTPAuth.from_api_request(v["auth"]).to_mk_file_format()) is not None:
-            value["auth"] = auth
+        if v["auth"]["state"] == "enabled":
+            value["auth"] = v["auth"]["value"]
 
         if (encryption := v.get("encryption")) is not None:
             value["encryption"] = encryption
@@ -568,10 +537,14 @@ class EnableSyncDeliveryViaSMTP:
 
         if self.value is not None:
             r["value"] = {
-                "auth": SMTPAuth.from_mk_file_format(self.value.get("auth")).api_response(),
+                "auth": {"state": "disabled"},
                 "port": self.value["port"],
                 "smarthosts": self.value["smarthosts"],
             }
+
+            if (auth := self.value.get("auth")) is not None:
+                r["value"]["auth"] = {"state": "enabled", "value": auth}
+
             if (encryption := self.value.get("encryption")) is not None:
                 r["value"]["encryption"] = encryption
 

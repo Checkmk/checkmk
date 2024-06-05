@@ -1001,12 +1001,20 @@ class Authentication(BaseSchema):
 class AuthenticationValue(Checkbox):
     value = fields.Nested(
         Authentication,
+        required=True,
     )
+
+
+class AuthOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": AuthenticationValue,
+    }
 
 
 class EnableSynchronousDeliveryViaSMTP(BaseSchema):
     auth = fields.Nested(
-        AuthenticationValue,
+        AuthOneOfSchema,
     )
     encryption = fields.String(
         enum=["ssl_tls", "starttls"],

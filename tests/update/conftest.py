@@ -229,11 +229,11 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     ):
         pytest.skip("Only latest base-version selected")
 
-    disable_interactive_mode = (
-        request.config.getoption(name="--disable-interactive-mode") or not interactive_mode
+    interactive_mode = interactive_mode and not request.config.getoption(
+        name="--disable-interactive-mode"
     )
-    LOGGER.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
-    test_site = _create_site(base_version, interactive=not disable_interactive_mode)
+    LOGGER.info("Setting up test-site (interactive-mode=%s) ...", interactive_mode)
+    test_site = _create_site(base_version, interactive=interactive_mode)
 
     disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
     if not version_from_env().is_saas_edition():
@@ -242,7 +242,7 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
         if not disable_rules_injection:
             inject_rules(test_site)
 
-    yield test_site, target_edition, disable_interactive_mode
+    yield test_site, target_edition, interactive_mode
     LOGGER.info("Removing test-site...")
     test_site.rm()
 

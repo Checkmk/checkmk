@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @pytest.mark.cse
 @pytest.mark.cee
 def test_update(test_setup: tuple[Site, Edition, bool]) -> None:
-    test_site, target_edition, disable_interactive_mode = test_setup
+    test_site, target_edition, interactive_mode = test_setup
     base_version = test_site.version
     hostname = HostName("test-host")
     ip_address = "127.0.0.1"
@@ -47,7 +47,7 @@ def test_update(test_setup: tuple[Site, Edition, bool]) -> None:
         assert len(base_ok_services) > 0
 
     target_version = CMKVersion(version_spec_from_env(CMKVersion.DAILY), target_edition)
-    target_site = update_site(test_site, target_version, not disable_interactive_mode)
+    target_site = update_site(test_site, target_version, interactive_mode)
 
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"

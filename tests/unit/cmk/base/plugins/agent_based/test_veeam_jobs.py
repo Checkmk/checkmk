@@ -117,7 +117,13 @@ def test_check_veeam_jobs() -> None:
                 Result(state=State.OK, summary="Type: BackupSync"),
             ],
         ),
-        ("backup_stopped", []),
+        (
+            "backup_stopped",
+            [
+                Result(state=State.UNKNOWN, summary="State: Stopped, Result: None"),
+                Result(state=State.OK, summary="Type: Backup"),
+            ],
+        ),
         (
             "stopped_and_failed",
             [

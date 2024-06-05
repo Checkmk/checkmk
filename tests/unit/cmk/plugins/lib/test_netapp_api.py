@@ -12,16 +12,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import (
-    CheckResult,
-    DiscoveryResult,
-    Metric,
-    render,
-    Result,
-    Service,
-    State,
-    StringTable,
-)
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
 from cmk.plugins.lib.netapp_api import (
     check_netapp_luns,
     check_netapp_qtree_quota,
@@ -29,50 +20,11 @@ from cmk.plugins.lib.netapp_api import (
     discover_netapp_qtree_quota,
     get_single_check,
     get_summary_check,
-    parse_netapp_api_multiple_instances,
     Qtree,
-    SectionMultipleInstances,
 )
 
 LAST_TIME_EPOCH = 0
 NOW_SIMULATED_SECONDS = 3600
-
-
-@pytest.mark.parametrize(
-    "info, expected_result",
-    [
-        (
-            [
-                [
-                    "interface e0a",
-                    "mediatype auto-1000t-fd-up",
-                    "flowcontrol full",
-                    "mtusize 9000",
-                    "ipspace-name default-ipspace",
-                    "mac-address 01:b0:89:22:df:01",
-                ],
-                ["interface"],
-            ],
-            {
-                "e0a": [
-                    {
-                        "interface": "e0a",
-                        "mediatype": "auto-1000t-fd-up",
-                        "flowcontrol": "full",
-                        "mtusize": "9000",
-                        "ipspace-name": "default-ipspace",
-                        "mac-address": "01:b0:89:22:df:01",
-                    }
-                ]
-            },
-        )
-    ],
-)
-def test_parse_netapp_api_multiple_instances(
-    info: StringTable, expected_result: SectionMultipleInstances
-) -> None:
-    result = parse_netapp_api_multiple_instances(info)
-    assert result == expected_result
 
 
 @pytest.mark.parametrize(

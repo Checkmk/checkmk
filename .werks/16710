@@ -1,0 +1,15 @@
+Title: Better handling of notification result in case of timeout
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1717580562
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Werk #16707 added useful log information to failed notifications in case of a timeout.
+In some cases, this log contained also script output.
+
+We now show the timeout message within "Summary" of the notification result
+and, if available, the last output of the notification plugin followed by the
+timeout message within the "Comment" column. Both are separated by "--".

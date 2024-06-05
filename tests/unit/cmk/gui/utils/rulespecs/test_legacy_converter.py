@@ -794,7 +794,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     )
                 ]
             ),
-            legacy_valuespecs.ListChoice(choices=[("first", _("First"))], default_value=()),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.ListChoice(choices=[("first", _("First"))], default_value=())
+            ),
             id="minimal MultipleChoice",
         ),
         pytest.param(
@@ -812,12 +814,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 show_toggle_all=True,
                 prefill=api_v1.form_specs.DefaultValue(("first", "second")),
             ),
-            legacy_valuespecs.ListChoice(
-                choices=[("first", _("First")), ("second", _("Second"))],
-                toggle_all=True,
-                title=_("my title"),
-                help=_("help text"),
-                default_value=["first", "second"],
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.ListChoice(
+                    choices=[("first", _("First")), ("second", _("Second"))],
+                    toggle_all=True,
+                    title=_("my title"),
+                    help=_("help text"),
+                    default_value=["first", "second"],
+                )
             ),
             id="MultipleChoice",
         ),
@@ -863,25 +867,27 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 show_toggle_all=True,
                 prefill=api_v1.form_specs.DefaultValue(("first", "third")),
             ),
-            legacy_valuespecs.DualListChoice(
-                choices=[
-                    ("first", _("First")),
-                    ("second", _("Second")),
-                    ("third", _("Third")),
-                    ("fourth", _("Fourth")),
-                    ("fifth", _("Fifth")),
-                    ("sixth", _("Sixth")),
-                    ("seventh", _("Seventh")),
-                    ("eight", _("Eight")),
-                    ("ninth", _("Ninth")),
-                    ("tenth", _("Tenth")),
-                    ("eleventh", _("Eleventh")),
-                ],
-                toggle_all=True,
-                title=_("my title"),
-                help=_("help text"),
-                default_value=["first", "third"],
-                rows=11,
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.DualListChoice(
+                    choices=[
+                        ("first", _("First")),
+                        ("second", _("Second")),
+                        ("third", _("Third")),
+                        ("fourth", _("Fourth")),
+                        ("fifth", _("Fifth")),
+                        ("sixth", _("Sixth")),
+                        ("seventh", _("Seventh")),
+                        ("eight", _("Eight")),
+                        ("ninth", _("Ninth")),
+                        ("tenth", _("Tenth")),
+                        ("eleventh", _("Eleventh")),
+                    ],
+                    toggle_all=True,
+                    title=_("my title"),
+                    help=_("help text"),
+                    default_value=["first", "third"],
+                    rows=11,
+                )
             ),
             id="large MultipleChoice",
         ),

@@ -18,6 +18,8 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, parse_raw_edition, repo_path, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
+from cmk.utils.version import Edition
+
 LOGGER = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
 RULES_DIR = repo_path() / "tests" / "update" / "rules"
@@ -70,10 +72,10 @@ class BaseVersions:
         BASE_VERSIONS_STR = json.load(f)
 
     if version_from_env().is_saas_edition():
-        BASE_VERSIONS = [CMKVersion(CMKVersion.DAILY, edition_from_env())]
+        BASE_VERSIONS = [CMKVersion(CMKVersion.DAILY, edition_from_env(Edition.CSE))]
     else:
         BASE_VERSIONS = [
-            CMKVersion(base_version_str, edition_from_env())
+            CMKVersion(base_version_str, edition_from_env(Edition.CEE))
             for base_version_str in BASE_VERSIONS_STR
             if not version_from_env().is_saas_edition()
         ]
@@ -219,10 +221,14 @@ def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) 
 def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     """Install the test site with the base version."""
     base_version, interactive_mode = request.param
+
     target_edition_raw = request.config.getoption(name="--target-edition")
     target_edition = (
-        parse_raw_edition(target_edition_raw) if target_edition_raw else edition_from_env()
+        parse_raw_edition(target_edition_raw)
+        if target_edition_raw
+        else edition_from_env(Edition.CEE)
     )
+
     if (
         request.config.getoption(name="--latest-base-version")
         and base_version.version != BaseVersions.BASE_VERSIONS[-1].version

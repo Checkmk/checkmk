@@ -226,28 +226,13 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
 
     tb_list = traceback.extract_tb(exc_traceback)
 
-    # Unify different string types from exception messages to a unicode string
-    # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
-    # Remove this after migration...
-    if exc_value is None or not exc_value.args:
-        exc_txt = ""
-    elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], bytes):
-        try:
-            exc_txt = exc_value.args[0].decode("utf-8")
-        except UnicodeDecodeError:
-            exc_txt = f"b{repr(exc_value.args[0])}"
-    elif len(exc_value.args) == 1:
-        exc_txt = str(exc_value.args[0])
-    else:
-        exc_txt = str(exc_value.args)
-
     infos = cmk_version.get_general_version_infos()
     infos.update(
         {
             "id": str(uuid.uuid1()),
             "crash_type": type_name,
             "exc_type": exc_type.__name__ if exc_type else None,
-            "exc_value": exc_txt,
+            "exc_value": str(exc_value),
             # Py3: Make traceback.FrameSummary serializable
             "exc_traceback": [tuple(e) for e in tb_list],
             "local_vars": _get_local_vars_of_last_exception(),

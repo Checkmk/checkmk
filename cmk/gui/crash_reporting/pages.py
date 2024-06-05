@@ -375,7 +375,15 @@ class PageCrash(ABCCrashReportPage):
             pre=True,
         )
         _crash_row(
-            _("Traceback"), self._format_traceback(info["exc_traceback"]), odd=False, pre=True
+            _("Traceback"),
+            "".join(
+                [
+                    self._format_traceback(info["exc_traceback"]),
+                    info["exc_value"],
+                ]
+            ),
+            odd=False,
+            pre=True,
         )
         _crash_row(
             _("Local Variables"),

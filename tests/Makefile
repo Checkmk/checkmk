@@ -116,9 +116,11 @@ help:
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-neb                       - Run unit tests for neb"
 	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
-	@echo "test-unit-resilience                - Run unit tests multiple times and in random order in docker"
+	@echo "test-unit-resilience-docker         - Run unit tests multiple times and in random order in docker"
 	@echo "test-unit-shell                     - Run shell unit tests"
 	@echo "test-unit-shell-docker              - Run shell unit tests in docker"
+	@echo "test-unit-xdist                     - Run parallelized unit tests"
+	@echo "test-unit-xdist-docker              - Run parallelized unit tests in docker"
 	@echo "test-werks                          - Run Werks tests"
 	@echo "test-werks-docker                   - Run Werks tests in docker"
 

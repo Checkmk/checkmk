@@ -228,7 +228,6 @@ def test_section_parse_function_does_something(fix_register: FixRegister) -> Non
         "unitrends_backup",
         "unitrends_replication",
         "vbox_guest",
-        "veeam_jobs",
         "vms_queuejobs",
         "vms_users",
         "vnx_version",

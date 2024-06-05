@@ -51,18 +51,23 @@ def check_veeam_jobs(item: str, section: Mapping[str, Job | None]) -> CheckResul
         state=monitoring_state(job.last_state, job.last_result, job.type_),
         summary=f"State: {job.last_state}, Result: {job.last_result}",
     )
-    yield Result(state=State.OK, summary=f"Creation time: {job.creation_time}")
-    yield Result(state=State.OK, summary=f"End time: {job.end_time}")
+    if job.creation_time != "":
+        yield Result(state=State.OK, summary=f"Creation time: {job.creation_time}")
+    if job.end_time != "":
+        yield Result(state=State.OK, summary=f"End time: {job.end_time}")
     yield Result(state=State.OK, summary=f"Type: {job.type_}")
 
 
 def parse_veeam_jobs(string_table: StringTable) -> Mapping[str, Job | None]:
     section: dict[str, Job | None] = {}
     for line in string_table:
-        if len(line) < 6:
+        if len(line) < 2:
             section[line[0]] = None
         else:
-            type_, last_state, last_result, creation_time, end_time = line[1:6]
+            # If end_time/creation_time are empty strings, then tab seperators are simply discarded,
+            # thus the resulting string_table line has 4 or 5 elements, despite being valid.
+            # We reinsert the missing emtpy str by hand.
+            type_, last_state, last_result, creation_time, end_time = [*line, "", ""][1:6]
             section[line[0]] = Job(
                 type_=type_,
                 last_state=last_state,

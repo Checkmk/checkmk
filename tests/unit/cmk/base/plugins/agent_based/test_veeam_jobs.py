@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.legacy_checks.veeam_jobs import (
+from cmk.base.plugins.agent_based.veeam_jobs import (
     check_veeam_jobs,
-    inventory_veeam_jobs,
+    discovery_veeam_jobs,
     parse_veeam_jobs,
 )
+
+from cmk.agent_based.v2 import Result, Service, State
 
 STRING_TABLE = [
     [  # based on customer agent output, this is the most common state
@@ -70,60 +72,82 @@ STRING_TABLE = [
 
 def test_discovery_veeam_jobs() -> None:
     section = parse_veeam_jobs(STRING_TABLE)
-    assert inventory_veeam_jobs(section) == [
-        ("VMware_Server", None),
-        ("warning_backup", None),
-        ("backup_sync_job", None),
-        ("backup_stopped", None),
-        ("stopped_and_failed", None),
-        ("starting_and_failed", None),
-        ("Lehrer Rechner", None),
-        ("backup_sync_idle", None),
+    assert list(discovery_veeam_jobs(section)) == [
+        Service(item="VMware_Server"),
+        Service(item="warning_backup"),
+        Service(item="backup_sync_job"),
+        Service(item="backup_stopped"),
+        Service(item="stopped_and_failed"),
+        Service(item="starting_and_failed"),
+        Service(item="Lehrer Rechner"),
+        Service(item="backup_sync_idle"),
     ]
 
 
 def test_check_veeam_jobs() -> None:
     section = parse_veeam_jobs(STRING_TABLE)
-    services = inventory_veeam_jobs(section)
+    items = [service.item or "" for service in discovery_veeam_jobs(section)]
 
-    results = [(service[0], check_veeam_jobs(service[0], {}, section)) for service in services]
+    results = [(item, list(check_veeam_jobs(item, section))) for item in items]
     assert results == [
         (
             "VMware_Server",
-            (
-                0,
-                "State: Stopped, Result: Success, Creation time: 21.01.2019 00:10:22, End time: 21.01.2019 00:29:12, Type: Backup",
-            ),
+            [
+                Result(state=State.OK, summary="State: Stopped"),
+                Result(state=State.OK, summary="Result: Success"),
+                Result(state=State.OK, summary="Creation time: 21.01.2019 00:10:22"),
+                Result(state=State.OK, summary="End time: 21.01.2019 00:29:12"),
+                Result(state=State.OK, summary="Type: Backup"),
+            ],
         ),
         (
             "warning_backup",
-            (
-                1,
-                "State: Stopped, Result: Warning, Creation time: 03.09.2020 15:45:50, End time: 03.09.2020 16:44:39, Type: Backup",
-            ),
+            [
+                Result(state=State.OK, summary="State: Stopped"),
+                Result(state=State.WARN, summary="Result: Warning"),
+                Result(state=State.OK, summary="Creation time: 03.09.2020 15:45:50"),
+                Result(state=State.OK, summary="End time: 03.09.2020 16:44:39"),
+                Result(state=State.OK, summary="Type: Backup"),
+            ],
         ),
-        ("backup_sync_job", (0, "Running since 20.07.2017 08:25:09 (current state is: Working)")),
-        ("backup_stopped", None),
+        (
+            "backup_sync_job",
+            [
+                Result(
+                    state=State.OK,
+                    summary="Running since 20.07.2017 08:25:09 (current state is: Working)",
+                ),
+            ],
+        ),
+        ("backup_stopped", []),
         (
             "stopped_and_failed",
-            (
-                2,
-                "State: Stopped, Result: Failed, Creation time: 26.10.2013 23:13:13, End time: 27.10.2013 00:51:17, Type: Backup",
-            ),
+            [
+                Result(state=State.OK, summary="State: Stopped"),
+                Result(state=State.CRIT, summary="Result: Failed"),
+                Result(state=State.OK, summary="Creation time: 26.10.2013 23:13:13"),
+                Result(state=State.OK, summary="End time: 27.10.2013 00:51:17"),
+                Result(state=State.OK, summary="Type: Backup"),
+            ],
         ),
         (
             "starting_and_failed",
-            (
-                0,
-                "Running since 26.10.2013 23:13:13 (current state is: Starting)",
-            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Running since 26.10.2013 23:13:13 (current state is: Starting)",
+                ),
+            ],
         ),
-        ("Lehrer Rechner", None),
+        ("Lehrer Rechner", []),
         (
             "backup_sync_idle",
-            (
-                0,
-                "State: Idle, Result: None, Creation time: 20.07.2017 08:25:09, End time: 20.07.2017 08:25:29, Type: BackupSync",
-            ),
+            [
+                Result(state=State.OK, summary="State: Idle"),
+                Result(state=State.OK, summary="Result: None"),
+                Result(state=State.OK, summary="Creation time: 20.07.2017 08:25:09"),
+                Result(state=State.OK, summary="End time: 20.07.2017 08:25:29"),
+                Result(state=State.OK, summary="Type: BackupSync"),
+            ],
         ),
     ]

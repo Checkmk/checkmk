@@ -9239,6 +9239,11 @@ msgstr ""
 "individualmente."
 
 msgid ""
+"By default, the ntopng host filter is enabled, however, disabling this can "
+"have a positive impact on the performance of the ntopng integration"
+msgstr ""
+
+msgid ""
 "By enabling this option notifications will be bulked only if the specified "
 "time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
@@ -20244,6 +20249,10 @@ msgstr "Abilitare le notifiche di servizio"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Abilitare la consegna sincrona via SMTP"
+
+#, fuzzy
+msgid "Enable the ntopng host filter"
+msgstr "Abilita questa istanza di ntopng"
 
 msgid "Enable this ntopng instance"
 msgstr "Abilita questa istanza di ntopng"
@@ -39297,6 +39306,10 @@ msgstr "Ntopng (add-on a pagamento)"
 msgid "Ntopng host"
 msgstr "Host Ntopng"
 
+#, fuzzy
+msgid "Ntopng host filter"
+msgstr "Host Ntopng"
+
 msgid "Ntopng integration"
 msgstr "Integrazione Ntopng"
 
@@ -46673,6 +46686,10 @@ msgid "Request metrics"
 msgstr "Richiesta di metrica"
 
 msgid "Request rate"
+msgstr "Tasso di richiesta"
+
+#, fuzzy
+msgid "Request too large"
 msgstr "Tasso di richiesta"
 
 msgid "Request transfer rate"
@@ -64811,6 +64828,10 @@ msgstr "Tempo"
 msgid "Time horizon"
 msgstr "Orizzonte temporale"
 
+#, fuzzy
+msgid "Time horizon for repeated events"
+msgstr "Tempo per la copertura degli eventi"
+
 msgid "Time horizon to keep in cache"
 msgstr "Orizzonte temporale da tenere in cache"
 
@@ -73172,6 +73193,12 @@ msgstr ""
 "degli eventi è impostato su WARNING."
 
 msgid ""
+"When the iCalendar file contains definitions of repeating events, these "
+"repeating events will be resolved to single events for the number of years "
+"you specify here."
+msgstr ""
+
+msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
 "that all of the logfiles listed here are reported by the monitored system."
 msgstr ""
@@ -78556,6 +78583,10 @@ msgid "y"
 msgstr "y"
 
 msgid "year"
+msgstr "anno"
+
+#, fuzzy
+msgid "years"
 msgstr "anno"
 
 msgid "yes"

@@ -9081,6 +9081,11 @@ msgstr ""
 "かに一致するファイルシステムは、グループから除外され、個別に監視されます。"
 
 msgid ""
+"By default, the ntopng host filter is enabled, however, disabling this can "
+"have a positive impact on the performance of the ntopng integration"
+msgstr ""
+
+msgid ""
 "By enabling this option notifications will be bulked only if the specified "
 "time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
@@ -19997,6 +20002,10 @@ msgstr "サービス通知を有効にする"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "SMTP経由の同期配信を有効にする"
+
+#, fuzzy
+msgid "Enable the ntopng host filter"
+msgstr "このntopngインスタンスを有効にします"
 
 msgid "Enable this ntopng instance"
 msgstr "このntopngインスタンスを有効にします"
@@ -38866,6 +38875,10 @@ msgstr "Ntopng(有料アドオン)"
 msgid "Ntopng host"
 msgstr "Ntopホスト"
 
+#, fuzzy
+msgid "Ntopng host filter"
+msgstr "Ntopホスト"
+
 msgid "Ntopng integration"
 msgstr "Ntopng統合"
 
@@ -46184,6 +46197,10 @@ msgid "Request metrics"
 msgstr "メトリックを要求する"
 
 msgid "Request rate"
+msgstr "リクエストレート"
+
+#, fuzzy
+msgid "Request too large"
 msgstr "リクエストレート"
 
 #, fuzzy
@@ -63800,6 +63817,10 @@ msgstr "タイムフレーム"
 msgid "Time horizon"
 msgstr "期間"
 
+#, fuzzy
+msgid "Time horizon for repeated events"
+msgstr "イベントをカバーする時間"
+
 msgid "Time horizon to keep in cache"
 msgstr "キャッシュに保持する期間"
 
@@ -72119,6 +72140,12 @@ msgstr ""
 "に設定されます。"
 
 msgid ""
+"When the iCalendar file contains definitions of repeating events, these "
+"repeating events will be resolved to single events for the number of years "
+"you specify here."
+msgstr ""
+
+msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
 "that all of the logfiles listed here are reported by the monitored system."
 msgstr ""
@@ -77378,6 +77405,10 @@ msgid "y"
 msgstr "y"
 
 msgid "year"
+msgstr "年"
+
+#, fuzzy
+msgid "years"
 msgstr "年"
 
 msgid "yes"

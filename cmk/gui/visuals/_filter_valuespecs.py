@@ -166,13 +166,17 @@ class VisualFilterList(ListOfMultiple):
             if fname not in ignored_context_choices:
                 yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list: SingleInfos, ignored_context_choices: Sequence[str] = (), **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self,
+        info_list: SingleInfos,
+        ignored_context_choices: Sequence[str] = (),
+        title: str | None = None,
+        allow_empty: bool = True,
+    ) -> None:
         self._filters = filters_allowed_for_infos(info_list)
 
-        kwargs.setdefault("title", _("Filters"))
-        kwargs.setdefault("add_label", _("Add filter"))
-        kwargs.setdefault("del_label", _("Remove filter"))
-        kwargs["delete_style"] = "filter"
+        if title is None:
+            title = _("Filters")
 
         grouped: GroupedListOfMultipleChoices = [
             ListOfMultipleChoiceGroup(
@@ -187,7 +191,10 @@ class VisualFilterList(ListOfMultiple):
             page_request_vars={
                 "infos": info_list,
             },
-            **kwargs,
+            allow_empty=allow_empty,
+            add_label=_("Add filter"),
+            del_label=_("Remove filter"),
+            delete_style="filter",
         )
 
     def from_html_vars(self, varprefix: str) -> VisualContext:

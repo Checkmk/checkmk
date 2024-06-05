@@ -28,7 +28,7 @@ use crate::types::{
     ComputerName, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
     InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
-use crate::utils;
+use crate::utils::{self, cleanup_error};
 use core::fmt;
 
 use anyhow::Result;
@@ -654,10 +654,10 @@ impl SqlInstance {
     ) -> String {
         let format_error = |d: &str, e: &anyhow::Error| {
             format!(
-                "{} {} - - - - - - - - - - - - {:?}\n",
+                "{} {} - - - - - - - - - - - - {}\n",
                 self.mssql_name(),
                 d.replace(' ', "_"),
-                e
+                cleanup_error(e)
             )
             .to_string()
         };
@@ -697,10 +697,10 @@ impl SqlInstance {
                     .iter()
                     .map(|d| {
                         format!(
-                            "{}{sep}{}{sep}-{sep}-{sep}-{sep}{:?}\n",
+                            "{}{sep}{}{sep}-{sep}-{sep}-{sep}{}\n",
                             self.mssql_name(),
                             d.replace(' ', "_"),
-                            err
+                            cleanup_error(&err)
                         )
                     })
                     .collect::<Vec<String>>()
@@ -767,7 +767,7 @@ impl SqlInstance {
             "{}{sep}{}|-|-|-|-|-|-|{:?}\n",
             self.name,
             d.replace(' ', "_"),
-            e
+            cleanup_error(e)
         )
         .to_string()
     }
@@ -820,7 +820,7 @@ impl SqlInstance {
             "{}{sep}{}{sep}{}{}\n",
             self.name,
             d.replace(' ', "_"),
-            e,
+            cleanup_error(e),
             format!("{sep}-").repeat(3),
         )
     }
@@ -923,7 +923,7 @@ impl SqlInstance {
         run_custom_query(client, query)
             .await
             .map(|rows| self.to_connections_entries(&rows, sep))
-            .unwrap_or_else(|e| format!("{}{sep}{}\n", self.name, e))
+            .unwrap_or_else(|e| format!("{}{sep}{}\n", self.name, cleanup_error(&e)))
     }
 
     fn to_connections_entries(&self, answers: &[UniAnswer], sep: char) -> String {
@@ -984,7 +984,7 @@ impl SqlInstance {
                             self.to_entries(rows, section.sep())
                         )
                     })
-                    .unwrap_or_else(|e| format!("{} {}\n", self.name, e))
+                    .unwrap_or_else(|e| format!("{} {}\n", self.name, cleanup_error(&e)))
             }
             Err(err) => format!("{} {}\n", self.name, err),
         }
@@ -1011,7 +1011,7 @@ impl SqlInstance {
                                     self.to_entries(rows, section.sep())
                                 )
                             })
-                            .unwrap_or_else(|e| format!("{} {}\n", self.name, e)),
+                            .unwrap_or_else(|e| format!("{} {}\n", self.name, cleanup_error(&e))),
                     )
                 } else {
                     None

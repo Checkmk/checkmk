@@ -1,5 +1,5 @@
 {
     "command_line": "./run --clean --all",
-    "maintainers": ["team-engelbart@checkmk.com"],
+    "maintainers": ["team-prj-engelbart@checkmk.com"],
     "dependencies": [".werks/"]
 }

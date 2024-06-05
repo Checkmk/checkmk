@@ -216,7 +216,7 @@ def test_duplicate_graph_templates() -> None:
             s.expression for s in template.scalars
         ]
         if template.range:
-            expressions.extend(template.range)
+            expressions.extend((template.range.min, template.range.max))
 
         idents_by_metrics.setdefault(
             tuple(sorted(m.name for e in expressions for m in e.metrics())), []
@@ -529,7 +529,7 @@ def test_non_trivial_graph_declarations() -> None:
             s.expression for s in template.scalars
         ]
         if template.range:
-            expressions.extend(template.range)
+            expressions.extend((template.range.min, template.range.max))
         if _is_non_trivial(expressions):
             non_trivial_graphs.append(ident)
 

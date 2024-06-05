@@ -167,14 +167,6 @@ def _parse_raw_metric_definition(
     )
 
 
-def _parse_raw_graph_range(
-    raw_graph_range: tuple[int | str, int | str] | None
-) -> tuple[MetricExpression, MetricExpression] | None:
-    if raw_graph_range is None:
-        return None
-    return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
-
-
 def _parse_quantity(
     quantity: (
         str
@@ -283,21 +275,16 @@ def _parse_quantity(
             )
 
 
-def _parse_minimal_range(
-    minimal_range: graphs.MinimalRange,
-) -> tuple[MetricExpression, MetricExpression]:
-    return (
-        (
-            Constant(minimal_range.lower)
-            if isinstance(minimal_range.lower, (int, float))
-            else _parse_quantity(minimal_range.lower, "line").expression
-        ),
-        (
-            Constant(minimal_range.upper)
-            if isinstance(minimal_range.upper, (int, float))
-            else _parse_quantity(minimal_range.upper, "line").expression
-        ),
-    )
+@dataclass(frozen=True, kw_only=True)
+class FixedGraphTemplateRange:
+    min: MetricExpression
+    max: MetricExpression
+
+
+@dataclass(frozen=True, kw_only=True)
+class MinimalGraphTemplateRange:
+    min: MetricExpression
+    max: MetricExpression
 
 
 @dataclass(frozen=True)
@@ -308,7 +295,7 @@ class GraphTemplate:
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
     consolidation_function: GraphConsoldiationFunction | None
-    range: tuple[MetricExpression, MetricExpression] | None
+    range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool
     metrics: Sequence[MetricDefinition]
 
@@ -351,10 +338,10 @@ class GraphTemplate:
             conflicting_metrics=template.get("conflicting_metrics", []),
             optional_metrics=template.get("optional_metrics", []),
             consolidation_function=template.get("consolidation_function"),
-            range=_parse_raw_graph_range(template.get("range")),
+            range=(
+                _parse_raw_graph_range(raw_range) if (raw_range := template.get("range")) else None
+            ),
             omit_zero_metrics=template.get("omit_zero_metrics", False),
-            # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
-            # https://github.com/python/mypy/issues/1178
             metrics=[_parse_raw_metric_definition(r) for r in template["metrics"]],
         )
 
@@ -390,16 +377,16 @@ class GraphTemplate:
 
     @classmethod
     def from_bidirectional(cls, graph: graphs.Bidirectional) -> Self:
-        lower_ranges = []
-        upper_ranges = []
+        ranges_min = []
+        ranges_max = []
         if graph.lower.minimal_range is not None:
             lower_range = _parse_minimal_range(graph.lower.minimal_range)
-            lower_ranges.append(lower_range[0])
-            upper_ranges.append(lower_range[1])
+            ranges_min.append(lower_range.min)
+            ranges_max.append(lower_range.max)
         if graph.upper.minimal_range is not None:
             upper_range = _parse_minimal_range(graph.upper.minimal_range)
-            lower_ranges.append(upper_range[0])
-            upper_ranges.append(upper_range[1])
+            ranges_min.append(upper_range.min)
+            ranges_max.append(upper_range.max)
 
         metrics_ = [_parse_quantity(l, "-stack") for l in graph.lower.compound_lines] + [
             _parse_quantity(l, "stack") for l in graph.upper.compound_lines
@@ -433,8 +420,11 @@ class GraphTemplate:
             id=graph.name,
             title=graph.title.localize(_),
             range=(
-                (Minimum(lower_ranges), Maximum(upper_ranges))
-                if lower_ranges and upper_ranges
+                MinimalGraphTemplateRange(
+                    min=Minimum(ranges_min),
+                    max=Maximum(ranges_max),
+                )
+                if ranges_min and ranges_max
                 else None
             ),
             metrics=metrics_,
@@ -445,23 +435,29 @@ class GraphTemplate:
             omit_zero_metrics=False,
         )
 
-    def compute_range(
-        self, translated_metrics: Mapping[str, TranslatedMetric]
-    ) -> tuple[float | None, float | None]:
-        if self.range is None:
-            return None, None
 
-        try:
-            from_ = self.range[0].evaluate(translated_metrics).value
-        except Exception:
-            from_ = None
+def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
+    return FixedGraphTemplateRange(
+        min=parse_expression(raw_graph_range[0], {}),
+        max=parse_expression(raw_graph_range[1], {}),
+    )
 
-        try:
-            to = self.range[1].evaluate(translated_metrics).value
-        except Exception:
-            to = None
 
-        return from_, to
+def _parse_minimal_range(
+    minimal_range: graphs.MinimalRange,
+) -> MinimalGraphTemplateRange:
+    return MinimalGraphTemplateRange(
+        min=(
+            Constant(minimal_range.lower)
+            if isinstance(minimal_range.lower, (int, float))
+            else _parse_quantity(minimal_range.lower, "line").expression
+        ),
+        max=(
+            Constant(minimal_range.upper)
+            if isinstance(minimal_range.upper, (int, float))
+            else _parse_quantity(minimal_range.upper, "line").expression
+        ),
+    )
 
 
 class CheckMetricEntry(TypedDict, total=False):

@@ -21,6 +21,7 @@ from cmk.gui.graphing._artwork import (
     TimeAxis,
     TimeAxisLabel,
 )
+from cmk.gui.graphing._graph_specification import FixedVerticalRange, MinimalVerticalRange
 from cmk.gui.graphing._utils import SizeEx
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
@@ -29,7 +30,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
     "explicit_vertical_range, layouted_curves_range, graph_data_vrange, mirrored, expected_v_axis_min_max",
     [
         pytest.param(
-            (None, None),
+            None,
             (None, None),
             None,
             False,
@@ -37,7 +38,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             id="default",
         ),
         pytest.param(
-            (None, None),
+            None,
             (None, None),
             None,
             True,
@@ -46,15 +47,15 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
         ),
         #
         pytest.param(
-            (0.01, 0.02),
+            MinimalVerticalRange(min=0.01, max=0.02),
             (None, None),
             None,
             False,
-            _VAxisMinMax((0.0, 0.02), 0.02, 0.0, 0.03),
+            _VAxisMinMax((0.01, 0.02), 0.01, 0.005, 0.025),
             id="small-pos",
         ),
         pytest.param(
-            (0.01, 0.02),
+            FixedVerticalRange(min=0.01, max=0.02),
             (None, None),
             None,
             True,
@@ -62,7 +63,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             id="small-pos-mirrored",
         ),
         pytest.param(
-            (-0.01, 0.02),
+            MinimalVerticalRange(min=-0.01, max=0.02),
             (None, None),
             None,
             False,
@@ -70,7 +71,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             id="small-neg",
         ),
         pytest.param(
-            (-0.01, 0.02),
+            FixedVerticalRange(min=-0.01, max=0.02),
             (None, None),
             None,
             True,
@@ -79,7 +80,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
         ),
         #
         pytest.param(
-            (-5.0, 10.0),
+            MinimalVerticalRange(min=-5.0, max=10.0),
             (None, None),
             None,
             False,
@@ -87,7 +88,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             id="explicit_vertical_range",
         ),
         pytest.param(
-            (-5.0, 10.0),
+            FixedVerticalRange(min=-5.0, max=10.0),
             (None, None),
             None,
             True,
@@ -95,7 +96,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             id="explicit_vertical_range-mirrored",
         ),
         pytest.param(
-            (None, None),
+            None,
             (-5.0, 10.0),
             None,
             False,
@@ -103,7 +104,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             id="layouted_curves_range",
         ),
         pytest.param(
-            (None, None),
+            None,
             (-5.0, 10.0),
             None,
             True,
@@ -111,7 +112,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             id="layouted_curves_range-mirrored",
         ),
         pytest.param(
-            (None, None),
+            None,
             (None, None),
             (-5.0, 10.0),
             False,
@@ -119,7 +120,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             id="graph_data_vrange",
         ),
         pytest.param(
-            (None, None),
+            None,
             (None, None),
             (-5.0, 10.0),
             True,
@@ -129,7 +130,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
     ],
 )
 def test__compute_v_axis_min_max(
-    explicit_vertical_range: tuple[float | None, float | None],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     layouted_curves_range: tuple[float | None, float | None],
     graph_data_vrange: tuple[float, float] | None,
     mirrored: bool,
@@ -151,21 +152,35 @@ def test__compute_v_axis_min_max(
     "explicit_vertical_range, layouted_curves_range, graph_data_vrange, expected_v_axis_min_max",
     [
         pytest.param(
-            (-500.0, 1000.0),
-            (-5.0, 10.0),
+            FixedVerticalRange(min=-500.0, max=1000.0),
+            (-600.0, 2000.0),
             None,
             _VAxisMinMax((-500.0, 1000.0), 1500.0, -1250.0, 1750.0),
-            id="explicit_vertical_range-and-layouted_curves_range",
+            id="explicit_vertical_range_fixed-and-layouted_curves_range",
         ),
         pytest.param(
-            (-500.0, 1000.0),
+            MinimalVerticalRange(min=-500.0, max=1000.0),
+            (-250.0, 500.0),
+            None,
+            _VAxisMinMax((-500.0, 1000.0), 1500.0, -1250.0, 1750.0),
+            id="explicit_vertical_range_minimal-and-layouted_curves_range_smaller",
+        ),
+        pytest.param(
+            MinimalVerticalRange(min=-500.0, max=1000.0),
+            (-1000.0, 2000.0),
+            None,
+            _VAxisMinMax((-1000.0, 2000.0), 3000.0, -2500.0, 3500.0),
+            id="explicit_vertical_range_minimal-and-layouted_curves_range_larger",
+        ),
+        pytest.param(
+            FixedVerticalRange(min=-500.0, max=1000.0),
             (None, None),
             (-5.0, 10.0),
             _VAxisMinMax((-500.0, 1000.0), 15.0, -5.0, 10.0),
             id="graph_data_vrange-precedence-over-explicit_vertical_range",
         ),
         pytest.param(
-            (None, None),
+            None,
             (-500.0, 1000.0),
             (-5.0, 10.0),
             _VAxisMinMax((-500.0, 1000.0), 15.0, -5.0, 10.0),
@@ -174,7 +189,7 @@ def test__compute_v_axis_min_max(
     ],
 )
 def test__compute_v_axis_min_max_precedence(
-    explicit_vertical_range: tuple[float | None, float | None],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     layouted_curves_range: tuple[float | None, float | None],
     graph_data_vrange: tuple[float, float] | None,
     expected_v_axis_min_max: _VAxisMinMax,

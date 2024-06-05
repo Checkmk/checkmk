@@ -79,7 +79,7 @@ _GRAPH_RECIPE = GraphRecipe(
         )
     ],
     unit="c",
-    explicit_vertical_range=(None, None),
+    explicit_vertical_range=None,
     horizontal_rules=[],
     omit_zero_metrics=False,
     consolidation_function="max",

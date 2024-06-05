@@ -1624,7 +1624,7 @@ COLOR_HEX = "#1e90ff"
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(Constant(0), Constant(100.0)),
+                range=utils.MinimalGraphTemplateRange(min=Constant(0), max=Constant(100.0)),
                 scalars=[],
                 conflicting_metrics=(),
                 optional_metrics=(),
@@ -1800,7 +1800,10 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(Minimum([Constant(1), Constant(2)]), Maximum([Constant(10), Constant(11)])),
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(1), Constant(2)]),
+                    max=Maximum([Constant(10), Constant(11)]),
+                ),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
@@ -1833,7 +1836,10 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(Minimum([Constant(1)]), Maximum([Constant(10)])),
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(1)]),
+                    max=Maximum([Constant(10)]),
+                ),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
@@ -1866,7 +1872,10 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(Minimum([Constant(2)]), Maximum([Constant(11)])),
+                range=utils.MinimalGraphTemplateRange(
+                    min=Minimum([Constant(2)]),
+                    max=Maximum([Constant(11)]),
+                ),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],

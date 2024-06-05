@@ -27,9 +27,15 @@ from cmk.gui.graphing._graph_specification import (
     MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
+    MinimalVerticalRange,
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
-from cmk.gui.graphing._utils import GraphTemplate, MetricDefinition, ScalarDefinition
+from cmk.gui.graphing._utils import (
+    GraphTemplate,
+    MetricDefinition,
+    MinimalGraphTemplateRange,
+    ScalarDefinition,
+)
 from cmk.gui.metrics import translate_perf_data
 
 
@@ -134,7 +140,7 @@ def test_create_graph_recipe_from_template() -> None:
         conflicting_metrics=["fs_free"],
         optional_metrics=[],
         consolidation_function=None,
-        range=(Constant(0), MaximumOf(Metric("fs_used"))),
+        range=MinimalGraphTemplateRange(min=Constant(0), max=MaximumOf(Metric("fs_used"))),
         omit_zero_metrics=False,
     )
     translated_metrics = translate_perf_data(
@@ -212,7 +218,10 @@ def test_create_graph_recipe_from_template() -> None:
             ),
         ],
         unit="bytes",
-        explicit_vertical_range=(0.0, None),
+        explicit_vertical_range=MinimalVerticalRange(
+            min=0.0,
+            max=None,
+        ),
         horizontal_rules=[],
         omit_zero_metrics=False,
         consolidation_function="max",

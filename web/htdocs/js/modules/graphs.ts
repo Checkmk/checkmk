@@ -125,6 +125,18 @@ interface VerticalAxis {
     pixels_per_second: number;
 }
 
+interface FixedVerticalRange {
+    type: "fixed";
+    min: number | null;
+    max: number | null;
+}
+
+interface MinimalVerticalRange {
+    type: "minimal";
+    min: number | null;
+    max: number | null;
+}
+
 //this type is from cmk/gui/plugins/metrics/artwork.py:82
 export interface GraphArtwork {
     //optional properties assigned dynamically in javascript
@@ -149,7 +161,7 @@ export interface GraphArtwork {
     start_time: Timestamp;
     end_time: Timestamp;
     step: Seconds;
-    explicit_vertical_range: [number | null, number | null];
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | null;
     requested_vrange: [number, number] | null;
     requested_start_time: Timestamp;
     requested_end_time: Timestamp;

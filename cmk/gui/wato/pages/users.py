@@ -59,6 +59,7 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
@@ -280,6 +281,8 @@ class ModeUsers(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -997,6 +1000,8 @@ class ModeEditUser(WatoMode):
             )
 
     def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(mode_url("users"))
 

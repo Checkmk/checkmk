@@ -62,6 +62,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -1874,6 +1875,8 @@ class ABCEditRuleMode(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self._back_url())
 

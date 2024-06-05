@@ -76,6 +76,7 @@ from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, Icon, PermissionName
 from cmk.gui.user_sites import get_event_console_site_choices
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -2245,6 +2246,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
@@ -3236,6 +3239,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -3391,6 +3396,8 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not request.uploaded_file("_upload_mib"):
             return None
         filename, mimetype, content = request.uploaded_file("_upload_mib")

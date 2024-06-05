@@ -74,6 +74,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Key
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -868,6 +869,8 @@ class PageEditBackupJob:
         ]
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
@@ -1748,6 +1751,8 @@ class PageEditBackupTarget:
             raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 

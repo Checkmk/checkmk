@@ -39,6 +39,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
@@ -251,6 +252,8 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         pass
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return redirect(mode_url("%s_groups" % self.type_name))
 

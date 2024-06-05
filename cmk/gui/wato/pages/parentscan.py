@@ -26,6 +26,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import (
@@ -140,6 +141,8 @@ class ModeParentScan(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         try:
             transactions.check_transaction()
 

@@ -33,6 +33,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import (
@@ -127,6 +128,8 @@ class ModeBulkRenameHost(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
         try:

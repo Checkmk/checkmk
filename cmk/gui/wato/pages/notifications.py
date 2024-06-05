@@ -54,6 +54,7 @@ from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -673,6 +674,8 @@ class ModeNotifications(ABCNotificationsMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if request.has_var("_show_user"):
             if transactions.check_transaction():
                 self._show_user_rules = bool(request.var("_show_user"))
@@ -2233,6 +2236,8 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         )
 
     def action(self) -> ActionResult:
+        check_csrf_token()
+
         if not transactions.check_transaction():
             return self._back_mode()
 

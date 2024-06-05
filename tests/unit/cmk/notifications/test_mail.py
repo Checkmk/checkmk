@@ -537,9 +537,11 @@ def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:
 
     with patch("cmk.notification_plugins.mail.urlopen", new=UrllibMock()) as mock:
         mock.side_effect = TimeoutError
-        # Bug
-        with pytest.raises(TypeError, match="%d format: a real number is required, not str"):
-            mail.render_cmk_graphs(context=context, is_bulk=False)
+        assert mail.render_cmk_graphs(context=context, is_bulk=False) == []
+        assert capsys.readouterr().err == (
+            "ERROR: Timed out fetching graphs (10 sec)\n"
+            "URL: http://localhost:80/NO_SITE/check_mk/ajax_graph_images.py?host=heute&service=_HOST_&num_graphs=1\n"
+        )
 
     with patch("cmk.notification_plugins.mail.urlopen", new=UrllibMock()) as mock:
         mock.data = "foo"

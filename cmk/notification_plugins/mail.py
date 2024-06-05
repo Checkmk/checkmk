@@ -719,7 +719,7 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
     except TimeoutError:
         if opt_debug:
             raise
-        sys.stderr.write("ERROR: Timed out fetching graphs (%d sec)\nURL: %s\n" % url)
+        sys.stderr.write(f"ERROR: Timed out fetching graphs ({timeout} sec)\nURL: {url}\n")
         return []
     except Exception as e:
         if opt_debug:

@@ -93,8 +93,7 @@ def test_check_veeam_jobs() -> None:
         (
             "VMware_Server",
             [
-                Result(state=State.OK, summary="State: Stopped"),
-                Result(state=State.OK, summary="Result: Success"),
+                Result(state=State.OK, summary="State: Stopped, Result: Success"),
                 Result(state=State.OK, summary="Creation time: 21.01.2019 00:10:22"),
                 Result(state=State.OK, summary="End time: 21.01.2019 00:29:12"),
                 Result(state=State.OK, summary="Type: Backup"),
@@ -103,8 +102,7 @@ def test_check_veeam_jobs() -> None:
         (
             "warning_backup",
             [
-                Result(state=State.OK, summary="State: Stopped"),
-                Result(state=State.WARN, summary="Result: Warning"),
+                Result(state=State.WARN, summary="State: Stopped, Result: Warning"),
                 Result(state=State.OK, summary="Creation time: 03.09.2020 15:45:50"),
                 Result(state=State.OK, summary="End time: 03.09.2020 16:44:39"),
                 Result(state=State.OK, summary="Type: Backup"),
@@ -113,8 +111,7 @@ def test_check_veeam_jobs() -> None:
         (
             "backup_sync_job",
             [
-                Result(state=State.OK, summary="State: Working"),
-                Result(state=State.OK, summary="Result: None"),
+                Result(state=State.OK, summary="State: Working, Result: None"),
                 Result(state=State.OK, summary="Creation time: 20.07.2017 08:25:09"),
                 Result(state=State.OK, summary="End time: 20.07.2017 08:25:29"),
                 Result(state=State.OK, summary="Type: BackupSync"),
@@ -124,8 +121,7 @@ def test_check_veeam_jobs() -> None:
         (
             "stopped_and_failed",
             [
-                Result(state=State.OK, summary="State: Stopped"),
-                Result(state=State.CRIT, summary="Result: Failed"),
+                Result(state=State.CRIT, summary="State: Stopped, Result: Failed"),
                 Result(state=State.OK, summary="Creation time: 26.10.2013 23:13:13"),
                 Result(state=State.OK, summary="End time: 27.10.2013 00:51:17"),
                 Result(state=State.OK, summary="Type: Backup"),
@@ -134,8 +130,7 @@ def test_check_veeam_jobs() -> None:
         (
             "starting_and_failed",
             [
-                Result(state=State.OK, summary="State: Starting"),
-                Result(state=State.OK, summary="Result: Failed"),
+                Result(state=State.OK, summary="State: Starting, Result: Failed"),
                 Result(state=State.OK, summary="Creation time: 26.10.2013 23:13:13"),
                 Result(state=State.OK, summary="End time: 27.10.2013 00:51:17"),
                 Result(state=State.OK, summary="Type: Backup"),
@@ -145,8 +140,7 @@ def test_check_veeam_jobs() -> None:
         (
             "backup_sync_idle",
             [
-                Result(state=State.OK, summary="State: Idle"),
-                Result(state=State.OK, summary="Result: None"),
+                Result(state=State.OK, summary="State: Idle, Result: None"),
                 Result(state=State.OK, summary="Creation time: 20.07.2017 08:25:09"),
                 Result(state=State.OK, summary="End time: 20.07.2017 08:25:29"),
                 Result(state=State.OK, summary="Type: BackupSync"),

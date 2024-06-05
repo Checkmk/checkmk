@@ -10,24 +10,61 @@ from cmk.base.legacy_checks.veeam_jobs import (
 )
 
 STRING_TABLE = [
-    ["VMware_Server", "Backup", "Stopped", "Success", "21.01.2019 00:10:22", "21.01.2019 00:29:12"],
-    [
-        "Lehrer_Rechner",
+    [  # based on customer agent output, this is the most common state
+        "VMware_Server",
         "Backup",
         "Stopped",
         "Success",
-        "23.07.2018 13:08:37",
-        "23.07.2018 13:27:44",
+        "21.01.2019 00:10:22",
+        "21.01.2019 00:29:12",
     ],
-    [
-        "Windows_Admin_PC",
+    [  # based on customer agent output
+        "warning_backup",
         "Backup",
         "Stopped",
-        "Success",
-        "20.01.2019 22:00:06",
-        "20.01.2019 22:02:42",
+        "Warning",
+        "03.09.2020 15:45:50",
+        "03.09.2020 16:44:39",
+    ],
+    [  # based on customer agent output
+        "backup_sync_job",
+        "BackupSync",
+        "Working",
+        "None",
+        "20.07.2017 08:25:09",
+        "20.07.2017 08:25:29",
+    ],
+    [  # based on customer agent output, happens if creation time/end time are empty
+        "backup_stopped",
+        "Backup",
+        "Stopped",
+        "None",
+    ],
+    [  # based on customer agent output
+        "stopped_and_failed",
+        "Backup",
+        "Stopped",
+        "Failed",
+        "26.10.2013 23:13:13",
+        "27.10.2013 00:51:17",
+    ],
+    [  # based on customer agent output
+        "starting_and_failed",
+        "Backup",
+        "Starting",
+        "Failed",
+        "26.10.2013 23:13:13",
+        "27.10.2013 00:51:17",
     ],
     ["Lehrer Rechner"],
+    [  # made up to get 100% coverage of check,
+        "backup_sync_idle",
+        "BackupSync",
+        "Idle",
+        "None",
+        "20.07.2017 08:25:09",
+        "20.07.2017 08:25:29",
+    ],
 ]
 
 
@@ -35,9 +72,13 @@ def test_discovery_veeam_jobs() -> None:
     section = parse_veeam_jobs(STRING_TABLE)
     assert inventory_veeam_jobs(section) == [
         ("VMware_Server", None),
-        ("Lehrer_Rechner", None),
-        ("Windows_Admin_PC", None),
+        ("warning_backup", None),
+        ("backup_sync_job", None),
+        ("backup_stopped", None),
+        ("stopped_and_failed", None),
+        ("starting_and_failed", None),
         ("Lehrer Rechner", None),
+        ("backup_sync_idle", None),
     ]
 
 
@@ -55,18 +96,34 @@ def test_check_veeam_jobs() -> None:
             ),
         ),
         (
-            "Lehrer_Rechner",
+            "warning_backup",
             (
-                0,
-                "State: Stopped, Result: Success, Creation time: 23.07.2018 13:08:37, End time: 23.07.2018 13:27:44, Type: Backup",
+                1,
+                "State: Stopped, Result: Warning, Creation time: 03.09.2020 15:45:50, End time: 03.09.2020 16:44:39, Type: Backup",
+            ),
+        ),
+        ("backup_sync_job", (0, "Running since 20.07.2017 08:25:09 (current state is: Working)")),
+        ("backup_stopped", None),
+        (
+            "stopped_and_failed",
+            (
+                2,
+                "State: Stopped, Result: Failed, Creation time: 26.10.2013 23:13:13, End time: 27.10.2013 00:51:17, Type: Backup",
             ),
         ),
         (
-            "Windows_Admin_PC",
+            "starting_and_failed",
             (
                 0,
-                "State: Stopped, Result: Success, Creation time: 20.01.2019 22:00:06, End time: 20.01.2019 22:02:42, Type: Backup",
+                "Running since 26.10.2013 23:13:13 (current state is: Starting)",
             ),
         ),
         ("Lehrer Rechner", None),
+        (
+            "backup_sync_idle",
+            (
+                0,
+                "State: Idle, Result: None, Creation time: 20.07.2017 08:25:09, End time: 20.07.2017 08:25:29, Type: BackupSync",
+            ),
+        ),
     ]

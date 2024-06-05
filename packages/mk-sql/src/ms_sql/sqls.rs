@@ -34,7 +34,7 @@ pub enum Id {
     Clusters,
 }
 
-mod query {
+pub mod query {
     pub const COMPUTER_NAME: &str =
         "SELECT Upper(Cast(SERVERPROPERTY( 'MachineName' ) as varchar)) as MachineName";
     /// Script to be run in SQL instance
@@ -156,6 +156,8 @@ SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Port
         (database_name nvarchar(128),database_size nvarchar(128), unallocated_space nvarchar(128)), \
         (reserved nvarchar(128),data nvarchar(128), index_size nvarchar(128), unused nvarchar(128)) \
         )";
+
+    pub const SPACE_USED_SIMPLE: &str = "EXEC sp_spaceused";
 
     /// TODO(sk): remove this variant.B after confirm that new script works nice
     /// Executes `sp_spaceused` with storing data in temp table

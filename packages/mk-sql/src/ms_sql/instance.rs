@@ -664,12 +664,19 @@ impl SqlInstance {
         let mut result = String::new();
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
-                Ok(mut c) => {
-                    result += &run_custom_query(&mut c, query)
-                        .await
-                        .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
-                        .unwrap_or_else(|e| format_error(d, &e));
-                }
+                Ok(mut c) => match run_custom_query(&mut c, query).await {
+                    Ok(rows) => {
+                        result += &to_table_spaces_entry(&self.mssql_name(), d, &rows, sep);
+                    }
+                    Err(err) => {
+                        // fallback on simple query sp_spaceused for very old SQL Servers
+                        log::info!("Failed to get table spaces: {}", err);
+                        result += &run_custom_query(&mut c, sqls::query::SPACE_USED_SIMPLE)
+                            .await
+                            .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
+                            .unwrap_or_else(|e| format_error(d, &e));
+                    }
+                },
                 Err(err) => {
                     result += &format_error(d, &err);
                 }

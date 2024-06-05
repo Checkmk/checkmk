@@ -1,0 +1,13 @@
+Title: veeam_jobs: Always Monitor Result of Last Backup
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1717598169
+Edition: cee
+Level: 1
+Version: 2.2.0p28
+
+Previously, the check plugin <code>veeam_jobs</code> would not always check the result of
+the last backup job to determine the monitoring state. If the creation time was
+an empty string, it would show <code>item not found</code> in case. It will now show all
+the information available and the correct monitoring state.

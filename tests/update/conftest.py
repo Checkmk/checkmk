@@ -112,7 +112,7 @@ class TestParams:
     ]
 
 
-def get_omd_status(site: Site) -> dict[str, str]:
+def _get_omd_status(site: Site) -> dict[str, str]:
     """Get the omd status for all services of the given site."""
     cmd = ["/usr/bin/omd", "status", "--bare"]
     status = {}
@@ -126,7 +126,7 @@ def get_omd_status(site: Site) -> dict[str, str]:
 
 def get_site_status(site: Site) -> str | None:
     """Get the overall status of the given site."""
-    service_status = get_omd_status(site)
+    service_status = _get_omd_status(site)
     logger.debug("Status codes: %s", service_status)
     if len(service_status) > 0:
         status = list(service_status.values())[-1]

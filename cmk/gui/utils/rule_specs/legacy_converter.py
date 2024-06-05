@@ -710,7 +710,7 @@ def _convert_to_inner_legacy_valuespec(
             return _convert_to_legacy_individual_or_stored_password(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.MultipleChoice():
-            return _convert_to_legacy_list_choice(to_convert, localizer)
+            return _convert_to_legacy_list_choice_match_type(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.MultilineText():
             return _convert_to_legacy_text_area(to_convert, localizer)
@@ -2172,6 +2172,22 @@ def _convert_to_legacy_individual_or_stored_password(
         ),
         forth=_transform_password_forth,
         back=_transform_password_back,
+    )
+
+
+def _convert_to_legacy_list_choice_match_type(
+    to_convert: ruleset_api_v1.form_specs.MultipleChoice, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ValueSpec:
+
+    def _ensure_sequence_str(value: object) -> Sequence | object:
+
+        if not isinstance(value, Sequence):
+            return value
+        return list(value)
+
+    return Transform(
+        _convert_to_legacy_list_choice(to_convert, localizer),
+        forth=_ensure_sequence_str,
     )
 
 

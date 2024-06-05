@@ -36,7 +36,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
+from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
@@ -149,6 +149,7 @@ def _sort_delta_rows(
 def compute_cell_spec(
     item: SDItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
+    icon_path_svc_problems: str,
 ) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
     tdclass, code = hint.paint_function(item.value)
@@ -169,10 +170,7 @@ def compute_cell_spec(
             HTMLWriter.render_span(
                 html_value
                 + HTML("&nbsp;")
-                + HTMLWriter.render_img(
-                    theme.detect_icon_path("svc_problems", "icon_"),
-                    class_=["icon"],
-                ),
+                + HTMLWriter.render_img(icon_path_svc_problems, class_=["icon"]),
                 title=_("Data is outdated and will be removed with the next check execution"),
                 css=["muted_text"],
             ),
@@ -267,6 +265,7 @@ def ajax_inv_render_tree() -> None:
         site_id,
         host_name,
         inv_display_hints,
+        theme,
         show_internal_tree_paths,
         tree_id,
     ).show(tree, request)
@@ -286,12 +285,14 @@ class TreeRenderer:
         site_id: SiteId,
         hostname: HostName,
         hints: DisplayHints,
+        theme_: Theme,
         show_internal_tree_paths: bool = False,
         tree_id: str = "",
     ) -> None:
         self._site_id = site_id
         self._hostname = hostname
         self._hints = hints
+        self._theme = theme_
         self._show_internal_tree_paths = show_internal_tree_paths
         self._tree_id = tree_id
         self._tree_name = f"inv_{hostname}{tree_id}"
@@ -320,7 +321,11 @@ class TreeRenderer:
             html.th(self._get_header(attr_hint.title, item.key))
             html.open_td()
             if isinstance(item, SDItem):
-                _tdclass, rendered_value = compute_cell_spec(item, attr_hint)
+                _tdclass, rendered_value = compute_cell_spec(
+                    item,
+                    attr_hint,
+                    self._theme.detect_icon_path("svc_problems", "icon_"),
+                )
             else:
                 _tdclass, rendered_value = _compute_delta_cell_spec(item, attr_hint)
             html.write_html(rendered_value)
@@ -377,7 +382,11 @@ class TreeRenderer:
                 col_hint = column_hints[item.key]
                 # TODO separate tdclass from rendered value
                 if isinstance(item, SDItem):
-                    tdclass, rendered_value = compute_cell_spec(item, col_hint)
+                    tdclass, rendered_value = compute_cell_spec(
+                        item,
+                        col_hint,
+                        self._theme.detect_icon_path("svc_problems", "icon_"),
+                    )
                 else:
                     tdclass, rendered_value = _compute_delta_cell_spec(item, col_hint)
                 html.open_td(class_=tdclass)
@@ -395,7 +404,7 @@ class TreeRenderer:
         if hint.icon:
             title += html.render_img(
                 class_=(["title", "icon"]),
-                src=theme.detect_icon_path(hint.icon, "icon_"),
+                src=self._theme.detect_icon_path(hint.icon, "icon_"),
             )
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
         with foldable_container(

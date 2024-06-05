@@ -30,6 +30,7 @@ from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 
@@ -124,6 +125,7 @@ class PainterInventoryTree(Painter):
             row["site"],
             row["host_name"],
             inv_display_hints,
+            theme,
             show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
         )
 
@@ -200,6 +202,7 @@ class PainterInvhistDelta(Painter):
             row["site"],
             row["host_name"],
             inv_display_hints,
+            theme,
             tree_id=str(row["invhist_time"]),
         )
 
@@ -325,6 +328,7 @@ def _paint_host_inventory_attribute(
             attributes.retentions.get(key),
         ),
         hint,
+        theme.detect_icon_path("svc_problems", "icon_"),
     )
 
 
@@ -390,6 +394,7 @@ def _paint_host_inventory_column(row: Row, ident: str, hint: ColumnDisplayHint) 
             row.get("_".join([ident, "retention_interval"])),
         ),
         hint,
+        theme.detect_icon_path("svc_problems", "icon_"),
     )
 
 
@@ -448,6 +453,7 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
         row["site"],
         row["host_name"],
         inv_display_hints,
+        theme,
         show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
     )
 

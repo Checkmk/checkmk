@@ -80,7 +80,12 @@ def _get_section() -> SectionCounter:
 
 
 def test_discovery_summary(section: SectionCounter) -> None:
-    assert sorted(discover_esx_vsphere_datastore_io([{"summary": True}], section)) == sorted(
+    assert sorted(
+        discover_esx_vsphere_datastore_io(
+            [{"summary": True, "physical": {}, "lvm": False, "vxvm": False, "diskless": False}],
+            section,
+        )
+    ) == sorted(
         [
             Service(item="SUMMARY"),
         ]
@@ -88,7 +93,20 @@ def test_discovery_summary(section: SectionCounter) -> None:
 
 
 def test_discovery_physical(section: SectionCounter) -> None:
-    assert sorted(discover_esx_vsphere_datastore_io([{"physical": True}], section)) == sorted(
+    assert sorted(
+        discover_esx_vsphere_datastore_io(
+            [
+                {
+                    "summary": False,
+                    "physical": {"service_name": "name"},
+                    "lvm": False,
+                    "vxvm": False,
+                    "diskless": False,
+                }
+            ],
+            section,
+        )
+    ) == sorted(
         [
             Service(item="56490e2e-692ac36c"),
             Service(item="79d8b527-45291f84"),
@@ -101,7 +119,15 @@ def test_discovery_physical(section: SectionCounter) -> None:
 
 
 def test_check_summary(section: SectionCounter) -> None:
-    assert list(_check_esx_vsphere_datastore_io("SUMMARY", {}, section, 1659382581, {})) == [
+    assert list(
+        _check_esx_vsphere_datastore_io(
+            "SUMMARY",
+            {"summary": False, "physical": {}, "lvm": False, "vxvm": False, "diskless": False},
+            section,
+            1659382581,
+            {},
+        )
+    ) == [
         Result(state=State.OK, summary="Read: 19.5 kB/s"),
         Metric("disk_read_throughput", 19456.0),
         Result(state=State.OK, summary="Write: 736 kB/s"),
@@ -117,7 +143,13 @@ def test_check_summary(section: SectionCounter) -> None:
 
 def test_check_item(section: SectionCounter) -> None:
     assert list(
-        _check_esx_vsphere_datastore_io("SSD_sgrz3par_vmstore1", {}, section, 1659382581, {})
+        _check_esx_vsphere_datastore_io(
+            "SSD_sgrz3par_vmstore1",
+            {"summary": False, "physical": {}, "lvm": False, "vxvm": False, "diskless": False},
+            section,
+            1659382581,
+            {},
+        )
     ) == [
         Result(state=State.OK, summary="Read: 0.00 B/s"),
         Metric("disk_read_throughput", 0.0),

@@ -8,8 +8,8 @@ from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, DefaultDict, TypedDict
 
-from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckResult,
     DiscoveryResult,
     get_average,
@@ -26,6 +26,13 @@ Disk = Mapping[str, float]
 Section = Mapping[str, Disk]
 
 DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
+DISKSTAT_DEFAULT_PARAMS = {
+    "summary": True,
+    "physical": {},
+    "lvm": False,
+    "vxvm": False,
+    "diskless": False,
+}
 
 
 def discovery_diskstat_generic(
@@ -39,29 +46,29 @@ def discovery_diskstat_generic(
 
     modes = params[0]
 
-    if "summary" in modes:
+    if modes["summary"]:
         yield Service(item="SUMMARY")
 
     for name in item_candidates:
         if (
-            (physical := modes.get("physical"))
+            (physical := modes["physical"])
             and " " not in name
             and not DISKSTAT_DISKLESS_PATTERN.match(name)
         ):
             if ":" in name:
                 device, wwn = name.split(":")
-                item = wwn if physical == "wwn" else device
+                item = wwn if physical["service_description"] == "wwn" else device
                 yield Service(item=item)
             else:
                 yield Service(item=name)
 
-        if "lvm" in modes and name.startswith("LVM "):
+        if modes["lvm"] and name.startswith("LVM "):
             yield Service(item=name)
 
-        if "vxvm" in modes and name.startswith("VxVM "):
+        if modes["vxvm"] and name.startswith("VxVM "):
             yield Service(item=name)
 
-        if "diskless" in modes and DISKSTAT_DISKLESS_PATTERN.match(name):
+        if modes["diskless"] and DISKSTAT_DISKLESS_PATTERN.match(name):
             # Sort of partitions with disks - typical in XEN virtual setups.
             # Eg. there are xvda1, xvda2, but no xvda...
             yield Service(item=name)
@@ -417,23 +424,14 @@ def check_diskstat_dict(
             label = specs.get("label") or key.replace("_", " ").capitalize()
             notice_only = not specs.get("in_service_output")
 
-            if isinstance(levels, dict):
-                yield from check_levels_predictive(
-                    metric_val,
-                    levels=levels,
-                    metric_name=metric_name,
-                    render_func=render_func,
-                    label=label,
-                )
-            else:
-                yield from check_levels(
-                    metric_val,
-                    levels_upper=levels,
-                    metric_name=metric_name,
-                    render_func=render_func,
-                    label=label,
-                    notice_only=notice_only,
-                )
+            yield from check_levels(
+                metric_val,
+                levels_upper=levels,
+                metric_name=metric_name,
+                render_func=render_func,
+                label=label,
+                notice_only=notice_only,
+            )
 
     # make sure we have a latency.
     if "latency" not in disk and "average_write_wait" in disk and "average_read_wait" in disk:

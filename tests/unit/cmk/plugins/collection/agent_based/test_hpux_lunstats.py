@@ -69,13 +69,31 @@ def _get_section() -> Section:
 
 
 def test_discover_default(section: Section) -> None:
-    assert list(discovery_diskstat_generic([{"summary": True}], section)) == [
+    assert list(
+        discovery_diskstat_generic(
+            [{"summary": True, "physical": {}, "lvm": False, "vxvm": False, "diskless": False}],
+            section,
+        )
+    ) == [
         Service(item="SUMMARY"),
     ]
 
 
 def test_discover_physical(section: Section) -> None:
-    assert list(discovery_diskstat_generic([{"physical": True}], section)) == [
+    assert list(
+        discovery_diskstat_generic(
+            [
+                {
+                    "summary": False,
+                    "physical": {"service_name": "name"},
+                    "lvm": False,
+                    "vxvm": False,
+                    "diskless": False,
+                }
+            ],
+            section,
+        )
+    ) == [
         Service(item="/dev/rdisk/disk4"),
         Service(item="/dev/rdisk/disk5"),
         Service(item="/dev/rdisk/disk20"),
@@ -95,7 +113,15 @@ def test_check_hpux_lunstats_summary(section: Section) -> None:
         "read_throughput": (1659105408, 12040575829),
     }
     this_time = 1659105468
-    assert list(_check_diskstat_io("SUMMARY", {}, section, vs, this_time)) == [
+    assert list(
+        _check_diskstat_io(
+            "SUMMARY",
+            {"summary": False, "physical": {}, "lvm": False, "vxvm": False, "diskless": False},
+            section,
+            vs,
+            this_time,
+        )
+    ) == [
         Result(
             state=State.OK,
             summary="Read: 103 GB/s",  # <- wow :-)

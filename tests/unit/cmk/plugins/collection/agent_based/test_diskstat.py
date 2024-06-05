@@ -6,15 +6,8 @@
 # pylint: disable=protected-access
 
 
-import time
-
 import pytest
 
-from cmk.agent_based.prediction_backend import (
-    InjectedParameters,
-    PredictionInfo,
-    PredictionParameters,
-)
 from cmk.agent_based.v2 import get_value_store, IgnoreResultsError, Metric, Result, State
 from cmk.plugins.collection.agent_based import diskstat
 from cmk.plugins.lib.multipath import Group
@@ -127,36 +120,18 @@ def test_parse_diskstat_predictive() -> None:
         ["buntu--vg-root", "253:1", "ubuntu-vg", "root"],
     ]
 
-    prep_u = PredictionParameters(
-        period="wday", horizon=90, levels=("relative", (10.0, 20.0)), bound=(10.0, 15.0)
-    )
-    meta_u = PredictionInfo.make(
-        metric="disk_read_throughput", direction="upper", params=prep_u, now=time.time()
-    )
-
     PARAMS = {
         "average": 300,
-        "latency": (0.08, 0.16),
-        "read_throughput": {
-            "period": prep_u.period,
-            "horizon": prep_u.horizon,
-            "levels_upper": prep_u.levels,
-            "levels_upper_min": prep_u.bound,
-            "__injected__": InjectedParameters(
-                meta_file_path_template="",  # should not be used
-                predictions={
-                    hash(meta_u): (0.1, (-1.0, 2.0))
-                },  # funny levels just to see something in the output
-            ).model_dump(),
-        },
-        "read_ios": (400.0, 600.0),
-        "read_latency": (0.08, 0.16),
-        "average_read_wait": (0.03, 0.05),
-        "utilization": (0.8, 0.9),
-        "write_throughput": (50000000.0, 100000000.0),
-        "write_ios": (300.0, 400.0),
-        "write_latency": (0.08, 0.16),
-        "average_write_wait": (0.03, 0.05),
+        "latency": ("fixed", (0.08, 0.16)),
+        "read_throughput": ("predictive", ("read_throughput", 0.1, (-1.0, 2.0))),
+        "read_ios": ("fixed", (400.0, 600.0)),
+        "read_latency": ("fixed", (0.08, 0.16)),
+        "average_read_wait": ("fixed", (0.03, 0.05)),
+        "utilization": ("fixed", (0.8, 0.9)),
+        "write_throughput": ("fixed", (50000000.0, 100000000.0)),
+        "write_ios": ("fixed", (300.0, 400.0)),
+        "write_latency": ("fixed", (0.08, 0.16)),
+        "average_write_wait": ("fixed", (0.03, 0.05)),
     }
 
     with pytest.raises(IgnoreResultsError):
@@ -175,10 +150,10 @@ def test_parse_diskstat_predictive() -> None:
         Metric("disk_utilization", 0.0, levels=(0.8, 0.9)),
         Result(
             state=State.WARN,
-            summary="Read: 0.00 B/s (predicted reference: 0.10 B/s) (warn/crit at -1.00 B/s/2.00 B/s)",
+            summary="Read: 0.00 B/s (prediction: 0.10 B/s) (warn/crit at -1.00 B/s/2.00 B/s)",
         ),
         Metric("disk_read_throughput", 0.0, levels=(-1.0, 2.0)),
-        Metric("predict_disk_read_throughput", 0.1),
+        Metric("predict_read_throughput", 0.1),
         Result(state=State.OK, summary="Write: 0.00 B/s"),
         Metric("disk_write_throughput", 0.0, levels=(50000000.0, 100000000.0)),
         Result(state=State.OK, notice="Average wait: 0 seconds"),
@@ -1610,7 +1585,9 @@ def test_check_latency_calculation() -> None:
     results_summary = list(
         diskstat.check_diskstat(
             "SUMMARY",
-            {"latency": (0.003, 0.005)},
+            {
+                "latency": ("fixed", (0.003, 0.005)),
+            },
             {
                 "disk1": {
                     "timestamp": 10000000,

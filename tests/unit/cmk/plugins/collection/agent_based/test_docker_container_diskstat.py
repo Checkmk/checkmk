@@ -354,8 +354,20 @@ def test_docker_container_diskstat(
 @pytest.mark.parametrize(
     "discovery_params, expected_item",
     [
-        [{"summary": True}, "SUMMARY"],
-        [{"physical": "name"}, "sda"],
+        [
+            {"summary": True, "physical": {}, "lvm": False, "vxvm": False, "diskless": False},
+            "SUMMARY",
+        ],
+        [
+            {
+                "summary": False,
+                "physical": {"service_name": "name"},
+                "lvm": False,
+                "vxvm": False,
+                "diskless": False,
+            },
+            "sda",
+        ],
     ],
 )
 def test_docker_container_diskstat_discovery(

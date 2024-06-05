@@ -14,7 +14,12 @@ from cmk.agent_based.v2 import (
     get_value_store,
     RuleSetType,
 )
-from cmk.plugins.lib.diskstat import check_diskstat_dict, combine_disks, discovery_diskstat_generic
+from cmk.plugins.lib.diskstat import (
+    check_diskstat_dict,
+    combine_disks,
+    discovery_diskstat_generic,
+    DISKSTAT_DEFAULT_PARAMS,
+)
 from cmk.plugins.lib.esx_vsphere import average_parsed_data, CounterValues, SectionCounter
 
 # Example output:
@@ -152,7 +157,7 @@ check_plugin_esx_vsphere_datastore_io = CheckPlugin(
     discovery_function=discover_esx_vsphere_datastore_io,
     discovery_ruleset_name="diskstat_inventory",
     discovery_ruleset_type=RuleSetType.ALL,
-    discovery_default_parameters={"summary": True},
+    discovery_default_parameters=DISKSTAT_DEFAULT_PARAMS,
     check_function=check_esx_vsphere_datastore_io,
     check_default_parameters={},
     check_ruleset_name="diskstat",

@@ -95,9 +95,9 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="discard",
-            title=_l("Discard changes"),
+            title=_l("Revert changes"),
             description=_l(
-                "This permission allows to discard pending changes. Beware that this holds only for "
+                "This permission allows to revert pending changes. Beware that this holds only for "
                 "the user's own pending changes, not for those of other users (foreign changes)."
             ),
             defaults=["admin", "user"],
@@ -108,11 +108,11 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="discardforeign",
-            title=_l("Discard foreign changes"),
+            title=_l("Revert foreign changes"),
             description=_l(
                 "When several users work in parallel with Setup then several pending changes of "
                 "different users might pile up before changes are activated. Only with this permission "
-                "a user will be allowed to discard all pending changes, including foreign ones."
+                "a user will be allowed to revert all pending changes, including foreign ones."
             ),
             defaults=["admin"],
         )

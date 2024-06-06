@@ -258,9 +258,10 @@ def ajax_inv_render_tree() -> None:
         host_name,
         inv_display_hints,
         theme,
+        request,
         show_internal_tree_paths,
         tree_id,
-    ).show(tree, request)
+    ).show(tree)
 
 
 def _replace_title_placeholders(title: str, abc_path: SDPath, path: SDPath) -> str:
@@ -278,6 +279,7 @@ class TreeRenderer:
         hostname: HostName,
         hints: DisplayHints,
         theme_: Theme,
+        request_: Request,
         show_internal_tree_paths: bool = False,
         tree_id: str = "",
     ) -> None:
@@ -285,6 +287,7 @@ class TreeRenderer:
         self._hostname = hostname
         self._hints = hints
         self._theme = theme_
+        self._request = request_
         self._show_internal_tree_paths = show_internal_tree_paths
         self._tree_id = tree_id
         self._tree_name = f"inv_{hostname}{tree_id}"
@@ -326,7 +329,9 @@ class TreeRenderer:
         html.close_table()
 
     def _show_table(
-        self, table: ImmutableTable | ImmutableDeltaTable, hint: NodeDisplayHint, request_: Request
+        self,
+        table: ImmutableTable | ImmutableDeltaTable,
+        hint: NodeDisplayHint,
     ) -> None:
         if hint.table_view_name:
             # Link to Multisite view with exactly this table
@@ -334,7 +339,7 @@ class TreeRenderer:
                 HTMLWriter.render_a(
                     _("Open this table for filtering / sorting"),
                     href=makeuri_contextless(
-                        request_,
+                        self._request,
                         [
                             (
                                 "view_name",
@@ -388,7 +393,7 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree, request_: Request) -> None:
+    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
         hint = self._hints.get_node_hint(node.path)
         title = self._get_header(
             _replace_title_placeholders(hint.title, hint.path, node.path),
@@ -406,7 +411,7 @@ class TreeRenderer:
             isopen=False,
             title=title,
             fetch_url=makeuri_contextless(
-                request_,
+                self._request,
                 [
                     ("site", self._site_id),
                     ("host", self._hostname),
@@ -418,15 +423,15 @@ class TreeRenderer:
             ),
         ) as is_open:
             if is_open:
-                self.show(node, request_)
+                self.show(node)
 
-    def show(self, tree: ImmutableTree | ImmutableDeltaTree, request_: Request) -> None:
+    def show(self, tree: ImmutableTree | ImmutableDeltaTree) -> None:
         hint = self._hints.get_node_hint(tree.path)
         if tree.attributes:
             self._show_attributes(tree.attributes, hint)
         if tree.table:
-            self._show_table(tree.table, hint, request_)
+            self._show_table(tree.table, hint)
         for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, request_)
+                self._show_node(node)

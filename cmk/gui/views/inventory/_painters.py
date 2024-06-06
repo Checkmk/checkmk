@@ -127,11 +127,12 @@ class PainterInventoryTree(Painter):
             row["host_name"],
             inv_display_hints,
             theme,
+            self.request,
             show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, self.request)
+            tree_renderer.show(tree)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -204,11 +205,12 @@ class PainterInvhistDelta(Painter):
             row["host_name"],
             inv_display_hints,
             theme,
+            self.request,
             tree_id=str(row["invhist_time"]),
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, self.request)
+            tree_renderer.show(tree)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -455,11 +457,12 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
         row["host_name"],
         inv_display_hints,
         theme,
+        request,
         show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(tree, request)
+        tree_renderer.show(tree)
         code = HTML(output_funnel.drain())
 
     return "invtree", code

@@ -25,10 +25,10 @@ from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
 from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist, in_extraconf_servicelist
+from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
+from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
-from cmk.utils.tags import TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
 
 from cmk.base import config
@@ -570,27 +570,12 @@ def event_match_hosttags(
     context: EventContext,
     _analyse: bool,
 ) -> str | None:
-    required = rule.get("match_hosttags")
-    if required:
+    required_tags = rule.get("match_hosttags")
+    if required_tags:
         notify_host_config = read_notify_host_file(context["HOSTNAME"])
-        # TODO This is a temporary solution to use the new core config generated
-        # tag infos. Will be reworked if the problem of HostTagCondition storing
-        # the tags as list is solved. See CMK-11285
-        #
-        # The following entries are skipped, even if they were present in the
-        # HOSTTAGS context key:
-        # * "site" (e.g. "site:heute") handled within event_match_site()
-        # * Folder (e.g. '/wato/') not needed
-        tags = [
-            TagID(tag_id)
-            for taggroup_id, tag_id in notify_host_config.tags.items()
-            if taggroup_id != "site"
-        ]
-        if not hosttags_match_taglist(tags, (TagID(_) for _ in required)):
-            return (
-                f"The host's tags {'|'.join(tags)} do not "
-                f"match the required tags {'|'.join(required)}"
-            )
+        host_tags = notify_host_config.tags
+        if not matches_host_tags(set(host_tags.items()), required_tags):
+            return f"The host's tags {host_tags} do not " f"match the required tags {required_tags}"
     return None
 
 

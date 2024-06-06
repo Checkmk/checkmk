@@ -413,8 +413,13 @@ def _get_source_state_files() -> Sequence[Path]:
 
 
 def _files_in(path: Path) -> Sequence[Path]:
+    """Return a sorted sequence of files in `path` excluding hidden files.
+
+    While the order of the files _should_ not matter, in some weird cases it might.
+    We don't expect that to happen (let alone be noticed), but in case it *does* happen, at least be predictable.
+    """
     try:
-        return [f for f in path.iterdir() if not f.name.startswith(".")]
+        return sorted(f for f in path.iterdir() if not f.name.startswith("."))
     except FileNotFoundError:
         return []
 

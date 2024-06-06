@@ -316,7 +316,6 @@ def test_store_piggyback_raw_data_second_source() -> None:
 
 
 def test_get_source_and_piggyback_hosts() -> None:
-    pytest.skip("Fails for reasons I don't understand and needs rework soon anyway")
     piggyback.store_piggyback_raw_data(
         HostName("source1"),
         {

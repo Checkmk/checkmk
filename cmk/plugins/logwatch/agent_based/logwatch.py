@@ -171,7 +171,7 @@ check_plugin_logwatch = CheckPlugin(
     discovery_function=discover_logwatch_single,
     discovery_ruleset_name="logwatch_groups",
     discovery_ruleset_type=RuleSetType.ALL,
-    discovery_default_parameters={},
+    discovery_default_parameters={"grouping_patterns": []},
     check_function=check_logwatch_node,
     # watch out when implementing a check_ruleset:
     # There *are* already check parameters, they're just bypassing the official API.
@@ -333,7 +333,7 @@ check_plugin_logwatch_groups = CheckPlugin(
     discovery_function=discover_logwatch_groups,
     discovery_ruleset_name="logwatch_groups",
     discovery_ruleset_type=RuleSetType.ALL,
-    discovery_default_parameters={},
+    discovery_default_parameters={"grouping_patterns": []},
     check_function=check_logwatch_groups_node,
     check_default_parameters={"group_patterns": []},
     cluster_check_function=check_logwatch_groups_cluster,

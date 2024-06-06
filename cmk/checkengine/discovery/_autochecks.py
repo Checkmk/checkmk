@@ -27,6 +27,7 @@ __all__ = [
     "AutochecksManager",
     "DiscoveredService",
     "remove_autochecks_of_host",
+    "set_autochecks_for_effective_host",
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
 ]
@@ -37,7 +38,8 @@ ComputeCheckParameters = Callable[
     TimespecificParameters,
 ]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
-GetEffectviveHost = Callable[[HostName, str], HostName]
+GetEffectiveHost = Callable[[HostName, str], HostName]
+GetEffectiveHostOfAc = Callable[[HostName, CheckPluginName, Item], HostName]
 
 
 class AutocheckServiceWithNodes(NamedTuple):
@@ -159,7 +161,7 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectviveHost,
+        get_effective_host: GetEffectiveHost,
     ) -> Sequence[ConfiguredService]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = list(
@@ -177,7 +179,7 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectviveHost,
+        get_effective_host: GetEffectiveHost,
     ) -> Iterable[ConfiguredService]:
         """Read automatically discovered checks of one host"""
         for autocheck_entry in self._read_raw_autochecks(hostname):
@@ -238,6 +240,7 @@ def set_autochecks_of_real_hosts(
     hostname: HostName,
     new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
 ) -> None:
+    # TODO: use set_autochecks_for_effective_host instead
     store = AutochecksStore(hostname)
     # write new autochecks file for that host
     store.write(
@@ -273,30 +276,56 @@ def set_autochecks_of_cluster(
     nodes: Iterable[HostName],
     hostname: HostName,
     new_services_with_nodes_by_host: Mapping[HostName, Sequence[AutocheckServiceWithNodes]],
-    get_effective_host: GetEffectviveHost,
+    get_effective_host: GetEffectiveHost,
     get_service_description: GetServiceDescription,
 ) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
     clustered service and add the ones we've got as input."""
+
+    def get_effective_host_by_id(
+        host: HostName, plugin_name: CheckPluginName, item: Item
+    ) -> HostName:
+        return get_effective_host(host, get_service_description(host, plugin_name, item))
+
     for node in nodes:
-        new_autochecks = [
-            existing
-            for existing in AutochecksStore(node).read()
-            if hostname != get_effective_host(node, get_service_description(node, *existing.id()))
-        ] + [
-            DiscoveredService.newer(discovered)
-            for discovered, found_on_nodes in new_services_with_nodes_by_host[node]
-            if node in found_on_nodes
-        ]
+        set_autochecks_for_effective_host(
+            autochecks_owner=node,
+            effective_host=hostname,
+            new_services=[
+                DiscoveredService.newer(discovered)
+                for discovered, found_on_nodes in new_services_with_nodes_by_host[node]
+                if node in found_on_nodes
+            ],
+            get_effective_host=get_effective_host_by_id,
+        )
 
-        # write new autochecks file for that host
-        AutochecksStore(node).write(_deduplicate(new_autochecks))
-
-    # Check whether or not the cluster host autocheck files are still existant.
+    # Check whether the cluster host autocheck files are still existent.
     # Remove them. The autochecks are only stored in the nodes autochecks files
     # these days.
     AutochecksStore(hostname).clear()
+
+
+def set_autochecks_for_effective_host(
+    autochecks_owner: HostName,
+    effective_host: HostName,
+    new_services: Iterable[AutocheckEntry],
+    get_effective_host: GetEffectiveHostOfAc,
+) -> None:
+    """A set all services of an effective host, and leave all other services alone."""
+    store = AutochecksStore(autochecks_owner)
+    store.write(
+        _deduplicate(
+            [
+                *(
+                    existing
+                    for existing in store.read()
+                    if effective_host != get_effective_host(autochecks_owner, *existing.id())
+                ),
+                *new_services,
+            ]
+        )
+    )
 
 
 def _deduplicate(autochecks: Sequence[AutocheckEntry]) -> Sequence[AutocheckEntry]:
@@ -319,7 +348,7 @@ def _deduplicate(autochecks: Sequence[AutocheckEntry]) -> Sequence[AutocheckEntr
 def remove_autochecks_of_host(
     hostname: HostName,
     remove_hostname: HostName,
-    get_effective_host: GetEffectviveHost,
+    get_effective_host: GetEffectiveHost,
     get_service_description: GetServiceDescription,
 ) -> int:
     """Remove all autochecks of a host while being cluster-aware

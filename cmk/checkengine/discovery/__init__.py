@@ -9,6 +9,7 @@ from ._autochecks import (
     AutochecksManager,
     AutochecksStore,
     remove_autochecks_of_host,
+    set_autochecks_for_effective_host,
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
@@ -58,4 +59,5 @@ __all__ = [
     "remove_autochecks_of_host",
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
+    "set_autochecks_for_effective_host",
 ]

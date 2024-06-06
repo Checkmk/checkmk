@@ -285,6 +285,47 @@ class Site:
             f"\n{pformat(pending_services)}\n"
         )
 
+    def wait_for_services_state_update(
+        self,
+        hostname: str,
+        service_description: str,
+        expected_state: int,
+        wait_timeout: int,
+        max_count: int = 10,
+    ) -> None:
+        """Wait for the update of the provided service util no pending services are found"""
+        count = 0
+        while (
+            len(pending_services := self.get_host_services(hostname, pending=True)) > 0
+            and count < max_count
+        ):
+            logger.info(
+                "The following services in %s host are in pending state:\n%s\n"
+                "Waiting for the next update...",
+                hostname,
+                pformat(pending_services),
+            )
+            last_check_before = self._last_service_check(hostname, service_description)
+            logger.debug(
+                "%s;%s last check before %r", hostname, service_description, last_check_before
+            )
+
+            command_timestamp = self._command_timestamp(last_check_before)
+            self._wait_for_next_service_check(
+                hostname,
+                service_description,
+                last_check_before,
+                command_timestamp,
+                expected_state,
+                wait_timeout,
+            )
+            count += 1
+
+        assert len(pending_services) == 0, (
+            "The following services are in pending state after waiting:"
+            f"\n{pformat(pending_services)}\n"
+        )
+
     def get_host_services(self, hostname: str, pending: bool = False) -> dict[str, ServiceInfo]:
         """Return dict for all services in the given site and host.
 

@@ -159,6 +159,8 @@ check_plugin_tsm_stagingpools = CheckPlugin(
     discovery_function=discovery_tsm_stagingpools,
     check_function=check_tsm_stagingpools,
     check_default_parameters=TSM_STAGINGPOOLS_DEFAULT_LEVELS,
-    check_ruleset_name="tsm_stagingspools",
+    # There's a typo in the ruleset name; but even the obvious corrected one
+    # does not exist oO; I checked 2.4 and 1.6.
+    # check_ruleset_name="tsm_stagingspools",
     cluster_check_function=cluster_check_tsm_stagingspools,
 )

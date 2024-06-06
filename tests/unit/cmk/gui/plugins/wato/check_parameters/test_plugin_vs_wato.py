@@ -281,7 +281,6 @@ class ErrorReporter:
         ("check", "stormshield_cluster_node", "stormshield_quality"),
         ("check", "stormshield_policy", "stormshield"),
         ("check", "stormshield_updates", "stormshield_updates"),
-        ("check", "tsm_stagingpools", "tsm_stagingspools"),
         ("check", "vbox_guest", "vm_state"),
         ("check", "win_netstat", "tcp_connections"),
         ("check", "wmic_process", "wmic_process"),

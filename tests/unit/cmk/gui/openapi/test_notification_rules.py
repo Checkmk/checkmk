@@ -13,6 +13,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import version
 from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
+from cmk.utils.tags import TagID
 
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
@@ -290,14 +291,14 @@ def conditions_set_2() -> APIConditions:
             "value": [
                 {
                     "tag_type": "aux_tag",
-                    "tag_id": "ip-v4",
+                    "tag_id": TagID("ip-v4"),
                     "operator": "is_set",
                 },
                 {
                     "tag_type": "tag_group",
                     "tag_group_id": "piggyback",
                     "operator": "is_not",
-                    "tag_id": "auto-piggyback",
+                    "tag_id": TagID("auto-piggyback"),
                 },
             ],
         },
@@ -1981,20 +1982,38 @@ def test_match_host_tags(clients: ClientRegistry) -> None:
         "value": [
             {
                 "tag_type": "aux_tag",
-                "tag_id": "aux_tag_id_1",
+                "tag_id": TagID("aux_tag_id_1"),
                 "operator": "is_set",
             },
             {
                 "tag_type": "tag_group",
                 "tag_group_id": "criticality",
                 "operator": "is_not",
-                "tag_id": "prod",
+                "tag_id": TagID("prod"),
             },
             {
                 "tag_type": "tag_group",
                 "tag_group_id": "networking",
                 "operator": "is_not",
-                "tag_id": "lan",
+                "tag_id": TagID("lan"),
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "agent",
+                "operator": "is",
+                "tag_id": TagID("cmk-agent"),
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "snmp_ds",
+                "operator": "one_of",
+                "tag_ids": [TagID("snmp-v1"), TagID("no-snmp"), TagID("snmp-v2")],
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "address_family",
+                "operator": "none_of",
+                "tag_ids": [TagID("ip-v4-only"), TagID("ip-v4v6")],
             },
         ],
     }

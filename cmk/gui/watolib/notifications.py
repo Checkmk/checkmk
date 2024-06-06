@@ -425,7 +425,7 @@ class Conditions:
                 config.get("match_escalation"),
             ),
             match_host_tags=CheckboxMatchHostTags.from_mk_file_format(
-                config.get("match_hosttags"),  # type: ignore[arg-type]  # TODO: Fix if CMK-17644 is done
+                config.get("match_hosttags"),
             ),
             match_host_event_type=CheckboxMatchHostEvents.from_mk_file_format(
                 config.get("match_host_event"),

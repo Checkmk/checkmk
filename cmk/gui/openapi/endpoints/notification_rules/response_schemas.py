@@ -7,7 +7,8 @@
 from collections.abc import Mapping
 from typing import Any, cast, get_args
 
-from marshmallow import post_dump, pre_dump
+from marshmallow import post_dump
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
@@ -39,7 +40,6 @@ from cmk.gui.openapi.endpoints.notification_rules.request_example import (
 )
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 from cmk.gui.rest_api_types.notifications_rule_types import PluginType
-from cmk.gui.watolib.tags import load_all_tag_config_read_only
 
 from cmk import fields
 
@@ -156,17 +156,13 @@ class CheckboxWithFolderStrOutput(CheckboxOutput):
     )
 
 
-class MatchHostTags(BaseSchema):
-    tag_type = fields.String(
-        example="aux_tag",
-        description="If it's an aux tag id or a group tag tag id.",
-    )
-    tag_group_id = TagGroupIDField(
-        example="agent",
-        required=False,
-        description="If the tag_type is 'tag_group', the id of that group is shown here.",
+class AuxTagOutput(BaseSchema):
+    tag_type = fields.Constant(
+        "aux_tag",
+        description="Identifies the type of host tag.",
     )
     operator = fields.String(
+        enum=["is_not_set", "is_set"],
         description="This describes the matching action",
     )
     tag_id = AuxTagIDField(
@@ -175,41 +171,90 @@ class MatchHostTags(BaseSchema):
     )
 
 
+class TagGroupBaseOutput(BaseSchema):
+    tag_type = fields.String(
+        enum=["aux_tag", "tag_group"],
+        example="tag_group",
+        description="Identifies the type of host tag.",
+    )
+    tag_group_id = TagGroupIDField(
+        example="agent",
+        required=False,
+        description="If the tag_type is 'tag_group', the id of that group is shown here.",
+    )
+
+
+class TagGroupNoneOfOrOneOfOutput(TagGroupBaseOutput):
+    operator = fields.String(enum=["one_of", "none_of"])
+    tag_ids = fields.List(
+        AuxTagIDField(
+            example="checkmk-agent",
+            description="Tag groups tag ids are available via the host tag group endpoint.",
+        ),
+        example=["ip-v4-only", "ip-v6-only"],
+    )
+
+
+class TagGroupIsNotOrIsOutput(TagGroupBaseOutput):
+    operator = fields.String(enum=["is", "is_not"])
+    tag_id = AuxTagIDField(
+        example="checkmk-agent",
+        description="Tag groups tag ids are available via the host tag group endpoint.",
+    )
+
+
+class TagGroupSelectorOutput(OneOfSchema):
+    type_field = "operator"
+    type_schemas = {
+        "one_of": TagGroupNoneOfOrOneOfOutput,
+        "none_of": TagGroupNoneOfOrOneOfOutput,
+        "is_not": TagGroupIsNotOrIsOutput,
+        "is": TagGroupIsNotOrIsOutput,
+    }
+    type_field_remove = False
+
+    def get_obj_type(self, obj):
+        operator = obj.get("operator")
+        if operator in self.type_schemas:
+            return operator
+
+        raise Exception("Unknown object type: %s" % repr(obj))
+
+
+class TagTypeSelectorOutput(OneOfSchema):
+    type_field = "tag_type"
+    type_schemas = {
+        "aux_tag": AuxTagOutput,
+        "tag_group": TagGroupSelectorOutput,
+    }
+    type_field_remove = False
+
+    def get_obj_type(self, obj):
+        tag_type = obj.get("tag_type")
+        if tag_type in self.type_schemas:
+            return tag_type
+
+        raise Exception("Unknown object type: %s" % repr(obj))
+
+
 class CheckboxMatchHostTagsOutput(CheckboxOutput):
-    value = fields.List(fields.Nested(MatchHostTags))
-
-    @pre_dump(pass_many=True)
-    def pre_dump(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        tag_config = load_all_tag_config_read_only()
-        aux_tags = [tag.id for tag in tag_config.aux_tag_list]
-        tag_groups_n_tags = [
-            (group.id, [tag.id for tag in group.tags]) for group in tag_config.tag_groups
-        ]
-
-        if (raw_value := data.get("value")) is not None:
-            data["value"] = []
-
-            for tag_id in raw_value:
-                raw_id = tag_id.replace("!", "")
-                if raw_id in aux_tags:
-                    auxtag = {
-                        "tag_type": "aux_tag",
-                        "tag_id": raw_id,
-                        "operator": "is_not_set" if tag_id[0] == "!" else "is_set",
-                    }
-                    data["value"].append(auxtag)
-
-                for tag_group_id, tag_ids in tag_groups_n_tags:
-                    if raw_id in tag_ids:
-                        grouptag = {
-                            "tag_type": "tag_group",
-                            "tag_group_id": tag_group_id,
-                            "operator": "is_not" if tag_id[0] == "!" else "is",
-                            "tag_id": raw_id,
-                        }
-                        data["value"].append(grouptag)
-
-        return data
+    value = fields.List(
+        fields.Nested(TagTypeSelectorOutput),
+        example=[
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "agent",
+                "operator": "is",
+                "tag_id": "checkmk-agent",
+            },
+            {
+                "tag_type": "aux_tag",
+                "operator": "is_set",
+                "tag_id": "snmp",
+            },
+        ],
+        description="A list of tag groups or aux tags with conditions",
+    )
 
 
 class FromToNotificationNumbersOutput(BaseSchema):

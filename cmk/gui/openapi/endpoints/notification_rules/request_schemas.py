@@ -81,20 +81,11 @@ class CheckboxWithFolderStr(Checkbox):
     )
 
 
-class TagType(BaseSchema):
+class AuxTag(BaseSchema):
     tag_type = fields.String(
-        enum=["aux_tag", "tag_group"],
+        enum=["aux_tag"],
         required=True,
         example="aux_tag",
-    )
-
-
-class AuxHostTag(TagType):
-    tag_id = AuxTagIDField(
-        presence="should_exist",
-        required=True,
-        example="snmp",
-        description="Tag ids are available via the aux tag endpoint.",
     )
     operator = fields.String(
         enum=["is_set", "is_not_set"],
@@ -102,44 +93,84 @@ class AuxHostTag(TagType):
         example="is_set",
         description="",
     )
+    tag_id = AuxTagIDField(
+        presence="should_exist",
+        required=True,
+        example="snmp",
+        description="Tag ids are available via the aux tag endpoint.",
+    )
 
 
-class TagGroupTag(TagType):
+class TagGroupBase(BaseSchema):
+    tag_type = fields.String(
+        enum=["tag_group"],
+        required=True,
+        example="aux_tag",
+    )
+
     tag_group_id = TagGroupIDField(
         presence="should_exist",
         required=True,
         example="agent",
         description="Tag group ids are available via the host tag group endpoint.",
     )
-    operator = fields.String(
-        enum=["is", "is_not"],
-        example="is_not",
-        required=True,
-        description="",
-    )
-    tag_id = fields.String(
-        example="checkmk-agent",
-        required=True,
-        description="Tag groups tag ids are available via the host tag group endpoint.",
-    )
 
     @post_load
     def _post_load(self, data: dict[str, Any], **_kwargs: Any) -> dict[str, Any]:
         tg = load_tag_group(ident=data["tag_group_id"])
         if tg is not None:
-            if data["tag_id"] not in tg.get_tag_ids():
-                raise ValidationError(
-                    f"The tag id {data['tag_id']} does not belong to the tag group {data['tag_group_id']}"
-                )
+            existing_tag_ids = tg.get_tag_ids()
+
+            if "tag_id" in data:
+                if data["tag_id"] not in existing_tag_ids:
+                    raise ValidationError(
+                        f"The tag id {data['tag_id']} does not belong to the tag group {data['tag_group_id']}"
+                    )
+            if "tag_ids" in data:
+                for tag_id in data["tag_ids"]:
+                    if tag_id not in existing_tag_ids:
+                        raise ValidationError(
+                            f"The tag id {tag_id} does not belong to the tag group {data['tag_group_id']}"
+                        )
         return data
+
+
+class TagGroupNoneOfOrOneof(TagGroupBase):
+    operator = fields.String(enum=["one_of", "none_of"])
+    tag_ids = fields.List(
+        AuxTagIDField(
+            example="checkmk-agent",
+            description="Tag groups tag ids are available via the host tag group endpoint.",
+        ),
+        example=["ip-v4-only", "ip-v6-only"],
+    )
+
+
+class TagGroupIsNotOrIs(TagGroupBase):
+    operator = fields.String(enum=["is", "is_not"])
+    tag_id = AuxTagIDField(
+        example="checkmk-agent",
+        description="Tag groups tag ids are available via the host tag group endpoint.",
+    )
+
+
+class TagGroupSelector(OneOfSchema):
+    type_field = "operator"
+    type_field_remove = False
+    type_schemas = {
+        "one_of": TagGroupNoneOfOrOneof,
+        "none_of": TagGroupNoneOfOrOneof,
+        "is_not": TagGroupIsNotOrIs,
+        "is": TagGroupIsNotOrIs,
+    }
 
 
 class TagTypeSelector(OneOfSchema):
     type_field = "tag_type"
     type_field_remove = False
     type_schemas = {
-        "aux_tag": AuxHostTag,
-        "tag_group": TagGroupTag,
+        "aux_tag": AuxTag,
+        "tag_group": TagGroupSelector,
     }
 
 
@@ -154,7 +185,11 @@ class CheckboxMatchHostTags(Checkbox):
                 "operator": "is",
                 "tag_id": "checkmk-agent",
             },
-            {"tag_type": "aux_tag", "operator": "is_set", "tag_id": "snmp"},
+            {
+                "tag_type": "aux_tag",
+                "operator": "is_set",
+                "tag_id": "snmp",
+            },
         ],
         description="A list of tag groups or aux tags with conditions",
     )

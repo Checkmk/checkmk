@@ -8,7 +8,17 @@ import contextlib
 import dataclasses
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, NamedTuple, NotRequired, TypeAlias, TypedDict, TypeVar
+from typing import (
+    Any,
+    cast,
+    Generic,
+    NamedTuple,
+    NotRequired,
+    TypeAlias,
+    TypedDict,
+    TypeGuard,
+    TypeVar,
+)
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (
@@ -58,6 +68,24 @@ TagConditionNOR = TypedDict(
     },
 )
 TagCondition = TagID | None | TagConditionNE | TagConditionOR | TagConditionNOR
+
+
+def is_tag_condition_or(condition: TagCondition) -> TypeGuard[TagConditionOR]:
+    return isinstance(condition, dict) and "$or" in condition
+
+
+def is_tag_condition_nor(condition: TagCondition) -> TypeGuard[TagConditionNOR]:
+    return isinstance(condition, dict) and "$nor" in condition
+
+
+def is_tag_condition_ne(condition: TagCondition) -> TypeGuard[TagConditionNE]:
+    return isinstance(condition, dict) and "$ne" in condition
+
+
+def is_tag_condition_tag_id(condition: TagCondition) -> TypeGuard[TagID]:
+    return isinstance(condition, str)
+
+
 # Here, we have data structures such as
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
 TagsOfHosts: TypeAlias = dict[HostName | HostAddress, Mapping[TagGroupID, TagID]]

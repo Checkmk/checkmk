@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import cast, Literal, Required, TypedDict
 
@@ -69,8 +69,21 @@ from cmk.utils.notify_types import (
     URLPrefix,
     WebHookUrl,
 )
+from cmk.utils.rulesets.ruleset_matcher import (
+    is_tag_condition_ne,
+    is_tag_condition_nor,
+    is_tag_condition_or,
+    is_tag_condition_tag_id,
+    TagCondition,
+    TagConditionNE,
+    TagConditionNOR,
+    TagConditionOR,
+)
+from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
+from cmk.gui.watolib.tags import load_all_tag_config_read_only
 
 CheckboxState = Literal["enabled", "disabled"]
 
@@ -784,17 +797,60 @@ class FromAndToEmailFields:
 
 # ---------------------------------------------------------------
 
+old_vs_new = """
+Old - list[str]
+
+['prod', '!ip-v4v6', '!ip-v4']
+
+New - dict[TagGroupID:TagCondition]:
+
+{
+    'address_family': {'$ne': 'ip-v4v6'},
+    'criticality': 'prod',
+    'ip-v4': {'$ne': 'ip-v4'}
+}
+
+"""
+
+
+AuxTagOperator = Literal["is_set", "is_not_set"]
+
+
+class AuxHostTag(TypedDict):
+    tag_type: Literal["aux_tag"]
+    tag_id: TagID
+    operator: AuxTagOperator
+
+
+TagGroupOperator = Literal["is", "is_not", "one_of", "none_of"]
+
+
+class TagGroupTag(TypedDict):
+    tag_type: Literal["tag_group"]
+    operator: TagGroupOperator
+    tag_group_id: str
+
+
+class TagGroupIsOrIsNot(TagGroupTag):
+    tag_id: TagID | None
+
+
+class TagGroupOneOfOrNoneOf(TagGroupTag):
+    tag_ids: Sequence[TagID | None]
+
 
 class MatchHostTagsAPIValueType(CheckboxStateType, total=False):
-    value: list
+    value: list[AuxHostTag | TagGroupOneOfOrNoneOf | TagGroupIsOrIsNot]
 
 
 @dataclass
 class CheckboxMatchHostTags:
-    value: list[str] | None = None
+    value: Mapping[TagGroupID, TagCondition] | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: list[str] | None) -> CheckboxMatchHostTags:
+    def from_mk_file_format(
+        cls, data: Mapping[TagGroupID, TagCondition] | None
+    ) -> CheckboxMatchHostTags:
         return cls(value=data)
 
     @classmethod
@@ -802,16 +858,40 @@ class CheckboxMatchHostTags:
         if data["state"] == "disabled":
             return cls()
 
-        tagids: list[str] = []
-        for value in data["value"]:
-            if "is_not" in value["operator"]:
-                tagids.append(
-                    f"!{value['tag_id']}",
-                )
-            else:
-                tagids.append(value["tag_id"])
+        values_host_tags: MutableMapping[TagGroupID, TagCondition] = {}
 
-        return cls(value=tagids)
+        for value in data["value"]:
+            if value["tag_type"] == "tag_group":
+                grouptagid = TagGroupID(value["tag_group_id"])
+
+                if "tag_ids" in value:
+                    one_of_or_none_of = cast(TagGroupOneOfOrNoneOf, value)
+                    if value["operator"] == "one_of":
+                        tag_condition_or: TagConditionOR = {"$or": one_of_or_none_of["tag_ids"]}
+                        values_host_tags[grouptagid] = tag_condition_or
+
+                    elif value["operator"] == "none_of":
+                        tag_condition_nor: TagConditionNOR = {"$nor": one_of_or_none_of["tag_ids"]}
+                        values_host_tags[grouptagid] = tag_condition_nor
+
+                elif "tag_id" in value:
+                    is_or_is_not = cast(TagGroupIsOrIsNot, value)
+                    if value["operator"] == "is_not":
+                        tag_condition_ne: TagConditionNE = {"$ne": is_or_is_not["tag_id"]}
+                        values_host_tags[grouptagid] = tag_condition_ne
+
+                    elif value["operator"] == "is":
+                        values_host_tags[grouptagid] = is_or_is_not["tag_id"]
+
+            else:
+                auxtagid = TagGroupID(value["tag_id"])
+                values_host_tags[auxtagid] = (
+                    TagConditionNE({"$ne": value["tag_id"]})
+                    if value["operator"] == "is_not_set"
+                    else value["tag_id"]
+                )
+
+        return cls(value=values_host_tags)
 
     def api_response(self) -> MatchHostTagsAPIValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
@@ -819,10 +899,67 @@ class CheckboxMatchHostTags:
         if self.value is None:
             return resp
 
-        resp["value"] = self.value
+        tag_config = load_all_tag_config_read_only()
+        aux_tags: list[TagID] = [tag.id for tag in tag_config.aux_tag_list]
+        tag_group_ids = [group.id for group in tag_config.tag_groups]
+
+        resp["value"] = []
+        for k, v in self.value.items():
+
+            as_aux_tag = TagID(k)
+            if as_aux_tag in aux_tags:
+                resp["value"].append(
+                    AuxHostTag(
+                        tag_type="aux_tag",
+                        tag_id=as_aux_tag,
+                        operator="is_not_set" if is_tag_condition_ne(v) else "is_set",
+                    )
+                )
+
+            elif k in tag_group_ids:
+                if is_tag_condition_ne(v) and v["$ne"]:
+                    resp["value"].append(
+                        TagGroupIsOrIsNot(
+                            tag_type="tag_group",
+                            tag_group_id=k,
+                            operator="is_not",
+                            tag_id=v["$ne"],
+                        )
+                    )
+
+                elif is_tag_condition_or(v):
+                    resp["value"].append(
+                        TagGroupOneOfOrNoneOf(
+                            tag_type="tag_group",
+                            tag_group_id=k,
+                            operator="one_of",
+                            tag_ids=v["$or"],
+                        )
+                    )
+
+                elif is_tag_condition_nor(v):
+                    resp["value"].append(
+                        TagGroupOneOfOrNoneOf(
+                            tag_type="tag_group",
+                            tag_group_id=k,
+                            operator="none_of",
+                            tag_ids=v["$nor"],
+                        )
+                    )
+
+                elif is_tag_condition_tag_id(v):
+                    resp["value"].append(
+                        TagGroupIsOrIsNot(
+                            tag_type="tag_group",
+                            tag_group_id=k,
+                            operator="is",
+                            tag_id=v,
+                        )
+                    )
+
         return resp
 
-    def to_mk_file_format(self) -> list[str] | None:
+    def to_mk_file_format(self) -> Mapping[TagGroupID, TagCondition] | None:
         return self.value
 
     def disable(self) -> None:

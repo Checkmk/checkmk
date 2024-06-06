@@ -20,6 +20,7 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
 )
 from cmk.gui.num_split import cmp_version
+from cmk.gui.utils.sort import cmp_natural_sort
 
 from .registry import InventoryHintRegistry
 
@@ -500,8 +501,14 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "title": _l("Checkmk"),
             "keyorder": ["num_hosts", "num_services"],
         },
-        ".software.applications.check_mk.num_hosts": {"title": _l("#Hosts")},
-        ".software.applications.check_mk.num_services": {"title": _l("#Services")},
+        ".software.applications.check_mk.num_hosts": {
+            "title": _l("#Hosts"),
+            "sort": cmp_natural_sort,
+        },
+        ".software.applications.check_mk.num_services": {
+            "title": _l("#Services"),
+            "sort": cmp_natural_sort,
+        },
         ".software.applications.check_mk.versions:": {
             "title": _l("Checkmk versions"),
             "keyorder": ["version", "number", "edition", "demo", "num_sites"],
@@ -542,8 +549,14 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.check_mk.sites:*.site": {"title": _l("Site")},
         ".software.applications.check_mk.sites:*.used_version": {"title": _l("Version")},
-        ".software.applications.check_mk.sites:*.num_hosts": {"title": _l("#Hosts")},
-        ".software.applications.check_mk.sites:*.num_services": {"title": _l("#Services")},
+        ".software.applications.check_mk.sites:*.num_hosts": {
+            "title": _l("#Hosts"),
+            "sort": cmp_natural_sort,
+        },
+        ".software.applications.check_mk.sites:*.num_services": {
+            "title": _l("#Services"),
+            "sort": cmp_natural_sort,
+        },
         ".software.applications.check_mk.sites:*.check_mk_helper_usage": {
             "title": _l("CMK helper usage"),
             "short": _l("CMK helper")

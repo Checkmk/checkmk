@@ -15,7 +15,7 @@ from cmk.gui.watolib.tags import TagConfigFile
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
-class UpdateTagConditions(UpdateAction):
+class UpdateNotificationTagConditions(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         tag_groups, aux_tag_list = get_tag_config()
         for rule in (notification_rules := NotificationRuleConfigFile().load_for_modification()):
@@ -74,10 +74,9 @@ def _convert_condition(
 
 
 update_action_registry.register(
-    UpdateTagConditions(
-        name="tag_conditions",
-        # TODO alert and event will follow
-        title="Notification, alert and event host tag conditions",
+    UpdateNotificationTagConditions(
+        name="notification_tag_conditions",
+        title="Notification host tag conditions",
         sort_index=31,
     )
 )

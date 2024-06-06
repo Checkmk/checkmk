@@ -18,7 +18,7 @@ from cmk.gui.watolib.tags import TagConfigFile
 
 from cmk.update_config.plugins.actions.tag_conditions import (
     transform_host_tags,
-    UpdateTagConditions,
+    UpdateNotificationTagConditions,
 )
 
 
@@ -246,9 +246,9 @@ def test_update_notification_conditions(
         NotificationRuleConfigFile().save(notification_rule)
         TagConfigFile().save(test_tag_cfg.get_dict_format())
 
-        UpdateTagConditions(
-            name="tag_conditions",
-            title="Tag conditions",
+        UpdateNotificationTagConditions(
+            name="notification_tag_conditions",
+            title="Notification host tag conditions",
             sort_index=31,
         )(logging.getLogger())
 

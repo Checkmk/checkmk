@@ -153,7 +153,7 @@ def test_registered_pages() -> None:
         "ajax_initial_dashboard_filters",
         "ajax_initial_view_filters",
         "ajax_initial_topology_filters",
-        "noauth:ajax_graph_images",
+        "ajax_graph_images",
         "gui_timings",
     ]
 

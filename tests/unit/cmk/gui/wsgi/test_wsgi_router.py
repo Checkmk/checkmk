@@ -169,18 +169,6 @@ def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:
     assert response.text == "Missing secret for automation command."
 
 
-def test_cmk_ajax_graph_images(wsgi_app: WebTestAppForCMK) -> None:
-    resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
-    assert resp.text.startswith("You are not allowed")
-
-    resp = wsgi_app.get(
-        "/NO_SITE/check_mk/ajax_graph_images.py",
-        status=200,
-        extra_environ={"REMOTE_ADDR": "127.0.0.1"},
-    )
-    assert resp.text == ""
-
-
 def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     # Should be 403 in integration test.
     wsgi_app.options("/", status=404)

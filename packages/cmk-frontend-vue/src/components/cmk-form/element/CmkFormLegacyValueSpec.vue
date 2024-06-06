@@ -38,10 +38,10 @@ const emit = defineEmits<{
 <template>
   <!-- eslint-disable vue/no-v-html -->
   <form
+    ref="legacy_dom"
     style="background: #595959"
     class="legacy_valuespec"
     v-html="spec.html"
-    ref="legacy_dom"
   ></form>
   <!--eslint-enable-->
   <FormValidation :validation="validation"></FormValidation>

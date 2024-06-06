@@ -218,7 +218,7 @@ def do_notify(
     fallback_email: str,
     fallback_format: _FallbackFormat,
     bulk_interval: int,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
 ) -> int | None:
     # pylint: disable=too-many-branches
@@ -345,7 +345,7 @@ def notify_notify(
     *,
     fallback_email: str,
     fallback_format: _FallbackFormat,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
     analyse: bool = False,
     dispatch: bool = False,
@@ -417,7 +417,7 @@ def locally_deliver_raw_context(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     fallback_email: str,
     fallback_format: _FallbackFormat,
     analyse: bool = False,
@@ -452,7 +452,7 @@ def notification_replay_backlog(
     *,
     fallback_email: str,
     fallback_format: _FallbackFormat,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
 ) -> None:
     global notify_mode
@@ -479,7 +479,7 @@ def notification_analyse_backlog(
     *,
     fallback_email: str,
     fallback_format: _FallbackFormat,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
@@ -507,7 +507,7 @@ def notification_test(
     *,
     fallback_email: str,
     fallback_format: _FallbackFormat,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
     dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
@@ -557,7 +557,7 @@ def notify_keepalive(
     fallback_email: str,
     fallback_format: _FallbackFormat,
     bulk_interval: int,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     logging_level: int,
 ) -> None:
     cmk.base.utils.register_sigint_handler()
@@ -595,7 +595,7 @@ def notify_rulebased(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     fallback_email: str,
     fallback_format: _FallbackFormat,
     analyse: bool = False,
@@ -743,7 +743,7 @@ def _process_notifications(
     *,
     fallback_email: str,
     fallback_format: _FallbackFormat,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
     analyse: bool,
     dispatch: bool = False,
 ) -> list[NotifyPluginInfo]:
@@ -1696,7 +1696,7 @@ def handle_spoolfile(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     fallback_email: str,
     fallback_format: _FallbackFormat,
-    spooling: Literal["local", "remote", "both"],
+    spooling: Literal["local", "remote", "both", "off"],
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")

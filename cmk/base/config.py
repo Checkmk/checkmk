@@ -2936,13 +2936,13 @@ class ConfigCache:
         return notification_logging
 
     @staticmethod
-    def notification_spooling() -> Literal["local", "remote", "both"]:
+    def notification_spooling() -> Literal["local", "remote", "both", "off"]:
         if notification_spool_to:
             if notification_spool_to[2]:
                 return "both"
             return "remote"
         if notification_spooling:
-            return "local"
+            return notification_spooling if notification_spooling == "off" else "local"
         return "remote"
 
     def notification_plugin_parameters(

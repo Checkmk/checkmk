@@ -43,6 +43,13 @@ from cmk.plugins.lib import ps
 
 Section = tuple[int, list]  # don't ask what kind of list.
 
+HOST_LABEL_DEFAULT_PARAMETERS = {
+    "descr": "Example service - unused",
+    "default_params": {
+        "cpu_rescale_max": True,
+    },
+}
+
 
 # This function is only concerned with deprecated output from psperf.bat,
 # in case of all other output it just returns info unmodified. But if it is
@@ -203,12 +210,7 @@ agent_section_ps = AgentSection[ps.Section](
     parse_function=parse_ps,
     host_label_function=ps.host_labels_ps,
     host_label_ruleset_name="inventory_processes_rules",
-    host_label_default_parameters={
-        "descr": "Example service - unused",
-        "default_params": {
-            "cpu_rescale_max": True,
-        },
-    },
+    host_label_default_parameters=HOST_LABEL_DEFAULT_PARAMETERS,
     host_label_ruleset_type=RuleSetType.ALL,
 )
 
@@ -284,7 +286,7 @@ agent_section_ps_lnx = AgentSection(
     parse_function=parse_ps_lnx,
     host_label_function=ps.host_labels_ps,
     host_label_ruleset_name="inventory_processes_rules",
-    host_label_default_parameters={},
+    host_label_default_parameters=HOST_LABEL_DEFAULT_PARAMETERS,
     host_label_ruleset_type=RuleSetType.ALL,
     supersedes=["ps"],
 )

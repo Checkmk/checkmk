@@ -899,7 +899,7 @@ class ActivateChangesManager(ActivateChanges):
         if not os.path.exists(info_path):
             raise MKUserError(
                 None,
-                f"Unknown activation process: {info_path!r} not found",
+                f"Unknown activation process: {activation_id!r} not found",
             )
         return store.load_object_from_file(info_path, default={})
 

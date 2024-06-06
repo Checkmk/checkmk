@@ -26,9 +26,13 @@ def test_proxy_register_import_workflow(
     central_site.openapi.create_host(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})
     central_site.openapi.activate_changes_and_wait_for_completion()
 
+    run(
+        [agent_ctl.as_posix(), "delete-all"],
+        check=False,
+        sudo=True,
+    )
     proxy_registration_proc = run(
         [
-            "sudo",
             agent_ctl.as_posix(),
             "proxy-register",
             "--server",
@@ -42,7 +46,8 @@ def test_proxy_register_import_workflow(
             "--password",
             central_site.admin_password,
             "--trust-cert",
-        ]
+        ],
+        sudo=True,
     )
     subprocess.run(
         ["sudo", agent_ctl.as_posix(), "import"],

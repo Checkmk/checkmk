@@ -1177,7 +1177,7 @@ class Site:
             execute(["cp", nagios_log_path, (self.result_dir() / "log").as_posix()], sudo=True)
 
         cmc_dir = self.result_dir() / "cmc"
-        os.makedirs(cmc_dir, exist_ok=True)
+        makedirs(cmc_dir, sudo=True)
 
         execute(
             ["cp", self.path("var/check_mk/core/history"), (cmc_dir / "history").as_posix()],

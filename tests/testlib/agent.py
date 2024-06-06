@@ -105,6 +105,22 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
 
     with execute(["python3", daemon_path, ctl_path.as_posix()], sudo=True) as daemon:
         yield daemon
+    logger.info("Running agent controller daemon...")
+    with execute([daemon_path], sudo=True) as daemon:
+        # wait for a dump being returned successfully (may not work immediately after starting the agent controller)
+        wait_until(
+            lambda: execute([ctl_path.as_posix(), "dump"], sudo=True).wait() == 0,
+            timeout=3,
+            interval=0.1,
+        )
+        try:
+            yield daemon
+        finally:
+            assert daemon.returncode is None, "Daemon was killed unexpectedly!"
+            logger.info("Killing agent controller daemon...")
+            daemon.kill()
+            logger.info("daemon.stdout: %s", daemon.stdout)
+            logger.info("daemon.stderr: %s", daemon.stderr)
 
 
 def register_controller(

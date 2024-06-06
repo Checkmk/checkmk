@@ -54,7 +54,7 @@ def _provide_agent_unix_socket() -> Iterator[None]:
         socket_address.unlink(missing_ok=True)
 
 
-def _run_controller_daemon(ctl_path: Path) -> int:
+def _run_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
     with subprocess.Popen(
         [ctl_path.as_posix(), "daemon"],
         stderr=subprocess.PIPE,
@@ -62,12 +62,13 @@ def _run_controller_daemon(ctl_path: Path) -> int:
         close_fds=True,
         encoding="utf-8",
     ) as proc:
-        exit_code = proc.wait()
-        stdout, stderr = proc.communicate()
-        logger.info("Stdout from controller daemon process:\n%s", stdout)
-        logger.info("Stderr from controller daemon process:\n%s", stderr)
-
-    return exit_code
+        try:
+            yield proc
+        finally:
+            stdout, stderr = proc.communicate()
+            proc.kill()
+            logger.info("Stdout from controller daemon process:\n%s", stdout)
+            logger.info("Stderr from controller daemon process:\n%s", stderr)
 
 
 @contextlib.contextmanager
@@ -80,12 +81,12 @@ def _clean_agent_controller(ctl_path: Path) -> Iterator[None]:
 
 
 @contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[int]:
+def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
     """Manually take over systemds job if we are in a container (where we have no systemd)."""
     with _clean_agent_controller(ctl_path), _provide_agent_unix_socket():
-        yield _run_controller_daemon(ctl_path)
+        yield from _run_controller_daemon(ctl_path)
 
 
 if __name__ == "__main__":
-    with agent_controller_daemon(agent_controller_path) as rc:
-        sys.exit(rc)
+    with agent_controller_daemon(agent_controller_path) as daemon:
+        sys.exit(daemon.wait())

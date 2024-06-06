@@ -277,7 +277,6 @@ class ErrorReporter:
         ("check", "netstat", "tcp_connections"),
         ("check", "nvidia_errors", "hw_errors"),
         ("check", "qlogic_fcport", "qlogic_fcport"),
-        ("check", "sap_hana_proc", "sap_hana_proc"),
         ("check", "stormshield_cluster_node", "stormshield_quality"),
         ("check", "stormshield_policy", "stormshield"),
         ("check", "stormshield_updates", "stormshield_updates"),

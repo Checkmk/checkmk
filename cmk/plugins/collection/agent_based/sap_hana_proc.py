@@ -84,6 +84,5 @@ check_plugin_sap_hana_proc = CheckPlugin(
     service_name="SAP HANA Process %s",
     discovery_function=discovery_sap_hana_proc,
     check_function=check_sap_hana_proc,
-    check_ruleset_name="sap_hana_proc",
     check_default_parameters={},
 )

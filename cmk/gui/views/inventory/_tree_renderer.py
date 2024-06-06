@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from functools import total_ordering
-from typing import NamedTuple
+from typing import Iterable, NamedTuple
 
 from livestatus import SiteId
 
@@ -53,11 +54,16 @@ def make_table_view_name_of_host(view_name: str) -> str:
     return f"{view_name}_of_host"
 
 
-def _make_columns(
+def _make_columns_and_hints(
     rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, SDDeltaValue]],
-    key_order: Sequence[SDKey],
-) -> Sequence[SDKey]:
-    return list(key_order) + sorted({k for r in rows for k in r} - set(key_order))
+    hint: NodeDisplayHint,
+) -> OrderedDict[SDKey, ColumnDisplayHint]:
+    return OrderedDict(
+        {
+            c: hint.get_column_hint(c)
+            for c in list(hint.columns) + sorted({k for r in rows for k in r} - set(hint.columns))
+        }
+    )
 
 
 @total_ordering
@@ -84,16 +90,14 @@ def _sort_pairs(attributes: ImmutableAttributes, key_order: Sequence[SDKey]) -> 
     ]
 
 
-def _sort_rows(table: ImmutableTable, columns: Sequence[SDKey]) -> Sequence[Sequence[SDItem]]:
-    def _sort_row(
-        ident: SDRowIdent, row: Mapping[SDKey, SDValue], columns: Sequence[SDKey]
-    ) -> Sequence[SDItem]:
+def _sort_rows(table: ImmutableTable, columns: Iterable[SDKey]) -> Sequence[Sequence[SDItem]]:
+    def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
         return [SDItem(c, row.get(c), table.retentions.get(ident, {}).get(c)) for c in columns]
 
     min_type = _MinType()
 
     return [
-        _sort_row(ident, row, columns)
+        _sort_row(ident, row)
         for ident, row in sorted(
             table.rows_by_ident.items(),
             key=lambda t: tuple(t[1].get(c) or min_type for c in columns),
@@ -120,11 +124,9 @@ def _sort_delta_pairs(
 
 
 def _sort_delta_rows(
-    table: ImmutableDeltaTable, columns: Sequence[SDKey]
+    table: ImmutableDeltaTable, columns: Iterable[SDKey]
 ) -> Sequence[Sequence[_SDDeltaItem]]:
-    def _sort_row(
-        row: Mapping[SDKey, SDDeltaValue], columns: Sequence[SDKey]
-    ) -> Sequence[_SDDeltaItem]:
+    def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
         return [
             _SDDeltaItem(c, v.old, v.new)
             for c in columns
@@ -137,7 +139,7 @@ def _sort_delta_rows(
         return (value.old or min_type, value.new or min_type)
 
     return [
-        _sort_row(row, columns)
+        _sort_row(row)
         for row in sorted(
             table.rows,
             key=lambda r: tuple(_sanitize(r.get(c) or SDDeltaValue(None, None)) for c in columns),
@@ -356,21 +358,20 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns = _make_columns(table.rows, list(hint.columns))
-        column_hints = {c: hint.get_column_hint(c) for c in columns}
+        columns_and_hints = _make_columns_and_hints(table.rows, hint)
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
-            _sort_rows(table, columns)
+            _sort_rows(table, columns_and_hints)
             if isinstance(table, ImmutableTable)
-            else _sort_delta_rows(table, columns)
+            else _sort_delta_rows(table, columns_and_hints)
         )
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
-        for column in columns:
+        for column, col_hint in columns_and_hints.items():
             html.th(
                 self._get_header(
-                    column_hints[column].title,
+                    col_hint.title,
                     f"{column}*" if column in table.key_columns else column,
                 )
             )
@@ -379,7 +380,7 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                col_hint = column_hints[item.key]
+                col_hint = columns_and_hints[item.key]
                 # TODO separate tdclass from rendered value
                 if isinstance(item, SDItem):
                     tdclass, rendered_value = compute_cell_spec(

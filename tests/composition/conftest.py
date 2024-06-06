@@ -54,7 +54,9 @@ def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator
     try:
         yield remote_site
     finally:
-        # teardown of remote site
+        # Teardown of remote site. We first stop the central site to avoid crashes due to
+        # interruptions in the remote-central communication caused by the teardown.
+        central_site.stop()
         yield from remote_site_generator
 
 

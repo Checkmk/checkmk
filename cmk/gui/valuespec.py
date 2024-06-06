@@ -1476,6 +1476,8 @@ class Url(TextInput):
                 varprefix,
                 _("Invalid URL scheme. Must be one of: %s") % ", ".join(self._allowed_schemes),
             )
+        if not is_allowed_url(value, cross_domain=True, schemes=self._allowed_schemes):
+            raise MKUserError(varprefix, _("Invalid URL given"))
 
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)

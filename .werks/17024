@@ -1,0 +1,29 @@
+Title: Fix XSS in Crash Report Page
+Class: security
+Compatible: compat
+Component: wato
+Date: 1717679856
+Edition: cre
+Level: 1
+Version: 2.1.0p45
+
+Prior to this Werk, it was possible to inject HTML elements into Crash report
+URL in the Global settings, leading to an <code>XSS</code> vulnerability in the Crash reports page.
+
+This vulnerability was identified during a commissioned penetration test conducted by PS Positive Security GmbH.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Indicators of Compromise</em>:
+
+Check the crash report HTTP URL in the Global settings for suspicious HTML elements.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 4.8 Medium with the following CVSS vector: <code>CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:N</code>.
+and assigned <code>CVE-2024-28832</code>.

@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
+from collections.abc import Collection
 from typing import Optional
 
 import cmk.utils.regex
 
 
 def is_allowed_url(
-    url: str, cross_domain: bool = False, schemes: Optional[list[str]] = None
+    url: str, cross_domain: bool = False, schemes: Optional[Collection[str]] = None
 ) -> bool:
     """Check if url is allowed
 

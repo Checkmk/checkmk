@@ -1,0 +1,11 @@
+Title: check_disk_smb: fix TCP Port
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1717653341
+Edition: cre
+Level: 1
+Version: 2.2.0p32
+
+The "TCP Port" option was using an incorrect commandline argument.
+This is now fixed.

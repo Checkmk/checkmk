@@ -6,6 +6,7 @@
 
 def check_disk_smb_arguments(params):
     args = [
+        "-s",
         params["share"],
         "-H",
         "$HOSTADDRESS$" if params["host"] == "use_parent_host" else params["host"][1],
@@ -19,7 +20,7 @@ def check_disk_smb_arguments(params):
         args += ["-W", params["workgroup"]]
 
     if "port" in params:
-        args += ["-p", params["port"]]
+        args += ["-P", str(params["port"])]
 
     if "auth" in params:
         username, password = params["auth"]

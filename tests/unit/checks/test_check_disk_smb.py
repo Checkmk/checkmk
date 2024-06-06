@@ -16,11 +16,25 @@ pytestmark = pytest.mark.checks
         (
             {"share": "foo", "levels": (85.0, 95.0), "host": "use_parent_host"},
             [
+                "-s",
                 "foo",
                 "-H",
                 "$HOSTADDRESS$",
                 "-w85%",
                 "-c95%",
+            ],
+        ),
+        (
+            {"share": "share_ut", "levels": (85.0, 95.0), "host": "use_parent_host", "port": 555},
+            [
+                "-s",
+                "share_ut",
+                "-H",
+                "$HOSTADDRESS$",
+                "-w85%",
+                "-c95%",
+                "-P",
+                "555",
             ],
         ),
         (
@@ -31,6 +45,7 @@ pytestmark = pytest.mark.checks
                 "ip_address": "100.100.10.1",
             },
             [
+                "-s",
                 "foo",
                 "-H",
                 "test_host",

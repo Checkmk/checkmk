@@ -26,8 +26,6 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
 def _installed_agent_ctl_in_unknown_state(site: Site, tmp_path: Path) -> Path:
-    if site.version.is_raw_edition():
-        pytest.skip("Downloading the agent in raw edition currently broken")  # TODO: investigate
     return download_and_install_agent_package(site, tmp_path)
 
 

@@ -60,14 +60,23 @@ def install_agent_package(package_path: Path) -> Path:
 
 
 def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
-    agent_download_resp = site.openapi.get(
-        "domain-types/agent/actions/download_by_host/invoke",
-        params={
-            "agent_type": "generic",
-            "os_type": get_package_type(),
-        },
-        headers={"Accept": "application/octet-stream"},
-    )
+    if site.version.is_raw_edition():
+        agent_download_resp = site.openapi.get(
+            "domain-types/agent/actions/download/invoke",
+            params={
+                "os_type": get_package_type(),
+            },
+            headers={"Accept": "application/octet-stream"},
+        )
+    else:
+        agent_download_resp = site.openapi.get(
+            "domain-types/agent/actions/download_by_host/invoke",
+            params={
+                "agent_type": "generic",
+                "os_type": get_package_type(),
+            },
+            headers={"Accept": "application/octet-stream"},
+        )
     assert agent_download_resp.ok
 
     path_agent_package = tmp_dir / ("agent." + get_package_type())

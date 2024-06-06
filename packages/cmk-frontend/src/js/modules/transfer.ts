@@ -93,15 +93,19 @@ function handle_report_error(
 
     const fail_container = document.getElementById("fail_msg")!;
     fail_container.style.display = "block";
+    const message_element = fail_container.children[0];
     if (status_code) {
-        fail_container.children[0].innerHTML += " (HTTP: " + status_code + ").";
+        message_element.append(` (HTTP: ${status_code}).`);
     } else if (error_msg) {
-        fail_container.children[0].innerHTML += " (" + error_msg + ").";
+        message_element.append(` (${error_msg}).`);
     } else {
-        fail_container.children[0].innerHTML +=
-            " (<tt>" +
-            handler_data!["base_url"] +
-            "</tt> is not reachable. Does your browser block XMLHttpRequest requests?).";
+        const tt = document.createElement("tt");
+        tt.textContent = handler_data!["base_url"];
+        message_element.append(
+            "(",
+            tt,
+            "is not reachable. Does your browser block XMLHttpRequest requests?)."
+        );
     }
 }
 

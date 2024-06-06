@@ -1314,6 +1314,18 @@ fn validate_rows_has_two_blocks(rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> 
     }
 }
 
+fn calc_unused(reserved: &str, data: &str, index_size: &str) -> Option<String> {
+    fn decode(s: &str) -> Option<i64> {
+        s.split(' ').next()?.parse::<i64>().ok()
+    }
+
+    let reserved = decode(reserved)?;
+    let data = decode(data)?;
+    let index_size = decode(index_size)?;
+    let unused = std::cmp::max(0, reserved - data - index_size);
+    Some(unused.to_string() + " KB")
+}
+
 fn to_table_spaces_entry(
     instance_name: &str,
     database_name: &str,
@@ -1337,7 +1349,13 @@ fn to_table_spaces_entry(
     let reserved = extract(answers, 1, "reserved");
     let data = extract(answers, 1, "data");
     let index_size = extract(answers, 1, "index_size");
-    let unused = extract(answers, 1, "unused");
+    let mut unused = extract(answers, 1, "unused");
+    if unused.is_empty() {
+        // in some cases ODBC may skip some fields in compound statements
+        // unused is an example, we calculate then value manually
+        unused = calc_unused(&reserved, &data, &index_size).unwrap_or("0 KB".to_string());
+    }
+
     format!(
         "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
         instance_name,
@@ -2479,6 +2497,21 @@ mssql:
             .build();
         assert_eq!(piggyback.generate_header(), "<<<<y>>>>\n");
         assert_eq!(piggyback.generate_footer(), "<<<<>>>>\n");
+    }
+
+    #[test]
+    fn test_calc_unused() {
+        use crate::ms_sql::instance::calc_unused;
+        assert_eq!(
+            calc_unused("500 KB", "100 KB", "10 KB").unwrap(),
+            "390 KB".to_owned()
+        );
+        assert_eq!(
+            calc_unused("500 KB", "100 KB", "500 KB").unwrap(),
+            "0 KB".to_owned()
+        );
+        assert!(calc_unused("500 KB", "", "500 KB").is_none());
+        assert!(calc_unused("500 KB", "A", "500 KB").is_none());
     }
 
     #[test]

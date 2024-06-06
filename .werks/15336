@@ -1,0 +1,16 @@
+Title: Add support for MariaDB 11
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718006095
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+
+MariaDB 11 deprecated mysql* binaries and shows an error message like:
+<code>
+mysqladmin: Deprecated program name. It will be removed in a future release, use ‘/usr/bin/mariadb-admin’ instead
+</code>
+
+The agent plugin now checks if the MariaDB binaries are available and prefers them over the mySQL binaries.

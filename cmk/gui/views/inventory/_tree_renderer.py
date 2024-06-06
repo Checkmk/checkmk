@@ -264,11 +264,11 @@ def ajax_inv_render_tree() -> None:
     ).show(tree)
 
 
-def _replace_title_placeholders(title: str, abc_path: SDPath, path: SDPath) -> str:
-    if "%d" not in title and "%s" not in title:
-        return title
-    title = title.replace("%d", "%s")
-    node_names = tuple(path[idx] for idx, node_name in enumerate(abc_path) if node_name == "*")
+def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:
+    if "%d" not in hint.title and "%s" not in hint.title:
+        return hint.title
+    title = hint.title.replace("%d", "%s")
+    node_names = tuple(path[idx] for idx, node_name in enumerate(hint.path) if node_name == "*")
     return title % node_names[-title.count("%s") :]
 
 
@@ -396,7 +396,7 @@ class TreeRenderer:
     def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
         hint = self._hints.get_node_hint(node.path)
         title = self._get_header(
-            _replace_title_placeholders(hint.title, hint.path, node.path),
+            _replace_title_placeholders(hint, node.path),
             ".".join(map(str, node.path)),
         )
         if hint.icon:

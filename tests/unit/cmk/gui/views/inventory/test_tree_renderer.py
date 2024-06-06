@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import OrderedDict
 from collections.abc import Sequence
 
 import pytest
@@ -18,6 +19,7 @@ from cmk.utils.structured_data import (
     SDPath,
 )
 
+from cmk.gui.views.inventory._display_hints import NodeDisplayHint
 from cmk.gui.views.inventory._tree_renderer import (
     _replace_title_placeholders,
     _SDDeltaItem,
@@ -227,4 +229,20 @@ def test_sort_delta_attributes_pairs_displayhint(
 def test__replace_title_placeholders(
     title: str, abc_path: SDPath, path: SDPath, expected_title: str
 ) -> None:
-    assert _replace_title_placeholders(title, abc_path, path) == expected_title
+    assert (
+        _replace_title_placeholders(
+            NodeDisplayHint(
+                path=abc_path,
+                icon="",
+                title=title,
+                short_title=title,
+                long_title=title,
+                attributes=OrderedDict(),
+                columns=OrderedDict(),
+                table_view_name="",
+                table_is_show_more=True,
+            ),
+            path,
+        )
+        == expected_title
+    )

@@ -123,8 +123,12 @@ def _render_exception(e: Exception, title: str) -> Response:
 
     if not fail_silently():
         make_header(html, title, Breadcrumb())
+        html.open_div(id="page_handler_error")
         html.show_error(str(e))
+        html.close_div()
         html.footer()
+
+        html.javascript("cmk.layout.insertBefore('page_handler_error', 'main_page_content');")
 
     return response
 

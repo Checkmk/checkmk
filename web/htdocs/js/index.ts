@@ -33,6 +33,7 @@ import * as host_diagnose from "host_diagnose";
 import * as hover from "hover";
 import $ from "jquery";
 import * as keyboard_shortcuts from "keyboard_shortcuts";
+import * as layout from "layout";
 import * as number_format from "number_format";
 import * as page_menu from "page_menu";
 import * as password_meter from "password_meter";
@@ -139,6 +140,7 @@ export const cmk_export = {
         help: help,
         host_diagnose: host_diagnose,
         hover: hover,
+        layout: layout,
         keyboard_shortcuts: keyboard_shortcuts,
         license_usage: {
             timeseries_graph: license_usage_timeseries_graph,

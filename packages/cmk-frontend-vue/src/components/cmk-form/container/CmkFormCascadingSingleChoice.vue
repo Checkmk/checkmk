@@ -3,14 +3,14 @@ import { computed, onBeforeMount, onUpdated, type PropType, ref } from 'vue'
 import { validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type {
-  VueCascadingSingleChoice,
-  VueCascadingSingleChoiceElement,
-  VueSchema
+  CascadingSingleChoice,
+  CascadingSingleChoiceElement,
+  FormSpec
 } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
 
 const props = defineProps<{
-  spec: VueCascadingSingleChoice
+  spec: CascadingSingleChoice
   validation: ValidationMessages
 }>()
 
@@ -27,7 +27,7 @@ const emit = defineEmits<{
 
 const current_values: Record<string, unknown> = {}
 onBeforeMount(() => {
-  props.spec.elements.forEach((element: VueCascadingSingleChoiceElement) => {
+  props.spec.elements.forEach((element: CascadingSingleChoiceElement) => {
     const key = element.name
     current_values[key] = element.default_value
     if (data.value[0] === key) {
@@ -57,13 +57,13 @@ const value = computed({
 })
 
 interface ActiveElement {
-  spec: VueSchema
+  spec: FormSpec
   validation: ValidationMessages
 }
 
 const active_element = computed((): ActiveElement => {
   const element = props.spec.elements.find(
-    (element: VueCascadingSingleChoiceElement) => element.name === data.value[0]
+    (element: CascadingSingleChoiceElement) => element.name === data.value[0]
   )
   return {
     spec: element!.parameter_form,

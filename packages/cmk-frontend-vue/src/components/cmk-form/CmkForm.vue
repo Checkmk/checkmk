@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CmkFormDispatcher from './CmkFormDispatcher.vue'
-import type { VueSchema } from '@/vue_formspec_components'
+import type { FormSpec } from '@/vue_formspec_components'
 import type { ValidationMessages } from '@/utils'
 
 defineProps<{
   id: string
-  spec: VueSchema
+  spec: FormSpec
   validation: ValidationMessages
 }>()
 

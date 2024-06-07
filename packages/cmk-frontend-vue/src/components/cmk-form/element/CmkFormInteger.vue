@@ -2,10 +2,10 @@
 import { computed, ref } from 'vue'
 import { is_integer, validate_value, type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
-import type { VueInteger } from '@/vue_formspec_components'
+import type { Integer } from '@/vue_formspec_components'
 
 const props = defineProps<{
-  spec: VueInteger
+  spec: Integer
   validation: ValidationMessages
 }>()
 

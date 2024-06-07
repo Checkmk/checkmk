@@ -2,14 +2,14 @@
 import { onBeforeMount } from 'vue'
 import CmkFormDispatcher from '../CmkFormDispatcher.vue'
 import { clicked_checkbox_label, type ValidationMessages } from '@/utils'
-import type { VueDictionary, VueDictionaryElement } from '@/vue_formspec_components'
+import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
 
 interface ElementFromProps {
-  dict_config: VueDictionaryElement
+  dict_config: DictionaryElement
   is_active: boolean
 }
 const props = defineProps<{
-  spec: VueDictionary
+  spec: Dictionary
   validation: ValidationMessages
 }>()
 
@@ -17,7 +17,7 @@ const data = defineModel('data', { type: Object, required: true })
 const default_values: Record<string, unknown> = {}
 
 onBeforeMount(() => {
-  props.spec.elements.forEach((element: VueDictionaryElement) => {
+  props.spec.elements.forEach((element: DictionaryElement) => {
     const key = element.ident
     default_values[key] = element.default_value
   })
@@ -26,7 +26,7 @@ onBeforeMount(() => {
 // TODO: computed
 function get_elements_from_props(): ElementFromProps[] {
   const elements: ElementFromProps[] = []
-  props.spec.elements.forEach((element: VueDictionaryElement) => {
+  props.spec.elements.forEach((element: DictionaryElement) => {
     elements.push({
       dict_config: element,
       is_active: element.ident in data.value ? true : element.required
@@ -79,7 +79,7 @@ function get_validation_for_child(ident: string): ValidationMessages {
                   clicked_dictionary_checkbox_label(event, dict_element.dict_config.ident)
               "
             >
-              {{ dict_element.dict_config.vue_schema.title }}
+              {{ dict_element.dict_config.parameter_form.title }}
             </label>
           </span>
           <br />
@@ -87,7 +87,7 @@ function get_validation_for_child(ident: string): ValidationMessages {
             <CmkFormDispatcher
               v-if="data[dict_element.dict_config.ident] !== undefined"
               v-model:data="data[dict_element.dict_config.ident]"
-              :spec="dict_element.dict_config.vue_schema"
+              :spec="dict_element.dict_config.parameter_form"
               :validation="get_validation_for_child(dict_element.dict_config.ident)"
             />
           </div>

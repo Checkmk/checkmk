@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { onBeforeMount, ref } from 'vue'
-import type { VueSchema } from '@/vue_formspec_components'
+import type { FormSpec } from '@/vue_formspec_components'
 import type { ValidationMessages } from '@/utils'
 import { CmkForm } from '@/components/cmk-form/'
 
 const props = defineProps<{
   id: string
-  spec: VueSchema
+  spec: FormSpec
   data: unknown
   validation: ValidationMessages
 }>()

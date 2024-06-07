@@ -15,23 +15,10 @@ from typing import Any, Sequence, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 
+import cmk.gui.form_specs.vue.type_defs.vue_formspec_components as VueComponents
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
-from cmk.gui.form_specs.vue.type_defs.vue_formspec_components import (
-    VueCascadingSingleChoice,
-    VueCascadingSingleChoiceElement,
-    VueDictionary,
-    VueDictionaryElement,
-    VueFloat,
-    VueInteger,
-    VueLegacyValuespec,
-    VueList,
-    VueSchema,
-    VueSingleChoice,
-    VueSingleChoiceElement,
-    VueString,
-)
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -72,12 +59,6 @@ DataForDisk = Any
 Value = Any
 
 
-@dataclass(kw_only=True)
-class Validation:
-    location: list[str]
-    message: str
-
-
 class DataOrigin(Enum):
     DISK = auto()
     FRONTEND = auto()
@@ -93,12 +74,14 @@ class VisitorOptions:
 class VueAppConfig:
     id: str
     app_name: str
-    form_spec: VueSchema
+    form_spec: VueComponents.FormSpec
     model_value: Any
     validation_messages: Any
 
 
-VueVisitorMethodResult = tuple[VueSchema, Value, list[Validation], DataForDisk]
+VueVisitorMethodResult = tuple[
+    VueComponents.FormSpec, Value, list[VueComponents.ValidationMessage], DataForDisk
+]
 VueFormSpecVisitorMethod = Callable[[VisitorOptions, Any, Any], VueVisitorMethodResult]
 
 
@@ -174,12 +157,12 @@ def _compute_validation_errors(
     visitor_options: VisitorOptions,
     validators: Sequence[Callable[[ModelT], object]],
     raw_value: Any,
-) -> list[Validation]:
+) -> list[VueComponents.ValidationMessage]:
     if not visitor_options.validate:
         return []
 
     return [
-        Validation(location=[""], message=x)
+        VueComponents.ValidationMessage(location=[""], message=x)
         for x in _optional_validation(validators, raw_value)
         if x is not None
     ]
@@ -198,7 +181,9 @@ def _visit_integer(
     )
 
     result = (
-        VueInteger(title=title, help=help_text, validators=build_vue_validators(validators)),
+        VueComponents.Integer(
+            title=title, help=help_text, validators=build_vue_validators(validators)
+        ),
         value,
         _compute_validation_errors(visitor_options, validators, value),
         value,
@@ -218,7 +203,9 @@ def _visit_float(
     )
 
     result = (
-        VueFloat(title=title, help=help_text, validators=build_vue_validators(validators)),
+        VueComponents.Float(
+            title=title, help=help_text, validators=build_vue_validators(validators)
+        ),
         value,
         _compute_validation_errors(visitor_options, validators, value),
         value,
@@ -236,7 +223,9 @@ def _visit_string(
     validators = form_spec.custom_validate if form_spec.custom_validate else []
 
     result = (
-        VueString(title=title, help=help_text, validators=build_vue_validators(validators)),
+        VueComponents.String(
+            title=title, help=help_text, validators=build_vue_validators(validators)
+        ),
         value,
         _compute_validation_errors(visitor_options, validators, value),
         value,
@@ -267,7 +256,7 @@ def _visit_dictionary(
 
         for validation in element_vue_validation:
             element_validations.append(
-                Validation(
+                VueComponents.ValidationMessage(
                     location=[key_name] + validation.location,
                     message=validation.message,
                 )
@@ -278,16 +267,16 @@ def _visit_dictionary(
             vue_values[key_name] = key_value
 
         elements_keyspec.append(
-            VueDictionaryElement(
+            VueComponents.DictionaryElement(
                 ident=key_name,
                 default_value=element_vue_value,
                 required=dict_element.required,
-                vue_schema=element_schema,
+                parameter_form=element_schema,
             )
         )
 
     return (
-        VueDictionary(title=title, help=help_text, elements=elements_keyspec),
+        VueComponents.Dictionary(title=title, help=help_text, elements=elements_keyspec),
         vue_values,
         element_validations,
         disk_values,
@@ -304,7 +293,7 @@ def _visit_single_choice(
         if isinstance(form_spec.prefill, InputHint):
             value = ""
             elements_to_show.append(
-                VueSingleChoiceElement(
+                VueComponents.SingleChoiceElement(
                     name="", title=form_spec.prefill.value.localize(translate_to_current_language)
                 )
             )
@@ -317,21 +306,22 @@ def _visit_single_choice(
     #      validators for this form spec
     validators = form_spec.custom_validate if form_spec.custom_validate else []
 
-    vue_elements: list[VueSingleChoiceElement] = []
+    vue_elements: list[VueComponents.SingleChoiceElement] = []
     for element in form_spec.elements:
         vue_elements.append(
-            VueSingleChoiceElement(
+            VueComponents.SingleChoiceElement(
                 name=element.name,
                 title=element.title.localize(translate_to_current_language),
             )
         )
 
     result = (
-        VueSingleChoice(
+        VueComponents.SingleChoice(
             title=title,
             help=help_text,
             elements=vue_elements,
             validators=build_vue_validators(validators),
+            frozen=form_spec.frozen,
         ),
         value,
         _compute_validation_errors(visitor_options, validators, value),
@@ -353,7 +343,7 @@ def _visit_cascading_single_choice(
     if isinstance(value, DEFAULT_VALUE):
         if isinstance(form_spec.prefill, InputHint):
             elements_to_show.append(
-                VueSingleChoiceElement(
+                VueComponents.SingleChoiceElement(
                     name="", title=form_spec.prefill.value.localize(translate_to_current_language)
                 )
             )
@@ -370,7 +360,7 @@ def _visit_cascading_single_choice(
     validators = form_spec.custom_validate if form_spec.custom_validate else []
 
     selected_disk_value: Any = None
-    vue_elements: list[VueCascadingSingleChoiceElement] = []
+    vue_elements: list[VueComponents.CascadingSingleChoiceElement] = []
     element_validations = []
     for element in form_spec.elements:
         element_value = _default_value if selected_name != element.name else selected_value
@@ -383,14 +373,14 @@ def _visit_cascading_single_choice(
 
         for validation in element_vue_validation:
             element_validations.append(
-                Validation(
+                VueComponents.ValidationMessage(
                     location=[element.name] + validation.location,
                     message=validation.message,
                 )
             )
 
         vue_elements.append(
-            VueCascadingSingleChoiceElement(
+            VueComponents.CascadingSingleChoiceElement(
                 name=element.name,
                 title=element.title.localize(translate_to_current_language),
                 default_value=element_vue_value,
@@ -399,7 +389,7 @@ def _visit_cascading_single_choice(
         )
 
     result = (
-        VueCascadingSingleChoice(
+        VueComponents.CascadingSingleChoice(
             title=title,
             help=help_text,
             elements=vue_elements,
@@ -437,14 +427,14 @@ def _visit_list(
         disk_values.append(element_disk_value)
         for validation in element_vue_validation:
             element_validations.append(
-                Validation(
+                VueComponents.ValidationMessage(
                     location=[str(idx)] + validation.location,
                     message=validation.message,
                 )
             )
 
     return (
-        VueList(
+        VueComponents.List(
             title=title,
             help=help_text,
             element_template=element_schema,
@@ -454,6 +444,7 @@ def _visit_list(
                 translate_to_current_language
             ),
             no_element_label=form_spec.no_element_label.localize(translate_to_current_language),
+            editable_order=form_spec.editable_order,
         ),
         vue_values,
         element_validations,
@@ -488,13 +479,13 @@ def _visit_legacyvaluespec(
                 form_spec.valuespec.validate_value(value, varprefix)
             except MKUserError as e:
                 user_errors.add(e)
-                validation_errors = [Validation(location=[""], message=str(e))]
+                validation_errors = [VueComponents.ValidationMessage(location=[""], message=str(e))]
                 with output_funnel.plugged():
                     # Keep in mind that this default value is actually not used,
                     # but replaced by the request vars
                     form_spec.valuespec.render_input(varprefix, form_spec.valuespec.default_value())
                     return (
-                        VueLegacyValuespec(
+                        VueComponents.LegacyValuespec(
                             title=title,
                             help=help_text,
                             html=output_funnel.drain(),
@@ -511,9 +502,9 @@ def _visit_legacyvaluespec(
         try:
             form_spec.valuespec.render_input(varprefix, value)
         except MKUserError as e:
-            validation_errors = [Validation(location=[""], message=str(e))]
+            validation_errors = [VueComponents.ValidationMessage(location=[""], message=str(e))]
         return (
-            VueLegacyValuespec(
+            VueComponents.LegacyValuespec(
                 title=title,
                 help=help_text,
                 html=output_funnel.drain(),
@@ -600,7 +591,7 @@ def _convert_to_native_form_spec(
     raise MKUserError("", f"Unsupported native conversion for {custom_form_spec}")
 
 
-def _process_validation_errors(validation_errors: list[Validation]) -> None:
+def _process_validation_errors(validation_errors: list[VueComponents.ValidationMessage]) -> None:
     """This functions introduces validation errors from the vue-world into the CheckMK-GUI-world
     The CheckMK-GUI works with a global parameter user_errors.
     These user_errors include the field_id of the broken input field and the error text

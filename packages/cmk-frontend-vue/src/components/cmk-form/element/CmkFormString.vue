@@ -2,10 +2,10 @@
 import { computed, ref } from 'vue'
 import { validate_value, type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
-import type { VueString } from '@/vue_formspec_components'
+import * as FormSpec from '@/vue_formspec_components'
 
 const props = defineProps<{
-  spec: VueString
+  spec: FormSpec.String
   validation: ValidationMessages
 }>()
 

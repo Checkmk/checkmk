@@ -5,94 +5,109 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type VueSchema =
-  | VueInteger
-  | VueFloat
-  | VueString
-  | VueDictionary
-  | VueList
-  | VueSingleChoice
-  | VueCascadingSingleChoice
-  | VueLegacyValuespec
-
-export type VueInteger = VueInteger1 & {
-  vue_type?: 'integer'
-  label?: string
-  unit?: string
-}
-export type VueInteger1 = VueBase
-
-export interface VueSingleChoiceElement {
-  name: string
-  title: string
-}
-
-export type VueSingleChoice = VueSingleChoice1 & {
-  vue_type?: 'single_choice'
-  label?: string
-  unit?: string
-  elements: VueSingleChoiceElement[]
-}
-export type VueSingleChoice1 = VueBase
-
-export interface VueCascadingSingleChoiceElement {
-  name: string
-  title: string
-  default_value: unknown
-  parameter_form: VueSchema
-}
-
-export type VueCascadingSingleChoice = VueCascadingSingleChoice1 & {
-  vue_type?: 'cascading_single_choice'
-  elements: VueCascadingSingleChoiceElement[]
-}
-export type VueCascadingSingleChoice1 = VueBase
-
-export type VueFloat = VueFloat1 & {
-  vue_type?: 'float'
-  label?: string
-  unit?: string
-}
-export type VueFloat1 = VueBase
-export type VueString = VueString1 & {
-  vue_type?: 'text'
-  placeholder?: string
-}
-export type VueString1 = VueBase
-export type VueDictionary = VueDictionary1 & {
-  vue_type?: 'dictionary'
-  elements: VueDictionaryElement[]
-}
-export type VueDictionary1 = VueBase
-export type VueLegacyValuespec = VueLegacyValuespec1 & {
-  vue_type?: 'legacy_valuespec'
-  html: string
-  varprefix: string
-}
-export type VueLegacyValuespec1 = VueBase
+export type Components =
+  | Integer
+  | Float
+  | String
+  | Dictionary
+  | List
+  | LegacyValuespec
+  | SingleChoice
+  | CascadingSingleChoice;
+export type Integer = FormSpec & {
+  type: "integer";
+  label?: string;
+  unit?: string;
+};
+export type Validators = IsInteger | IsFloat | NumberInRange | LengthInRange;
+export type Float = FormSpec & {
+  type: "float";
+  label?: string;
+  unit?: string;
+};
+export type String = FormSpec & {
+  type: "string";
+  placeholder?: string;
+};
+export type Dictionary = FormSpec & {
+  type: "dictionary";
+  elements: DictionaryElement[];
+};
+export type List = FormSpec & {
+  type: "list";
+  element_template: FormSpec;
+  element_default_value: unknown;
+  editable_order: boolean;
+  add_element_label: string;
+  remove_element_label: string;
+  no_element_label: string;
+};
+export type LegacyValuespec = FormSpec & {
+  type: "legacy_valuespec";
+  html: string;
+  varprefix: string;
+};
+export type SingleChoice = FormSpec & {
+  type: "single_choice";
+  elements: SingleChoiceElement[];
+  no_elements_text?: string;
+  frozen: boolean;
+  label?: string;
+};
+export type CascadingSingleChoice = FormSpec & {
+  type: "cascading_single_choice";
+  elements: CascadingSingleChoiceElement[];
+  no_elements_text?: string;
+  label?: string;
+};
 
 export interface VueFormspecComponents {
-  all_schemas?: VueSchema[]
+  components?: Components;
+  validation_message?: ValidationMessage;
 }
-export interface VueBase {
-  title: string
-  help: string
-  validators?: {}[]
+export interface FormSpec {
+  type: string;
+  title: string;
+  help: string;
+  validators: Validators[];
 }
-export interface VueDictionaryElement {
-  ident: string
-  required: boolean
-  default_value: unknown
-  vue_schema: VueSchema
+export interface IsInteger {
+  type: "is_integer";
+  error_message?: string;
 }
-
-export type VueList = VueList1 & {
-  editable_order: boolean
-  vue_type: 'list'
-  element_template: VueBase
-  element_default_value: unknown
-  add_element_label: string
-  remove_element_label: string
-  no_element_label: string
+export interface IsFloat {
+  type: "is_float";
+  error_message?: string;
 }
-export type VueList1 = VueBase
+export interface NumberInRange {
+  type: "number_in_range";
+  min_value?: number;
+  max_value?: number;
+  error_message?: string;
+}
+export interface LengthInRange {
+  type: "length_in_range";
+  min_value?: number;
+  max_value?: number;
+  error_message?: string;
+}
+export interface DictionaryElement {
+  ident: string;
+  required: boolean;
+  default_value: unknown;
+  parameter_form: FormSpec;
+}
+export interface SingleChoiceElement {
+  name: string;
+  title: string;
+}
+export interface CascadingSingleChoiceElement {
+  name: string;
+  title: string;
+  default_value: unknown;
+  parameter_form: FormSpec;
+}
+export interface ValidationMessage {
+  location: string[];
+  message: string;
+}

@@ -2,14 +2,14 @@
 import { computed, onMounted, onUpdated, ref } from 'vue'
 import { validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
-import type { VueList } from '@/vue_formspec_components'
+import type { List } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
 import type { D3DragEvent } from 'd3'
 import { select, selectAll, pointer } from 'd3-selection'
 import { drag } from 'd3-drag'
 
 const props = defineProps<{
-  spec: VueList
+  spec: List
   validation: ValidationMessages
 }>()
 

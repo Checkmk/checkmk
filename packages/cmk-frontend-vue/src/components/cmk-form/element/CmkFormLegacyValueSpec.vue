@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
-import type { VueLegacyValuespec } from '@/vue_formspec_components'
+import type { LegacyValuespec } from '@/vue_formspec_components'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { select } from 'd3-selection'
 
 const props = defineProps<{
-  spec: VueLegacyValuespec
+  spec: LegacyValuespec
   validation: ValidationMessages
 }>()
 

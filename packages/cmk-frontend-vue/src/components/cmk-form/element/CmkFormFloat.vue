@@ -2,10 +2,10 @@
 import { computed, ref } from 'vue'
 import { is_float, validate_value, type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
-import type { VueFloat } from '@/vue_formspec_components'
+import type { Float } from '@/vue_formspec_components'
 
 const props = defineProps<{
-  spec: VueFloat
+  spec: Float
   validation: ValidationMessages
 }>()
 

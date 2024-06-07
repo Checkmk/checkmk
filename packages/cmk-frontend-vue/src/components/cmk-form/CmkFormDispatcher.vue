@@ -5,13 +5,13 @@ import CmkFormString from './element/CmkFormString.vue'
 import CmkFormSingleChoice from './element/CmkFormSingleChoice.vue'
 import CmkFormDictionary from './container/CmkFormDictionary.vue'
 import type { ValidationMessages } from '@/utils'
-import type { VueSchema } from '@/vue_formspec_components'
+import type { FormSpec } from '@/vue_formspec_components'
 import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
 import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
 import CmkFormLegacyValueSpec from '@/components/cmk-form/element/CmkFormLegacyValueSpec.vue'
 
 const props = defineProps<{
-  spec: VueSchema
+  spec: FormSpec
   validation: ValidationMessages
 }>()
 
@@ -31,7 +31,7 @@ const components: Record<string, unknown> = {
 
 // TODO: we should enforce an interface as return value?!
 function get_component(): unknown {
-  return components[props.spec.vue_type!]
+  return components[props.spec.type]
 }
 </script>
 

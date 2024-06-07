@@ -11,9 +11,9 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
-pub fn cleanup_error(e: &anyhow::Error) -> String {
+pub fn prepare_error(e: &anyhow::Error) -> String {
     let msg = e.to_string();
-    msg.replace('\n', " ")
+    format!("ERROR: {}", &msg.replace('\n', " "))
 }
 
 pub fn read_file(file_name: &Path) -> Result<String> {

@@ -554,6 +554,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut UniClient
             found.insert(values[1].to_string());
         }
         assert!(values[2].contains(" error: "), "wrong: {l}");
+        assert!(values[2].starts_with("ERROR: "), "wrong: {l}");
         assert_eq!(values[3..6], ["-", "-", "-"], "wrong: {l}");
     }
     assert_eq!(found, expected);

@@ -133,7 +133,9 @@ def _validate_rule_spec_form_creation() -> ActiveCheckResult:
 
 def _validate_agent_based_plugin_v2_ruleset_ref(
     plugin: _AgentBasedPlugins,
+    *,
     rule_group: Callable[[str | None], str],
+    fallback_rule_group: Callable[[str | None], str] | None = None,
     ruleset_ref_attr: str,
     default_params_attr: str,
 ) -> str | None:
@@ -147,14 +149,24 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
         )
 
     if (rule_spec := rulespec_registry.get(rule_group(ruleset_ref))) is None:
-        return (
-            f"'{ruleset_ref_attr}' of {type(plugin).__name__} '{plugin.name}' references "
-            f"non-existent rule spec '{ruleset_ref}'"
-        )
+        if (
+            fallback_rule_group is None
+            or (rule_spec := rulespec_registry.get(fallback_rule_group(ruleset_ref))) is None
+        ):
+            return (
+                f"'{ruleset_ref_attr}' of {type(plugin).__name__} '{plugin.name}' references "
+                f"non-existent rule spec '{ruleset_ref}'"
+            )
+        # we're validating against the enforces service rule in this case
+        assert isinstance(plugin, agent_based_v2.CheckPlugin)
+        params = (plugin.name, "item" if "%s" in plugin.service_name else None, default_params)
+
+    else:
+        params = default_params
 
     try:
-        rule_spec.valuespec.validate_datatype(default_params, "")
-        rule_spec.valuespec.validate_value(default_params, "")
+        rule_spec.valuespec.validate_datatype(params, "")
+        rule_spec.valuespec.validate_value(params, "")
     except Exception as e:
         if debug.enabled():
             raise e
@@ -198,6 +210,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                     error := _validate_agent_based_plugin_v2_ruleset_ref(
                         plugin,
                         rule_group=RuleGroup.CheckgroupParameters,
+                        fallback_rule_group=RuleGroup.StaticChecks,
                         ruleset_ref_attr="check_ruleset_name",
                         default_params_attr="check_default_parameters",
                     )

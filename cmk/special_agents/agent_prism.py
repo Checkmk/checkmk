@@ -44,19 +44,20 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def output_containers(session: requests.Session, url: str, timeout: int) -> None:
+def output_containers(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
     LOGGING.debug("do request..")
-    obj = session.get(url + "/containers", timeout=timeout).json()
+    obj = session.get(url + "/containers", verify=verify, timeout=timeout).json()
     LOGGING.debug("got %d containers", len(obj["entities"]))
     with SectionWriter("prism_containers") as w:
         w.append_json(obj)
 
 
-def output_alerts(session: requests.Session, url: str, timeout: int) -> None:
+def output_alerts(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
     LOGGING.debug("do request..")
     obj = session.get(
         url + "/alerts",
         params={"resolved": "false", "acknowledged": "false"},
+        verify=verify,
         timeout=timeout,
     ).json()
     LOGGING.debug("got %d alerts", len(obj["entities"]))
@@ -64,24 +65,24 @@ def output_alerts(session: requests.Session, url: str, timeout: int) -> None:
         w.append_json(obj)
 
 
-def output_cluster(session: requests.Session, url: str, timeout: int) -> None:
+def output_cluster(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
     LOGGING.debug("do request..")
-    obj = session.get(url + "/cluster", timeout=timeout).json()
+    obj = session.get(url + "/cluster", verify=verify, timeout=timeout).json()
     LOGGING.debug("got %d keys", len(obj.keys()))
     with SectionWriter("prism_info") as w:
         w.append_json(obj)
 
 
-def output_storage_pools(session: requests.Session, url: str, timeout: int) -> None:
+def output_storage_pools(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
     LOGGING.debug("do request..")
-    obj = session.get(url + "/storage_pools", timeout=timeout).json()
+    obj = session.get(url + "/storage_pools", verify=verify, timeout=timeout).json()
     LOGGING.debug("got %d entities", len(obj["entities"]))
     with SectionWriter("prism_storage_pools") as w:
         w.append_json(obj)
 
 
-def output_vms(session: requests.Session, url: str, timeout: int) -> None:
-    obj = session.get(url + "/vms", timeout=timeout).json()
+def output_vms(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
+    obj = session.get(url + "/vms", verify=verify, timeout=timeout).json()
     with SectionWriter("prism_vms") as w:
         w.append_json(obj)
     for element in obj.get("entities"):
@@ -90,8 +91,8 @@ def output_vms(session: requests.Session, url: str, timeout: int) -> None:
                 w.append_json(element)
 
 
-def output_hosts(session: requests.Session, url: str, timeout: int) -> None:
-    obj = session.get(url + "/hosts", timeout=timeout).json()
+def output_hosts(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
+    obj = session.get(url + "/hosts", verify=verify, timeout=timeout).json()
     with SectionWriter("prism_hosts") as w:
         w.append_json(obj)
     for element in obj.get("entities"):
@@ -99,26 +100,26 @@ def output_hosts(session: requests.Session, url: str, timeout: int) -> None:
             with SectionWriter("prism_host") as w:
                 w.append_json(element)
             networks = session.get(
-                f"{url}/hosts/{element.get('uuid')}/host_nics", timeout=timeout
+                f"{url}/hosts/{element.get('uuid')}/host_nics", verify=verify, timeout=timeout
             ).json()
             with SectionWriter("prism_host_networks") as w:
                 w.append_json(networks)
 
 
-def output_protection(session: requests.Session, url: str, timeout: int) -> None:
-    obj = session.get(url + "/protection_domains", timeout=timeout).json()
+def output_protection(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
+    obj = session.get(url + "/protection_domains", verify=verify, timeout=timeout).json()
     with SectionWriter("prism_protection_domains") as w:
         w.append_json(obj)
 
 
-def output_support(session: requests.Session, url: str, timeout: int) -> None:
-    obj = session.get(url + "/cluster/remote_support", timeout=timeout).json()
+def output_support(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
+    obj = session.get(url + "/cluster/remote_support", verify=verify, timeout=timeout).json()
     with SectionWriter("prism_remote_support") as w:
         w.append_json(obj)
 
 
-def output_ha(session: requests.Session, url: str, timeout: int) -> None:
-    obj = session.get(url + "/ha", timeout=timeout).json()
+def output_ha(session: requests.Session, url: str, verify: bool, timeout: int) -> None:
+    obj = session.get(url + "/ha", verify=verify, timeout=timeout).json()
     with SectionWriter("prism_ha") as w:
         w.append_json(obj)
 
@@ -136,36 +137,34 @@ def agent_prism_main(args: Args) -> int:
             + base64.b64encode(f"{args.username}:{args.password}".encode()).decode()
         }
     )
-    session.verify = (
-        False if args.no_cert_check else True  # pylint: disable=simplifiable-if-expression
-    )
+    verify = False if args.no_cert_check else True  # pylint: disable=simplifiable-if-expression
 
     LOGGING.info("fetch and write container info..")
-    output_containers(session, base_url_v1, timeout=args.timeout)
+    output_containers(session, base_url_v1, verify, timeout=args.timeout)
 
     LOGGING.info("fetch and write alerts..")
-    output_alerts(session, base_url_v2, timeout=args.timeout)
+    output_alerts(session, base_url_v2, verify, timeout=args.timeout)
 
     LOGGING.info("fetch and write cluster info..")
-    output_cluster(session, base_url_v2, timeout=args.timeout)
+    output_cluster(session, base_url_v2, verify, timeout=args.timeout)
 
     LOGGING.info("fetch and write storage_pools..")
-    output_storage_pools(session, base_url_v1, timeout=args.timeout)
+    output_storage_pools(session, base_url_v1, verify, timeout=args.timeout)
 
     LOGGING.info("fetch and write vm info..")
-    output_vms(session, base_url_v1, timeout=args.timeout)
+    output_vms(session, base_url_v1, verify, timeout=args.timeout)
 
     LOGGING.info("fetch and write hosts info..")
-    output_hosts(session, base_url_v2, timeout=args.timeout)
+    output_hosts(session, base_url_v2, verify, timeout=args.timeout)
 
     LOGGING.info("fetch and write protection domain info..")
-    output_protection(session, base_url_v2, timeout=args.timeout)
+    output_protection(session, base_url_v2, verify, timeout=args.timeout)
 
     LOGGING.info("fetch and write support info..")
-    output_support(session, base_url_v2, timeout=args.timeout)
+    output_support(session, base_url_v2, verify, timeout=args.timeout)
 
     LOGGING.info("fetch and write ha state..")
-    output_ha(session, base_url_v2, timeout=args.timeout)
+    output_ha(session, base_url_v2, verify, timeout=args.timeout)
 
     LOGGING.info("all done. bye.")
 

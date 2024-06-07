@@ -231,6 +231,8 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
         if target_edition_raw
         else edition_from_env(Edition.CEE)
     )
+    LOGGER.info("Base edition: %s", base_version.edition.short)
+    LOGGER.info("Target edition: %s", target_edition.short)
 
     if (
         request.config.getoption(name="--latest-base-version")

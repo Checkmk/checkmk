@@ -674,6 +674,7 @@ function render_graph(graph: GraphArtwork) {
             render_area(
                 graph["start_time"],
                 step,
+                v_range_from,
                 coordinate_trans,
                 corner_markers,
                 ctx
@@ -884,6 +885,7 @@ function render_curve(
 function render_area(
     start_time: number,
     time_step_size: number,
+    v_range_from: number,
     coordinate_tranformation: GraphCoordinateTransformation,
     corner_markers: [TimeSeriesValue, TimeSeriesValue][],
     ctx: CanvasRenderingContext2D
@@ -910,26 +912,75 @@ function render_area(
             continue;
         }
 
-        ctx.beginPath();
-        ctx.moveTo(
-            coordinate_tranformation.trans_t(t - time_step_size),
-            coordinate_tranformation.trans_v(prev_lower)
-        );
-        ctx.lineTo(
-            coordinate_tranformation.trans_t(t - time_step_size),
-            coordinate_tranformation.trans_v(prev_upper)
-        );
-        ctx.lineTo(
-            coordinate_tranformation.trans_t(t),
-            coordinate_tranformation.trans_v(upper)
-        );
-        ctx.lineTo(
-            coordinate_tranformation.trans_t(t),
-            coordinate_tranformation.trans_v(lower)
-        );
-        ctx.closePath();
-        ctx.fill();
-
+        // All points are above the lower vertical range limit. Render a quadrilateral.
+        if (prev_lower >= v_range_from && lower >= v_range_from) {
+            render_filled_polygon(
+                ctx,
+                coordinate_tranformation,
+                [t - time_step_size, prev_lower],
+                [t - time_step_size, prev_upper],
+                [t, upper],
+                [t, lower]
+            );
+        }
+        // Transition from above lower vertical range limit to below. Render a pentagon with the
+        // lower edge exactly at the lower vertical range limit, st. the area below the limit is
+        // not filled.
+        else if (prev_lower >= v_range_from && lower < v_range_from) {
+            render_filled_polygon(
+                ctx,
+                coordinate_tranformation,
+                [t - time_step_size, prev_lower],
+                [t - time_step_size, prev_upper],
+                [t, upper],
+                [t, v_range_from],
+                [
+                    t_value_of_intersection_point(
+                        t,
+                        time_step_size,
+                        prev_lower,
+                        lower,
+                        v_range_from
+                    ),
+                    v_range_from,
+                ]
+            );
+        }
+        // Transition from below lower vertical range limit to above. Render a pentagon with the
+        // lower edge exactly at the lower vertical range limit, st. the area below the limit is
+        // not filled.
+        else if (prev_lower < v_range_from && lower >= v_range_from) {
+            render_filled_polygon(
+                ctx,
+                coordinate_tranformation,
+                [t - time_step_size, v_range_from],
+                [t - time_step_size, prev_upper],
+                [t, upper],
+                [t, lower],
+                [
+                    t_value_of_intersection_point(
+                        t,
+                        time_step_size,
+                        prev_lower,
+                        lower,
+                        v_range_from
+                    ),
+                    v_range_from,
+                ]
+            );
+        }
+        // We are completely below the limit. Render a quadrilateral with the lower edge exactly at
+        // the lower vertical range limit.
+        else {
+            render_filled_polygon(
+                ctx,
+                coordinate_tranformation,
+                [t - time_step_size, v_range_from],
+                [t - time_step_size, prev_upper],
+                [t, upper],
+                [t, v_range_from]
+            );
+        }
         prev_lower = lower;
         prev_upper = upper;
         t += time_step_size;
@@ -955,6 +1006,28 @@ function t_value_of_intersection_point(
     const slope = (v_2 - v_1) / time_step_size;
     const offset = v_1 - slope * t_1;
     return (v_intersect - offset) / slope;
+}
+
+function render_filled_polygon(
+    ctx: CanvasRenderingContext2D,
+    coordinate_tranformation: GraphCoordinateTransformation,
+    ...corner_coordinates: [number, number][]
+) {
+    if (!corner_coordinates.length) return;
+
+    ctx.beginPath();
+    ctx.moveTo(
+        coordinate_tranformation.trans_t(corner_coordinates[0][0]),
+        coordinate_tranformation.trans_v(corner_coordinates[0][1])
+    );
+    for (const corner_coord of corner_coordinates.slice(1)) {
+        ctx.lineTo(
+            coordinate_tranformation.trans_t(corner_coord[0]),
+            coordinate_tranformation.trans_v(corner_coord[1])
+        );
+    }
+    ctx.closePath();
+    ctx.fill();
 }
 
 function hex_to_rgba(color: string) {

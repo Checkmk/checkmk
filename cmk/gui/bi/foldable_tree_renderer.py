@@ -5,7 +5,7 @@
 
 import abc
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, TypeGuard
 
 import cmk.gui.view_utils
 from cmk.gui.config import active_config
@@ -29,6 +29,9 @@ WARN = 1
 CRIT = 2
 UNKNOWN = 3
 UNAVAIL = 4
+
+BIAggrTreeState = tuple[dict[str, Any], Any, dict[str, Any], list]
+BILeafTreeState = tuple[dict[str, Any], Any, dict[str, Any]]
 
 
 class ABCFoldableTreeRenderer(abc.ABC):
@@ -59,7 +62,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
             user.save_tree_states()
 
     @abc.abstractmethod
-    def css_class(self):
+    def css_class(self) -> str:
         raise NotImplementedError()
 
     def render(self) -> HTML:
@@ -89,43 +92,46 @@ class ABCFoldableTreeRenderer(abc.ABC):
         html.open_div(id_=url_id, class_="bi_tree_container")
         self._show_subtree(
             tree,
-            path=[("frozen_" if self._show_frozen_difference else "") + tree[2]["title"]],
+            path=tuple([("frozen_" if self._show_frozen_difference else "") + tree[2]["title"]]),
             show_host=len(affected_hosts) > 1,
         )
         html.close_div()
 
     @abc.abstractmethod
-    def _show_subtree(self, tree, path, show_host):
+    def _show_subtree(
+        self,
+        tree: BIAggrTreeState | BILeafTreeState,
+        path: tuple[str, ...],
+        show_host: bool,
+        frozen_marker_set: bool = False,
+    ) -> None:
         raise NotImplementedError()
 
-    def _get_tree(self):
+    def _get_tree(self) -> BIAggrTreeState:
         tree = self._row["aggr_treestate"]
         if self._only_problems:
             tree = self._filter_tree_only_problems(tree)
         return tree
 
     # Convert tree to tree contain only node in non-OK state
-    def _filter_tree_only_problems(self, tree):
+    def _filter_tree_only_problems(self, tree: BIAggrTreeState) -> BIAggrTreeState:
         state, assumed_state, node, subtrees = tree
         # remove subtrees in state OK
-        new_subtrees = []
+        new_subtrees: list[BIAggrTreeState | BILeafTreeState] = []
         for subtree in subtrees:
             effective_state = subtree[1] if subtree[1] is not None else subtree[0]
             if effective_state["state"] not in [OK, PENDING]:
-                if len(subtree) == 3:
+                if is_leaf(subtree):
                     new_subtrees.append(subtree)
-                else:
+                elif is_aggr(subtree):
                     new_subtrees.append(self._filter_tree_only_problems(subtree))
 
         return state, assumed_state, node, new_subtrees
 
-    def _is_leaf(self, tree) -> bool:  # type: ignore[no-untyped-def]
-        return len(tree) == 3
-
-    def _path_id(self, path):
+    def _path_id(self, path: tuple[str, ...]) -> str:
         return "/".join(path)
 
-    def _is_open(self, path) -> bool:  # type: ignore[no-untyped-def]
+    def _is_open(self, path: tuple[str, ...]) -> bool:
         is_open = self._treestate.get(self._path_id(path))
         if is_open is None:
             is_open = len(path) <= self._expansion_level
@@ -136,17 +142,17 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
         return is_open
 
-    def _omit_content(self, path):
+    def _omit_content(self, path: tuple[str, ...]) -> bool:
         return self._lazy and not self._is_open(path)
 
-    def _get_mousecode(self, path):
+    def _get_mousecode(self, path: tuple[str, ...]) -> str:
         return "%s(this, %d);" % (self._toggle_js_function(), self._omit_content(path))
 
     @abc.abstractmethod
-    def _toggle_js_function(self):
+    def _toggle_js_function(self) -> str:
         raise NotImplementedError()
 
-    def _show_leaf(self, tree, show_host):
+    def _show_leaf(self, tree: BILeafTreeState, show_host: bool) -> None:
         site, host = tree[2]["host"]
         service = tree[2].get("service")
 
@@ -213,18 +219,24 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
 
 class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
-    def css_class(self):
+    def css_class(self) -> str:
         return "aggrtree"
 
-    def _toggle_js_function(self):
+    def _toggle_js_function(self) -> str:
         return "cmk.bi.toggle_subtree"
 
     def _show_subtree(
-        self, tree, path, show_host, frozen_marker_set=False
-    ):  # pylint: disable=too-many-branches
-        if self._is_leaf(tree):
+        self,
+        tree: BIAggrTreeState | BILeafTreeState,
+        path: tuple[str, ...],
+        show_host: bool,
+        frozen_marker_set: bool = False,
+    ) -> None:
+        if is_leaf(tree):
             self._show_leaf(tree, show_host)
             return
+        if not is_aggr(tree):
+            raise ValueError("Invalid tree state")
 
         html.open_span(class_="title")
 
@@ -260,51 +272,51 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
             if not self._omit_content(path):
                 for node in tree[3]:
-                    if not node[2].get("hidden"):
-                        new_path = path + [node[2]["title"]]
-                        frozen_marker = node[2].get("frozen_marker")
-                        frozen_aggregation_css = ""
-                        tooltip_text = ""
-                        if not frozen_marker_set and frozen_marker and self._show_frozen_difference:
-                            is_leaf = self._is_leaf(new_path)
-                            if frozen_marker.status == "new":
-                                if is_leaf:
-                                    tooltip_text = _("This node is not in the frozen aggregation")
-                                else:
-                                    tooltip_text = _(
-                                        "These nodes are not in the frozen aggregation"
-                                    )
-                                frozen_aggregation_css = (
-                                    "frozen_aggregation missing_in_frozen_aggregation"
-                                )
-                            else:
-                                if is_leaf:
-                                    tooltip_text = _("This node is only in the frozen aggregation")
-                                else:
-                                    tooltip_text = _(
-                                        "These nodes are only in the frozen aggregation"
-                                    )
-                                frozen_aggregation_css = (
-                                    "frozen_aggregation only_in_frozen_aggregation"
-                                )
-                        html.open_li(class_=frozen_aggregation_css)
-                        if frozen_aggregation_css:
-                            html.span(
-                                "+" if frozen_marker.status == "new" else "-",
-                                class_=["frozen_marker", frozen_marker.status],
-                                title=tooltip_text,
-                            )
-                        self._show_subtree(
-                            node,
-                            new_path,
-                            show_host,
-                            frozen_marker_set or bool(frozen_aggregation_css),
-                        )
-                        html.close_li()
+                    self._show_child(path, node, show_host, frozen_marker_set)
 
             html.close_ul()
 
         html.close_span()
+
+    def _show_child(
+        self,
+        path: tuple[str, ...],
+        node: BIAggrTreeState | BILeafTreeState,
+        show_host: bool,
+        frozen_marker_set: bool,
+    ) -> None:
+        if not node[2].get("hidden"):
+            new_path = tuple([*path, node[2]["title"]])
+            frozen_marker = node[2].get("frozen_marker")
+            frozen_aggregation_css = ""
+            tooltip_text = ""
+            if not frozen_marker_set and frozen_marker and self._show_frozen_difference:
+                if frozen_marker.status == "new":
+                    if is_leaf(new_path):
+                        tooltip_text = _("This node is not in the frozen aggregation")
+                    else:
+                        tooltip_text = _("These nodes are not in the frozen aggregation")
+                    frozen_aggregation_css = "frozen_aggregation missing_in_frozen_aggregation"
+                else:
+                    if is_leaf(new_path):
+                        tooltip_text = _("This node is only in the frozen aggregation")
+                    else:
+                        tooltip_text = _("These nodes are only in the frozen aggregation")
+                    frozen_aggregation_css = "frozen_aggregation only_in_frozen_aggregation"
+            html.open_li(class_=frozen_aggregation_css)
+            if frozen_aggregation_css and frozen_marker:
+                html.span(
+                    "+" if frozen_marker.status == "new" else "-",
+                    class_=["frozen_marker", frozen_marker.status],
+                    title=tooltip_text,
+                )
+            self._show_subtree(
+                node,
+                new_path,
+                show_host,
+                frozen_marker_set or bool(frozen_aggregation_css),
+            )
+            html.close_li()
 
     @contextmanager
     def _show_node(  # pylint: disable=too-many-branches
@@ -389,13 +401,19 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
 
 class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
-    def css_class(self):
+    def css_class(self) -> str:
         return "aggrtree_box"
 
-    def _toggle_js_function(self):
+    def _toggle_js_function(self) -> str:
         return "cmk.bi.toggle_box"
 
-    def _show_subtree(self, tree, path, show_host):
+    def _show_subtree(
+        self,
+        tree: BIAggrTreeState | BILeafTreeState,
+        path: tuple[str, ...],
+        show_host: bool,
+        frozen_marker_set: bool = False,
+    ) -> None:
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
             addclass = ["assumed"]
@@ -404,8 +422,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             addclass = []
             effective_state = tree[0]
 
-        is_leaf = self._is_leaf(tree)
-        if is_leaf:
+        if is_leaf(tree):
             leaf = "leaf"
             mc = None
         else:
@@ -428,20 +445,20 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
                 onclick=mc,
             )
 
-            if is_leaf:
+            if is_leaf(tree):
                 self._show_leaf(tree, show_host)
             else:
                 html.write_text(tree[2]["title"].replace(" ", "&nbsp;"))
 
             html.close_span()
 
-        if not is_leaf and not self._omit_content(path):
+        if is_aggr(tree) and not self._omit_content(path):
             html.open_span(
                 class_="bibox",
                 style="display: none;" if not self._is_open(path) and not omit else "",
             )
             for node in tree[3]:
-                new_path = path + [node[2]["title"]]
+                new_path = tuple(list(path) + [node[2]["title"]])
                 self._show_subtree(node, new_path, show_host)
             html.close_span()
 
@@ -456,7 +473,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
 class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
     _mirror = False
 
-    def _show_tree(self):
+    def _show_tree(self) -> None:
         td_style = None if self._wrap_texts == "wrap" else "white-space: nowrap;"
 
         tree = self._get_tree()
@@ -487,18 +504,26 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
 
         html.close_table()
 
-    def _gen_table(self, tree, height, show_host):
-        if self._is_leaf(tree):
+    def _gen_table(
+        self, tree: BIAggrTreeState | BILeafTreeState, height: int, show_host: bool
+    ) -> list[tuple[HTML, int, list]]:
+        if is_leaf(tree):
             return self._gen_leaf(tree, height, show_host)
-        return self._gen_node(tree, height, show_host)
+        if is_aggr(tree):
+            return self._gen_node(tree, height, show_host)
+        raise ValueError("Invalid tree state")
 
-    def _gen_leaf(self, tree, height, show_host):
+    def _gen_leaf(
+        self, tree: BILeafTreeState, height: int, show_host: bool
+    ) -> list[tuple[HTML, int, list]]:
         with output_funnel.plugged():
             self._show_leaf(tree, show_host)
             content = HTML(output_funnel.drain())
         return [(content, height, [])]
 
-    def _gen_node(self, tree, height, show_host):
+    def _gen_node(
+        self, tree: BIAggrTreeState, height: int, show_host: bool
+    ) -> list[tuple[HTML, int, list]]:
         leaves: list[Any] = []
         for node in tree[3]:
             if not node[2].get("hidden"):
@@ -517,8 +542,16 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         return leaves
 
 
-def _status_tree_depth(tree):
-    if len(tree) == 3:
+def is_leaf(tree: BIAggrTreeState | BILeafTreeState) -> TypeGuard[BILeafTreeState]:
+    return len(tree) == 3
+
+
+def is_aggr(tree: BIAggrTreeState | BILeafTreeState) -> TypeGuard[BIAggrTreeState]:
+    return len(tree) == 4
+
+
+def _status_tree_depth(tree: BIAggrTreeState | BILeafTreeState) -> int:
+    if not is_aggr(tree):
         return 1
 
     subtrees = tree[3]

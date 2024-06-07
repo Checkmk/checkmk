@@ -138,11 +138,6 @@ class AjaxFetchAggregationData(AjaxPage):
         return layout_settings
 
 
-TreeState = tuple[dict[str, Any], dict[str, Any], list]
-BIAggrTreeState = tuple[dict[str, Any], Any, dict[str, Any], list]
-BILeafTreeState = tuple[dict[str, Any], Any, dict[str, Any]]
-
-
 class NodeVisualizationBIDataMapper:
     def __init__(self, is_single_host_aggregation=False):
         super().__init__()

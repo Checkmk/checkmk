@@ -18,10 +18,13 @@ from cmk.utils.statename import short_service_state_name
 from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
 from cmk.gui.bi.foldable_tree_renderer import (
     ABCFoldableTreeRenderer,
+    BIAggrTreeState,
+    BILeafTreeState,
     FoldableTreeRendererBottomUp,
     FoldableTreeRendererBoxes,
     FoldableTreeRendererTopDown,
     FoldableTreeRendererTree,
+    is_aggr,
 )
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.hooks import request_memoize
@@ -1024,7 +1027,9 @@ def render_tree_json(  # pylint: disable=redefined-outer-name
         user.set_tree_states("bi", treestate)
         user.save_tree_states()
 
-    def render_node_json(tree, show_host) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+    def render_node_json(
+        tree: BIAggrTreeState | BILeafTreeState, show_host: bool
+    ) -> dict[str, Any]:
         is_leaf = len(tree) == 3
         if is_leaf:
             service = tree[2].get("service")
@@ -1061,17 +1066,18 @@ def render_tree_json(  # pylint: disable=redefined-outer-name
         json_node["output"] = compute_output_message(effective_state, tree[2])
         return json_node
 
-    def render_subtree_json(node, path, show_host) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+    def render_subtree_json(
+        node: BIAggrTreeState | BILeafTreeState, path: Sequence[str], show_host: bool
+    ) -> dict[str, Any]:
         json_node = render_node_json(node, show_host)
 
-        is_leaf = len(node) == 3
         is_next_level_open = len(path) <= expansion_level
 
-        if not is_leaf and is_next_level_open:
+        if is_aggr(node) and is_next_level_open:
             json_node["nodes"] = []
             for child_node in node[3]:
                 if not child_node[2].get("hidden"):
-                    new_path = path + [child_node[2]["title"]]
+                    new_path = [*path, child_node[2]["title"]]
                     json_node["nodes"].append(render_subtree_json(child_node, new_path, show_host))
 
         return json_node

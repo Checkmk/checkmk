@@ -20,10 +20,9 @@ case "$1" in
    set)
        APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/cookie_auth.conf
        NAGVIS_CFG=${OMD_ROOT}/etc/nagvis/conf.d/cookie_auth.ini.php
-       PNP_CFG=${OMD_ROOT}/etc/pnp4nagios/config.d/cookie_auth.php
        if [ "$2" == "on" ]; then
            cat > $APACHE_CFG <<EOF
-<LocationMatch ^/${OMD_SITE}/(omd|wiki|nagvis|check_mk|pnp4nagios)>
+<LocationMatch ^/${OMD_SITE}/(nagvis|check_mk)>
     Order allow,deny
     Allow from all
     Satisfy any
@@ -41,27 +40,9 @@ logon_multisite_cookie_version=1
 EOF
           fi
 
-          if [ -d ${PNP_CFG%/*} ]; then
-              cat > $PNP_CFG <<EOF
-<?php
-// Created by OMD hook MULTISITE_COOKIE_AUTH
-//
-// Using the multisite cookie based authentication when no
-// REMOTE_USER available.
-//
-\$conf['auth_multisite_enabled']    = TRUE;
-\$conf['auth_multisite_htpasswd']   = '/omd/sites/$OMD_SITE/etc/htpasswd';
-\$conf['auth_multisite_secret']     = '/omd/sites/$OMD_SITE/etc/auth.secret';
-\$conf['auth_multisite_serials']    = '/omd/sites/$OMD_SITE/etc/auth.serials';
-\$conf['auth_multisite_login_url']  = '/$OMD_SITE/check_mk/login.py';
-?>
-EOF
-          fi
-
        else
           [ -f $APACHE_CFG ] && rm $APACHE_CFG
           [ -f $NAGVIS_CFG ] && rm $NAGVIS_CFG
-          [ -f $PNP_CFG ] && rm $PNP_CFG
        fi
        true
    ;;

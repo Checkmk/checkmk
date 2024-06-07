@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Any, Final, Generic, NamedTuple, TypeVar
@@ -204,7 +205,9 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
             # management board (SNMP or IPMI) does not support piggybacking
             continue
 
-        piggyback.store_piggyback_raw_data(host_key.hostname, host_sections.piggybacked_raw_data)
+        piggyback.store_piggyback_raw_data(
+            host_key.hostname, host_sections.piggybacked_raw_data, time.time()
+        )
 
 
 def make_providers(

@@ -17,7 +17,7 @@ from typing import NamedTuple, Self
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import piggyback_dir, piggyback_source_dir
-from cmk.utils.store import load_bytes_from_file, makedirs, save_bytes_to_file
+from cmk.utils.store import load_bytes_from_file, makedirs
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +120,7 @@ def remove_source_status_file(source_hostname: HostName) -> bool:
 def store_piggyback_raw_data(
     source_hostname: HostName,
     piggybacked_raw_data: Mapping[HostName, Sequence[bytes]],
+    timestamp: float,
 ) -> None:
     if not piggybacked_raw_data:
         # Cleanup the status file when no piggyback data was sent this turn.
@@ -134,7 +135,9 @@ def store_piggyback_raw_data(
         # Raw data is always stored as bytes. Later the content is
         # converted to unicode in abstact.py:_parse_info which respects
         # 'encoding' in section options.
-        save_bytes_to_file(piggyback_file_path, b"%s\n" % b"\n".join(lines))
+        _write_file_with_mtime(
+            file_path=piggyback_file_path, content=b"%s\n" % b"\n".join(lines), mtime=timestamp
+        )
         piggyback_file_paths.append(piggyback_file_path)
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
@@ -142,40 +145,26 @@ def store_piggyback_raw_data(
     # Only do this for hosts that sent piggyback data this turn.
     logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
     status_file_path = _get_source_status_file_path(source_hostname)
-    _store_status_file_of(status_file_path, piggyback_file_paths)
+    _write_file_with_mtime(file_path=status_file_path, content=b"", mtime=timestamp)
 
 
-def _store_status_file_of(
-    status_file_path: Path,
-    piggyback_file_paths: Iterable[Path],
+def _write_file_with_mtime(
+    file_path: Path,
+    content: bytes,
+    mtime: float,
 ) -> None:
-    makedirs(status_file_path.parent)
+    """Create a file with the given mtime in a race-condition free manner"""
+    makedirs(file_path.parent)
 
-    # Cannot use store.save_bytes_to_file like:
-    # 1. store.save_bytes_to_file(status_file_path, b"")
-    # 2. set utime of piggybacked host files
-    # Between 1. and 2.:
-    # - the piggybacked host may check its files
-    # - status file is newer (before utime of piggybacked host files is set)
-    # => piggybacked host file is outdated
     with tempfile.NamedTemporaryFile(
-        "wb", dir=str(status_file_path.parent), prefix=f".{status_file_path.name}.new", delete=False
+        "wb", dir=str(file_path.parent), prefix=f".{file_path.name}.new", delete=False
     ) as tmp:
         tmp_path = tmp.name
-        tmp.write(b"")
+        tmp.write(content)
 
-        tmp_stats = os.stat(tmp_path)
-        status_file_times = (tmp_stats.st_atime, tmp_stats.st_mtime)
-        for piggyback_file_path in piggyback_file_paths:
-            try:
-                # TODO use Path.stat() but be aware of:
-                # On POSIX platforms Python reads atime and mtime at nanosecond resolution
-                # but only writes them at microsecond resolution.
-                # (We're using os.utime() in _store_status_file_of())
-                os.utime(str(piggyback_file_path), status_file_times)
-            except FileNotFoundError:
-                continue
-    os.rename(tmp_path, str(status_file_path))
+    tmp_stats = os.stat(tmp_path)
+    os.utime(tmp_path, (tmp_stats.st_atime, mtime))
+    os.rename(tmp_path, str(file_path))
 
 
 #   .--folders/files-------------------------------------------------------.

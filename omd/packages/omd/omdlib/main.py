@@ -1715,7 +1715,7 @@ def config_configure_hook(
 def init_action(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: GlobalOptions,
+    _global_opts: object,
     command: str,
     args: Arguments,
     options: CommandOptions,
@@ -1988,11 +1988,11 @@ def main_help(
 
 
 def main_setversion(
-    version_info: VersionInfo,
+    _version_info: object,
     _site: object,
-    global_opts: GlobalOptions,
+    _global_opts: object,
     args: Arguments,
-    options: CommandOptions,
+    _options: object,
     versions_path: Path = Path("/omd/versions/"),
 ) -> None:
     if len(args) == 0:
@@ -2048,7 +2048,7 @@ def main_create(
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
-    args: Arguments,
+    _args: object,
     options: CommandOptions,
 ) -> None:
     reuse = False
@@ -2118,7 +2118,7 @@ def main_init(
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
-    args: Arguments,
+    _args: object,
     options: CommandOptions,
 ) -> None:
     if not is_disabled(SitePaths.from_site_name(site.name).apache_conf):
@@ -2284,7 +2284,7 @@ def main_rm(
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
-    args: Arguments,
+    _args: object,
     options: CommandOptions,
 ) -> None:
     # omd rm is called as root but the init scripts need to be called as
@@ -2350,7 +2350,7 @@ def main_disable(
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
-    args: Arguments,
+    _args: object,
     options: CommandOptions,
 ) -> None:
     if is_disabled(SitePaths.from_site_name(site.name).apache_conf):
@@ -2372,8 +2372,8 @@ def main_enable(
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
-    args: Arguments,
-    options: CommandOptions,
+    _args: object,
+    _options: object,
 ) -> None:
     if not is_disabled(SitePaths.from_site_name(site.name).apache_conf):
         sys.stderr.write("This site is already enabled.\n")
@@ -2395,8 +2395,8 @@ def main_update_apache_config(
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
-    args: Arguments,
-    options: CommandOptions,
+    _args: object,
+    _options: object,
 ) -> None:
     site.load_config(load_defaults(site))
     if _is_apache_enabled(site):
@@ -2553,7 +2553,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
 
 
 def main_diff(
-    version_info: VersionInfo,
+    _version_info: object,
     site: SiteContext,
     global_opts: GlobalOptions,
     args: Arguments,
@@ -2723,7 +2723,7 @@ def main_update(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
-    args: Arguments,
+    _args: object,
     options: CommandOptions,
     versions_path: Path = Path("/omd/versions/"),
 ) -> None:
@@ -3040,10 +3040,10 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
 
 
 def main_umount(
-    version_info: VersionInfo,
+    _version_info: object,
     site: SiteContext,
-    global_opts: GlobalOptions,
-    args: Arguments,
+    _global_opts: object,
+    _args: object,
     options: CommandOptions,
 ) -> None:
     only_version = options.get("version")
@@ -3246,7 +3246,7 @@ def main_config(  # pylint: disable=too-many-branches
     site: SiteContext,
     global_opts: GlobalOptions,
     args: Arguments,
-    options: CommandOptions,
+    _options: object,
 ) -> None:
     if (not args or args[0] != "show") and not site.is_stopped() and global_opts.force:
         need_start = True
@@ -3281,11 +3281,11 @@ def main_config(  # pylint: disable=too-many-branches
 
 
 def main_su(
-    version_info: VersionInfo,
+    _version_info: object,
     site: SiteContext,
-    global_opts: GlobalOptions,
-    args: Arguments,
-    options: CommandOptions,
+    _global_opts: object,
+    _args: object,
+    _options: object,
 ) -> None:
     try:
         os.execl("/bin/su", "su", "-", "%s" % site.name)
@@ -3310,7 +3310,7 @@ def _try_backup_site_to_tarfile(
 
 
 def main_backup(
-    version_info: VersionInfo,
+    _version_info: object,
     site: SiteContext,
     global_opts: GlobalOptions,
     args: Arguments,
@@ -3692,9 +3692,9 @@ def postprocess_restore_as_site_user(
 def main_cleanup(
     version_info: VersionInfo,
     _site: object,
-    global_opts: GlobalOptions,
-    args: Arguments,
-    options: CommandOptions,
+    _global_opts: object,
+    _args: object,
+    _options: object,
     versions_path: Path = Path("/omd/versions/"),
 ) -> None:
     package_manager = PackageManager.factory(version_info)
@@ -4670,7 +4670,7 @@ def main() -> None:  # pylint: disable=too-many-branches
                 global_opts, main_args = handle_global_option(global_opts, main_args, c, opt)
 
     if len(main_args) < 1:
-        main_help(version_info, object(), global_opts)
+        main_help(object(), object())
         sys.exit(1)
 
     args = main_args[1:]
@@ -4678,7 +4678,7 @@ def main() -> None:  # pylint: disable=too-many-branches
     if global_opts.verbose:
         logger.setLevel(VERBOSE)
 
-    command = _get_command(version_info, global_opts, main_args[0])
+    command = _get_command(main_args[0])
 
     if not is_root() and command.only_root:
         bail_out("omd: root permissions are needed for this command.")
@@ -4727,17 +4727,13 @@ def default_global_options() -> GlobalOptions:
     )
 
 
-def _get_command(
-    version_info: VersionInfo,
-    global_opts: GlobalOptions,
-    command_arg: str,
-) -> Command:
+def _get_command(command_arg: str) -> Command:
     for command in COMMANDS:
         if command.command == command_arg:
             return command
 
     sys.stderr.write("omd: no such command: %s\n" % command_arg)
-    main_help(version_info, object(), global_opts)
+    main_help(object(), object())
     sys.exit(1)
 
 

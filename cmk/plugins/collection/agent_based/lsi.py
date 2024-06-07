@@ -56,7 +56,7 @@ def discover_lsi_array(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section["arrays"])
 
 
-def check_lsi_array(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_lsi_array(item: str, params: object, section: Section) -> CheckResult:
     state = section["arrays"].get(item)
     if state is None:
         yield Result(state=State.CRIT, summary="RAID volume %s not existing" % item)

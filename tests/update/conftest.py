@@ -72,7 +72,9 @@ class BaseVersions:
         BASE_VERSIONS_STR = json.load(f)
 
     if version_from_env().is_saas_edition():
-        BASE_VERSIONS = [CMKVersion(CMKVersion.DAILY, edition_from_env(Edition.CSE))]
+        BASE_VERSIONS = [
+            CMKVersion(CMKVersion.DAILY, edition_from_env(Edition.CSE), "2.3.0", "2.3.0")
+        ]
     else:
         BASE_VERSIONS = [
             CMKVersion(base_version_str, edition_from_env(Edition.CEE))

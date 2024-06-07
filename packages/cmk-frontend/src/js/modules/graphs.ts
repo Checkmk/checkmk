@@ -708,22 +708,15 @@ function render_graph(graph: GraphArtwork) {
         } else {
             // "line"
             ctx.save();
-            ctx.beginPath();
             ctx.strokeStyle = color;
             ctx.lineWidth = curve_line_width;
-            let last_value: TimeSeriesValue = null;
-            for (j = 0; j < points.length; j++) {
-                const value = points[j] as TimeSeriesValue;
-                if (value != null) {
-                    const p = coordinate_trans.trans(t, value);
-                    if (last_value != null) ctx.lineTo(p[0], p[1]);
-                    else ctx.moveTo(p[0], p[1]);
-                }
-                last_value = value;
-                t += step;
-            }
-            ctx.stroke();
-            ctx.closePath();
+            render_curve(
+                graph["start_time"],
+                step,
+                coordinate_trans,
+                points as TimeSeriesValue[],
+                ctx
+            );
             ctx.restore();
         }
     }
@@ -831,6 +824,41 @@ class GraphCoordinateTransformation {
     trans(t: number, v: number): [number, number] {
         return [this.trans_t(t), this.trans_v(v)];
     }
+}
+
+function render_curve(
+    start_time: number,
+    time_step_size: number,
+    coordinate_tranformation: GraphCoordinateTransformation,
+    v_points: TimeSeriesValue[],
+    ctx: CanvasRenderingContext2D
+) {
+    let t = start_time;
+    let should_connect_to_previous_point = false;
+    let i;
+    ctx.beginPath();
+
+    for (i = 0; i < v_points.length; i++) {
+        const value = v_points[i] as TimeSeriesValue;
+
+        if (value == null) {
+            should_connect_to_previous_point = false;
+            t += time_step_size;
+            continue;
+        }
+
+        const p = coordinate_tranformation.trans(t, value);
+        if (should_connect_to_previous_point) {
+            ctx.lineTo(p[0], p[1]);
+        } else {
+            ctx.moveTo(p[0], p[1]);
+        }
+        should_connect_to_previous_point = true;
+        t += time_step_size;
+    }
+
+    ctx.stroke();
+    ctx.closePath();
 }
 
 function hex_to_rgba(color: string) {

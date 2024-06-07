@@ -632,9 +632,8 @@ function render_graph(graph: GraphArtwork) {
     // Paint curves
     const curves = graph["curves"];
     const step = graph["step"] / 2.0;
-    let i, j, color, opacity;
+    let i, color, opacity;
     for (let i = 0; i < curves.length; i++) {
-        let t = graph["start_time"];
         const curve = curves[i];
         const points = curve["points"];
         // the hex color code can have additional opacity information
@@ -671,44 +670,13 @@ function render_graph(graph: GraphArtwork) {
                 }),
                 ctx
             );
-
-            let prev_lower: TimeSeriesValue = null;
-            let prev_upper: TimeSeriesValue = null;
-            for (j = 0; j < points.length; j++) {
-                const point = points[j] as [TimeSeriesValue, TimeSeriesValue];
-                const lower = point[0];
-                const upper = point[1];
-                if (
-                    lower != null &&
-                    upper != null &&
-                    prev_lower != null &&
-                    prev_upper != null
-                ) {
-                    ctx.beginPath();
-                    ctx.moveTo(
-                        coordinate_trans.trans_t(t - step),
-                        coordinate_trans.trans_v(prev_lower)
-                    );
-                    ctx.lineTo(
-                        coordinate_trans.trans_t(t - step),
-                        coordinate_trans.trans_v(prev_upper)
-                    );
-                    ctx.lineTo(
-                        coordinate_trans.trans_t(t),
-                        coordinate_trans.trans_v(upper)
-                    );
-                    ctx.lineTo(
-                        coordinate_trans.trans_t(t),
-                        coordinate_trans.trans_v(lower)
-                    );
-                    ctx.closePath();
-                    ctx.fill();
-                }
-                prev_lower = lower;
-                prev_upper = upper;
-                t += step;
-            }
-
+            render_area(
+                graph["start_time"],
+                step,
+                coordinate_trans,
+                corner_markers,
+                ctx
+            );
             ctx.restore();
         } else {
             // "line"
@@ -864,6 +832,61 @@ function render_curve(
 
     ctx.stroke();
     ctx.closePath();
+}
+
+function render_area(
+    start_time: number,
+    time_step_size: number,
+    coordinate_tranformation: GraphCoordinateTransformation,
+    corner_markers: [TimeSeriesValue, TimeSeriesValue][],
+    ctx: CanvasRenderingContext2D
+) {
+    let t = start_time;
+    let prev_lower: TimeSeriesValue = null;
+    let prev_upper: TimeSeriesValue = null;
+    let i;
+
+    for (i = 0; i < corner_markers.length; i++) {
+        const [lower, upper] = corner_markers[i] as [
+            TimeSeriesValue,
+            TimeSeriesValue
+        ];
+        if (
+            lower == null ||
+            upper == null ||
+            prev_lower == null ||
+            prev_upper == null
+        ) {
+            prev_lower = lower;
+            prev_upper = upper;
+            t += time_step_size;
+            continue;
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(
+            coordinate_tranformation.trans_t(t - time_step_size),
+            coordinate_tranformation.trans_v(prev_lower)
+        );
+        ctx.lineTo(
+            coordinate_tranformation.trans_t(t - time_step_size),
+            coordinate_tranformation.trans_v(prev_upper)
+        );
+        ctx.lineTo(
+            coordinate_tranformation.trans_t(t),
+            coordinate_tranformation.trans_v(upper)
+        );
+        ctx.lineTo(
+            coordinate_tranformation.trans_t(t),
+            coordinate_tranformation.trans_v(lower)
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        prev_lower = lower;
+        prev_upper = upper;
+        t += time_step_size;
+    }
 }
 
 function hex_to_rgba(color: string) {

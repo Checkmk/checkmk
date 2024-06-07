@@ -3739,6 +3739,13 @@ msgstr "ホストグループの追加"
 msgid "Add host to the monitoring"
 msgstr "ホストを監視対象に追加"
 
+#, fuzzy
+msgid "Add host to use this action"
+msgstr "ホストを監視対象に追加"
+
+msgid "Add host/subfolder to use this action"
+msgstr ""
+
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
 "also add the permission <i>Modify existing hosts</i>."
@@ -17363,12 +17370,6 @@ msgid ""
 msgstr ""
 "パスワードを無効にすると、ユーザーは元のパスワードを保持したままログインでき"
 "なくなります。通知はこの設定の影響を受けません。"
-
-msgid "Discard changes"
-msgstr "変更の破棄"
-
-msgid "Discard foreign changes"
-msgstr "他の人の変更を破棄する"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -46751,6 +46752,10 @@ msgstr "変更の取り消し"
 msgid "Revert changes?"
 msgstr "変更を取り消しますか?"
 
+#, fuzzy
+msgid "Revert foreign changes"
+msgstr "外国の変更を有効にする"
+
 msgid "Revolutions per minute"
 msgstr "1分あたりの回転数"
 
@@ -61306,8 +61311,9 @@ msgid ""
 msgstr ""
 "この権限により、イベントコンソールのグローバル設定を行うことができます。"
 
+#, fuzzy
 msgid ""
-"This permission allows to discard pending changes. Beware that this holds "
+"This permission allows to revert pending changes. Beware that this holds "
 "only for the user's own pending changes, not for those of other users "
 "(foreign changes)."
 msgstr ""
@@ -72007,10 +72013,11 @@ msgstr ""
 "に、異なるユーザーによる保留中の変更が積み重なる可能性があります。この権限が"
 "ある場合のみ、ユーザーは現在の設定を有効にすることができます。"
 
+#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
 "of different users might pile up before changes are activated. Only with "
-"this permission a user will be allowed to discard all pending changes, "
+"this permission a user will be allowed to revert all pending changes, "
 "including foreign ones."
 msgstr ""
 "複数のユーザーがセットアップと並行して作業している場合、変更が有効化される前"
@@ -77435,6 +77442,12 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Discard changes"
+#~ msgstr "変更の破棄"
+
+#~ msgid "Discard foreign changes"
+#~ msgstr "他の人の変更を破棄する"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

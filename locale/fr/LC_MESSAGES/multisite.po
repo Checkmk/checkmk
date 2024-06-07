@@ -3870,6 +3870,13 @@ msgstr "Ajouter un groupe d'hôtes"
 msgid "Add host to the monitoring"
 msgstr "Ajouter un hôte à la surveillance"
 
+#, fuzzy
+msgid "Add host to use this action"
+msgstr "Ajouter un hôte à la surveillance"
+
+msgid "Add host/subfolder to use this action"
+msgstr ""
+
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
 "also add the permission <i>Modify existing hosts</i>."
@@ -17925,14 +17932,6 @@ msgstr ""
 "La désactivation du mot de passe empêchera un utilisateur de se connecter "
 "tout en conservant le mot de passe original. Les notifications ne sont pas "
 "affectées par ce paramètre."
-
-#, fuzzy
-msgid "Discard changes"
-msgstr "%d changements"
-
-#, fuzzy
-msgid "Discard foreign changes"
-msgstr "Activer les changements étrangers"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -48183,6 +48182,10 @@ msgstr "Variation des stocks"
 msgid "Revert changes?"
 msgstr ""
 
+#, fuzzy
+msgid "Revert foreign changes"
+msgstr "Activer les changements étrangers"
+
 msgid "Revolutions per minute"
 msgstr "Révolutions par minute"
 
@@ -63456,7 +63459,7 @@ msgstr ""
 "d'événements."
 
 msgid ""
-"This permission allows to discard pending changes. Beware that this holds "
+"This permission allows to revert pending changes. Beware that this holds "
 "only for the user's own pending changes, not for those of other users "
 "(foreign changes)."
 msgstr ""
@@ -74568,7 +74571,7 @@ msgstr ""
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
 "of different users might pile up before changes are activated. Only with "
-"this permission a user will be allowed to discard all pending changes, "
+"this permission a user will be allowed to revert all pending changes, "
 "including foreign ones."
 msgstr ""
 "Lorsque plusieurs utilisateurs travaillent en parallèle avec l'installation, "
@@ -80259,6 +80262,14 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#, fuzzy
+#~ msgid "Discard changes"
+#~ msgstr "%d changements"
+
+#, fuzzy
+#~ msgid "Discard foreign changes"
+#~ msgstr "Activer les changements étrangers"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

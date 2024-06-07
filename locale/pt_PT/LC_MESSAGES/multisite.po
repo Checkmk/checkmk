@@ -3823,6 +3823,13 @@ msgstr "Adicionar grupo anfitrião"
 msgid "Add host to the monitoring"
 msgstr "Adicionar o anfitrião ao monitoramento"
 
+#, fuzzy
+msgid "Add host to use this action"
+msgstr "Adicionar o anfitrião ao monitoramento"
+
+msgid "Add host/subfolder to use this action"
+msgstr ""
+
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
 "also add the permission <i>Modify existing hosts</i>."
@@ -17762,12 +17769,6 @@ msgid ""
 msgstr ""
 "Desativar a senha impedirá que um usuário faça o login enquanto mantém a "
 "senha original. Notificações não são afetadas por esta configuração."
-
-msgid "Discard changes"
-msgstr "Rejeitar alterações"
-
-msgid "Discard foreign changes"
-msgstr "Rejeitar alterações estrangeiras"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -47686,6 +47687,10 @@ msgstr "Reverter alterações"
 msgid "Revert changes?"
 msgstr "Reverter as alterações?"
 
+#, fuzzy
+msgid "Revert foreign changes"
+msgstr "Ativar mudanças estrangeiras"
+
 msgid "Revolutions per minute"
 msgstr "Revoluções por minuto"
 
@@ -62745,8 +62750,9 @@ msgstr ""
 "Esta permissão permite configurar as definições globais da consola de "
 "eventos."
 
+#, fuzzy
 msgid ""
-"This permission allows to discard pending changes. Beware that this holds "
+"This permission allows to revert pending changes. Beware that this holds "
 "only for the user's own pending changes, not for those of other users "
 "(foreign changes)."
 msgstr ""
@@ -73702,10 +73708,11 @@ msgstr ""
 "as alterações serem activadas. Só com esta permissão é que um utilizador "
 "pode ativar a configuração atual se esta situação se verificar."
 
+#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
 "of different users might pile up before changes are activated. Only with "
-"this permission a user will be allowed to discard all pending changes, "
+"this permission a user will be allowed to revert all pending changes, "
 "including foreign ones."
 msgstr ""
 "Quando vários utilizadores trabalham em paralelo com a Configuração, várias "
@@ -79289,6 +79296,12 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Discard changes"
+#~ msgstr "Rejeitar alterações"
+
+#~ msgid "Discard foreign changes"
+#~ msgstr "Rejeitar alterações estrangeiras"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

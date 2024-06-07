@@ -3862,6 +3862,13 @@ msgstr "Añadir grupo de hosts"
 msgid "Add host to the monitoring"
 msgstr "Añadir el host a la supervisión"
 
+#, fuzzy
+msgid "Add host to use this action"
+msgstr "Añadir el host a la supervisión"
+
+msgid "Add host/subfolder to use this action"
+msgstr ""
+
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
 "also add the permission <i>Modify existing hosts</i>."
@@ -17929,14 +17936,6 @@ msgstr ""
 "Si se desactiva la contraseña, el usuario no podrá iniciar la sesión y "
 "conservará la contraseña original. Las notificaciones no se ven afectadas "
 "por esta configuración."
-
-#, fuzzy
-msgid "Discard changes"
-msgstr "%d cambios"
-
-#, fuzzy
-msgid "Discard foreign changes"
-msgstr "Activar los cambios en el extranjero"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -48166,6 +48165,10 @@ msgstr "Cambios en el inventario"
 msgid "Revert changes?"
 msgstr "Cambios en el inventario"
 
+#, fuzzy
+msgid "Revert foreign changes"
+msgstr "Activar los cambios en el extranjero"
+
 msgid "Revolutions per minute"
 msgstr "Revoluciones por minuto"
 
@@ -63404,8 +63407,9 @@ msgstr ""
 "Este permiso permite configurar los ajustes globales de la consola de "
 "eventos."
 
+#, fuzzy
 msgid ""
-"This permission allows to discard pending changes. Beware that this holds "
+"This permission allows to revert pending changes. Beware that this holds "
 "only for the user's own pending changes, not for those of other users "
 "(foreign changes)."
 msgstr ""
@@ -74471,7 +74475,7 @@ msgstr ""
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
 "of different users might pile up before changes are activated. Only with "
-"this permission a user will be allowed to discard all pending changes, "
+"this permission a user will be allowed to revert all pending changes, "
 "including foreign ones."
 msgstr ""
 "Cuando varios usuarios trabajan en paralelo con la Configuración, pueden "
@@ -80121,6 +80125,14 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~ msgid "Discard changes"
+#~ msgstr "%d cambios"
+
+#, fuzzy
+#~ msgid "Discard foreign changes"
+#~ msgstr "Activar los cambios en el extranjero"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

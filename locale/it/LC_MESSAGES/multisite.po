@@ -3803,6 +3803,13 @@ msgstr "Aggiungere il gruppo di host"
 msgid "Add host to the monitoring"
 msgstr "Aggiungere l'host al monitoraggio"
 
+#, fuzzy
+msgid "Add host to use this action"
+msgstr "Aggiungere l'host al monitoraggio"
+
+msgid "Add host/subfolder to use this action"
+msgstr ""
+
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
 "also add the permission <i>Modify existing hosts</i>."
@@ -17593,12 +17600,6 @@ msgstr ""
 "Disabilitando la password si impedisce a un utente di accedere, mantenendo "
 "la password originale. Le notifiche non sono interessate da questa "
 "impostazione."
-
-msgid "Discard changes"
-msgstr "Scartare le modifiche"
-
-msgid "Discard foreign changes"
-msgstr "Scartare le modifiche estranee"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -47241,6 +47242,10 @@ msgstr "Annullamento delle modifiche"
 msgid "Revert changes?"
 msgstr "Ripristinare le modifiche?"
 
+#, fuzzy
+msgid "Revert foreign changes"
+msgstr "Attivare i cambiamenti stranieri"
+
 msgid "Revolutions per minute"
 msgstr "Giri al minuto"
 
@@ -62206,7 +62211,7 @@ msgstr ""
 "console eventi."
 
 msgid ""
-"This permission allows to discard pending changes. Beware that this holds "
+"This permission allows to revert pending changes. Beware that this holds "
 "only for the user's own pending changes, not for those of other users "
 "(foreign changes)."
 msgstr ""
@@ -73050,10 +73055,11 @@ msgstr ""
 "attivate. Solo con questa autorizzazione un utente potrà attivare la "
 "configurazione corrente se si verifica questa situazione."
 
+#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
 "of different users might pile up before changes are activated. Only with "
-"this permission a user will be allowed to discard all pending changes, "
+"this permission a user will be allowed to revert all pending changes, "
 "including foreign ones."
 msgstr ""
 "Quando più utenti lavorano in parallelo con Setup, le modifiche in sospeso "
@@ -78613,6 +78619,12 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Discard changes"
+#~ msgstr "Scartare le modifiche"
+
+#~ msgid "Discard foreign changes"
+#~ msgstr "Scartare le modifiche estranee"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

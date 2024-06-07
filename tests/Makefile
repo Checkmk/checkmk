@@ -259,6 +259,14 @@ test-update-cce:
 test-update-cse:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cse --log-cli-level=INFO
 
+test-update-cross-edition-cce: # from CEE to CCE
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
+	--latest-base-version --target-edition=CCE
+
+test-update-cross-edition-cme: # from CEE to CME
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
+	--latest-base-version --target-edition=CME
+
 test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
 

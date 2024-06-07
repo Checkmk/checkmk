@@ -559,15 +559,14 @@ function render_graph(graph: GraphArtwork) {
     // Now transform the whole coordinate system to our real t and v coords
     // so if we paint something at (0, 0) it will correctly represent a
     // value of 0 and a time point of time_start.
-    const trans_t = function (t: number) {
-        return (t - t_range_from) * t_pixels_per_second + t_orig;
-    };
-    const trans_v = function (v: number) {
-        return v_orig - (v - v_axis_orig) * v_pixels_per_unit;
-    };
-    const trans = function (t: number, v: number): [number, number] {
-        return [trans_t(t), trans_v(v)];
-    };
+    const coordinate_trans = new GraphCoordinateTransformation(
+        t_orig,
+        t_range_from,
+        t_pixels_per_second,
+        v_orig,
+        v_axis_orig,
+        v_pixels_per_unit
+    );
 
     // render grid
     if (!graph.render_config.preview) {
@@ -582,8 +581,14 @@ function render_graph(graph: GraphArtwork) {
             vertical_axis_label = vertical_axis_labels[i];
             if (vertical_axis_label.line_width > 0) {
                 paint_line(
-                    trans(t_range_from, vertical_axis_label.position),
-                    trans(t_range_to, vertical_axis_label.position),
+                    coordinate_trans.trans(
+                        t_range_from,
+                        vertical_axis_label.position
+                    ),
+                    coordinate_trans.trans(
+                        t_range_to,
+                        vertical_axis_label.position
+                    ),
                     v_line_color[vertical_axis_label.line_width]
                 );
             }
@@ -592,7 +597,10 @@ function render_graph(graph: GraphArtwork) {
                 ctx.fillText(
                     vertical_axis_label.text,
                     t_orig - v_label_margin,
-                    trans(t_range_from, vertical_axis_label.position)[1]
+                    coordinate_trans.trans(
+                        t_range_from,
+                        vertical_axis_label.position
+                    )[1]
                 );
         }
         ctx.restore();
@@ -606,8 +614,14 @@ function render_graph(graph: GraphArtwork) {
             time_axis_label = time_axis_labels[i];
             if (time_axis_label.line_width > 0) {
                 paint_line(
-                    trans(time_axis_label.position, v_range_from),
-                    trans(time_axis_label.position, v_range_to),
+                    coordinate_trans.trans(
+                        time_axis_label.position,
+                        v_range_from
+                    ),
+                    coordinate_trans.trans(
+                        time_axis_label.position,
+                        v_range_to
+                    ),
                     v_line_color[time_axis_label.line_width]
                 );
             }
@@ -651,10 +665,22 @@ function render_graph(graph: GraphArtwork) {
                     prev_upper != null
                 ) {
                     ctx.beginPath();
-                    ctx.moveTo(trans_t(t - step), trans_v(prev_lower));
-                    ctx.lineTo(trans_t(t - step), trans_v(prev_upper));
-                    ctx.lineTo(trans_t(t), trans_v(upper));
-                    ctx.lineTo(trans_t(t), trans_v(lower));
+                    ctx.moveTo(
+                        coordinate_trans.trans_t(t - step),
+                        coordinate_trans.trans_v(prev_lower)
+                    );
+                    ctx.lineTo(
+                        coordinate_trans.trans_t(t - step),
+                        coordinate_trans.trans_v(prev_upper)
+                    );
+                    ctx.lineTo(
+                        coordinate_trans.trans_t(t),
+                        coordinate_trans.trans_v(upper)
+                    );
+                    ctx.lineTo(
+                        coordinate_trans.trans_t(t),
+                        coordinate_trans.trans_v(lower)
+                    );
                     ctx.closePath();
                     ctx.fill();
 
@@ -663,10 +689,15 @@ function render_graph(graph: GraphArtwork) {
                     ctx.lineWidth = curve_line_width;
                     const mirrored = upper <= 0;
                     ctx.moveTo(
-                        trans_t(t - step),
-                        trans_v(mirrored ? prev_lower : prev_upper)
+                        coordinate_trans.trans_t(t - step),
+                        coordinate_trans.trans_v(
+                            mirrored ? prev_lower : prev_upper
+                        )
                     );
-                    ctx.lineTo(trans_t(t), trans_v(mirrored ? lower : upper));
+                    ctx.lineTo(
+                        coordinate_trans.trans_t(t),
+                        coordinate_trans.trans_v(mirrored ? lower : upper)
+                    );
                     ctx.stroke();
                 }
                 prev_lower = lower;
@@ -684,7 +715,7 @@ function render_graph(graph: GraphArtwork) {
             for (j = 0; j < points.length; j++) {
                 const value = points[j] as TimeSeriesValue;
                 if (value != null) {
-                    const p = trans(t, value);
+                    const p = coordinate_trans.trans(t, value);
                     if (last_value != null) ctx.lineTo(p[0], p[1]);
                     else ctx.moveTo(p[0], p[1]);
                 }
@@ -709,7 +740,7 @@ function render_graph(graph: GraphArtwork) {
                 // @ts-ignore
                 ctx.fillText(
                     time_axis_label.text,
-                    trans(time_axis_label.position, 0)[0],
+                    coordinate_trans.trans(time_axis_label.position, 0)[0],
                     v_orig + t_label_margin
                 );
             }
@@ -727,8 +758,8 @@ function render_graph(graph: GraphArtwork) {
         color = rules[i][2];
         if (position >= v_range_from && position <= v_range_to) {
             paint_line(
-                trans(t_range_from, position),
-                trans(t_range_to, position),
+                coordinate_trans.trans(t_range_from, position),
+                coordinate_trans.trans(t_range_to, position),
                 color
             );
         }
@@ -737,7 +768,7 @@ function render_graph(graph: GraphArtwork) {
 
     // paint the optional pin
     if (graph.render_config.show_pin && graph.pin_time != null) {
-        const pin_x = trans_t(graph.pin_time);
+        const pin_x = coordinate_trans.trans_t(graph.pin_time);
         if (pin_x >= t_orig) {
             paint_line(
                 [pin_x, v_orig + axis_over_width],
@@ -749,7 +780,7 @@ function render_graph(graph: GraphArtwork) {
     }
     // paint forecast graph future start
     if (graph.mark_requested_end_time) {
-        const pin_x = trans_t(graph.requested_end_time);
+        const pin_x = coordinate_trans.trans_t(graph.requested_end_time);
         if (pin_x >= t_orig) {
             paint_line(
                 [pin_x, v_orig + axis_over_width],
@@ -761,6 +792,45 @@ function render_graph(graph: GraphArtwork) {
 
     // Enable interactive mouse control of graph
     graph_activate_mouse_control(graph);
+}
+
+// Transforms the graph coordinate system to our real t and v coordinates.
+// (0, 0) is at the top left corner of the canvas.
+class GraphCoordinateTransformation {
+    t_orig: number;
+    t_range_from: number;
+    t_pixels_per_second: number;
+    v_orig: number;
+    v_axis_orig: number;
+    v_pixels_per_unit: number;
+
+    constructor(
+        t_orig: number,
+        t_range_from: number,
+        t_pixels_per_second: number,
+        v_orig: number,
+        v_axis_orig: number,
+        v_pixels_per_unit: number
+    ) {
+        this.t_orig = t_orig;
+        this.t_range_from = t_range_from;
+        this.t_pixels_per_second = t_pixels_per_second;
+        this.v_orig = v_orig;
+        this.v_axis_orig = v_axis_orig;
+        this.v_pixels_per_unit = v_pixels_per_unit;
+    }
+
+    trans_t(t: number): number {
+        return (t - this.t_range_from) * this.t_pixels_per_second + this.t_orig;
+    }
+
+    trans_v(v: number): number {
+        return this.v_orig - (v - this.v_axis_orig) * this.v_pixels_per_unit;
+    }
+
+    trans(t: number, v: number): [number, number] {
+        return [this.trans_t(t), this.trans_v(v)];
+    }
 }
 
 function hex_to_rgba(color: string) {

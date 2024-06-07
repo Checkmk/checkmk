@@ -2241,6 +2241,7 @@ pub async fn obtain_instance_builders(
     endpoint: &Endpoint,
     instances: &[&InstanceName],
 ) -> Result<Vec<SqlInstanceBuilder>> {
+    log::info!("Finding instances...");
     match client::connect_main_endpoint(endpoint).await {
         Ok(mut client) => Ok(_obtain_instance_builders(&mut client, endpoint).await),
         Err(err) => {

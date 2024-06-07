@@ -648,12 +648,32 @@ function render_graph(graph: GraphArtwork) {
         }
 
         if (curve["type"] == "area") {
-            let prev_lower: TimeSeriesValue = null;
-            let prev_upper: TimeSeriesValue = null;
+            const corner_markers = points as [
+                TimeSeriesValue,
+                TimeSeriesValue
+            ][];
+
             ctx.save();
             ctx.fillStyle = hex_to_rgba(color + opacity);
             ctx.imageSmoothingEnabled = true; // seems no difference on FF
+            ctx.strokeStyle = color;
+            ctx.lineWidth = curve_line_width;
+            render_curve(
+                graph["start_time"],
+                step,
+                coordinate_trans,
+                corner_markers.map(([lower, upper]) => {
+                    if (lower == null || upper == null) {
+                        return null;
+                    } else {
+                        return upper <= 0 ? lower : upper;
+                    }
+                }),
+                ctx
+            );
 
+            let prev_lower: TimeSeriesValue = null;
+            let prev_upper: TimeSeriesValue = null;
             for (j = 0; j < points.length; j++) {
                 const point = points[j] as [TimeSeriesValue, TimeSeriesValue];
                 const lower = point[0];
@@ -683,27 +703,12 @@ function render_graph(graph: GraphArtwork) {
                     );
                     ctx.closePath();
                     ctx.fill();
-
-                    ctx.beginPath();
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = curve_line_width;
-                    const mirrored = upper <= 0;
-                    ctx.moveTo(
-                        coordinate_trans.trans_t(t - step),
-                        coordinate_trans.trans_v(
-                            mirrored ? prev_lower : prev_upper
-                        )
-                    );
-                    ctx.lineTo(
-                        coordinate_trans.trans_t(t),
-                        coordinate_trans.trans_v(mirrored ? lower : upper)
-                    );
-                    ctx.stroke();
                 }
                 prev_lower = lower;
                 prev_upper = upper;
                 t += step;
             }
+
             ctx.restore();
         } else {
             // "line"

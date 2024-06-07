@@ -41,6 +41,7 @@ from ._display_hints import (
     NodeDisplayHint,
 )
 from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
+from .registry import PaintFunction
 
 
 @request_memoize()
@@ -317,7 +318,7 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDVal
 
 
 def _paint_host_inventory_attribute(
-    row: Row, path: SDPath, key: SDKey, hint: AttributeDisplayHint
+    row: Row, path: SDPath, key: SDKey, paint_function: PaintFunction
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
@@ -327,7 +328,7 @@ def _paint_host_inventory_attribute(
             attributes.pairs.get(key),
             attributes.retentions.get(key),
         ),
-        hint,
+        paint_function,
         theme.detect_icon_path("svc_problems", "icon_"),
     )
 
@@ -362,7 +363,7 @@ def attribute_painter_from_hint(
         printable=True,
         load_inv=True,
         sorter=ident,
-        paint=lambda row: _paint_host_inventory_attribute(row, path, key, hint),
+        paint=lambda row: _paint_host_inventory_attribute(row, path, key, hint.paint_function),
         export_for_python=lambda row, cell: _compute_attribute_painter_data(row, path, key),
         export_for_csv=lambda row, cell: (
             "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
@@ -384,7 +385,7 @@ class ColumnPainterFromHint(TypedDict):
     export_for_json: Callable[[Row, Cell], SDValue]
 
 
-def _paint_host_inventory_column(row: Row, ident: str, hint: ColumnDisplayHint) -> CellSpec:
+def _paint_host_inventory_column(row: Row, ident: str, paint_function: PaintFunction) -> CellSpec:
     if ident not in row:
         return "", ""
     return compute_cell_spec(
@@ -393,7 +394,7 @@ def _paint_host_inventory_column(row: Row, ident: str, hint: ColumnDisplayHint) 
             row[ident],
             row.get("_".join([ident, "retention_interval"])),
         ),
-        hint,
+        paint_function,
         theme.detect_icon_path("svc_problems", "icon_"),
     )
 
@@ -414,7 +415,7 @@ def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPaint
         # the "real" parameters, ie. _painter_params, are used.
         params=FixedValue(PainterParameters(), totext=""),
         sorter=ident,
-        paint=lambda row: _paint_host_inventory_column(row, ident, hint),
+        paint=lambda row: _paint_host_inventory_column(row, ident, hint.paint_function),
         export_for_python=lambda row, cell: row.get(ident),
         export_for_csv=lambda row, cell: "" if (data := row.get(ident)) is None else str(data),
         export_for_json=lambda row, cell: row.get(ident),

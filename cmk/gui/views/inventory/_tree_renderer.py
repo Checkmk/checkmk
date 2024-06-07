@@ -41,13 +41,8 @@ from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
-from ._display_hints import (
-    AttributeDisplayHint,
-    ColumnDisplayHint,
-    DisplayHints,
-    inv_display_hints,
-    NodeDisplayHint,
-)
+from ._display_hints import ColumnDisplayHint, DisplayHints, inv_display_hints, NodeDisplayHint
+from .registry import PaintFunction
 
 
 def make_table_view_name_of_host(view_name: str) -> str:
@@ -149,12 +144,10 @@ def _sort_delta_rows(
 
 
 def compute_cell_spec(
-    item: SDItem,
-    hint: AttributeDisplayHint | ColumnDisplayHint,
-    icon_path_svc_problems: str,
+    item: SDItem, paint_function: PaintFunction, icon_path_svc_problems: str
 ) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
-    tdclass, code = hint.paint_function(item.value)
+    tdclass, code = paint_function(item.value)
     html_value = HTML(code)
     if (
         not html_value
@@ -193,22 +186,19 @@ def compute_cell_spec(
     return tdclass, html_value
 
 
-def _compute_delta_cell_spec(
-    item: _SDDeltaItem,
-    hint: AttributeDisplayHint | ColumnDisplayHint,
-) -> tuple[str, HTML]:
+def _compute_delta_cell_spec(item: _SDDeltaItem, paint_function: PaintFunction) -> tuple[str, HTML]:
     if item.old is None and item.new is not None:
-        tdclass, rendered_value = hint.paint_function(item.new)
+        tdclass, rendered_value = paint_function(item.new)
         return tdclass, HTMLWriter.render_span(rendered_value, css="invnew")
     if item.old is not None and item.new is None:
-        tdclass, rendered_value = hint.paint_function(item.old)
+        tdclass, rendered_value = paint_function(item.old)
         return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
     if item.old == item.new:
-        tdclass, rendered_value = hint.paint_function(item.old)
+        tdclass, rendered_value = paint_function(item.old)
         return tdclass, HTML(rendered_value)
     if item.old is not None and item.new is not None:
-        tdclass, rendered_old_value = hint.paint_function(item.old)
-        tdclass, rendered_new_value = hint.paint_function(item.new)
+        tdclass, rendered_old_value = paint_function(item.old)
+        tdclass, rendered_new_value = paint_function(item.new)
         return (
             tdclass,
             HTMLWriter.render_span(rendered_old_value, css="invold")
@@ -325,11 +315,11 @@ class TreeRenderer:
             if isinstance(item, SDItem):
                 _tdclass, rendered_value = compute_cell_spec(
                     item,
-                    attr_hint,
+                    attr_hint.paint_function,
                     self._theme.detect_icon_path("svc_problems", "icon_"),
                 )
             else:
-                _tdclass, rendered_value = _compute_delta_cell_spec(item, attr_hint)
+                _tdclass, rendered_value = _compute_delta_cell_spec(item, attr_hint.paint_function)
             html.write_html(rendered_value)
             html.close_td()
             html.close_tr()
@@ -385,11 +375,13 @@ class TreeRenderer:
                 if isinstance(item, SDItem):
                     tdclass, rendered_value = compute_cell_spec(
                         item,
-                        col_hint,
+                        col_hint.paint_function,
                         self._theme.detect_icon_path("svc_problems", "icon_"),
                     )
                 else:
-                    tdclass, rendered_value = _compute_delta_cell_spec(item, col_hint)
+                    tdclass, rendered_value = _compute_delta_cell_spec(
+                        item, col_hint.paint_function
+                    )
                 html.open_td(class_=tdclass)
                 html.write_html(rendered_value)
                 html.close_td()

@@ -10,7 +10,6 @@ import inspect
 import json
 import logging
 import os
-import shutil
 import subprocess
 import sys
 import time
@@ -1157,40 +1156,34 @@ class Site:
         logger.info("Saving to %s", self.result_dir())
         self.makedirs(self.result_dir())
 
-        with suppress(FileNotFoundError):
-            shutil.copy(self.path("junit.xml"), self.result_dir())
-
-        shutil.copytree(
-            self.path("var/log"),
-            self.result_dir() / "logs",
-            ignore_dangling_symlinks=True,
-            ignore=shutil.ignore_patterns(".*"),
-            dirs_exist_ok=True,
+        execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)
+        execute(
+            ["cp", "-r", self.path("var/log"), (self.result_dir() / "logs").as_posix()], sudo=True
         )
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
-            shutil.copy(nagios_log_path, self.result_dir() / "logs")
+            execute(["cp", nagios_log_path, (self.result_dir() / "logs").as_posix()], sudo=True)
 
         cmc_dir = self.result_dir() / "cmc"
         os.makedirs(cmc_dir, exist_ok=True)
 
-        with suppress(FileNotFoundError):
-            shutil.copy(self.path("var/check_mk/core/history"), cmc_dir / "history")
+        execute(
+            ["cp", self.path("var/check_mk/core/history"), (cmc_dir / "history").as_posix()],
+            sudo=True,
+        )
+        execute(
+            ["cp", self.path("var/check_mk/core/core"), (cmc_dir / "core_dump").as_posix()],
+            sudo=True,
+        )
+        execute(
+            ["cp", "-r", self.crash_report_dir.as_posix(), self.crash_archive_dir.as_posix()],
+            sudo=True,
+        )
 
-        with suppress(FileNotFoundError):
-            shutil.copy(self.path("var/check_mk/core/core"), cmc_dir / "core_dump")
-
-        with suppress(FileNotFoundError):
-            shutil.copytree(
-                self.crash_report_dir,
-                self.crash_archive_dir,
-                ignore=shutil.ignore_patterns(".*"),
-                dirs_exist_ok=True,
-            )
-
-            # Rename files to get better handling by the browser when opening a crash file
-            for crash_info in self.crash_archive_dir.glob("**/crash.info"):
-                crash_info.rename(crash_info.parent / (crash_info.stem + ".json"))
+        # Rename files to get better handling by the browser when opening a crash file
+        for crash_info in self.crash_archive_dir.glob("**/crash.info"):
+            crash_json = crash_info.parent / (crash_info.stem + ".json")
+            execute(["mv", crash_info.as_posix(), crash_json.as_posix()], sudo=True)
 
     def report_crashes(self):
         crash_dirs = [

@@ -3783,6 +3783,13 @@ msgstr "Hostgroep toevoegen"
 msgid "Add host to the monitoring"
 msgstr "Host toevoegen aan de bewaking"
 
+#, fuzzy
+msgid "Add host to use this action"
+msgstr "Host toevoegen aan de bewaking"
+
+msgid "Add host/subfolder to use this action"
+msgstr ""
+
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
 "also add the permission <i>Modify existing hosts</i>."
@@ -17810,14 +17817,6 @@ msgstr ""
 "Het uitschakelen van het wachtwoord zal voorkomen dat een gebruiker inlogt "
 "terwijl het oorspronkelijke wachtwoord behouden blijft. Meldingen worden "
 "niet beïnvloed door deze instelling."
-
-#, fuzzy
-msgid "Discard changes"
-msgstr "%d aanpassingen"
-
-#, fuzzy
-msgid "Discard foreign changes"
-msgstr "Buitenlandse wijzigingen activeren"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -49639,6 +49638,10 @@ msgstr "Inventariswijzigingen"
 msgid "Revert changes?"
 msgstr "Inventariswijzigingen"
 
+#, fuzzy
+msgid "Revert foreign changes"
+msgstr "Buitenlandse wijzigingen activeren"
+
 msgid "Revolutions per minute"
 msgstr "Omwentelingen per minuut"
 
@@ -64738,7 +64741,7 @@ msgstr ""
 "gebeurtenisconsole worden geconfigureerd."
 
 msgid ""
-"This permission allows to discard pending changes. Beware that this holds "
+"This permission allows to revert pending changes. Beware that this holds "
 "only for the user's own pending changes, not for those of other users "
 "(foreign changes)."
 msgstr ""
@@ -71014,13 +71017,6 @@ msgstr "UNKN"
 msgid "UNKNOWN"
 msgstr "ONBEKEND"
 
-#, python-format
-msgid "UNKNOWN custom_form_spec %s"
-msgstr ""
-
-msgid "UNKNOWN custom_form_spec ServiceState"
-msgstr ""
-
 msgid "UNKNOWN services"
 msgstr "ONBEKENDE diensten"
 
@@ -75742,7 +75738,7 @@ msgstr ""
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
 "of different users might pile up before changes are activated. Only with "
-"this permission a user will be allowed to discard all pending changes, "
+"this permission a user will be allowed to revert all pending changes, "
 "including foreign ones."
 msgstr ""
 "Wanneer meerdere gebruikers parallel met Setup werken, kan het gebeuren dat "
@@ -81366,6 +81362,14 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~ msgid "Discard changes"
+#~ msgstr "%d aanpassingen"
+
+#, fuzzy
+#~ msgid "Discard foreign changes"
+#~ msgstr "Buitenlandse wijzigingen activeren"
 
 #, python-format
 #~ msgid "%sPacket loss"

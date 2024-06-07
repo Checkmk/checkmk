@@ -3791,6 +3791,13 @@ msgstr "Adăugați un grup de gazde"
 msgid "Add host to the monitoring"
 msgstr "Adăugați gazda la monitorizare"
 
+#, fuzzy
+msgid "Add host to use this action"
+msgstr "Adăugați gazda la monitorizare"
+
+msgid "Add host/subfolder to use this action"
+msgstr ""
+
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
 "also add the permission <i>Modify existing hosts</i>."
@@ -17820,12 +17827,6 @@ msgstr ""
 "Dezactivarea parolei va împiedica un utilizator să se conecteze, păstrând în "
 "același timp parola originală. Notificările nu sunt afectate de această "
 "setare."
-
-msgid "Discard changes"
-msgstr "Schimbări de respingere"
-
-msgid "Discard foreign changes"
-msgstr "Eliminarea modificărilor străine"
 
 #, python-format
 msgid "Discarded pending changes (Restored %s)"
@@ -49670,6 +49671,10 @@ msgstr "Revocarea modificărilor"
 msgid "Revert changes?"
 msgstr "Reveniți asupra modificărilor?"
 
+#, fuzzy
+msgid "Revert foreign changes"
+msgstr "Activați modificările străine"
+
 msgid "Revolutions per minute"
 msgstr "Rotații pe minut"
 
@@ -64887,8 +64892,9 @@ msgstr ""
 "Această permisiune permite configurarea setărilor globale ale consolei de "
 "evenimente."
 
+#, fuzzy
 msgid ""
-"This permission allows to discard pending changes. Beware that this holds "
+"This permission allows to revert pending changes. Beware that this holds "
 "only for the user's own pending changes, not for those of other users "
 "(foreign changes)."
 msgstr ""
@@ -71134,13 +71140,6 @@ msgstr "UNKN"
 msgid "UNKNOWN"
 msgstr "NECUNOSCUT"
 
-#, fuzzy, python-format
-msgid "UNKNOWN custom_form_spec %s"
-msgstr "UNKNOWN custom_form_spec ServiceState"
-
-msgid "UNKNOWN custom_form_spec ServiceState"
-msgstr "UNKNOWN custom_form_spec ServiceState"
-
 msgid "UNKNOWN services"
 msgstr "Servicii NECUNOSCUTE"
 
@@ -75864,10 +75863,11 @@ msgstr ""
 "înainte ca modificările să fie activate. Numai cu această permisiune, un "
 "utilizator va putea activa configurația curentă dacă apare această situație."
 
+#, fuzzy
 msgid ""
 "When several users work in parallel with Setup then several pending changes "
 "of different users might pile up before changes are activated. Only with "
-"this permission a user will be allowed to discard all pending changes, "
+"this permission a user will be allowed to revert all pending changes, "
 "including foreign ones."
 msgstr ""
 "Atunci când mai mulți utilizatori lucrează în paralel cu Setup, atunci mai "
@@ -81482,6 +81482,19 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Discard changes"
+#~ msgstr "Schimbări de respingere"
+
+#~ msgid "Discard foreign changes"
+#~ msgstr "Eliminarea modificărilor străine"
+
+#, fuzzy, python-format
+#~ msgid "UNKNOWN custom_form_spec %s"
+#~ msgstr "UNKNOWN custom_form_spec ServiceState"
+
+#~ msgid "UNKNOWN custom_form_spec ServiceState"
+#~ msgstr "UNKNOWN custom_form_spec ServiceState"
 
 #, python-format
 #~ msgid "%sPacket loss"

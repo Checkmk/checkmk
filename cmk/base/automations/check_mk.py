@@ -58,6 +58,7 @@ from cmk.utils.paths import (
     logwatch_dir,
     nagios_startscript,
     omd_root,
+    piggyback_dir,
     precompiled_hostchecks_dir,
     snmpwalks_dir,
     tcp_cache_dir,
@@ -1070,11 +1071,11 @@ class AutomationRenameHosts(Automation):
             if self._rename_host_file(str(tmp_dir / d), oldname, newname):
                 actions.append(d)
 
-        if self._rename_host_dir(str(tmp_dir / "piggyback"), oldname, newname):
+        if self._rename_host_dir(str(piggyback_dir), oldname, newname):
             actions.append("piggyback-load")
 
         # Rename piggy files *created* by the host
-        piggybase = str(tmp_dir) + "/piggyback/"
+        piggybase = str(piggyback_dir) + "/"
         if os.path.exists(piggybase):
             for piggydir in os.listdir(piggybase):
                 if self._rename_host_file(piggybase + piggydir, oldname, newname):

@@ -86,6 +86,15 @@ def check_mssql_databases(
         return
     state_int = params.get("map_db_states", {}).get(db_state.replace(" ", "_").upper(), 0)
     yield Result(state=State(state_int), summary="Status: %s" % db_state)
+    if should_be_reco_model := params.get("recovery_model"):
+        if should_be_reco_model == data["Recovery"]:
+            yield Result(state=State.OK, summary="Recovery: %s" % data["Recovery"])
+        else:
+            yield Result(
+                state=State(params["if_not_reco_model"]),
+                summary=f"Recovery: {data['Recovery']} (but should {should_be_reco_model})",
+            )
+
     yield Result(state=State.OK, summary="Recovery: %s" % data["Recovery"])
 
     for what in ["close", "shrink"]:
@@ -110,7 +119,7 @@ check_plugin_mssql_databases = CheckPlugin(
     service_name="MSSQL %s Database",
     discovery_function=discover_mssql_databases,
     check_function=check_mssql_databases,
-    check_default_parameters={},
+    check_default_parameters={"if_not_reco_model": 1},
     check_ruleset_name="mssql_databases",
     cluster_check_function=cluster_check_mssql_databases,
 )

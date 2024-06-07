@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, MonitoringState, TextInput
 
 
 def _parameter_valuespec_mssql_databases():
@@ -56,7 +56,26 @@ def _parameter_valuespec_mssql_databases():
                     optional_keys=[],
                 ),
             ),
+            (
+                "recovery_model",
+                DropdownChoice(
+                    title=_("Setting a specific recovery model for the database"),
+                    choices=[
+                        ("FULL", _("Full")),
+                        ("SIMPLE", _("Simple")),
+                        ("BULK-LOGGED", _("Bulk-logged")),
+                    ],
+                ),
+            ),
+            (
+                "if_not_reco_model",
+                MonitoringState(
+                    title=_("Criticality if not choosen Recovery Model is not set"),
+                    default_value=1,
+                ),
+            ),
         ],
+        optional_keys=["recovery_model", "if_not_reco_model"],
     )
 
 

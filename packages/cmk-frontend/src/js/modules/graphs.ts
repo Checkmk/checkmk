@@ -660,6 +660,7 @@ function render_graph(graph: GraphArtwork) {
             render_curve(
                 graph["start_time"],
                 step,
+                v_range_from,
                 coordinate_trans,
                 corner_markers.map(([lower, upper]) => {
                     if (lower == null || upper == null) {
@@ -686,6 +687,7 @@ function render_graph(graph: GraphArtwork) {
             render_curve(
                 graph["start_time"],
                 step,
+                v_range_from,
                 coordinate_trans,
                 points as TimeSeriesValue[],
                 ctx
@@ -802,31 +804,76 @@ class GraphCoordinateTransformation {
 function render_curve(
     start_time: number,
     time_step_size: number,
+    v_range_from: number,
     coordinate_tranformation: GraphCoordinateTransformation,
     v_points: TimeSeriesValue[],
     ctx: CanvasRenderingContext2D
 ) {
     let t = start_time;
     let should_connect_to_previous_point = false;
-    let i;
+
     ctx.beginPath();
 
-    for (i = 0; i < v_points.length; i++) {
-        const value = v_points[i] as TimeSeriesValue;
-
-        if (value == null) {
+    for (const current_and_next_v_value of current_and_next_value_gen(
+        v_points
+    )) {
+        const [v_value, next_v_value] = current_and_next_v_value;
+        if (v_value == null) {
             should_connect_to_previous_point = false;
             t += time_step_size;
             continue;
         }
 
-        const p = coordinate_tranformation.trans(t, value);
-        if (should_connect_to_previous_point) {
-            ctx.lineTo(p[0], p[1]);
+        // Are we above the lower vertical range limit? Note that we don't have to worry about the
+        // upper vertical range limit, since the graph simply ends there. We can draw arbitrarily
+        // large vertical values, they simply won't show up in the end.
+        if (v_value >= v_range_from) {
+            const p = coordinate_tranformation.trans(t, v_value);
+            if (should_connect_to_previous_point) {
+                ctx.lineTo(p[0], p[1]);
+            } else {
+                ctx.moveTo(p[0], p[1]);
+            }
+            should_connect_to_previous_point = true;
+
+            // If the next value falls below the lower vertical range limit, we draw a line from
+            // the current point to the intersection point with the lower vertical range limit.
+            if (next_v_value != null && next_v_value < v_range_from) {
+                const p_intersect = coordinate_tranformation.trans(
+                    t_value_of_intersection_point(
+                        t,
+                        time_step_size,
+                        v_value,
+                        next_v_value,
+                        v_range_from
+                    ),
+                    v_range_from
+                );
+                ctx.lineTo(p_intersect[0], p_intersect[1]);
+                should_connect_to_previous_point = false;
+            }
         } else {
-            ctx.moveTo(p[0], p[1]);
+            should_connect_to_previous_point = false;
+
+            // If the next value is above the lower vertical range limit, we move to the
+            // intersection point with the lower vertical range limit and signal that we want to
+            // connect to this point.
+            if (next_v_value != null && next_v_value > v_range_from) {
+                const p_intersect = coordinate_tranformation.trans(
+                    t_value_of_intersection_point(
+                        t,
+                        time_step_size,
+                        v_value,
+                        next_v_value,
+                        v_range_from
+                    ),
+                    v_range_from
+                );
+                ctx.moveTo(p_intersect[0], p_intersect[1]);
+                should_connect_to_previous_point = true;
+            }
         }
-        should_connect_to_previous_point = true;
+
         t += time_step_size;
     }
 
@@ -887,6 +934,27 @@ function render_area(
         prev_upper = upper;
         t += time_step_size;
     }
+}
+
+function* current_and_next_value_gen<T>(arr: T[]): Generator<[T, T | null]> {
+    for (let i = 0; i < arr.length - 1; i++) {
+        yield [arr[i], arr[i + 1]];
+    }
+    if (arr.length) {
+        yield [arr[arr.length - 1], null];
+    }
+}
+
+function t_value_of_intersection_point(
+    t_1: number,
+    time_step_size: number,
+    v_1: number,
+    v_2: number,
+    v_intersect: number
+): number {
+    const slope = (v_2 - v_1) / time_step_size;
+    const offset = v_1 - slope * t_1;
+    return (v_intersect - offset) / slope;
 }
 
 function hex_to_rgba(color: string) {

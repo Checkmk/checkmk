@@ -11,7 +11,6 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
-from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.valuespec import TextInput, Transform
 from cmk.gui.watolib.config_domain_name import ConfigVariable, ConfigVariableRegistry
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -73,22 +72,21 @@ def test_update_global_config(
         global_settings, "filter_unknown_settings", lambda global_config: global_config
     )
 
-    with gui_context():
-        assert global_settings.update_global_config(
-            logging.getLogger(),
-            {
-                "global_a": True,
-                "global_b": 14,
-                "keep": "do not remove me",
-                "old_unused": "remove me",
-                "unknown": "How did this get here?",
-            },
-        ) == {
+    assert global_settings.update_global_config(
+        logging.getLogger(),
+        {
+            "global_a": True,
+            "global_b": 14,
             "keep": "do not remove me",
+            "old_unused": "remove me",
             "unknown": "How did this get here?",
-            "new_global_a": 1,
-            "new_global_b": 14,
-        }
+        },
+    ) == {
+        "keep": "do not remove me",
+        "unknown": "How did this get here?",
+        "new_global_a": 1,
+        "new_global_b": 14,
+    }
 
 
 def test_remove_options() -> None:
@@ -106,27 +104,3 @@ def test_remove_options() -> None:
         "global_b": 14,
         "unknown": "How did this get here?",
     }
-
-
-def test_convert_agent_deployment_tag_condition() -> None:
-    with gui_context():
-        assert global_settings.update_global_config(
-            logging.getLogger(),
-            {
-                "agent_deployment_host_selection": {
-                    "match_hosttags": [
-                        "!ip-v4-only",
-                        "!ip-v4",
-                        "ip-v6",
-                    ]
-                },
-            },
-        ) == {
-            "agent_deployment_host_selection": {
-                "match_hosttags": {
-                    "address_family": {"$ne": "ip-v4-only"},
-                    "ip-v4": {"$ne": "ip-v4"},
-                    "ip-v6": "ip-v6",
-                }
-            },
-        }

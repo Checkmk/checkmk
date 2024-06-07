@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::client::{self, Client};
+use super::client::{self, UniClient};
 use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
 use crate::config::ms_sql::is_use_tcp;
@@ -373,7 +373,7 @@ impl SqlInstance {
     }
 
     /// Gather databases based on sections content: only if any of sections is database based
-    async fn gather_databases(&self, client: &mut Client, sections: &[Section]) -> Vec<String> {
+    async fn gather_databases(&self, client: &mut UniClient, sections: &[Section]) -> Vec<String> {
         let database_based_sections = section::get_per_database_sections();
         let need = database_based_sections.iter().any(|s| {
             sections
@@ -391,7 +391,7 @@ impl SqlInstance {
 
     async fn _generate_sections(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         endpoint: &Endpoint,
         sections: &[Section],
     ) -> String {
@@ -411,7 +411,7 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         database: Option<String>,
-    ) -> Result<Client> {
+    ) -> Result<UniClient> {
         log::info!("create client {}", self.name);
         let (auth, conn) = endpoint.split();
         let client = match auth.auth_type() {
@@ -435,7 +435,7 @@ impl SqlInstance {
         client.build().await
     }
 
-    pub async fn generate_details_entry(&self, client: &mut Client, sep: char) -> String {
+    pub async fn generate_details_entry(&self, client: &mut UniClient, sep: char) -> String {
         let r = SqlInstanceProperties::obtain_by_query(client).await;
         match r {
             Ok(properties) => self.process_details_rows(&properties, sep),
@@ -456,7 +456,7 @@ impl SqlInstance {
 
     pub async fn generate_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         endpoint: &Endpoint,
         section: &Section,
         databases: &[String],
@@ -478,7 +478,7 @@ impl SqlInstance {
 
     async fn generate_section_body(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         endpoint: &Endpoint,
         section: &Section,
         databases: &[String],
@@ -569,7 +569,7 @@ impl SqlInstance {
 
     pub async fn generate_counters_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
         sep: char,
     ) -> String {
@@ -589,7 +589,7 @@ impl SqlInstance {
         }
     }
 
-    pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
+    pub async fn generate_counters_entry(&self, client: &mut UniClient, sep: char) -> String {
         let x = run_known_query(client, sqls::Id::CounterEntries)
             .await
             .and_then(validate_rows)
@@ -610,7 +610,7 @@ impl SqlInstance {
 
     pub async fn generate_sessions_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
         sep: char,
     ) -> String {
@@ -664,7 +664,7 @@ impl SqlInstance {
 
     pub async fn generate_backup_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
         sep: char,
     ) -> String {
@@ -782,7 +782,7 @@ impl SqlInstance {
 
     pub async fn generate_databases_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         databases: &[String],
         query: &str,
         sep: char,
@@ -810,7 +810,7 @@ impl SqlInstance {
     }
 
     /// doesn't return error - the same behavior as plugin
-    pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
+    pub async fn generate_databases(&self, client: &mut UniClient) -> Vec<String> {
         let result = run_known_query(client, sqls::Id::DatabaseNames)
             .await
             .and_then(validate_rows)
@@ -861,7 +861,7 @@ impl SqlInstance {
 
     async fn generate_clusters_entry(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         database: &str,
         query: &str,
         sep: char,
@@ -879,7 +879,7 @@ impl SqlInstance {
         )))
     }
 
-    async fn is_database_clustered(&self, client: &mut Client) -> Result<bool> {
+    async fn is_database_clustered(&self, client: &mut UniClient) -> Result<bool> {
         let rows = &run_known_query(client, sqls::Id::IsClustered)
             .await
             .and_then(validate_rows)?;
@@ -888,7 +888,7 @@ impl SqlInstance {
 
     async fn get_cluster_nodes(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
     ) -> Result<(String, String)> {
         let rows = &run_custom_query(client, query).await?;
@@ -910,7 +910,7 @@ impl SqlInstance {
 
     pub async fn generate_connections_section(
         &self,
-        client: &mut Client,
+        client: &mut UniClient,
         query: &str,
         sep: char,
     ) -> String {
@@ -1143,7 +1143,7 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
 }
 
 impl SqlInstanceProperties {
-    pub async fn obtain_by_query(client: &mut Client) -> Result<Self> {
+    pub async fn obtain_by_query(client: &mut UniClient) -> Result<Self> {
         let r = run_known_query(client, sqls::Id::InstanceProperties).await?;
         if r.is_empty() {
             anyhow::bail!("Empty answer from server on query instance_properties");
@@ -1749,7 +1749,7 @@ fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> Por
 }
 
 async fn obtain_properties(
-    client: &mut Client,
+    client: &mut UniClient,
     name: &InstanceName,
 ) -> Option<SqlInstanceProperties> {
     match SqlInstanceProperties::obtain_by_query(client).await {
@@ -1927,7 +1927,7 @@ pub async fn obtain_instance_builders_by_sql_browser(
 }
 
 async fn _obtain_instance_builders(
-    client: &mut Client,
+    client: &mut UniClient,
     endpoint: &Endpoint,
 ) -> Vec<SqlInstanceBuilder> {
     let mut builders = try_find_instances_in_registry(client).await;
@@ -1970,7 +1970,7 @@ async fn _obtain_instance_builders(
 
 /// returns instances found in registry
 /// if registry is unavailable returns empty list, this is ok too
-async fn try_find_instances_in_registry(client: &mut Client) -> Vec<SqlInstanceBuilder> {
+async fn try_find_instances_in_registry(client: &mut UniClient) -> Vec<SqlInstanceBuilder> {
     let mut result: Vec<SqlInstanceBuilder> = vec![];
     for q in [
         &sqls::get_win_registry_instances_query(),
@@ -1990,7 +1990,7 @@ async fn try_find_instances_in_registry(client: &mut Client) -> Vec<SqlInstanceB
 
 /// return all MS SQL instances installed
 async fn exec_win_registry_sql_instances_query(
-    client: &mut Client,
+    client: &mut UniClient,
     query: &str,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let answers = run_custom_query(client, query).await?;

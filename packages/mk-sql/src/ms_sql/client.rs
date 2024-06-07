@@ -15,7 +15,12 @@ use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
 use super::defaults;
-pub type Client = tiberius::Client<Compat<TcpStream>>;
+pub type StdClient = tiberius::Client<Compat<TcpStream>>;
+
+#[derive(Debug)]
+pub enum UniClient {
+    Std(StdClient),
+}
 
 pub struct RemoteConnection<'a> {
     pub host: HostName,
@@ -207,7 +212,7 @@ impl<'a> ClientBuilder<'a> {
         Ok(config)
     }
 
-    pub async fn build(self) -> Result<Client> {
+    pub async fn build(self) -> Result<UniClient> {
         let tiberius_config = self.make_config()?;
         match self.client_connection {
             Some(ClientConnection::Remote(_)) => create_remote_client(tiberius_config).await,
@@ -228,11 +233,11 @@ pub enum Credentials<'a> {
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 
-pub async fn connect_main_endpoint(endpoint: &Endpoint) -> Result<Client> {
+pub async fn connect_main_endpoint(endpoint: &Endpoint) -> Result<UniClient> {
     connect_custom_endpoint(endpoint, endpoint.port()).await
 }
 
-pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<Client> {
+pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<UniClient> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
         log::warn!(
@@ -284,7 +289,7 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
 pub async fn connect_custom_instance(
     endpoint: &Endpoint,
     instance: &InstanceName,
-) -> Result<Client> {
+) -> Result<UniClient> {
     use crate::constants;
 
     let (auth, conn) = endpoint.split();
@@ -345,7 +350,7 @@ pub fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Optio
 }
 
 /// Create client for remote MS SQL
-async fn create_remote_client(tiberius_config: Config) -> Result<Client> {
+async fn create_remote_client(tiberius_config: Config) -> Result<UniClient> {
     let mut config = tiberius_config.clone();
     config.encryption(tiberius::EncryptionLevel::Required);
     match connect_via_tcp(config).await {
@@ -373,7 +378,7 @@ async fn create_remote_client(tiberius_config: Config) -> Result<Client> {
 
 /// Create client for `named` MS SQL `instance`
 #[cfg(windows)]
-async fn create_named_instance_client(config: Config) -> anyhow::Result<Client> {
+async fn create_named_instance_client(config: Config) -> anyhow::Result<UniClient> {
     log::info!("Named connection to addr {}", config.get_addr());
 
     // This will create a new `TcpStream` from `async-std`, connected to the
@@ -384,12 +389,13 @@ async fn create_named_instance_client(config: Config) -> anyhow::Result<Client> 
         .map_err(|e| anyhow::anyhow!("Failed to connect to SQL Browser {}", e))?;
     tcp.set_nodelay(true)?; // in documentation and examples
 
-    Client::connect(config, tcp.compat_write())
+    StdClient::connect(config, tcp.compat_write())
         .await
         .map_err(|e| anyhow::anyhow!("Failed to access SQL Browser {}", e))
+        .map(UniClient::Std)
 }
 
-async fn connect_via_tcp(config: Config) -> Result<Client> {
+async fn connect_via_tcp(config: Config) -> Result<UniClient> {
     log::info!("Connecting to addr '{}'...", config.get_addr());
     let tcp = TcpStream::connect(config.get_addr()).await.map_err(|e| {
         anyhow::anyhow!(
@@ -405,12 +411,12 @@ async fn connect_via_tcp(config: Config) -> Result<Client> {
     // To be able to use Tokio's tcp, we're using the `compat_write` from
     // the `TokioAsyncWriteCompatExt` to get a stream compatible with the
     // traits from the `futures` crate. The same is for upcoming NamedPipe
-    let result = Client::connect(config, tcp.compat_write())
+    let result = StdClient::connect(config, tcp.compat_write())
         .await
         .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e));
     log::info!("Connection success {}", result.is_ok());
 
-    result
+    result.map(UniClient::Std)
 }
 
 /// Create `local` connection to MS SQL `instance`
@@ -424,7 +430,7 @@ pub async fn create_instance_local(
     _instance_name: &str,
     _port: Option<u16>,
     _database: Option<String>,
-) -> anyhow::Result<Client> {
+) -> anyhow::Result<UniClient> {
     anyhow::bail!("not supported");
 }
 

@@ -6,7 +6,7 @@ use assert_cmd::output::OutputError;
 use assert_cmd::Command;
 use flexi_logger::{self, DeferredNow, FileSpec, LogSpecification, Record};
 use mk_sql::config::ms_sql::{Authentication, Connection, Endpoint};
-use mk_sql::ms_sql::client::Client;
+use mk_sql::ms_sql::client::UniClient;
 use mk_sql::ms_sql::query;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -181,7 +181,7 @@ pub fn skip_on_lack_of_ms_sql_endpoint() {
     .unwrap();
 }
 
-pub async fn run_get_version(client: &mut Client) -> Option<String> {
+pub async fn run_get_version(client: &mut UniClient) -> Option<String> {
     let rows = query::run_custom_query(client, "select @@VERSION")
         .await
         .unwrap();

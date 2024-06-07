@@ -5,7 +5,7 @@
 use crate::types::{ComputerName, InstanceName};
 
 use super::sqls::find_known_query;
-use super::{client::Client, sqls};
+use super::{client::UniClient, sqls};
 use std::borrow::Borrow;
 
 use anyhow::Result;
@@ -90,7 +90,7 @@ impl<'a> Column<'a> for Row {
 /// Runs predefined query
 /// return Vec\<Vec\<Row\>\> as a Results Vec: one Vec\<Row\> per one statement in query.
 pub async fn run_known_query<T: Borrow<sqls::Id>>(
-    client: &mut Client,
+    client: &mut UniClient,
     id: T,
 ) -> Result<Vec<Answer>> {
     let start = Instant::now();
@@ -101,7 +101,10 @@ pub async fn run_known_query<T: Borrow<sqls::Id>>(
 
 /// Runs any query
 /// return Vec\<Vec\<Row\>\> as a Results Vec: one Vec\<Row\> per one statement in query.
-pub async fn run_custom_query<T: AsRef<str>>(client: &mut Client, query: T) -> Result<Vec<Answer>> {
+pub async fn run_custom_query<T: AsRef<str>>(
+    client: &mut UniClient,
+    query: T,
+) -> Result<Vec<Answer>> {
     let query = query.as_ref();
     if query.is_empty() {
         anyhow::bail!("Empty custom query");
@@ -123,18 +126,25 @@ fn log_query(start: Instant, result: &Result<Vec<Answer>>, query_body: &str) {
     }
 }
 
-async fn _run_known_query<T: Borrow<sqls::Id>>(client: &mut Client, id: T) -> Result<Vec<Answer>> {
+async fn _run_known_query<T: Borrow<sqls::Id>>(
+    client: &mut UniClient,
+    id: T,
+) -> Result<Vec<Answer>> {
     log::debug!("Query name: `{:?}`", id.borrow());
     let query = find_known_query(id)?;
     exec_sql(client, query).await
 }
 
-async fn exec_sql(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
+async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<Answer>> {
     log::debug!("Query to run short: `{}`", make_short_query(query));
     log::trace!("Query to run: `{}`", query);
-    let stream = Query::new(query).query(client).await?;
-    let rows: Vec<Answer> = stream.into_results().await?;
-    Ok(rows)
+    match client {
+        UniClient::Std(client) => {
+            let stream = Query::new(query).query(client).await?;
+            let rows: Vec<Answer> = stream.into_results().await?;
+            Ok(rows)
+        }
+    }
 }
 
 fn make_short_query(query: &str) -> &str {
@@ -143,7 +153,7 @@ fn make_short_query(query: &str) -> &str {
         .unwrap_or_default()
 }
 
-pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<ComputerName>> {
+pub async fn obtain_computer_name(client: &mut UniClient) -> Result<Option<ComputerName>> {
     let rows = run_known_query(client, sqls::Id::ComputerName).await?;
     if rows.is_empty() || rows[0].is_empty() {
         log::warn!("Computer name not found with query computer_name");
@@ -158,7 +168,7 @@ pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<Computer
         .map(|s| s.into()))
 }
 
-pub async fn obtain_instance_name(client: &mut Client) -> Result<Option<InstanceName>> {
+pub async fn obtain_instance_name(client: &mut UniClient) -> Result<Option<InstanceName>> {
     let rows = run_custom_query(client, "select @@ServiceName").await?;
     if rows.is_empty() || rows[0].is_empty() {
         log::warn!("Instance name not found with query");
@@ -173,7 +183,7 @@ pub async fn obtain_instance_name(client: &mut Client) -> Result<Option<Instance
         .map(|s| s.into()))
 }
 
-pub async fn obtain_system_user(client: &mut Client) -> Result<Option<String>> {
+pub async fn obtain_system_user(client: &mut UniClient) -> Result<Option<String>> {
     let rows = run_custom_query(client, "select System_User").await?;
     if rows.is_empty() || rows[0].is_empty() {
         log::warn!("Can't obtain system user with query `select SystemUser`");

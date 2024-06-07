@@ -140,14 +140,18 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
     if (ruleset_ref := getattr(plugin, ruleset_ref_attr)) is None:
         return None
 
+    if (default_params := getattr(plugin, default_params_attr)) is None:
+        return (
+            f"Default parameters '{default_params_attr}' specified by {type(plugin).__name__} "
+            f"'{plugin.name}' should not be `None` since there is a ruleset ('{ruleset_ref}')"
+        )
+
     if (rule_spec := rulespec_registry.get(rule_group(ruleset_ref))) is None:
         return (
             f"'{ruleset_ref_attr}' of {type(plugin).__name__} '{plugin.name}' references "
             f"non-existent rule spec '{ruleset_ref}'"
         )
 
-    if (default_params := getattr(plugin, default_params_attr)) is None:
-        return None
     try:
         rule_spec.valuespec.validate_datatype(default_params, "")
         rule_spec.valuespec.validate_value(default_params, "")

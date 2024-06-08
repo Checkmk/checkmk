@@ -31464,6 +31464,10 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
+#, fuzzy
+msgid "Invalid code provided"
+msgstr "無効なバックURLが提供されました。"
+
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "無効な色指定 '%s'"
@@ -63098,12 +63102,14 @@ msgstr ""
 "作成します。設定により通知が抑制されるたびに、ログメッセージに正確な理由が説"
 "明されます。"
 
+#, fuzzy
 msgid ""
 "This options enables automatic locking of user accounts after the configured "
-"number of consecutive invalid login attempts. Once the account is locked "
-"only an admin user can unlock it. Beware: Also the admin users will be "
-"locked that way. You need to manually edit <tt>etc/htpasswd</tt> and remove "
-"the <tt>!</tt> in case you are locked out completely."
+"number of consecutive invalid login attempts. These attempts include failed "
+"Two Factor authentication events. Once the account is locked only an admin "
+"user can unlock it. Beware: Also the admin users will be locked that way. "
+"You need to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> in "
+"case you are locked out completely."
 msgstr ""
 "このオプションは、連続した無効なログイン試行回数が設定された後に、ユーザーア"
 "カウントを自動的にロックすることを可能にします。一度ロックされたアカウント"
@@ -63640,6 +63646,10 @@ msgstr ""
 "このプラグインは、コマンドラインツール<tt> MegaCli.exe </tt>を使用して、"
 "LSIRAIDコントローラーと接続されているハードディスクの監視情報を提供します。こ"
 "のツールは、<a href='http://www.lsi.com/'> LSI </a>からダウンロードできます。"
+
+#, fuzzy
+msgid "This plugin has no paramaters"
+msgstr "このチェックにはパラメータがありません。"
 
 msgid ""
 "This predefined condition can not be used with the current ruleset, because "
@@ -71150,6 +71160,10 @@ msgid "Use WMI"
 msgstr "WMIを使用する"
 
 #, fuzzy
+msgid "Use World Wide Name (WWN) as service description"
+msgstr "新しいサービスの説明を使用する"
+
+#, fuzzy
 msgid ""
 "Use a alternative field as host name in case of SSL Certificate Problems "
 "(eg. the Hostalias )"
@@ -71234,6 +71248,10 @@ msgstr "デバイス名とセンサー名を使用する"
 
 msgid "Use device levels"
 msgstr "デバイスレベルを使用する"
+
+#, fuzzy
+msgid "Use device name as service description"
+msgstr "新しいサービスの説明を使用する"
 
 msgid "Use device states"
 msgstr "デバイスの状態を使用する"
@@ -72157,6 +72175,12 @@ msgstr "ユーザー、役割と権限"
 #, fuzzy
 msgid "Users: User Management"
 msgstr "ユーザー管理"
+
+msgid ""
+"Using device name as service description isn't recommended. Device names "
+"aren't persistent and can change after a reboot or an update. In case WWN is "
+"not available, device name will be used."
+msgstr ""
 
 msgid "Using predefined condition"
 msgstr "事前定義された条件の使用"

@@ -32134,6 +32134,10 @@ msgstr "Ongeldige controleparameter"
 msgid "Invalid check type"
 msgstr "Ongeldig controletype"
 
+#, fuzzy
+msgid "Invalid code provided"
+msgstr "Ongeldige URL teruggegeven."
+
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Ongeldige kleurspecificatie '%s'"
@@ -64589,12 +64593,14 @@ msgstr ""
 "meldingsmechanismen. Elke keer dat een melding wordt onderdrukt vanwege "
 "instellingen, zal een logbericht de exacte reden uitleggen."
 
+#, fuzzy
 msgid ""
 "This options enables automatic locking of user accounts after the configured "
-"number of consecutive invalid login attempts. Once the account is locked "
-"only an admin user can unlock it. Beware: Also the admin users will be "
-"locked that way. You need to manually edit <tt>etc/htpasswd</tt> and remove "
-"the <tt>!</tt> in case you are locked out completely."
+"number of consecutive invalid login attempts. These attempts include failed "
+"Two Factor authentication events. Once the account is locked only an admin "
+"user can unlock it. Beware: Also the admin users will be locked that way. "
+"You need to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> in "
+"case you are locked out completely."
 msgstr ""
 "Deze optie maakt het automatisch vergrendelen van gebruikersaccounts "
 "mogelijk na het ingestelde aantal opeenvolgende ongeldige "
@@ -65145,6 +65151,10 @@ msgstr ""
 "bewakingsinformatie te verstrekken over LSI RAID-controllers en aangesloten "
 "harde schijven. U kunt dit hulpprogramma downloaden van <a href='http://www."
 "lsi.com/'>LSI</a>."
+
+#, fuzzy
+msgid "This plugin has no paramaters"
+msgstr "Deze controle heeft geen parameters."
 
 msgid ""
 "This predefined condition can not be used with the current ruleset, because "
@@ -72819,6 +72829,10 @@ msgid "Use WMI"
 msgstr "Gebruik WMI"
 
 #, fuzzy
+msgid "Use World Wide Name (WWN) as service description"
+msgstr "Gebruik nieuwe dienstbeschrijvingen"
+
+#, fuzzy
 msgid ""
 "Use a alternative field as host name in case of SSL Certificate Problems "
 "(eg. the Hostalias )"
@@ -72905,6 +72919,10 @@ msgstr "Gebruik apparaat- en sensornaam"
 
 msgid "Use device levels"
 msgstr "Apparaatniveaus gebruiken"
+
+#, fuzzy
+msgid "Use device name as service description"
+msgstr "Gebruik nieuwe dienstbeschrijvingen"
 
 msgid "Use device states"
 msgstr "Apparaattoestanden gebruiken"
@@ -73867,6 +73885,12 @@ msgstr "Gebruikers, rollen en machtigingen"
 #, fuzzy
 msgid "Users: User Management"
 msgstr "Gebruikersbeheer"
+
+msgid ""
+"Using device name as service description isn't recommended. Device names "
+"aren't persistent and can change after a reboot or an update. In case WWN is "
+"not available, device name will be used."
+msgstr ""
 
 msgid "Using predefined condition"
 msgstr "Gebruik van voorgedefinieerde voorwaarde"

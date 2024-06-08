@@ -32119,6 +32119,10 @@ msgstr "Parâmetro de verificação inválido"
 msgid "Invalid check type"
 msgstr "Tipo de cheque inválido"
 
+#, fuzzy
+msgid "Invalid code provided"
+msgstr "URL de retorno inválido fornecido."
+
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Especificação de cor inválida '%s'"
@@ -64526,12 +64530,14 @@ msgstr ""
 "de notificação. Cada vez que uma notificação é suprimida devido às "
 "configurações, uma mensagem de log explica o motivo exato."
 
+#, fuzzy
 msgid ""
 "This options enables automatic locking of user accounts after the configured "
-"number of consecutive invalid login attempts. Once the account is locked "
-"only an admin user can unlock it. Beware: Also the admin users will be "
-"locked that way. You need to manually edit <tt>etc/htpasswd</tt> and remove "
-"the <tt>!</tt> in case you are locked out completely."
+"number of consecutive invalid login attempts. These attempts include failed "
+"Two Factor authentication events. Once the account is locked only an admin "
+"user can unlock it. Beware: Also the admin users will be locked that way. "
+"You need to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> in "
+"case you are locked out completely."
 msgstr ""
 "Esta opção permite o bloqueio automático das contas de usuário após o número "
 "configurado de tentativas consecutivas de login inválido. Assim que a conta "
@@ -65087,6 +65093,10 @@ msgstr ""
 "de fornecer informações de monitoramento de controladores RAID LSI e discos "
 "rígidos conectados. Você pode baixar esta ferramenta de <a href='http://www."
 "lsi.com/'>LSI</a>."
+
+#, fuzzy
+msgid "This plugin has no paramaters"
+msgstr "Esta verificação não tem parâmetros."
 
 msgid ""
 "This predefined condition can not be used with the current ruleset, because "
@@ -72761,6 +72771,10 @@ msgid "Use WMI"
 msgstr "Use o WMI"
 
 #, fuzzy
+msgid "Use World Wide Name (WWN) as service description"
+msgstr "Usar novas descrições de serviço"
+
+#, fuzzy
 msgid ""
 "Use a alternative field as host name in case of SSL Certificate Problems "
 "(eg. the Hostalias )"
@@ -72845,6 +72859,10 @@ msgstr "Use o nome do dispositivo e do sensor"
 
 msgid "Use device levels"
 msgstr "Use os níveis dos dispositivos"
+
+#, fuzzy
+msgid "Use device name as service description"
+msgstr "Usar novas descrições de serviço"
 
 msgid "Use device states"
 msgstr "Use os estados do dispositivo"
@@ -73802,6 +73820,12 @@ msgstr "Utilizadores, funções e permissões"
 #, fuzzy
 msgid "Users: User Management"
 msgstr "Gestão de utilizadores"
+
+msgid ""
+"Using device name as service description isn't recommended. Device names "
+"aren't persistent and can change after a reboot or an update. In case WWN is "
+"not available, device name will be used."
+msgstr ""
 
 msgid "Using predefined condition"
 msgstr "Usando condição pré-definida"

@@ -30941,6 +30941,10 @@ msgstr "Parâmetro de verificação inválido"
 msgid "Invalid check type"
 msgstr "Tipo de cheque inválido"
 
+#, fuzzy
+msgid "Invalid code provided"
+msgstr "URL de retorno inválido fornecido."
+
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Especificação de cor inválida '%s'"
@@ -62600,12 +62604,14 @@ msgstr ""
 "de notificação. Cada vez que uma notificação é suprimida devido às "
 "configurações, uma mensagem de log explica o motivo exato."
 
+#, fuzzy
 msgid ""
 "This options enables automatic locking of user accounts after the configured "
-"number of consecutive invalid login attempts. Once the account is locked "
-"only an admin user can unlock it. Beware: Also the admin users will be "
-"locked that way. You need to manually edit <tt>etc/htpasswd</tt> and remove "
-"the <tt>!</tt> in case you are locked out completely."
+"number of consecutive invalid login attempts. These attempts include failed "
+"Two Factor authentication events. Once the account is locked only an admin "
+"user can unlock it. Beware: Also the admin users will be locked that way. "
+"You need to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> in "
+"case you are locked out completely."
 msgstr ""
 "Esta opção permite o bloqueio automático das contas de usuário após o número "
 "configurado de tentativas consecutivas de login inválido. Assim que a conta "

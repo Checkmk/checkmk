@@ -31016,6 +31016,10 @@ msgstr "Parametru de control invalid"
 msgid "Invalid check type"
 msgstr "Tip de control nevalabil"
 
+#, fuzzy
+msgid "Invalid code provided"
+msgstr "URL-ul de întoarcere furnizat nu este valid."
+
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Specificație de culoare invalidă '%s'"
@@ -62814,12 +62818,14 @@ msgstr ""
 "mecanicii de notificare. De fiecare dată când o notificare este suprimată "
 "din cauza setărilor, un mesaj de jurnal va explica motivul exact."
 
+#, fuzzy
 msgid ""
 "This options enables automatic locking of user accounts after the configured "
-"number of consecutive invalid login attempts. Once the account is locked "
-"only an admin user can unlock it. Beware: Also the admin users will be "
-"locked that way. You need to manually edit <tt>etc/htpasswd</tt> and remove "
-"the <tt>!</tt> in case you are locked out completely."
+"number of consecutive invalid login attempts. These attempts include failed "
+"Two Factor authentication events. Once the account is locked only an admin "
+"user can unlock it. Beware: Also the admin users will be locked that way. "
+"You need to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> in "
+"case you are locked out completely."
 msgstr ""
 "Această opțiune permite blocarea automată a conturilor de utilizator după un "
 "număr configurat de încercări consecutive de autentificare invalidă. Odată "

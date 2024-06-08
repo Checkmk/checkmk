@@ -30473,6 +30473,10 @@ msgstr "Ungültiger Check-Parameter"
 msgid "Invalid check type"
 msgstr "Ungültiger Check-Typ"
 
+#, fuzzy
+msgid "Invalid code provided"
+msgstr "Fehlerhafte Rückkehradresse angegeben."
+
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Ungültige Farbangabe '%s'"
@@ -61929,12 +61933,14 @@ msgstr ""
 "Einstellungen unterdrückt wird, erklärt eine Logmeldung den genauen Grund "
 "dafür."
 
+#, fuzzy
 msgid ""
 "This options enables automatic locking of user accounts after the configured "
-"number of consecutive invalid login attempts. Once the account is locked "
-"only an admin user can unlock it. Beware: Also the admin users will be "
-"locked that way. You need to manually edit <tt>etc/htpasswd</tt> and remove "
-"the <tt>!</tt> in case you are locked out completely."
+"number of consecutive invalid login attempts. These attempts include failed "
+"Two Factor authentication events. Once the account is locked only an admin "
+"user can unlock it. Beware: Also the admin users will be locked that way. "
+"You need to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> in "
+"case you are locked out completely."
 msgstr ""
 "Diese Option aktiviert ein automatisches Sperren von Benutzerkonten nach der "
 "konfigurierten Anzahl von aufeinanderfolgenden fehlerhaften Login-Versuchen. "

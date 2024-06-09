@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onBeforeUpdate } from 'vue'
 import { is_integer, validate_value, type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
 import type { Integer } from '@/vue_formspec_components'
@@ -11,6 +11,13 @@ const props = defineProps<{
 
 const data = defineModel<number>('data', { required: true })
 const local_validation = ref<ValidationMessages | null>(null)
+
+onBeforeUpdate(() => {
+  local_validation.value === null
+  validate_value(data.value, props.spec.validators!).forEach((error) => {
+    local_validation.value = [{ message: error, location: [] }]
+  })
+})
 
 const emit = defineEmits<{
   (e: 'update:data', value: number | string): void
@@ -29,7 +36,7 @@ const value = computed({
       emitted_value = value as string
     }
     validate_value(emitted_value, props.spec.validators!).forEach((error) => {
-      local_validation.value = [{ message: error, location: [''] }]
+      local_validation.value = [{ message: error, location: [] }]
     })
     emit('update:data', emitted_value)
   }

@@ -74,9 +74,9 @@ class VisitorOptions:
 class VueAppConfig:
     id: str
     app_name: str
-    form_spec: VueComponents.FormSpec
-    model_value: Any
-    validation_messages: Any
+    spec: VueComponents.FormSpec
+    data: Any
+    validation: Any
 
 
 class FormSpecVisitor(abc.ABC, Generic[ModelT]):
@@ -138,7 +138,7 @@ def _compute_validation_errors(
     raw_value: Any,
 ) -> list[VueComponents.ValidationMessage]:
     return [
-        VueComponents.ValidationMessage(location=[""], message=x)
+        VueComponents.ValidationMessage(location=[], message=x)
         for x in _optional_validation(validators, raw_value)
         if x is not None
     ]
@@ -654,7 +654,7 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                     self.form_spec.valuespec.validate_value(value, varprefix)
                 except MKUserError as e:
                     user_errors.add(e)
-                    return [VueComponents.ValidationMessage(location=[""], message=str(e))]
+                    return [VueComponents.ValidationMessage(location=[], message=str(e))]
 
         varprefix = f"legacy_varprefix_{uuid.uuid4()}"
         with output_funnel.plugged():
@@ -662,7 +662,7 @@ class LegacyValuespecVisitor(FormSpecVisitor):
             try:
                 self.form_spec.valuespec.render_input(varprefix, value)
             except MKUserError as e:
-                validation_errors = [VueComponents.ValidationMessage(location=[""], message=str(e))]
+                validation_errors = [VueComponents.ValidationMessage(location=[], message=str(e))]
             return validation_errors
 
     def to_disk(self, value: Any) -> Any:
@@ -783,9 +783,9 @@ def render_form_spec(form_spec: FormSpec, field_id: str, default_value: Any) -> 
             VueAppConfig(
                 id=field_id,
                 app_name="form_spec",
-                form_spec=vue_component,
-                model_value=vue_value,
-                validation_messages=validation,
+                spec=vue_component,
+                data=vue_value,
+                validation=validation,
             )
         )
         logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220))

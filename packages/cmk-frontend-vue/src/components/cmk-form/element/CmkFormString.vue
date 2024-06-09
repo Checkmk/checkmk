@@ -23,7 +23,7 @@ const value = computed({
   set(value: string) {
     local_validation.value = []
     validate_value(value, props.spec.validators!).forEach((error) => {
-      local_validation.value = [{ message: error, location: [''] }]
+      local_validation.value = [{ message: error, location: [] }]
     })
     emit('update:data', value)
   }

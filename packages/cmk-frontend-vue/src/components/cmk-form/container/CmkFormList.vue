@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onUpdated, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { validate_value, type ValidationMessages } from '@/utils'
 import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
 import type { List } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
-import type { D3DragEvent } from 'd3'
-import { select, selectAll, pointer } from 'd3-selection'
-import { drag } from 'd3-drag'
 
 const props = defineProps<{
   spec: List
@@ -16,33 +13,40 @@ const props = defineProps<{
 const data = defineModel<unknown[]>('data', { required: true })
 const local_validation = ref<ValidationMessages | null>(null)
 
-const emit = defineEmits<{
-  (e: 'update:data', value: unknown[]): void
-}>()
+type DataWithID = {
+  value: unknown
+  validation: ValidationMessages
+  key: string
+}
+
+const data_with_id = ref<DataWithID[]>([])
 
 onMounted(() => {
-  setup_drag_handler()
+  data.value.forEach((element, index) => {
+    data_with_id.value.push({
+      value: element,
+      validation: getValidationForChild(index),
+      key: crypto.randomUUID()
+    })
+  })
 })
 
-onUpdated(() => {
-  setup_drag_handler()
-})
-
-const value = computed(() => {
-  return data.value
-})
-
-const validation = computed(() => {
-  // If the local validation was never used (null), return the props.validation (backend validation)
-  if (local_validation.value === null) {
-    return props.validation
+const validation = computed({
+  get(): ValidationMessages {
+    // If the local validation was never used (null), return the props.validation (backend validation)
+    if (local_validation.value === null) {
+      return props.validation
+    }
+    return local_validation.value
+  },
+  set(value: ValidationMessages) {
+    local_validation.value = value
   }
-  return local_validation.value
 })
 
-function get_validation_for_child(index: number): ValidationMessages {
+function getValidationForChild(index: number): ValidationMessages {
   const child_messages: ValidationMessages = []
-  props.validation.forEach((msg) => {
+  validation.value.forEach((msg) => {
     if (msg.location[0] === index.toString()) {
       child_messages.push({
         location: msg.location.slice(1),
@@ -58,134 +62,114 @@ const class_listof_element = 'listof_element'
 const class_element_dragger = 'element_dragger'
 const class_vlof_buttons = 'vlof_buttons'
 
-let dragged_index: number = -1
-let target_index: number = -1
-let dragged_row: HTMLTableRowElement | null = null
-
-function get_dragged_row(event: D3DragEvent<HTMLImageElement, unknown, HTMLImageElement>) {
-  if (!event.sourceEvent.target) {
-    return
-  }
-  const target = event.sourceEvent.target
-  return target.closest('tr')
+function dragStart(event: DragEvent) {
+  ;(event.target! as HTMLTableRowElement).closest('tr')!.classList.add('dragging')
 }
 
-function drag_start(event: D3DragEvent<HTMLImageElement, unknown, HTMLImageElement>) {
-  dragged_row = get_dragged_row(event) as HTMLTableRowElement
-  dragged_index = [...table_ref.value!.children].indexOf(dragged_row)
-  target_index = -1
-  select(dragged_row).classed('dragging', true)
+function dragEnd(event: DragEvent) {
+  ;(event.target! as HTMLTableRowElement).closest('tr')!.classList.remove('dragging')
 }
 
-function dragging(event: MouseEvent) {
-  if (dragged_row == null) {
+function dragging(event: DragEvent) {
+  if (table_ref.value == null || event.clientY == 0) {
     return
   }
-  if (table_ref.value == null) {
-    return
-  }
-  const y_coords = pointer(event)[1]
+  const table_children = [...table_ref.value!.children]
+  const dragged_row = (event.target! as HTMLImageElement).closest('tr')!
+  const dragged_index = table_children.indexOf(dragged_row)
 
+  const y_coords = event.clientY
   function sibling_middle_point(sibling: Element) {
     let sibling_rect = sibling.getBoundingClientRect()
     return sibling_rect.top + sibling_rect.height / 2
   }
 
-  let previous = dragged_row.previousElementSibling
+  let target_index = -1
+  let previous: null | undefined | Element = dragged_row.previousElementSibling
   while (previous && y_coords < sibling_middle_point(previous)) {
-    target_index = [...table_ref.value!.children].indexOf(previous)
-    table_ref.value.insertBefore(dragged_row, previous)
-    previous = dragged_row.previousElementSibling
+    target_index = table_children.indexOf(previous)
+    previous = table_ref.value!.children[target_index - 1]
   }
 
-  let next = dragged_row.nextElementSibling
+  let next: null | undefined | Element = dragged_row.nextElementSibling
   while (next && y_coords > sibling_middle_point(next)) {
-    target_index = [...table_ref.value!.children].indexOf(next)
-    table_ref.value.insertBefore(dragged_row, next.nextElementSibling)
-    next = dragged_row.nextElementSibling
+    target_index = table_children.indexOf(next)
+    next = table_ref.value!.children[target_index + 1]
   }
-}
 
-function drag_end() {
-  selectAll('tr.listof_element').classed('dragging', false)
-  if (target_index === -1 || target_index === dragged_index) {
+  if (dragged_index === target_index || target_index === -1) {
     return
   }
-  const new_value = JSON.parse(JSON.stringify(data.value))
-  const moved_entry = new_value.splice(dragged_index, 1)[0]
-  new_value.splice(target_index, 0, moved_entry)
-  emit('update:data', new_value)
+  const moved_entry = data_with_id.value.splice(dragged_index, 1)[0]!
+  data_with_id.value.splice(target_index, 0, moved_entry)
+  sendDataUpstream()
 }
 
-function setup_drag_handler() {
-  const drag_handler = drag<HTMLImageElement, null>()
-    .on('start.drag', (event) => drag_start(event))
-    .on('drag.drag', (event) => dragging(event))
-    .on('end.drag', () => drag_end())
-  const elements = select(table_ref.value)
-    .selectChildren<HTMLTableRowElement, null>('tr')
-    .selectChildren<HTMLTableCellElement, null>(`td.${class_vlof_buttons}`)
-    .select<HTMLImageElement>(`img.${class_element_dragger}`)
-  elements.call(drag_handler)
-}
-
-function validate_list() {
-  validate_value(value, props.spec.validators!).forEach((error) => {
-    local_validation.value = [{ message: error, location: [''] }]
+function validateList() {
+  validate_value(data.value, props.spec.validators!).forEach((error) => {
+    local_validation.value = [{ message: error, location: [] }]
   })
 }
 
-function remove_element(index: number) {
-  data.value.splice(index, 1)
-  validate_list()
+function removeElement(index: number) {
+  data_with_id.value.splice(index, 1)
+  sendDataUpstream()
+  validateList()
 }
 
-function add_element() {
-  data.value.push(props.spec.element_default_value)
-  validate_list()
+function addElement() {
+  data_with_id.value.push({
+    value: props.spec.element_default_value,
+    validation: [],
+    key: crypto.randomUUID()
+  })
+  sendDataUpstream()
+  validateList()
 }
 
-const row_with_uuid = computed(() => {
-  // This generates new rows on each data update, causes
-  const rows = []
-  for (let i = 0; i < value.value.length; i++) {
-    rows.push({ uuid: crypto.randomUUID(), value: value.value[i] })
-  }
-  return rows
-})
+function updateElementData(new_value: unknown, key: string) {
+  data_with_id.value.forEach((element) => {
+    if (element.key === key) {
+      element.value = new_value
+    }
+  })
+  sendDataUpstream()
+}
+function sendDataUpstream() {
+  data.value.splice(0)
+  data_with_id.value.forEach((element) => {
+    data.value.push(element.value)
+  })
+}
 </script>
 
 <template>
   <table ref="table_ref" class="valuespec_listof">
-    <tr
-      v-for="(element_row, index) in row_with_uuid"
-      :key="element_row.uuid"
-      :class="class_listof_element"
-    >
-      <td :class="class_vlof_buttons">
-        <a><img src="themes/modern-dark/images/icon_drag.svg" :class="class_element_dragger" /> </a>
-        <a title="Delete this entry">
-          <img
-            class="icon iconbutton"
-            src="themes/modern-dark/images/icon_close.svg"
-            @click.prevent="remove_element(index)"
-          />
-        </a>
-      </td>
-      <td class="vlof_content">
-        <CmkFormDispatcher
-          v-model:data="value[index]"
-          :spec="spec.element_template"
-          :validation="get_validation_for_child(index)"
-        ></CmkFormDispatcher>
-      </td>
-    </tr>
+    <template v-for="(element, index) in data_with_id" :key="element.key">
+      <tr :class="class_listof_element">
+        <td :class="class_vlof_buttons" @dragstart="dragStart" @drag="dragging" @dragend="dragEnd">
+          <a
+            ><img src="themes/modern-dark/images/icon_drag.svg" :class="class_element_dragger" />
+          </a>
+          <a title="Delete this entry">
+            <img
+              class="icon iconbutton"
+              src="themes/modern-dark/images/icon_close.svg"
+              @click.prevent="removeElement(index)"
+            />
+          </a>
+        </td>
+        <td class="vlof_content">
+          <CmkFormDispatcher
+            v-model:data="element.value"
+            :spec="spec.element_template"
+            :validation="element.validation"
+            @update:data="(new_value) => updateElementData(new_value, element.key)"
+          ></CmkFormDispatcher>
+        </td>
+      </tr>
+    </template>
   </table>
-  <input
-    type="button"
-    class="button"
-    :value="spec.add_element_label"
-    @click.prevent="add_element"
-  />
+  <input type="button" class="button" :value="spec.add_element_label" @click.prevent="addElement" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

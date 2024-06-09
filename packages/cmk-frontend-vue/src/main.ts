@@ -32,11 +32,11 @@ function setup_vue() {
     if (vueApp.app_name == 'form_spec') {
       const app = createApp(CmkRuleset, {
         id: vueApp.id,
-        spec: vueApp.form_spec,
+        spec: vueApp.spec,
         // eslint has a false positive: assuming `data` is part of a vue component
         // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
-        data: vueApp.model_value,
-        validation: vueApp.validation_messages
+        data: vueApp.data,
+        validation: vueApp.validation
       })
       // Assign a unique id to each component, useful for label for=..
       // until https://github.com/vuejs/rfcs/discussions/557 is resolved

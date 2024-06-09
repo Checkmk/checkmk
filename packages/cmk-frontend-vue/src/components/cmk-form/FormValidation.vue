@@ -9,7 +9,9 @@ const props = defineProps<{
 const messages = computed((): string[] => {
   const messages: string[] = []
   props.validation.forEach((msg) => {
-    messages.push(msg.message)
+    if (msg.location.length === 0) {
+      messages.push(msg.message)
+    }
   })
   return messages
 })

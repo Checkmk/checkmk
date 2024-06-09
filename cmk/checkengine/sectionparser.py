@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any, Final, Generic, NamedTuple, TypeVar
 
 import cmk.utils.piggyback
+from cmk.utils import debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.validatedstr import ValidatedString
@@ -111,7 +112,7 @@ class SectionsParser(Generic[_TSeq]):
         try:
             return parse_function(list(raw_data))
         except Exception:
-            if cmk.utils.debug.enabled():
+            if debug.enabled():
                 raise
             self.parsing_errors.append(self.error_handling(section_name, raw_data))
             return None

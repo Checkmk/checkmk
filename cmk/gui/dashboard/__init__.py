@@ -83,7 +83,7 @@ def load_plugins() -> None:
 
         declare_permission(
             "dashboard.%s" % name,
-            board["title"],
+            f"{board['title']} ({board['name']})",
             board.get("description", ""),
             default_permissions,
         )

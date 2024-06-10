@@ -997,7 +997,7 @@ class Overridable(Base[_T_OverridableSpec]):
                 Permission(
                     section=permission_section_registry[cls.type_name()],
                     name=page.name(),
-                    title=page.title(),
+                    title=f"{page.title()} ({page.name()})",
                     description=page.description(),
                     defaults=default_authorized_builtin_role_ids,
                 )

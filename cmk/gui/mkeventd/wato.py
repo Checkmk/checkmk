@@ -16,7 +16,7 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from html import escape as html_escape
 from pathlib import Path
-from typing import Any, cast, overload, TypeVar
+from typing import Any, cast, Literal, overload, TypeVar
 
 from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import-untyped]
 from pysmi.compiler import MibCompiler  # type: ignore[import-untyped]
@@ -2473,7 +2473,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         html.write_text(_("DROP"))
                 else:
                     if isinstance(rule["state"], tuple):
-                        stateval = rule["state"][0]
+                        stateval: Literal["text_pattern", 0, 1, 2, 3, -1] = rule["state"][0]
                     else:
                         stateval = rule["state"]
                     txt = {
@@ -2516,7 +2516,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.cell(_("Hits"), str(rh) if hits else "", css=["number"])
 
                 # Text to match
-                table.cell(_("Text to match"), rule.get("match"))
+                match = rule.get("match")
+                # ECRuleSpec the match type is wrong for the UI. In the config we only have str.
+                # during EC runtime we may have a pattern in that field.
+                assert not isinstance(match, re.Pattern)
+                table.cell(_("Text to match"), match)
 
                 # Description
                 table.cell(_("Description"))
@@ -2540,7 +2544,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
     def _filter_mkeventd_rules(
-        self, search_expression: str, rule_pack: ec.ECRulePackSpec
+        self, search_expression: str, rule_pack: ec.ECRulePack
     ) -> list[ec.Rule]:
         return [
             rule

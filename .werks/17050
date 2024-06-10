@@ -1,0 +1,11 @@
+Title: Don't escape customer name
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1718032736
+Edition: cme
+Level: 1
+Version: 2.2.0p28
+
+If you created a customer with e.g. an ampersand in the customer name, the name
+was escaped on the customers page showing "&amp" instead of "&".

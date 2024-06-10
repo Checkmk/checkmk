@@ -44,10 +44,6 @@ if [ "$USER" == "jenkins" ]; then
     echo >&2 "WARNING: run-in-docker.sh used in CI. This should not happen. Use CI native tools instead"
 else
     # LOCAL
-    if [ ! -d "${CONTAINER_SHADOW_WORKSPACE}/venv" ]; then
-        CMD="touch ${CHECKOUT_ROOT}/Pipfile.lock; ${CMD[*]}"
-    fi
-
     # Make sure a local containerized session does not interfere with
     # native builds. Maybe in the future this script should not be executed in
     # a CI environment (since those come with their own containerization solutions)

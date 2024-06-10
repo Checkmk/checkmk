@@ -17,6 +17,7 @@ set -e
 : "${DOCKER_REGISTRY_NO_HTTP:="$(echo ${DOCKER_REGISTRY} | sed -e "s/^https*:\/\///")"}"
 : "${BASE_BUILD_IMAGE:="${DOCKER_REGISTRY_NO_HTTP}/${REFERENCE_IMAGE_DISTRO}:${BUILD_IMAGE_TAG}"}"
 : "${CACHE_IMAGE:="${DOCKER_REGISTRY_NO_HTTP}/${REFERENCE_IMAGE_DISTRO}-reference:cache"}"
+: "${LOCK_FILE:="${HOME}/docker-build-mutex"}"
 
 CHECKOUT_ROOT="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" >/dev/null 2>&1 && pwd)"
 TEMP_CONTEXT_DIR=$(mktemp -d)
@@ -67,8 +68,24 @@ fi
 # cannot use as build context
 "${CHECKOUT_ROOT}/defines/dev-images/populate-build-context.sh" "${TEMP_CONTEXT_DIR}"
 
+run_optionally_exclusive() {
+    # We've encountered strange Docker related errors, likely related to concurrent
+    # invocations of `docker build`. So this function provides a way to avoid
+    # concurrent invocations (at least for the 'reference image') by locking
+    # a global file.
+    # In case this file does not exist, the lock will not be obtained, making
+    # the lock-file itself a switch for turning locking on/off (by existence)
+    if [ -f "${LOCK_FILE}" ]; then
+        [ -n "${VERBOSE}" ] && echo >&2 "lock ${LOCK_FILE} and execute $*"
+        flock "${LOCK_FILE}" "$@"
+    else
+        [ -n "${VERBOSE}" ] && echo >&2 "execute without lock (${LOCK_FILE} does not exist): $*"
+        "$@"
+    fi
+}
+
 # shellcheck disable=SC2086
-"${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
+run_optionally_exclusive "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
     docker buildx build \
     ${EXTRA_ARGS} \
     --iidfile "${IIDFILE}" \

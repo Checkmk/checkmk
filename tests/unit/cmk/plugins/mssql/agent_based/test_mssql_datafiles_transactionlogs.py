@@ -82,7 +82,7 @@ def section_mssql() -> msdt.SectionDatafiles:
         (
             parse_df(
                 [
-                    ["Z:\\\\", "NTFS", "31463268", "16510812", "14952456", "53%", "Z:\\\\"],
+                    ["Z:\\", "NTFS", "31463268", "16510812", "14952456", "53%", "Z:\\"],
                 ]
             ),
         ),
@@ -139,7 +139,7 @@ def test_discovery_mssql_transactionlogs(
             "MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log",
             parse_df(
                 [
-                    ["Z:\\\\", "NTFS", "31463268", "16510812", "14952456000000", "53%", "Z:\\\\"],
+                    ["Z:\\", "NTFS", "31463268", "16510812", "14952456000000", "53%", "Z:\\"],
                 ]
             ),
             [
@@ -167,7 +167,7 @@ def test_discovery_mssql_transactionlogs(
             "MSSQL46.master.mastlog",
             parse_df(
                 [
-                    ["Z:\\\\", "NTFS", "31463268", "16510812", "14952456000000", "53%", "Z:\\\\"],
+                    ["Z:\\", "NTFS", "31463268", "16510812", "14952456000000", "53%", "Z:\\"],
                 ]
             ),
             [
@@ -195,7 +195,7 @@ def test_discovery_mssql_transactionlogs(
             "MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log",
             parse_df(
                 [
-                    ["Z:\\\\", "NTFS", "1", "1", "1", "53%", "Z:\\\\"],
+                    ["Z:\\", "NTFS", "1", "1", "1", "53%", "Z:\\"],
                 ]
             ),
             [

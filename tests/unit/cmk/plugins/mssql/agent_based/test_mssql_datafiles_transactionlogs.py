@@ -281,3 +281,55 @@ def test_check_mssql_common_unlimited() -> None:
         Metric("allocated_size", 44844449792.0, boundaries=(0.0, 64945123328.0)),
         Result(state=State.OK, summary="Maximum size: 60.5 GiB"),
     ]
+
+
+DF_SECTION_WITH_MULTIPLE_MPS = [
+    ["System", "NTFS", "125247484", "83827900", "41419584", "67%", "C:\\"],
+    ["SQL_root", "NTFS", "104724416", "31955520", "72768896", "31%", "D:\\"],
+    ["NAME_data", "NTFS", "1047233920", "457569280", "589664640", "44%", "D:\\MyData\\"],
+    ["NAME_logs", "NTFS", "83751872", "36375296", "47376576", "44%", "D:\\MyLogs\\"],
+    ["temp", "NTFS", "10485760", "375296", "10110464", "3%", "D:\\temp\\"],
+]
+
+DATAFILE_SECTION = [
+    ["NAME", "master", "master1", "D:\\MyData\\master1.mdf", "0", "124890", "124172", "1"],
+    ["NAME", "master", "master2", "D:\\MyData\\master2.mdf", "0", "128890", "128172", "1"],
+]
+
+
+def test_check_mssql_transactionlogs_multiple_mp_single() -> None:
+    assert list(
+        msdt.check_mssql_transactionlogs(
+            "NAME.master.master1",
+            {},
+            msdt.parse_mssql_datafiles(DATAFILE_SECTION),
+            parse_df(DF_SECTION_WITH_MULTIPLE_MPS),
+        )
+    ) == [
+        Result(state=State.OK, summary="Used: 121 GiB"),
+        Metric("data_size", 130203779072.0, boundaries=(0.0, 140556894208.0)),
+        Result(state=State.OK, summary="Allocated used: 121 GiB"),
+        Result(state=State.OK, summary="Allocated: 122 GiB"),
+        Metric("allocated_size", 130956656640.0, boundaries=(0.0, 140556894208.0)),
+        # FIXME. Currently this is 131 GiB: allocated for this file + available on D:\temp\. That's nonsense.
+        Result(state=State.OK, summary="Maximum size: 131 GiB"),
+    ]
+
+
+def test_check_mssql_transactionlogs_multiple_mp_summary() -> None:
+    assert list(
+        msdt.check_mssql_transactionlogs(
+            "NAME.master",
+            {},
+            msdt.parse_mssql_datafiles(DATAFILE_SECTION),
+            parse_df(DF_SECTION_WITH_MULTIPLE_MPS),
+        )
+    ) == [
+        Result(state=State.OK, summary="Used: 246 GiB"),
+        Metric("data_size", 264601862144.0, boundaries=(0.0, 285308092416.0)),
+        Result(state=State.OK, summary="Allocated used: 246 GiB"),
+        Result(state=State.OK, summary="Allocated: 248 GiB"),
+        Metric("allocated_size", 266107617280.0, boundaries=(0.0, 285308092416.0)),
+        # FIXME. See above. But this is twice as wrong: allocated + _2_ * avalable on D:\temp\
+        Result(state=State.OK, summary="Maximum size: 266 GiB"),
+    ]

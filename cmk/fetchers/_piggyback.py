@@ -58,8 +58,12 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         )
 
     def open(self) -> None:
-        for origin in (self.hostname, self.address):
-            self._sources.extend(PiggybackFetcher._raw_data(origin))
+        self._sources.extend(
+            line
+            for origin in (self.hostname, self.address)
+            if origin
+            for line in PiggybackFetcher._raw_data(origin)
+        )
 
     def close(self) -> None:
         self._sources.clear()
@@ -111,5 +115,5 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         return ("<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels)).encode("utf-8")
 
     @staticmethod
-    def _raw_data(hostname: HostAddress | None) -> Sequence[PiggybackRawDataInfo]:
-        return get_piggyback_raw_data(hostname if hostname else HostName(""))
+    def _raw_data(hostname: HostAddress) -> Sequence[PiggybackRawDataInfo]:
+        return get_piggyback_raw_data(hostname)

@@ -23,6 +23,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
+_ItemKey = tuple[str | None, str, str]
+
 
 class MSSQLInstanceData(TypedDict):
     unlimited: bool
@@ -32,23 +34,11 @@ class MSSQLInstanceData(TypedDict):
     mountpoint: str
 
 
-SectionDatafiles = dict[tuple[str | None, str, str], MSSQLInstanceData]
+SectionDatafiles = Mapping[_ItemKey, MSSQLInstanceData]
 
 
 def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
-    """
-    >>> from pprint import pprint
-    >>> pprint(parse_mssql_datafiles([
-    ...     ['MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
-    ...      'Z:\\\\mypath\\\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'],
-    ... ]))
-    {('MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log'): {'allocated_size': 268435456.0,
-                                                                 'max_size': 2199023255552.0,
-                                                                 'mountpoint': 'Z',
-                                                                 'unlimited': False,
-                                                                 'used_size': 16777216.0}}
-    """
-    section: SectionDatafiles = {}
+    section: dict[_ItemKey, MSSQLInstanceData] = {}
     for line in string_table:
         if line[-1].startswith("ERROR: "):
             continue
@@ -69,7 +59,7 @@ def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
                 "max_size": None,
                 "allocated_size": None,
                 "used_size": None,
-                "mountpoint": physical_name[0],
+                "mountpoint": physical_name.lower(),
             },
         )
         with suppress(ValueError):
@@ -182,6 +172,20 @@ def _mssql_datafiles_process_sizes(
     )
 
 
+def _get_mountpoint(
+    df_dict: Mapping[str, object],
+    physical_name: str,
+) -> str:
+    part = physical_name.split("\\")
+    i = len(part)
+    while i > 1:
+        i = i - 1
+        mountpoint = df_dict.get("/".join(part[0:i]) + "/")
+        if mountpoint is not None:
+            return "/".join(part[0:i]) + "/"
+    return part[0] + "/"
+
+
 def discover_mssql_common(
     mode: Literal["datafiles", "transactionlogs"],
     params: list[Mapping[str, Any]],
@@ -227,15 +231,22 @@ def _datafile_usage(
     used_size_sum = 0.0
     unlimited = False
     instances_found = False
+    used_mointpoints = []
 
     for instance in instances:
         instances_found = True
         unlimited |= instance["unlimited"]
         allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += (used_size := instance["used_size"] or 0)
+        mountpoint = _get_mountpoint(available_bytes, instance["mountpoint"])
+        filesystem_free_size = available_bytes.get(mountpoint)
+        if mountpoint in used_mointpoints:
+            filesystem_free_size = 0
+        else:
+            used_mointpoints.append(mountpoint)
         max_size = _effective_max_size(
             instance["max_size"],
-            available_bytes.get(instance["mountpoint"]),
+            filesystem_free_size,
             used_size,
             unlimited,
         )
@@ -286,7 +297,9 @@ def check_mssql_common(
         )
     )
     available_bytes = (
-        {f.mountpoint[0]: f.avail_mb * 1024 * 1024 for f in section_df[0]} if section_df else {}
+        {f.mountpoint.lower(): f.avail_mb * 1024 * 1024 for f in section_df[0]}
+        if section_df
+        else {}
     )
 
     if not (

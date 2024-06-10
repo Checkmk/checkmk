@@ -379,7 +379,10 @@ def declare_visual_permission(what: VisualTypeName, name: str, visual: TVisual) 
     permname = PermissionName(f"{what[:-1]}.{name}")
     if published_to_user(visual) and permname not in permission_registry:
         declare_permission(
-            permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
+            permname,
+            f"{visual['title']} ({visual['name']})",
+            visual["description"],
+            default_authorized_builtin_role_ids,
         )
 
 
@@ -388,7 +391,7 @@ def declare_packaged_visual_permission(what: VisualTypeName, name: str, visual: 
     if visual["packaged"] and permname not in permission_registry:
         declare_permission(
             permname,
-            visual["title"] + _(" (packaged)"),
+            f"{visual['title']} ({visual['name']}, {_('packaged)')}",
             visual["description"],
             default_authorized_builtin_role_ids,
         )

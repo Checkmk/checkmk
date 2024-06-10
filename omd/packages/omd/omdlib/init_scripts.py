@@ -5,12 +5,11 @@
 
 """Handling of site-internal init scripts"""
 
+import contextlib
 import logging
 import os
 import subprocess
 import sys
-
-from omdlib.utils import chdir
 
 from cmk.utils import tty
 from cmk.utils.crypto.secrets import SiteInternalSecret
@@ -36,7 +35,7 @@ def call_init_scripts(
         return max(code_stop, code_start)
 
     # OMD guarantees OMD_ROOT to be the current directory
-    with chdir(site_dir):
+    with contextlib.chdir(site_dir):
         if command == "start":
             log_security_event(SiteStartStoppedEvent(event="start"))
             SiteInternalSecret().regenerate()

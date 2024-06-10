@@ -3,37 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
+from contextlib import chdir
 from pathlib import Path
 
 from omdlib.global_options import GlobalOptions
 
 
 def test_orig_working_directory(tmp_path: Path) -> None:
-    orig_wd = os.getcwd()
-    try:
-        base_path = tmp_path.joinpath("lala")
-        base_path.mkdir(parents=True)
-        os.chdir(str(base_path))
+    base_path = tmp_path.joinpath("lala")
+    base_path.mkdir(parents=True)
+    with chdir(base_path):
         global_options = GlobalOptions.default()
-        assert global_options.orig_working_directory == str(base_path)
-    finally:
-        os.chdir(orig_wd)
+    assert global_options.orig_working_directory == str(base_path)
 
 
 def test_orig_working_directory_not_existing(tmp_path: Path) -> None:
-    orig_wd = os.getcwd()
-    try:
-        test_dir = tmp_path.joinpath("lala")
-        test_dir.mkdir()
-
-        os.chdir(str(test_dir))
-        assert os.getcwd() == str(test_dir)
-
+    test_dir = tmp_path.joinpath("lala")
+    test_dir.mkdir()
+    with chdir(test_dir):
         test_dir.rmdir()
         assert not test_dir.exists()
 
         global_options = GlobalOptions.default()
-        assert global_options.orig_working_directory == "/"
-    finally:
-        os.chdir(orig_wd)
+    assert global_options.orig_working_directory == "/"

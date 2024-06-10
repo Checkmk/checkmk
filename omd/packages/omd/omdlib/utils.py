@@ -8,7 +8,6 @@ import enum
 import os
 import pwd
 import shutil
-from collections.abc import Iterator
 from pathlib import Path
 
 from omdlib.skel_permissions import get_skel_permissions, Permissions
@@ -21,17 +20,6 @@ def is_containerized() -> bool:
         or os.path.exists("/run/.containerenv")
         or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
     )
-
-
-@contextlib.contextmanager
-def chdir(path: str) -> Iterator[None]:
-    """Change working directory and return on exit"""
-    prev_cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
 
 
 def delete_user_file(user_path: str) -> None:
@@ -121,7 +109,7 @@ def create_skeleton_files(
 ) -> None:
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = directory == "."
-    with chdir(skelroot):  # make relative paths
+    with contextlib.chdir(skelroot):  # make relative paths
         for dirpath, dirnames, filenames in os.walk(directory):
             dirpath = dirpath.removeprefix("./")
             for entry in dirnames + filenames:

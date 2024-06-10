@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import abc
+import contextlib
 import errno
 import fcntl
 import io
@@ -101,7 +102,6 @@ from omdlib.users_and_groups import (
     userdel,
 )
 from omdlib.utils import (
-    chdir,
     chown_tree,
     create_skeleton_file,
     create_skeleton_files,
@@ -355,7 +355,7 @@ def walk_skel(
         "etc/htpasswd",
     ]
 
-    with chdir(root):
+    with contextlib.chdir(root):
         # Note: os.walk first finds level 1 directories, then deeper
         # layers. If we need a real depth search instead, where we first
         # handle deep directories and files, then the top level ones.
@@ -411,7 +411,7 @@ def patch_skeleton_files(
     new_replacements: Replacements,
 ) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    with chdir(skelroot):  # make relative paths
+    with contextlib.chdir(skelroot):  # make relative paths
         for dirpath, _dirnames, filenames in os.walk("."):
             if dirpath.startswith("./"):
                 dirpath = dirpath[2:]
@@ -1735,7 +1735,7 @@ def init_action(
         daemon = None
 
     # OMD guarantees that we are in OMD_ROOT
-    with chdir(site.dir):
+    with contextlib.chdir(site.dir):
         if command == "status":
             return check_status(site.dir, display=True, daemon=daemon, bare="bare" in options)
         return call_init_scripts(site.dir, command, daemon)

@@ -1515,7 +1515,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
     def _search_expression(self) -> str | None:
         return get_search_expression()
 
-    def _rule_pack_with_id(self, rule_pack_id: str | None):  # type: ignore[no-untyped-def]
+    def _rule_pack_with_id(self, rule_pack_id: str | None) -> tuple[int, ec.ECRulePack]:
         for nr, entry in enumerate(self._rule_packs):
             if entry["id"] == rule_pack_id:
                 return nr, entry
@@ -2195,7 +2195,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def _from_vars(self) -> None:
         self._rule_pack_id = request.get_ascii_input_mandatory("rule_pack")
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
-        self._rules = self._rule_pack["rules"]
 
     def title(self) -> str:
         return _("Rule pack %s") % self._rule_pack["title"]
@@ -2271,7 +2270,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
         if request.var("_move_to"):
-            for move_nr, rule in enumerate(self._rules):
+            for move_nr, rule in enumerate(self._rule_pack["rules"]):
                 move_var = "_move_to_%s" % rule["id"]
                 if request.var(move_var):
                     other_pack_nr, other_pack = self._rule_pack_with_id(request.var(move_var))
@@ -2283,8 +2282,13 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     if type_ == ec.RulePackType.unmodified_mkp:
                         ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
 
-                    self._rule_packs[other_pack_nr]["rules"][0:0] = [rule]
-                    del self._rule_packs[self._rule_pack_nr]["rules"][move_nr]
+                    self._rule_packs[other_pack_nr]["rules"] = [rule] + list(
+                        self._rule_packs[other_pack_nr]["rules"]
+                    )
+
+                    rules = list(self._rule_packs[self._rule_pack_nr]["rules"])
+                    del rules[move_nr]
+                    self._rule_packs[self._rule_pack_nr]["rules"] = rules
 
                     if other_type_ == ec.RulePackType.exported:
                         _export_mkp_rule_pack(other_pack)
@@ -2304,14 +2308,16 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         if request.has_var("_delete"):
             nr = request.get_integer_input_mandatory("_delete")
-            rules = self._rules
-            rule = rules[nr]
-            self._add_change("delete-rule", _("Deleted rule %s") % self._rules[nr]["id"])
             if type_ == ec.RulePackType.unmodified_mkp:
                 ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
-                rules = self._rule_packs[self._rule_pack_nr]["rules"]
+                rules = list(self._rule_packs[self._rule_pack_nr]["rules"])
+            else:
+                rules = list(self._rule_pack["rules"])
 
+            self._add_change("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
             del rules[nr]
+
+            self._rule_pack["rules"] = rules
 
             if type_ == ec.RulePackType.exported:
                 _export_mkp_rule_pack(self._rule_pack)
@@ -2322,14 +2328,17 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             from_pos = request.get_integer_input_mandatory("_move")
             to_pos = request.get_integer_input_mandatory("_index")
 
-            rules = self._rules
             if type_ == ec.RulePackType.unmodified_mkp:
                 ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
-                rules = self._rule_packs[self._rule_pack_nr]["rules"]
+                rules = list(self._rule_packs[self._rule_pack_nr]["rules"])
+            else:
+                rules = list(self._rule_pack["rules"])
 
             rule = rules[from_pos]
             del rules[from_pos]  # make to_pos now match!
             rules[to_pos:to_pos] = [rule]
+
+            self._rule_pack["rules"] = rules
 
             if type_ == ec.RulePackType.exported:
                 _export_mkp_rule_pack(self._rule_pack)
@@ -2348,9 +2357,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         else:
             found_rules = []
 
+        rules = self._rule_pack["rules"]
+
         # Simulator
         event = self._show_event_simulator()
-        if not self._rules:
+        if not rules:
             html.show_message(_("This package does not yet contain any rules."))
             return
         if search_expression and not found_rules:
@@ -2359,14 +2370,14 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         if len(self._rule_packs) > 1:
             with html.form_context("move_to", method="POST"):
-                self._show_table(event, found_rules)
+                self._show_table(event, found_rules, rules)
                 html.hidden_field("_move_to", "yes")
                 html.hidden_fields()
         else:
-            self._show_table(event, found_rules)
+            self._show_table(event, found_rules, rules)
 
     def _show_table(  # pylint: disable=too-many-branches
-        self, event: ec.Event | None, found_rules: list[ec.Rule]
+        self, event: ec.Event | None, found_rules: list[ec.Rule], rules: Collection[ec.Rule]
     ) -> None:
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
         priorities = _deref(syslog_priorities)
@@ -2376,7 +2387,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             hits = _get_rule_stats_from_ec()
-            for nr, rule in enumerate(self._rules):
+            for nr, rule in enumerate(rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
                     url=make_action_link(
@@ -2734,19 +2745,18 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             # We just know the rule id and need to find the pack ourselves.
             rule_id = request.get_ascii_input_mandatory("rule_id")
 
-            self._rule_pack = None
+            rule_pack = None
             for nr, pack in enumerate(self._rule_packs):
                 for rnr, rule in enumerate(pack["rules"]):
                     if rule_id == rule["id"]:
-                        self._rule_pack_nr, self._rule_pack = nr, pack
+                        self._rule_pack_nr, rule_pack = nr, pack
                         request.set_var("edit", str(rnr))
                         request.set_var("rule_pack", pack["id"])
                         break
 
-            if not self._rule_pack:
+            if not rule_pack:
                 raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
-
-        self._rules = self._rule_pack["rules"]
+            self._rule_pack = rule_pack
 
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)  # missing -> new rule
         self._clone_nr = request.get_integer_input_mandatory(
@@ -2755,19 +2765,19 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         self._new = self._edit_nr < 0
 
         if self._new:
-            self._rule = {}
+            self._rule = ec.Rule({})
             if self._clone_nr >= 0:
-                self._rule.update(self._rules[self._clone_nr])
+                self._rule.update(list(self._rule_pack["rules"])[self._clone_nr])
         else:
             try:
-                self._rule = self._rules[self._edit_nr]
+                self._rule = list(self._rule_pack["rules"])[self._edit_nr]
             except IndexError:
                 raise MKUserError("edit", _("The rule you are trying to edit does not exist."))
 
     def title(self) -> str:
         if self._new:
             return _("Add rule")
-        return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
+        return _("Edit rule %s") % list(self._rule_pack["rules"])[self._edit_nr]["id"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
@@ -2795,16 +2805,16 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         if not self._new:
             old_id = self._rule["id"]
         vs = self._valuespec()
-        self._rule = vs.from_html_vars("rule")
-        vs.validate_value(self._rule, "rule")
-        if not self._new and old_id != self._rule["id"]:
+        rule = vs.from_html_vars("rule")
+        vs.validate_value(dict(rule), "rule")
+        if not self._new and old_id != rule["id"]:
             raise MKUserError(
                 "rule_p_id", _("It is not allowed to change the ID of an existing rule.")
             )
         if self._new:
             for pack in self._rule_packs:
                 for r in pack["rules"]:
-                    if r["id"] == self._rule["id"]:
+                    if r["id"] == rule["id"]:
                         raise MKUserError(
                             "rule_p_id",
                             _("A rule with this ID already exists in rule pack <b>%s</b>.")
@@ -2812,7 +2822,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                         )
 
         try:
-            num_groups = re.compile(self._rule["match"]).groups
+            num_groups = re.compile(rule["match"]).groups
         except Exception:
             raise MKUserError("rule_p_match", _("Invalid regular expression"))
         if num_groups > 9:
@@ -2824,13 +2834,13 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 ),
             )
 
-        if "count" in self._rule and "expect" in self._rule:
+        if "count" in rule and "expect" in rule:
             raise MKUserError(
                 "rule_p_expect_USE",
                 _("You cannot use counting and expecting at the same time in the same rule."),
             )
 
-        if "expect" in self._rule and "delay" in self._rule:
+        if "expect" in rule and "delay" in rule:
             raise MKUserError(
                 "rule_p_expect_USE",
                 _(
@@ -2844,7 +2854,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         num_repl = 9
         while num_repl > num_groups:
             repl = "\\%d" % num_repl
-            for name, value in self._rule.items():
+            for name, value in rule.items():
                 if name.startswith("set_") and isinstance(value, str):
                     if repl in value:
                         raise MKUserError(
@@ -2859,7 +2869,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
         if edition() is Edition.CME and "customer" in self._rule_pack:
             try:
-                del self._rule["customer"]
+                del rule["customer"]
             except KeyError:
                 pass
 
@@ -2867,14 +2877,18 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
         if type_ == ec.RulePackType.unmodified_mkp:
             ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
-            self._rules = self._rule_packs[self._rule_pack_nr]["rules"]
+            rules = list(self._rule_packs[self._rule_pack_nr]["rules"])
+        else:
+            rules = list(self._rule_pack["rules"])
 
         if self._new and self._clone_nr >= 0:
-            self._rules[self._clone_nr : self._clone_nr] = [self._rule]
+            rules[self._clone_nr : self._clone_nr] = [rule]
         elif self._new:
-            self._rules[0:0] = [self._rule]
+            rules[0:0] = [rule]
         else:
-            self._rules[self._edit_nr] = self._rule
+            rules[self._edit_nr] = rule
+
+        self._rule_pack["rules"] = rules
 
         if type_ == ec.RulePackType.exported:
             _export_mkp_rule_pack(self._rule_pack)
@@ -2883,24 +2897,24 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         if self._new:
             _add_change_for_sites(
                 what="new-rule",
-                message=("Created new event correlation rule with id %s") % self._rule["id"],
-                rule_or_rulepack=self._rule,
+                message=("Created new event correlation rule with id %s") % rule["id"],
+                rule_or_rulepack=rule,
             )
         else:
             _add_change_for_sites(
                 what="edit-rule",
-                message=("Modified event correlation rule %s") % self._rule["id"],
-                rule_or_rulepack=self._rule,
+                message=("Modified event correlation rule %s") % rule["id"],
+                rule_or_rulepack=rule,
             )
             # Reset hit counters of this rule
-            execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())
+            execute_command("RESETCOUNTERS", [rule["id"]], omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
     def page(self) -> None:
         self._verify_ec_enabled()
         with html.form_context("rule"):
             vs = self._valuespec()
-            vs.render_input("rule", self._rule)
+            vs.render_input("rule", dict(self._rule))
             vs.set_focus("rule")
             html.hidden_fields()
 

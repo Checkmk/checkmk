@@ -49,6 +49,8 @@ _MAP_INPUT_VOLTAGE = {
     "1": "low110v",
     "2": "high220v",
     "3": "minus48v",
+    "4": "ac110vOr220v",
+    "5": "dc",
 }
 
 

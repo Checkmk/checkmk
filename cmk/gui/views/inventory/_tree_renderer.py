@@ -50,13 +50,12 @@ def make_table_view_name_of_host(view_name: str) -> str:
 
 
 def _make_columns_and_hints(
-    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, SDDeltaValue]],
-    hint: NodeDisplayHint,
+    keys: Iterable[SDKey], hint: NodeDisplayHint
 ) -> OrderedDict[SDKey, ColumnDisplayHint]:
     return OrderedDict(
         {
             c: hint.get_column_hint(c)
-            for c in list(hint.columns) + sorted({k for r in rows for k in r} - set(hint.columns))
+            for c in list(hint.columns) + sorted(set(keys) - set(hint.columns))
         }
     )
 
@@ -350,7 +349,7 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns_and_hints = _make_columns_and_hints(table.rows, hint)
+        columns_and_hints = _make_columns_and_hints({k for r in table.rows for k in r}, hint)
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
             _sort_rows(table, columns_and_hints)
             if isinstance(table, ImmutableTable)

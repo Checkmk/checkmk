@@ -66,6 +66,7 @@ class DataOrigin(Enum):
 
 @dataclass
 class VisitorOptions:
+    # Depending on the origin, we will call the migrate function
     data_origin: DataOrigin
 
 
@@ -794,7 +795,6 @@ def parse_data_from_frontend(form_spec: FormSpec, field_id: str) -> Any:
     if not request.has_var(field_id):
         raise MKGeneralException("Formular data is missing in request")
     value_from_frontend = json.loads(request.get_str_input_mandatory(field_id))
-    # TODO Why DataOrigin.DISK when data is coming from frontend?
-    visitor = _get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.DISK))
+    visitor = _get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     _process_validation_errors(visitor.validate(value_from_frontend))
     return visitor.to_disk(value_from_frontend)

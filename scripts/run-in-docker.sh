@@ -31,6 +31,7 @@ CMD="${*:-bash}"
 
 CONTAINER_SHADOW_WORKSPACE="${CHECKOUT_ROOT}/container_shadow_workspace_local"
 DOCKER_MOUNT_ARGS="-v ${CONTAINER_SHADOW_WORKSPACE}/home:${HOME}"
+: "${CONTAINER_NAME:="ref-$(basename "$(pwd)")-$(sha1sum <<<"${CONTAINER_SHADOW_WORKSPACE}" | cut -c1-10)"}"
 
 # Create directories for build artifacts which we want to have separated
 # in native and containerized builds
@@ -112,6 +113,7 @@ fi
 # shellcheck disable=SC2086
 docker run -a stdout -a stderr \
     --rm \
+    --name $CONTAINER_NAME \
     ${TERMINAL_FLAG} \
     --init \
     -u "$(id -u):$(id -g)" \

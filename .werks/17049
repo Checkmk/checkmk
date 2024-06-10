@@ -1,0 +1,12 @@
+Title: Add ID to some sections on "Edit role" page
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1718015289
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Built-in views already showed the ID of the view, this was added now for custom
+views and other sections like dashboards, topics and graph collections.
+

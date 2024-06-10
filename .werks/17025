@@ -1,0 +1,27 @@
+Title: Fix XSS in confirmation pop-up
+Class: security
+Compatible: compat
+Component: wato
+Date: 1718016028
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Prior to this Werk, there was a potential for HTML elements from user inputs to be rendered in certain confirmation pop-ups, leading to an XSS vulnerability.
+
+
+This vulnerability was identified during a commissioned penetration test conducted by PS Positive Security GmbH.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+
+<em>Indicators of Compromise</em>:
+
+Injected HTML elements in some specific user input fields with no proper escaping that are displayed in the confirmation pop-up.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 5.4 Medium with the following CVSS vector: <code>CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N</code>, and assigned <code>CVE-2024-28831</code>.
+

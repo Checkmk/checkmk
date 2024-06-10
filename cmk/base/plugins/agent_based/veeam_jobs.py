@@ -15,12 +15,20 @@
 # BACKUP_R43-Pool2_HXWH44 Backup  Stopped Failed  27.10.2013 02:37:45     27.10.2013 02:45:35
 
 
-def inventory_veeam_jobs(info):
-    return [(x[0], None) for x in info]
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 
-def check_veeam_jobs(item, _no_params, info):
-    for line in info:
+def discovery_veeam_jobs(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in section)
+
+
+def check_veeam_jobs(item: str, section: StringTable) -> CheckResult:
+    for line in section:
         if len(line) < 6:
             continue  # Skip incomplete lines
 
@@ -32,34 +40,41 @@ def check_veeam_jobs(item, _no_params, info):
             continue  # Skip not matching lines
 
         if job_last_state in ["Starting", "Working", "Postprocessing"]:
-            return 0, "Running since %s (current state is: %s)" % (
-                job_creation_time,
-                job_last_state,
-            )
+            summary = f"Running since {job_creation_time} (current state is: {job_last_state})"
+            yield Result(state=State.OK, summary=summary)
+            return
 
         if job_last_result == "Success":
-            state = 0
+            state = State.OK
         elif job_last_state == "Idle" and job_type == "BackupSync":
             # A sync job is always idle
-            state = 0
+            state = State.OK
         elif job_last_result == "Failed":
-            state = 2
+            state = State.CRIT
         elif job_last_state == "Stopped" and job_last_result == "Warning":
-            state = 1
+            state = State.WARN
         else:
-            state = 3
+            state = State.UNKNOWN
 
-        return state, "State: %s, Result: %s, Creation time: %s, End time: %s, Type: %s" % (
-            job_last_state,
-            job_last_result,
-            job_creation_time,
-            job_end_time,
-            job_type,
-        )
+        yield Result(state=State.OK, summary=f"State: {job_last_state}")
+        yield Result(state=state, summary=f"Result: {job_last_result}")
+        yield Result(state=State.OK, summary=f"Creation time: {job_creation_time}")
+        yield Result(state=State.OK, summary=f"End time: {job_end_time}")
+        yield Result(state=State.OK, summary=f"Type: {job_type}")
 
 
-check_info["veeam_jobs"] = {
-    "check_function": check_veeam_jobs,
-    "inventory_function": inventory_veeam_jobs,
-    "service_description": "VEEAM Job %s",
-}
+def parse_veeam_jobs(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+register.agent_section(
+    name="veeam_jobs",
+    parse_function=parse_veeam_jobs,
+)
+
+register.check_plugin(
+    name="veeam_jobs",
+    service_name="VEEAM Job %s",
+    discovery_function=discovery_veeam_jobs,
+    check_function=check_veeam_jobs,
+)

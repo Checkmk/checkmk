@@ -2147,7 +2147,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "varnish.worker_thread_ratio",
         "vbox_guest",
         "veeam_client",
-        "veeam_jobs",
         "veeam_tapejobs",
         "viprinet_firmware",
         "viprinet_mem",

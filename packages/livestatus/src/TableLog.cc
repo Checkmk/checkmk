@@ -7,6 +7,7 @@
 
 #include <bitset>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -15,6 +16,7 @@
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/LogCache.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
@@ -50,7 +52,7 @@ public:
 
 using row_type = LogRow;
 
-TableLog::TableLog(ICore *mc, LogCache *log_cache) : _log_cache(log_cache) {
+TableLog::TableLog(ICore *mc, LogCache *log_cache) : log_cache_{log_cache} {
     const ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.add([](Row r) { return r.rawData<row_type>()->entry; })};
@@ -145,32 +147,8 @@ bool rowWithoutHost(const LogRow &lr) {
            clazz == LogEntry::Class::program ||
            clazz == LogEntry::Class::ext_command;
 }
-}  // namespace
 
-void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
-    auto log_filter = constructFilter(query, core.maxLinesPerLogFile());
-    if (log_filter.classmask == 0) {
-        return;
-    }
-
-    auto is_authorized = [&user](const row_type &row) {
-        // If we have an AuthUser, suppress entries for messages with hosts
-        // that do not exist anymore, otherwise use the common authorization
-        // logic.
-        return user.is_authorized_for_object(row.hst, row.svc,
-                                             rowWithoutHost(row));
-    };
-
-    auto process = [is_authorized, &core, &query](const LogEntry &entry) {
-        row_type row{entry, core};
-        return !is_authorized(row) || query.processDataset(Row{&row});
-    };
-    _log_cache->for_each(log_filter, process);
-}
-
-// static
-LogFilter TableLog::constructFilter(Query &query,
-                                    size_t max_lines_per_logfile) {
+LogFilter constructFilter(Query &query, size_t max_lines_per_logfile) {
     // Optimize time interval for the query. In log queries there should
     // always be a time range in form of one or two filter expressions over
     // time. We use that to limit the number of logfiles we need to scan and
@@ -194,6 +172,28 @@ LogFilter TableLog::constructFilter(Query &query,
         .since = since,
         .until = until,
     };
+}
+}  // namespace
+
+void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
+    auto log_filter = constructFilter(query, core.maxLinesPerLogFile());
+    if (log_filter.classmask == 0) {
+        return;
+    }
+
+    auto is_authorized = [&user](const row_type &row) {
+        // If we have an AuthUser, suppress entries for messages with hosts
+        // that do not exist anymore, otherwise use the common authorization
+        // logic.
+        return user.is_authorized_for_object(row.hst, row.svc,
+                                             rowWithoutHost(row));
+    };
+
+    auto process = [is_authorized, &core, &query](const LogEntry &entry) {
+        row_type row{entry, core};
+        return !is_authorized(row) || query.processDataset(Row{&row});
+    };
+    log_cache_->for_each(log_filter, process);
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

@@ -276,7 +276,7 @@ class TreeRenderer:
     def __init__(
         self,
         site_id: SiteId,
-        hostname: HostName,
+        host_name: HostName,
         hints: DisplayHints,
         theme_: Theme,
         request_: Request,
@@ -284,13 +284,13 @@ class TreeRenderer:
         tree_id: str = "",
     ) -> None:
         self._site_id = site_id
-        self._hostname = hostname
+        self._host_name = host_name
         self._hints = hints
         self._theme = theme_
         self._request = request_
         self._show_internal_tree_paths = show_internal_tree_paths
         self._tree_id = tree_id
-        self._tree_name = f"inv_{hostname}{tree_id}"
+        self._tree_name = f"inv_{host_name}{tree_id}"
 
     def _get_header(self, title: str, key_info: str) -> HTML:
         # Todo (CMK-17819)
@@ -346,7 +346,7 @@ class TreeRenderer:
                                 "view_name",
                                 make_table_view_name_of_host(hint.table_view_name),
                             ),
-                            ("host", self._hostname),
+                            ("host", self._host_name),
                         ],
                         filename="view.py",
                     ),
@@ -415,7 +415,7 @@ class TreeRenderer:
                 self._request,
                 [
                     ("site", self._site_id),
-                    ("host", self._hostname),
+                    ("host", self._host_name),
                     ("raw_path", raw_path),
                     ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
                     ("tree_id", self._tree_id),

@@ -5,15 +5,17 @@
 
 import contextlib
 import logging
+import os
 import socketserver
 import subprocess
+import sys
 from collections.abc import Iterator
 from multiprocessing import Process
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-agent_controller_path = Path("/usr/bin/cmk-agent-ctl")
+agent_controller_path = Path(os.getenv("CMK_AGENT_CTL", "/usr/bin/cmk-agent-ctl"))
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
@@ -52,6 +54,22 @@ def _provide_agent_unix_socket() -> Iterator[None]:
         socket_address.unlink(missing_ok=True)
 
 
+def _run_controller_daemon(ctl_path: Path) -> int:
+    with subprocess.Popen(
+        [ctl_path.as_posix(), "daemon"],
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        close_fds=True,
+        encoding="utf-8",
+    ) as proc:
+        exit_code = proc.wait()
+        stdout, stderr = proc.communicate()
+        logger.info("Stdout from controller daemon process:\n%s", stdout)
+        logger.info("Stderr from controller daemon process:\n%s", stderr)
+
+    return exit_code
+
+
 @contextlib.contextmanager
 def _clean_agent_controller(ctl_path: Path) -> Iterator[None]:
     _clear_controller_connections(ctl_path)
@@ -61,15 +79,13 @@ def _clean_agent_controller(ctl_path: Path) -> Iterator[None]:
         _clear_controller_connections(ctl_path)
 
 
-with _clean_agent_controller(agent_controller_path), _provide_agent_unix_socket():
-    with subprocess.Popen(
-        [
-            agent_controller_path.as_posix(),
-            "daemon",
-        ],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        close_fds=True,
-        encoding="utf-8",
-    ) as agent_controller:
-        agent_controller.wait()
+@contextlib.contextmanager
+def agent_controller_daemon(ctl_path: Path) -> Iterator[int]:
+    """Manually take over systemds job if we are in a container (where we have no systemd)."""
+    with _clean_agent_controller(ctl_path), _provide_agent_unix_socket():
+        yield _run_controller_daemon(ctl_path)
+
+
+if __name__ == "__main__":
+    with agent_controller_daemon(agent_controller_path) as rc:
+        sys.exit(rc)

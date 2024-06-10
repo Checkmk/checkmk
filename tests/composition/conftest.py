@@ -3,19 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import (
-    agent_controller_daemon,
-    clean_agent_controller,
-    install_agent_package,
-)
+from tests.testlib.agent import agent_controller_daemon, install_agent_package
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import is_containerized
+from tests.testlib.utils import is_containerized, run
 
 from tests.composition.constants import TEST_HOST_1
 from tests.composition.utils import bake_agent, get_cre_agent_path
@@ -120,10 +115,7 @@ def _agent_package_path(site: Site) -> Path:
 
 @pytest.fixture(name="agent_ctl", scope="function")
 def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
-        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
-    ):
+    with agent_controller_daemon(installed_agent_ctl_in_unknown_state):
         yield installed_agent_ctl_in_unknown_state
 
 
@@ -140,10 +132,11 @@ def _run_cron() -> Iterator[None]:
         )
     ):
         try:
-            subprocess.run(
+            run(
                 [cron_cmd],
                 # calling cron spawns a background process, which fails if cron is already running
                 check=False,
+                sudo=True,
             )
         except FileNotFoundError:
             continue

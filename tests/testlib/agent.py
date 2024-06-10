@@ -8,14 +8,13 @@ import json
 import logging
 import os
 import re
-import socketserver
 import subprocess
 import time
 from collections.abc import Iterator, Mapping
-from multiprocessing import Process
 from pathlib import Path
 from typing import Any
 
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import execute, run, wait_until
 
@@ -46,13 +45,13 @@ def install_agent_package(package_path: Path) -> Path:
     installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
     if package_type == "linux_deb":
         try:
-            run(["sudo", "dpkg", "-i", package_path.as_posix()])
+            run(["dpkg", "-i", package_path.as_posix()], sudo=True)
         except RuntimeError as e:
             process_table = run(["ps", "aux"]).stdout
             raise RuntimeError(f"dpkg failed. Process table:\n{process_table}") from e
         return installed_ctl_path
     if package_type == "linux_rpm":
-        run(["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()])
+        run(["rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()], sudo=True)
         return installed_ctl_path
     raise NotImplementedError(
         f"Installation of package type {package_type} is not supported yet, please implement it"
@@ -95,100 +94,25 @@ def _is_containerized() -> bool:
     )
 
 
-class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
-    def handle(self) -> None:
-        self.request.sendall(
-            subprocess.run(
-                ["check_mk_agent"],
-                input=self.request.recv(1024),
-                capture_output=True,
-                close_fds=True,
-                check=True,
-            ).stdout
-        )
-
-
-def _clear_controller_connections(ctl_path: Path) -> None:
-    run(["sudo", ctl_path.as_posix(), "delete-all"])
-
-
 @contextlib.contextmanager
-def _provide_agent_unix_socket() -> Iterator[None]:
-    socket_address = Path("/run/check-mk-agent.socket")
-    socket_address.unlink(missing_ok=True)
-    proc = Process(
-        target=socketserver.UnixStreamServer(
-            server_address=str(socket_address),
-            RequestHandlerClass=_CMKAgentSocketHandler,
-        ).serve_forever
-    )
-    proc.start()
-    socket_address.chmod(0o777)
-    try:
-        yield
-    finally:
-        proc.kill()
-        socket_address.unlink(missing_ok=True)
-
-
-@contextlib.contextmanager
-def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
-    # Note:
-    # We are deliberately not using Popen as a context manager here. In case we run into an
-    # exception while we are inside a Popen context manager, we end up in Popen.__exit__, which
-    # waits for the child process to finish. Our child process is not supposed to ever finish.
-    proc = subprocess.Popen(
-        [
-            ctl_path.as_posix(),
-            "daemon",
-        ],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        close_fds=True,
-        encoding="utf-8",
-    )
-
-    try:
-        yield
-    finally:
-        exit_code = proc.poll()
-        proc.kill()
-
-        stdout, stderr = proc.communicate()
-        logger.info("Stdout from controller daemon process:\n%s", stdout)
-        logger.info("Stderr from controller daemon process:\n%s", stderr)
-
-        if exit_code is not None:
-            logger.error("Controller daemon exited with code %s, which is unexpected.", exit_code)
-
-
-@contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
+def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]:
     """Manually take over systemds job if we are in a container (where we have no systemd)."""
     if not _is_containerized():
-        yield
+        yield None
         return
 
-    with _provide_agent_unix_socket(), _run_controller_daemon(ctl_path):
-        yield
+    daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
 
-
-@contextlib.contextmanager
-def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
-    _clear_controller_connections(ctl_path)
-    try:
-        yield
-    finally:
-        _clear_controller_connections(ctl_path)
+    with execute(["python3", daemon_path, ctl_path.as_posix()], sudo=True) as daemon:
+        yield daemon
 
 
 def register_controller(
-    contoller_path: Path, site: Site, hostname: HostName, site_address: str | None = None
+    ctl_path: Path, site: Site, hostname: HostName, site_address: str | None = None
 ) -> None:
     run(
         [
-            "sudo",
-            contoller_path.as_posix(),
+            ctl_path.as_posix(),
             "--verbose",
             "register",
             "--server",
@@ -202,7 +126,8 @@ def register_controller(
             "--password",
             site.admin_password,
             "--trust-cert",
-        ]
+        ],
+        sudo=True,
     )
 
 
@@ -224,8 +149,8 @@ def wait_until_host_receives_data(
     )
 
 
-def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
-    return json.loads(run(["sudo", contoller_path.as_posix(), "status", "--json"]).stdout)
+def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
+    return json.loads(run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout)
 
 
 def wait_until_host_has_services(
@@ -281,6 +206,7 @@ def _remove_omd_status_cache() -> None:
         ["rm", "-f", str(OMD_STATUS_CACHE)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        sudo=True,
     ) as p:
         rc = p.wait()
         p_out, p_err = p.communicate()

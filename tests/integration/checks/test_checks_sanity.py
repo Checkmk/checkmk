@@ -10,7 +10,6 @@ import pytest
 
 from tests.testlib.agent import (
     agent_controller_daemon,
-    clean_agent_controller,
     download_and_install_agent_package,
     register_controller,
     wait_for_agent_cache_omd_status,
@@ -26,18 +25,21 @@ from cmk.utils.rulesets.definition import RuleGroup
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(site: Site, tmp_path: Path) -> Path:
-    return download_and_install_agent_package(site, tmp_path)
+@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")
+def _installed_agent_ctl_in_unknown_state(
+    site: Site, tmp_path_factory: pytest.TempPathFactory
+) -> Path:
+    return download_and_install_agent_package(site, tmp_path_factory.mktemp("agent"))
 
 
-@pytest.fixture(name="agent_ctl", scope="function")
+@pytest.fixture(name="agent_ctl", scope="module")
 def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
-        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
-    ):
-        yield installed_agent_ctl_in_unknown_state
+    with agent_controller_daemon(installed_agent_ctl_in_unknown_state) as daemon:
+        try:
+            yield installed_agent_ctl_in_unknown_state
+        finally:
+            if daemon:
+                daemon.kill()
 
 
 @pytest.fixture(

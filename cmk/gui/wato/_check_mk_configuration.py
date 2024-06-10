@@ -1595,7 +1595,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                                     "<ul>"
                                                     "<li>$HOSTNAME$: Contains the name of the host</li>"
                                                     "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                    "<li>$SERVICEDESC$: Contains the service description "
+                                                    "<li>$SERVICEDESC$: Contains the service name "
                                                     "(in case this is a service)</li>"
                                                     "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
                                                     "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
@@ -2832,7 +2832,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return ListChoice(
-            title=_("Use new service descriptions"),
+            title=_("Use new service names"),
             help=_(
                 "In order to make Checkmk more consistent, "
                 "the descriptions of several services have been renamed in newer "
@@ -5055,7 +5055,7 @@ def _valuespec_extra_service_conf_display_name():
             "a column when creating new views or modifying existing ones. "
             "It is always visible in the details view of a service. In the "
             "availability reporting there is an option for using that name "
-            "instead of the normal service description. It does <b>not</b> automatically "
+            "instead of the normal service name. It does <b>not</b> automatically "
             "replace the normal service name in all views.<br><br><b>Note</b>: The "
             "purpose of this rule set is to define unique names for several well-known "
             "services. It cannot rename services in general."
@@ -5085,7 +5085,7 @@ def _valuespec_extra_service_conf_notes_url():
             "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
             "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
             "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
-            "<li>$SERVICEDESC$: Contains the service description "
+            "<li>$SERVICEDESC$: Contains the service name "
             "(in case this is a service)</li>"
             "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
             "<li>$USER_ID$: The user ID of the currently active user</li>"
@@ -6102,9 +6102,9 @@ PiggybackTranslation = HostRulespec(
 
 def _valuespec_service_description_translation():
     return ServiceDescriptionTranslation(
-        title=_("Translation of service descriptions"),
+        title=_("Translation of service names"),
         help=_(
-            "Within this ruleset service descriptions can be translated similar to the ruleset "
+            "Within this ruleset service names can be translated similar to the ruleset "
             "<tt>Host name translation for piggybacked hosts</tt>. Services such as "
             "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
             "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are excluded. "
@@ -6113,7 +6113,7 @@ def _valuespec_service_description_translation():
             "services have to be adapted.</li>"
             "<li>Performance data and graphs will begin from scratch for translated services.</li>"
             "<li>Especially configured check parameters keep their functionality further on.</li>"
-            "<li>This new ruleset translates also the item part of a service description. "
+            "<li>This new ruleset translates also the item part of a service name. "
             "This means that after such a translation the item may be gone but is used in the "
             "conditions of the parameters further on if any parameters are configured. "
             "This might be confusing.</li></ul>"

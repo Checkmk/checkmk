@@ -681,7 +681,7 @@ def _valuespec_endpoints() -> List:
                                 parameter_form=String(
                                     title=Title("Name"),
                                     help_text=Help(
-                                        "The name is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
+                                        "The name is the individual part of the used service name. Choose a human readable and unique title to be able to find your service later in Checkmk."
                                     ),
                                     custom_validate=(validators.LengthInRange(min_value=1),),
                                     prefill=InputHint("My service name"),

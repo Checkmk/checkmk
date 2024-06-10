@@ -98,7 +98,7 @@ OPTIONAL_HOST_NAME = {
     query_params=[
         {
             "service_description": fields.String(
-                description="The service description of the selected host",
+                description="The service name of the selected host",
                 example="Filesystem /boot",
                 required=True,
             ),
@@ -137,7 +137,7 @@ def show_service(params: Mapping[str, Any]) -> Response:
         return problem(
             status=404,
             title="The requested service was not found",
-            detail=f"The service description {service_description} did not match any service",
+            detail=f"The service name {service_description} did not match any service",
         )
     return serve_json(
         constructors.domain_object(

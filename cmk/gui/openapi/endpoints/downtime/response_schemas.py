@@ -63,7 +63,7 @@ class ServiceDowntimeAttributes(BaseDowntimeSchema):
     )
     service_description = fields.String(
         required=True,
-        description="The service description if the downtime corresponds to a service, otherwise this field is not present.",
+        description="The service name if the downtime corresponds to a service, otherwise this field is not present.",
         example="CPU Load",
     )
 

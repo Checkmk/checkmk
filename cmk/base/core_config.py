@@ -100,7 +100,7 @@ def duplicate_service_warning(
     second_occurrence: AbstractServiceID,
 ) -> None:
     return config_warnings.warn(
-        "ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
+        "ERROR: Duplicate service name (%s check) '%s' for host '%s'!\n"
         " - 1st occurrence: check plug-in / item: %s / %r\n"
         " - 2nd occurrence: check plug-in / item: %s / %r\n"
         % (checktype, description, host_name, *first_occurrence, *second_occurrence)

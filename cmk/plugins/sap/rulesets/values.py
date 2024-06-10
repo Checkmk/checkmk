@@ -70,7 +70,7 @@ def _formspec_inventory_sap_values():
                     title=Title("Limit path levels for service names"),
                     label=Label("Number of levels:"),
                     help_text=Help(
-                        "The service descriptions of the inventorized services are named like the "
+                        "The service names of the inventorized services are named like the "
                         "paths in SAP. You can use this option to let the inventory function only "
                         "use the last x path levels for naming."
                     ),

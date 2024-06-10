@@ -2122,7 +2122,7 @@ def _convert_to_legacy_monitored_service_description(
     }
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
         help_text = ruleset_api_v1.Help(
-            "Select from a list of service descriptions known to Checkmk"
+            "Select from a list of service names known to Checkmk"
         ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:

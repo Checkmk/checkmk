@@ -62,7 +62,7 @@ def _make_parameter_form() -> Dictionary:
                     title=Title("Service name"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
-                        "Here you can specify a service description. "
+                        "Here you can specify a service name. "
                         "If this parameter is not set, the service is named <tt>TCP Port [PORT NUMBER]</tt>"
                     ),
                 ),

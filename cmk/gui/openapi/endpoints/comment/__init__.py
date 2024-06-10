@@ -106,7 +106,7 @@ COLLECTION_NAME = {
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
-        description="The service description. No exception is raised when the specified service "
+        description="The service name. No exception is raised when the specified service "
         "description does not exist",
         example="Memory",
         required=False,
@@ -319,7 +319,7 @@ def create_service_comment(params: Mapping[str, Any]) -> Response:
             except CommentQueryException:
                 return problem(
                     status=400,
-                    title="The query did not match any service descriptions",
+                    title="The query did not match any service names",
                     detail="The provided query returned an empty list so no comment was created",
                 )
 

@@ -146,7 +146,7 @@ class ActiveCheck:
             except InvalidPluginInfoError:
                 config_warnings.warn(
                     f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
-                    f"active check plug-in is missing an argument function or a service description"
+                    f"active check plug-in is missing an argument function or a service name"
                 )
             except Exception as e:
                 if cmk.utils.debug.enabled():
@@ -323,7 +323,7 @@ class ActiveCheck:
             except InvalidPluginInfoError:
                 config_warnings.warn(
                     f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
-                    f"active check plug-in is missing an argument function or a service description"
+                    f"active check plug-in is missing an argument function or a service name"
                 )
                 continue
             except Exception as e:

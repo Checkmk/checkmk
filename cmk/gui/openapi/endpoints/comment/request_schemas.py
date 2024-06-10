@@ -77,7 +77,7 @@ class CreateServiceComment(CreateServiceCommentBase):
         required=True,
     )
     service_description = fields.String(
-        description="The service description for which the comment is for. No exception is raised when the specified service description does not exist",
+        description="The service name for which the comment is for. No exception is raised when the specified service name does not exist",
         example="Memory",
         required=True,
     )

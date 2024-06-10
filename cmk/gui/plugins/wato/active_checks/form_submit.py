@@ -47,7 +47,7 @@ def _valuespec_active_checks_form_submit() -> Transform:
                     "name",
                     TextInput(
                         title=_("Name"),
-                        help=_("The name will be used in the service description"),
+                        help=_("The name will be used in the service name"),
                         allow_empty=False,
                     ),
                 ),

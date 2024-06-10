@@ -745,7 +745,7 @@ class Conditions(base.BaseSchema):
             " * The pattern is matched from the beginning.\n"
             " * The match is performed case sensitive.\n"
             "BE AWARE: Depending on the service ruleset the service_description of "
-            "the rules is only a check item or a full service description. For "
+            "the rules is only a check item or a full service name. For "
             "example the check parameters rulesets only use the item, and other "
             "service rulesets like disabled services ruleset use full service"
             "descriptions."

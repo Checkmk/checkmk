@@ -769,7 +769,7 @@ def test_test_get_active_service_data_crash_with_debug(
             HostName("myhost"),
             HOST_ATTRS,
             [],
-            "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plug-in is missing an argument function or a service description\n",
+            "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plug-in is missing an argument function or a service name\n",
             id="invalid_plugin_info",
         ),
         pytest.param(
@@ -1094,7 +1094,7 @@ def test_get_active_service_descriptions(
             HostName("myhost"),
             HOST_ATTRS,
             [],
-            "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plug-in is missing an argument function or a service description\n",
+            "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plug-in is missing an argument function or a service name\n",
             id="invalid_plugin_info",
         ),
     ],

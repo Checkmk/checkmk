@@ -740,7 +740,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.MonitoredService(),
             legacy_valuespecs.MonitoredServiceDescription(
                 title=_("Service name"),
-                help=_("Select from a list of service descriptions known to Checkmk"),
+                help=_("Select from a list of service names known to Checkmk"),
                 autocompleter=ContextAutocompleterConfig(
                     ident=legacy_valuespecs.MonitoredServiceDescription.ident,
                     strict=True,

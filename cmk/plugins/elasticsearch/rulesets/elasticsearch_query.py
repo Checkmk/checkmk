@@ -31,7 +31,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Item suffix"),
                     help_text=Help(
-                        "Here you can define what service description (item) is "
+                        "Here you can define what service name (item) is "
                         "used for the created service. The resulting item "
                         "is always prefixed with 'Elasticsearch Query'."
                     ),

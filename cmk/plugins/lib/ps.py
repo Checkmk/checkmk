@@ -177,7 +177,7 @@ def replace_service_description(service_description, match_groups, pattern):
         return description_template.format(None, *(g or "" for g in match_groups))
     except IndexError:
         raise ValueError(
-            "Invalid entry in inventory_processes_rules: service description '%s' contains %d "
+            "Invalid entry in inventory_processes_rules: service name '%s' contains %d "
             "replaceable elements, but regular expression %r contains only %d subexpression(s)."
             % (service_description, total_replacements_count, pattern, len(match_groups))
         )

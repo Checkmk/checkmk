@@ -28,7 +28,7 @@ class CommentAttributes(BaseSchema):
         required=True, description="The timestamp from when the comment was created."
     )
     service_description = fields.String(
-        required=False, description="The service description the comment belongs to."
+        required=False, description="The service name the comment belongs to."
     )
     is_service = fields.Boolean(
         required=True, description="True if the comment is from a service or else it's False."

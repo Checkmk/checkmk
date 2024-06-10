@@ -134,7 +134,7 @@ class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
         required=True,
     )
     service_description = fields.String(
-        description="The acknowledgement process will be applied to all matching service descriptions",
+        description="The acknowledgement process will be applied to all matching service names",
         example="CPU load",
         required=True,
     )

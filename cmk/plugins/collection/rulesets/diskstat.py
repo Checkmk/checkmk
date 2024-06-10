@@ -83,18 +83,16 @@ def _valuespec_diskstat_inventory() -> Dictionary:
                                 elements=[
                                     SingleChoiceElement(
                                         name="wwn",
-                                        title=Title(
-                                            "Use World Wide Name (WWN) as service description"
-                                        ),
+                                        title=Title("Use World Wide Name (WWN) as service name"),
                                     ),
                                     SingleChoiceElement(
                                         name="name",
-                                        title=Title("Use device name as service description"),
+                                        title=Title("Use device name as service name"),
                                     ),
                                 ],
                                 prefill=DefaultValue("wwn"),
                                 help_text=Help(
-                                    "Using device name as service description isn't recommended. "
+                                    "Using device name as service name isn't recommended. "
                                     "Device names aren't persistent and can change after a reboot or an update. "
                                     "In case WWN is not available, device name will be used."
                                 ),

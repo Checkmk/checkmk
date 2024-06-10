@@ -451,8 +451,8 @@ def process_discovery_descr_option():
             "substitute all such groups with the actual values when creating the "
             "check. That way one rule can create several checks on a host.</p>"
             "<p>If the pattern contains more groups then occurrences of <tt>%s</tt> in "
-            "the service description then only the first matching subexpressions are "
-            "used for the service descriptions. The matched substrings corresponding to "
+            "the service name then only the first matching subexpressions are "
+            "used for the service names. The matched substrings corresponding to "
             "the remaining groups are copied into the regular expression, "
             "nevertheless.</p>"
             "<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, "
@@ -631,7 +631,7 @@ def _manual_item_spec_ps():
         regex="^[a-zA-Z_0-9 _./-]*$",
         regex_error=_(
             "Please use only a-z, A-Z, 0-9, space, underscore, "
-            "dot, hyphen and slash for your service description"
+            "dot, hyphen and slash for your service name"
         ),
     )
 
@@ -999,7 +999,7 @@ def _manual_item_spec_hr_ps():
         regex="^[a-zA-Z_0-9 _./-]*$",
         regex_error=_(
             "Please use only a-z, A-Z, 0-9, space, underscore, "
-            "dot, hyphen and slash for your service description"
+            "dot, hyphen and slash for your service name"
         ),
     )
 

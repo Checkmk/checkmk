@@ -70,7 +70,7 @@ FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
-        description="The service description. No exception is raised when the specified service "
+        description="The service name. No exception is raised when the specified service "
         "description does not exist. This parameter can be combined with the host_name parameter "
         "to only filter for service downtimes of on a specific host. Cannot be used "
         "together with the query parameter.",

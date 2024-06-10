@@ -55,8 +55,8 @@ def _make_parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Name"),
                     help_text=Help(
-                        "The service description will be <b>LDAP</b> plus this name. If the name starts with "
-                        "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>LDAP</tt>."
+                        "The service name will be <b>LDAP</b> plus this name. If the name starts with "
+                        "a caret (<tt>^</tt>), the service name will not be prefixed with <tt>LDAP</tt>."
                     ),
                     custom_validate=(validators.LengthInRange(1, None),),
                     macro_support=True,

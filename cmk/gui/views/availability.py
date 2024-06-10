@@ -1228,7 +1228,7 @@ def _validate_reclassify_of_states(value, varprefix):
         if not value.get("service"):
             raise MKUserError(
                 "_editanno_p_service_value",
-                _("Please set a service description for service state reclassification"),
+                _("Please set a service name for service state reclassification"),
             )
 
 

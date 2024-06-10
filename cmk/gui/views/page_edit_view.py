@@ -286,7 +286,7 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
             help=_(
                 "A joined column can display information about specific services for "
                 "host objects in a view showing host objects. You need to specify the "
-                "service description of the service you like to show the data for."
+                "service name of the service you like to show the data for."
             ),
             elements=[
                 _get_vs_column_dropdown(ds_name, "join_painter", join_painters),
@@ -299,7 +299,7 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
                             "If multiple entries are found, the first one of the sorted entries"
                             " is used. If you use macros within inventory based views these"
                             " macros are replaced <tt>before</tt> the regex evaluation."
-                            "<br>Note: If a service description contains special characters like"
+                            "<br>Note: If a service name contains special characters like"
                             " <tt>%s</tt> you have to escape them in order to get reliable"
                             " results. Macros don't need to be escaped. If a macro could not be"
                             " found then it stays as it is."

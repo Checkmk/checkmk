@@ -5060,12 +5060,12 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
             (
                 "item",
                 TextInput(
-                    title=_("Item (used in service description)"),
+                    title=_("Item (used in service name)"),
                     help=_(
                         "If you enter an item name here, this will be used as "
-                        'part of the service description after the prefix "Events ". '
+                        'part of the service name after the prefix "Events ". '
                         "The prefix plus the configured item must result in an unique "
-                        "service description per host. If you leave this empty either the "
+                        "service name per host. If you leave this empty either the "
                         'string provided in "Application" is used as item or the service '
                         'gets no item when the "Application" field is also not configured.'
                     ),

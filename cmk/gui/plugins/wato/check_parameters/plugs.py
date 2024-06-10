@@ -18,7 +18,7 @@ def _item_spec_plugs() -> TextInput:
     return TextInput(
         title=_("Plug item number or name"),
         help=_(
-            "Whether you need the number or the name depends on the check. Just take a look to the service description."
+            "Whether you need the number or the name depends on the check. Just take a look to the service name."
         ),
         allow_empty=True,
     )

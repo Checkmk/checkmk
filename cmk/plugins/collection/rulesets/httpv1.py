@@ -605,8 +605,8 @@ def _parameter_form_active_checks_http() -> Dictionary:
                 parameter_form=String(
                     title=Title("Service name"),
                     help_text=Help(
-                        "Will be used in the service description. If the name starts with a caret"
-                        " (<tt>^</tt>), the service description will not be prefixed with either"
+                        "Will be used in the service name. If the name starts with a caret"
+                        " (<tt>^</tt>), the service name will not be prefixed with either"
                         " <tt>HTTP</tt> or <tt>HTTPS</tt>."
                     ),
                     custom_validate=(

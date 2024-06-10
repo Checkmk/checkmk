@@ -156,7 +156,7 @@ def _vs_grouping():
                                             "group_name",
                                             TextInput(
                                                 title=_("Group name"),
-                                                help=_("Name of group in service description"),
+                                                help=_("Name of group in service name"),
                                                 allow_empty=False,
                                             ),
                                         ),
@@ -423,7 +423,7 @@ vs_elements_if_groups_group: list[DictionaryEntry] = [
         "group_name",
         TextInput(
             title=_("Group name"),
-            help=_("Name of group in service description"),
+            help=_("Name of group in service name"),
             allow_empty=False,
         ),
     ),

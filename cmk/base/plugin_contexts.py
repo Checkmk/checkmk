@@ -87,5 +87,5 @@ def check_type() -> str:
 def service_description() -> str:
     """Returns the name of the service currently being checked."""
     if _service_description is None:
-        raise RuntimeError("service description has not been set")
+        raise RuntimeError("service name has not been set")
     return _service_description

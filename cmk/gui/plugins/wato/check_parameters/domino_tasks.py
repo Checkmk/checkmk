@@ -68,7 +68,7 @@ def _valuespec_inv_domino_tasks_rules() -> Dictionary:
                     title=_("Service Description"),
                     allow_empty=False,
                     help=_(
-                        "<p>The service description may contain one or more occurances of <tt>%s</tt>. In this "
+                        "<p>The service name may contain one or more occurances of <tt>%s</tt>. In this "
                         "case, the pattern must be a regular expression prefixed with ~. For each "
                         '<tt>%s</tt> in the description, the expression has to contain one "group". A group '
                         "is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or "
@@ -157,7 +157,7 @@ def _item_spec_domino_tasks():
         regex="^[a-zA-Z_0-9 _.-]*$",
         regex_error=_(
             "Please use only a-z, A-Z, 0-9, space, underscore, "
-            "dot and hyphen for your service description"
+            "dot and hyphen for your service name"
         ),
     )
 

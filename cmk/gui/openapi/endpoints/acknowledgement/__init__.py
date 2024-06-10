@@ -43,7 +43,7 @@ from cmk import fields
 
 SERVICE_DESCRIPTION = {
     "service_description": fields.String(
-        description="The service description.",
+        description="The service name.",
         example="Memory",
     )
 }

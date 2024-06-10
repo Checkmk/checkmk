@@ -87,9 +87,7 @@ def _valuespec_active_checks_dns():
                     "name",
                     TextInput(
                         title=_("Alternative service name"),
-                        help=_(
-                            "The service description will be this name instead <i>DNS Servername</i>"
-                        ),
+                        help=_("The service name will be this name instead <i>DNS Servername</i>"),
                     ),
                 ),
                 (

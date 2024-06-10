@@ -33,7 +33,7 @@ def _migrate_opt_string(
 def _item_spec_heartbeat_crm_resources():
     return TextInput(
         title=_("Resource Name"),
-        help=_("The name of the cluster resource as shown in the service description."),
+        help=_("The name of the cluster resource as shown in the service name."),
         allow_empty=False,
     )
 

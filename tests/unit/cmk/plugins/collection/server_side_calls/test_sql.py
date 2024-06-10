@@ -92,3 +92,29 @@ def test_check_sql_port_macro_replaced() -> None:
         "--port=5432",
         "",
     ]
+
+
+def test_check_sql_user_macro_replaced() -> None:
+    (command,) = active_check_sql(
+        {
+            "description": "foo",
+            "dbms": "postgres",
+            "name": "bar",
+            "user": "$my_user$",
+            "password": Secret(0),
+            "sql": "",
+        },
+        HostConfig(
+            name="hostname",
+            ipv4_config=IPv4Config(address="ipaddress"),
+            macros={"$my_user$": "my_user"},
+        ),
+    )
+    assert command.command_arguments == [
+        "--hostname=ipaddress",
+        "--dbms=postgres",
+        "--name=bar",
+        "--user=my_user",
+        Secret(0).unsafe("--password=%s"),
+        "",
+    ]

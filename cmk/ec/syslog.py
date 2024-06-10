@@ -144,9 +144,9 @@ class StructuredDataName:
         return hash(self.name)
 
     def __eq__(self, o: object) -> bool:
-        if not isinstance(o, StructuredDataName):
-            return NotImplemented
-        return self.name == o.name
+        if isinstance(o, StructuredDataName):
+            return self.name == o.name
+        return NotImplemented
 
     def __ne__(self, other: object) -> bool:
         result = self.__eq__(other)

@@ -20,11 +20,8 @@ from tests.plugins_integration.checks import (
 
 logger = logging.getLogger(__name__)
 
-# merge https://review.lan.tribe29.com/c/qa-test-data/+/80098
-HOST_NAMES = [name for name in get_host_names() if name != "agent-2.2.0p14-windows-veeam-backup"]
 
-
-@pytest.mark.parametrize("host_name", HOST_NAMES)
+@pytest.mark.parametrize("host_name", get_host_names())
 def test_plugin(
     test_site: Site,
     host_name: str,

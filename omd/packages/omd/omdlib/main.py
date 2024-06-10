@@ -60,6 +60,7 @@ from omdlib.dialog import (
     dialog_yesno,
     user_confirms,
 )
+from omdlib.global_options import default_global_options, GlobalOptions
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
@@ -4381,13 +4382,6 @@ Usage:\n\
 ]
 
 
-class GlobalOptions(NamedTuple):
-    verbose: bool
-    force: bool
-    interactive: bool
-    orig_working_directory: str
-
-
 def handle_global_option(
     global_opts: GlobalOptions, main_args: Arguments, opt: str, orig: str
 ) -> tuple[GlobalOptions, Arguments]:
@@ -4748,15 +4742,6 @@ def main() -> None:  # pylint: disable=too-many-branches
     _run_command(command, version_info, site, global_opts, args, command_options)
 
 
-def default_global_options() -> GlobalOptions:
-    return GlobalOptions(
-        verbose=False,
-        force=False,
-        interactive=False,
-        orig_working_directory=_get_orig_working_directory(),
-    )
-
-
 def _get_command(command_arg: str) -> Command:
     for command in COMMANDS:
         if command.command == command_arg:
@@ -4765,10 +4750,3 @@ def _get_command(command_arg: str) -> Command:
     sys.stderr.write("omd: no such command: %s\n" % command_arg)
     main_help(object(), object())
     sys.exit(1)
-
-
-def _get_orig_working_directory() -> str:
-    try:
-        return os.getcwd()
-    except FileNotFoundError:
-        return "/"

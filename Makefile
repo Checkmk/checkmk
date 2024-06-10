@@ -192,7 +192,8 @@ EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
 	    --exclude=".venv.lock" \
 	    --exclude=".cargo" \
-	    --exclude="node_modules"
+	    --exclude="node_modules" \
+	    --exclude=".cache"
 
 # The list of files and folders to be protected from remove after "buildclean" is called
 # Rust dirs are kept due to heavy load when compiled: .cargo, controller

@@ -62,6 +62,8 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         + (mount_host_user_files ? ["-v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro"] : [])
         + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])
         + (create_cache_folder ? ["-v \"${container_shadow_workspace}/cache:${env.HOME}/.cache\""] : [])
+        + ["-v \"${container_shadow_workspace}/venv:${checkout_dir}/.venv\""]
+        + ["-v \"${container_shadow_workspace}/checkout_cache:${checkout_dir}/.cache\""]
     ).join(" ");
     /// We have to make sure both, the source directory and (if applicable) the target
     /// directory inside an already mounted parent directory (here: /home/<USER>)
@@ -77,8 +79,13 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         mkdir -p ${container_shadow_workspace}/home
         mkdir -p ${container_shadow_workspace}/home/.cache
         mkdir -p ${container_shadow_workspace}/cache
+        mkdir -p ${container_shadow_workspace}/venv
+        mkdir -p ${container_shadow_workspace}/checkout_cache
         mkdir -p ${checkout_dir}/shared_cargo_folder
+        mkdir -p ${checkout_dir}/.venv
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}")"
+        mkdir -p ${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}/.venv")
+        mkdir -p ${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}/.cache")
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${reference_repo_dir}")"
         # END COMMON CODE with run-in-docker.sh
     """);

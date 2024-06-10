@@ -42,19 +42,6 @@ if [ "$USER" == "jenkins" ]; then
 else
     # LOCAL
     CONTAINER_SHADOW_WORKSPACE="${CHECKOUT_ROOT}/container_shadow_workspace_local"
-
-    # Make sure a local containerized session does not interfere with
-    # native builds. Maybe in the future this script should not be executed in
-    # a CI environment (since those come with their own containerization solutions)
-    # rendering this distinction unnessesary.
-
-    mkdir -p "${CHECKOUT_ROOT}/.venv"
-    mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/venv"
-    DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/venv:${CHECKOUT_ROOT}/.venv"
-
-    mkdir -p "${CHECKOUT_ROOT}/omd/build"
-    mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/omd_build"
-    DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/omd_build:${CHECKOUT_ROOT}/omd/build"
 fi
 
 : "${CONTAINER_NAME:="ref-$(basename "$(pwd)")-$(sha1sum <<<"${CONTAINER_SHADOW_WORKSPACE}" | cut -c1-10)"}"
@@ -69,8 +56,13 @@ rm -rf "${CONTAINER_SHADOW_WORKSPACE}"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/cache"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/venv"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/checkout_cache"
 mkdir -p "${CHECKOUT_ROOT}/shared_cargo_folder"
+mkdir -p "${CHECKOUT_ROOT}/.venv"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${CHECKOUT_ROOT}")"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${CHECKOUT_ROOT}/.venv")"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${CHECKOUT_ROOT}/.cache")"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${GIT_COMMON_DIR}")"
 # END COMMON CODE with docker_image_aliases_helper.groovy
 
@@ -80,9 +72,11 @@ mkdir -p "${HOME}/shared_cargo_folder"
 # UNCONDITIONAL MOUNTS
 DOCKER_MOUNT_ARGS="-v ${CONTAINER_SHADOW_WORKSPACE}/home:${HOME}"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/cache:${HOME}/.cache"
+DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/checkout_cache:${CHECKOUT_ROOT}/.cache"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${HOME}/shared_cargo_folder:${CHECKOUT_ROOT}/shared_cargo_folder"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CHECKOUT_ROOT}:${CHECKOUT_ROOT}"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}"
+DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/venv:${CHECKOUT_ROOT}/.venv"
 
 if [ -d "${HOME}/.docker" ]; then
     mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.docker"

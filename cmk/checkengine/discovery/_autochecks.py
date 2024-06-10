@@ -312,7 +312,7 @@ def set_autochecks_for_effective_host(
     new_services: Iterable[AutocheckEntry],
     get_effective_host: GetEffectiveHostOfAc,
 ) -> None:
-    """A set all services of an effective host, and leave all other services alone."""
+    """Set all services of an effective host, and leave all other services alone."""
     store = AutochecksStore(autochecks_owner)
     store.write(
         _deduplicate(

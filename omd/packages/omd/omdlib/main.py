@@ -60,7 +60,7 @@ from omdlib.dialog import (
     dialog_yesno,
     user_confirms,
 )
-from omdlib.global_options import default_global_options, GlobalOptions
+from omdlib.global_options import GlobalOptions
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
@@ -4680,7 +4680,7 @@ def main() -> None:  # pylint: disable=too-many-branches
     version_info = VersionInfo(omdlib.__version__)
     version_info.load()
 
-    global_opts = default_global_options()
+    global_opts = GlobalOptions.default()
     while len(main_args) >= 1 and main_args[0].startswith("-"):
         opt = main_args[0]
         main_args = main_args[1:]

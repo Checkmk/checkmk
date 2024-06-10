@@ -6,7 +6,7 @@
 import os
 from pathlib import Path
 
-from omdlib.global_options import _get_orig_working_directory
+from omdlib.global_options import GlobalOptions
 
 
 def test_orig_working_directory(tmp_path: Path) -> None:
@@ -15,12 +15,13 @@ def test_orig_working_directory(tmp_path: Path) -> None:
         base_path = tmp_path.joinpath("lala")
         base_path.mkdir(parents=True)
         os.chdir(str(base_path))
-        assert _get_orig_working_directory() == str(base_path)
+        global_options = GlobalOptions.default()
+        assert global_options.orig_working_directory == str(base_path)
     finally:
         os.chdir(orig_wd)
 
 
-def test_get_orig_working_directory_not_existing(tmp_path: Path) -> None:
+def test_orig_working_directory_not_existing(tmp_path: Path) -> None:
     orig_wd = os.getcwd()
     try:
         test_dir = tmp_path.joinpath("lala")
@@ -32,6 +33,7 @@ def test_get_orig_working_directory_not_existing(tmp_path: Path) -> None:
         test_dir.rmdir()
         assert not test_dir.exists()
 
-        assert _get_orig_working_directory() == "/"
+        global_options = GlobalOptions.default()
+        assert global_options.orig_working_directory == "/"
     finally:
         os.chdir(orig_wd)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
 
 class GlobalOptions(NamedTuple):
@@ -13,18 +13,16 @@ class GlobalOptions(NamedTuple):
     interactive: bool
     orig_working_directory: str
 
+    @classmethod
+    def default(cls) -> Self:
+        try:
+            orig_working_directory = os.getcwd()
+        except FileNotFoundError:
+            orig_working_directory = "/"
 
-def default_global_options() -> GlobalOptions:
-    return GlobalOptions(
-        verbose=False,
-        force=False,
-        interactive=False,
-        orig_working_directory=_get_orig_working_directory(),
-    )
-
-
-def _get_orig_working_directory() -> str:
-    try:
-        return os.getcwd()
-    except FileNotFoundError:
-        return "/"
+        return cls(
+            verbose=False,
+            force=False,
+            interactive=False,
+            orig_working_directory=orig_working_directory,
+        )

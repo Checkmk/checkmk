@@ -1,0 +1,9 @@
+Title: mssql_datafiles: Fix computation of maximum size
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718053672
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+

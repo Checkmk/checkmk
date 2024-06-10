@@ -10,23 +10,26 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.mknotifyd import (
+from cmk.plugins.collection.agent_based.mknotifyd import (  # Queue,
     check_mknotifyd,
     check_mknotifyd_connection,
+    Connection,
     discover_mknotifyd,
     discover_mknotifyd_connection,
     discover_mknotifyd_connection_v2,
+    MkNotifySection,
     parse_mknotifyd,
-    Section,
+    Site,
+    Spool,
 )
 
 # TODO: test outgoing connections + states
 
 INFO_ERROR = [["1571212728"], ["[EX]"], ["Binary file (standard input) matches"]]
-SECTION_ERROR: Section = {
-    "sites": {"EX": {"spools": {}, "connections": {}, "queues": {}}},
-    "timestamp": 1571212728.0,
-}
+SECTION_ERROR = MkNotifySection(
+    timestamp=1571212728.0,
+    sites={"EX": Site(spools={}, connections={})},  #  queues={})},
+)
 
 INFO_STANDARD = [
     ["1571212728"],
@@ -70,57 +73,36 @@ INFO_STANDARD = [
     ["OutputBuffer:             0 Bytes"],
 ]
 
-SECTION_STANDARD = {
-    "sites": {
-        "heute": {
-            "Configuration": 1571143926,
-            "Listening FD": 5,
-            "Started": 1571143926,
-            "Updated": 1571212726,
-            "Version": "2019.10.14",
-            "connections": {
-                "127.0.0.1": {
-                    "HB. Interval": 10,
-                    "InputBuffer": 0,
-                    "LastHeartbeat": 1571212717,
-                    "LastIncomingData": 1571212661,
-                    "Notifications Received": 47,
-                    "Notifications Sent": 47,
-                    "OutputBuffer": 0,
-                    "Pending Acknowledgements": "",
-                    "Since": 1571143941,
-                    "Socket FD": 6,
-                    "State": "established",
-                    "Type": "incoming",
-                },
-                "remote_site": {
-                    "HB. Interval": 10,
-                    "InputBuffer": 0,
-                    "LastHeartbeat": 1571212717,
-                    "LastIncomingData": 1571212661,
-                    "Notifications Received": 47,
-                    "Notifications Sent": 47,
-                    "OutputBuffer": 0,
-                    "Pending Acknowledgements": "",
-                    "Since": 1571143941,
-                    "Socket FD": 6,
-                    "State": "established",
-                    "Type": "incoming",
-                },
+SECTION_STANDARD = MkNotifySection(
+    sites={
+        "heute": Site(
+            updated=1571212726,
+            version="2019.10.14",
+            connections={
+                "127.0.0.1": Connection(
+                    type_="incoming",
+                    state="established",
+                    since=1571143941,
+                    notifications_sent=47,
+                    notifications_received=47,
+                ),
+                "remote_site": Connection(
+                    type_="incoming",
+                    state="established",
+                    since=1571143941,
+                    notifications_sent=47,
+                    notifications_received=47,
+                ),
             },
-            "queues": {
-                "None": {"Processing": 0, "Waiting": 0},
-                "mail": {"Processing": 0, "Waiting": 0},
+            spools={
+                "Corrupted": Spool(count=0, oldest=None, youngest=None),
+                "Deferred": Spool(count=0, oldest=None, youngest=None),
+                "New": Spool(count=0, oldest=None, youngest=None),
             },
-            "spools": {
-                "Corrupted": {"Count": 0, "Oldest": "", "Youngest": ""},
-                "Deferred": {"Count": 0, "Oldest": "", "Youngest": ""},
-                "New": {"Count": 0, "Oldest": "", "Youngest": ""},
-            },
-        }
+        ),
     },
-    "timestamp": 1571212728.0,
-}
+    timestamp=1571212728.0,
+)
 
 INFO_CONNECTION_COOLDOWN = [
     ["1571212728"],
@@ -165,59 +147,38 @@ INFO_CONNECTION_COOLDOWN = [
     ["OutputBuffer:             0 Bytes"],
 ]
 
-SECTION_CONNECTION_COOLDOWN = {
-    "sites": {
-        "heute": {
-            "Configuration": 1571143926,
-            "Listening FD": 5,
-            "Started": 1571143926,
-            "Updated": 1571212726,
-            "Version": "2019.10.14",
-            "connections": {
-                "127.0.0.1": {
-                    "HB. Interval": 10,
-                    "InputBuffer": 0,
-                    "LastHeartbeat": 1571212717,
-                    "LastIncomingData": 1571212661,
-                    "Notifications Received": 0,
-                    "Notifications Sent": 0,
-                    "OutputBuffer": 0,
-                    "Pending Acknowledgements": "",
-                    "Since": 1571143941,
-                    "Socket FD": 6,
-                    "State": "cooldown",
-                    "Type": "incoming",
-                    "Status Message": "All good",
-                },
-                "remote_site": {
-                    "HB. Interval": 10,
-                    "InputBuffer": 0,
-                    "LastHeartbeat": 1571212717,
-                    "LastIncomingData": 1571212661,
-                    "Notifications Received": 0,
-                    "Notifications Sent": 0,
-                    "OutputBuffer": 0,
-                    "Pending Acknowledgements": "",
-                    "Since": 1571143941,
-                    "Socket FD": 6,
-                    "State": "cooldown",
-                    "Type": "incoming",
-                    "Status Message": "All good",
-                },
+SECTION_CONNECTION_COOLDOWN = MkNotifySection(
+    sites={
+        "heute": Site(
+            updated=1571212726,
+            version="2019.10.14",
+            connections={
+                "127.0.0.1": Connection(
+                    type_="incoming",
+                    state="cooldown",
+                    status_message="All good",
+                    since=1571143941,
+                    notifications_sent=0,
+                    notifications_received=0,
+                ),
+                "remote_site": Connection(
+                    type_="incoming",
+                    state="cooldown",
+                    status_message="All good",
+                    since=1571143941,
+                    notifications_sent=0,
+                    notifications_received=0,
+                ),
             },
-            "queues": {
-                "None": {"Processing": 0, "Waiting": 0},
-                "mail": {"Processing": 0, "Waiting": 0},
+            spools={
+                "Corrupted": Spool(count=0, oldest=None, youngest=None),
+                "Deferred": Spool(count=0, oldest=None, youngest=None),
+                "New": Spool(count=0, oldest=None, youngest=None),
             },
-            "spools": {
-                "Corrupted": {"Count": 0, "Oldest": "", "Youngest": ""},
-                "Deferred": {"Count": 0, "Oldest": "", "Youngest": ""},
-                "New": {"Count": 0, "Oldest": "", "Youngest": ""},
-            },
-        }
+        ),
     },
-    "timestamp": 1571212728.0,
-}
+    timestamp=1571212728.0,
+)
 
 INFO_WITH_DEFERRED_CORRUPTED_NEW = [
     ["1571212728"],
@@ -246,28 +207,21 @@ INFO_WITH_DEFERRED_CORRUPTED_NEW = [
     ["Waiting:         0"],
     ["Processing:      0"],
 ]
-SECTION_WITH_DEFERRED_CORRUPTED_NEW = {
-    "sites": {
-        "heute": {
-            "Configuration": 1571143926,
-            "Listening FD": 5,
-            "Started": 1571143926,
-            "Updated": 1571212726,
-            "Version": "2019.10.14",
-            "connections": {},
-            "queues": {
-                "None": {"Processing": 0, "Waiting": 0},
-                "mail": {"Processing": 0, "Waiting": 0},
+SECTION_WITH_DEFERRED_CORRUPTED_NEW = MkNotifySection(
+    sites={
+        "heute": Site(
+            updated=1571212726,
+            version="2019.10.14",
+            connections={},
+            spools={
+                "Corrupted": Spool(count=1, oldest=1571212726, youngest=1571212726),
+                "Deferred": Spool(count=3, oldest=1571212726, youngest=1571212726),
+                "New": Spool(count=2, oldest=1571212726, youngest=1571212726),
             },
-            "spools": {
-                "Corrupted": {"Count": 1, "Oldest": 1571212726, "Youngest": 1571212726},
-                "Deferred": {"Count": 3, "Oldest": 1571212726, "Youngest": 1571212726},
-                "New": {"Count": 2, "Oldest": 1571212726, "Youngest": 1571212726},
-            },
-        }
+        ),
     },
-    "timestamp": 1571212728.0,
-}
+    timestamp=1571212728.0,
+)
 
 
 @pytest.mark.parametrize(
@@ -279,7 +233,7 @@ SECTION_WITH_DEFERRED_CORRUPTED_NEW = {
         pytest.param(INFO_CONNECTION_COOLDOWN, SECTION_CONNECTION_COOLDOWN),
     ],
 )
-def test_parse_mknotifyd(info: StringTable, section: Section) -> None:
+def test_parse_mknotifyd(info: StringTable, section: MkNotifySection) -> None:
     with time_machine.travel(
         datetime.datetime.fromisoformat("2019-05-22T14:00:00").replace(tzinfo=ZoneInfo("UTC"))
     ):
@@ -295,7 +249,7 @@ def test_parse_mknotifyd(info: StringTable, section: Section) -> None:
         pytest.param(SECTION_CONNECTION_COOLDOWN, [Service(item="heute")]),
     ],
 )
-def test_discover_mknotifyd(section: Section, services: Sequence[Service]) -> None:
+def test_discover_mknotifyd(section: MkNotifySection, services: Sequence[Service]) -> None:
     assert list(discover_mknotifyd(section)) == services
 
 
@@ -319,7 +273,9 @@ def test_discover_mknotifyd_connection_deprecated() -> None:
         ),
     ],
 )
-def test_discover_mknotifyd_connection_v2(section: Section, services: Sequence[Service]) -> None:
+def test_discover_mknotifyd_connection_v2(
+    section: MkNotifySection, services: Sequence[Service]
+) -> None:
     assert list(discover_mknotifyd_connection_v2(section)) == services
 
 
@@ -398,7 +354,7 @@ def test_discover_mknotifyd_connection_v2(section: Section, services: Sequence[S
 def test_check_mknotifyd(
     item: str,
     expected_output: Sequence[object],
-    section: Section,
+    section: MkNotifySection,
 ) -> None:
     assert list(check_mknotifyd(item, section)) == expected_output
 
@@ -448,6 +404,6 @@ def test_check_mknotifyd(
 def test_check_mknotifyd_connection(
     item: str,
     expected_output: Sequence[object],
-    section: Section,
+    section: MkNotifySection,
 ) -> None:
     assert list(check_mknotifyd_connection(item, section)) == expected_output

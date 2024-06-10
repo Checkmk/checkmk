@@ -148,6 +148,12 @@ class StructuredDataName:
             return NotImplemented
         return self.name == o.name
 
+    def __ne__(self, other: object) -> bool:
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return result
+        return not result
+
 
 class StructuredDataID:
     """Represents SD-ID from https://tools.ietf.org/html/rfc5424"""

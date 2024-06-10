@@ -19,7 +19,6 @@ from cmk.gui.utils.html import HTML
     ],
 )
 def test_class_HTML_value(value: str) -> None:
-    assert isinstance(HTML(value).value, str)
     assert HTML(HTML(value)) == HTML(value)
 
 
@@ -41,7 +40,7 @@ def test_class_HTML() -> None:
     assert str(A) == a, str(A)
     assert "%s" % A == a, "%s" % A
     assert json.loads(json.dumps(A)) == A
-    assert repr(A) == 'HTML("%s")' % A.value
+    assert repr(A) == 'HTML("%s")' % a
     assert len(B) == len(b)
     assert str(B) == str(b)
 

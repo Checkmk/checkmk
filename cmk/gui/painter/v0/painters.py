@@ -654,7 +654,9 @@ class PainterSvcLongPluginOutput(Painter):
         if 0 < max_len < long_output_len:
             long_output = long_output[:max_len] + "..."
 
-        content = format_plugin_output(long_output, request=self.request, row=row)
+        content = format_plugin_output(
+            long_output, request=self.request, row=row, newlineishs_to_brs=True
+        )
 
         # has to be placed after format_plugin_output() to keep links save from
         # escaping
@@ -671,16 +673,14 @@ class PainterSvcLongPluginOutput(Painter):
                     ("varname", "max_long_output_size"),
                 ],
             )
-            content.value = (
-                f"Lost data due to truncation of long output to "
-                f"{int(max_long_output_size / 1000)}kB "
-                f"{setting_link_tag}"
-                f'{html.render_b("WARN", class_="stmark state1")}<br>'
-                f"{content.value}"
+            content = (
+                "Lost data due to truncation of long output to "
+                + f"{int(max_long_output_size / 1000)}kB "
+                + setting_link_tag
+                + html.render_b("WARN", class_="stmark state1")
+                + html.render_br()
+                + content
             )
-
-        # In long output we get newlines which should also be displayed in the GUI
-        content.value = content.value.replace("\\n", "<br>").replace("\n", "<br>")
 
         return paint_stalified(row, content, config=self.config)
 
@@ -4498,10 +4498,9 @@ class PainterLogDetailsHistory(Painter):
         if 0 < max_len < len(long_output):
             long_output = long_output[:max_len] + "..."
 
-        content = format_plugin_output(long_output, request=self.request, row=row)
-
-        # In long output we get newlines which should also be displayed in the GUI
-        content.value = content.value.replace("\\n", "<br>").replace("\n", "<br>")
+        content = format_plugin_output(
+            long_output, request=self.request, row=row, newlineishs_to_brs=True
+        )
 
         return paint_stalified(row, content, config=self.config)
 

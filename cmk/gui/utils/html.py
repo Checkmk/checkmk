@@ -27,11 +27,13 @@ class HTML:
     def __init__(self, value: HTML | str = "") -> None:
         # Type hints are not used everywhere. So better be sure that we really have
         # the types we want.
-        assert value is not None
-        assert not isinstance(value, (float, int))
-        self.value = value if isinstance(value, str) else str(value)
+        if not isinstance(value, (str, HTML)):
+            raise TypeError("value must be a str or HTML object")
 
-    def _ensure_str(self, value: HTML | str) -> str:
+        self._value = value if isinstance(value, str) else str(value)
+
+    @staticmethod
+    def _ensure_str(value: HTML | str) -> str:
         """return escaped string or HTML as str
 
         >>> HTML()._ensure_str("foo<b>bar</b>")
@@ -42,67 +44,73 @@ class HTML:
         return html.escape(value) if isinstance(value, str) else str(value)
 
     def __str__(self) -> str:
-        return self.value
+        return self._value
 
     def __repr__(self) -> str:
-        return 'HTML("%s")' % self.value
+        return 'HTML("%s")' % self._value
 
     def __hash__(self) -> int:
-        return hash(self.value)
+        """Return the hash of the value
+
+        Not sure if we want that...
+        >>> hash("<h1>foo</h1>") == hash(HTML("<h1>foo</h1>"))
+        True
+        """
+        return hash(self._value)
 
     def to_json(self) -> str:
-        return self.value
+        return self._value
 
     def __add__(self, other: HTML | str) -> HTML:
-        return HTML(self.value + self._ensure_str(other))
+        return HTML(self._value + self._ensure_str(other))
 
     def __iadd__(self, other: HTML | str) -> HTML:
         return self.__add__(other)
 
     def __radd__(self, other: HTML | str) -> HTML:
-        return HTML(self._ensure_str(other) + self.value)
+        return HTML(self._ensure_str(other) + self._value)
 
     def join(self, iterable: Iterable[HTML | str]) -> HTML:
         """add to the HTML object but escape if str"""
-        return HTML(self.value.join(map(self._ensure_str, iterable)))
+        return HTML(self._value.join(map(self._ensure_str, iterable)))
 
     def __eq__(self, other: Any) -> bool:
-        return self.value == self._ensure_str(other)
+        return self._value == self._ensure_str(other)
 
     def __ne__(self, other: Any) -> bool:
-        return self.value != self._ensure_str(other)
+        return self._value != self._ensure_str(other)
 
     def __len__(self) -> int:
-        return len(self.value)
+        return len(self._value)
 
     def __getitem__(self, index: int) -> HTML:
-        return HTML(self.value[index])
+        return HTML(self._value[index])
 
     def __contains__(self, item: HTML | str) -> bool:
-        return self._ensure_str(item) in self.value
+        return self._ensure_str(item) in self._value
 
     def count(self, x: HTML | str, __start: int | None = None, __end: int | None = None) -> int:
-        return self.value.count(self._ensure_str(x), __start, __end)
+        return self._value.count(self._ensure_str(x), __start, __end)
 
     def index(self, sub: HTML | str, __start: int | None = None, __end: int | None = None) -> int:
-        return self.value.index(self._ensure_str(sub), __start, __end)
+        return self._value.index(self._ensure_str(sub), __start, __end)
 
     def lstrip(self, chars: HTML | str | None = None) -> HTML:
-        return HTML(self.value.lstrip(self._ensure_str(chars) if chars is not None else None))
+        return HTML(self._value.lstrip(self._ensure_str(chars) if chars is not None else None))
 
     def rstrip(self, chars: HTML | str | None = None) -> HTML:
-        return HTML(self.value.rstrip(self._ensure_str(chars) if chars is not None else None))
+        return HTML(self._value.rstrip(self._ensure_str(chars) if chars is not None else None))
 
     def strip(self, chars: HTML | str | None = None) -> HTML:
-        return HTML(self.value.strip(self._ensure_str(chars) if chars is not None else None))
+        return HTML(self._value.strip(self._ensure_str(chars) if chars is not None else None))
 
     def lower(self) -> HTML:
-        return HTML(self.value.lower())
+        return HTML(self._value.lower())
 
     def upper(self) -> HTML:
-        return HTML(self.value.upper())
+        return HTML(self._value.upper())
 
     def startswith(
         self, prefix: HTML | str, start: int | None = None, end: int | None = None
     ) -> bool:
-        return self.value.startswith(self._ensure_str(prefix), start, end)
+        return self._value.startswith(self._ensure_str(prefix), start, end)

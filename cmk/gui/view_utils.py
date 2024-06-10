@@ -64,7 +64,12 @@ _STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
 def format_plugin_output(  # pylint: disable=redefined-outer-name
-    output: str, *, request: Request, row: Row | None = None, shall_escape: bool = True
+    output: str,
+    *,
+    request: Request,
+    row: Row | None = None,
+    shall_escape: bool = True,
+    newlineishs_to_brs: bool = False,
 ) -> HTML:
     shall_escape = _consolidate_escaping_options(row, shall_escape)
 
@@ -78,6 +83,8 @@ def format_plugin_output(  # pylint: disable=redefined-outer-name
 
     output = _render_host_links(output, row, request=request)
 
+    if newlineishs_to_brs:
+        output = output.replace("\\n", "<br>").replace("\n", "<br>")
     return HTML(output)
 
 

@@ -169,7 +169,7 @@ def log_audit(
 
     if active_config.wato_use_git:
         if isinstance(message, HTML):
-            message = escaping.strip_tags(message.value)
+            message = escaping.strip_tags(str(message))
         cmk.gui.watolib.git.add_message(message)
 
     _log_entry(action, message, object_ref, user_id, diff_text)

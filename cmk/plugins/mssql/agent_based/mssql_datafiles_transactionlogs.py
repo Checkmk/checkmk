@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from typing import Any, Literal, TypedDict
 
@@ -224,18 +224,16 @@ def discover_mssql_transactionlogs(
 
 
 def _datafile_usage(
-    instances: Iterable[MSSQLInstanceData],
+    instances: Sequence[MSSQLInstanceData],
     available_bytes: Mapping[str, float],
-) -> DatafileUsage | None:
+) -> DatafileUsage:
     max_size_sum = 0.0
     allocated_size_sum = 0.0
     used_size_sum = 0.0
     unlimited = False
-    instances_found = False
     used_mointpoints = []
 
     for instance in instances:
-        instances_found = True
         unlimited |= instance["unlimited"]
         allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += (used_size := instance["used_size"] or 0)
@@ -253,14 +251,10 @@ def _datafile_usage(
         )
         max_size_sum += max_size
 
-    return (
-        DatafileUsage(
-            used=used_size_sum,
-            allocated=allocated_size_sum,
-            max=max_size_sum,
-        )
-        if instances_found
-        else None
+    return DatafileUsage(
+        used=used_size_sum,
+        allocated=allocated_size_sum,
+        max=max_size_sum,
     )
 
 
@@ -289,25 +283,15 @@ def check_mssql_common(
     section: SectionDatafiles,
     section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> CheckResult:
-    instances_for_item = (
-        values
-        for (inst, database, file_name), values in section.items()
-        if (
-            _format_item_mssql_datafiles(inst, database, file_name) == item
-            or _format_item_mssql_datafiles(inst, database, None) == item
-        )
-    )
-    available_bytes = (
-        {f.mountpoint.lower(): f.avail_mb * 1024 * 1024 for f in section_df[0]}
-        if section_df
-        else {}
-    )
-
     if not (
-        datafile_usage := _datafile_usage(
-            instances_for_item,
-            available_bytes,
-        )
+        instances_for_item := [
+            values
+            for (inst, database, file_name), values in section.items()
+            if (
+                _format_item_mssql_datafiles(inst, database, file_name) == item
+                or _format_item_mssql_datafiles(inst, database, None) == item
+            )
+        ]
     ):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
@@ -315,7 +299,14 @@ def check_mssql_common(
 
     yield from _mssql_datafiles_process_sizes(
         params,
-        datafile_usage,
+        _datafile_usage(
+            instances_for_item,
+            available_bytes=(
+                {f.mountpoint.lower(): f.avail_mb * 1024 * 1024 for f in section_df[0]}
+                if section_df
+                else {}
+            ),
+        ),
     )
 
 

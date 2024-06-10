@@ -324,11 +324,10 @@ def _make_customized_confirm_link(
 ) -> str:
     return "javascript:cmk.forms.confirm_link({}, {}, {}),cmk.popup_menu.close_popup()".format(
         json.dumps(quote_plus(url)),
-        json.dumps(escape_text(message)),
+        json.dumps(escape_text(message, escape_links=True)),
         json.dumps(
             {
-                "title": title,
-                "html": message,
+                "title": escape_text(title, escape_links=True),
                 "confirmButtonText": confirm_button,
                 "cancelButtonText": cancel_button,
                 "icon": icon if icon else "question",

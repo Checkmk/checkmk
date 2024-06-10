@@ -108,6 +108,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     title=Title("Database user"),
                     help_text=Help("The username used to connect to the database"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
+                    macro_support=True,
                 ),
                 required=True,
             ),

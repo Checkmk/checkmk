@@ -45,7 +45,7 @@ def discover_liebert_system(section: SystemSection) -> DiscoveryResult:
 
 
 def check_liebert_system(item: str, section: SystemSection) -> CheckResult:
-    # Variable 'item' is used to generate the service description.
+    # Variable 'item' is used to generate the service name.
     # However, only one item per host is expected, which is why it is not
     # used in this check funtion.
     for key, value in sorted(section.items()):

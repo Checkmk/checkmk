@@ -889,7 +889,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         # Not loading all checks improves performance of the calls and as a result the
         # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
-        # because we already have calculated service descriptions. For clusters we have to load all
+        # because we already have calculated service names. For clusters we have to load all
         # checks for config_cache.set_autochecks, because it needs to calculate the
         # service_descriptions of existing services to decided whether or not they are clustered
         # (See autochecks.set_autochecks_of_cluster())

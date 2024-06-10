@@ -3331,7 +3331,7 @@ class MonitoredHostname(AjaxDropdownChoice):
 class MonitoredServiceDescription(AjaxDropdownChoice):
     """Unfiltered Service Descriptions for input with dropdown completion
 
-    Renders an input field for entering a service description while providing an auto completion dropdown field.
+    Renders an input field for entering a service name while providing an auto completion dropdown field.
     Fetching the choices from the current live config via livestatus"""
 
     ident = "monitored_service_description"

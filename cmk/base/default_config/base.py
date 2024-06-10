@@ -59,7 +59,7 @@ cluster_max_cachefile_age = 90  # secs.
 piggyback_max_cachefile_age = 3600  # secs
 # Ruleset for translating piggyback host names
 piggyback_translation: list[RuleSpec[TranslationOptions]] = []
-# Ruleset for translating service descriptions
+# Ruleset for translating service names
 service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
 simulation_mode = False
 fake_dns: str | None = None

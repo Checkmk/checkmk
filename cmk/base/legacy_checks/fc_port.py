@@ -89,7 +89,7 @@ fc_port_no_inventory_types = [3]
 fc_port_no_inventory_admstates = [1, 3]
 fc_port_no_inventory_opstates = []
 fc_port_no_inventory_phystates = []
-fc_port_inventory_use_portname = False  # use connUnitPortName as service description
+fc_port_inventory_use_portname = False  # use connUnitPortName as service name
 
 
 # Helper function for computing item from port number

@@ -39,7 +39,7 @@ def acknowledge_service_problem(
             The host-name for which this acknowledgement is for.
 
         service_description:
-            The service description of the service, whose problems shall be acknowledged.
+            The service name of the service, whose problems shall be acknowledged.
 
         sticky:
             If set, only a state-change of the service to an OK state will discard the

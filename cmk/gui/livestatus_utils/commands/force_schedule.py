@@ -67,7 +67,7 @@ def force_schedule_service_check(
             The name of the host where the service is
 
         service_description:
-            The service description for which the forced check should be performed on
+            The service name for which the forced check should be performed on
 
         check_time:
             The time at which this forced check should be performed

@@ -1263,15 +1263,15 @@ class Rule:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
 
         # BE AWARE: Depending on the service ruleset the service_description of
-        # the rules is only a check item or a full service description. For
+        # the rules is only a check item or a full service name. For
         # example the check parameters rulesets only use the item, and other
         # service rulesets like disabled services ruleset use full service
         # descriptions.
         #
         # The service_description attribute of the match_object must be set to
-        # either the item or the full service description, depending on the
+        # either the item or the full service name, depending on the
         # ruleset, but the labels of a service need to be gathered using the
-        # real service description.
+        # real service name.
         if only_host_conditions:
             match_object = ruleset_matcher.RulesetMatchObject(hostname)
         elif self.ruleset.item_type() == "service":
@@ -1495,7 +1495,7 @@ def _match_one_of_search_expression(
 
 
 def service_description_to_condition(service_description: str) -> HostOrServiceConditionRegex:
-    r"""Packs a service description to be used as explicit match condition
+    r"""Packs a service name to be used as explicit match condition
 
     >>> service_description_to_condition("abc")
     {'$regex': 'abc$'}

@@ -156,7 +156,7 @@ def parse_diskstat(string_table: StringTable) -> diskstat.Section:
         if major != "None" and minor != "None" and (int(major), int(minor)) in name_info:
             device = name_info[(int(major), int(minor))]
 
-        # service description will be either device or wwn
+        # service name will be either device or wwn
         # both are added to the section key to keep the diskstat.Disk type generic
         # across all disk plugins
         if (wwn := wwn_info.get(device)) is not None:

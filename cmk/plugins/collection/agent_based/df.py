@@ -190,7 +190,7 @@ def discover_df(params: Mapping[str, Any], section: DfSection) -> DiscoveryResul
             additional_params = {"grouping_behaviour": item_and_grouping.grouping}
 
         elif df_block:
-            # Somehow the user wanted to see the volume name in the service description,
+            # Somehow the user wanted to see the volume name in the service name,
             # but the grouping itself is based on the mountpoint only
             # => The df_inventory returns a list of mountpoints and mountpoint groups
             # Add the volume name as prefix for single mountpoints

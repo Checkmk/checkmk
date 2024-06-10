@@ -2539,7 +2539,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     obj = matcher._service_match_object(xyz_host, "bla blä")
     assert obj == RulesetMatchObject(HostName("xyz"), "bla blä", {})
 
-    # Funny service description because the plug-in isn't loaded.
+    # Funny service name because the plug-in isn't loaded.
     # We could patch config.service_description, but this is easier:
     description = "Unimplemented check cpu_load"
 

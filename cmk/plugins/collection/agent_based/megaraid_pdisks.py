@@ -30,7 +30,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import megaraid
 
-# This makes service descriptions backward compatible to match
+# This makes service names backward compatible to match
 # inventory made by older versions that didn't support multiple
 # controllers
 megaraid_pdisks_adapterstr = ["e", "f", "g", "h", "i", "j", "k", "l"]

@@ -935,7 +935,7 @@ def _get_shadow_hosts() -> ShadowHosts:
 #   | Service related helper functions                                     |
 #   '----------------------------------------------------------------------'
 
-# Renaming of service descriptions while keeping backward compatibility with
+# Renaming of service names while keeping backward compatibility with
 # existing installations.
 # Synchronize with htdocs/wato.py and plugins/wato/check_mk_configuration.py!
 
@@ -1116,7 +1116,7 @@ def _get_service_description_template_and_item(
 ) -> tuple[ServiceName, Item]:
     plugin_name_str = str(plugin_name)
 
-    # use user-supplied service description, if available
+    # use user-supplied service name, if available
     if descr_format := service_descriptions.get(plugin_name_str):
         return descr_format, item
 
@@ -1146,7 +1146,7 @@ def _format_item_with_template(template: str, item: Item) -> str:
 def get_final_service_description(
     description: ServiceName, translations: cmk.utils.translations.TranslationOptions
 ) -> ServiceName:
-    # Note: at least strip the service description.
+    # Note: at least strip the service name.
     # Some plugins introduce trailing whitespaces, but Nagios silently drops leading
     # and trailing spaces in the configuration file.
     description = (
@@ -1155,7 +1155,7 @@ def get_final_service_description(
         else description.strip()
     )
 
-    # Sanitize: remove illegal characters from a service description
+    # Sanitize: remove illegal characters from a service name
     cache = cache_manager.obtain_cache("final_service_description")
     with contextlib.suppress(KeyError):
         return cache[description]

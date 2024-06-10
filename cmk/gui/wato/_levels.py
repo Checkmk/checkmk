@@ -39,7 +39,7 @@ def PredictiveLevels(
             ignored_keys=[
                 # This is a place holder:
                 # The backend uses this marker to inject a callback to get the prediction.
-                # Its main purpose it to bind the host name and service description,
+                # Its main purpose it to bind the host name and service name,
                 # which are not known to the plugin.
                 INJECTION_KEY,
             ],

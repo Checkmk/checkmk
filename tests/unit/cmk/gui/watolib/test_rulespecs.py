@@ -530,7 +530,7 @@ def test_register_check_parameters(patch_rulespec_registries: None) -> None:
 
     # Static checks wrap the valuespec into a 3-element tuple
     # - check type selection
-    # - item spec for the service description
+    # - item spec for the service name
     # - original valuespec (TimeperiodSelection)
     assert isinstance(rulespec.valuespec, Tuple)
     assert len(rulespec.valuespec._elements) == 3

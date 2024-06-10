@@ -31,7 +31,7 @@ def core_command(
     Sequence[CommandSpec], list[tuple[str, str]], CommandConfirmDialogOptions, CommandExecutor
 ]:
     """Examine the current HTML variables in order determine, which command the user has selected.
-    The fetch ids from a data row (host name, service description, downtime/commands id) and
+    The fetch ids from a data row (host name, service name, downtime/commands id) and
     construct one or several core command lines and a descriptive confirm dialog."""
     host = row.get("host_name")
     descr = row.get("service_description")

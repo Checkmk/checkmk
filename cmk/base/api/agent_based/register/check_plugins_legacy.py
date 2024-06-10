@@ -120,7 +120,7 @@ def _create_check_function(
         if not requires_item:
             # this handles a very weird case, in which check plug-ins do not have an '%s'
             # in their description (^= no item) but do in fact discover an empty string.
-            # We cannot just append "%s" to the service description, because in that case
+            # We cannot just append "%s" to the service name, because in that case
             # our tests complain about the ruleset not being for plugins with item :-(
             kwargs = {k: v for k, v in kwargs.items() if k != "item"}
 

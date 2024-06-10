@@ -201,7 +201,7 @@ class ABCCrashReport(abc.ABC):
 
         The parts are separated with "@" signs. The "@" signs found in the parts are
         replaced with "~" which is not allowed to be in the single parts. E.g.
-        service descriptions don't have such signs."""
+        service names don't have such signs."""
         return "@".join([p.replace("@", "~") for p in self.ident()])
 
     def crash_dir(self, ident_text: str | None = None) -> Path:

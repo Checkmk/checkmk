@@ -235,7 +235,7 @@ def schedule_service_downtime(
             The host-name for which this downtime is for.
 
         service_description:
-            The service description of the service, whose problems shall be acknowledged.
+            The service name of the service, whose problems shall be acknowledged.
 
         start_time:
             When the downtime shall begin.

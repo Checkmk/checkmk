@@ -170,7 +170,7 @@ def replace_service_description(service_description, match_groups, pattern):
         description_template = description_template.replace("%s", "{%d}" % number, 1)
 
     # It is allowed (1.1.4) that the pattern contains more subexpressions
-    # then the service description. In that case only the first
+    # then the service name. In that case only the first
     # subexpressions are used as item.
     try:
         # First argument is None, because format is zero indexed

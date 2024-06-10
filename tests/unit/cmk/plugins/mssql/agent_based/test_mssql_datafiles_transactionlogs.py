@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from functools import lru_cache
 
 import pytest
 
@@ -12,89 +13,87 @@ from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.df_section import parse_df
 from cmk.plugins.lib.df import BlocksSubsection, DfBlock, InodesSubsection
 
-SECTION_MSSQL = msdt.parse_mssql_datafiles(
-    [
+
+@lru_cache
+def section_mssql() -> msdt.SectionDatafiles:
+    return msdt.parse_mssql_datafiles(
         [
-            "MSSQL46",
-            "CorreLog_Report_T",
-            "CorreLog_Report_T_log",
-            "Z:\\mypath\\CorreLog_Report_T_log.ldf",
-            "2097152",
-            "256",
-            "16",
-            "0",
-        ],
-        [
-            "MSSQL46",
-            "DASH_CONFIG_T",
-            "DASH_CONFIG_T_log",
-            "Z:\\mypath\\DASH_CONFIG_T_log.ldf",
-            "2097152",
-            "256",
-            "1",
-            "0",
-        ],
-        ["MSSQL46", "master", "mastlog", "Z:\\mypath\\mastlog.ldf", "0", "1", "0", "1"],
-        ["MSSQL46", "model", "modellog", "Z:\\mypath\\modellog.ldf", "0", "34", "32", "1"],
-        ["MSSQL46", "msdb", "MSDBLog", "Z:\\mypath\\MSDBLog.ldf", "2097152", "17", "3", "0"],
-        [
-            "MSSQL46",
-            "NOC_ALARM_T",
-            "NOC_ALARM_T_log",
-            "Z:\\mypath\\NOC_ALARM_T_log.ldf",
-            "2097152",
-            "256",
-            "8",
-            "0",
-        ],
-        [
-            "MSSQL46",
-            "NOC_CONFIG_T",
-            "NOC_CONFIG_T_log",
-            "Z:\\mypath\\NOC_CONFIG_T_log.ldf",
-            "2097152",
-            "768",
-            "31",
-            "0",
-        ],
-        ["MSSQL46", "tempdb", "templog", "Z:\\mypath\\templog.ldf", "0", "160", "55", "1"],
-        [
-            "MSSQL46",
-            "test_autoclose",
-            "test_autoclose_log",
-            "Z:\\mypath\\test_autoclose_log.ldf",
-            "2097152",
-            "32",
-            "1",
-            "0",
-        ],
-    ]
-)
+            [
+                "MSSQL46",
+                "CorreLog_Report_T",
+                "CorreLog_Report_T_log",
+                "Z:\\mypath\\CorreLog_Report_T_log.ldf",
+                "2097152",
+                "256",
+                "16",
+                "0",
+            ],
+            [
+                "MSSQL46",
+                "DASH_CONFIG_T",
+                "DASH_CONFIG_T_log",
+                "Z:\\mypath\\DASH_CONFIG_T_log.ldf",
+                "2097152",
+                "256",
+                "1",
+                "0",
+            ],
+            ["MSSQL46", "master", "mastlog", "Z:\\mypath\\mastlog.ldf", "0", "1", "0", "1"],
+            ["MSSQL46", "model", "modellog", "Z:\\mypath\\modellog.ldf", "0", "34", "32", "1"],
+            ["MSSQL46", "msdb", "MSDBLog", "Z:\\mypath\\MSDBLog.ldf", "2097152", "17", "3", "0"],
+            [
+                "MSSQL46",
+                "NOC_ALARM_T",
+                "NOC_ALARM_T_log",
+                "Z:\\mypath\\NOC_ALARM_T_log.ldf",
+                "2097152",
+                "256",
+                "8",
+                "0",
+            ],
+            [
+                "MSSQL46",
+                "NOC_CONFIG_T",
+                "NOC_CONFIG_T_log",
+                "Z:\\mypath\\NOC_CONFIG_T_log.ldf",
+                "2097152",
+                "768",
+                "31",
+                "0",
+            ],
+            ["MSSQL46", "tempdb", "templog", "Z:\\mypath\\templog.ldf", "0", "160", "55", "1"],
+            [
+                "MSSQL46",
+                "test_autoclose",
+                "test_autoclose_log",
+                "Z:\\mypath\\test_autoclose_log.ldf",
+                "2097152",
+                "32",
+                "1",
+                "0",
+            ],
+        ]
+    )
 
 
 @pytest.mark.parametrize(
-    "section_mssql, section_df",
+    "section_df",
     [
         (
-            SECTION_MSSQL,
             parse_df(
                 [
                     ["Z:\\\\", "NTFS", "31463268", "16510812", "14952456", "53%", "Z:\\\\"],
                 ]
             ),
         ),
-        (
-            SECTION_MSSQL,
-            None,
-        ),
+        (None,),
     ],
 )
 def test_discovery_mssql_transactionlogs(
-    section_mssql: msdt.SectionDatafiles | None,
     section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> None:
     assert sorted(
-        msdt.discover_mssql_transactionlogs([{}], section_mssql, section_df),
+        msdt.discover_mssql_transactionlogs([{}], section_mssql(), section_df),
         key=lambda s: s.item or "",
     ) == [
         Service(item="MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log"),
@@ -110,11 +109,10 @@ def test_discovery_mssql_transactionlogs(
 
 
 @pytest.mark.parametrize(
-    "item, section_mssql, section_df, check_results",
+    "item, section_df, check_results",
     [
         (
             "MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log",
-            SECTION_MSSQL,
             None,
             [
                 Result(
@@ -139,7 +137,6 @@ def test_discovery_mssql_transactionlogs(
         ),
         (
             "MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log",
-            SECTION_MSSQL,
             parse_df(
                 [
                     ["Z:\\\\", "NTFS", "31463268", "16510812", "14952456000000", "53%", "Z:\\\\"],
@@ -168,7 +165,6 @@ def test_discovery_mssql_transactionlogs(
         ),
         (
             "MSSQL46.master.mastlog",
-            SECTION_MSSQL,
             parse_df(
                 [
                     ["Z:\\\\", "NTFS", "31463268", "16510812", "14952456000000", "53%", "Z:\\\\"],
@@ -197,7 +193,6 @@ def test_discovery_mssql_transactionlogs(
         ),
         (
             "MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log",
-            SECTION_MSSQL,
             parse_df(
                 [
                     ["Z:\\\\", "NTFS", "1", "1", "1", "53%", "Z:\\\\"],
@@ -228,7 +223,6 @@ def test_discovery_mssql_transactionlogs(
 )
 def test_check_mssql_transactionlogs(
     item: str,
-    section_mssql: msdt.SectionDatafiles | None,
     section_df: tuple[BlocksSubsection, InodesSubsection] | None,
     check_results: Sequence[Result | Metric],
 ) -> None:
@@ -237,7 +231,7 @@ def test_check_mssql_transactionlogs(
             msdt.check_mssql_transactionlogs(
                 item,
                 {},
-                section_mssql,
+                section_mssql(),
                 section_df,
             )
         )

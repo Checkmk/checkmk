@@ -24,6 +24,8 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.df import BlocksSubsection, InodesSubsection
 
+_ItemKey = tuple[str | None, str, str]
+
 
 class MSSQLInstanceData(TypedDict):
     unlimited: bool
@@ -33,23 +35,11 @@ class MSSQLInstanceData(TypedDict):
     mountpoint: str
 
 
-SectionDatafiles = dict[tuple[str | None, str, str], MSSQLInstanceData]
+SectionDatafiles = Mapping[_ItemKey, MSSQLInstanceData]
 
 
 def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
-    """
-    >>> from pprint import pprint
-    >>> pprint(parse_mssql_datafiles([
-    ...     ['MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
-    ...      'Z:\\\\mypath\\\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'],
-    ... ]))
-    {('MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log'): {'allocated_size': 268435456.0,
-                                                                 'max_size': 2199023255552.0,
-                                                                 'mountpoint': 'Z',
-                                                                 'unlimited': False,
-                                                                 'used_size': 16777216.0}}
-    """
-    section: SectionDatafiles = {}
+    section: dict[_ItemKey, MSSQLInstanceData] = {}
     for line in string_table:
         if line[-1].startswith("ERROR: "):
             continue

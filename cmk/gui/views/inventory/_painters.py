@@ -206,11 +206,10 @@ class PainterInvhistDelta(Painter):
             inv_display_hints,
             theme,
             self.request,
-            tree_id=str(row["invhist_time"]),
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree)
+            tree_renderer.show(tree, str(row["invhist_time"]))
             code = HTML.without_escaping(output_funnel.drain())
 
         return "invtree", code

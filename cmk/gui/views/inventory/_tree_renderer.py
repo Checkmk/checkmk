@@ -260,8 +260,7 @@ def ajax_inv_render_tree() -> None:
         theme,
         request,
         show_internal_tree_paths,
-        tree_id,
-    ).show(tree)
+    ).show(tree, tree_id)
 
 
 def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:
@@ -281,7 +280,6 @@ class TreeRenderer:
         theme_: Theme,
         request_: Request,
         show_internal_tree_paths: bool = False,
-        tree_id: str = "",
     ) -> None:
         self._site_id = site_id
         self._host_name = host_name
@@ -289,8 +287,6 @@ class TreeRenderer:
         self._theme = theme_
         self._request = request_
         self._show_internal_tree_paths = show_internal_tree_paths
-        self._tree_id = tree_id
-        self._tree_name = f"inv_{host_name}{tree_id}"
 
     def _get_header(self, title: str, key_info: str) -> HTML:
         # Todo (CMK-17819)
@@ -394,7 +390,7 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
+    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree, tree_id: str) -> None:
         hint = self._hints.get_node_hint(node.path)
         title = self._get_header(
             _replace_title_placeholders(hint, node.path),
@@ -407,7 +403,7 @@ class TreeRenderer:
             )
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
         with foldable_container(
-            treename=self._tree_name,
+            treename=f"inv_{self._host_name}{tree_id}",
             id_=raw_path,
             isopen=False,
             title=title,
@@ -418,7 +414,7 @@ class TreeRenderer:
                     ("host", self._host_name),
                     ("raw_path", raw_path),
                     ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
-                    ("tree_id", self._tree_id),
+                    ("tree_id", tree_id),
                 ],
                 "ajax_inv_render_tree.py",
             ),
@@ -426,7 +422,7 @@ class TreeRenderer:
             if is_open:
                 self.show(node)
 
-    def show(self, tree: ImmutableTree | ImmutableDeltaTree) -> None:
+    def show(self, tree: ImmutableTree | ImmutableDeltaTree, tree_id: str = "") -> None:
         hint = self._hints.get_node_hint(tree.path)
         if tree.attributes:
             self._show_attributes(tree.attributes, hint)
@@ -435,4 +431,4 @@ class TreeRenderer:
         for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node)
+                self._show_node(node, tree_id)

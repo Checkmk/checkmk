@@ -1,0 +1,9 @@
+Title: aws_ec2_summary: Update catalog documentation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718028509
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+

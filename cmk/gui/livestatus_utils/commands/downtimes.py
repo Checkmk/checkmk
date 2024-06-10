@@ -819,7 +819,7 @@ def _schedule_downtime(
         params = [host_or_group]
     elif command == DOWNTIME.SCHEDULE_SERVICE:
         if not service_description:
-            raise ValueError("Service description necessary.")
+            raise ValueError("Service name necessary.")
         params = [host_or_group, service_description]
     else:
         raise ValueError(f"Unsupported command: {command}")

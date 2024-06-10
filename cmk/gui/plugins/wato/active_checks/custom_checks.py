@@ -28,7 +28,7 @@ def _valuespec_custom_checks() -> MigrateNotUpdated:
                 (
                     "service_description",
                     TextInput(
-                        title=_("Service description"),
+                        title=_("Service name"),
                         help=_(
                             "Please make sure that this is unique per host "
                             "and does not collide with other services."

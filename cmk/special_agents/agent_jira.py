@@ -262,7 +262,7 @@ def parse_arguments(argv):
         action="append",
         help="The names of workflows of the given project",
     )
-    parser.add_argument("--jql-desc", nargs=1, action="append", help="Service description.")
+    parser.add_argument("--jql-desc", nargs=1, action="append", help="Service name.")
     parser.add_argument("--jql-query", nargs=1, action="append", help="JQL search string.")
     parser.add_argument(
         "--jql-result",

@@ -157,7 +157,7 @@ def _valuespec_special_agents_jira():
                             (
                                 "service_description",
                                 TextInput(
-                                    title=_("Service description: "),
+                                    title=_("Service name: "),
                                     help=_(
                                         "The resulting service will get this entry as "
                                         "service description"

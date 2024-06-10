@@ -59,7 +59,7 @@ def _make_parameter_form() -> Dictionary:
             ),
             "svc_description": DictElement(
                 parameter_form=String(
-                    title=Title("Service description"),
+                    title=Title("Service name"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
                         "Here you can specify a service description. "

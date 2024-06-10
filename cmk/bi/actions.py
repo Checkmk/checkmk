@@ -220,7 +220,7 @@ class BIStateOfServiceActionSchema(Schema):
     )
     host_regex = ReqString(dump_default="", example="testhost", description="Host name regex.")
     service_regex = ReqString(
-        dump_default="", example="testservice", description="Service description regex."
+        dump_default="", example="testservice", description="Service name regex."
     )
 
 

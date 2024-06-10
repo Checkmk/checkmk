@@ -739,7 +739,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.MonitoredService(),
             legacy_valuespecs.MonitoredServiceDescription(
-                title=_("Service description"),
+                title=_("Service name"),
                 help=_("Select from a list of service descriptions known to Checkmk"),
                 autocompleter=ContextAutocompleterConfig(
                     ident=legacy_valuespecs.MonitoredServiceDescription.ident,

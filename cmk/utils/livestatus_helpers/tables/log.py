@@ -1406,9 +1406,9 @@ class Log(Table):
     current_service_description = Column(
         'current_service_description',
         col_type='string',
-        description='Service description',
+        description='Service name',
     )
-    """Service description"""
+    """Service name"""
 
     current_service_display_name = Column(
         'current_service_display_name',

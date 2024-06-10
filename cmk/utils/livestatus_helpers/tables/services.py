@@ -202,9 +202,9 @@ class Services(Table):
     description = Column(
         'description',
         col_type='string',
-        description='Service description',
+        description='Service name',
     )
-    """Service description"""
+    """Service name"""
 
     display_name = Column(
         'display_name',

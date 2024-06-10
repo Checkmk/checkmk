@@ -54,9 +54,7 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterHostIpv4Address)
     registry.register(SorterNumProblems)
 
-    declare_simple_sorter(
-        "svcdescr", _("Service description"), "service_description", cmp_service_name
-    )
+    declare_simple_sorter("svcdescr", _("Service name"), "service_description", cmp_service_name)
     declare_simple_sorter(
         "svcdispname",
         _("Service alternative display name"),

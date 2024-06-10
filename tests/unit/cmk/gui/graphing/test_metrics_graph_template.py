@@ -155,7 +155,7 @@ def test_create_graph_recipe_from_template() -> None:
     specification = TemplateGraphSpecification(
         site=SiteId("Site"),
         host_name=HostName("Host-Name"),
-        service_description="Service description",
+        service_description="Service name",
     )
 
     assert gt.create_graph_recipe_from_template(

@@ -140,7 +140,7 @@ class HostConditionsSchema(Schema):
 
 class ServiceConditionsSchema(HostConditionsSchema):
     service_regex = ReqString(
-        dump_default="", example="Filesystem.*", description="Service description regex."
+        dump_default="", example="Filesystem.*", description="Service name regex."
     )
     service_label_groups = ReqList(
         fields.Nested(LabelGroupConditionSchema),

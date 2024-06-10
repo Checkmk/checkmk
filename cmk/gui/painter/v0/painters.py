@@ -958,7 +958,7 @@ class PainterServiceDescription(Painter):
         return "service_description"
 
     def title(self, cell: Cell) -> str:
-        return _("Service description")
+        return _("Service name")
 
     def short_title(self, cell: Cell) -> str:
         return _("Service")
@@ -3496,10 +3496,10 @@ class PainterServiceDiscoveryService(Painter):
         return "service_discovery_service"
 
     def title(self, cell: Cell) -> str:
-        return _("Service discovery: Service description")
+        return _("Service discovery: Service name")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Service description")
+        return _("Service name")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

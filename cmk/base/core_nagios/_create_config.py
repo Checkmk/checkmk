@@ -560,7 +560,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         cfg.write("\n\n# Custom checks\n")
         for entry in custchecks:
             # entries are dicts with the following keys:
-            # "service_description"        Service description to use
+            # "service_description"        Service name to use
             # "command_line"  (optional)   Unix command line for executing the check
             #                              If this is missing, we create a passive check
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,

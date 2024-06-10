@@ -797,7 +797,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
                             ("tg", _("Host tag")),
                             ("hg", _("Host group")),
                             ("sg", _("Service group")),
-                            ("s", _("Service description")),
+                            ("s", _("Service name")),
                         ],
                     ),
                     DropdownChoice(

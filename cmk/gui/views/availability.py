@@ -1251,7 +1251,7 @@ def _vs_annotation():
                 valuespec=TextInput(allow_empty=False),
                 sameline=True,
                 title=_("Service"),
-                label=_("Service description"),
+                label=_("Service name"),
             ),
         ),
         (

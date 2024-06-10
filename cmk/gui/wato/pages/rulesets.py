@@ -2500,7 +2500,7 @@ class VSExplicitConditions(Transform):
                 "You can make the rule apply only to certain services of the "
                 "specified hosts. Do this by specifying explicit <b>items</b> to "
                 "match here. <b>Hint:</b> make sure to enter the item only, "
-                "not the full Service description. "
+                "not the full service name. "
                 "<b>Note:</b> the match is done on the <u>beginning</u> "
                 "of the item in question. Regular expressions are interpreted, "
                 "so appending a <tt>$</tt> will force an exact match."

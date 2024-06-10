@@ -2126,7 +2126,7 @@ def _convert_to_legacy_monitored_service_description(
         ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:
-        title = ruleset_api_v1.Title("Service description").localize(localizer)
+        title = ruleset_api_v1.Title("Service name").localize(localizer)
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)

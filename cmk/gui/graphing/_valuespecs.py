@@ -115,7 +115,7 @@ def _vs_title_infos() -> ListChoice:
         ("plain", _("Graph title")),
         ("add_host_name", _("Host name")),
         ("add_host_alias", _("Host alias")),
-        ("add_service_description", _("Service description")),
+        ("add_service_description", _("Service name")),
     ]
     return ListChoice(title=_("Title format"), choices=choices, default_value=["plain"])
 

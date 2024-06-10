@@ -1217,9 +1217,9 @@ class Downtimes(Table):
     service_description = Column(
         'service_description',
         col_type='string',
-        description='Service description',
+        description='Service name',
     )
-    """Service description"""
+    """Service name"""
 
     service_display_name = Column(
         'service_display_name',

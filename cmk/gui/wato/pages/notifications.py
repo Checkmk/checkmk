@@ -420,7 +420,7 @@ class ABCNotificationsMode(ABCEventsMode):
             choices=[
                 ("folder", _("Folder")),
                 ("host", _("Host")),
-                ("service", _("Service description")),
+                ("service", _("Service name")),
                 ("sl", _("Service level")),
                 ("check_type", _("Check type")),
                 ("state", _("Host/Service state")),

@@ -298,7 +298,7 @@ class BICompiledLeafSchema(Schema):
     required_hosts = ReqList(fields.Nested(BISiteHostPairSchema), description="List of hosts.")
     site_id = ReqString(description="Site ID.")
     host_name = ReqString(description="Host name.")
-    service_description = fields.String(description="Service description.")
+    service_description = fields.String(description="Service name.")
 
 
 #   .--Rule----------------------------------------------------------------.

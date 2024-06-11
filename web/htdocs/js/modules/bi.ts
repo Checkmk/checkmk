@@ -348,8 +348,7 @@ export class BIRulePreview extends BIPreview {
         let nodes = d3
             .selectAll("#rule_p_nodes_container > tr")
             .data(json_data.result.data);
-
-        let node_previews = nodes
+        nodes
             .select(".vlof_content")
             .selectAll("div.node_preview")
             .data(d => [d])
@@ -358,13 +357,16 @@ export class BIRulePreview extends BIPreview {
                 this._create_node_preview_div(enter);
             });
 
-        node_previews.each((d, idx, nodes) => {
-            this._update_preview_of_node(
-                d,
-                json_data.result.title,
-                d3.select(nodes[idx])
-            );
-        });
+        nodes
+            .select(".vlof_content")
+            .selectAll("div.node_preview")
+            .each((d, idx, nodes) => {
+                this._update_preview_of_node(
+                    d,
+                    json_data.result.title,
+                    d3.select(nodes[idx])
+                );
+            });
         BIPreview.prototype._update_previews.call(this, json_data);
     }
 

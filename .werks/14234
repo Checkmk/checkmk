@@ -1,0 +1,10 @@
+Title: BI configuration: "Toggle search preview"
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1718110926
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+The search preview for the BI nodes only worked if the entered data was changed again.

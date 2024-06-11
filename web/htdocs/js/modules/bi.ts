@@ -391,19 +391,22 @@ export class BIRulePreview extends BIPreview {
             .selectAll("#rule_p_nodes_container > tr")
             .data(json_data.result.data);
 
-        const node_previews = nodes
+        nodes
             .select(".vlof_content")
             .selectAll<HTMLDivElement, unknown>("div.node_preview")
             .data(d => [d])
             .join(enter => this._create_node_preview_div(enter));
 
-        node_previews.each((d, idx, nodes) => {
-            this._update_preview_of_node(
-                d,
-                json_data.result.title,
-                d3.select(nodes[idx])
-            );
-        });
+        nodes
+            .select(".vlof_content")
+            .selectAll<HTMLDivElement, any>("div.node_preview")
+            .each((d, idx, nodes) => {
+                this._update_preview_of_node(
+                    d,
+                    json_data.result.title,
+                    d3.select(nodes[idx])
+                );
+            });
         BIPreview.prototype._update_previews.call(this, json_data);
     }
 

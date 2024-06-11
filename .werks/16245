@@ -1,0 +1,9 @@
+Title: Add c6a.* as AWS EC2 resource types
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1718117240
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+

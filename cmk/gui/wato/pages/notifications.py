@@ -15,6 +15,7 @@ from typing import Any, Literal, NamedTuple, overload
 from livestatus import LivestatusResponse
 
 import cmk.utils.store as store
+from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
 from cmk.utils.statename import host_state_name, service_state_name
@@ -844,7 +845,7 @@ class ModeNotifications(ABCNotificationsMode):
         so we enrich the context after fetching all user defined options"""
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET hosts\nColumns: custom_variable_names custom_variable_values groups contact_groups\nFilter: host_name = %s\n"
+            "GET hosts\nColumns: custom_variable_names custom_variable_values groups contact_groups labels\nFilter: host_name = %s\n"
             % hostname
         )
         if len(resp) < 1:
@@ -856,6 +857,7 @@ class ModeNotifications(ABCNotificationsMode):
         self._set_custom_variables(context, resp, "HOST")
         context["HOSTGROUPNAMES"] = ",".join(resp[0][2])
         context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][3])
+        self._set_labels(context, resp[0][4], "HOST")
 
     def _set_custom_variables(
         self,
@@ -876,7 +878,7 @@ class ModeNotifications(ABCNotificationsMode):
     def _add_missing_service_context(self, context: NotificationContext) -> None:
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET services\nColumns: custom_variable_names custom_variable_values groups contact_groups check_command\nFilter: host_name = %s\nFilter: service_description = %s"
+            "GET services\nColumns: custom_variable_names custom_variable_values groups contact_groups check_command labels\nFilter: host_name = %s\nFilter: service_description = %s"
             % (hostname, context["SERVICEDESC"])
         )
         if len(resp) < 1:
@@ -889,6 +891,16 @@ class ModeNotifications(ABCNotificationsMode):
         context["SERVICEGROUPNAMES"] = ",".join(resp[0][2])
         context["SERVICECONTACTGROUPNAMES"] = ",".join(resp[0][3])
         context["SERVICECHECKCOMMAND"] = resp[0][4]
+        self._set_labels(context, resp[0][5], "SERVICE")
+
+    def _set_labels(
+        self,
+        context: NotificationContext,
+        labels: Labels,
+        prefix: Literal["HOST", "SERVICE"],
+    ) -> None:
+        for k, v in labels.items():
+            context[f"{prefix}LABEL_" + k] = v
 
     def _show_no_fallback_contact_warning(self):
         if not self._fallback_mail_contacts_configured():

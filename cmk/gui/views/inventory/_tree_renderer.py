@@ -308,6 +308,8 @@ class TreeRenderer:
             if isinstance(attributes, ImmutableAttributes)
             else _sort_delta_pairs(attributes, list(hint.attributes))
         )
+        if not sorted_pairs:
+            return
 
         html.open_table()
         for item in sorted_pairs:
@@ -333,6 +335,15 @@ class TreeRenderer:
         table: ImmutableTable | ImmutableDeltaTable,
         hint: NodeDisplayHint,
     ) -> None:
+        columns = _make_columns({k for r in table.rows for k in r}, table.key_columns, hint)
+        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
+            _sort_rows(table, columns)
+            if isinstance(table, ImmutableTable)
+            else _sort_delta_rows(table, columns)
+        )
+        if not sorted_rows:
+            return
+
         if hint.table_view_name:
             # Link to Multisite view with exactly this table
             html.div(
@@ -352,13 +363,6 @@ class TreeRenderer:
                 ),
                 class_="invtablelink",
             )
-
-        columns = _make_columns({k for r in table.rows for k in r}, table.key_columns, hint)
-        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
-            _sort_rows(table, columns)
-            if isinstance(table, ImmutableTable)
-            else _sort_delta_rows(table, columns)
-        )
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -422,10 +426,8 @@ class TreeRenderer:
 
     def show(self, tree: ImmutableTree | ImmutableDeltaTree, tree_id: str = "") -> None:
         hint = self._hints.get_node_hint(tree.path)
-        if tree.attributes:
-            self._show_attributes(tree.attributes, hint)
-        if tree.table:
-            self._show_table(tree.table, hint)
+        self._show_attributes(tree.attributes, hint)
+        self._show_table(tree.table, hint)
         for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(

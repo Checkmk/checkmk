@@ -135,7 +135,7 @@ def test_content_security_policy_header(site: Site) -> None:
         "object-src 'self'; "
         "worker-src 'self' blob:; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://support.checkmk.com; "
-        "frame-src 'self' https://support.checkmk.com; "
+        "frame-src 'self' https://support.checkmk.com;"
     )
 
     # No CSP for media files

@@ -3643,8 +3643,13 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     # Change config files from old to new site (see rename_site())
     if sitename != site.name:
         old_site = SiteContext(sitename)
+        old_replacements = {
+            "###SITE###": old_site.name,
+            "###ROOT###": old_site.dir,
+            "###EDITION###": site.replacements["###EDITION###"],
+        }
         patch_skeleton_files(
-            _get_conflict_mode(options), old_site, site, old_site.replacements, site.replacements
+            _get_conflict_mode(options), old_site, site, old_replacements, site.replacements
         )
 
     # Now switch over to the new site as currently active site

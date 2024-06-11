@@ -1,0 +1,26 @@
+Title: omd restore: Fix RuntimeError: Failed to determine site version
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1718107423
+Edition: cre
+Level: 1
+Version: 2.2.0p29
+
+Due to a regression introduced by Werk <a href="https://checkmk.com/werk/16422">Werk #16422</a>, the
+command `omd restore <NEW_SITE> <ARCHIVE_PATH>` could fail:
+
+C+:
+  File "/omd/versions/2.3.0p6.cee/lib/python3/omdlib/main.py", line 3522, in _restore_backup_from_tar
+    old_site.replacements(),
+    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/omd/versions/2.3.0p6.cee/lib/python3/omdlib/contexts.py", line 136, in replacements
+    raise RuntimeError("Failed to determine site version")
+C-:
+
+The failure only occured, if the user provided a site name, which differed from the original name,
+and the original site did no longer exist. This crash also affected the `Migrate existing Site`
+function of the appliance.
+
+If you are affected by this crash, but are unable to update, then you can start be restoring the
+site without a new name. The site can then be renamed with `omd mv`.

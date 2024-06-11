@@ -1600,7 +1600,7 @@ fn to_backup_entry(
         .get_value_by_name("is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() && is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" {
         format!(
             "{}{sep}{}{sep}{}{sep}{}\n",
             instance_name,

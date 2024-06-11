@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-07 00:20+0000\n"
+"PO-Revision-Date: 2024-06-10 21:55+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -61,9 +61,6 @@ msgstr " (in Bezug auf alle erfolgreichen Pakete)"
 
 msgid " (lower levels)"
 msgstr " (Untergrenzen)"
-
-msgid " (packaged)"
-msgstr " (packetiert)"
 
 msgid " (required)"
 msgstr " ist erforderlich"
@@ -6373,9 +6370,8 @@ msgstr "Anwendungs- und Netzwerklastausgleich (ELBv2)"
 msgid "Application gateway"
 msgstr "Anwendungs-Gateway"
 
-#, fuzzy
 msgid "Application gateways"
-msgstr "Application Gateways"
+msgstr "Applikations-Gateways"
 
 msgid "Application load balancer certificates"
 msgstr "Application Load Balancer Zertifikate"
@@ -78096,6 +78092,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid " (packaged)"
+#~ msgstr " (packetiert)"
 
 #~ msgid "Discard changes"
 #~ msgstr "Änderungen verwerfen"

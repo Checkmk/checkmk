@@ -63,9 +63,6 @@ msgstr " (în raport cu toate pachetele reușite)"
 msgid " (lower levels)"
 msgstr " (niveluri inferioare)"
 
-msgid " (packaged)"
-msgstr " (ambalat)"
-
 msgid " (required)"
 msgstr " (obligatoriu)"
 
@@ -79542,6 +79539,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid " (packaged)"
+#~ msgstr " (ambalat)"
 
 #~ msgid "Discard changes"
 #~ msgstr "Schimbări de respingere"

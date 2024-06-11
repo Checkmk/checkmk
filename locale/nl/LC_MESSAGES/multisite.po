@@ -63,9 +63,6 @@ msgstr " (in relatie tot alle succesvolle pakketten)"
 msgid " (lower levels)"
 msgstr "Lagere niveaus"
 
-msgid " (packaged)"
-msgstr " (verpakt)"
-
 #, fuzzy
 msgid " (required)"
 msgstr "is vereist"
@@ -79421,6 +79418,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid " (packaged)"
+#~ msgstr " (verpakt)"
 
 #, fuzzy
 #~ msgid "Discard changes"

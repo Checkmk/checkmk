@@ -63,9 +63,6 @@ msgstr " (em relação a todos os successful packets)"
 msgid " (lower levels)"
 msgstr "Níveis mais baixos"
 
-msgid " (packaged)"
-msgstr " (embalado)"
-
 #, fuzzy
 msgid " (required)"
 msgstr " é necessário"
@@ -79302,6 +79299,9 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid " (packaged)"
+#~ msgstr " (embalado)"
 
 #~ msgid "Discard changes"
 #~ msgstr "Rejeitar alterações"

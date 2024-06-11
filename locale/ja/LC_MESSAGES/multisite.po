@@ -6,9 +6,9 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-15 04:56+0000\n"
+"PO-Revision-Date: 2024-06-10 21:55+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
-"software/ja/>\n"
+"stable/ja/>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -61,9 +61,6 @@ msgstr " (成功したすべてのパケットに関して)"
 
 msgid " (lower levels)"
 msgstr " (下位レベル)"
-
-msgid " (packaged)"
-msgstr " (パッケージ)"
 
 msgid " (required)"
 msgstr " (必須)"
@@ -611,9 +608,9 @@ msgstr "%sレイテンシ%s"
 msgid "%s left in your Checkmk trial period"
 msgstr "Checkmk の試用期間は残り %s 日です"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s left in your free trial"
-msgstr "無料トライアルの残り%日"
+msgstr "無料トライアル残り%s日"
 
 #, python-format
 msgid "%s matching labels: %s"
@@ -725,13 +722,13 @@ msgstr ""
 "%s. Checkmk はアンライセンスになり、'変更を有効にする' ことができなくなりまし"
 "た。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s. Checkmk will become unlicensed %s and you will no longer be able to "
 "'Activate changes'."
 msgstr ""
-"%s. Checkmk はアンライセンスになり、'変更を有効にする' ことができなくなりまし"
-"た。"
+"%s.Checkmk はアンライセンス %s になり、'変更を有効にする' ことができなくなり"
+"ます。"
 
 #, python-format
 msgid "%s: %s"
@@ -2229,13 +2226,12 @@ msgstr "このIDのルールは、ルールパック <b>%s</b>にすでに存在
 msgid "A scheduled job on Microsoft SQL Server."
 msgstr "Microsoft SQL Serverでスケジュールされたジョブ。"
 
-#, fuzzy
 msgid ""
 "A scheduler job is an object in an Oracle database which could be compared "
 "to a cron job on unix."
 msgstr ""
-"スケジューラジョブは、UNIX上のcronジョブと比較できるORACLEデータベース内のオ"
-"ブジェクトです。 "
+"スケジューラージョブは、UNIX上のcronジョブと比較できるORACLEデータベース内の"
+"オブジェクトです。"
 
 msgid ""
 "A seperate notification is send to every recipient. Recipients cannot see "
@@ -5680,10 +5676,9 @@ msgstr ""
 "ユーザが他のユーザのスケジュールされたレポートを変更したり、レポートの宛先と"
 "して任意の電子メールアドレスを指定することを許可する。"
 
-#, fuzzy
 msgid ""
 "Allows the assignment of the Robotmk plan/test services to another host."
-msgstr "連絡先グループへのサービスの割り当て"
+msgstr "Robotmk の計画/テストサービスを別のホストに割り当てることができます。"
 
 msgid ""
 "Allows the user the do instant reporting. At the top of each view a button "
@@ -9152,9 +9147,8 @@ msgstr ""
 "イトの到達可能性状態として使用する必要があります。詳細については、<a "
 "target=_blank href='%s'>オンラインドキュメント</a>を参照してください。"
 
-#, fuzzy
 msgid "Bypass Proxy for certain hosts"
-msgstr "特定のホストのすべてのグラフ。"
+msgstr "特定のホストのプロキシをバイパスする"
 
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
@@ -13578,16 +13572,17 @@ msgstr "Couchbase vBuckets"
 msgid "Couchbase: Cache"
 msgstr "Couchbase:キャッシュ"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Could not connect to the license server (%s). Please retry again later. If "
 "this error persists, please contact the Checkmk support. You also need to "
 "make sure that your Checkmk can reach the license server. Please check your "
 "firewall and proxy settings."
 msgstr ""
-"ライセンスサーバー(%s)との接続に失敗しました。お使いのCheckmkがライセンスサー"
-"バーに到達できることを確認する必要があります。ファイアウォールやプロキシの設"
-"定を確認してください。<br><br>詳細: %s"
+"ライセンスサーバー(%s)との接続に失敗しました。後で再試行してください。このエ"
+"ラーが続く場合は、Checkmk サポートにお問い合わせください。また、Checkmkがライ"
+"センスサーバーに到達できることを確認する必要があります。ファイアウォールとプ"
+"ロキシの設定を確認してください。"
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -13622,9 +13617,9 @@ msgstr ""
 "スターに追加するかを指定する必要があります。これは、 <a href=\"%s\">%s</a> "
 "ルールセットを使用して行われます。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Could not find the group \"%s\" specified for role %s"
-msgstr "ロール%sに指定されたグループが見つかりませんでした"
+msgstr "ロール%s に指定されたグループ\"%s\"が見つかりませんでした"
 
 #, python-format
 msgid ""
@@ -15528,7 +15523,7 @@ msgstr ""
 "した場合は、その再販業者にお問い合わせください。<br><br>敬具　Checkmk サー"
 "バー"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Dear Checkmk user,<br><br>The license verification for your Checkmk site "
 "'%s' failed and as a result, the site will become unlicensed %s. After that, "
@@ -15536,14 +15531,12 @@ msgid ""
 "Checkmk without restrictions, please contact your Checkmk support."
 "<br><br>Sincerely, your Checkmk Server"
 msgstr ""
-"Checkmkユーザー様<br><br>あなたの Checkmk サイト '%s' のライセンスの期限は "
+"Checkmkユーザー様, <br><br>あなたの Checkmk サイト '%s' のライセンスの期限は "
 "%s です。有効期限が切れると、「変更を有効にする」ことができなくなります。"
-"<br><br>まだライセンスを延長していない場合は、%sのCheckmk営業チームまでご連絡"
-"ください。<br><br>Checkmk のパートナーまたは再販業者を通じてライセンスを購入"
-"した場合は、その再販業者にお問い合わせください。<br><br>敬具　Checkmk サー"
-"バー"
+"<br><br>制限なしでCheckmkを継続したい場合は、Checkmkサポートにご連絡くださ"
+"い。<br><br>敬具、あなたのCheckmkサーバー"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Dear Checkmk user,<br><br>You have %s left in your Checkmk trial period of "
 "site '%s'.<br><br>%s now to continue using Checkmk as you do today. If you "
@@ -15554,7 +15547,7 @@ msgid ""
 "service limit of Checkmk in license state 'Free'.<br><br>Sincerely, your "
 "Checkmk Server"
 msgstr ""
-"Checkmkユーザー様<br><br>残り %d 日であなたのサイト '%s' の Checkmk 試用期間"
+"Checkmkユーザー様, <br><br>残り%s日であなたのサイト '%s' の Checkmk 試用期間"
 "は終了します。<br><br>現在と同じようにCheckmkを使用するには、今すぐ %s を入力"
 "してください。すでにライセンスをお持ちの場合は、製品のライセンスページでライ"
 "センスの詳細を入力してください。<br><br>さもないと、試用期間終了後に自動的に"
@@ -30287,9 +30280,8 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
-#, fuzzy
 msgid "Invalid code provided"
-msgstr "無効なバックURLが提供されました。"
+msgstr "不正なコード"
 
 #, python-format
 msgid "Invalid color specification '%s'"
@@ -30373,9 +30365,9 @@ msgstr "無効なホストアドレス。アドレスを%sとして指定する�
 msgid "Invalid host name"
 msgstr "無効なホスト名"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid host name: %s"
-msgstr "無効なホスト名"
+msgstr "無効なホスト名: %s"
 
 #, python-format
 msgid "Invalid host or IP address. IPv4: %s, IPv6: %s"
@@ -31624,9 +31616,9 @@ msgstr "最終更新"
 msgid "Last user synchronization ran into an exception: "
 msgstr "最後のユーザー同期で例外が発生しました: "
 
-#, fuzzy, python-format
+#, python-format
 msgid "Last verification %s"
-msgstr "最終認証失敗"
+msgstr "最終認証失敗 %s"
 
 #, fuzzy
 msgid "Last verification failed"
@@ -32953,9 +32945,8 @@ msgstr ""
 "Checkmkマイクロコアのパフォーマンス統計のライブモニター。注意:このスナップイ"
 "ンは、<b>すべての</b>サイトでCheckmkコアが実行されている場合にのみ機能します"
 
-#, fuzzy
 msgid "Live search active"
-msgstr "アクティブ/アクティブ"
+msgstr "ライブサーチアクティブ"
 
 msgid "Liveproxy Daemon"
 msgstr "Liveproxyデーモン"
@@ -34887,9 +34878,8 @@ msgstr "最大ファイル記述子"
 msgid "Max length"
 msgstr "最大長"
 
-#, fuzzy
 msgid "Max time for last reported"
-msgstr "最大応答待ち時間。"
+msgstr "最後のレポートからの最大待ち時間"
 
 msgid "Max. Age (sec)"
 msgstr "最大期間(秒)"
@@ -35428,9 +35418,9 @@ msgstr "Windowsサーバーのファイルシステムの効率測定\n"
 msgid "Measurement unit"
 msgstr "測定単位"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Measurement: %s"
-msgstr "測定単位"
+msgstr "測定単位: %s"
 
 msgid "Mechanical"
 msgstr "機械的"
@@ -37995,11 +37985,11 @@ msgstr "ライセンス認証はまだ行われていない"
 msgid "No logging"
 msgstr "ロギングなし"
 
-#, fuzzy
 msgid ""
 "No logs are available. If available, more information will be shown in the "
 "service description."
-msgstr "サービスの説明で使用される名前"
+msgstr ""
+"ログはありません。利用可能な場合は、サービスの説明に詳細情報が表示されます。"
 
 msgid "No logs found for this host."
 msgstr "このホストのログは見つかりませんでした。"
@@ -39196,9 +39186,8 @@ msgstr "1シャード1コレクションあたりのジャンボチャンク数"
 msgid "Number of kernel events per second"
 msgstr "1秒あたりのカーネルイベントの数"
 
-#, fuzzy
 msgid "Number of levels:"
-msgstr "サービスの数"
+msgstr "サービスの数:"
 
 msgid "Number of lock requests per second that required the caller to wait."
 msgstr "呼び出し元が待機する必要があった1秒あたりのロック要求の数。"
@@ -39361,9 +39350,8 @@ msgstr "ルールグループの数"
 msgid "Number of running containers"
 msgstr "稼働中のコンテナ数"
 
-#, fuzzy
 msgid "Number of runs:"
-msgstr "チャンクの数"
+msgstr "ランの数:"
 
 msgid "Number of search results"
 msgstr "検索結果の数"
@@ -40494,9 +40482,9 @@ msgstr ""
 msgid "Oracle"
 msgstr "オラクル"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Oracle %s"
-msgstr "オラクル"
+msgstr "オラクル %s"
 
 #, fuzzy, python-format
 msgid "Oracle %s %s %s"
@@ -42144,11 +42132,11 @@ msgstr "パーセントレベル%s"
 msgid "Perf-O-Meter"
 msgstr "Perf-O-Meter"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Perf-O-Meter %r must contain exactly two definitions, not %d"
 msgstr ""
-"タイプ 'dual'のPerf-O-Meterには、 %d ではなく正確に2つの定義が含まれている必"
-"要があります"
+"Perf-O-Meter %r には、%d ではなく、正確に 2 つの定義が含まれていなければなり"
+"ません"
 
 msgid "Perf-O-Meter of type 'dual' must only contain plain Perf-O-Meters"
 msgstr ""
@@ -42552,11 +42540,12 @@ msgstr ""
 msgid "Plan ID"
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Plan IDs (combinations of application names, suite names and variants) must "
 "be unique."
-msgstr "運用状態と管理状態の組合せマップ"
+msgstr ""
+"プランID（アプリケーション名、スイート名、バリアントの組み合わせ）は一意でな"
+"ければならない。"
 
 msgid "Plans"
 msgstr ""
@@ -42581,9 +42570,8 @@ msgstr "少なくとも1つの子ノードを追加してください。"
 msgid "Please add at least one column to your view."
 msgstr "ビューに少なくとも1つの列を追加してください。"
 
-#, fuzzy
 msgid "Please add at least one endpoint to monitor"
-msgstr "ビューに少なくとも1つの列を追加してください。"
+msgstr "監視するエンドポイントを少なくとも1つ追加してください。"
 
 msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
@@ -42620,9 +42608,8 @@ msgstr ""
 "トレージはすでに十分に安全である可能性があります。ただし、場合によっては、"
 "バックアップを暗号化して保存することをお勧めします。"
 
-#, fuzzy
 msgid "Please choose"
-msgstr "PNG画像を選択してください。"
+msgstr "選択してください"
 
 msgid "Please choose a PNG image."
 msgstr "PNG画像を選択してください。"
@@ -42878,17 +42865,15 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr ".xml'ファイルをご提供ください"
 
-#, fuzzy
 msgid "Please provide a hostname to test with."
-msgstr "有効なホストとポートを入力してください"
+msgstr "テストするホスト名を指定してください。"
 
 #, fuzzy
 msgid "Please provide a relative Windows path"
 msgstr "有効な名前を入力してください"
 
-#, fuzzy
 msgid "Please provide a service."
-msgstr "有効な名前を入力してください"
+msgstr "サービスを提供してください。"
 
 msgid "Please provide a valid host and port"
 msgstr "有効なホストとポートを入力してください"
@@ -42924,16 +42909,14 @@ msgstr "グラフを選択してください。"
 msgid "Please select a host."
 msgstr "グラフを選択してください。"
 
-#, fuzzy
 msgid "Please select a metric."
-msgstr "メトリックを選択してください"
+msgstr "メトリックを選択してください。"
 
 msgid "Please select a number between 0 and 100"
 msgstr "0〜100の数字を選択してください"
 
-#, fuzzy
 msgid "Please select a service."
-msgstr "サービスを選択してください"
+msgstr "サービスを選択してください。"
 
 msgid "Please select at least one element"
 msgstr "少なくとも1つの要素を選択してください"
@@ -52394,9 +52377,9 @@ msgstr "スポットインスタンスリクエスト"
 msgid "Spread over"
 msgstr "Spread over"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Spread should be a positive number: %s"
-msgstr "正の分数を入力してください。"
+msgstr "スプレッドは正数である必要があります: %s"
 
 msgid ""
 "Spreading distributes checks evenly over the specified period. This helps to "
@@ -52575,11 +52558,12 @@ msgstr "起動"
 msgid "Starting with entry"
 msgstr "エントリーから"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours "
 "and %d %s."
-msgstr "ホスト/サービスがDOWN/UNREACHした場合、最大%d時間で開始する。"
+msgstr ""
+"ホスト/サービスが最大%d時間、%d %sの時間DOWN/UNREACHした場合に開始します。"
 
 msgid "Startup overhead in shared pool"
 msgstr "共有プールの起動オーバーヘッド"
@@ -55773,15 +55757,15 @@ msgstr ""
 "のデータ送信を停止します。このオプションは、このホストのCheckmkサービスの"
 "チェック間隔を変更した場合、その間隔に応じて変更する必要があります。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The agent will update itself only with packages that are signed by one of "
 "these keys. You need to specify at least one key. Keys are being create <a "
 "href='%s' target='_blank'>here</a>."
 msgstr ""
 "エージェントは、これらのキーの1つによって署名されたパッケージでのみ自身を更新"
-"します。少なくとも1つのキーを指定する必要があります。キーは<a href='%s'>ここ"
-"</a>で作成されています。"
+"します。少なくとも1つのキーを指定する必要があります。キーは<a href='%s' "
+"target='_blank'>ここ</a>で作成されています。"
 
 msgid "The aggregate was in a scheduled downtime"
 msgstr "集計はスケジュールされたダウンタイムにありました"
@@ -59157,9 +59141,9 @@ msgstr "値 %rのタイプは %sですが、floatまたはintのいずれかで�
 msgid "The value %r has type %s, but must be of type bool"
 msgstr "値 %r のタイプは %sですが、タイプはboolである必要があります"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The value %r has type %s, but must be of type float"
-msgstr "値 %r は、タイプは%sですが、タイプはfloat %s である必要があります"
+msgstr "値 %r は、タイプは%sですが、タイプはfloat である必要があります"
 
 #, python-format
 msgid "The value %r has type %s, but must be of type float%s"
@@ -63829,9 +63813,8 @@ msgstr "タイムフレーム"
 msgid "Time horizon"
 msgstr "期間"
 
-#, fuzzy
 msgid "Time horizon for repeated events"
-msgstr "イベントをカバーする時間"
+msgstr "繰り返されるイベントの時間軸"
 
 msgid "Time horizon to keep in cache"
 msgstr "キャッシュに保持する期間"
@@ -69748,7 +69731,7 @@ msgstr ""
 "します。ここにホスト名を追加してください。例:my_rabbitmq.com 設定されていない"
 "場合、割り当てられたホストがインスタンスとして使用されます。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Use this rule to enable the use of SNMP verison 2c instead of the default "
 "SNMP version 1. Checkmk defaults to SNMPv1 in order to support as many "
@@ -69759,14 +69742,16 @@ msgid ""
 "some buggy devices do not properly support \"bulkwalk\" queries. For those "
 "you may want to try disabling them using the ruleset \"%s\"."
 msgstr ""
-"Checkmkは、できるだけ多くのデバイスをサポートするために、デフォルトでSNMPv1を"
-"使用しています。実際には、ほとんどのSNMP機器はSNMPv2cもサポートしており、64"
-"ビットカウンタとバルクウォークをサポートしているため、CPUとネットワークリソー"
-"スを節約でき、よりパフォーマンスが高いという2つの利点があります。このルールを"
-"使って、できるだけ多くの機器にSNMPv2cを設定します。ただし、SNMPv2cに対応した"
-"機器にはバグがある場合がありますので、ご注意ください。バグがあった場合、ルー"
-"ルセット「Disable bulk walks on SNMPv2c/v3 」を使用して、バルクウォークを無効"
-"にしてみるとよいでしょう。"
+"デフォルトの SNMP バージョン 1 ではなく、SNMP バージョン 2c の使用を有効にす"
+"るには、このルールを使用します。Checkmkは、できるだけ多くのデバイスをサポート"
+"するために、デフォルトでSNMPv1を使用します。実際には、ほとんどのSNMPデバイス"
+"はSNMPv2cもサポートしており、これには2つの利点があります： SNMPv2c には、64 "
+"ビットのカウンタと「bulkwalk」クエリがサポートされ ているため、より高速で "
+"CPU とネットワークリソースを節約できます。このルールを使用して、できるだけ多"
+"くのデバイスにSNMPv2cを設定してください。ただし、バグが多いデバイスの中には、"
+"「bulkwalk 」クエリーを正しくサポートしていないものもあるので注意してくださ"
+"い。そのような場合は、ルールセット \"%s\" を使用して、このクエリを無効にして"
+"みてください。"
 
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
@@ -70676,9 +70661,9 @@ msgstr "検証"
 msgid "Verification could not be performed (Status code: %d, Server: %s): %s"
 msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid "Verification failed (Status code: %d, Server: %s): %s"
-msgstr "認証に失敗しました（ライセンスサーバー）"
+msgstr "認証に失敗しました（ステータスコード: %d, サーバー: %s）: %s"
 
 msgid "Verification failed (license server)"
 msgstr "認証に失敗しました（ライセンスサーバー）"
@@ -72157,6 +72142,8 @@ msgid ""
 "repeating events will be resolved to single events for the number of years "
 "you specify here."
 msgstr ""
+"iCalendarファイルに繰り返しイベントの定義が含まれている場合、これらの繰り返し"
+"イベントは、ここで指定した年数の間、単一イベントに解決されます。"
 
 msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
@@ -73357,9 +73344,9 @@ msgstr "ID <b>%s</b>のエレメントが既にあります"
 msgid "You are analysing this notification"
 msgstr "この通知を分析しています"
 
-#, fuzzy, python-format
+#, python-format
 msgid "You are currently monitoring %d %s on this site."
-msgstr "ホスト上で現在監視されているサービスとの違い。"
+msgstr "現在、このサイトで %d %s を監視しています。"
 
 #, fuzzy
 msgid ""
@@ -74624,7 +74611,7 @@ msgid "You have no permission for changes in this rule using %s."
 msgstr "%sを使用してこのルールを変更する権限がありません。"
 
 msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
-msgstr "<a href=\"wato.py?mode=tags\">タグ</a>を構成していません。"
+msgstr "<a href=\"wato.py?mode=tags\">タグ</a>を設定していません。"
 
 msgid ""
 "You have not configured any local or remotes sites. Multisite will "
@@ -74636,13 +74623,13 @@ msgstr ""
 "トのデータを暗黙のうちに追加します。リモートサイトを追加した場合で、ローカル"
 "監視サイトのデータも表示したいのであれば、忘れずに追加してください。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "You have not created any agent <a href='%s' target='_blank'>signature keys</"
 "a> yet. This is necessary."
 msgstr ""
-"エージェントの<a href='%s'>署名キー</a>をまだ作成していません。これは必須で"
-"す。"
+"エージェントの<a href='%s' target='_blank'>署名キー</a>をまだ作成していませ"
+"ん。これは必須です。"
 
 msgid ""
 "You have not created any rule packs yet. The Event Console is useless unless "
@@ -77448,6 +77435,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid " (packaged)"
+#~ msgstr " (パッケージ)"
 
 #~ msgid "Discard changes"
 #~ msgstr "変更の破棄"

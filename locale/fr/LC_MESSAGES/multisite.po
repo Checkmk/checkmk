@@ -62,9 +62,6 @@ msgstr " (en relation avec tous les paquets correctement installés)"
 msgid " (lower levels)"
 msgstr " (niveaux inférieurs)"
 
-msgid " (packaged)"
-msgstr " Paquet"
-
 msgid " (required)"
 msgstr " (nécessaire)"
 
@@ -80268,6 +80265,9 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid " (packaged)"
+#~ msgstr " Paquet"
 
 #, fuzzy
 #~ msgid "Discard changes"

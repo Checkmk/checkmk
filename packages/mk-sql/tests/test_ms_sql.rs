@@ -410,7 +410,7 @@ async fn validate_backup(instance: &SqlInstance, client: &mut UniClient) {
     }
     assert_eq!(
         lines[lines.len() - 2],
-        format!("{}|tempdb|-|-|-|No backup found", instance.mssql_name())
+        format!("{}|tempdb|-|-|-|no backup found", instance.mssql_name())
     );
     assert!(to_be_found.is_empty());
 }

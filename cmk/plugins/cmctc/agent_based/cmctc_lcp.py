@@ -199,6 +199,7 @@ def check_cmctc_lcp_temp(item: str, params: TempParamType, section: Section) -> 
     status = int(sensor.status)
     yield from check_temperature(
         reading=sensor.reading,
+        value_store=sensor.reading,
         params=params,
         unique_name="cmctc_lcp_temp_%s" % item,
         dev_levels=sensor.levels,

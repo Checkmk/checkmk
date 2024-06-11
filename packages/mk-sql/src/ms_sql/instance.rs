@@ -1131,15 +1131,15 @@ impl SqlInstance {
         databases: &[String],
         sep: char,
     ) -> (Vec<String>, HashSet<String>) {
-        let mut only_databases: HashSet<String> = databases.iter().cloned().collect();
+        let mut found_databases: HashSet<String> = HashSet::new();
         let s: Vec<String> = match answers.first() {
             Some(UniAnswer::Rows(rows)) => rows
                 .iter()
                 .filter_map(|row| {
-                    let backup_database = row.get_value_by_name("database_name");
-                    if only_databases.contains(&backup_database) {
-                        only_databases.remove(&backup_database);
-                        to_backup_entry(&self.mssql_name(), &backup_database, row, sep)
+                    let database_name = row.get_value_by_name("database_name");
+                    if databases.contains(&database_name) {
+                        found_databases.insert(database_name.to_lowercase());
+                        to_backup_entry(&self.mssql_name(), &database_name, row, sep)
                     } else {
                         None
                     }
@@ -1149,10 +1149,10 @@ impl SqlInstance {
                 .rows
                 .iter()
                 .filter_map(|row| {
-                    let backup_database = block.get_value_by_name(row, "database_name");
-                    if only_databases.contains(&backup_database) {
-                        only_databases.remove(&backup_database);
-                        to_backup_entry_odbc(&self.mssql_name(), &backup_database, block, row, sep)
+                    let database_name = block.get_value_by_name(row, "database_name");
+                    if databases.contains(&database_name) {
+                        found_databases.insert(database_name.to_lowercase());
+                        to_backup_entry_odbc(&self.mssql_name(), &database_name, block, row, sep)
                     } else {
                         None
                     }
@@ -1160,14 +1160,20 @@ impl SqlInstance {
                 .collect(),
             None => vec![],
         };
-        (s, only_databases)
+
+        let missing_databases = databases
+            .iter()
+            .filter(|&s| !found_databases.contains(&s.to_lowercase()))
+            .cloned()
+            .collect();
+        (s, missing_databases)
     }
 
     fn process_missing_backup_rows(&self, data: &HashSet<String>, sep: char) -> Vec<String> {
         data.iter()
             .map(|db| {
                 format!(
-                    "{}{sep}{}{sep}-{sep}-{sep}-{sep}No backup found\n",
+                    "{}{sep}{}{sep}-{sep}-{sep}-{sep}no backup found\n",
                     self.mssql_name(),
                     db.replace(' ', "_")
                 )
@@ -1349,11 +1355,15 @@ fn to_table_spaces_entry(
     let reserved = extract(answers, 1, "reserved");
     let data = extract(answers, 1, "data");
     let index_size = extract(answers, 1, "index_size");
-    let mut unused = extract(answers, 1, "unused");
-    if unused.is_empty() {
+    let mut unused = extract(answers, 1, "unused").trim().to_string();
+    if !unused.ends_with('B') {
         // in some cases ODBC may skip some fields in compound statements
         // unused is an example, we calculate then value manually
         unused = calc_unused(&reserved, &data, &index_size).unwrap_or("0 KB".to_string());
+    }
+
+    if unused.is_empty() {
+        unused = "0 KB".to_string();
     }
 
     format!(
@@ -1600,9 +1610,9 @@ fn to_backup_entry(
         .get_value_by_name("is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() && is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" {
         format!(
-            "{}{sep}{}{sep}{}{sep}{}\n",
+            "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,
             database_name.replace(' ', "_"),
             last_backup_date.replace(' ', "|"),
@@ -1642,9 +1652,9 @@ fn to_backup_entry_odbc(
         .get_value_by_name(row, "is_primary_replica")
         .trim()
         .to_string();
-    if replica_id.is_empty() && is_primary_replica == "True" {
+    if replica_id.is_empty() || is_primary_replica == "True" {
         format!(
-            "{}{sep}{}{sep}{}{sep}{}\n",
+            "{}{sep}{}{sep}{}+00:00{sep}{}\n",
             instance_name,
             database_name.replace(' ', "_"),
             last_backup_date.replace(' ', "|"),

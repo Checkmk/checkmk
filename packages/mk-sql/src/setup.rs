@@ -85,13 +85,13 @@ impl Env {
     pub fn obtain_cache_sub_dir(&self, sub: &str) -> Option<PathBuf> {
         if let Some(cache_dir) = self.calc_cache_sub_dir(sub) {
             if cache_dir.is_dir() {
-                log::info!("Cache dir exists");
+                log::info!("Cache dir exists {:?}", cache_dir);
                 Some(cache_dir)
             } else if cache_dir.exists() {
                 log::error!("Cache dir exists but isn't usable(not a directory)");
                 None
             } else {
-                log::info!("Cache dir to be created");
+                log::info!("Cache dir {:?} to be created", cache_dir);
                 std::fs::create_dir_all(&cache_dir).unwrap_or_else(|e| {
                     log::error!("Failed to create root cache dir: {e}");
                 });

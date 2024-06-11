@@ -84,6 +84,7 @@ from cmk.base.config import (
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.errorhandling import create_check_crash_dump
+from cmk.base.server_side_calls import SpecialAgentCommandLine
 from cmk.base.sources import (
     FetcherFactory,
     make_parser,
@@ -91,6 +92,7 @@ from cmk.base.sources import (
     ParserFactory,
     SNMPFetcherConfig,
     Source,
+    SpecialAgentSource,
 )
 
 import cmk.ccc.debug
@@ -113,6 +115,7 @@ __all__ = [
     "HostLabelPluginMapper",
     "InventoryPluginMapper",
     "SectionPluginMapper",
+    "SpecialAgentFetcher",
 ]
 
 
@@ -265,6 +268,51 @@ def _summarize_host_sections(
             )
         )
     )
+
+
+class SpecialAgentFetcher:
+    def __init__(
+        self,
+        factory: FetcherFactory,
+        *,
+        # alphabetically sorted
+        agent_name: str,
+        cmds: Iterator[SpecialAgentCommandLine],
+        file_cache_options: FileCacheOptions,
+    ) -> None:
+        self.factory: Final = factory
+        self.agent_name: Final = agent_name
+        self.cmds: Final = cmds
+        self.file_cache_options: Final = file_cache_options
+
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
+        tuple[
+            SourceInfo,
+            result.Result[AgentRawData | SNMPRawData, Exception],
+            Snapshot,
+        ]
+    ]:
+        max_age = MaxAge.zero()
+        file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+
+        return _fetch_all(
+            [
+                SpecialAgentSource(
+                    self.factory,
+                    host_name,
+                    ip_address,
+                    agent_name=self.agent_name,
+                    stdin=cmd.stdin,
+                    cmdline=cmd.cmdline,
+                    max_age=max_age,
+                    file_cache_path=file_cache_path,
+                )
+                for cmd in self.cmds
+            ],
+            simulation=False,
+            file_cache_options=self.file_cache_options,
+            mode=Mode.DISCOVERY,
+        )
 
 
 class CMKFetcher:

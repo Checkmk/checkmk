@@ -162,6 +162,7 @@ from cmk.base.checkers import (
     DiscoveryPluginMapper,
     HostLabelPluginMapper,
     SectionPluginMapper,
+    SpecialAgentFetcher,
 )
 from cmk.base.config import (
     ConfigCache,
@@ -391,6 +392,49 @@ class AutomationDiscoveryPre22Name(AutomationDiscovery):
 
 
 automations.register(AutomationDiscoveryPre22Name())
+
+
+class AutomationSpecialAgentDiscoveryPreview(Automation):
+    cmd = "special-agent-discovery-preview"
+    needs_config = True
+    needs_checks = True
+
+    def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
+        run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
+        config_cache = config.get_config_cache()
+        file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
+        password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
+        try:
+            cmk.utils.password_store.save(run_settings.passwords, password_store_file)
+            cmds = get_special_agent_commandline(
+                run_settings.host_config,
+                run_settings.agent_name,
+                run_settings.params,
+                password_store_file,
+                run_settings.passwords,
+                run_settings.http_proxies,
+            )
+            fetcher = SpecialAgentFetcher(
+                config_cache.fetcher_factory(),
+                agent_name=run_settings.agent_name,
+                cmds=cmds,
+                file_cache_options=file_cache_options,
+            )
+            preview = _get_discovery_preview(
+                run_settings.host_config.host_name,
+                OnError.RAISE,
+                fetcher,
+                file_cache_options,
+                ip_address_of_host,
+                run_settings.host_config.ip_address,
+            )
+        finally:
+            if password_store_file.exists():
+                password_store_file.unlink()
+        return preview
+
+
+automations.register(AutomationSpecialAgentDiscoveryPreview())
 
 
 class AutomationDiscoveryPreview(Automation):

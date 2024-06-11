@@ -171,6 +171,22 @@ def discovery(
     )
 
 
+def special_agent_discovery_preview(
+    site_id: SiteId,
+    special_agent_preview_input: results.DiagSpecialAgentInput,
+) -> results.SpecialAgentDiscoveryPreviewResult:
+    return _deserialize(
+        _automation_serialized(
+            "special-agent-discovery-preview",
+            siteid=site_id,
+            indata=special_agent_preview_input.serialize(
+                cmk_version.Version.from_str(cmk_version.__version__)
+            ),
+        ),
+        results.SpecialAgentDiscoveryPreviewResult,
+    )
+
+
 def local_discovery_preview(
     host_name: HostName,
     *,

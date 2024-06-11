@@ -34,6 +34,7 @@ def test_registered_automations() -> None:
         "autodiscovery",
         "service-discovery",
         "service-discovery-preview",
+        "special-agent-discovery-preview",
         "get-agent-output",
         "get-check-information",
         "get-configuration",

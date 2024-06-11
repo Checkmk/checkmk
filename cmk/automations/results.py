@@ -184,6 +184,15 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
 result_type_registry.register(ServiceDiscoveryPreviewResult)
 
 
+class SpecialAgentDiscoveryPreviewResult(ServiceDiscoveryPreviewResult):
+    @staticmethod
+    def automation_call() -> str:
+        return "special-agent-discovery-preview"
+
+
+result_type_registry.register(SpecialAgentDiscoveryPreviewResult)
+
+
 @dataclass
 class AutodiscoveryResult(ABCAutomationResult):
     hosts: Mapping[HostName, SingleHostDiscoveryResult]

@@ -6,6 +6,7 @@
 import time
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from functools import total_ordering
 from typing import Iterable, NamedTuple
 
@@ -41,7 +42,7 @@ from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
-from ._display_hints import ColumnDisplayHint, DisplayHints, inv_display_hints, NodeDisplayHint
+from ._display_hints import DisplayHints, inv_display_hints, NodeDisplayHint
 from .registry import PaintFunction
 
 
@@ -49,13 +50,21 @@ def make_table_view_name_of_host(view_name: str) -> str:
     return f"{view_name}_of_host"
 
 
-def _make_columns_and_hints(
-    keys: Iterable[SDKey], hint: NodeDisplayHint
-) -> OrderedDict[SDKey, ColumnDisplayHint]:
+@dataclass(frozen=True)
+class Column:
+    title: str
+    paint_function: PaintFunction
+    key_info: str
+
+
+def _make_columns(
+    keys: Iterable[SDKey], key_columns: Sequence[SDKey], hint: NodeDisplayHint
+) -> OrderedDict[SDKey, Column]:
     return OrderedDict(
         {
-            c: hint.get_column_hint(c)
+            c: Column(h.title, h.paint_function, f"{c}*" if c in key_columns else c)
             for c in list(hint.columns) + sorted(set(keys) - set(hint.columns))
+            for h in (hint.get_column_hint(c),)
         }
     )
 
@@ -349,39 +358,34 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns_and_hints = _make_columns_and_hints({k for r in table.rows for k in r}, hint)
+        columns = _make_columns({k for r in table.rows for k in r}, table.key_columns, hint)
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
-            _sort_rows(table, columns_and_hints)
+            _sort_rows(table, columns)
             if isinstance(table, ImmutableTable)
-            else _sort_delta_rows(table, columns_and_hints)
+            else _sort_delta_rows(table, columns)
         )
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
-        for column, col_hint in columns_and_hints.items():
-            html.th(
-                self._get_header(
-                    col_hint.title,
-                    f"{column}*" if column in table.key_columns else column,
-                )
-            )
+        for column in columns.values():
+            html.th(self._get_header(column.title, column.key_info))
         html.close_tr()
 
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                col_hint = columns_and_hints[item.key]
                 # TODO separate tdclass from rendered value
                 if isinstance(item, SDItem):
                     tdclass, rendered_value = compute_cell_spec(
                         item,
-                        col_hint.paint_function,
+                        columns[item.key].paint_function,
                         self._theme.detect_icon_path("svc_problems", "icon_"),
                     )
                 else:
                     tdclass, rendered_value = _compute_delta_cell_spec(
-                        item, col_hint.paint_function
+                        item,
+                        columns[item.key].paint_function,
                     )
                 html.open_td(class_=tdclass)
                 html.write_html(rendered_value)

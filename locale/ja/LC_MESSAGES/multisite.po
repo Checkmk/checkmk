@@ -6,9 +6,9 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-15 04:56+0000\n"
-"Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
-"software/ja/>\n"
+"PO-Revision-Date: 2024-06-10 21:55+0000\n"
+"Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
+"ja/>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -61,9 +61,6 @@ msgstr " (成功したすべてのパケットに関して)"
 
 msgid " (lower levels)"
 msgstr " (下位レベル)"
-
-msgid " (packaged)"
-msgstr " (パッケージ)"
 
 msgid " (required)"
 msgstr " (必須)"
@@ -183,6 +180,9 @@ msgstr " または "
 
 msgid " or int"
 msgstr " またはint"
+
+msgid " to get notified once the commercial release is available. "
+msgstr ""
 
 msgid " to:"
 msgstr " まで:"
@@ -603,9 +603,9 @@ msgstr "%sレイテンシ"
 msgid "%s left in your Checkmk trial period"
 msgstr "Checkmk の試用期間は残り %s 日です"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s left in your free trial"
-msgstr "無料トライアルの残り%日"
+msgstr "無料トライアル残り%s日"
 
 #, python-format
 msgid "%s matching labels: %s"
@@ -717,13 +717,13 @@ msgstr ""
 "%s. Checkmk はアンライセンスになり、'変更を有効にする' ことができなくなりまし"
 "た。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s. Checkmk will become unlicensed %s and you will no longer be able to "
 "'Activate changes'."
 msgstr ""
-"%s. Checkmk はアンライセンスになり、'変更を有効にする' ことができなくなりまし"
-"た。"
+"%s.Checkmk はアンライセンス %s になり、'変更を有効にする' ことができなくなり"
+"ます。"
 
 #, python-format
 msgid "%s: %s"
@@ -1717,6 +1717,7 @@ msgstr ""
 "とえば、このルールを使用して、式 \"%s\" (引用符なし)を指定し、 \"%s\" を選択"
 "することで、Dockerコンテナに属するすべてのプロセスを除外できます。</p>"
 
+#, fuzzy
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
@@ -1726,11 +1727,11 @@ msgid ""
 "inventory finds a process matching the pattern, it will substitute all such "
 "groups with the actual values when creating the check. That way one rule can "
 "create several checks on a host.</p><p>If the pattern contains more groups "
-"then occurrences of <tt>%s</tt> in the service description then only the "
-"first matching subexpressions are used for the service descriptions. The "
-"matched substrings corresponding to the remaining groups are copied into the "
-"regular expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you "
-"may also use <tt>%1</tt>, <tt>%2</tt>, etc.  These will be replaced by the "
+"then occurrences of <tt>%s</tt> in the service name then only the first "
+"matching subexpressions are used for the service names. The matched "
+"substrings corresponding to the remaining groups are copied into the regular "
+"expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you may "
+"also use <tt>%1</tt>, <tt>%2</tt>, etc.  These will be replaced by the "
 "first, second, ... matching group. This allows you to reorder thing"
 msgstr ""
 "<p>プロセス名には、<tt>%s</tt>を1つ以上含めえることができます。この場合、パ"
@@ -1747,10 +1748,11 @@ msgstr ""
 "初、2番目、...の一致するグループに置き換えられ、並べ替えることができます。</"
 "p>"
 
+#, fuzzy
 msgid ""
-"<p>The service description may contain one or more occurances of <tt>%s</"
-"tt>. In this case, the pattern must be a regular expression prefixed with ~. "
-"For each <tt>%s</tt> in the description, the expression has to contain one "
+"<p>The service name may contain one or more occurances of <tt>%s</tt>. In "
+"this case, the pattern must be a regular expression prefixed with ~. For "
+"each <tt>%s</tt> in the description, the expression has to contain one "
 "\"group\". A group is a subexpression enclosed in brackets, for example "
 "<tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory "
 "finds a task matching the pattern, it will substitute all such groups with "
@@ -2054,10 +2056,11 @@ msgstr ""
 msgid "A host with this name already exists in this folder."
 msgstr "この名前のホストは、このフォルダーに既に存在します。"
 
+#, fuzzy
 msgid ""
 "A joined column can display information about specific services for host "
-"objects in a view showing host objects. You need to specify the service "
-"description of the service you like to show the data for."
+"objects in a view showing host objects. You need to specify the service name "
+"of the service you like to show the data for."
 msgstr ""
 "結合された列は、ホストオブジェクトを表示するビューに、ホストオブジェクトの特"
 "定のサービスに関する情報を表示できます。 データを表示するサービスのサービスの"
@@ -2183,13 +2186,12 @@ msgstr "このIDのルールは、ルールパック <b>%s</b>にすでに存在
 msgid "A scheduled job on Microsoft SQL Server."
 msgstr "Microsoft SQL Serverでスケジュールされたジョブ。"
 
-#, fuzzy
 msgid ""
 "A scheduler job is an object in an Oracle database which could be compared "
 "to a cron job on unix."
 msgstr ""
-"スケジューラジョブは、UNIX上のcronジョブと比較できるORACLEデータベース内のオ"
-"ブジェクトです。 "
+"スケジューラージョブは、UNIX上のcronジョブと比較できるORACLEデータベース内の"
+"オブジェクトです。"
 
 msgid ""
 "A seperate notification is send to every recipient. Recipients cannot see "
@@ -4088,9 +4090,6 @@ msgstr "ユーザーを追加する"
 msgid "Add user attribute"
 msgstr "ユーザー属性を追加する"
 
-msgid "Add warning"
-msgstr "警告を追加"
-
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "InfluxDB接続の追加、編集、削除。"
 
@@ -5637,10 +5636,9 @@ msgstr ""
 "ユーザが他のユーザのスケジュールされたレポートを変更したり、レポートの宛先と"
 "して任意の電子メールアドレスを指定することを許可する。"
 
-#, fuzzy
 msgid ""
 "Allows the assignment of the Robotmk plan/test services to another host."
-msgstr "連絡先グループへのサービスの割り当て"
+msgstr "Robotmk の計画/テストサービスを別のホストに割り当てることができます。"
 
 msgid ""
 "Allows the user the do instant reporting. At the top of each view a button "
@@ -5779,9 +5777,6 @@ msgstr ""
 msgid "Altered"
 msgstr "アラートされた"
 
-msgid "Alternative Service description"
-msgstr "代替サービスの説明"
-
 msgid "Alternative address to ping"
 msgstr "pingの代替アドレス"
 
@@ -5800,6 +5795,10 @@ msgstr "代替ホスト名"
 
 msgid "Alternative names for the service"
 msgstr "サービスの別名"
+
+#, fuzzy
+msgid "Alternative service name"
+msgstr "代替ホスト名"
 
 msgid "Always"
 msgstr "常に"
@@ -9162,9 +9161,8 @@ msgstr ""
 "イトの到達可能性状態として使用する必要があります。詳細については、<a "
 "target=_blank href='%s'>オンラインドキュメント</a>を参照してください。"
 
-#, fuzzy
 msgid "Bypass Proxy for certain hosts"
-msgstr "特定のホストのすべてのグラフ。"
+msgstr "特定のホストのプロキシをバイパスする"
 
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
@@ -9993,10 +9991,9 @@ msgstr ""
 "グラフをレンダリングできません:ホスト %s ,サービス %s が見つかりません。\n"
 " %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot render graph: host %s, service description or regex not found in "
-"context.\n"
+"Cannot render graph: host %s, service name or regex not found in context.\n"
 msgstr ""
 "グラフをレンダリングできません: ホスト%s、サービスの説明、または正規表現がコ"
 "ンテキストに見つかりません\n"
@@ -10818,6 +10815,10 @@ msgstr ""
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached (エー"
 "ジェントプラグインmk_inventoryをインストールする必要があります)"
 
+#, fuzzy
+msgid "Checkmk Cloud (SaaS) Beta"
+msgstr "Checkmkエージェント"
+
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
 
@@ -10850,10 +10851,6 @@ msgstr "Checkmkの概要"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "CheckmkサーバーのCheckmk概要"
-
-#, fuzzy
-msgid "Checkmk SaaS Beta"
-msgstr "Checkmkエージェント"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmkサイドバー"
@@ -13612,16 +13609,17 @@ msgstr "Couchbase vBuckets"
 msgid "Couchbase: Cache"
 msgstr "Couchbase:キャッシュ"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Could not connect to the license server (%s). Please retry again later. If "
 "this error persists, please contact the Checkmk support. You also need to "
 "make sure that your Checkmk can reach the license server. Please check your "
 "firewall and proxy settings."
 msgstr ""
-"ライセンスサーバー(%s)との接続に失敗しました。お使いのCheckmkがライセンスサー"
-"バーに到達できることを確認する必要があります。ファイアウォールやプロキシの設"
-"定を確認してください。<br><br>詳細: %s"
+"ライセンスサーバー(%s)との接続に失敗しました。後で再試行してください。このエ"
+"ラーが続く場合は、Checkmk サポートにお問い合わせください。また、Checkmkがライ"
+"センスサーバーに到達できることを確認する必要があります。ファイアウォールとプ"
+"ロキシの設定を確認してください。"
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -13656,9 +13654,9 @@ msgstr ""
 "スターに追加するかを指定する必要があります。これは、 <a href=\"%s\">%s</a> "
 "ルールセットを使用して行われます。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Could not find the group \"%s\" specified for role %s"
-msgstr "ロール%sに指定されたグループが見つかりませんでした"
+msgstr "ロール%s に指定されたグループ\"%s\"が見つかりませんでした"
 
 #, python-format
 msgid ""
@@ -13905,7 +13903,23 @@ msgstr "通知を作成する"
 msgid "Create a private copy of this"
 msgstr "これのプライベートコピーを作成する"
 
+#, fuzzy
+msgid "Create a separate check for each LVM volume (Linux)"
+msgstr "ログファイルごとに個別のチェックを作成します"
+
+#, fuzzy
+msgid "Create a separate check for each VxVM volume (Linux)"
+msgstr "ログファイルごとに個別のチェックを作成します"
+
 msgid "Create a separate check for each logfile"
+msgstr "ログファイルごとに個別のチェックを作成します"
+
+#, fuzzy
+msgid "Create a separate check for each partition (XEN)"
+msgstr "ログファイルごとに個別のチェックを作成します"
+
+#, fuzzy
+msgid "Create a separate check for each physical disk"
 msgstr "ログファイルごとに個別のチェックを作成します"
 
 msgid ""
@@ -13920,6 +13934,10 @@ msgstr "インスタンスとバックアップの種類ごとにサービスを
 
 msgid "Create a service for every pinged IP address"
 msgstr "Pingを送信したIPアドレスごとにサービスを作成する"
+
+#, fuzzy
+msgid "Create a summary over all physical disks"
+msgstr "すべてのアラートルールに対するサマリーサービスを作成する"
 
 msgid "Create a summary service for all alert rules"
 msgstr "すべてのアラートルールに対するサマリーサービスを作成する"
@@ -15555,7 +15573,7 @@ msgstr ""
 "した場合は、その再販業者にお問い合わせください。<br><br>敬具　Checkmk サー"
 "バー"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Dear Checkmk user,<br><br>The license verification for your Checkmk site "
 "'%s' failed and as a result, the site will become unlicensed %s. After that, "
@@ -15563,14 +15581,12 @@ msgid ""
 "Checkmk without restrictions, please contact your Checkmk support."
 "<br><br>Sincerely, your Checkmk Server"
 msgstr ""
-"Checkmkユーザー様<br><br>あなたの Checkmk サイト '%s' のライセンスの期限は "
+"Checkmkユーザー様, <br><br>あなたの Checkmk サイト '%s' のライセンスの期限は "
 "%s です。有効期限が切れると、「変更を有効にする」ことができなくなります。"
-"<br><br>まだライセンスを延長していない場合は、%sのCheckmk営業チームまでご連絡"
-"ください。<br><br>Checkmk のパートナーまたは再販業者を通じてライセンスを購入"
-"した場合は、その再販業者にお問い合わせください。<br><br>敬具　Checkmk サー"
-"バー"
+"<br><br>制限なしでCheckmkを継続したい場合は、Checkmkサポートにご連絡くださ"
+"い。<br><br>敬具、あなたのCheckmkサーバー"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Dear Checkmk user,<br><br>You have %s left in your Checkmk trial period of "
 "site '%s'.<br><br>%s now to continue using Checkmk as you do today. If you "
@@ -15581,7 +15597,7 @@ msgid ""
 "service limit of Checkmk in license state 'Free'.<br><br>Sincerely, your "
 "Checkmk Server"
 msgstr ""
-"Checkmkユーザー様<br><br>残り %d 日であなたのサイト '%s' の Checkmk 試用期間"
+"Checkmkユーザー様, <br><br>残り%s日であなたのサイト '%s' の Checkmk 試用期間"
 "は終了します。<br><br>現在と同じようにCheckmkを使用するには、今すぐ %s を入力"
 "してください。すでにライセンスをお持ちの場合は、製品のライセンスページでライ"
 "センスの詳細を入力してください。<br><br>さもないと、試用期間終了後に自動的に"
@@ -19023,7 +19039,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s."
+msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -20450,9 +20466,10 @@ msgstr ""
 "クラスタノードのホスト名を入力します。これらのホストはセットアップに存在する"
 "必要があります。"
 
+#, fuzzy
 msgid ""
 "Enter the name of the sensor. In single mode, this can be read off from the "
-"service descriptions of the services 'IPMI Sensor ...'."
+"service names of the services 'IPMI Sensor ...'."
 msgstr ""
 "センサー名を入力します。シングルモードでは、これはサービス「IPMIセンサー」の"
 "サービス説明から読み取ることができます。"
@@ -20467,9 +20484,9 @@ msgstr ""
 msgid "Enter the six-digit code from your authenticator app to log in."
 msgstr "認証アプリから6桁のコードを入力してログインします。"
 
+#, fuzzy
 msgid ""
-"Enter the uniserve service name here (has nothing to do with service "
-"description)."
+"Enter the uniserve service name here (has nothing to do with service name)."
 msgstr ""
 "ここに uniserve サービス名を入力します (サービスの説明とは関係ありません)。"
 
@@ -25116,8 +25133,9 @@ msgstr ""
 "は、定義済みのインデックスとフィールドを使用します。そうしないと、すべてのイ"
 "ンデックスとフィールドが検索されます。"
 
+#, fuzzy
 msgid ""
-"Here you can define what service description (item) is used for the created "
+"Here you can define what service name (item) is used for the created "
 "service. The resulting item is always prefixed with 'Elasticsearch Query'."
 msgstr ""
 "ここでは、作成されたサービスに使用されるサービスの説明(アイテム)を定義できま"
@@ -25379,13 +25397,6 @@ msgstr ""
 msgid "Here you can set the number of remaining open slots"
 msgstr "ここで、残りの空きスロットの数を設定できます"
 
-#, fuzzy
-msgid ""
-"Here you can set upper levels for the time difference between agent and "
-"system time."
-msgstr ""
-"ここでは、エージェント時間とシステム時間の時間差の上位レベルを設定できます。"
-
 msgid "Here you can set upper levels of busy workers"
 msgstr "ここでは、忙しいワーカーの上位レベルを設定できます"
 
@@ -25411,9 +25422,10 @@ msgstr ""
 msgid "Here you can specifiy the measurement unit of the network interface"
 msgstr "ここでは、ネットワークインターフェイスの測定単位を指定できます"
 
+#, fuzzy
 msgid ""
-"Here you can specify a service description. If this parameter is not set, "
-"the service is named <tt>TCP Port [PORT NUMBER]</tt>"
+"Here you can specify a service name. If this parameter is not set, the "
+"service is named <tt>TCP Port [PORT NUMBER]</tt>"
 msgstr ""
 "ここで、サービスの説明を指定できます。このパラメータが設定されていない場合、"
 "サービスの名前は<tt>TCP Port [PORT NUMBER]</tt>になります"
@@ -28601,14 +28613,14 @@ msgstr ""
 "制限が有効な場合、設定されている名前やタグの制限に関係なく、すべてのインスタ"
 "ンスがフェッチされます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "If multiple entries are found, the first one of the sorted entries is used. "
 "If you use macros within inventory based views these macros are replaced "
-"<tt>before</tt> the regex evaluation.<br>Note: If a service description "
-"contains special characters like <tt>%s</tt> you have to escape them in "
-"order to get reliable results. Macros don't need to be escaped. If a macro "
-"could not be found then it stays as it is."
+"<tt>before</tt> the regex evaluation.<br>Note: If a service name contains "
+"special characters like <tt>%s</tt> you have to escape them in order to get "
+"reliable results. Macros don't need to be escaped. If a macro could not be "
+"found then it stays as it is."
 msgstr ""
 "複数のエントリが見つかった場合、ソートされたエントリのうち最初のものが使用さ"
 "れます。インベントリベース ビューでマクロを使用している場合、これらのマクロは"
@@ -29435,13 +29447,13 @@ msgstr ""
 "致させる必要があります。完全に一致する必要がある場合は、アンカー <tt>^</tt> "
 "および <tt>$</tt>を使用します。"
 
+#, fuzzy
 msgid ""
 "If you enter an item name here, this will be used as part of the service "
-"description after the prefix \"Events \". The prefix plus the configured "
-"item must result in an unique service description per host. If you leave "
-"this empty either the string provided in \"Application\" is used as item or "
-"the service gets no item when the \"Application\" field is also not "
-"configured."
+"name after the prefix \"Events \". The prefix plus the configured item must "
+"result in an unique service name per host. If you leave this empty either "
+"the string provided in \"Application\" is used as item or the service gets "
+"no item when the \"Application\" field is also not configured."
 msgstr ""
 "ここにアイテム名を入力すると、プレフィックス\"イベント\"の後にサービスの説明"
 "の一部として使用されます。プレフィックスと構成済みアイテムは、ホストごとに一"
@@ -31464,9 +31476,8 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
-#, fuzzy
 msgid "Invalid code provided"
-msgstr "無効なバックURLが提供されました。"
+msgstr "不正なコード"
 
 #, python-format
 msgid "Invalid color specification '%s'"
@@ -31550,9 +31561,9 @@ msgstr "無効なホストアドレス。アドレスを%sとして指定する�
 msgid "Invalid host name"
 msgstr "無効なホスト名"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid host name: %s"
-msgstr "無効なホスト名"
+msgstr "無効なホスト名: %s"
 
 #, python-format
 msgid "Invalid host or IP address. IPv4: %s, IPv6: %s"
@@ -32006,7 +32017,8 @@ msgstr ""
 msgid "Item"
 msgstr "項目"
 
-msgid "Item (used in service description)"
+#, fuzzy
+msgid "Item (used in service name)"
 msgstr "アイテム(サービスの説明で使用)"
 
 msgid "Item appearance"
@@ -32809,9 +32821,9 @@ msgstr "最終更新"
 msgid "Last user synchronization ran into an exception: "
 msgstr "最後のユーザー同期で例外が発生しました: "
 
-#, fuzzy, python-format
+#, python-format
 msgid "Last verification %s"
-msgstr "最終認証失敗"
+msgstr "最終認証失敗 %s"
 
 #, fuzzy, python-format
 msgid "Last verification failed %s"
@@ -34138,9 +34150,8 @@ msgstr ""
 "Checkmkマイクロコアのパフォーマンス統計のライブモニター。注意:このスナップイ"
 "ンは、<b>すべての</b>サイトでCheckmkコアが実行されている場合にのみ機能します"
 
-#, fuzzy
 msgid "Live search active"
-msgstr "アクティブ/アクティブ"
+msgstr "ライブサーチアクティブ"
 
 msgid "Liveproxy Daemon"
 msgstr "Liveproxyデーモン"
@@ -36073,9 +36084,8 @@ msgstr "最大ファイル記述子"
 msgid "Max length"
 msgstr "最大長"
 
-#, fuzzy
 msgid "Max time for last reported"
-msgstr "最大応答待ち時間。"
+msgstr "最後のレポートからの最大待ち時間"
 
 msgid "Max. Age (sec)"
 msgstr "最大期間(秒)"
@@ -36608,9 +36618,9 @@ msgstr "Windowsサーバーのファイルシステムの効率測定\n"
 msgid "Measurement unit"
 msgstr "測定単位"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Measurement: %s"
-msgstr "測定単位"
+msgstr "測定単位: %s"
 
 msgid "Mechanical"
 msgstr "機械的"
@@ -38359,7 +38369,8 @@ msgstr "クォータが有効になっているファイルシステムの名前
 msgid "Name of group"
 msgstr "グループ名"
 
-msgid "Name of group in service description"
+#, fuzzy
+msgid "Name of group in service name"
 msgstr "サービスの説明にあるグループの名前"
 
 msgid "Name of indice"
@@ -38479,9 +38490,6 @@ msgstr "監視サイトの名前"
 
 msgid "Name of the mount point"
 msgstr "マウントポイントの名前"
-
-msgid "Name of the node"
-msgstr "ノードの名前"
 
 msgid "Name of the peer"
 msgstr "ピアの名前"
@@ -38694,18 +38702,11 @@ msgstr "Netapp FCポートのスループット"
 msgid "Netapp fan discovery"
 msgstr "Netappファンの発見"
 
-#, fuzzy
-msgid "Netapp instance state"
-msgstr "Netappインスタンスの状態"
-
 msgid "Netapp port discovery"
 msgstr "Netappポートの検出"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp電源ユニットの発見"
-
-msgid "Netapp systemtime"
-msgstr "Netappシステムタイム"
 
 msgid "Netmask"
 msgstr "ネットマスク"
@@ -39199,8 +39200,9 @@ msgstr "ロギングなし"
 #, fuzzy
 msgid ""
 "No logs are available. If available, more information will be shown in the "
-"service description."
-msgstr "サービスの説明で使用される名前"
+"service name."
+msgstr ""
+"ログはありません。利用可能な場合は、サービスの説明に詳細情報が表示されます。"
 
 msgid "No logs found for this host."
 msgstr "このホストのログは見つかりませんでした。"
@@ -40409,9 +40411,8 @@ msgstr "1シャード1コレクションあたりのジャンボチャンク数"
 msgid "Number of kernel events per second"
 msgstr "1秒あたりのカーネルイベントの数"
 
-#, fuzzy
 msgid "Number of levels:"
-msgstr "サービスの数"
+msgstr "サービスの数:"
 
 msgid "Number of lock requests per second that required the caller to wait."
 msgstr "呼び出し元が待機する必要があった1秒あたりのロック要求の数。"
@@ -40574,9 +40575,8 @@ msgstr "ルールグループの数"
 msgid "Number of running containers"
 msgstr "稼働中のコンテナ数"
 
-#, fuzzy
 msgid "Number of runs:"
-msgstr "チャンクの数"
+msgstr "ランの数:"
 
 msgid "Number of search results"
 msgstr "検索結果の数"
@@ -41234,13 +41234,14 @@ msgstr ""
 msgid "Only add matching hosts"
 msgstr "一致するホストのみを追加します"
 
+#, fuzzy
 msgid ""
-"Only applicable to clustermode installations. The service description of "
-"snapvault services is composed of the destination vserver (SVM) and the "
-"destination volume by default. Check this box if you would like to use the "
-"destination volume as the service description on its own. Please be advised "
-"that this may lead to a service description that is not unique, resulting in "
-"some services, which are not shown!"
+"Only applicable to clustermode installations. The service name of snapvault "
+"services is composed of the destination vserver (SVM) and the destination "
+"volume by default. Check this box if you would like to use the destination "
+"volume as the service name on its own. Please be advised that this may lead "
+"to a service name that is not unique, resulting in some services, which are "
+"not shown!"
 msgstr ""
 "クラスターモードのインストールにのみ適用されます。snapvaultサービスのサービス"
 "記述は、デフォルトで宛先vserver (SVM)と宛先ボリュームで構成されます。宛先ボ"
@@ -44021,11 +44022,11 @@ msgstr "パーセントレベル%s"
 msgid "Perf-O-Meter"
 msgstr "Perf-O-Meter"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Perf-O-Meter %r must contain exactly two definitions, not %d"
 msgstr ""
-"タイプ 'dual'のPerf-O-Meterには、 %d ではなく正確に2つの定義が含まれている必"
-"要があります"
+"Perf-O-Meter %r には、%d ではなく、正確に 2 つの定義が含まれていなければなり"
+"ません"
 
 msgid "Perf-O-Meter of type 'dual' must only contain plain Perf-O-Meters"
 msgstr ""
@@ -44429,11 +44430,12 @@ msgstr ""
 msgid "Plan ID"
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Plan IDs (combinations of application names, suite names and variants) must "
 "be unique."
-msgstr "運用状態と管理状態の組合せマップ"
+msgstr ""
+"プランID（アプリケーション名、スイート名、バリアントの組み合わせ）は一意でな"
+"ければならない。"
 
 msgid "Plans"
 msgstr ""
@@ -44458,9 +44460,8 @@ msgstr "少なくとも1つの子ノードを追加してください。"
 msgid "Please add at least one column to your view."
 msgstr "ビューに少なくとも1つの列を追加してください。"
 
-#, fuzzy
 msgid "Please add at least one endpoint to monitor"
-msgstr "ビューに少なくとも1つの列を追加してください。"
+msgstr "監視するエンドポイントを少なくとも1つ追加してください。"
 
 msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
@@ -44497,9 +44498,8 @@ msgstr ""
 "トレージはすでに十分に安全である可能性があります。ただし、場合によっては、"
 "バックアップを暗号化して保存することをお勧めします。"
 
-#, fuzzy
 msgid "Please choose"
-msgstr "PNG画像を選択してください。"
+msgstr "選択してください"
 
 msgid "Please choose a PNG image."
 msgstr "PNG画像を選択してください。"
@@ -44755,17 +44755,15 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr ".xml'ファイルをご提供ください"
 
-#, fuzzy
 msgid "Please provide a hostname to test with."
-msgstr "有効なホストとポートを入力してください"
+msgstr "テストするホスト名を指定してください。"
 
 #, fuzzy
 msgid "Please provide a relative Windows path"
 msgstr "有効な名前を入力してください"
 
-#, fuzzy
 msgid "Please provide a service."
-msgstr "有効な名前を入力してください"
+msgstr "サービスを提供してください。"
 
 msgid "Please provide a valid host and port"
 msgstr "有効なホストとポートを入力してください"
@@ -44801,16 +44799,14 @@ msgstr "グラフを選択してください。"
 msgid "Please select a host."
 msgstr "グラフを選択してください。"
 
-#, fuzzy
 msgid "Please select a metric."
-msgstr "メトリックを選択してください"
+msgstr "メトリックを選択してください。"
 
 msgid "Please select a number between 0 and 100"
 msgstr "0〜100の数字を選択してください"
 
-#, fuzzy
 msgid "Please select a service."
-msgstr "サービスを選択してください"
+msgstr "サービスを選択してください。"
 
 msgid "Please select at least one element"
 msgstr "少なくとも1つの要素を選択してください"
@@ -44883,7 +44879,8 @@ msgstr ""
 msgid "Please set a host name for host state reclassification"
 msgstr "ホスト状態を再分類するためのホスト名を設定してください"
 
-msgid "Please set a service description for service state reclassification"
+#, fuzzy
+msgid "Please set a service name for service state reclassification"
 msgstr "サービス状態の再分類のためにサービスの説明を設定してください"
 
 msgid "Please specify a full name or descriptive alias for the user."
@@ -45017,16 +45014,18 @@ msgstr "パスワードを指定してください。"
 msgid "Please supply a title for you auxiliary tag."
 msgstr "補助タグのタイトルを入力してください。"
 
+#, fuzzy
 msgid ""
 "Please use only a-z, A-Z, 0-9, space, underscore, dot and hyphen for your "
-"service description"
+"service name"
 msgstr ""
 "サービスの説明には、az、AZ、0?9、スペース、アンダースコア、ドット、ハイフンの"
 "みを使用してください"
 
+#, fuzzy
 msgid ""
 "Please use only a-z, A-Z, 0-9, space, underscore, dot, hyphen and slash for "
-"your service description"
+"your service name"
 msgstr ""
 "サービスの説明には、az、AZ、0〜9、スペース、アンダースコア、ドット、ハイフ"
 "ン、スラッシュのみを使用してください"
@@ -45703,7 +45702,8 @@ msgstr "プロセス一致テキストの説明またはプロセスのパス"
 msgid "Process name"
 msgstr "プロセス名"
 
-msgid "Process name for usage in the Nagios service description"
+#, fuzzy
+msgid "Process name for usage in the Nagios service name"
 msgstr "Nagiosサービスの説明で使用するプロセス名"
 
 msgid "Process name matching"
@@ -47965,6 +47965,10 @@ msgstr "レポート"
 
 msgid "Report Properties"
 msgstr "レポートのプロパティ"
+
+#, fuzzy
+msgid "Report an issue here."
+msgstr "スケジュールに報告する"
 
 #, fuzzy
 msgid ""
@@ -50301,7 +50305,7 @@ msgstr ""
 msgid "Select from a list of metrics known to Checkmk"
 msgstr ""
 
-msgid "Select from a list of service descriptions known to Checkmk"
+msgid "Select from a list of service names known to Checkmk"
 msgstr ""
 
 msgid ""
@@ -50905,15 +50909,6 @@ msgstr "サービスカスタム属性"
 msgid "Service custom field ID"
 msgstr "サービスカスタムフィールドID"
 
-msgid "Service description"
-msgstr "サービスの説明"
-
-msgid "Service description: "
-msgstr "サービスの説明: "
-
-msgid "Service descriptions"
-msgstr "サービスの説明"
-
 #, fuzzy
 msgid "Service details"
 msgstr "BIサービスの詳細"
@@ -50948,7 +50943,8 @@ msgstr "サービスディスカバリー:未決定のサービスへ移動"
 msgid "Service discovery: Remove services"
 msgstr "サービスディスカバリー:サービスの削除"
 
-msgid "Service discovery: Service description"
+#, fuzzy
+msgid "Service discovery: Service name"
 msgstr "サービス検出:サービスの説明"
 
 msgid "Service discovery: State"
@@ -51077,6 +51073,14 @@ msgid "Service monitoring rules"
 msgstr "サービス監視ルール"
 
 msgid "Service name"
+msgstr "サービス名"
+
+#, fuzzy
+msgid "Service name: "
+msgstr "サービス名"
+
+#, fuzzy
+msgid "Service names"
 msgstr "サービス名"
 
 msgid "Service normal check interval"
@@ -51746,9 +51750,6 @@ msgstr "'%s'に設定する"
 msgid "Set upper Levels"
 msgstr "上位レベルを設定する"
 
-msgid "Set upper levels for the time difference"
-msgstr "時差の上位レベルを設定する"
-
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -52347,8 +52348,8 @@ msgid "Show separate result for each SLA period"
 msgstr "SLA期間ごとに個別の結果を表示する"
 
 #, fuzzy
-msgid "Show service description"
-msgstr "サービスの説明"
+msgid "Show service name"
+msgstr "サービス名"
 
 msgid "Show service status"
 msgstr "サービスステータスを表示する"
@@ -52595,6 +52596,9 @@ msgid ""
 msgstr ""
 "Linux、Windows、およびその他のオペレーティング・システム用のベイクエージェン"
 "ト・パッケージに署名します"
+
+msgid "Sign up here"
+msgstr ""
 
 msgid "Signal quality of Wireless device"
 msgstr "ワイヤレスデバイスの信号品質"
@@ -54158,9 +54162,10 @@ msgstr ""
 msgid "Specify two upper case letters like <tt>EN</tt> or <tt>DE</tt>."
 msgstr "<tt>EN</tt>や<tt>DE</tt>のような2つの大文字を指定します。"
 
+#, fuzzy
 msgid ""
 "Specify upper and/or lower levels for a queried PromQL value. The matching "
-"happens on a 2-level basis: First on the service description level where the "
+"happens on a 2-level basis: First on the service name level where the "
 "regular expression allows to target multiple services at once. Specify the "
 "regular expression in the Conditions section below. A service can consist of "
 "multiple metrics and you can add levels to each queried metric value. For "
@@ -54295,9 +54300,9 @@ msgstr "スポットインスタンスリクエスト"
 msgid "Spread over"
 msgstr "Spread over"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Spread should be a positive number: %s"
-msgstr "正の分数を入力してください。"
+msgstr "スプレッドは正数である必要があります: %s"
 
 msgid ""
 "Spreading distributes checks evenly over the specified period. This helps to "
@@ -54476,11 +54481,12 @@ msgstr "起動"
 msgid "Starting with entry"
 msgstr "エントリーから"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours "
 "and %d %s."
-msgstr "ホスト/サービスがDOWN/UNREACHした場合、最大%d時間で開始する。"
+msgstr ""
+"ホスト/サービスが最大%d時間、%d %sの時間DOWN/UNREACHした場合に開始します。"
 
 msgid "Startup overhead in shared pool"
 msgstr "共有プールの起動オーバーヘッド"
@@ -57685,15 +57691,15 @@ msgstr ""
 "のデータ送信を停止します。このオプションは、このホストのCheckmkサービスの"
 "チェック間隔を変更した場合、その間隔に応じて変更する必要があります。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The agent will update itself only with packages that are signed by one of "
 "these keys. You need to specify at least one key. Keys are being create <a "
 "href='%s' target='_blank'>here</a>."
 msgstr ""
 "エージェントは、これらのキーの1つによって署名されたパッケージでのみ自身を更新"
-"します。少なくとも1つのキーを指定する必要があります。キーは<a href='%s'>ここ"
-"</a>で作成されています。"
+"します。少なくとも1つのキーを指定する必要があります。キーは<a href='%s' "
+"target='_blank'>ここ</a>で作成されています。"
 
 msgid "The aggregate was in a scheduled downtime"
 msgstr "集計はスケジュールされたダウンタイムにありました"
@@ -59427,14 +59433,13 @@ msgstr ""
 msgid ""
 "The name is the individual part of the used service description. Choose a "
 "human readable and unique title to be able to find your service later in "
-"Checkmk."
+"Checkmk. You may use macros in this field. The most common ones are $HOSTNAME"
+"$, $HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
 
 msgid ""
-"The name is the individual part of the used service description. Choose a "
-"human readable and unique title to be able to find your service later in "
-"Checkmk. You may use macros in this field. The most common ones are $HOSTNAME"
-"$, $HOSTALIAS$ or $HOSTADDRESS$."
+"The name is the individual part of the used service name. Choose a human "
+"readable and unique title to be able to find your service later in Checkmk."
 msgstr ""
 
 msgid "The name of the Data Proxy"
@@ -59458,11 +59463,12 @@ msgstr ""
 msgid "The name of the OMD site to check the status for"
 msgstr "ステータスを確認するOMDサイトの名前"
 
+#, fuzzy
 msgid ""
-"The name of the aggregation to fetch. It will be added to the service "
-"description. You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME"
-"$</tt> within this parameter to make them be replaced by the hosts values. "
-"The aggregation name is the title in the top-level-rule of your BI pack."
+"The name of the aggregation to fetch. It will be added to the service name. "
+"You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> "
+"within this parameter to make them be replaced by the hosts values. The "
+"aggregation name is the title in the top-level-rule of your BI pack."
 msgstr ""
 "フェッチする集計の名前。サービスの説明に追加されます。このパラメーター内で "
 "<tt>$HOSTADDRESS$</tt> や <tt>$HOSTNAME$</tt> などのマクロを使用して、それら"
@@ -59488,7 +59494,8 @@ msgstr ""
 "ます。標準ユーザーの資格情報を使用するには、オプションのパラメータで設定した"
 "有効な認証方法も必要です。"
 
-msgid "The name of the cluster resource as shown in the service description."
+#, fuzzy
+msgid "The name of the cluster resource as shown in the service name."
 msgstr "サービスの説明に示されているクラスターリソースの名前。"
 
 msgid "The name of the dashboard is missing."
@@ -59572,10 +59579,12 @@ msgstr "表示されるこのアクティブなサービスの名前。"
 msgid "The name or IPv4 address you want to query"
 msgstr "クエリしたい名前またはIPv4アドレス"
 
-msgid "The name that will be used in the service description"
+#, fuzzy
+msgid "The name that will be used in the service name"
 msgstr "サービスの説明で使用される名前"
 
-msgid "The name will be used in the service description"
+#, fuzzy
+msgid "The name will be used in the service name"
 msgstr "名前はサービスの説明で使用されます"
 
 #, python-format
@@ -60254,7 +60263,8 @@ msgid ""
 "reached and leads to a CRIT on the service."
 msgstr ""
 
-msgid "The resulting service will get this entry as service description"
+#, fuzzy
+msgid "The resulting service will get this entry as service name"
 msgstr "結果のサービスは、このエントリをサービスの説明として取得します"
 
 msgid ""
@@ -60472,46 +60482,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The service description of qtree services is composed of the quota, quota-"
-"users and the volume name by default. Check this boxif you would like to use "
-"the quota and quota-users combination as the service description on its own. "
-"Please be advised that this may lead to a service description that is not "
-"unique, resulting in some services, which are not shown!"
-msgstr ""
-"qtreeサービスのサービス記述は、デフォルトでquota、quota-users、およびボリュー"
-"ム名で構成されています。quotaとquota-usersの組合せを単独でサービスの説明とし"
-"て使用する場合は、このボックスのチェックをオンにします。これにより、サービス"
-"の説明が一意でなくなり、表示されなくなる可能性があることにご注意ください！"
-
-msgid ""
-"The service description will be <b>LDAP</b> plus this name. If the name "
-"starts with a caret (<tt>^</tt>), the service description will not be "
-"prefixed with <tt>LDAP</tt>."
-msgstr ""
-"サービスの説明は、<b>LDAP</b>とこの名前になります。名前がキャレット(<tt>^</"
-"tt>)で始まる場合、サービスの説明の前に<tt>LDAP</tt>は付きません。"
-
-msgid ""
-"The service description will be <b>SMTP</b> plus this name. If the name "
-"starts with a caret (<tt>^</tt>), the service description will not be "
-"prefixed with <tt>SMTP</tt>."
-msgstr ""
-"サービスの説明は、<b>SMTP</b>とこの名前になります。名前がキャレット(<tt>^</"
-"tt>)で始まる場合、サービスの説明の前に<tt>SMTP</tt>は付きません。"
-
-msgid "The service description will be this name instead <i>DNS Servername</i>"
-msgstr "サービスの説明は、<i>DNSサーバー名</i>ではなくこの名前になります"
-
-msgid ""
-"The service descriptions of the inventorized services are named like the "
-"paths in SAP. You can use this option to let the inventory function only use "
-"the last x path levels for naming."
-msgstr ""
-"発明されたサービスのサービスの説明は、SAPのパスのように名前が付けられていま"
-"す。このオプションを使用して、インベントリ関数が名前付けに最後のxパスレベルの"
-"みを使用するようにすることができます。"
-
-msgid ""
 "The service discovery of this host failed during a previous bulk service "
 "discovery."
 msgstr "このホストのサービス検出は、以前の一括サービス検出中に失敗しました。"
@@ -60550,8 +60520,53 @@ msgstr ""
 msgid "The service name"
 msgstr "サービス名"
 
+#, fuzzy
+msgid ""
+"The service name of qtree services is composed of the quota, quota-users and "
+"the volume name by default. Check this boxif you would like to use the quota "
+"and quota-users combination as the service name on its own. Please be "
+"advised that this may lead to a service name that is not unique, resulting "
+"in some services, which are not shown!"
+msgstr ""
+"qtreeサービスのサービス記述は、デフォルトでquota、quota-users、およびボリュー"
+"ム名で構成されています。quotaとquota-usersの組合せを単独でサービスの説明とし"
+"て使用する場合は、このボックスのチェックをオンにします。これにより、サービス"
+"の説明が一意でなくなり、表示されなくなる可能性があることにご注意ください！"
+
+#, fuzzy
+msgid ""
+"The service name will be <b>LDAP</b> plus this name. If the name starts with "
+"a caret (<tt>^</tt>), the service name will not be prefixed with <tt>LDAP</"
+"tt>."
+msgstr ""
+"サービスの説明は、<b>LDAP</b>とこの名前になります。名前がキャレット(<tt>^</"
+"tt>)で始まる場合、サービスの説明の前に<tt>LDAP</tt>は付きません。"
+
 msgid "The service name will be <b>Mail Loop</b> plus this name"
 msgstr "サービス名は、<b>Mail Loop</b> にこの名前をつけたものになります"
+
+#, fuzzy
+msgid ""
+"The service name will be <b>SMTP</b> plus this name. If the name starts with "
+"a caret (<tt>^</tt>), the service name will not be prefixed with <tt>SMTP</"
+"tt>."
+msgstr ""
+"サービスの説明は、<b>SMTP</b>とこの名前になります。名前がキャレット(<tt>^</"
+"tt>)で始まる場合、サービスの説明の前に<tt>SMTP</tt>は付きません。"
+
+#, fuzzy
+msgid "The service name will be this name instead <i>DNS Servername</i>"
+msgstr "サービスの説明は、<i>DNSサーバー名</i>ではなくこの名前になります"
+
+#, fuzzy
+msgid ""
+"The service names of the inventorized services are named like the paths in "
+"SAP. You can use this option to let the inventory function only use the last "
+"x path levels for naming."
+msgstr ""
+"発明されたサービスのサービスの説明は、SAPのパスのように名前が付けられていま"
+"す。このオプションを使用して、インベントリ関数が名前付けに最後のxパスレベルの"
+"みを使用するようにすることができます。"
 
 msgid ""
 "The service will not warn if self-signed certificates are used if this "
@@ -61070,9 +61085,9 @@ msgstr "値 %rのタイプは %sですが、floatまたはintのいずれかで�
 msgid "The value %r has type %s, but must be of type bool"
 msgstr "値 %r のタイプは %sですが、タイプはboolである必要があります"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The value %r has type %s, but must be of type float"
-msgstr "値 %r は、タイプは%sですが、タイプはfloat %s である必要があります"
+msgstr "値 %r は、タイプは%sですが、タイプはfloat である必要があります"
 
 #, python-format
 msgid "The value %r has type %s, but must be of type float%s"
@@ -61730,12 +61745,13 @@ msgstr "このSLAには、計算プラグインが設定されていません"
 msgid "This URL can also be collected from the Password Store from Checkmk."
 msgstr "このURLはCheckmkのパスワードストアから収集することも可能です。"
 
+#, fuzzy
 msgid ""
 "This URL is opened when clicking on the action / icon. You can use some "
 "macros within the URL which are dynamically replaced for each object. These "
 "are:<br><ul><li>$HOSTNAME$: Contains the name of the host</li><li>"
 "$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li><li>$SERVICEDESC$: "
-"Contains the service description (in case this is a service)</li><li>"
+"Contains the service name (in case this is a service)</li><li>"
 "$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li><li>$HOSTADDRESS"
 "$: Contains the network address of the host</li><li>$HOSTADDRESS_URL_ENCODED"
 "$: Same as above but URL encoded</li><li>$USER_ID$: The user ID of the "
@@ -63994,9 +64010,6 @@ msgid ""
 "given VSID."
 msgstr "このルールを使用すると、特定のVSIDの最大接続数を構成できます。"
 
-msgid "This rule allows you to override netapp warnings"
-msgstr "このルールを使用すると、netappの警告を上書きできます"
-
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -64195,9 +64208,10 @@ msgstr ""
 "このルールは、Lotus Dominoシステムでのタスクの検出を制御します。後で変更を加"
 "える場合は、ホストを再検出する必要があります"
 
+#, fuzzy
 msgid ""
-"This rule controls whether the UUID or the alias is used in the service "
-"description during discovery of Multipath devices on Linux."
+"This rule controls whether the UUID or the alias is used in the service name "
+"during discovery of Multipath devices on Linux."
 msgstr ""
 "このルールは、Linuxでマルチパスデバイスを検出するときに、サービスの説明でUUID"
 "またはエイリアスのどちらを使用するかを制御します。"
@@ -64209,17 +64223,6 @@ msgid ""
 msgstr ""
 "このルールは、個々の CPU を監視するために、どのチェックをいくつ作成するかを制"
 "御します。現在、cisco_cpu_multiitemのみがこの設定をサポートしています。 "
-
-msgid ""
-"This rule controls which and how many checks will be created for monitoring "
-"individual physical and logical disks. Note: the option <i>Create a summary "
-"for all read, one for write</i> has been removed. Some checks will still "
-"support this settings, but it will be removed there soon."
-msgstr ""
-"このルールは、個々の物理ディスクと論理ディスクを監視するために作成される"
-"チェックとその数を制御します。注意:<i>すべての読み取りの概要を作成し、1つは書"
-"き込みの概要を作成する</i>オプションは削除されました。一部のチェックは引き続"
-"きこの設定をサポートしますが、まもなく削除されます。"
 
 msgid ""
 "This rule decides about the number of retries and timeout values for the "
@@ -64436,15 +64439,16 @@ msgstr ""
 "このルールセットでは、定期的に繰り返される%sのダウンタイムを作成することがで"
 "きます。"
 
+#, fuzzy
 msgid ""
 "This rule set allows you to specify an alternative name to be displayed for "
 "certain services. This name is available as a column when creating new views "
 "or modifying existing ones. It is always visible in the details view of a "
 "service. In the availability reporting there is an option for using that "
-"name instead of the normal service description. It does <b>not</b> "
-"automatically replace the normal service name in all views.<br><br><b>Note</"
-"b>: The purpose of this rule set is to define unique names for several well-"
-"known services. It cannot rename services in general."
+"name instead of the normal service name. It does <b>not</b> automatically "
+"replace the normal service name in all views.<br><br><b>Note</b>: The "
+"purpose of this rule set is to define unique names for several well-known "
+"services. It cannot rename services in general."
 msgstr ""
 "このルールセットを使用すると、特定のサービスに表示される代替名を指定できま"
 "す。この名前は、新しいビューを作成したり、既存のビューを変更したりするときに"
@@ -65405,16 +65409,18 @@ msgstr ""
 "変更されたホストキーや無効なホストキーに対しては接続を拒否します。このオプ"
 "ションは OpenSSH version >= 7.6 でしか使えません。"
 
+#, fuzzy
 msgid ""
-"This will be used as service description in Checkmk. It must be a unique "
-"name per host."
+"This will be used as service name in Checkmk. It must be a unique name per "
+"host."
 msgstr ""
 "これは、Checkmk内のサービスの説明として使用されます。ホストごとに一意の名前で"
 "ある必要があります。"
 
+#, fuzzy
 msgid ""
-"This will be used as service description within Checkmk. It must be a unique "
-"name per host."
+"This will be used as service name within Checkmk. It must be a unique name "
+"per host."
 msgstr ""
 "これは、Checkmk内のサービスの説明として使用されます。ホストごとに一意の名前で"
 "ある必要があります。"
@@ -65772,7 +65778,7 @@ msgid "Time horizon"
 msgstr "期間"
 
 msgid "Time horizon for repeated events"
-msgstr "繰り返されるイベントの期間"
+msgstr "繰り返されるイベントの時間軸"
 
 msgid "Time horizon to keep in cache"
 msgstr "キャッシュに保持する期間"
@@ -69081,7 +69087,8 @@ msgstr "HAProxyの状態を監視状態に変換する"
 msgid "Translation of VM state to monitoring state"
 msgstr "VM状態から監視状態への変換"
 
-msgid "Translation of service descriptions"
+#, fuzzy
+msgid "Translation of service names"
 msgstr "サービス説明の翻訳"
 
 msgid "Translations"
@@ -71160,7 +71167,7 @@ msgid "Use WMI"
 msgstr "WMIを使用する"
 
 #, fuzzy
-msgid "Use World Wide Name (WWN) as service description"
+msgid "Use World Wide Name (WWN) as service name"
 msgstr "新しいサービスの説明を使用する"
 
 #, fuzzy
@@ -71250,8 +71257,8 @@ msgid "Use device levels"
 msgstr "デバイスレベルを使用する"
 
 #, fuzzy
-msgid "Use device name as service description"
-msgstr "新しいサービスの説明を使用する"
+msgid "Use device name as service name"
+msgstr "サービス名としてポート名を使用する"
 
 msgid "Use device states"
 msgstr "デバイスの状態を使用する"
@@ -71347,8 +71354,9 @@ msgstr "マウントポイントを使用する"
 msgid "Use narrow rendering for this number"
 msgstr "この数値にはナローレンダリングを使用する"
 
-msgid "Use new service descriptions"
-msgstr "新しいサービスの説明を使用する"
+#, fuzzy
+msgid "Use new service names"
+msgstr "サービス名"
 
 msgid "Use normal state, ignore acknowledgement"
 msgstr "通常の状態を使用し、確認応答を無視します"
@@ -71695,7 +71703,7 @@ msgstr ""
 "します。ここにホスト名を追加してください。例:my_rabbitmq.com 設定されていない"
 "場合、割り当てられたホストがインスタンスとして使用されます。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Use this rule to enable the use of SNMP verison 2c instead of the default "
 "SNMP version 1. Checkmk defaults to SNMPv1 in order to support as many "
@@ -71706,14 +71714,16 @@ msgid ""
 "some buggy devices do not properly support \"bulkwalk\" queries. For those "
 "you may want to try disabling them using the ruleset \"%s\"."
 msgstr ""
-"Checkmkは、できるだけ多くのデバイスをサポートするために、デフォルトでSNMPv1を"
-"使用しています。実際には、ほとんどのSNMP機器はSNMPv2cもサポートしており、64"
-"ビットカウンタとバルクウォークをサポートしているため、CPUとネットワークリソー"
-"スを節約でき、よりパフォーマンスが高いという2つの利点があります。このルールを"
-"使って、できるだけ多くの機器にSNMPv2cを設定します。ただし、SNMPv2cに対応した"
-"機器にはバグがある場合がありますので、ご注意ください。バグがあった場合、ルー"
-"ルセット「Disable bulk walks on SNMPv2c/v3 」を使用して、バルクウォークを無効"
-"にしてみるとよいでしょう。"
+"デフォルトの SNMP バージョン 1 ではなく、SNMP バージョン 2c の使用を有効にす"
+"るには、このルールを使用します。Checkmkは、できるだけ多くのデバイスをサポート"
+"するために、デフォルトでSNMPv1を使用します。実際には、ほとんどのSNMPデバイス"
+"はSNMPv2cもサポートしており、これには2つの利点があります： SNMPv2c には、64 "
+"ビットのカウンタと「bulkwalk」クエリがサポートされ ているため、より高速で "
+"CPU とネットワークリソースを節約できます。このルールを使用して、できるだけ多"
+"くのデバイスにSNMPv2cを設定してください。ただし、バグが多いデバイスの中には、"
+"「bulkwalk 」クエリーを正しくサポートしていないものもあるので注意してくださ"
+"い。そのような場合は、ルールセット \"%s\" を使用して、このクエリを無効にして"
+"みてください。"
 
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
@@ -72177,9 +72187,9 @@ msgid "Users: User Management"
 msgstr "ユーザー管理"
 
 msgid ""
-"Using device name as service description isn't recommended. Device names "
-"aren't persistent and can change after a reboot or an update. In case WWN is "
-"not available, device name will be used."
+"Using device name as service name isn't recommended. Device names aren't "
+"persistent and can change after a reboot or an update. In case WWN is not "
+"available, device name will be used."
 msgstr ""
 
 msgid "Using predefined condition"
@@ -72449,9 +72459,10 @@ msgstr "自動化ユーザーの有効な自動化シークレット"
 msgid "Valid from"
 msgstr "から有効"
 
+#, fuzzy
 msgid ""
-"Valid service descriptions may only contain letters, numbers, dashes, "
-"underscores, spaces and dots."
+"Valid service names may only contain letters, numbers, dashes, underscores, "
+"spaces and dots."
 msgstr ""
 "有効なサービスの説明には、文字、数字、ダッシュ、アンダースコア、スペース、お"
 "よびドットのみを含めることができます。"
@@ -72652,9 +72663,9 @@ msgstr "検証"
 msgid "Verification could not be performed (Status code: %d, Server: %s): %s"
 msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid "Verification failed (Status code: %d, Server: %s): %s"
-msgstr "認証に失敗しました（ライセンスサーバー）"
+msgstr "認証に失敗しました（ステータスコード: %d, サーバー: %s）: %s"
 
 msgid "Verification failed (license server)"
 msgstr "認証に失敗しました（ライセンスサーバー）"
@@ -73382,9 +73393,6 @@ msgstr "警告 "
 #, fuzzy, python-format
 msgid "Warning of %s"
 msgstr "%s の場合警告"
-
-msgid "Warning starts with"
-msgstr "警告の開始"
 
 msgid "Warning threshold"
 msgstr "警告しきい値"
@@ -74128,7 +74136,7 @@ msgid ""
 "you specify here."
 msgstr ""
 "iCalendarファイルに繰り返しイベントの定義が含まれている場合、これらの繰り返し"
-"イベントは、ここで指定した年数の間、単一のイベントに解決されます。"
+"イベントは、ここで指定した年数の間、単一イベントに解決されます。"
 
 msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
@@ -74539,9 +74547,10 @@ msgid ""
 msgstr ""
 "見つかったIPアドレスを見つかったホストのIPv4アドレスとして構成するかどうか。"
 
+#, fuzzy
 msgid ""
 "Whether you need the number or the name depends on the check. Just take a "
-"look to the service description."
+"look to the service name."
 msgstr ""
 "番号と名前のどちらが必要かはチェック次第です。サービスの内容を確認してくださ"
 "い。"
@@ -74563,10 +74572,11 @@ msgstr ""
 msgid "Width of the rules"
 msgstr "ルールの幅"
 
+#, fuzzy
 msgid ""
-"Will be used in the service description. If the name starts with a caret "
-"(<tt>^</tt>), the service description will not be prefixed with either "
-"<tt>HTTP</tt> or <tt>HTTPS</tt>."
+"Will be used in the service name. If the name starts with a caret (<tt>^</"
+"tt>), the service name will not be prefixed with either <tt>HTTP</tt> or "
+"<tt>HTTPS</tt>."
 msgstr ""
 "サービスの説明で使用されます。名前がキャレット(<tt>^</tt>)で始まる場合、サー"
 "ビスの説明の前に<tt> HTTP </tt>または<tt>HTTPS </tt>は付けられません。"
@@ -74904,18 +74914,6 @@ msgstr ""
 "意してください。"
 
 msgid ""
-"With this rule you can set limits for various disk IO statistics. Keep in "
-"mind that not all of these settings may be applicable for the actual check. "
-"For example, if the check doesn't provide a <i>Read wait</i> information in "
-"its output, any configuration setting referring to <i>Read wait</i> will "
-"have no effect."
-msgstr ""
-"このルールを使用すると、様々なディスクIO統計の制限を設定できます。これらの設"
-"定の全てが実際の検査に適用されるとは限らないことに留意してください。例えば、"
-"チェックの出力に<i>読み取り待ち</i>情報が無い場合、<i>読み取り待ち</i>を参照"
-"する設定は何の効果もありません。"
-
-msgid ""
 "With this ruleset you can configure \"classical Monitoring checks\" to be "
 "executed directly on your monitoring server. These checks will not use "
 "Checkmk. It is also possible to configure passive checks that are fed with "
@@ -74958,6 +74956,7 @@ msgstr ""
 "アドレスを含む</li><li>$HOSTADDRESS_URL_ENCODED$: 上記と同じだが、URLエンコー"
 "ドされている</li><li>$USER_ID$: 現在アクティブなユーザーのID</li></ul>"
 
+#, fuzzy
 msgid ""
 "With this setting you can set links to documentations for each service. You "
 "can use some macros within the URL which are dynamically replaced for each "
@@ -74965,7 +74964,7 @@ msgid ""
 "li><li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li><li>"
 "$HOSTADDRESS$: Contains the network address of the host</li><li>"
 "$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li><li>$SERVICEDESC"
-"$: Contains the service description (in case this is a service)</li><li>"
+"$: Contains the service name (in case this is a service)</li><li>"
 "$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li><li>$USER_ID$: "
 "The user ID of the currently active user</li></ul>"
 msgstr ""
@@ -74988,18 +74987,18 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Within this ruleset service descriptions can be translated similar to the "
-"ruleset <tt>Host name translation for piggybacked hosts</tt>. Services such "
-"as <tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
+"Within this ruleset service names can be translated similar to the ruleset "
+"<tt>Host name translation for piggybacked hosts</tt>. Services such as "
+"<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
 "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are "
 "excluded. <b>Attention:</b><ul><li>Downtimes and other configured rules "
 "which match these services have to be adapted.</li><li>Performance data and "
 "graphs will begin from scratch for translated services.</li><li>Especially "
 "configured check parameters keep their functionality further on.</"
-"li><li>This new ruleset translates also the item part of a service "
-"description. This means that after such a translation the item may be gone "
-"but is used in the conditions of the parameters further on if any parameters "
-"are configured. This might be confusing.</li></ul>This rule should only be "
+"li><li>This new ruleset translates also the item part of a service name. "
+"This means that after such a translation the item may be gone but is used in "
+"the conditions of the parameters further on if any parameters are "
+"configured. This might be confusing.</li></ul>This rule should only be "
 "configured in the early stages."
 msgstr ""
 "このルールセット内では、サービスの説明は、ルールセットの<tt>ピギーバックホス"
@@ -75370,9 +75369,9 @@ msgstr "ID <b>%s</b>のエレメントが既にあります"
 msgid "You are analysing this notification"
 msgstr "この通知を分析しています"
 
-#, fuzzy, python-format
+#, python-format
 msgid "You are currently monitoring %d %s on this site."
-msgstr "ホスト上で現在監視されているサービスとの違い。"
+msgstr "現在、このサイトで %d %s を監視しています。"
 
 #, fuzzy
 msgid ""
@@ -75852,11 +75851,12 @@ msgstr ""
 "プラグインが特定のバージョンまたは最小バージョンで実行されていることを確認で"
 "きます。"
 
+#, fuzzy
 msgid ""
 "You can make the rule apply only to certain services of the specified hosts. "
 "Do this by specifying explicit <b>items</b> to match here. <b>Hint:</b> make "
-"sure to enter the item only, not the full Service description. <b>Note:</b> "
-"the match is done on the <u>beginning</u> of the item in question. Regular "
+"sure to enter the item only, not the full service name. <b>Note:</b> the "
+"match is done on the <u>beginning</u> of the item in question. Regular "
 "expressions are interpreted, so appending a <tt>$</tt> will force an exact "
 "match."
 msgstr ""
@@ -76637,7 +76637,7 @@ msgid "You have no permission for changes in this rule using %s."
 msgstr "%sを使用してこのルールを変更する権限がありません。"
 
 msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
-msgstr "<a href= \"wato.py?mode=tags\">タグ</a>を構成していません。"
+msgstr "<a href=\"wato.py?mode=tags\">タグ</a>を設定していません。"
 
 msgid ""
 "You have not configured any local or remotes sites. Multisite will "
@@ -76649,13 +76649,13 @@ msgstr ""
 "トのデータを暗黙のうちに追加します。リモートサイトを追加した場合で、ローカル"
 "監視サイトのデータも表示したいのであれば、忘れずに追加してください。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "You have not created any agent <a href='%s' target='_blank'>signature keys</"
 "a> yet. This is necessary."
 msgstr ""
-"エージェントの<a href='%s'>署名キー</a>をまだ作成していません。これは必須で"
-"す。"
+"エージェントの<a href='%s' target='_blank'>署名キー</a>をまだ作成していませ"
+"ん。これは必須です。"
 
 msgid ""
 "You have not created any rule packs yet. The Event Console is useless unless "
@@ -77403,7 +77403,8 @@ msgstr "アクティブ インスタンス"
 msgid "active-backup"
 msgstr "最後のバックアップ"
 
-msgid "add \"ISL\" to service description for interswitch links"
+#, fuzzy
+msgid "add \"ISL\" to service name for interswitch links"
 msgstr "スイッチ間リンクのサービスの説明に\"ISL\"を追加"
 
 msgid "add ISL"
@@ -79417,6 +79418,86 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid " (packaged)"
+#~ msgstr " (パッケージ)"
+
+#~ msgid "Add warning"
+#~ msgstr "警告を追加"
+
+#~ msgid "Alternative Service description"
+#~ msgstr "代替サービスの説明"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can set upper levels for the time difference between agent and "
+#~ "system time."
+#~ msgstr ""
+#~ "ここでは、エージェント時間とシステム時間の時間差の上位レベルを設定できま"
+#~ "す。"
+
+#~ msgid "Name of the node"
+#~ msgstr "ノードの名前"
+
+#, fuzzy
+#~ msgid "Netapp instance state"
+#~ msgstr "Netappインスタンスの状態"
+
+#~ msgid "Netapp systemtime"
+#~ msgstr "Netappシステムタイム"
+
+#~ msgid "Service description"
+#~ msgstr "サービスの説明"
+
+#~ msgid "Service description: "
+#~ msgstr "サービスの説明: "
+
+#~ msgid "Service descriptions"
+#~ msgstr "サービスの説明"
+
+#~ msgid "Set upper levels for the time difference"
+#~ msgstr "時差の上位レベルを設定する"
+
+#, fuzzy
+#~ msgid "Show service description"
+#~ msgstr "サービスの説明"
+
+#~ msgid "This rule allows you to override netapp warnings"
+#~ msgstr "このルールを使用すると、netappの警告を上書きできます"
+
+#~ msgid ""
+#~ "This rule controls which and how many checks will be created for "
+#~ "monitoring individual physical and logical disks. Note: the option "
+#~ "<i>Create a summary for all read, one for write</i> has been removed. "
+#~ "Some checks will still support this settings, but it will be removed "
+#~ "there soon."
+#~ msgstr ""
+#~ "このルールは、個々の物理ディスクと論理ディスクを監視するために作成される"
+#~ "チェックとその数を制御します。注意:<i>すべての読み取りの概要を作成し、1つ"
+#~ "は書き込みの概要を作成する</i>オプションは削除されました。一部のチェックは"
+#~ "引き続きこの設定をサポートしますが、まもなく削除されます。"
+
+#, fuzzy
+#~ msgid "Use device name as service description"
+#~ msgstr "新しいサービスの説明を使用する"
+
+#~ msgid "Use new service descriptions"
+#~ msgstr "新しいサービスの説明を使用する"
+
+#~ msgid "Warning starts with"
+#~ msgstr "警告の開始"
+
+#~ msgid ""
+#~ "With this rule you can set limits for various disk IO statistics. Keep in "
+#~ "mind that not all of these settings may be applicable for the actual "
+#~ "check. For example, if the check doesn't provide a <i>Read wait</i> "
+#~ "information in its output, any configuration setting referring to <i>Read "
+#~ "wait</i> will have no effect."
+#~ msgstr ""
+#~ "このルールを使用すると、様々なディスクIO統計の制限を設定できます。これらの"
+#~ "設定の全てが実際の検査に適用されるとは限らないことに留意してください。例え"
+#~ "ば、チェックの出力に<i>読み取り待ち</i>情報が無い場合、<i>読み取り待ち</i>"
+#~ "を参照する設定は何の効果もありません。"
 
 #~ msgid "Discard changes"
 #~ msgstr "変更の破棄"

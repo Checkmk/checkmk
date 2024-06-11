@@ -214,9 +214,10 @@ pub mod odbc {
             }
             blocks.push(Block { headline, rows });
 
-            if let Ok((cursor, _buffer)) = row_set_cursor.unbind() {
+            if let Ok((cursor, mut _buffer)) = row_set_cursor.unbind() {
                 if let Ok(Some(mut c)) = cursor.more_results() {
                     let headline = c.column_names()?.collect::<Result<_, _>>()?;
+                    let mut buffers = TextRowSet::for_cursor(BATCH_SIZE, &mut c, Some(4096))?;
                     let mut rows: Vec<Vec<String>> = Vec::new();
                     let mut row_set_cursor = c.bind_buffer(&mut buffers)?;
                     while let Some(batch) = row_set_cursor.fetch()? {

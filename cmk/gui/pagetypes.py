@@ -998,12 +998,10 @@ class ListPage(Page, Generic[_Self]):
             try:
                 instances.remove_instance((owner, delname))
                 self._type.save_user_instances(instances, owner)
+                flash(_("Your %s has been deleted.") % pagetype_title)
                 html.reload_whole_page()
             except MKUserError as e:
                 html.user_error(e)
-
-            flash(_("Your %s has been deleted.") % pagetype_title)
-            html.reload_whole_page(self._type.list_url())
 
         elif request.var("_bulk_delete") and transactions.check_transaction():
             self._bulk_delete_after_confirm(instances)
@@ -1053,8 +1051,14 @@ class ListPage(Page, Generic[_Self]):
         for owner in {e[0] for e in to_delete}:
             self._type.save_user_instances(instances, owner)
 
-        flash(_("The selected %s have been deleted.") % self._type.phrase("title_plural"))
-        html.reload_whole_page(self._type.list_url())
+        if len(to_delete) > 1:
+            flash(
+                _("The selected %s have been deleted.") % self._type.phrase("title_plural").lower()
+            )
+        elif len(to_delete) == 1:
+            flash(_("The selected %s has been deleted.") % self._type.phrase("title").lower())
+
+        html.reload_whole_page()
 
     def _show_table(
         self,

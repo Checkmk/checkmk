@@ -222,7 +222,7 @@ def ajax_inv_render_tree() -> None:
     host_name = request.get_validated_type_input_mandatory(HostName, "host")
     inventory.verify_permission(host_name, site_id)
 
-    raw_path = request.get_ascii_input_mandatory("raw_path")
+    raw_path = request.get_ascii_input_mandatory("raw_path", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
     tree: ImmutableTree | ImmutableDeltaTree
@@ -256,11 +256,6 @@ def ajax_inv_render_tree() -> None:
             )
             return
 
-    inventory_path = inventory.parse_inventory_path(raw_path or "")
-    if not (tree := tree.get_tree(inventory_path.path)):
-        html.show_error(_("No such tree below %r") % inventory_path.path)
-        return
-
     TreeRenderer(
         site_id,
         host_name,
@@ -268,7 +263,7 @@ def ajax_inv_render_tree() -> None:
         theme,
         request,
         show_internal_tree_paths,
-    ).show(tree, tree_id)
+    ).show(tree.get_tree(inventory.parse_inventory_path(raw_path).path), tree_id)
 
 
 def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:

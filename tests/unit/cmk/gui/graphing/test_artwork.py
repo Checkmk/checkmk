@@ -173,6 +173,13 @@ def test__compute_v_axis_min_max(
             id="explicit_vertical_range_minimal-and-layouted_curves_range_larger",
         ),
         pytest.param(
+            None,
+            (1000.0, 2000.0),
+            None,
+            _VAxisMinMax(real_range=(0, 2000.0), distance=2000.0, min_value=0, max_value=3000.0),
+            id="layouted_curves_range_at_least_zero",
+        ),
+        pytest.param(
             FixedVerticalRange(min=-500.0, max=1000.0),
             (None, None),
             (-5.0, 10.0),

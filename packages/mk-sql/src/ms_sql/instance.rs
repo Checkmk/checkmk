@@ -1764,7 +1764,7 @@ fn to_blocked_session_entry_odbc(
 impl CheckConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
-            CheckConfig::prepare_cache_sub_dir(environment, ms_sql.hash());
+            CheckConfig::prepare_cache_sub_dir(environment, &ms_sql.config_cache_dir());
             log::info!("Generating main data");
             let mut output: Vec<String> = Vec::new();
             output.push(
@@ -1777,7 +1777,7 @@ impl CheckConfig {
             );
             for (num, config) in std::iter::zip(0.., ms_sql.configs()) {
                 log::info!("Generating configs data");
-                CheckConfig::prepare_cache_sub_dir(environment, &config.cache_dir());
+                CheckConfig::prepare_cache_sub_dir(environment, &config.config_cache_dir());
                 let configs_data = generate_data(config, environment)
                     .await
                     .unwrap_or_else(|e| {
@@ -1910,7 +1910,7 @@ async fn find_working_instances(
         .into_iter()
         .map(|b: SqlInstanceBuilder| {
             b.environment(environment)
-                .cache_dir(&ms_sql.cache_dir())
+                .cache_dir(&ms_sql.config_cache_dir())
                 .build()
         })
         .collect::<Vec<SqlInstance>>())

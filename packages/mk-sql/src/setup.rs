@@ -63,7 +63,7 @@ impl Env {
     }
 
     /// guaranteed to return cache dir or None
-    pub fn cache_dir(&self) -> Option<PathBuf> {
+    pub fn base_cache_dir(&self) -> Option<PathBuf> {
         self.state_dir()
             .map(|state_dir| state_dir.join("mk-sql-cache"))
     }
@@ -78,12 +78,12 @@ impl Env {
         .filter(|p| Path::is_dir(p))
     }
 
-    pub fn calc_cache_sub_dir(&self, sub: &str) -> Option<PathBuf> {
-        self.cache_dir().map(|d| d.join(sub))
+    pub fn calc_cache_sub_dir(&self, sub_dir: &str) -> Option<PathBuf> {
+        self.base_cache_dir().map(|d| d.join(sub_dir))
     }
 
-    pub fn obtain_cache_sub_dir(&self, sub: &str) -> Option<PathBuf> {
-        if let Some(cache_dir) = self.calc_cache_sub_dir(sub) {
+    pub fn obtain_cache_sub_dir(&self, sub_dir: &str) -> Option<PathBuf> {
+        if let Some(cache_dir) = self.calc_cache_sub_dir(sub_dir) {
             if cache_dir.is_dir() {
                 log::info!("Cache dir exists {:?}", cache_dir);
                 Some(cache_dir)
@@ -275,7 +275,10 @@ mod tests {
         let e = Env::new(&args);
         assert_eq!(e.log_dir(), Some(Path::new(".")));
         assert_eq!(e.temp_dir(), Some(Path::new(".")));
-        assert_eq!(e.cache_dir(), Some(PathBuf::from(".").join("mk-sql-cache")));
+        assert_eq!(
+            e.base_cache_dir(),
+            Some(PathBuf::from(".").join("mk-sql-cache"))
+        );
         assert_eq!(
             e.calc_cache_sub_dir("aa"),
             Some(PathBuf::from(".").join("mk-sql-cache").join("aa"))
@@ -291,7 +294,7 @@ mod tests {
         let e = Env::new(&args);
         assert!(e.log_dir().is_none());
         assert!(e.temp_dir().is_none());
-        assert!(e.cache_dir().is_none());
+        assert!(e.base_cache_dir().is_none());
         assert!(e.calc_cache_sub_dir("aa").is_none());
         assert!(e.obtain_cache_sub_dir("a").is_none());
     }

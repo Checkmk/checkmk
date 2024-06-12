@@ -235,11 +235,7 @@ impl Config {
         &self.configs
     }
 
-    pub fn hash(&self) -> &str {
-        &self.hash
-    }
-
-    pub fn cache_dir(&self) -> String {
+    pub fn config_cache_dir(&self) -> String {
         "mssql-".to_owned() + &self.hash
     }
 

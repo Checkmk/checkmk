@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from typing import Any, Final
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
@@ -107,54 +108,45 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 label="Total number of executors",
             )
 
-        for key, infotext in [
-            ("busyExecutors", "Number of busy executors"),
-            ("idleExecutors", "Number of idle executors"),
-        ]:
-            exec_label_data = node.get("assignedLabels")
-
-            if exec_label_data is None:
-                continue
-
-            for executor in exec_label_data:
-                # list of two dicts like [{"busyExecutors": 0,
-                # "idleExecutors": 1}, {"busyExecutors": 0,
-                # "idleExecutors": 1}], we only need one entry here
-                executors = executor.get(key)
-                break
-
-            if executors is None:
-                continue
-
-            executor_name = "jenkins_%s" % key.lower()
-
-            yield from check_levels(
-                executors,
-                metric_name="jenkins_%s_executors" % key[0:4],
-                levels_upper=params.get(executor_name),
-                render_func=lambda x: str(int(x)),
-                label=infotext,
-            )
-
-        # get labels for each node
-        labels_data = node.get("assignedLabels")
-        label_collection = ""
-        if labels_data is not None:
-            for labels in labels_data:
-                label_name = labels.get("name")
-                if label_name is not None and label_name != item:
-                    label_collection += " %s" % label_name
-
         mode = "Unknown"
         mode_state = State.UNKNOWN
-        mode_infotext = "Mode: "
-        try:
-            mode = node["assignedLabels"][0]["nodes"][0]["mode"]
-            mode_state = State.OK
-        except (KeyError, ValueError):
-            pass
 
-        mode_infotext += "%s " % mode.title()
+        assigned_labels = node.get("assignedLabels") or []
+        if assigned_labels:
+            # Select the proper label to base our executor data on
+            # We try to find a good label by looking for one that matches
+            # the name of the currently processed node.
+            # If no match is found we take the first label.
+            for label in assigned_labels:
+                if label.get("name") == item:
+                    break
+            else:
+                label = assigned_labels[0]
+
+            for key in ("busy", "idle"):
+                if (value := label.get(f"{key}Executors")) is None:
+                    continue
+
+                yield from check_levels(
+                    value,
+                    metric_name=f"jenkins_{key}_executors",
+                    levels_upper=params.get(f"jenkins_{key}executors"),
+                    render_func=render_integer,
+                    label=f"Number of {key} executors",
+                )
+
+            with suppress(KeyError, ValueError):
+                mode = label["nodes"][0]["mode"]
+                mode_state = State.OK
+
+        mode_infotext = f"Mode: {mode.title()} "
+
+        # get labels for each node
+        label_collection = [
+            label_name
+            for labels in assigned_labels
+            if (label_name := labels.get("name")) is not None and label_name != item
+        ]
 
         if mode == "EXCLUSIVE" and label_collection:
             mode_infotext += "(Labels:%s)" % label_collection
@@ -216,6 +208,12 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 label="Free temp space",
                 render_func=render.bytes,
             )
+
+
+def render_integer(value: float) -> str:
+    "Render a float as an integer"
+
+    return str(int(value))
 
 
 register.check_plugin(

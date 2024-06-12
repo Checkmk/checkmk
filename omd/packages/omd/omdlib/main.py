@@ -4608,35 +4608,35 @@ def _run_command(
             case "sites":
                 main_sites(object(), object(), object(), object(), command_options)
             case "create":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_create(version_info, site, global_opts, object(), command_options)
             case "init":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_init(version_info, site, global_opts, object(), command_options)
             case "rm":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_rm(version_info, site, global_opts, object(), command_options)
             case "disable":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_disable(version_info, site, global_opts, object(), command_options)
             case "enable":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_enable(version_info, site, global_opts, object(), command_options)
             case "update-apache-config":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_update_apache_config(version_info, site, global_opts, object(), object())
             case "mv":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_mv_or_cp(
                     version_info, site, global_opts, CommandType.move, args, command_options
                 )
             case "cp":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_mv_or_cp(
                     version_info, site, global_opts, CommandType.copy, args, command_options
                 )
             case "update":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_update(version_info, site, global_opts, object(), command_options)
             case "start":
                 main_init_action(version_info, site, global_opts, "start", args, command_options)
@@ -4649,18 +4649,18 @@ def _run_command(
             case "status":
                 main_init_action(version_info, site, global_opts, "status", args, command_options)
             case "config":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_config(version_info, site, global_opts, args, object())
             case "diff":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_diff(object(), site, global_opts, args, command_options)
             case "su":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_su(object(), site, object(), object(), object())
             case "umount":
                 main_umount(object(), site, object(), object(), command_options)
             case "backup":
-                assert command.needs_site > 0 and isinstance(site, SiteContext)
+                assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_backup(object(), site, global_opts, args, command_options)
             case "restore":
                 main_restore(version_info, object(), global_opts, args, command_options)

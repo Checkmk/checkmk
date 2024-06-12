@@ -1,0 +1,11 @@
+Title: Allow upload of Checkmk 2.3 compliant MKPs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718184355
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Users where unable to upload MKPs containing files that are only relevant for Checkmk 2.3.
+However, it should be possible to upload such MKPs in preperation for an upgrade.

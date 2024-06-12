@@ -70,7 +70,10 @@ def clean_dirs() -> Iterable[None]:
     yield
 
     for path in paths:
-        shutil.rmtree(str(path))
+        try:
+            shutil.rmtree(str(path))
+        except FileNotFoundError:
+            pass  # some dirs are nested.
 
 
 @pytest.fixture(name="mkp_bytes")
@@ -266,6 +269,8 @@ def test_unpackaged_files_none(installer: packaging.Installer) -> None:
         "bin": [],
         "checkman": [],
         "checks": [],
+        "cmk_addons_plugins": [],
+        "cmk_plugins": [],
         "doc": [],
         "ec_rule_packs": [],
         "inventory": [],
@@ -310,6 +315,8 @@ def test_unpackaged_files(installer: packaging.Installer) -> None:
         packaging.PackagePart.PNP_TEMPLATES: [],
         packaging.PackagePart.WEB: [],
         packaging.PackagePart.GUI: [],
+        packaging.PackagePart.CMK_PLUGINS: [],
+        packaging.PackagePart.CMK_ADDONS_PLUGINS: [],
     }
 
 

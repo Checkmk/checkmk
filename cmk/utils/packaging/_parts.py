@@ -70,6 +70,12 @@ class PathConfig:
                 return self.mib_dir
             case PackagePart.ALERT_HANDLERS:
                 return self.alert_handlers_dir
+            case PackagePart.CMK_PLUGINS:
+                # this is ignored in 2.2, but we must be able to resolve the path
+                return self.lib_dir / "cmk23_cmk_plugins"
+            case PackagePart.CMK_ADDONS_PLUGINS:
+                # this is ignored in 2.2, but we must be able to resolve the path
+                return self.lib_dir / "cmk23_cmk_addons_plugins"
         return assert_never(part)
 
     @cached_property
@@ -131,6 +137,10 @@ def ui_title(part: PackagePart) -> str:
             return _("SNMP MIBs")
         case PackagePart.ALERT_HANDLERS:
             return _("Alert handlers")
+        case PackagePart.CMK_PLUGINS:
+            return _("Shipped Checkmk plug-ins (for Checkmk 2.3)")
+        case PackagePart.CMK_ADDONS_PLUGINS:
+            return _("Additional Checkmk plug-ins by third parties (for Checkmk 2.3)")
 
     return assert_never(part)
 
@@ -169,6 +179,10 @@ def permissions(part: PackagePart) -> int:
             return 0o644
         case PackagePart.ALERT_HANDLERS:
             return 0o755
+        case PackagePart.CMK_PLUGINS:
+            return 0o644
+        case PackagePart.CMK_ADDONS_PLUGINS:
+            return 0o644
     return assert_never(part)
 
 

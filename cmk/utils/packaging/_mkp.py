@@ -46,6 +46,9 @@ class PackagePart(str, enum.Enum):
     LIB = "lib"
     MIBS = "mibs"
     ALERT_HANDLERS = "alert_handlers"
+    # Also allow these in 2.2 to prepare for an upgrade
+    CMK_PLUGINS = "cmk_plugins"
+    CMK_ADDONS_PLUGINS = "cmk_addons_plugins"
 
     @property
     def ident(self) -> str:

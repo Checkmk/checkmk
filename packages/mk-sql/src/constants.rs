@@ -25,6 +25,8 @@ pub mod environment {
     pub const VAR_DIR_ENV_VAR: &str = "MK_VARDIR";
 }
 
+pub const ODBC_CONNECTION_TIMEOUT: u32 = 2;
+
 lazy_static! {
     pub static ref LOCAL_HOST: HostName = "localhost".to_owned().into();
     pub static ref DEFAULT_CONFIG_FILE: PathBuf =

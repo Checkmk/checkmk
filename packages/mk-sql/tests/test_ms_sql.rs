@@ -1439,15 +1439,44 @@ fn test_odbc() {
         Some("master"),
         None,
     );
-    let r = odbc::execute(&s, sqls::find_known_query(sqls::Id::TableSpaces).unwrap()).unwrap();
+    let r = odbc::execute(
+        &s,
+        sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
+        None,
+    )
+    .unwrap();
     assert_eq!(r.len(), 2);
     assert_eq!(r[0].headline.len(), 3);
     assert_eq!(r[1].headline.len(), 4);
 
-    let r = odbc::execute(&s, sqls::find_known_query(sqls::Id::ComputerName).unwrap()).unwrap();
+    let r = odbc::execute(
+        &s,
+        sqls::find_known_query(sqls::Id::ComputerName).unwrap(),
+        None,
+    )
+    .unwrap();
     assert_eq!(r.len(), 1);
     assert_eq!(r[0].headline[0], "MachineName");
     assert!(!r[0].rows[0][0].is_empty());
+}
+
+#[cfg(windows)]
+#[test]
+fn test_odbc_timeout() {
+    let s = odbc::make_connection_string(
+        &InstanceName::from("SQLEXPRESS_XX".to_string()),
+        Some("master"),
+        None,
+    );
+    let start = std::time::Instant::now();
+    let r = odbc::execute(
+        &s,
+        sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
+        Some(1),
+    );
+    assert!(r.is_err());
+    let end = std::time::Instant::now();
+    assert!(end - start < std::time::Duration::from_secs(2));
 }
 
 #[cfg(windows)]

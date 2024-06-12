@@ -192,14 +192,25 @@ pub mod odbc {
 
     type BufferType = ColumnarBuffer<TextColumn<u8>>;
 
-    pub fn execute(connection_string: &str, query: &str) -> Result<Vec<Block>> {
+    // TODO(sk): make it ASYNC!
+    pub fn execute(
+        connection_string: &str,
+        query: &str,
+        timeout: Option<u32>,
+    ) -> Result<Vec<Block>> {
         let env = Environment::new()?;
 
         log::info!("Connecting with string {}", connection_string);
 
-        let conn =
-            env.connect_with_connection_string(connection_string, ConnectionOptions::default())?;
+        let conn = env.connect_with_connection_string(
+            connection_string,
+            ConnectionOptions {
+                login_timeout_sec: timeout,
+                ..Default::default()
+            },
+        )?;
 
+        // TODO(sk): replace execute with execute_polling
         if let Some(mut cursor) = conn.execute(query, ())? {
             const BATCH_SIZE: usize = 5000;
             let mut blocks: Vec<Block> = Vec::new();

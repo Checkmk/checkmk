@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+#[cfg(windows)]
+use crate::constants::ODBC_CONNECTION_TIMEOUT;
 use crate::platform::Block;
 
 #[cfg(windows)]
@@ -200,8 +202,16 @@ async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>>
                 let queries = query.split(';').collect::<Vec<&str>>();
                 if queries.len() == 3 && queries[2].is_empty() {
                     log::debug!("ODBC does not support multiple queries in one call");
-                    let blocks_0 = odbc::execute(client.conn_string(), queries[0])?;
-                    let blocks_1 = odbc::execute(client.conn_string(), queries[1])?;
+                    let blocks_0 = odbc::execute(
+                        client.conn_string(),
+                        queries[0],
+                        Some(ODBC_CONNECTION_TIMEOUT),
+                    )?;
+                    let blocks_1 = odbc::execute(
+                        client.conn_string(),
+                        queries[1],
+                        Some(ODBC_CONNECTION_TIMEOUT),
+                    )?;
                     let answers: Vec<UniAnswer> = blocks_0
                         .into_iter()
                         .chain(blocks_1.into_iter())
@@ -209,7 +219,8 @@ async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>>
                         .collect();
                     Ok(answers)
                 } else {
-                    let blocks = odbc::execute(client.conn_string(), query)?;
+                    let blocks =
+                        odbc::execute(client.conn_string(), query, Some(ODBC_CONNECTION_TIMEOUT))?;
                     let answers: Vec<UniAnswer> =
                         blocks.into_iter().map(UniAnswer::Block).collect();
                     Ok(answers)

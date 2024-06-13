@@ -4090,6 +4090,9 @@ msgstr "ユーザーを追加する"
 msgid "Add user attribute"
 msgstr "ユーザー属性を追加する"
 
+msgid "Add warning"
+msgstr "警告を追加"
+
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "InfluxDB接続の追加、編集、削除。"
 
@@ -25397,6 +25400,13 @@ msgstr ""
 msgid "Here you can set the number of remaining open slots"
 msgstr "ここで、残りの空きスロットの数を設定できます"
 
+#, fuzzy
+msgid ""
+"Here you can set upper levels for the time difference between agent and "
+"system time."
+msgstr ""
+"ここでは、エージェント時間とシステム時間の時間差の上位レベルを設定できます。"
+
 msgid "Here you can set upper levels of busy workers"
 msgstr "ここでは、忙しいワーカーの上位レベルを設定できます"
 
@@ -38491,6 +38501,9 @@ msgstr "監視サイトの名前"
 msgid "Name of the mount point"
 msgstr "マウントポイントの名前"
 
+msgid "Name of the node"
+msgstr "ノードの名前"
+
 msgid "Name of the peer"
 msgstr "ピアの名前"
 
@@ -38702,11 +38715,18 @@ msgstr "Netapp FCポートのスループット"
 msgid "Netapp fan discovery"
 msgstr "Netappファンの発見"
 
+#, fuzzy
+msgid "Netapp instance state"
+msgstr "Netappインスタンスの状態"
+
 msgid "Netapp port discovery"
 msgstr "Netappポートの検出"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp電源ユニットの発見"
+
+msgid "Netapp systemtime"
+msgstr "Netappシステムタイム"
 
 msgid "Netmask"
 msgstr "ネットマスク"
@@ -51750,6 +51770,9 @@ msgstr "'%s'に設定する"
 msgid "Set upper Levels"
 msgstr "上位レベルを設定する"
 
+msgid "Set upper levels for the time difference"
+msgstr "時差の上位レベルを設定する"
+
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -64010,6 +64033,9 @@ msgid ""
 "given VSID."
 msgstr "このルールを使用すると、特定のVSIDの最大接続数を構成できます。"
 
+msgid "This rule allows you to override netapp warnings"
+msgstr "このルールを使用すると、netappの警告を上書きできます"
+
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -73394,6 +73420,9 @@ msgstr "警告 "
 msgid "Warning of %s"
 msgstr "%s の場合警告"
 
+msgid "Warning starts with"
+msgstr "警告の開始"
+
 msgid "Warning threshold"
 msgstr "警告しきい値"
 
@@ -79422,29 +79451,8 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ msgid " (packaged)"
 #~ msgstr " (パッケージ)"
 
-#~ msgid "Add warning"
-#~ msgstr "警告を追加"
-
 #~ msgid "Alternative Service description"
 #~ msgstr "代替サービスの説明"
-
-#, fuzzy
-#~ msgid ""
-#~ "Here you can set upper levels for the time difference between agent and "
-#~ "system time."
-#~ msgstr ""
-#~ "ここでは、エージェント時間とシステム時間の時間差の上位レベルを設定できま"
-#~ "す。"
-
-#~ msgid "Name of the node"
-#~ msgstr "ノードの名前"
-
-#, fuzzy
-#~ msgid "Netapp instance state"
-#~ msgstr "Netappインスタンスの状態"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netappシステムタイム"
 
 #~ msgid "Service description"
 #~ msgstr "サービスの説明"
@@ -79455,15 +79463,9 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ msgid "Service descriptions"
 #~ msgstr "サービスの説明"
 
-#~ msgid "Set upper levels for the time difference"
-#~ msgstr "時差の上位レベルを設定する"
-
 #, fuzzy
 #~ msgid "Show service description"
 #~ msgstr "サービスの説明"
-
-#~ msgid "This rule allows you to override netapp warnings"
-#~ msgstr "このルールを使用すると、netappの警告を上書きできます"
 
 #~ msgid ""
 #~ "This rule controls which and how many checks will be created for "
@@ -79483,9 +79485,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Use new service descriptions"
 #~ msgstr "新しいサービスの説明を使用する"
-
-#~ msgid "Warning starts with"
-#~ msgstr "警告の開始"
 
 #~ msgid ""
 #~ "With this rule you can set limits for various disk IO statistics. Keep in "

@@ -4181,6 +4181,9 @@ msgstr "Adicionar usuário"
 msgid "Add user attribute"
 msgstr "Adicionar atributo de usuário"
 
+msgid "Add warning"
+msgstr "Adicionar aviso"
+
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "Adicionar, editar e eliminar ligações InfluxDB."
 
@@ -25931,6 +25934,14 @@ msgstr ""
 msgid "Here you can set the number of remaining open slots"
 msgstr "Aqui você pode definir o número de vagas restantes em aberto"
 
+#, fuzzy
+msgid ""
+"Here you can set upper levels for the time difference between agent and "
+"system time."
+msgstr ""
+"Aqui você pode Definir níveis superiores para a diferença de tempo entre o "
+"tempo do agente e o tempo do sistema."
+
 msgid "Here you can set upper levels of busy workers"
 msgstr "Aqui você pode definir níveis superiores de trabalhadores ocupados"
 
@@ -39279,6 +39290,9 @@ msgstr "Nome do local de monitoramento"
 msgid "Name of the mount point"
 msgstr "Nome do ponto de montagem"
 
+msgid "Name of the node"
+msgstr "Nome do nó"
+
 msgid "Name of the peer"
 msgstr "Nome do par"
 
@@ -39492,11 +39506,18 @@ msgstr "Netapp FC Porto"
 msgid "Netapp fan discovery"
 msgstr "Netapp descoberta dos fãs"
 
+#, fuzzy
+msgid "Netapp instance state"
+msgstr "Estado de Netapp Instance"
+
 msgid "Netapp port discovery"
 msgstr "Netapp descoberta da porta"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoberta da unidade de fornecimento de energia Netapp"
+
+msgid "Netapp systemtime"
+msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Máscara de rede"
@@ -52749,6 +52770,9 @@ msgstr "Mudar \"%s\" para \"%s\""
 msgid "Set upper Levels"
 msgstr "Definir níveis superiores"
 
+msgid "Set upper levels for the time difference"
+msgstr "Definir níveis superiores para a diferença horária"
+
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -65487,6 +65511,9 @@ msgstr ""
 "Esta regra permite configurar o número máximo de conexões para um "
 "determinado VSID."
 
+msgid "This rule allows you to override netapp warnings"
+msgstr "Esta regra permite que você substitua os avisos de netapp"
+
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -75059,6 +75086,9 @@ msgstr "Aviso se %s"
 msgid "Warning of %s"
 msgstr "Aviso se %s"
 
+msgid "Warning starts with"
+msgstr "O aviso começa com"
+
 msgid "Warning threshold"
 msgstr "Limiar de advertência"
 
@@ -81281,29 +81311,8 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #~ msgid " (packaged)"
 #~ msgstr " (embalado)"
 
-#~ msgid "Add warning"
-#~ msgstr "Adicionar aviso"
-
 #~ msgid "Alternative Service description"
 #~ msgstr "Descrição do serviço alternativo"
-
-#, fuzzy
-#~ msgid ""
-#~ "Here you can set upper levels for the time difference between agent and "
-#~ "system time."
-#~ msgstr ""
-#~ "Aqui você pode Definir níveis superiores para a diferença de tempo entre "
-#~ "o tempo do agente e o tempo do sistema."
-
-#~ msgid "Name of the node"
-#~ msgstr "Nome do nó"
-
-#, fuzzy
-#~ msgid "Netapp instance state"
-#~ msgstr "Estado de Netapp Instance"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
 
 #~ msgid "Service description"
 #~ msgstr "Descrição do serviço"
@@ -81314,15 +81323,9 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #~ msgid "Service descriptions"
 #~ msgstr "Descrição dos serviços"
 
-#~ msgid "Set upper levels for the time difference"
-#~ msgstr "Definir níveis superiores para a diferença horária"
-
 #, fuzzy
 #~ msgid "Show service description"
 #~ msgstr "Descrição do serviço"
-
-#~ msgid "This rule allows you to override netapp warnings"
-#~ msgstr "Esta regra permite que você substitua os avisos de netapp"
 
 #~ msgid ""
 #~ "This rule controls which and how many checks will be created for "
@@ -81343,9 +81346,6 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
 #~ msgid "Use new service descriptions"
 #~ msgstr "Usar novas descrições de serviço"
-
-#~ msgid "Warning starts with"
-#~ msgstr "O aviso começa com"
 
 #~ msgid ""
 #~ "With this rule you can set limits for various disk IO statistics. Keep in "

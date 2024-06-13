@@ -4151,6 +4151,9 @@ msgstr "Aggiungi utente"
 msgid "Add user attribute"
 msgstr "Aggiungere l'attributo utente"
 
+msgid "Add warning"
+msgstr "Aggiungere l'avvertimento"
+
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "Aggiungere, modificare ed eliminare le connessioni InfluxDB."
 
@@ -25689,6 +25692,14 @@ msgstr ""
 msgid "Here you can set the number of remaining open slots"
 msgstr "Qui è possibile impostare il numero di slot rimasti aperti"
 
+#, fuzzy
+msgid ""
+"Here you can set upper levels for the time difference between agent and "
+"system time."
+msgstr ""
+"Qui potete impostare i livelli superiori per la differenza di tempo tra "
+"l'ora dell'agente e quella del sistema."
+
 msgid "Here you can set upper levels of busy workers"
 msgstr "Qui è possibile impostare i livelli superiori dei lavoratori occupati"
 
@@ -38924,6 +38935,9 @@ msgstr "Nome del sito di monitoraggio"
 msgid "Name of the mount point"
 msgstr "Nome del punto di montaggio"
 
+msgid "Name of the node"
+msgstr "Nome del nodo"
+
 msgid "Name of the peer"
 msgstr "Nome del pari"
 
@@ -39138,11 +39152,18 @@ msgstr "Netapp FC Port throughput"
 msgid "Netapp fan discovery"
 msgstr "Scoperta dei ventilatori Netapp"
 
+#, fuzzy
+msgid "Netapp instance state"
+msgstr "Stato dell'istanza Netapp"
+
 msgid "Netapp port discovery"
 msgstr "Scoperta della porta Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Scoperta dell'alimentatore Netapp"
+
+msgid "Netapp systemtime"
+msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Netmask"
@@ -52277,6 +52298,9 @@ msgstr "Impostare su '%s'."
 msgid "Set upper Levels"
 msgstr "Impostare i livelli superiori"
 
+msgid "Set upper levels for the time difference"
+msgstr "Impostare i livelli superiori per la differenza di orario"
+
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -64955,6 +64979,9 @@ msgstr ""
 "Questa regola permette di configurare il numero di connessioni massime per "
 "un dato VSID."
 
+msgid "This rule allows you to override netapp warnings"
+msgstr "Questa regola permette di sovrascrivere gli avvertimenti di netapp"
+
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
@@ -74409,6 +74436,9 @@ msgstr "Avviso di "
 msgid "Warning of %s"
 msgstr "Attenzione se %s"
 
+msgid "Warning starts with"
+msgstr "L'avvertimento inizia con"
+
 msgid "Warning threshold"
 msgstr "Soglia di avvertimento"
 
@@ -80607,29 +80637,8 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 #~ msgid " (packaged)"
 #~ msgstr " (pacchetto)"
 
-#~ msgid "Add warning"
-#~ msgstr "Aggiungere l'avvertimento"
-
 #~ msgid "Alternative Service description"
 #~ msgstr "Descrizione del servizio alternativo"
-
-#, fuzzy
-#~ msgid ""
-#~ "Here you can set upper levels for the time difference between agent and "
-#~ "system time."
-#~ msgstr ""
-#~ "Qui potete impostare i livelli superiori per la differenza di tempo tra "
-#~ "l'ora dell'agente e quella del sistema."
-
-#~ msgid "Name of the node"
-#~ msgstr "Nome del nodo"
-
-#, fuzzy
-#~ msgid "Netapp instance state"
-#~ msgstr "Stato dell'istanza Netapp"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
 
 #~ msgid "Service description"
 #~ msgstr "Descrizione del servizio"
@@ -80640,14 +80649,8 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 #~ msgid "Service descriptions"
 #~ msgstr "Descrizioni del servizio"
 
-#~ msgid "Set upper levels for the time difference"
-#~ msgstr "Impostare i livelli superiori per la differenza di orario"
-
 #~ msgid "Show service description"
 #~ msgstr "Mostra la descrizione del servizio"
-
-#~ msgid "This rule allows you to override netapp warnings"
-#~ msgstr "Questa regola permette di sovrascrivere gli avvertimenti di netapp"
 
 #~ msgid ""
 #~ "This rule controls which and how many checks will be created for "
@@ -80668,9 +80671,6 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 
 #~ msgid "Use new service descriptions"
 #~ msgstr "Utilizzare le nuove descrizioni dei servizi"
-
-#~ msgid "Warning starts with"
-#~ msgstr "L'avvertimento inizia con"
 
 #~ msgid ""
 #~ "With this rule you can set limits for various disk IO statistics. Keep in "

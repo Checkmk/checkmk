@@ -4189,6 +4189,9 @@ msgstr "Adăugați un utilizator"
 msgid "Add user attribute"
 msgstr "Adăugați atributul de utilizator"
 
+msgid "Add warning"
+msgstr "Adăugați un avertisment"
+
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
 
@@ -25948,6 +25951,14 @@ msgstr ""
 msgid "Here you can set the number of remaining open slots"
 msgstr "Aici puteți seta numărul de sloturi rămase deschise"
 
+#, fuzzy
+msgid ""
+"Here you can set upper levels for the time difference between agent and "
+"system time."
+msgstr ""
+"Aici puteți seta nivelurile superioare pentru diferența de timp dintre ora "
+"agentului și ora sistemului."
+
 msgid "Here you can set upper levels of busy workers"
 msgstr "Aici puteți seta nivelurile superioare ale lucrătorilor ocupați"
 
@@ -39327,6 +39338,9 @@ msgstr "Denumirea sitului de monitorizare"
 msgid "Name of the mount point"
 msgstr "Numele punctului de montare"
 
+msgid "Name of the node"
+msgstr "Denumirea nodului"
+
 msgid "Name of the peer"
 msgstr "Numele omologului"
 
@@ -39555,11 +39569,18 @@ msgstr "Netapp FC Port throughput"
 msgid "Netapp fan discovery"
 msgstr "Descoperirea ventilatorului Netapp"
 
+#, fuzzy
+msgid "Netapp instance state"
+msgstr "Starea instanței Netapp"
+
 msgid "Netapp port discovery"
 msgstr "Descoperirea portului Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoperirea unității de alimentare Netapp"
+
+msgid "Netapp systemtime"
+msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Masca de rețea"
@@ -52850,6 +52871,9 @@ msgstr "Setați la '%s'"
 msgid "Set upper Levels"
 msgstr "Setați nivelurile superioare"
 
+msgid "Set upper levels for the time difference"
+msgstr "Setați nivelurile superioare pentru diferența de fus orar"
+
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -65721,6 +65745,9 @@ msgstr ""
 "Această regulă vă permite să configurați numărul maxim de conexiuni pentru "
 "un anumit VSID."
 
+msgid "This rule allows you to override netapp warnings"
+msgstr "Această regulă vă permite să anulați avertismentele netapp"
+
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
@@ -75259,6 +75286,9 @@ msgstr "Avertisment de "
 msgid "Warning of %s"
 msgstr "Avertisment dacă %s"
 
+msgid "Warning starts with"
+msgstr "Avertismentul începe cu"
+
 msgid "Warning threshold"
 msgstr "Prag de avertizare"
 
@@ -81520,29 +81550,8 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgid " (packaged)"
 #~ msgstr " (ambalat)"
 
-#~ msgid "Add warning"
-#~ msgstr "Adăugați un avertisment"
-
 #~ msgid "Alternative Service description"
 #~ msgstr "Descriere alternativă a serviciului"
-
-#, fuzzy
-#~ msgid ""
-#~ "Here you can set upper levels for the time difference between agent and "
-#~ "system time."
-#~ msgstr ""
-#~ "Aici puteți seta nivelurile superioare pentru diferența de timp dintre "
-#~ "ora agentului și ora sistemului."
-
-#~ msgid "Name of the node"
-#~ msgstr "Denumirea nodului"
-
-#, fuzzy
-#~ msgid "Netapp instance state"
-#~ msgstr "Starea instanței Netapp"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
 
 #~ msgid "Select from a list of service descriptions known to Checkmk"
 #~ msgstr ""
@@ -81557,14 +81566,8 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgid "Service descriptions"
 #~ msgstr "Descrieri de servicii"
 
-#~ msgid "Set upper levels for the time difference"
-#~ msgstr "Setați nivelurile superioare pentru diferența de fus orar"
-
 #~ msgid "Show service description"
 #~ msgstr "Afișați descrierea serviciului"
-
-#~ msgid "This rule allows you to override netapp warnings"
-#~ msgstr "Această regulă vă permite să anulați avertismentele netapp"
 
 #~ msgid ""
 #~ "This rule controls which and how many checks will be created for "
@@ -81585,9 +81588,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Use new service descriptions"
 #~ msgstr "Utilizați noi descrieri de servicii"
-
-#~ msgid "Warning starts with"
-#~ msgstr "Avertismentul începe cu"
 
 #~ msgid ""
 #~ "With this rule you can set limits for various disk IO statistics. Keep in "

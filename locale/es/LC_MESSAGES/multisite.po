@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-05-23 08:28+0000\n"
+"PO-Revision-Date: 2024-06-13 10:06+0000\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/dev/"
 "es/>\n"
 "Language: es\n"
@@ -4219,6 +4219,9 @@ msgstr "Añadir usuario"
 
 msgid "Add user attribute"
 msgstr "Añadir atributo de usuario"
+
+msgid "Add warning"
+msgstr "Añadir advertencia"
 
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "Añadir, editar y eliminar conexiones InfluxDB."
@@ -12383,7 +12386,8 @@ msgstr ""
 
 msgid "Codec that should be used to decode the matching files"
 msgstr ""
-"Códec que debe utilizarse para descodificar los archivos correspondientes"
+"Codificación de caracteres que debe utilizarse para descodificar los "
+"archivos correspondientes"
 
 #, fuzzy
 msgid "Codes copied"
@@ -26162,6 +26166,14 @@ msgstr ""
 msgid "Here you can set the number of remaining open slots"
 msgstr "Aquí puede establecer el número de ranuras abiertas restantes"
 
+#, fuzzy
+msgid ""
+"Here you can set upper levels for the time difference between agent and "
+"system time."
+msgstr ""
+"Aquí puede establecer niveles superiores para la diferencia horaria entre el "
+"agente y la hora del sistema."
+
 msgid "Here you can set upper levels of busy workers"
 msgstr "Aquí puede establecer niveles superiores de trabajadores ocupados"
 
@@ -39636,6 +39648,9 @@ msgstr "Nombre del lugar de control"
 msgid "Name of the mount point"
 msgstr "Nombre del punto de montaje"
 
+msgid "Name of the node"
+msgstr "Nombre del nodo"
+
 msgid "Name of the peer"
 msgstr "Nombre del compañero"
 
@@ -39852,11 +39867,18 @@ msgstr "Rendimiento del puerto FC de Netapp"
 msgid "Netapp fan discovery"
 msgstr "Descubrimiento del ventilador Netapp"
 
+#, fuzzy
+msgid "Netapp instance state"
+msgstr "Estado de la Instancia Netapp"
+
 msgid "Netapp port discovery"
 msgstr "Descubrimiento de puertos de Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descubrimiento de la fuente de alimentación de Netapp"
+
+msgid "Netapp systemtime"
+msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Máscara de red"
@@ -53266,6 +53288,9 @@ msgstr "Cambiar '%s' por '%s'"
 msgid "Set upper Levels"
 msgstr "Establecer niveles superiores"
 
+msgid "Set upper levels for the time difference"
+msgstr "Establecer niveles superiores para la diferencia horaria"
+
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -66158,6 +66183,9 @@ msgstr ""
 "Esta regla permite configurar el número de conexiones máximas para un VSID "
 "determinado."
 
+msgid "This rule allows you to override netapp warnings"
+msgstr "Esta regla permite anular las advertencias de netapp"
+
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -75811,6 +75839,9 @@ msgstr "Advertencia si %s"
 msgid "Warning of %s"
 msgstr "Advertencia si %s"
 
+msgid "Warning starts with"
+msgstr "La advertencia comienza con"
+
 msgid "Warning threshold"
 msgstr "Umbral de advertencia"
 
@@ -82105,29 +82136,8 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #~ msgid " (packaged)"
 #~ msgstr " (empaquetado)"
 
-#~ msgid "Add warning"
-#~ msgstr "Añadir advertencia"
-
 #~ msgid "Alternative Service description"
 #~ msgstr "Descripción del servicio alternativo"
-
-#, fuzzy
-#~ msgid ""
-#~ "Here you can set upper levels for the time difference between agent and "
-#~ "system time."
-#~ msgstr ""
-#~ "Aquí puede establecer niveles superiores para la diferencia horaria entre "
-#~ "el agente y la hora del sistema."
-
-#~ msgid "Name of the node"
-#~ msgstr "Nombre del nodo"
-
-#, fuzzy
-#~ msgid "Netapp instance state"
-#~ msgstr "Estado de la Instancia Netapp"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
 
 #~ msgid "Service description"
 #~ msgstr "Descripción del servicio"
@@ -82138,15 +82148,9 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #~ msgid "Service descriptions"
 #~ msgstr "Descripciones de servicios"
 
-#~ msgid "Set upper levels for the time difference"
-#~ msgstr "Establecer niveles superiores para la diferencia horaria"
-
 #, fuzzy
 #~ msgid "Show service description"
 #~ msgstr "Descripción del servicio"
-
-#~ msgid "This rule allows you to override netapp warnings"
-#~ msgstr "Esta regla permite anular las advertencias de netapp"
 
 #~ msgid ""
 #~ "This rule controls which and how many checks will be created for "
@@ -82167,9 +82171,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 #~ msgid "Use new service descriptions"
 #~ msgstr "Utilizar nuevas descripciones de servicios"
-
-#~ msgid "Warning starts with"
-#~ msgstr "La advertencia comienza con"
 
 #~ msgid ""
 #~ "With this rule you can set limits for various disk IO statistics. Keep in "

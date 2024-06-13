@@ -123,7 +123,7 @@ def _join_inventory_rows(
         }
 
         found_values_by_ident: dict[str, list[str | int | float]] = {}
-        for found_table_row in table_rows_by_master_key[_MasterKey.make(row)]:
+        for found_table_row in table_rows_by_master_key.get(_MasterKey.make(row), []):
             if found_table_row.matches(row_values_by_macro):
                 found_values_by_ident.setdefault(found_table_row.ident, []).append(
                     found_table_row.column_value

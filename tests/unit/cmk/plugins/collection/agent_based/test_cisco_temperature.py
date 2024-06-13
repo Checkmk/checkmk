@@ -745,7 +745,9 @@ def test_defect_sensor() -> None:
 
     assert list(ct.discover_cisco_temperature(section))
 
-    (defect_result,) = ct.check_cisco_temperature("Chassis 1", {}, section)
+    (defect_result,) = ct._check_cisco_temperature(  # pylint: disable=protected-access
+        {}, "Chassis 1", {}, section
+    )
     assert isinstance(defect_result, Result)
     assert defect_result.state is not State.OK
 
@@ -1036,3 +1038,34 @@ def test_check_dom_not_ok_sensors(
     item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
 ) -> None:
     assert list(ct.check_cisco_temperature_dom(item, {}, section_not_ok_sensors)) == expected_result
+
+
+def test_ensure_invalid_data_is_ignored(as_path: Callable[[str], Path]) -> None:
+    input_table = """.1.3.6.1.2.1.1.1.0 Cisco NX-OS(tm) Nexus9000 C93240YC-FX2, Software (NXOS 64-bit), Version 10.2(5), RELEASE SOFTWARE Copyright (c) 2002-2023 by Cisco Systems, Inc. Compiled 3/10/2023 12:00:00
+.1.3.6.1.4.1.9.9.91.1.1.1.1.1.38487 8
+.1.3.6.1.4.1.9.9.91.1.1.1.1.2.38487 9
+.1.3.6.1.4.1.9.9.91.1.1.1.1.3.38487 0
+.1.3.6.1.4.1.9.9.91.1.1.1.1.4.38487 inf
+.1.3.6.1.4.1.9.9.91.1.1.1.1.5.38487 1
+.1.3.6.1.4.1.9.9.91.1.1.1.1.6.38487 554712961
+.1.3.6.1.4.1.9.9.91.1.1.1.1.7.38487 60
+.1.3.6.1.4.1.9.9.91.1.2.1.1.2.38487.1 10
+.1.3.6.1.4.1.9.9.91.1.2.1.1.2.38487.2 20
+.1.3.6.1.4.1.9.9.91.1.2.1.1.3.38487.1 4
+.1.3.6.1.4.1.9.9.91.1.2.1.1.3.38487.2 4
+.1.3.6.1.4.1.9.9.91.1.2.1.1.4.38487.1 70
+.1.3.6.1.4.1.9.9.91.1.2.1.1.4.38487.2 80
+.1.3.6.1.4.1.9.9.91.1.2.1.1.5.38487.1 2
+.1.3.6.1.4.1.9.9.91.1.2.1.1.5.38487.2 2
+.1.3.6.1.4.1.9.9.91.1.2.1.1.6.38487.1 1
+.1.3.6.1.4.1.9.9.91.1.2.1.1.6.38487.2 1"""
+    snmp_walk = as_path(input_table)
+    parsed_section = get_parsed_snmp_section(ct.snmp_section_cisco_temperature, snmp_walk)
+    assert parsed_section is not None
+    value_store: dict = {}
+    _ = list(
+        ct._check_cisco_temperature(  # pylint: disable=protected-access
+            value_store, "38487", {}, parsed_section
+        )
+    )
+    assert not value_store

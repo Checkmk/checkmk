@@ -5,9 +5,10 @@
 
 import dataclasses
 import enum
+import math
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, MutableMapping
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
@@ -563,7 +564,12 @@ def discover_cisco_temperature(section: Section) -> DiscoveryResult:
         yield Service(item=item)
 
 
-def check_cisco_temperature(item: str, params: TempParamDict, section: Section) -> CheckResult:
+def _check_cisco_temperature(
+    value_store: MutableMapping[str, Any],
+    item: str,
+    params: TempParamDict,
+    section: Section,
+) -> CheckResult:
     temp_parsed = section.get("8", {})
 
     try:
@@ -577,16 +583,25 @@ def check_cisco_temperature(item: str, params: TempParamDict, section: Section) 
         yield Result(state=State(state), summary="Status: %s" % state_readable)
         return
 
+    if not math.isfinite(reading):
+        yield Result(state=State(state), summary="Status: %s" % state_readable)
+        yield Result(state=State.UNKNOWN, summary="Reading: {reading}")
+        return
+
     yield from check_temperature(
         reading,
         params,
         unique_name="cisco_temperature_%s" % item,
-        value_store=get_value_store(),
+        value_store=value_store,
         dev_levels=data.get("dev_levels_upper", None),
         dev_levels_lower=data.get("dev_levels_lower", None),
         dev_status=state,
         dev_status_name=state_readable,
     )
+
+
+def check_cisco_temperature(item: str, params: TempParamDict, section: Section) -> CheckResult:
+    yield from _check_cisco_temperature(get_value_store(), item, params, section)
 
 
 check_plugin_cisco_temperature = CheckPlugin(
@@ -651,6 +666,10 @@ def check_cisco_temperature_dom(
 
     reading = data.get("reading")
     if reading is None:
+        return
+
+    if not math.isfinite(reading):
+        yield Result(state=State.UNKNOWN, summary="Reading: {reading}")
         return
 
     # get won't save you, because 'dev_levels' may be present, but None.

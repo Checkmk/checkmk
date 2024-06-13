@@ -15,7 +15,11 @@ import sys
 import time
 
 conf_file = None
-for path in ["/etc/dhcpd.conf", "/etc/dhcp/dhcpd.conf", "/var/dhcpd/etc/dhcpd.conf", "/usr/local/etc/dhcpd.conf"]:
+for path in ["/etc/dhcpd.conf", 
+             "/etc/dhcp/dhcpd.conf", 
+             "/var/dhcpd/etc/dhcpd.conf", 
+             "/usr/local/etc/dhcpd.conf",
+            ]:
     if os.path.exists(path):
         conf_file = path
         break

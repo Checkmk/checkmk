@@ -46,7 +46,7 @@ def test_check_windows_item(section: jn.Section) -> None:
         Metric("jenkins_busy_executors", 0),
         Result(state=State.OK, summary="Number of idle executors: 1"),
         Metric("jenkins_idle_executors", 1),
-        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Mode: Exclusive"),
         Result(state=State.OK, summary="Offline: no"),
         Result(state=State.OK, summary="Average response time: 35 milliseconds"),
         Metric("avg_response_time", 0.035),
@@ -70,7 +70,7 @@ def test_check_master_item(section: jn.Section) -> None:
         Metric("jenkins_busy_executors", 3),
         Result(state=State.OK, summary="Number of idle executors: 17"),
         Metric("jenkins_idle_executors", 17),
-        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Mode: Exclusive"),
         Result(state=State.OK, summary="Offline: no"),
         Result(state=State.OK, summary="Average response time: 0 seconds"),
         Metric("avg_response_time", 0.0),
@@ -102,7 +102,7 @@ def test_check_foo_item(section: jn.Section) -> None:
         Metric("jenkins_busy_executors", 0),
         Result(state=State.OK, summary="Number of idle executors: 1"),
         Metric("jenkins_idle_executors", 1),
-        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Mode: Exclusive"),
         Result(state=State.OK, summary="Offline: no"),
         Result(
             state=State.WARN,
@@ -243,4 +243,4 @@ def test_showing_correct_executor_mode(multi_label_section):
         )
     )
 
-    assert Result(state=State.OK, summary="Mode: Normal ") in check_results
+    assert Result(state=State.OK, summary="Mode: Normal") in check_results

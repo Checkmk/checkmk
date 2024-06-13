@@ -148,7 +148,7 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 mode = label["nodes"][0]["mode"]
                 mode_state = State.OK
 
-        mode_infotext = f"Mode: {mode.title()} "
+        mode_infotext = [f"Mode: {mode.title()}"]
 
         # get labels for each node
         label_collection = [
@@ -158,14 +158,14 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
         ]
 
         if mode == "EXCLUSIVE" and label_collection:
-            mode_infotext += f"(Labels: {' '.join(label_collection)})"
+            mode_infotext.append(f"(Labels: {' '.join(label_collection)})")
 
         if (mode_expected := params.get("jenkins_mode")) is not None:
             if mode_expected != mode:
                 mode_state = State.CRIT
-                mode_infotext += f" (expected: {mode_expected.title()})"
+                mode_infotext.append(f"(expected: {mode_expected.title()})")
 
-        yield Result(state=mode_state, summary=mode_infotext)
+        yield Result(state=mode_state, summary=" ".join(mode_infotext))
 
         offline_state = node["offline"]
         state = State(params["jenkins_offline"]) if offline_state else State.OK

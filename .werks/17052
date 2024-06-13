@@ -1,0 +1,16 @@
+Title: mkeventd: Forward to remote Event Console or Syslog server if configured
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1718284259
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+The notification method "Forward notification to Event Console" offers the
+option to forward messages to a remote Event Console or Syslog server.
+
+In earlier versions the messages were only forwarded if the local Event Console
+(mkeventd) was not running.
+
+This has been fixed.

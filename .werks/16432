@@ -1,0 +1,21 @@
+Title: cisco_temperature: Handle Invalid Device Readings
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718280849
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Cisco SNMP devices may report temperatures of "inf" or "-inf". According to
+CISCO-ENTITY-SENSOR-MIB, these values are not valid.
+
+Previously, Checkmk would treat non-finite temperatures as valid. This invalid
+data would be written to <code>tmp/check_mk/counters/</code>, which then caused the
+<code>Check_MK</code> service to become UNKNOWN. Furthermore, the services on the host
+would become stale. With this Werk, the problematic values not persisted. Only
+the affected service state will be UNKNOWN.
+
+If you are affected, you can delete the corrupted counter file in
+<code>tmp/check_mk/counters/&lt;host name&gt;</code>. To fix the readings reported by your
+device, please directly contact Cisco.

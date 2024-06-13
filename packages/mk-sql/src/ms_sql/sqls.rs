@@ -153,7 +153,7 @@ SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Port
     pub const SPACE_USED: &str = "EXEC sp_spaceused \
         WITH RESULT SETS \
         ( \
-        (database_name nvarchar(128),database_size nvarchar(128), unallocated_space nvarchar(128)), \
+        (database_name nvarchar(128),database_size nvarchar(128), \"unallocated space\" nvarchar(128)), \
         (reserved nvarchar(128),data nvarchar(128), index_size nvarchar(128), unused nvarchar(128)) \
         )";
 

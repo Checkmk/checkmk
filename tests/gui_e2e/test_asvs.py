@@ -15,23 +15,19 @@ from playwright.sync_api import BrowserContext
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.helpers import CmkCredentials
+from tests.testlib.playwright.pom.change_password import ChangePassword
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site
-
-
-def _change_password(page: LoginPage, old_password: str, new_password: str) -> None:
-    page.main_menu.user_change_password.click()
-    page.main_area.locator("input[name='cur_password']").fill(old_password)
-    page.main_area.locator("input[name='password']").fill(new_password)
-    page.main_area.locator("#suggestions >> text=Save").click()
-    page.main_area.check_success("Successfully changed password.")
 
 
 def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCredentials) -> None:
     """Verify users can change their password."""
 
     page = logged_in_page
-    _change_password(page, credentials.password, "not-cmk-really-not")
+
+    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page.change_password(credentials.password, "not-cmk-really-not")
+    change_password_page.main_area.check_success("Successfully changed password.")
     page.logout()
 
     # check old password, shouldn't work anymore
@@ -49,13 +45,9 @@ def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCred
 def test_password_truncation_error(logged_in_page: LoginPage) -> None:
     """Bcrypt truncates at 72 chars, check for the error if the password is longer"""
 
-    page = logged_in_page
-    page.main_menu.user_change_password.click()
-
-    page.main_area.locator("input[name='cur_password']").fill("cmk")
-    page.main_area.locator("input[name='password']").fill("A" * 80)
-    page.main_area.locator("#suggestions >> text=Save").click()
-    page.main_area.check_error(
+    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page.change_password("cmk", "A" * 80)
+    change_password_page.main_area.check_error(
         "Passwords over 72 bytes would be truncated and are therefore not allowed!"
     )
 

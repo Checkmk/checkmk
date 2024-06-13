@@ -9,6 +9,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.playwright.helpers import CmkCredentials
+from tests.testlib.playwright.pom.change_password import ChangePassword
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import ADMIN_USER, Site
 
@@ -47,16 +48,6 @@ def fixture_with_password_policy(logged_in_page: LoginPage, test_site: Site) -> 
     logged_in_page.go(home)
 
 
-def _change_password(page: LoginPage, new_pw: str, new_pw_conf: str, old_pw: str) -> None:
-    # first go to dashboard to ensure we're reloading the page in case we're already there
-    page.goto_main_dashboard()
-    page.main_menu.user_change_password.click()
-    page.main_area.locator("input[name='cur_password']").fill(old_pw)
-    page.main_area.locator("input[name='password']").fill(new_pw)
-    page.main_area.locator("input[name='password2']").fill(new_pw_conf)
-    page.main_area.locator("#suggestions >> text=Save").click()
-
-
 @pytest.mark.parametrize(
     "new_pw,new_pw_conf",
     [
@@ -82,8 +73,9 @@ def test_user_change_password_success(
 
     page = logged_in_page
 
-    _change_password(page, new_pw=new_pw, new_pw_conf=new_pw_conf, old_pw=test_site.admin_password)
-    page.main_area.check_success("Successfully changed password.")
+    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page.change_password(test_site.admin_password, new_pw, new_pw_conf)
+    change_password_page.main_area.check_success("Successfully changed password.")
 
     # Logout and then login with the new password
     page.logout()
@@ -115,9 +107,9 @@ def test_user_change_password_errors(
     expect_error_contains: str,
 ) -> None:
     """Test failure cases of changing the user's own password in the user profile menu"""
-    page = logged_in_page
-    _change_password(page, new_pw=new_pw, new_pw_conf=new_pw_conf, old_pw=old_pw)
-    page.main_area.check_error(re.compile(f".*{expect_error_contains}.*"))
+    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page.change_password(old_pw, new_pw, new_pw_conf)
+    change_password_page.main_area.check_error(re.compile(f".*{expect_error_contains}.*"))
 
 
 def test_user_change_password_incompatible_with_policy(
@@ -128,9 +120,9 @@ def test_user_change_password_incompatible_with_policy(
     Test changing the user's own password in the user profile menu to a PW that doesn't comply with
     the PW policy
     """
-    page = logged_in_page
-    _change_password(page, new_pw="123456789010", new_pw_conf="123456789010", old_pw="cmk")
-    page.main_area.check_error(
+    change_password_page = ChangePassword(logged_in_page.page)
+    change_password_page.change_password("cmk", "123456789010", "123456789010")
+    change_password_page.main_area.check_error(
         "The password does not use enough character groups. You need to "
         "set a password which uses at least %d of them." % 2
     )

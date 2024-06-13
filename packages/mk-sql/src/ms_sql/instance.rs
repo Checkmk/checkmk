@@ -1457,7 +1457,10 @@ fn to_table_spaces_entry(
         }
     };
     let db_size = extract(answers, 0, "database_size");
-    let unallocated = extract(answers, 0, "unallocated_space");
+    let mut unallocated = extract(answers, 0, "unallocated space");
+    if unallocated.is_empty() {
+        unallocated = "0 KB".to_string();
+    }
     let reserved = extract(answers, 1, "reserved");
     let data = extract(answers, 1, "data");
     let index_size = extract(answers, 1, "index_size");

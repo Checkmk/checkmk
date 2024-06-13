@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
+use mk_sql::config::ms_sql::Discovery;
 use mk_sql::platform;
 #[cfg(windows)]
 use mk_sql::platform::odbc;
@@ -127,7 +128,7 @@ mssql:
 #[tokio::test(flavor = "multi_thread")]
 async fn test_obtain_all_instances_from_registry_local() {
     let endpoint = make_default_endpoint();
-    let builders = instance::obtain_instance_builders(&endpoint, &[])
+    let builders = instance::obtain_instance_builders(&endpoint, &[], &Discovery::default())
         .await
         .unwrap();
     let all: Vec<SqlInstance> = to_instances(builders);
@@ -139,13 +140,68 @@ async fn test_obtain_all_instances_from_registry_local() {
 
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
+async fn test_obtain_all_instances_from_registry_local_include() {
+    use yaml_rust2::YamlLoader;
+    const SOURCE: &str = r#"
+    discovery:
+      detect: true
+      include: [MSSQLSERVER]
+    "#;
+    let endpoint = make_default_endpoint();
+    let discovery = Discovery::from_yaml(&YamlLoader::load_from_str(SOURCE).unwrap()[0])
+        .unwrap()
+        .unwrap();
+    assert_eq!(discovery.include().len(), 1usize, "Discovery is wrong");
+    let builders = instance::obtain_instance_builders(&endpoint, &[], &discovery)
+        .await
+        .unwrap();
+    let all: Vec<SqlInstance> = to_instances(builders);
+    let names: Vec<InstanceName> = all.into_iter().map(|i| i.name).collect();
+    assert_eq!(
+        names,
+        vec![InstanceName::from("MSSQLSERVER".to_string())],
+        "During connecting to `local`"
+    );
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_obtain_all_instances_from_registry_local_exclude() {
+    use yaml_rust2::YamlLoader;
+    const SOURCE: &str = r#"
+    discovery:
+      detect: true
+      exclude: [SQLEXPRESS_OLD, SQLEXPRESS_AW, SQLEXPRESS_WOW]
+    "#;
+    let endpoint = make_default_endpoint();
+    let discovery = Discovery::from_yaml(&YamlLoader::load_from_str(SOURCE).unwrap()[0])
+        .unwrap()
+        .unwrap();
+    assert_eq!(discovery.exclude().len(), 3usize, "Discovery is wrong");
+    let builders = instance::obtain_instance_builders(&endpoint, &[], &discovery)
+        .await
+        .unwrap();
+    let all: Vec<SqlInstance> = to_instances(builders);
+    let names: Vec<InstanceName> = all.into_iter().map(|i| i.name).collect();
+    assert_eq!(
+        names,
+        vec![
+            InstanceName::from("MSSQLSERVER".to_string()),
+            InstanceName::from("SQLEXPRESS_NAME".to_string())
+        ],
+        "During connecting to `local`"
+    );
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
     use mk_sql::constants;
 
     let l = tools::LogMe::new("test_validate_all_instances_local").start(log::Level::Debug);
     log::info!("{:#?}", l.dir());
     let endpoint = make_default_endpoint();
-    let builders = instance::obtain_instance_builders(&endpoint, &[])
+    let builders = instance::obtain_instance_builders(&endpoint, &[], &Discovery::default())
         .await
         .unwrap();
     let names: Vec<InstanceName> = builders.into_iter().map(|i| i.get_name()).collect();
@@ -208,9 +264,10 @@ fn to_instances(builders: Vec<SqlInstanceBuilder>) -> Vec<SqlInstance> {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let builders = instance::obtain_instance_builders(&endpoint.make_ep(), &[])
-            .await
-            .unwrap();
+        let builders =
+            instance::obtain_instance_builders(&endpoint.make_ep(), &[], &Discovery::default())
+                .await
+                .unwrap();
         let all = to_instances(builders);
         assert!(all.iter().all(is_instance_good));
         assert_eq!(all.len(), expected_instances().len());
@@ -234,9 +291,10 @@ async fn test_find_all_instances_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let builders = instance::obtain_instance_builders(&endpoint.make_ep(), &[])
-            .await
-            .unwrap();
+        let builders =
+            instance::obtain_instance_builders(&endpoint.make_ep(), &[], &Discovery::default())
+                .await
+                .unwrap();
         let is = to_instances(builders);
 
         let cfg = Config::from_string(&create_remote_config(endpoint))
@@ -676,9 +734,10 @@ async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote_extra() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let builders = instance::obtain_instance_builders(&endpoint.make_ep(), &[])
-            .await
-            .unwrap();
+        let builders =
+            instance::obtain_instance_builders(&endpoint.make_ep(), &[], &Discovery::default())
+                .await
+                .unwrap();
         let is = to_instances(builders);
         let ms_sql = Config::from_string(
             r"---

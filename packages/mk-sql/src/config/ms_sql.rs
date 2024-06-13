@@ -244,15 +244,8 @@ impl Config {
     }
 
     pub fn is_instance_allowed(&self, name: &impl ToString) -> bool {
-        if !self.discovery.include().is_empty() {
-            return self.discovery.include().contains(&name.to_string());
-        }
-
-        if self.discovery.exclude().contains(&name.to_string()) {
-            return false;
-        }
-
-        true
+        self.discovery
+            .is_instance_allowed(&InstanceName::from(name.to_string()))
     }
 }
 
@@ -609,6 +602,18 @@ impl Discovery {
     }
     pub fn exclude(&self) -> &Vec<String> {
         &self.exclude
+    }
+
+    pub fn is_instance_allowed(&self, name: &InstanceName) -> bool {
+        if !self.include.is_empty() {
+            return self.include.contains(&name.to_string());
+        }
+
+        if self.exclude.contains(&name.to_string()) {
+            return false;
+        }
+
+        true
     }
 }
 

@@ -7,7 +7,7 @@ use super::client::OdbcClient;
 use super::client::{self, UniClient};
 use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
-use crate::config::ms_sql::{is_local_host, is_use_tcp};
+use crate::config::ms_sql::{is_local_host, is_use_tcp, Discovery};
 use crate::config::section;
 use crate::config::{
     self,
@@ -1953,9 +1953,17 @@ pub async fn find_all_instance_builders(
     .into_iter()
     .map(|b| b.piggyback(ms_sql.piggyback_host().map(|h| h.to_string().into())))
     .collect();
-    // let d = HashSet::from_iter(detected) + HashSet::from_iter(predefined);
-    let customizations: HashMap<&InstanceName, &CustomInstance> =
-        ms_sql.instances().iter().map(|i| (i.name(), i)).collect();
+    let customizations: HashMap<&InstanceName, &CustomInstance> = ms_sql
+        .instances()
+        .iter()
+        .filter_map(|i| {
+            if ms_sql.is_instance_allowed(i.name()) {
+                Some((i.name(), i))
+            } else {
+                None
+            }
+        })
+        .collect();
     let builders = apply_customizations(detected, &customizations);
     add_custom_instance_builders(builders, &customizations).await
 }
@@ -1964,7 +1972,7 @@ pub async fn find_all_instance_builders(
 async fn find_detectable_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Vec<SqlInstanceBuilder> {
-    obtain_instance_builders(&ms_sql.endpoint(), &[])
+    obtain_instance_builders(&ms_sql.endpoint(), &[], ms_sql.discovery())
         .await
         .unwrap_or_else(|e| {
             log::warn!("Error discovering instances: {e}");
@@ -2064,7 +2072,7 @@ async fn find_custom_instance(
     endpoint: &Endpoint,
     instance_name: &InstanceName,
 ) -> Option<SqlInstanceBuilder> {
-    let builders = obtain_instance_builders(endpoint, &[instance_name])
+    let builders = obtain_instance_builders(endpoint, &[instance_name], &Discovery::default())
         .await
         .unwrap_or_else(|e| {
             log::error!("Error creating client for instance `{instance_name}`: {e}",);
@@ -2250,13 +2258,14 @@ async fn generate_result(
 pub async fn obtain_instance_builders(
     endpoint: &Endpoint,
     instances: &[&InstanceName],
+    discovery: &Discovery,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     log::info!("Finding instances...");
     match client::connect_main_endpoint(endpoint).await {
-        Ok(mut client) => Ok(_obtain_instance_builders(&mut client, endpoint).await),
+        Ok(mut client) => Ok(_obtain_instance_builders(&mut client, endpoint, discovery).await),
         Err(err) => {
             log::error!("Failed to create main client: {err}");
-            obtain_instance_builders_by_sql_browser(endpoint, instances).await
+            obtain_instance_builders_by_sql_browser(endpoint, instances, discovery).await
         }
     }
 }
@@ -2265,6 +2274,7 @@ pub async fn obtain_instance_builders(
 pub async fn obtain_instance_builders_by_sql_browser(
     endpoint: &Endpoint,
     instances: &[&InstanceName],
+    discovery: &Discovery,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     log::info!("Finding instances by SQL Browser");
     for instance in instances {
@@ -2277,7 +2287,9 @@ pub async fn obtain_instance_builders_by_sql_browser(
             .build()
             .await
         {
-            Ok(mut client) => return Ok(_obtain_instance_builders(&mut client, endpoint).await),
+            Ok(mut client) => {
+                return Ok(_obtain_instance_builders(&mut client, endpoint, discovery).await)
+            }
             Err(err) => {
                 log::error!("Failed to create client: {err}");
             }
@@ -2290,13 +2302,26 @@ pub async fn obtain_instance_builders_by_sql_browser(
 pub async fn obtain_instance_builders_by_sql_browser(
     _endpoint: &Endpoint,
     _instances: &[&InstanceName],
+    _discovery: &Discovery,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     anyhow::bail!("Failed to create client, sql browser on linux is not supported")
+}
+
+fn filter_builders(
+    builders: &[SqlInstanceBuilder],
+    discovery: &Discovery,
+) -> Vec<SqlInstanceBuilder> {
+    builders
+        .iter()
+        .filter(|b| discovery.is_instance_allowed(&b.get_name()))
+        .cloned()
+        .collect()
 }
 
 async fn _obtain_instance_builders(
     client: &mut UniClient,
     endpoint: &Endpoint,
+    discovery: &Discovery,
 ) -> Vec<SqlInstanceBuilder> {
     let mut builders = try_find_instances_in_registry(client).await;
     if builders.is_empty() {
@@ -2325,6 +2350,7 @@ async fn _obtain_instance_builders(
             }
         };
     }
+    builders = filter_builders(&builders, discovery);
     let computer_name = obtain_computer_name(client).await.unwrap_or_default();
     builders
         .iter()

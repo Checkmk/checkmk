@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-02-14 07:00+0000\n"
+"PO-Revision-Date: 2024-06-13 10:06+0000\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
-"software/es/>\n"
+"stable/es/>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -11093,9 +11093,6 @@ msgstr ""
 "SNMPv2 para averiguar la configuración de monitorización correcta para ese "
 "host."
 
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
-
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -12352,7 +12349,8 @@ msgstr ""
 
 msgid "Codec that should be used to decode the matching files"
 msgstr ""
-"Códec que debe utilizarse para descodificar los archivos correspondientes"
+"Codificación de caracteres que debe utilizarse para descodificar los "
+"archivos correspondientes"
 
 #, fuzzy
 msgid "Codes copied"
@@ -21655,8 +21653,10 @@ msgid "Exclude empty tag choices"
 msgstr "Excluir las opciones de etiquetas vacías"
 
 #, fuzzy
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "Excluya los siguientes SID (si los encuentra)"
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "Consulte sólo los siguientes SID (si los encuentra)"
 
 msgid "Exclude hosts"
 msgstr "Excluir hosts"
@@ -37260,6 +37260,9 @@ msgstr "No se permite la mezcla de CME y no CME."
 msgid "Mixed"
 msgstr "Mixto"
 
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
+
 msgid "Mobile"
 msgstr "Móviles"
 
@@ -41368,7 +41371,8 @@ msgstr ""
 "href='%s'>reglas</a>."
 
 #, fuzzy
-msgid "Only monitor following SIDs (if detected or manually added)"
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "Consulte sólo los siguientes SID (si los encuentra)"
 
 #, fuzzy
@@ -69534,7 +69538,8 @@ msgstr "Pruebe"
 msgid "Try pattern match"
 msgstr "Pruebe la coincidencia de patrones"
 
-msgid "Try to detect MS SQL instances presented on Server"
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
 msgstr "Intente detectar las instancias MS SQL presentadas en el Servidor"
 
 msgid "Try to fit text to the available space."
@@ -80128,6 +80133,10 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "Excluya los siguientes SID (si los encuentra)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (empaquetado)"

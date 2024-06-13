@@ -10718,11 +10718,6 @@ msgstr ""
 "例えばエージェント経由、SNMPv1経由、SNMPv2経由をテストし、そのホストの正しい"
 "監視設定を見つけます。"
 
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
-"Check-SQLプラグインは、MS SQLインスタンスを見つけるためにさまざまな方法を使用"
-"します"
-
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -20993,8 +20988,10 @@ msgid "Exclude empty tag choices"
 msgstr "空のタグの選択肢を除外する"
 
 #, fuzzy
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "次のSIDを除外します(見つかった場合)"
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "次のSIDのみをクエリします(見つかった場合)"
 
 msgid "Exclude hosts"
 msgstr "ホストを除外する"
@@ -36140,6 +36137,12 @@ msgstr "CMEと非CMEの混合は認められない。"
 msgid "Mixed"
 msgstr "混合"
 
+#, fuzzy
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
+"Check-SQLプラグインは、MS SQLインスタンスを見つけるためにさまざまな方法を使用"
+"します"
+
 msgid "Mobile"
 msgstr "モバイル"
 
@@ -40130,7 +40133,8 @@ msgstr ""
 "で定義することもできます。"
 
 #, fuzzy
-msgid "Only monitor following SIDs (if detected or manually added)"
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "次のSIDのみをクエリします(見つかった場合)"
 
 #, fuzzy
@@ -67258,7 +67262,8 @@ msgstr "試してみる"
 msgid "Try pattern match"
 msgstr "パターン一致を試す"
 
-msgid "Try to detect MS SQL instances presented on Server"
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
 msgstr "サーバー上に表示されたMS SQLインスタンスを検出する"
 
 msgid "Try to fit text to the available space."
@@ -77435,6 +77440,10 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "次のSIDを除外します(見つかった場合)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (パッケージ)"

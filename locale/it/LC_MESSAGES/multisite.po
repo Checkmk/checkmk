@@ -10880,9 +10880,6 @@ msgstr ""
 "accesso a un host, ad esempio tramite agente, SNMPv1, SNMPv2 per scoprire la "
 "configurazione di monitoraggio corretta per quell'host."
 
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
-
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -21255,8 +21252,11 @@ msgstr "Escludi il vserver di destinazione"
 msgid "Exclude empty tag choices"
 msgstr "Escludi le scelte di tag vuote"
 
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "Escludere i seguenti SID (se rilevati o aggiunti manualmente)"
+#, fuzzy
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "Monitora solo i seguenti SID (se rilevati o aggiunti manualmente)"
 
 msgid "Exclude hosts"
 msgstr "Escludi gli host"
@@ -36569,6 +36569,9 @@ msgstr "Non è consentita la combinazione di ECM e non ECM."
 msgid "Mixed"
 msgstr "Misto"
 
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
+
 msgid "Mobile"
 msgstr "Mobile"
 
@@ -40587,7 +40590,9 @@ msgstr ""
 "L'assegnazione degli host ai gruppi di contatto può essere definita anche da "
 "<a href='%s'>regole</a>."
 
-msgid "Only monitor following SIDs (if detected or manually added)"
+#, fuzzy
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "Monitora solo i seguenti SID (se rilevati o aggiunti manualmente)"
 
 #, fuzzy
@@ -68210,8 +68215,9 @@ msgstr "Prova"
 msgid "Try pattern match"
 msgstr "Prova il pattern match"
 
-msgid "Try to detect MS SQL instances presented on Server"
-msgstr ""
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
+msgstr "Necessario solo se si hanno più istanze MySQL su un server"
 
 msgid "Try to fit text to the available space."
 msgstr "Cerca di adattare il testo allo spazio disponibile."
@@ -78622,6 +78628,9 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "Escludere i seguenti SID (se rilevati o aggiunti manualmente)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (pacchetto)"

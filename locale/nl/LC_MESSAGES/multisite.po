@@ -10999,9 +10999,6 @@ msgstr ""
 "SNMPv1, SNMPv2 om de juiste bewakingsconfiguratie voor die host te "
 "achterhalen."
 
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
-
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -21461,8 +21458,10 @@ msgid "Exclude empty tag choices"
 msgstr "Lege tag keuzes uitsluiten"
 
 #, fuzzy
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "Sluit de volgende SID's uit (indien gevonden)"
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "Vraag alleen naar de volgende SID's (indien gevonden)"
 
 msgid "Exclude hosts"
 msgstr "Hosts uitsluiten"
@@ -36934,6 +36933,9 @@ msgstr ""
 msgid "Mixed"
 msgstr "Gemengd"
 
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
+
 msgid "Mobile"
 msgstr "Mobiel"
 
@@ -41001,7 +41003,8 @@ msgstr ""
 "gedefinieerd door <a href='%s'>regels</a>."
 
 #, fuzzy
-msgid "Only monitor following SIDs (if detected or manually added)"
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "Vraag alleen naar de volgende SID's (indien gevonden)"
 
 #, fuzzy
@@ -68906,8 +68909,9 @@ msgstr "Uitproberen"
 msgid "Try pattern match"
 msgstr "Probeer Patroon Overeenstemming"
 
-msgid "Try to detect MS SQL instances presented on Server"
-msgstr ""
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
+msgstr "Alleen nodig als u meerdere MySQL Instances op één server heeft"
 
 msgid "Try to fit text to the available space."
 msgstr "Probeer de tekst in de beschikbare ruimte te passen."
@@ -79418,6 +79422,10 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "Sluit de volgende SID's uit (indien gevonden)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (verpakt)"

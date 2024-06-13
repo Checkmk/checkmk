@@ -10993,9 +10993,6 @@ msgstr ""
 "de acesso a um anfitrião, por exemplo, através de agente, SNMPv1, SNMPv2 "
 "para descobrir a configuração de monitorização correcta para esse anfitrião."
 
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
-
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -21448,8 +21445,10 @@ msgid "Exclude empty tag choices"
 msgstr "Excluir escolhas de etiquetas vazias"
 
 #, fuzzy
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "Excluir os seguintes SIDs (se encontrados)"
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "Consulte apenas os seguintes SIDs (se encontrados)"
 
 msgid "Exclude hosts"
 msgstr "Excluir anfitriões"
@@ -36918,6 +36917,9 @@ msgstr "Não é permitida a mistura de CME e não CME."
 msgid "Mixed"
 msgstr "Misto"
 
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
+
 msgid "Mobile"
 msgstr "Telemóvel"
 
@@ -40963,7 +40965,8 @@ msgstr ""
 "href='%s'>regras</a>."
 
 #, fuzzy
-msgid "Only monitor following SIDs (if detected or manually added)"
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "Consulte apenas os seguintes SIDs (se encontrados)"
 
 #, fuzzy
@@ -68848,8 +68851,9 @@ msgstr "Experimente"
 msgid "Try pattern match"
 msgstr "Tentar a correspondência de padrões"
 
-msgid "Try to detect MS SQL instances presented on Server"
-msgstr ""
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
+msgstr "Só é necessário se você tiver várias Instâncias MySQL em um servidor"
 
 msgid "Try to fit text to the available space."
 msgstr "Tente encaixar o texto no espaço disponível."
@@ -79299,6 +79303,10 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "Excluir os seguintes SIDs (se encontrados)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (embalado)"

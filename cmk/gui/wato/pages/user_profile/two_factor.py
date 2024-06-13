@@ -93,7 +93,10 @@ from cmk.gui.watolib.mode import redirect
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related
 
-fido2.features.webauthn_json_mapping.enabled = True
+try:  # this fails if its set multiple times (which sometimes happens in doctests)
+    fido2.features.webauthn_json_mapping.enabled = True
+except ValueError:
+    pass
 
 
 def make_fido2_server() -> Fido2Server:

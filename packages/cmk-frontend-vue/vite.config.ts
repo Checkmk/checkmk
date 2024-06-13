@@ -52,6 +52,11 @@ export default defineConfig(({ command }) => {
     // we are in serve mode here, supporting auto hot reload
     return {
       ...resultBuild,
+      test: {
+        // enable jest-like global test APIs
+        globals: true,
+        environment: 'jsdom'
+      },
       server: {
         strictPort: true,
         proxy: {

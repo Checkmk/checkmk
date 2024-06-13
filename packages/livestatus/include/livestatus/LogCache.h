@@ -83,7 +83,7 @@ public:
     inline auto apply(F f) {
         std::lock_guard<std::mutex> lg(_lock);
         update();
-        return f(LogFiles{_logfiles});
+        return f(LogFiles{_logfiles}, _num_cached_log_messages);
     }
 
     // Call the given callback for each log entry matching the filter in a
@@ -92,10 +92,6 @@ public:
     void for_each(
         const LogFilter &log_filter,
         const std::function<bool(const LogEntry &)> &process_log_entry);
-
-    // Returns the overall number of log entries currently in the cache. Used by
-    // Store::numCachedLogMessages().
-    size_t numCachedLogMessages();
 
 private:
     ICore *const _mc;

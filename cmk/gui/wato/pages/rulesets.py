@@ -15,6 +15,7 @@ from dataclasses import asdict
 from enum import auto, Enum
 from typing import Any, cast, Literal, overload, TypedDict
 
+from cmk.utils.global_ident_type import is_locked_by_config_bundle
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.regex import escape_regex_chars
@@ -1085,6 +1086,8 @@ class ModeEditRuleset(WatoMode):
 
         action = request.get_ascii_input_mandatory("_action")
         if action == "delete":
+            if is_locked_by_config_bundle(rule.locked_by):
+                raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
             ruleset.delete_rule(rule)
         elif action == "move_to":
             ruleset.move_rule_to(rule, request.get_integer_input_mandatory("_index"))
@@ -1263,16 +1266,24 @@ class ModeEditRuleset(WatoMode):
 
         html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
 
-        html.icon_button(
-            url=make_confirm_delete_link(
-                url=self._action_url("delete", folder, rule.id),
-                title=_("Delete rule #%d") % rulenr,
-                suffix=rule.rule_options.description,
-                message=_("Folder: %s") % folder.alias_path(),
-            ),
-            title=_("Delete this rule"),
-            icon="delete",
-        )
+        if is_locked_by_config_bundle(rule.locked_by):
+            html.icon_button(
+                url="",
+                title=_("Rule can only be deleted via Quick setup"),
+                icon="delete",
+                class_=["disabled"],
+            )
+        else:
+            html.icon_button(
+                url=make_confirm_delete_link(
+                    url=self._action_url("delete", folder, rule.id),
+                    title=_("Delete rule #%d") % rulenr,
+                    suffix=rule.rule_options.description,
+                    message=_("Folder: %s") % folder.alias_path(),
+                ),
+                title=_("Delete this rule"),
+                icon="delete",
+            )
 
     def _match(
         self,
@@ -1427,6 +1438,18 @@ class ModeEditRuleset(WatoMode):
 
         desc = rule.rule_options.description or rule.rule_options.comment or ""
         html.write_text_permissive(desc)
+
+        # Source
+        table.cell(_("Source"), css=["source"])
+        if is_locked_by_config_bundle(rule.locked_by):
+            html.a(
+                _("[%s] Quick setup") % rule.conditions.get_single_explicit_host()
+                or "<hostname>",  # TODO: QUICK-SETUP - host name
+                "#",  # TODO: QUICK-SETUP - link to Quick setup
+                class_=["config-bundle-link"],
+            )
+        else:
+            html.write_text("")
 
     def _rule_conditions(self, rule: Rule) -> None:
         self._predefined_condition_info(rule)
@@ -1744,6 +1767,17 @@ def _vs_ruleset_group() -> DropdownChoice:
     )
 
 
+def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked: bool) -> None:
+    if locked:
+        html.write_html(HTML.without_escaping(vs.value_to_html(value)))
+        html.open_div(style="display:none;")
+
+    vs.render_input(varprefix, value)
+
+    if locked:
+        html.close_div()
+
+
 class ABCEditRuleMode(WatoMode):
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
@@ -1890,7 +1924,8 @@ class ABCEditRuleMode(WatoMode):
         if not transactions.check_transaction():
             return redirect(self._back_url())
 
-        self._update_rule_from_vars()
+        if redirect_ := self._update_rule_from_vars():
+            return redirect_
 
         # Check permissions on folders
         new_rule_folder = folder_tree().folder(self._get_rule_conditions_from_vars().host_folder)
@@ -1901,6 +1936,10 @@ class ABCEditRuleMode(WatoMode):
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder
             self._save_rule()
+
+        elif is_locked_by_config_bundle(self._rule.locked_by):
+            flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
+            return redirect(self._back_url())
 
         else:
             # Move rule to new folder during editing
@@ -1927,7 +1966,7 @@ class ABCEditRuleMode(WatoMode):
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _update_rule_from_vars(self) -> None:
+    def _update_rule_from_vars(self) -> HTTPRedirect | None:
         # Additional options
         rule_options = self._vs_rule_options(self._rule).from_html_vars("options")
         self._vs_rule_options(self._rule).validate_value(rule_options, "options")
@@ -1939,12 +1978,23 @@ class ABCEditRuleMode(WatoMode):
             docu_url=rule_options["docu_url"],
         )
 
+        # CONDITION
+        rule_conditions = self._get_rule_conditions_from_vars()
+        if (
+            is_locked_by_config_bundle(self._rule.locked_by)
+            and self._rule.conditions != rule_conditions
+        ):
+            flash(
+                _("Cannot change rule conditions for rules managed by Quick setup."),
+                msg_type="error",
+            )
+            return redirect(self._back_url())
+
         if self._get_condition_type_from_vars() == "predefined":
             condition_id = self._get_condition_id_from_vars()
             self._rule.rule_options.predefined_condition_id = condition_id
 
-        # CONDITION
-        self._rule.update_conditions(self._get_rule_conditions_from_vars())
+        self._rule.update_conditions(rule_conditions)
 
         # VALUE
         render_mode, registered_form_spec = self._get_render_mode()
@@ -1964,6 +2014,7 @@ class ABCEditRuleMode(WatoMode):
                 self._ruleset.valuespec().validate_value(value, "ve")
 
         self._rule.value = value
+        return None
 
     def _get_render_mode(
         self,
@@ -2051,7 +2102,40 @@ class ABCEditRuleMode(WatoMode):
         return self._rule.value, DataOrigin.DISK
 
     def _page_form(self) -> None:
-        # Additonal rule options
+        if is_locked_by_config_bundle(self._rule.locked_by):
+            html.div(
+                html.render_div(
+                    html.render_h2(
+                        _("Configured with %s Quick setup")
+                        % self._rule.locked_by["instance_id"],  # TODO: QUICK-SETUP - rule type
+                        class_=["heading"],
+                    )
+                    + html.render_div(
+                        _(
+                            "This rule is part of the {hostname} configuration using Quick setup. "
+                            "Some options cannot be edited to avoid conflicts.<br>Go to Quick "
+                            "setup to edit all parameters of {hostname}."
+                        ).format(
+                            hostname=self._rule.conditions.get_single_explicit_host()
+                            or "<hostname>"
+                        ),  # TODO: QUICK-SETUP - hostname
+                    )
+                    + html.render_div(
+                        html.render_a(
+                            html.render_b(
+                                _("Edit %s") % self._rule.conditions.get_single_explicit_host()
+                                or "<hostname>"
+                            ),  # TODO: QUICK-SETUP - hostname
+                            href="#",  # TODO: QUICK-SETUP - link to Quick setup
+                        ),
+                        class_=["button-container"],
+                    ),
+                    class_=["content"],
+                ),
+                class_=["warning_container"],
+            )
+
+        # Additional rule options
         self._vs_rule_options(self._rule).render_input("options", asdict(self._rule.rule_options))
 
         # Value
@@ -2115,15 +2199,23 @@ class ABCEditRuleMode(WatoMode):
         self._vs_rule_options(self._rule).set_focus("options")
 
     def _show_conditions(self) -> None:
-        forms.header(_("Conditions"))
+        locked = is_locked_by_config_bundle(self._rule.locked_by)
+        forms.header(_("Conditions"), css="locked" if locked else None)
+        if locked:
+            forms.warning_message(
+                _("Conditions of rules managed by Quick setup cannot be changed.")
+            )
 
         condition_type = "predefined" if self._rule.predefined_condition_id() else "explicit"
 
         forms.section(_("Condition type"))
-        self._vs_condition_type().render_input(varprefix="condition_type", value=condition_type)
-        self._show_predefined_conditions()
-        self._show_explicit_conditions()
-        html.javascript('cmk.wato.toggle_rule_condition_type("condition_type")')
+
+        render_hidden_if_locked(self._vs_condition_type(), "condition_type", condition_type, locked)
+        self._show_predefined_conditions(locked)
+        self._show_explicit_conditions(locked)
+
+        if not locked:
+            html.javascript('cmk.wato.toggle_rule_condition_type("condition_type")')
 
     def _vs_condition_type(self) -> DropdownChoice[str]:
         return DropdownChoice(
@@ -2141,11 +2233,13 @@ class ABCEditRuleMode(WatoMode):
             encode_value=False,
         )
 
-    def _show_predefined_conditions(self) -> None:
-        forms.section(_("Predefined condition"), css="condition predefined")
-        self._vs_predefined_condition_id().render_input(
+    def _show_predefined_conditions(self, locked: bool) -> None:
+        forms.section(_("Predefined condition"), css="condition predefined", hide=locked)
+        render_hidden_if_locked(
+            vs=self._vs_predefined_condition_id(),
             varprefix="predefined_condition_id",
             value=self._rule.predefined_condition_id(),
+            locked=locked,
         )
 
     def _vs_predefined_condition_id(self) -> DropdownChoice:
@@ -2191,13 +2285,15 @@ class ABCEditRuleMode(WatoMode):
                 ),
             )
 
-    def _show_explicit_conditions(self) -> None:
-        vs = self._vs_explicit_conditions(render="form_part")
+    def _show_explicit_conditions(self, locked: bool) -> None:
+        if locked:
+            forms.section(_("Explicit condition"), css="condition explicit")
+        vs = self._vs_explicit_conditions(render="normal" if locked else "form_part")
         value = self._rule.get_rule_conditions()
 
         try:
             vs.validate_datatype(value, "explicit_conditions")
-            vs.render_input("explicit_conditions", value)
+            render_hidden_if_locked(vs, "explicit_conditions", value, locked)
         except Exception as e:
             forms.section("", css="condition explicit")
             html.show_warning(
@@ -2212,7 +2308,8 @@ class ABCEditRuleMode(WatoMode):
             )
 
             # In case of validation problems render the input with default values
-            vs.render_input("explicit_conditions", RuleConditions(host_folder=self._folder.path()))
+            value = RuleConditions(host_folder=self._folder.path())
+            render_hidden_if_locked(vs, "explicit_conditions", value, locked)
 
     def _vs_explicit_conditions(
         self, render: Literal["normal", "form_part"]
@@ -2220,12 +2317,9 @@ class ABCEditRuleMode(WatoMode):
         return VSExplicitConditions(rulespec=self._rulespec, render=render)
 
     def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
-        return Dictionary(
-            title=_("Rule properties"),
-            optional_keys=False,
-            render="form",
-            elements=rule_option_elements(disabling)
-            + [
+        elements = rule_option_elements(disabling)
+        elements.extend(
+            (
                 (
                     "id",
                     FixedValue(
@@ -2245,7 +2339,31 @@ class ABCEditRuleMode(WatoMode):
                         ),
                     ),
                 ),
-            ],
+            )
+        )
+
+        if is_locked_by_config_bundle(rule.locked_by):
+            elements.append(
+                (
+                    "source",
+                    FixedValue(
+                        value=rule.locked_by["instance_id"],
+                        title=_("Source"),
+                        totext=html.render_a(
+                            _("[%s] Quick setup") % rule.conditions.get_single_explicit_host()
+                            or "<hostname>",  # TODO: QUICK-SETUP - use host name
+                            "#",  # TODO: QUICK-SETUP - link to Quick setup
+                            class_=["config-bundle-link"],
+                        ),
+                    ),
+                )
+            )
+
+        return Dictionary(
+            title=_("Rule properties"),
+            optional_keys=False,
+            render="form",
+            elements=elements,
             show_more_keys=["id", "_name"],
         )
 

@@ -370,7 +370,7 @@ class FixedValue(ValueSpec[T]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         value: T,
-        totext: str | None = None,
+        totext: str | HTML | None = None,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[T] = DEF_VALUE,

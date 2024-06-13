@@ -1170,6 +1170,7 @@ class RuleClient(RestApiClient):
             "delete",
             url=f"/objects/{self.domain}/{rule_id}",
             headers={"If-Match": etag, "Accept": "application/json"},
+            expect_ok=expect_ok,
         )
         if expect_ok:
             resp.assert_status_code(204)

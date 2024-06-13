@@ -20,6 +20,7 @@ from typing import (
     TypeVar,
 )
 
+from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (
     AndOrNotLiteral,
@@ -135,6 +136,7 @@ class RuleSpec(Generic[TRuleValue], TypedDict):
     condition: RuleConditionsSpec
     id: str  # a UUID if provided by either the GUI or the REST API
     options: NotRequired[RuleOptionsSpec]
+    locked_by: NotRequired[GlobalIdent]
 
 
 def is_disabled(rule: RuleSpec[TRuleValue]) -> bool:

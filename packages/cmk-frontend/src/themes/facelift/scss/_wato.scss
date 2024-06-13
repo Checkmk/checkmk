@@ -213,6 +213,24 @@ div.warning_container {
     margin: 0;
     background-color: $headline-color;
     border-radius: 0 $theme-border-radius $theme-border-radius 0;
+
+    .heading {
+      margin-top: 0;
+      margin-bottom: 4px;
+    }
+
+    div.button-container {
+      padding-top: 8px;
+
+      a {
+        padding: 8px 18px;
+        line-height: 30px;
+        color: $font-color-black;
+        background: $color-state-1-background;
+        border-radius: $theme-border-radius;
+        text-decoration: none;
+      }
+    }
   }
   &::before {
     display: inline-block;
@@ -582,6 +600,12 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 }
 
 .wato form.rule_editor {
+  table.locked tbody {
+    pointer-events: none;
+    td.content {
+      opacity: 0.5;
+    }
+  }
   table.hosttags td.title {
     min-width: 200px;
   }
@@ -606,10 +630,15 @@ span.tagify__tag-text {
 }
 
 .wato table.data.ruleset {
+  td.rulebuttons a.disabled img {
+    opacity: 0.5;
+  }
+
   td.condition,
   td.value,
-  td.description {
-    min-width: 30%;
+  td.description,
+  td.source {
+    min-width: 20%;
   }
 
   tr.disabled td {
@@ -778,6 +807,22 @@ div.filter_buttons {
       height: auto;
       clear: left;
     }
+  }
+}
+
+.wato a.config-bundle-link {
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    background-image: url("images/icon_manual_active.svg");
+    background-repeat: no-repeat;
+    background-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
   }
 }
 

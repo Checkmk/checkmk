@@ -21,6 +21,7 @@ from typing import Any, assert_never, cast, Final
 from cmk.utils import store
 from cmk.utils.config_validation_layer.rules import validate_rulesets
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
@@ -303,6 +304,25 @@ class RuleConditions:
             ),
             service_label_groups=self.service_label_groups,
         )
+
+    def get_single_explicit_host(self) -> str | None:
+        """Return a single host name, if there is exactly one configured."""
+        if (
+            isinstance(self.host_name, list)
+            and len(self.host_name) == 1
+            and isinstance(self.host_name[0], str)
+        ):
+            return self.host_name[0]
+
+        return None
+
+    def __bool__(self) -> bool:
+        return bool(self.to_config(UseHostFolder.HOST_FOLDER_FOR_UI))
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, RuleConditions) and self.to_config(
+            UseHostFolder.HOST_FOLDER_FOR_UI
+        ) == other.to_config(UseHostFolder.HOST_FOLDER_FOR_UI)
 
 
 class RulesetCollection:
@@ -1057,6 +1077,7 @@ class Rule:
         conditions: RuleConditions,
         options: RuleOptions,
         value: RuleValue,
+        locked_by: GlobalIdent | None = None,
     ) -> None:
         self.ruleset: Ruleset = ruleset
         self.folder: Folder = folder
@@ -1064,6 +1085,7 @@ class Rule:
         self.id: str = id_
         self.rule_options: RuleOptions = options
         self.value: RuleValue = value
+        self.locked_by = locked_by
         self._single_base_ruleset_representation: Sequence[RuleSpec] | None = None
 
     def clone(self, preserve_id: bool = False) -> Rule:
@@ -1074,6 +1096,7 @@ class Rule:
             self.conditions.clone(),
             dataclasses.replace(self.rule_options),
             self.value,
+            self.locked_by,
         )
 
     @classmethod
@@ -1125,6 +1148,7 @@ class Rule:
             RuleConditions.from_config(folder.path(), conditions),
             RuleOptions.from_config(rule_options),
             rule_config["value"],
+            rule_config.get("locked_by"),
         )
 
     def value_masked(self) -> RuleValue:
@@ -1189,6 +1213,8 @@ class Rule:
         )
         if options := self.rule_options.to_config():
             rule_spec["options"] = options
+        if self.locked_by:
+            rule_spec["locked_by"] = self.locked_by
         return rule_spec
 
     def object_ref(self) -> ObjectRef:

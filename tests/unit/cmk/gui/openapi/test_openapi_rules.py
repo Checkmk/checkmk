@@ -5,7 +5,7 @@
 import os
 import typing
 import urllib
-from typing import Any
+from typing import Any, Iterable
 
 import pytest
 
@@ -18,8 +18,9 @@ from tests.testlib.rest_api_client import (
 )
 
 from cmk.utils import paths
+from cmk.utils.global_ident_type import PROGRAM_ID_CONFIG_BUNDLE
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.store import load_mk_file
+from cmk.utils.store import load_mk_file, save_mk_file, save_to_mk_file
 
 DEFAULT_VALUE_RAW = """{
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
@@ -494,3 +495,73 @@ def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -
         },
         value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
     )
+
+
+@pytest.fixture(name="locked_rule_id")
+def fixture_locked_rule_id() -> Iterable[str]:
+    rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
+    content: str | None = None
+    if os.path.exists(rules_mk):
+        with open(rules_mk) as f:
+            content = f.read()
+    id_ = "f893cdfc-00c8-4d93-943b-05c4edc52068"
+    save_to_mk_file(
+        rules_mk,
+        "special_agents",
+        {
+            "jenkins": [
+                {
+                    "id": id_,
+                    "value": {
+                        "instance": "localhost:9999",
+                        "user": "uhh",
+                        "password": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuidb1728c95-932d-475a-8623-de0b1f35260f", "no"),
+                        ),
+                        "protocol": "https",
+                        "sections": ["instance", "jobs", "nodes", "queue"],
+                    },
+                    "condition": {},
+                    "options": {"disabled": False, "description": "test"},
+                    "locked_by": {
+                        "site_id": "heute",
+                        "program_id": PROGRAM_ID_CONFIG_BUNDLE,
+                        "instance_id": "quick-setup-rule-1",
+                    },
+                },
+            ]
+        },
+    )
+    yield id_
+    if content is None:
+        os.remove(rules_mk)
+    else:
+        save_mk_file(rules_mk, content)
+
+
+def test_openapi_cannot_delete_locked_rule(clients: ClientRegistry, locked_rule_id: str) -> None:
+    resp = clients.Rule.delete(locked_rule_id, expect_ok=False).assert_status_code(400)
+    assert resp.json["detail"] == "Rules managed by Quick setup cannot be deleted."
+
+
+def test_openapi_cannot_move_locked_rule(clients: ClientRegistry, locked_rule_id: str) -> None:
+    clients.Folder.create("test_folder", "/", "test_folder")
+    resp = clients.Rule.move(
+        locked_rule_id, {"position": "top_of_folder", "folder": "/test_folder"}, expect_ok=False
+    ).assert_status_code(400)
+    assert resp.json["detail"] == "Rules managed by Quick setup cannot be moved to another folder."
+
+
+def test_openapi_cannot_change_locked_rule_conditions(
+    clients: ClientRegistry, locked_rule_id: str
+) -> None:
+    get_resp = clients.Rule.get(locked_rule_id)
+    resp = clients.Rule.edit(
+        locked_rule_id,
+        value_raw=get_resp.json["extensions"]["value_raw"],
+        conditions=DEFAULT_CONDITIONS,
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert resp.json["detail"] == "Conditions cannot be modified for rules managed by Quick setup."

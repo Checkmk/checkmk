@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.utils.datastructures import denilled
+from cmk.utils.global_ident_type import is_locked_by_config_bundle
 from cmk.utils.labels import LabelGroups
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.rulesets.conditions import (
@@ -148,6 +149,16 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
                 title="Invalid position",
                 detail=f"Position {position!r} is not a valid position.",
             )
+
+    if (
+        is_locked_by_config_bundle(source_entry.rule.locked_by)
+        and source_entry.folder != dest_folder
+    ):
+        return problem(
+            status=400,
+            title="Rule is managed by Quick setup",
+            detail="Rules managed by Quick setup cannot be moved to another folder.",
+        )
 
     dest_folder.permissions.need_permission("write")
     source_entry.ruleset.move_to_folder(source_entry.rule, dest_folder, index)
@@ -311,10 +322,12 @@ def _get_rule_by_id(rule_uuid: str, all_rulesets: AllRulesets | None = None) -> 
     output_empty=True,
     status_descriptions={
         204: "Rule was deleted successfully.",
+        400: "The rule is locked and cannot be deleted.",
         404: "The rule to be deleted was not found.",
     },
     additional_status_codes=[
         204,
+        400,
         404,
     ],
     permissions_required=RW_PERMISSIONS,
@@ -327,15 +340,18 @@ def delete_rule(param):
     rule: Rule
     all_rulesets = AllRulesets.load_all_rulesets()
 
-    found = False
     for ruleset in visible_rulesets(all_rulesets.get_rulesets()).values():
         for _folder, _index, rule in ruleset.get_rules():
             if rule.id == rule_id:
+                if is_locked_by_config_bundle(rule.locked_by):
+                    return problem(
+                        status=400,
+                        title="Rule is managed by Quick setup",
+                        detail="Rules managed by Quick setup cannot be deleted.",
+                    )
                 ruleset.delete_rule(rule)
                 all_rulesets.save()
-                found = True
-    if found:
-        return http.Response(status=204)
+                return http.Response(status=204)
 
     return problem(
         status=404,
@@ -387,6 +403,13 @@ def edit_rule(param):
         value,
         param["rule_id"],
     )
+
+    if rule_entry.rule.conditions != new_rule.conditions:
+        return problem(
+            status=400,
+            title="Rule is managed by Quick setup",
+            detail="Conditions cannot be modified for rules managed by Quick setup.",
+        )
 
     ruleset.edit_rule(current_rule, new_rule)
     rulesets.save_folder(folder)

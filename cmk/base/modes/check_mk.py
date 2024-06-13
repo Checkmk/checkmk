@@ -811,60 +811,6 @@ modes.register(
 )
 
 # .
-#   .--scan-parents--------------------------------------------------------.
-#   |                                                         _            |
-#   |    ___  ___ __ _ _ __        _ __   __ _ _ __ ___ _ __ | |_ ___      |
-#   |   / __|/ __/ _` | '_ \ _____| '_ \ / _` | '__/ _ \ '_ \| __/ __|     |
-#   |   \__ \ (_| (_| | | | |_____| |_) | (_| | | |  __/ | | | |_\__ \     |
-#   |   |___/\___\__,_|_| |_|     | .__/ \__,_|_|  \___|_| |_|\__|___/     |
-#   |                             |_|                                      |
-#   '----------------------------------------------------------------------'
-
-
-def mode_scan_parents(options: dict, args: list[str]) -> None:
-    config.load(exclude_parents_mk=True)
-    config_cache = config.get_config_cache()
-    hosts_config = config.make_hosts_config()
-
-    if "procs" in options:
-        config.max_num_processes = options["procs"]
-
-    cmk.base.parent_scan.do_scan_parents(
-        config_cache,
-        hosts_config,
-        HostName(config.monitoring_host) if config.monitoring_host is not None else None,
-        [HostName(hn) for hn in args],
-    )
-
-
-modes.register(
-    Mode(
-        long_option="scan-parents",
-        handler_function=mode_scan_parents,
-        needs_config=False,
-        needs_checks=False,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Autoscan parents, create conf.d/parents.mk",
-        long_help=[
-            "Uses traceroute in order to automatically detect hosts's parents. "
-            "It creates the file conf.d/parents.mk which "
-            "defines gateway hosts and parent declarations.",
-        ],
-        sub_options=[
-            Option(
-                long_option="procs",
-                argument=True,
-                argument_descr="N",
-                argument_conv=int,
-                short_help="Start up to N processes in parallel. Defaults to 50.",
-            ),
-        ],
-    )
-)
-
-# .
 #   .--snmptranslate-------------------------------------------------------.
 #   |                            _                       _       _         |
 #   |  ___ _ __  _ __ ___  _ __ | |_ _ __ __ _ _ __  ___| | __ _| |_ ___   |

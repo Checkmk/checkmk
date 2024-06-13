@@ -466,13 +466,12 @@ def register(name: str, default_value: Any) -> None:
 def load(
     with_conf_d: bool = True,
     validate_hosts: bool = True,
-    exclude_parents_mk: bool = False,
     *,
     changed_vars_handler: Callable[[set[str]], None] | None = None,
 ) -> None:
     _initialize_config()
 
-    changed_var_names = _load_config(with_conf_d, exclude_parents_mk)
+    changed_var_names = _load_config(with_conf_d)
     if changed_vars_handler is not None:
         changed_vars_handler(changed_var_names)
 
@@ -586,7 +585,7 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
     )  # nosec B102 # BNS:aee528
 
 
-def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
+def _load_config(with_conf_d: bool) -> set[str]:
     helper_vars = {
         "FOLDER_PATH": None,
     }
@@ -610,10 +609,6 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
     host_storage_loaders = get_host_storage_loaders(config_storage_format)
     config_dir_path = Path(cmk.utils.paths.check_mk_config_dir)
     for path in get_config_file_paths(with_conf_d):
-        # During parent scan mode we must not read in old version of parents.mk!
-        if exclude_parents_mk and path.name == "parents.mk":
-            continue
-
         try:
             # Make the config path available as a global variable to be used
             # within the configuration file. The FOLDER_PATH is only used by

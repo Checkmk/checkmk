@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from cmk.plugins.collection.server_side_calls.sql import active_check_sql
@@ -71,50 +73,87 @@ def test_check_sql_port_macro_invalid() -> None:
         )
 
 
-def test_check_sql_port_macro_replaced() -> None:
-    (command,) = active_check_sql(
-        {
-            **MINIMAL_CONFIG,
-            "port": ("macro", "$my_port$"),
-        },
-        HostConfig(
-            name="hostname",
-            ipv4_config=IPv4Config(address="ipaddress"),
-            macros={"$my_port$": "5432"},
+@pytest.mark.parametrize(
+    "params,host_config, expected_arguments",
+    [
+        pytest.param(
+            {
+                **MINIMAL_CONFIG,
+                "port": ("macro", "$my_port$"),
+            },
+            HostConfig(
+                name="hostname",
+                ipv4_config=IPv4Config(address="ipaddress"),
+                macros={"$my_port$": "5432"},
+            ),
+            [
+                "--hostname=ipaddress",
+                "--dbms=postgres",
+                "--name=bar",
+                "--user=hans",
+                Secret(0).unsafe("--password=%s"),
+                "--port=5432",
+                "",
+            ],
+            id="port macro",
         ),
-    )
-    assert command.command_arguments == [
-        "--hostname=ipaddress",
-        "--dbms=postgres",
-        "--name=bar",
-        "--user=hans",
-        Secret(0).unsafe("--password=%s"),
-        "--port=5432",
-        "",
-    ]
-
-
-def test_check_sql_user_macro_replaced() -> None:
-    (command,) = active_check_sql(
-        {
-            "description": "foo",
-            "dbms": "postgres",
-            "name": "bar",
-            "user": "$my_user$",
-            "password": Secret(0),
-            "sql": "",
-        },
-        HostConfig(
-            name="hostname",
-            ipv4_config=IPv4Config(address="ipaddress"),
-            macros={"$my_user$": "my_user"},
+        pytest.param(
+            {
+                "description": "foo",
+                "dbms": "postgres",
+                "name": "bar",
+                "user": "$my_user$",
+                "password": Secret(0),
+                "sql": "",
+            },
+            HostConfig(
+                name="hostname",
+                ipv4_config=IPv4Config(address="ipaddress"),
+                macros={"$my_user$": "my_user"},
+            ),
+            [
+                "--hostname=ipaddress",
+                "--dbms=postgres",
+                "--name=bar",
+                "--user=my_user",
+                Secret(0).unsafe("--password=%s"),
+                "",
+            ],
+            id="user macro",
         ),
+        pytest.param(
+            {
+                "description": "foo",
+                "dbms": "postgres",
+                "name": "bar",
+                "user": "hans",
+                "password": Secret(0),
+                "sql": "$my_sql_command$",
+            },
+            HostConfig(
+                name="hostname",
+                ipv4_config=IPv4Config(address="ipaddress"),
+                macros={"$my_sql_command$": "SELECT column FROM table;"},
+            ),
+            [
+                "--hostname=ipaddress",
+                "--dbms=postgres",
+                "--name=bar",
+                "--user=hans",
+                Secret(0).unsafe("--password=%s"),
+                "SELECT column FROM table\\;",
+            ],
+            id="sql macro",
+        ),
+    ],
+)
+def test_check_sql_macros_replaced(
+    params: Mapping[str, str | Secret],
+    host_config: HostConfig,
+    expected_arguments: Sequence[str | Secret],
+) -> None:
+    (command,) = active_check_sql(
+        params,
+        host_config,
     )
-    assert command.command_arguments == [
-        "--hostname=ipaddress",
-        "--dbms=postgres",
-        "--name=bar",
-        "--user=my_user",
-        Secret(0).unsafe("--password=%s"),
-        "",
-    ]
+    assert command.command_arguments == expected_arguments

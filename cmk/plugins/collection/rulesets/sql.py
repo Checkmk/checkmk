@@ -134,6 +134,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     ),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     monospaced=True,
+                    macro_support=True,
                 ),
                 required=True,
             ),

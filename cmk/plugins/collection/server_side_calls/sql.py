@@ -79,7 +79,8 @@ def generate_sql_command(
     if params.text:
         args.append(f"--text={params.text}")
 
-    args.append("%s" % params.sql.replace("\n", r"\n").replace(";", r"\;"))
+    sql = replace_macros(params.sql, host_config.macros)
+    args.append("%s" % sql.replace("\n", r"\n").replace(";", r"\;"))
 
     yield ActiveCheckCommand(
         service_description=replace_macros(params.description, host_config.macros),

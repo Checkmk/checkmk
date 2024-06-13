@@ -21,8 +21,8 @@ Related documentation
 
 
 """
-
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Any
 
 from livestatus import SiteId
@@ -75,6 +75,10 @@ def _serialize_comment(comment: Comment) -> DomainObject:
 
     if "site" in dict_comment:
         dict_comment["site_id"] = dict_comment.pop("site")
+
+    dict_comment["entry_time"] = (
+        datetime.strptime(dict_comment["entry_time"], "%b %d %Y %H:%M:%S").isoformat() + "+00:00"
+    )
 
     return constructors.domain_object(
         domain_type="comment",

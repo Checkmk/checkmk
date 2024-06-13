@@ -610,10 +610,10 @@ def _downtime_properties(info):
         "site_id": info["site"],
         "host_name": info["host_name"],
         "author": info["author"],
-        "is_service": "yes" if info["is_service"] else "no",
+        "is_service": bool(info["is_service"]),
         "start_time": info["start_time"],
         "end_time": info["end_time"],
-        "recurring": "yes" if info["recurring"] else "no",
+        "recurring": bool(info["recurring"]),
         "comment": info["comment"],
     }
 

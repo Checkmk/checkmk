@@ -1,9 +1,5 @@
 [MASTER]
 # Setup the Python paths needed for our tests.
-#
-# Please note:
-# - repo path is added to be able to import tests.conftest
-# - tests.conftest is again extending the sys.path to add the required paths
 init-hook=
     import sys;
     sys.path.insert(0, __file__[:__file__.rfind("/.venv")]);  # __file__ is somewhere deep inside the .venv

@@ -35,6 +35,7 @@ import os
 import shutil
 import sys
 import time
+import traceback
 from collections.abc import Callable, Iterator, Sequence
 from datetime import datetime
 from pathlib import Path
@@ -62,6 +63,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
@@ -81,6 +83,7 @@ from cmk.gui.plugins.userdb.utils import (
 )
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users
+from cmk.gui.userdb.store import load_users, save_users
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -205,6 +208,18 @@ def _get_ad_locator():
             return six.ensure_text(sites_list[0][1])
 
     return FasterDetectLocator()
+
+
+def _show_exception(
+    connection_id: str,
+    title: str,
+    e: Exception,
+    debug: bool = True,
+) -> None:
+    html.show_error(
+        "<b>" + connection_id + " - " + title + "</b>"
+        "<pre>%s</pre>" % (debug and traceback.format_exc() or e)
+    )
 
 
 @user_connector_registry.register
@@ -657,7 +672,12 @@ class LDAPUserConnector(UserConnector):
         return results
 
     def _ldap_search(  # pylint: disable=too-many-branches
-        self, base, filt="(objectclass=*)", columns=None, scope="sub", implicit_connect=True
+        self,
+        base,
+        filt="(objectclass=*)",
+        columns=None,
+        scope="sub",
+        implicit_connect=True,
     ):
         if columns is None:
             columns = []
@@ -1010,7 +1030,10 @@ class LDAPUserConnector(UserConnector):
                 filt = f"(&{filt}{add_filt})"
 
             for dn, obj in self._ldap_search(
-                self.get_group_dn(), filt, ["cn", member_attr], self._config["group_scope"]
+                self.get_group_dn(),
+                filt,
+                ["cn", member_attr],
+                self._config["group_scope"],
             ):
                 groups[_unescape_dn(dn)] = {
                     "cn": obj["cn"][0],
@@ -1062,7 +1085,10 @@ class LDAPUserConnector(UserConnector):
                 result = self._ldap_search(
                     self.get_group_dn(),
                     "(&%s(cn=%s))"
-                    % (self.ldap_filter("groups"), ldap.filter.escape_filter_chars(filter_val)),
+                    % (
+                        self.ldap_filter("groups"),
+                        ldap.filter.escape_filter_chars(filter_val),
+                    ),
                     ["dn", "cn"],
                     self._config["group_scope"],
                 )
@@ -1166,6 +1192,42 @@ class LDAPUserConnector(UserConnector):
 
         return ldap.dn.dn2str(base_dn)
 
+    def create_ldap_user(self, userid: UserId, existing_users: Users) -> None:
+        existing_users[userid] = new_user_template(self.id)
+        existing_users[userid].setdefault("alias", userid)
+        save_users(existing_users, datetime.now())
+
+        try:
+            self.do_sync(
+                add_to_changelog=False,
+                only_username=userid,
+                load_users_func=load_users,
+                save_users_func=save_users,
+            )
+        except MKLDAPException as e:
+            _show_exception(self.id, _("Error during sync"), e, debug=active_config.debug)
+        except Exception as e:
+            _show_exception(self.id, _("Error during sync"), e)
+
+    def get_matching_user_profile(self, user_id: UserId) -> UserId | None:
+        """This function will try to match an existing user profile, or create a new one if
+        it doesn't exist yet. If no user_id can be matched/created, return None."""
+        existing_users = load_users(lock=True)
+
+        def get_user_id_create_user_if_neccessary(
+            user_id_to_check: UserId,
+        ) -> UserId | None:
+            if (user_from_config := existing_users.get(user_id_to_check, None)) is None:
+                self.create_ldap_user(user_id_to_check, existing_users)
+                return user_id_to_check
+            return user_id_to_check if user_from_config.get("connector") == self.id else None
+
+        matched_user_id = get_user_id_create_user_if_neccessary(user_id)
+        if matched_user_id is None and self._has_suffix():
+            return get_user_id_create_user_if_neccessary(UserId(f"{user_id}@{self._get_suffix()}"))
+
+        return matched_user_id
+
     #
     # USERDB API METHODS
     #
@@ -1175,6 +1237,7 @@ class LDAPUserConnector(UserConnector):
         # Connect only to servers of connections, the user is configured for,
         # to avoid connection errors for unrelated servers
         user_connection_id = self._connection_id_of_user(user_id)
+
         if user_connection_id is not None and user_connection_id != self.id:
             return None
 
@@ -1217,10 +1280,13 @@ class LDAPUserConnector(UserConnector):
         # authentication which should be rebound again after trying this.
         try:
             self._bind(user_dn, ("password", password.raw))
-            result = user_id if not self._has_suffix() else self._add_suffix(user_id)
+            userid = self.get_matching_user_profile(UserId(user_id))
+            result: CheckCredentialsResult = False if userid is None else userid
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
-                "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)
+                "Unable to authenticate user %s. Reason: %s",
+                user_id,
+                e.args[0].get("desc", e),
             )
             result = False
         except Exception:
@@ -1241,7 +1307,10 @@ class LDAPUserConnector(UserConnector):
 
     def _user_enforces_this_connection(self, username):
         matched_connection_ids = []
-        for suffix, connection_id in LDAPUserConnector.get_connection_suffixes().items():
+        for (
+            suffix,
+            connection_id,
+        ) in LDAPUserConnector.get_connection_suffixes().items():
             if self._username_matches_suffix(username, suffix):
                 matched_connection_ids.append(connection_id)
 
@@ -1262,7 +1331,9 @@ class LDAPUserConnector(UserConnector):
 
     def _add_suffix(self, username):
         suffix = self._get_suffix()
-        return f"{username}@{suffix}"
+        if username.endswith(f"@{suffix}"):
+            return UserId(username)
+        return UserId(f"{username}@{suffix}")
 
     def do_sync(  # pylint: disable=too-many-branches
         self,
@@ -1696,7 +1767,11 @@ def register_user_attribute_sync_plugins() -> None:
                     ],
                 ),
                 "sync_func": lambda self, connection, plugin, params, user_id, ldap_user, user: ldap_sync_simple(
-                    user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]
+                    user_id,
+                    ldap_user,
+                    user,
+                    plugin,
+                    self.needed_attributes(connection, params)[0],
                 ),
             },
         )
@@ -2434,7 +2509,9 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
             ldap_groups.update(
                 dict(
                     conn.get_group_memberships(
-                        group_dns, filt_attr="distinguishedname", nested=params.get("nested", False)
+                        group_dns,
+                        filt_attr="distinguishedname",
+                        nested=params.get("nested", False),
                     )
                 )
             )

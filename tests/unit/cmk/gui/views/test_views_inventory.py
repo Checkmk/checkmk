@@ -909,6 +909,14 @@ def test_row_post_processor() -> None:
                 }
             ),
         },
+        {
+            "site": "mysite2",
+            "host_name": "my-host-name2",
+            "invorainstance_sid": "sid1",
+            "invorainstance_version": "version1",
+            "invorainstance_bar": "bar",
+            "host_inventory": StructuredDataNode(),
+        },
     ]
 
     expected_len = len(rows)

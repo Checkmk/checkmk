@@ -1,0 +1,9 @@
+Title: Fix internal error while combining inventory tables within views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1718296539
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+

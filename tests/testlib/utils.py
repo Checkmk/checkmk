@@ -13,7 +13,7 @@ import textwrap
 
 # pylint: disable=redefined-outer-name
 import time
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from pprint import pformat
@@ -211,8 +211,17 @@ def spawn_expect_process(
     return rc
 
 
-def run(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
+def run(
+    args: list[str],
+    check: bool = True,
+    sudo: bool = False,
+    substitute_user: str | None = None,
+) -> subprocess.CompletedProcess:
     """Run a process and return a CompletedProcess object."""
+    if sudo:
+        args = ["sudo"] + args
+    if substitute_user:
+        args = ["su", "-l", substitute_user, "-c"] + args
     LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
     try:
         proc = subprocess.run(
@@ -234,7 +243,7 @@ def execute(  # type: ignore[no-untyped-def]
     cmd: list[str],
     *args,
     preserve_env: list[str] | None = None,
-    sudo: bool = True,
+    sudo: bool = False,
     substitute_user: str | None = None,
     **kwargs,
 ) -> subprocess.Popen:

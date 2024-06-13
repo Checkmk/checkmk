@@ -88,15 +88,15 @@ def test_user_change_password_success(
 
 
 @pytest.mark.parametrize(
-    "new_pw,new_pw_conf,old_pw,expect_error_contains",
+    "new_pw, new_pw_conf, old_pw, expect_error_contains",
     [
-        ("", "", "", "need to provide your current password"),
-        ("new", "new", "", "need to provide your current password"),
-        ("new", "new", "blub", "old password is wrong"),
-        ("", "new", "cmk", "need to change your password"),
-        ("cmk", "", "cmk", "new password must differ"),
+        pytest.param("", "", "", "need to provide your current password", id="empty"),
+        pytest.param("new", "new", "", "need to provide your current password", id="new-new"),
+        pytest.param("new", "new", "blub", "old password is wrong", id="new-new-bulb"),
+        pytest.param("", "new", "cmk", "need to change your password", id="empty-new-cmk"),
+        pytest.param("cmk", "", "cmk", "new password must differ", id="cmk-empty-cmk"),
         # Regression for Werk 14392 -- spaces are not stripped:
-        ("new", "new  ", "cmk", "New passwords don't match"),
+        pytest.param("new", "new  ", "cmk", "New passwords don't match", id="new-new+spaces-cmk"),
     ],
 )
 def test_user_change_password_errors(
@@ -129,12 +129,12 @@ def test_user_change_password_incompatible_with_policy(
 
 
 @pytest.mark.parametrize(
-    "new_pw,new_pw_conf,expect_error_contains",
+    "new_pw, new_pw_conf, expect_error_contains",
     [
-        ("", "new", "Passwords don't match"),
-        ("", "    ", "Passwords don't match"),
+        pytest.param("", "new", "Passwords don't match", id="empty-new"),
+        pytest.param("", "    ", "Passwords don't match", id="empty-spaces"),
         # Regression for Werk 14392 -- spaces are not stripped:
-        ("new", "new  ", "Passwords don't match"),
+        pytest.param("new", "new  ", "Passwords don't match", id="new-new+spaces"),
     ],
 )
 def test_edit_user_change_password_errors(

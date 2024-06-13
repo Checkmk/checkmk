@@ -60,9 +60,8 @@ def check_credentials(
         # We have the cases where users exist "partially"
         # a) The htpasswd file of the site may have a username:pwhash data set
         #    and Checkmk does not have a user entry yet
-        # b) LDAP authenticates a user and Checkmk does not have a user entry yet
         #
-        # In these situations a user account with the "default profile" should be created
+        # In this situation a user account with the "default profile" should be created
         create_non_existing_user(connection_id, user_id, now)
 
         if not is_customer_user_allowed_to_login(user_id):

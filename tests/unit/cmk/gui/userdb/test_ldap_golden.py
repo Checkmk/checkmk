@@ -213,7 +213,7 @@ def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -
     result = connector.check_credentials(UserId("carol"), Password("hunter2"))
 
     connector._ldap_obj.simple_bind_s.assert_any_call("carol", "hunter2")
-    assert result == UserId("carol_id@LDAP_SUFFIX")
+    assert result == UserId("carol_id")
 
 
 def test_check_credentials_invalid(mocker: MockerFixture, request_context: None) -> None:

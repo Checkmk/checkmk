@@ -5,11 +5,10 @@
 
 #include "livestatus/LogCache.h"
 
-#include <algorithm>
 #include <compare>
-#include <iterator>
-#include <ranges>
+#include <filesystem>
 #include <system_error>
+#include <utility>
 
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
@@ -73,30 +72,6 @@ void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
     }
 
     _logfiles.emplace(since, std::move(logfile));
-}
-
-std::pair<std::vector<std::filesystem::path>,
-          std::optional<std::filesystem::path>>
-LogCache::pathsSince(std::chrono::system_clock::time_point since) {
-    return apply(
-        [since](const LogFiles &log_files, size_t /*num_cached_log_messages*/) {
-            std::vector<std::filesystem::path> paths;
-            bool horizon_reached{false};
-            std::optional<std::filesystem::path> first_skipped;
-            for (const auto &[unused, log_file] :
-                 std::ranges::reverse_view(log_files)) {
-                if (horizon_reached) {
-                    first_skipped = log_file->path();
-                    break;
-                }
-                paths.push_back(log_file->path());
-                // NOTE: We really need "<" below, "<=" is not enough: Lines at
-                // the end of one log file might have the same timestamp as the
-                // lines at the beginning of the next log file.
-                horizon_reached = log_file->since() < since;
-            }
-            return std::pair{paths, first_skipped};
-        });
 }
 
 // This method is called each time a log message is loaded into memory. If the

@@ -8,14 +8,10 @@
 
 #include <chrono>
 #include <cstddef>
-#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
-#include <optional>
-#include <utility>
-#include <vector>
 
 #include "livestatus/Logfile.h"
 
@@ -69,16 +65,8 @@ public:
     // Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
 
-    // Return log file paths chronologically backwards up to a given horizon
-    // plus the first skipped log file path (if any). Used by
-    // StateHistoryThread::run().
-    std::pair<std::vector<std::filesystem::path>,
-              std::optional<std::filesystem::path>>
-    pathsSince(std::chrono::system_clock::time_point since);
-
     // Call the given function with a locked and updated LogCache, keeping the
-    // lock and the update function local. Used by
-    // TableStateHistory::answerQuery()
+    // lock and the update function local.
     template <typename F>
     inline auto apply(F f) {
         std::lock_guard<std::mutex> lg(_lock);

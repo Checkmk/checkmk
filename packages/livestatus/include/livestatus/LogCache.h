@@ -8,16 +8,13 @@
 
 #include <chrono>
 #include <cstddef>
-#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
 
 #include "livestatus/Logfile.h"
-
-class LogEntry;
-class Logger;
 class ICore;
+class Logger;
 
 // We keep this on top level to make forward declarations possible.
 class LogFiles {
@@ -73,13 +70,6 @@ public:
         update();
         return f(LogFiles{_logfiles}, _num_cached_log_messages);
     }
-
-    // Call the given callback for each log entry matching the filter in a
-    // chronologically backwards fashion, until the callback returns false. Used
-    // by TableLog::answerQuery().
-    void for_each(
-        const LogFilter &log_filter,
-        const std::function<bool(const LogEntry &)> &process_log_entry);
 
 private:
     ICore *const _mc;

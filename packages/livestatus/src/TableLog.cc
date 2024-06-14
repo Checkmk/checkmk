@@ -7,17 +7,21 @@
 
 #include <bitset>
 #include <chrono>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/LogEntry.h"
+#include "livestatus/Logfile.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -173,6 +177,47 @@ LogFilter constructFilter(Query &query, size_t max_lines_per_logfile) {
         .until = until,
     };
 }
+
+// Call the given callback for each log entry matching the filter in a
+// chronologically backwards fashion, until the callback returns false.
+void for_each_log_entry(
+    LogCache &log_cache, const LogFilter &log_filter,
+    const std::function<bool(const LogEntry &)> &process_log_entry) {
+    log_cache.apply(
+        [&log_filter, &process_log_entry](const LogFiles &log_files,
+                                          size_t /*num_cached_log_messages*/) {
+            if (log_files.begin() == log_files.end()) {
+                return;
+            }
+            auto it = log_files.end();  // it now points beyond last log file
+            --it;  // switch to last logfile (we have at least one)
+
+            // Now find newest log where 'until' is contained. The problem here:
+            // For each logfile we only know the time of the *first* entry, not
+            // that of the last.
+            while (it != log_files.begin() &&
+                   it->second->since() > log_filter.until) {
+                --it;  // while logfiles are too new go back in history
+            }
+            if (it->second->since() > log_filter.until) {
+                return;  // all logfiles are too new
+            }
+
+            while (true) {
+                const auto *entries = it->second->getEntriesFor(
+                    log_filter.max_lines_per_logfile, log_filter.classmask);
+                if (!Logfile::processLogEntries(process_log_entry, entries,
+                                                log_filter)) {
+                    break;  // end of time range found
+                }
+                if (it == log_files.begin()) {
+                    break;  // this was the oldest one
+                }
+                --it;
+            }
+        });
+}
+
 }  // namespace
 
 void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
@@ -193,7 +238,7 @@ void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
         row_type row{entry, core};
         return !is_authorized(row) || query.processDataset(Row{&row});
     };
-    log_cache_->for_each(log_filter, process);
+    for_each_log_entry(*log_cache_, log_filter, process);
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

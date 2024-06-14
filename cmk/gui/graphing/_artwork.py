@@ -737,7 +737,6 @@ def _apply_mirrored(min_value: float, max_value: float) -> tuple[float, float]:
 def _compute_min_max(
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     layouted_curves: Sequence[LayoutedCurve],
-    mirrored: bool,
 ) -> tuple[float, float]:
     def _extract_lc_values() -> Iterator[float]:
         for curve in layouted_curves:
@@ -775,13 +774,10 @@ def _compute_min_max(
         case _:
             assert_never(explicit_vertical_range)
 
-    min_value = min([min_value for min_value in min_values if min_value is not None] or [0.0])
-    max_value = max([max_value for max_value in max_values if max_value is not None] or [1.0])
-
-    # In case the graph is mirrored, the 0 line is always exactly in the middle
-    if mirrored:
-        return _apply_mirrored(min_value, max_value)
-    return min_value, max_value
+    return (
+        min([min_value for min_value in min_values if min_value is not None] or [0.0]),
+        max([max_value for max_value in max_values if max_value is not None] or [1.0]),
+    )
 
 
 def _compute_v_axis_min_max(
@@ -791,7 +787,11 @@ def _compute_v_axis_min_max(
     mirrored: bool,
     height: SizeEx,
 ) -> _VAxisMinMax:
-    min_value, max_value = _compute_min_max(explicit_vertical_range, layouted_curves, mirrored)
+    min_value, max_value = _compute_min_max(explicit_vertical_range, layouted_curves)
+
+    # In case the graph is mirrored, the 0 line is always exactly in the middle
+    if mirrored:
+        min_value, max_value = _apply_mirrored(min_value, max_value)
 
     # physical range, without extra margin or zooming
     real_range = min_value, max_value

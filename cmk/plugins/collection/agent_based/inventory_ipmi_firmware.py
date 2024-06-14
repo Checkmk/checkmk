@@ -5,7 +5,13 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2 import AgentSection, Attributes, InventoryPlugin, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    Attributes,
+    InventoryPlugin,
+    InventoryResult,
+    StringTable,
+)
 
 Section = Mapping[str, str]
 
@@ -26,7 +32,7 @@ agent_section_ipmi_firmware = AgentSection(
 )
 
 
-def inventory_ipmi_firmware(section: Section):  # type: ignore[no-untyped-def]
+def inventory_ipmi_firmware(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "management_interface"],
         inventory_attributes=section,

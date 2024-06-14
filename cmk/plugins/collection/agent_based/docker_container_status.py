@@ -235,7 +235,7 @@ check_plugin_docker_container_status_health = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_docker_container_status(section: Section):  # type: ignore[no-untyped-def]
+def discover_docker_container_status(section: Section) -> DiscoveryResult:
     if isinstance(section, _MultipleNodesMarker) or _is_active_container(section):
         yield Service()
 

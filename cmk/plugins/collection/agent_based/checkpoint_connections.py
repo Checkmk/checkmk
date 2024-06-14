@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
@@ -47,8 +47,8 @@ def discover_checkpoint_connections(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_checkpoint_connections(  # type: ignore[no-untyped-def]
-    params,
+def check_checkpoint_connections(
+    params: dict[str, Any],
     section: Section,
 ) -> CheckResult:
     yield from check_levels(

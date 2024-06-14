@@ -72,8 +72,8 @@ def discover_netapp_api_volumes(
     yield from df_discovery(params, section)
 
 
-def _check_single_netapp_api_volume(  # type: ignore[no-untyped-def]
-    item: str, params: Mapping[str, Any], volume
+def _check_single_netapp_api_volume(
+    item: str, params: Mapping[str, Any], volume: Mapping[str, Any]
 ) -> CheckResult:
     value_store = get_value_store()
     mega = 1024.0 * 1024.0

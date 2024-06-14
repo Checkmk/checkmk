@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.agent_based.v2 import AgentSection, RuleSetType, StringTable
 from cmk.plugins.lib import ps
@@ -54,7 +54,7 @@ HOST_LABEL_DEFAULT_PARAMETERS = {
 # This function is only concerned with deprecated output from psperf.bat,
 # in case of all other output it just returns info unmodified. But if it is
 # a windows output it will extract the number of cpu cores
-def _merge_wmic_info(info) -> tuple[int, list]:  # type: ignore[no-untyped-def]
+def _merge_wmic_info(info: StringTable) -> tuple[int, StringTable]:
     # Agent output version cmk>1.2.5
     # Assumes line = [CLUSTER, PS_INFO, COMMAND]
     has_wmic = False
@@ -73,7 +73,7 @@ def _merge_wmic_info(info) -> tuple[int, list]:  # type: ignore[no-untyped-def]
     return _extract_wmic_info(info)
 
 
-def _extract_wmic_info(info) -> tuple[int, list]:  # type: ignore[no-untyped-def]
+def _extract_wmic_info(info: StringTable) -> tuple[int, StringTable]:
     ps_result = []
     lines = iter(info)
     wmic_info: dict[str, list] = {}
@@ -108,9 +108,9 @@ def _extract_wmic_info(info) -> tuple[int, list]:  # type: ignore[no-untyped-def
     return _merge_wmic(ps_result, wmic_info, wmic_headers)
 
 
-def _merge_wmic(  # type: ignore[no-untyped-def]
-    ps_result, wmic_info, wmic_headers
-) -> tuple[int, list]:
+def _merge_wmic(
+    ps_result: StringTable, wmic_info: Mapping[str, list], wmic_headers: Sequence[str]
+) -> tuple[int, StringTable]:
     info = []
     seen_pids = set()  # Remove duplicate entries
     cpu_cores = 1
@@ -141,9 +141,7 @@ def _merge_wmic(  # type: ignore[no-untyped-def]
 
 
 # This mainly formats the line[1] element which contains the process info (user,...)
-def parse_process_entries(  # type: ignore[no-untyped-def]
-    pre_parsed,
-) -> list[tuple[ps.PsInfo, list[str]]]:
+def parse_process_entries(pre_parsed: StringTable) -> list[tuple[ps.PsInfo, list[str]]]:
     parsed = []
     # line[0] = process_info OR (if no process info available) = process name
     for line in pre_parsed:

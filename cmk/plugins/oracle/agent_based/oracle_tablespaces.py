@@ -337,8 +337,8 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             )
 
 
-def cluster_check_oracle_tablespaces(  # type: ignore[no-untyped-def]
-    item, params, section: Mapping[str, oracle.SectionTableSpaces | None]
+def cluster_check_oracle_tablespaces(
+    item: str, params: dict[str, Any], section: Mapping[str, oracle.SectionTableSpaces | None]
 ) -> CheckResult:
     selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}
 

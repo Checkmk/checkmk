@@ -146,7 +146,7 @@ def discovery_hp_proliant_mem(section: Section) -> DiscoveryResult:
             yield Service(item=module.number)
 
 
-def check_hp_proliant_mem(item, section) -> CheckResult:  # type: ignore[no-untyped-def]
+def check_hp_proliant_mem(item: str, section: Section) -> CheckResult:
     module = section.get(item)
     if module is None:
         return

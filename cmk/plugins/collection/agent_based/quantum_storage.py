@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from cmk.agent_based.v2 import (
     Attributes,
@@ -65,9 +65,7 @@ def discover_quantum_storage_status(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_quantum_storage_status(  # type: ignore[no-untyped-def]
-    params, section: Section
-) -> CheckResult:
+def check_quantum_storage_status(params: Mapping[str, Any], section: Section) -> CheckResult:
     state_txt = _QUANTUM_DEVICE_STATE.get(section.state, f"Unknown [{section.state}]")
     yield Result(
         state=State(params["map_states"].get(state_txt, 3)),

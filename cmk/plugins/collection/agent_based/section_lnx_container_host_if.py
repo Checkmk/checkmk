@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from enum import Enum
 
-from cmk.agent_based.v2 import AgentSection
+from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib.interfaces import (
     Attributes,
     Counters,
@@ -134,7 +134,7 @@ def _create_interface(raw_stats: Mapping[str, str]) -> InterfaceWithCounters:
     )
 
 
-def parse_lnx_container_host_if(string_table) -> Section:  # type: ignore[no-untyped-def]
+def parse_lnx_container_host_if(string_table: StringTable) -> Section:
     return [_create_interface(_parse_raw_stats(i)) for i in string_table], {}
 
 

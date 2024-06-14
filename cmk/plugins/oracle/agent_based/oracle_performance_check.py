@@ -285,8 +285,11 @@ check_plugin_oracle_performance_dbtime = CheckPlugin(
 #
 
 
-def _check_oracle_memory_info(  # type: ignore[no-untyped-def]
-    data, params, sticky_fields: Sequence[str], fields
+def _check_oracle_memory_info(
+    data: Mapping[str, Any],
+    params: Mapping[str, Any],
+    sticky_fields: Sequence[str],
+    fields: Sequence[oracle_constants.OracleSGA] | Sequence[oracle_constants.OraclePGA],
 ) -> CheckResult:
     for ga_field in fields:
         value = data.get(ga_field.name)
@@ -339,14 +342,14 @@ check_plugin_oracle_performance_memory = CheckPlugin(
 #
 
 
-def _check_oracle_performance_iostat_file(  # type: ignore[no-untyped-def]
+def _check_oracle_performance_iostat_file(
     value_store: MutableMapping[str, Any],
     now: float,
     item: str,
     params: Mapping[str, Any],
     data: InstancePerformance,
     unit: str,
-    io_fields,
+    io_fields: Sequence[tuple[int, str, str]],
 ) -> CheckResult:
     totals = [0.0] * len(io_fields)
 

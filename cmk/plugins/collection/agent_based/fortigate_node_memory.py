@@ -60,8 +60,8 @@ def discovery_fortigate_node_memory(section: Section) -> DiscoveryResult:
         yield Service(item=k)
 
 
-def check_fortigate_node_memory(  # type: ignore[no-untyped-def]
-    item, params: Mapping[str, Any], section: Section
+def check_fortigate_node_memory(
+    item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     memory = section.get(item)
     if memory is None:

@@ -7,7 +7,13 @@ import time
 from collections.abc import Mapping
 from contextlib import suppress
 
-from cmk.agent_based.v2 import AgentSection, Attributes, InventoryPlugin, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    Attributes,
+    InventoryPlugin,
+    InventoryResult,
+    StringTable,
+)
 
 
 def parse_win_bios(string_table: StringTable) -> Mapping[str, int | str]:
@@ -45,7 +51,7 @@ agent_section_win_bios = AgentSection(
 )
 
 
-def inventory_win_bios(section: Mapping[str, str | int]):  # type: ignore[no-untyped-def]
+def inventory_win_bios(section: Mapping[str, str | int]) -> InventoryResult:
     attr = {k: section[k] for k in ("date", "model", "vendor", "version") if k in section}
     with suppress(KeyError):
         attr["version"] = (

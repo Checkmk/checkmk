@@ -66,7 +66,7 @@ class CheckParams(TypedDict):
     pl: tuple[int, int]
 
 
-def discover_mtr(section) -> DiscoveryResult:  # type: ignore[no-untyped-def]
+def discover_mtr(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 

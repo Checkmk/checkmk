@@ -27,6 +27,7 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 
 from .lib import render_integer
@@ -67,7 +68,7 @@ MAP_BUILD_STATES = {
 Section = Mapping[str, JenkinsJobInfo]
 
 
-def parse_jenkins_jobs(string_table) -> Section:  # type: ignore[no-untyped-def]
+def parse_jenkins_jobs(string_table: StringTable) -> Section:
     parsed: dict[str, JenkinsJobInfo] = {}
 
     for line in string_table:

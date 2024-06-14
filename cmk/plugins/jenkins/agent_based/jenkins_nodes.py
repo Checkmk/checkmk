@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     Service,
     ServiceLabel,
     State,
+    StringTable,
 )
 
 from .lib import render_integer
@@ -32,7 +33,7 @@ _MAP_NODE_STATES: Final = {
 Section = Mapping[str, Sequence[Mapping]]
 
 
-def parse_jenkins_nodes(string_table) -> Section:  # type: ignore[no-untyped-def]
+def parse_jenkins_nodes(string_table: StringTable) -> Section:
     parsed: dict[str, list[Mapping]] = {}
 
     for line in string_table:

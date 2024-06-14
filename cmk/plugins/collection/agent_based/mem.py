@@ -4,7 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import AgentSection, Attributes, InventoryPlugin, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    Attributes,
+    InventoryPlugin,
+    InventoryResult,
+    StringTable,
+)
 from cmk.plugins.lib import memory
 
 
@@ -44,7 +50,7 @@ agent_section_mem = AgentSection(
 )
 
 
-def inventory_mem(section: memory.SectionMem):  # type: ignore[no-untyped-def]
+def inventory_mem(section: memory.SectionMem) -> InventoryResult:
     yield Attributes(
         path=["hardware", "memory"],
         inventory_attributes={

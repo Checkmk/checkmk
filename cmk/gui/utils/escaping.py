@@ -32,7 +32,11 @@ _TAG_RE = re.compile(r"(<[^>]+?>)")
 
 
 def escape_to_html(value: str) -> HTML:
-    """Escape HTML and return as HTML object"""
+    """Escape HTML and return as HTML object
+
+    >>> escape_to_html("foo<b>bar</b>")
+    HTML("foo&lt;b&gt;bar&lt;/b&gt;")
+    """
     return HTML(escape(value))
 
 

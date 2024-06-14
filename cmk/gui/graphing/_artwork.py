@@ -817,40 +817,24 @@ def _compute_v_axis_min_max(
 
 def _get_min_max_from_curves(
     layouted_curves: Sequence[LayoutedCurve],
-) -> tuple[float | None, float | None]:
-    min_value, max_value = None, None
-
+) -> tuple[float, float] | tuple[None, None]:
     # Now make sure that all points are within the range.
     # Enlarge a given range if necessary.
-    for curve in layouted_curves:
-        for point in curve["points"]:
-            # Line points
-            if isinstance(point, (float, int)):
-                if max_value is None:
-                    max_value = point
-                elif point is not None:
-                    max_value = max(max_value, point)
+    def _extract_values() -> Iterator[float]:
+        for curve in layouted_curves:
+            for point in curve["points"]:
+                if isinstance(point, float):
+                    # Line points
+                    yield point
+                elif isinstance(point, tuple):
+                    # Area points
+                    lower, higher = point
+                    if lower is not None:
+                        yield lower
+                    if higher is not None:
+                        yield higher
 
-                if min_value is None:
-                    min_value = point
-                elif point is not None:
-                    min_value = min(min_value, point)
-
-            # Area points
-            elif isinstance(point, tuple):
-                lower, higher = point
-
-                if max_value is None:
-                    max_value = higher
-                elif higher is not None:
-                    max_value = max(max_value, higher)
-
-                if min_value is None:
-                    min_value = lower
-                elif lower is not None:
-                    min_value = min(min_value, lower)
-
-    return min_value, max_value
+    return (min(values), max(values)) if (values := list(_extract_values())) else (None, None)
 
 
 # Create labels for the necessary range

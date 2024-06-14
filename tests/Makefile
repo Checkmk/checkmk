@@ -53,7 +53,7 @@ BROWSER_ENGINES = "chromium"
 	test-update test-update-docker \
 	test-integration test-integration-docker test-integration-docker-debug \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
-	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
+	test-unit test-unit-all test-unit-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
@@ -110,6 +110,7 @@ help:
 	@echo "test-shellcheck                     - Run shellcheck tests"
 	@echo "test-shellcheck-docker              - Run shellcheck tests in docker"
 	@echo "test-unit                           - Run unit tests"
+	@echo "test-unit-all                       - Run unit tests (including those marked as slow)"
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
 	@echo "test-unit-resilience                - Run unit tests multiple times and in random order in docker"
@@ -366,24 +367,12 @@ test-unit: prepare-protobuf-files sync-legacy-checks
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
-test-unit-slow: prepare-protobuf-files sync-legacy-checks
+test-unit-all: prepare-protobuf-files sync-legacy-checks
 	$(PYTEST) \
-		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
 		$(PYTEST_UNIT_TEST_OPTS)
 
-test-unit-slow-docker:
-	../scripts/run-in-docker.sh make --quiet test-unit-slow
-
-test-unit-resilience: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
-		--count=2 \
-		--random-order-bucket=global \
-	        -m "not non_resilient" \
-		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
-
-test-unit-resilience-docker:
-	../scripts/run-in-docker.sh make test-unit-resilience
+test-unit-all-docker:
+	../scripts/run-in-docker.sh make --quiet test-unit-all
 
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)

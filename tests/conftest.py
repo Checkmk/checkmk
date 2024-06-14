@@ -98,11 +98,6 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys())
     )
-    config.addinivalue_line(
-        "markers",
-        "non_resilient:"
-        " Tests marked as non-resilient are allowed to fail when run in resilience test.",
-    )
 
 
 def pytest_collection_modifyitems(items):

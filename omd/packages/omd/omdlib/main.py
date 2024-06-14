@@ -295,6 +295,11 @@ def calculate_admin_password(options: CommandOptions) -> Password:
 
 
 def set_admin_password(site: SiteContext, pw: Password) -> None:
+    """Write cmkadmin's password hash to htpasswd
+
+    Raises PasswordTooLongError or ValueError if the password is too long or contains disallowed
+    characters.
+    """
     with open("%s/etc/htpasswd" % site.dir, "w") as f:
         f.write("cmkadmin:%s\n" % hash_password(pw))
 

@@ -17,7 +17,7 @@ import re
 import bcrypt
 
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.exceptions import MKException
+from cmk.utils.crypto.types import MKCryptoException
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 BCRYPT_ROUNDS = 12
 
 
-class PasswordTooLongError(MKException):
+class PasswordTooLongError(MKCryptoException):
     """Indicates that the provided password is too long to be used
 
     Currently this will happen when trying to hash a password longer than 72 bytes due to
@@ -34,7 +34,7 @@ class PasswordTooLongError(MKException):
     """
 
 
-class PasswordInvalidError(MKException):
+class PasswordInvalidError(MKCryptoException):
     """Indicates that the provided password could not be verified"""
 
 

@@ -3893,7 +3893,7 @@ class ConfigCache:
     def get_definitive_piggybacked_data_expiry_age(self) -> float:
         """Get the interval after which we definitively can get rid of piggybacked data."""
         return max(
-            *(
+            (
                 value
                 for _, key, value in self.get_piggybacked_hosts_time_settings()
                 if key in {"max_cache_age", "validity_period"}

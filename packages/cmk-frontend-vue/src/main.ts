@@ -14,6 +14,7 @@ import { createApp } from 'vue'
 import D3Table from './views/D3Table.vue'
 import { CmkRuleset } from './components/cmk-form/'
 import Table from './views/CmkTable.vue'
+import { mixinUniqueId } from './plugins'
 
 function setup_vue() {
   document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {
@@ -37,6 +38,9 @@ function setup_vue() {
         data: vueApp.model_value,
         validation: vueApp.validation_messages
       })
+      // Assign a unique id to each component, useful for label for=..
+      // until https://github.com/vuejs/rfcs/discussions/557 is resolved
+      app.use(mixinUniqueId)
       app.mount(div)
     } else if (vueApp.app_name == 'd3_table') {
       console.log('vue create table')

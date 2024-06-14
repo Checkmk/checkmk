@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeMount } from 'vue'
 import CmkFormDispatcher from '../CmkFormDispatcher.vue'
-import { clicked_checkbox_label, type ValidationMessages } from '@/utils'
+import { type ValidationMessages } from '@/utils'
 import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
 
 interface ElementFromProps {
@@ -35,12 +35,11 @@ function get_elements_from_props(): ElementFromProps[] {
   return elements
 }
 
-function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
+function toggle_element(event: MouseEvent, key: string) {
   let target = event.target
   if (!target) {
     return
   }
-  clicked_checkbox_label(target as HTMLLabelElement)
   if (key in data.value) {
     delete data.value[key]
   } else {
@@ -70,15 +69,14 @@ function get_validation_for_child(ident: string): ValidationMessages {
           <span class="checkbox">
             <input
               v-if="!dict_element.dict_config.required"
+              :id="$componentId + dict_element.dict_config.ident"
               v-model="dict_element.is_active"
+              :onclick="
+                (event: MouseEvent) => toggle_element(event, dict_element.dict_config.ident)
+              "
               type="checkbox"
             />
-            <label
-              :onclick="
-                (event: MouseEvent) =>
-                  clicked_dictionary_checkbox_label(event, dict_element.dict_config.ident)
-              "
-            >
+            <label :for="$componentId + dict_element.dict_config.ident">
               {{ dict_element.dict_config.parameter_form.title }}
             </label>
           </span>

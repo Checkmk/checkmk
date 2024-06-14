@@ -39,6 +39,7 @@ const validation = computed(() => {
 </script>
 
 <template>
-  <input v-model="value" type="text" />
+  <label :for="$componentId">{{ props.spec.title }}</label>
+  <input :id="$componentId" v-model="value" type="text" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

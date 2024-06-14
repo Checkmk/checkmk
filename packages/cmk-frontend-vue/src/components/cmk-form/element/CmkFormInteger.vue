@@ -42,14 +42,11 @@ const validation = computed(() => {
   }
   return local_validation.value
 })
-
-const unit = computed(() => {
-  return props.spec.unit || ''
-})
 </script>
 
 <template>
-  <input v-model="value" class="number" type="text" />
-  <span v-if="unit" class="vs_floating_text">{{ unit }}</span>
+  <label v-if="props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
+  <input :id="$componentId" v-model="value" class="number" type="text" />
+  <span v-if="props.spec.unit" class="vs_floating_text">{{ props.spec.unit }}</span>
   <FormValidation :validation="validation"></FormValidation>
 </template>

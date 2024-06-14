@@ -10,7 +10,11 @@ from typing import Required, TypedDict
 
 from cmk.utils import password_store
 
-from cmk.special_agents.v0_unstable.request_helper import create_api_connect_session, parse_api_url
+from cmk.special_agents.v0_unstable.request_helper import (
+    ApiSession,
+    create_api_connect_session,
+    parse_api_url,
+)
 
 
 class ConnectionConfig(TypedDict):
@@ -49,7 +53,7 @@ def extract_connection_args(config):
     return connection_args
 
 
-def generate_api_session(connection_options):
+def generate_api_session(connection_options: dict) -> ApiSession:
     return create_api_connect_session(
         connection_options["api_url"],
         auth=connection_options.get("auth"),

@@ -420,7 +420,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             )
             for hn in value
         ]
-        return "", HTML(", ").join(parts)
+        return "", HTML.without_escaping(", ").join(parts)
 
     def filter_matches(self, crit: list, value: list, hostname: HostName) -> bool:
         return any(item in value for item in crit)

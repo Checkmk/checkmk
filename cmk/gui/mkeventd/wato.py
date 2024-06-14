@@ -357,7 +357,7 @@ def _macros_help() -> HTML:
         + _("The following macros will be substituted by value from the actual event:")
         + HTMLWriter.render_br()
         + HTMLWriter.render_br()
-        + HTMLWriter.render_table(HTML().join(_help_rows), class_="help")
+        + HTMLWriter.render_table(HTML.empty().join(_help_rows), class_="help")
     )
 
 
@@ -374,7 +374,7 @@ def _vars_help() -> HTML:
         + _("This information is available as environment variables")
         + HTMLWriter.render_br()
         + HTMLWriter.render_br()
-        + HTMLWriter.render_table(HTML().join(_help_rows), class_="help")
+        + HTMLWriter.render_table(HTML.empty().join(_help_rows), class_="help")
     )
 
 

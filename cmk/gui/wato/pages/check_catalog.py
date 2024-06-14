@@ -589,7 +589,7 @@ class ModeCheckManPage(WatoMode):
         if self._check_type == "check_mk":
             html.open_tr()
             html.th(_("Service name"))
-            html.td(HTML(self._service_description.replace("%s", "&#9744;")))
+            html.td(HTML.without_escaping(self._service_description.replace("%s", "&#9744;")))
             html.close_tr()
 
             if discovery := self._manpage.discovery:
@@ -653,6 +653,6 @@ class ModeCheckManPage(WatoMode):
         html.open_tr()
         html.th(_("Default parameters"))
         html.open_td()
-        html.write_html(HTML(paramtext))
+        html.write_html(HTML.with_escaping(paramtext))
         html.close_td()
         html.close_tr()

@@ -259,7 +259,7 @@ class ModeAuditLog(WatoMode):
     def _render_filter_form(self) -> HTML:
         with output_funnel.plugged():
             self._display_audit_log_options()
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
@@ -395,11 +395,13 @@ class ModeAuditLog(WatoMode):
                         _("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"]
                     )
 
-                text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
+                text = HTML.without_escaping(
+                    escaping.escape_text(entry.text).replace("\n", "<br>\n")
+                )
                 table.cell(_("Summary"), text)
 
                 if self._show_details:
-                    diff_text = HTML(
+                    diff_text = HTML.without_escaping(
                         escaping.escape_text(entry.diff_text).replace("\n", "<br>\n")
                         if entry.diff_text
                         else ""

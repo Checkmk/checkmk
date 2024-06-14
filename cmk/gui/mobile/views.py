@@ -1017,7 +1017,7 @@ def render_mobile_list(
             html.p(rendered_content, class_=["ui-li-aside", "ui-li-desc", rendered_class])
 
             if len(rendered_cells) > 1:
-                content = HTML(" &middot; ").join(
+                content = HTML.without_escaping(" &middot; ").join(
                     [
                         rendered_cell[1]
                         for rendered_cell in rendered_cells[1 : num_columns + 1]

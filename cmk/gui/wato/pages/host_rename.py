@@ -150,7 +150,7 @@ class ModeBulkRenameHost(WatoMode):
                     HTMLWriter.render_td(host_name) + HTMLWriter.render_td(" → %s" % target_name)
                 )
             )
-        message += HTMLWriter.render_table(HTML().join(rows))
+        message += HTMLWriter.render_table(HTML.empty().join(rows))
 
         nr_rename = len(renamings)
         c = _confirm(

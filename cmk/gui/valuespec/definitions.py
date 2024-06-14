@@ -1929,7 +1929,7 @@ class TextAreaUnicode(TextInput):
 
     def value_to_html(self, value: str) -> ValueSpecText:
         if self._monospaced:
-            return HTMLWriter.render_pre(HTML(value), class_="ve_textarea")
+            return HTMLWriter.render_pre(value, class_="ve_textarea")
         return value.replace("\n", "<br>")
 
     def render_input(self, varprefix: str, value: str | None) -> None:
@@ -2162,8 +2162,8 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
                 HTMLWriter.render_tr(HTMLWriter.render_td(self._valuespec.value_to_html(v)))
                 for v in value
             ]
-            return HTMLWriter.render_table(HTML().join(s))
-        return HTML(", ").join(self._valuespec.value_to_html(v) for v in value)
+            return HTMLWriter.render_table(HTML.empty().join(s))
+        return HTML.without_escaping(", ").join(self._valuespec.value_to_html(v) for v in value)
 
     def from_html_vars(self, varprefix: str) -> Sequence[str]:
         list_prefix = varprefix + "_"
@@ -2522,7 +2522,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             return self._text_if_empty
 
         return HTMLWriter.render_table(
-            HTML().join(
+            HTML.empty().join(
                 HTMLWriter.render_tr(HTMLWriter.render_td(self._valuespec.value_to_html(v)))
                 for v in value
             )
@@ -2736,7 +2736,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return {ident: self._choice_dict[ident].mask(val) for ident, val in value.items()}
 
     def value_to_html(self, value: ListOfMultipleModel) -> ValueSpecText:
-        table_content = HTML()
+        table_content = HTML.empty()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
             table_content += HTMLWriter.render_tr(
@@ -3837,11 +3837,11 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                 ),
             ):
                 html.write_text(rendered_value)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
         return (
-            HTML(escaping.escape_text(choice.title))
-            + HTML(escaping.escape_text(self._separator))
+            HTML.without_escaping(escaping.escape_text(choice.title))
+            + HTML.without_escaping(escaping.escape_text(self._separator))
             + rendered_value
         )
 
@@ -5704,7 +5704,7 @@ class Alternative(ValueSpec[AlternativeModel]):
     def value_to_html(self, value: AlternativeModel) -> ValueSpecText:
         vs = self._matching_alternative(value)
         if vs:
-            output = HTML()
+            output = HTML.empty()
             if self._show_alternative_title and (title := vs.title()):
                 output = escaping.escape_to_html(title) + HTMLWriter.render_br()
             return output + vs.value_to_html(value)
@@ -5865,7 +5865,9 @@ class Tuple(ValueSpec[TT]):
         return tuple(el.mask(val) for _, el, val in self._iter_value(value))  # type: ignore[return-value]
 
     def value_to_html(self, value: TT) -> ValueSpecText:
-        return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
+        return HTML.without_escaping(", ").join(
+            el.value_to_html(val) for _, el, val in self._iter_value(value)
+        )
 
     def value_to_json(self, value: TT) -> JSONValue:
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
@@ -6235,7 +6237,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         return self._value_to_html_multiline(elem, value)
 
     def _value_to_html_multiline(self, elem: DictionaryElements, value: DictionaryModel) -> HTML:
-        s = HTML()
+        s = HTML.empty()
         for param, vs in elem:
             if param in value:
                 if vs.title():
@@ -8392,13 +8394,13 @@ class _CAorCAChain(UploadOrPasteTextFile):
                 HTMLWriter.render_tr(
                     HTMLWriter.render_td("%s:" % title)
                     + HTMLWriter.render_td(
-                        HTML().join(
+                        HTML.empty().join(
                             f"{title1}: {val}" for title1, val in sorted(cert_info[what].items())
                         )
                     )
                 )
             )
-        return HTMLWriter.render_table(HTML().join(rows))
+        return HTMLWriter.render_table(HTML.empty().join(rows))
 
 
 def ListOfCAs(  # pylint: disable=redefined-builtin
@@ -8653,7 +8655,7 @@ def DocumentationURL() -> TextInput:
 
     return TextInput(
         title=_("Documentation URL"),
-        help=HTML(
+        help=HTML.without_escaping(
             _(
                 "Optionally, add a URL linking to a documentation or any other "
                 "page. An icon links to the page and opens in a new tab when "

@@ -152,7 +152,7 @@ class TestValueSpecDictionary:
         )
         assert vs.Dictionary(elements=_test_elements(), required_keys=["a", "c"]).value_to_html(
             {"a": "", "c": "z"}
-        ) == HTML(
+        ) == HTML.without_escaping(
             "<table>"
             "<tr>"
             '<td class="title">A:&nbsp;</td><td></td>'

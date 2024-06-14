@@ -2153,6 +2153,6 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     assert isinstance(displayed_custom_notes, HTML)
 
     notes_as_string = str(displayed_custom_notes)
-    expected_string = str(HTML("<hr>".join(expected_notes)))
+    expected_string = str(HTML.without_escaping("<hr>".join(expected_notes)))
 
     assert expected_string == notes_as_string

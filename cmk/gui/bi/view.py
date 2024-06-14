@@ -480,7 +480,7 @@ class PainterAggrIcons(Painter):
                     "outof_serviceperiod",
                     _("This aggregation is currently out of its service period."),
                 )
-            code = HTML(output_funnel.drain())
+            code = HTML.without_escaping(output_funnel.drain())
         return "buttons", code
 
 
@@ -668,7 +668,7 @@ def paint_aggr_hosts(
     for site, host in row["aggr_hosts"]:
         url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
         h.append(HTMLWriter.render_a(host, url))
-    return "", HTML(" ").join(h)
+    return "", HTML.without_escaping(" ").join(h)
 
 
 class PainterAggrHosts(Painter):
@@ -1177,7 +1177,7 @@ class CommandFreezeAggregation(Command):
         html.close_div()
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML(
+        return HTML.without_escaping(
             _("Affected %s: %s")
             % (
                 ungettext(

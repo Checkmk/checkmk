@@ -349,7 +349,7 @@ class CommandDeleteCrashReports(Command):
         return ["crash"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML(
+        return HTML.without_escaping(
             _("Affected %s: %s")
             % (
                 ungettext(

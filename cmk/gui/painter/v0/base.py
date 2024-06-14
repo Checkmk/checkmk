@@ -641,7 +641,7 @@ class Cell:
             # Current limitation: *one* image
             assert not isinstance(txt, tuple)
             if (isinstance(txt, str) and txt.lower().startswith("<img")) or (
-                isinstance(txt, HTML) and txt.lower().startswith(HTML("<img"))
+                isinstance(txt, HTML) and txt.lower().startswith(HTML.without_escaping("<img"))
             ):
                 img_filename = re.sub(".*src=[\"']([^'\"]*)[\"'].*", "\\1", str(txt))
                 img_path = find_htdocs_image_path(img_filename)

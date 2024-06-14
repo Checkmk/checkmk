@@ -160,7 +160,7 @@ def _render_graph_html(
 ) -> HTML:
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
-        html_code = HTML(output_funnel.drain())
+        html_code = HTML.without_escaping(output_funnel.drain())
 
     return HTMLWriter.render_javascript(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
@@ -274,7 +274,7 @@ def _show_html_graph_title(
             graph_render_config,
             explicit_title=graph_render_config.explicit_title,
         ),
-        separator=" / ",
+        separator=HTML.without_escaping(" / "),
     )
     if not title:
         return
@@ -336,7 +336,7 @@ def _show_graph_html_content(
     if additional_html := graph_artwork.definition.additional_html:
         html.open_div(align="center")
         html.h2(additional_html.title)
-        html.write_html(HTML(additional_html.html))
+        html.write_html(HTML.without_escaping(additional_html.html))
         html.close_div()
 
     html.close_div()
@@ -655,7 +655,7 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
 
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
-        html_code = HTML(output_funnel.drain())
+        html_code = HTML.without_escaping(output_funnel.drain())
 
     return {
         "html": html_code,
@@ -750,7 +750,7 @@ def _render_graphs_from_definitions(
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML()
+    output = HTML.empty()
     for graph_recipe in graph_recipes:
         recipe_specific_render_config = graph_render_config.model_copy(
             update=dict(graph_recipe.render_options)
@@ -839,7 +839,7 @@ def _render_graph_content_html(
     *,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML()
+    output = HTML.empty()
 
     try:
         graph_artwork = compute_graph_artwork(
@@ -922,7 +922,7 @@ def _render_time_range_selection(
             )
         )
     return HTMLWriter.render_table(
-        HTML().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
+        HTML.empty().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
     )
 
 

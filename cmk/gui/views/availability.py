@@ -249,7 +249,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
     # Deletion must take place before computation, since it affects the outcome
     with output_funnel.plugged():
         handle_delete_annotations()
-        confirmation_html_code = HTML(output_funnel.drain())
+        confirmation_html_code = HTML.without_escaping(output_funnel.drain())
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
     request.del_vars("anno_")
@@ -435,7 +435,7 @@ def _render_avoptions_form(
 ) -> HTML:
     with output_funnel.plugged():
         _show_availability_options(option_type, what, avoptions, valuespecs)
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def _page_menu_entries_av_mode(
@@ -868,7 +868,7 @@ def show_bi_availability(  # pylint: disable=too-many-branches
 
     if not user_errors:
         # iterate all aggregation rows
-        timewarpcode = HTML()
+        timewarpcode = HTML.empty()
         timewarp = request.get_integer_input("timewarp")
 
         # The timewarp is used to display an aggregation at a specific timestamp
@@ -988,7 +988,7 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                     html.close_tr()
                     html.close_table()
 
-                    timewarpcode += HTML(output_funnel.drain())
+                    timewarpcode += HTML.without_escaping(output_funnel.drain())
 
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 

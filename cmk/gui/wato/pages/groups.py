@@ -405,7 +405,7 @@ class ModeContactgroups(ModeGroups):
         super()._show_row_cells(nr, table, name, group)
         table.cell(_("Members"))
         html.write_html(
-            HTML(", ").join(
+            HTML.without_escaping(", ").join(
                 [
                     HTMLWriter.render_a(
                         alias,

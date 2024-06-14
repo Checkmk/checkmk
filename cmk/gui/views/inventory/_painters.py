@@ -133,7 +133,7 @@ class PainterInventoryTree(Painter):
 
         with output_funnel.plugged():
             tree_renderer.show(tree)
-            code = HTML(output_funnel.drain())
+            code = HTML.without_escaping(output_funnel.drain())
 
         return "invtree", code
 
@@ -211,7 +211,7 @@ class PainterInvhistDelta(Painter):
 
         with output_funnel.plugged():
             tree_renderer.show(tree)
-            code = HTML(output_funnel.drain())
+            code = HTML.without_escaping(output_funnel.drain())
 
         return "invtree", code
 
@@ -463,7 +463,7 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
 
     with output_funnel.plugged():
         tree_renderer.show(tree)
-        code = HTML(output_funnel.drain())
+        code = HTML.without_escaping(output_funnel.drain())
 
     return "invtree", code
 

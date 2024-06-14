@@ -745,7 +745,7 @@ class PainterSvcMetrics(Painter):
                 show_metric_id=self._painter_options.get("show_internal_graph_and_metric_ids"),
                 theme=self.theme,
             )
-            return "", HTML(output_funnel.drain())
+            return "", HTML.without_escaping(output_funnel.drain())
 
     def _show_metrics_table(
         self,
@@ -907,7 +907,7 @@ class PainterSvcNotesURL(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         raw_url = row.get("service_notes_url")
         if not raw_url:
-            return None, HTML()
+            return None, HTML.empty()
 
         url = replace_action_url_macros(raw_url, "service", row)
         content = self.url_renderer.link_direct(url, html_text=url, target="_blank")
@@ -1581,7 +1581,7 @@ class PainterSvcGroupMemberlist(Painter):
                 ],
             )
             links.append(link)
-        return "", HTML(", ").join(links)
+        return "", HTML.without_escaping(", ").join(links)
 
 
 class PainterCheckManpage(Painter):
@@ -1627,19 +1627,19 @@ class PainterCheckManpage(Painter):
         except KeyError:
             return "", ""
 
-        description = (
+        description = HTML.without_escaping(
             escaping.escape_attribute(page.description)
             .replace("{", "<b>")
             .replace("}", "</b>")
             .replace("&lt;br&gt;", "<br>")
             .replace("\n\n", "\n<br>\n")
         )
-        return "", HTML(description)
+        return "", description
 
 
 def _paint_comments(prefix: str, row: Row) -> CellSpec:
     comments = row[prefix + "comments_with_info"]
-    text = HTML(", ").join(
+    text = HTML.without_escaping(", ").join(
         [
             HTMLWriter.render_i(a)
             + escaping.escape_to_html_permissive(": %s" % c, escape_links=False)
@@ -1730,7 +1730,9 @@ def _paint_custom_notes(what: str, row: Row, *, config: Config) -> CellSpec:
 
     for f in files:
         contents.append(replace_tags(f.read_text(encoding="utf8").strip()))
-    return "", HTML("<hr>".join(contents))
+    # These notes can only be created if you have site user access.
+    # And yes that feature is used: SUP-15290
+    return "", HTML.without_escaping("<hr>".join(contents))
 
 
 class PainterSvcCustomNotes(Painter):
@@ -1811,7 +1813,7 @@ def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> Ce
             rows.append(
                 HTMLWriter.render_tr(HTMLWriter.render_td(varname) + HTMLWriter.render_td(value))
             )
-    return "", HTMLWriter.render_table(HTML().join(rows))
+    return "", HTMLWriter.render_table(HTML.empty().join(rows))
 
 
 class PainterServiceCustomVariables(Painter):
@@ -2115,7 +2117,7 @@ class PainterHostNotesURL(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         raw_url = row.get("host_notes_url")
         if not raw_url:
-            return None, HTML()
+            return None, HTML.empty()
 
         url = replace_action_url_macros(raw_url, "host", row)
         content = self.url_renderer.link_direct(url, html_text=url, target="_blank")
@@ -3029,7 +3031,7 @@ def _paint_service_list(row: Row, columnname: str, *, renderer: RenderLink) -> C
             return entry[0].lower(), entry[1].lower()
         return entry[0].lower()
 
-    h = HTML()
+    h = HTML.empty()
     for entry in sorted(row[columnname], key=sort_key):
         if columnname.startswith("servicegroup"):
             host, svc, state, checked = entry
@@ -3203,7 +3205,7 @@ class PainterHostGroupMemberlist(Painter):
                 ],
             )
             links.append(link)
-        return "", HTML(", ").join(links)
+        return "", HTML.without_escaping(", ").join(links)
 
 
 class PainterHostContacts(Painter):
@@ -3550,7 +3552,7 @@ class PainterHostgroupHosts(Painter):
             else:
                 css = "hstatep"
             divs.append(HTMLWriter.render_div(link, class_=css))
-        return "", HTMLWriter.render_div(HTML("").join(divs), class_="objectlist")
+        return "", HTMLWriter.render_div(HTML.empty().join(divs), class_="objectlist")
 
 
 class PainterHgNumServices(Painter):
@@ -4696,7 +4698,7 @@ class PainterLogContactName(Painter):
             )
             for contact in row["log_contact_name"].split(",")
         ]
-        return "nowrap", HTML(", ").join(links)
+        return "nowrap", HTML.without_escaping(", ").join(links)
 
 
 class PainterLogCommand(Painter):

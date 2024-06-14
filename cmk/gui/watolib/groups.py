@@ -364,7 +364,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                         ),
                     )
                 )
-        result: HTML = HTML(", ").join(texts)
+        result: HTML = HTML.without_escaping(", ").join(texts)
         if texts and value["use"]:
             result += HTMLWriter.render_span(
                 HTMLWriter.render_b("*"),

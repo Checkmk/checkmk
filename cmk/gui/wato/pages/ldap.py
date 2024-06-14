@@ -866,7 +866,7 @@ class ModeEditLDAPConnection(WatoMode):
         html.h2(_("Diagnostics"))
         if not request.var("_test") or not self._connection_id:
             html.show_message(
-                HTML(
+                HTML.without_escaping(
                     "<p>%s</p><p>%s</p>"
                     % (
                         _(

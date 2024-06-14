@@ -108,7 +108,8 @@ class HTMLWriter:
 
     def write_text(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
-        self.write_html(HTML(escaping.escape_text(text)))
+        # This is going to be write_text_permissive CMK-13491
+        self.write_html(HTML.without_escaping(escaping.escape_text(text)))
 
     def write_html(self, content: HTML) -> None:
         """Write HTML code directly, without escaping."""
@@ -159,7 +160,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
-        return render_element("script", HTML(code), **attrs)
+        return render_element("script", HTML.without_escaping(code), **attrs)
 
     def final_javascript(self, code: FinalJavaScript) -> None:
         self._final_javascript.append(code)
@@ -268,7 +269,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_br() -> HTML:
-        return HTML("<br />")
+        return HTML.without_escaping("<br />")
 
     def br(self) -> None:
         self.write_html(HTMLWriter.render_br())
@@ -285,7 +286,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_nbsp() -> HTML:
-        return HTML("&nbsp;")
+        return HTML.without_escaping("&nbsp;")
 
     def nbsp(self) -> None:
         self.write_html(HTMLWriter.render_nbsp())

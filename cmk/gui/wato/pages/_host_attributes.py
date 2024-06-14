@@ -319,12 +319,12 @@ def configure_attributes(  # pylint: disable=too-many-branches
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation: HTML = HTML("")
+            explanation: HTML = HTML.empty()
             value: object = None
             if for_what == "bulk":
                 if num_haveit == 0:
                     assert inherited_from is not None
-                    explanation = HTML(" (") + inherited_from + HTML(")")
+                    explanation = " (" + inherited_from + ")"
                     value = inherited_value
                 elif not unique:
                     explanation = escape_to_html(

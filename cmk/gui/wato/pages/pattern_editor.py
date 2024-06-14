@@ -269,7 +269,7 @@ class ModePatternEditor(WatoMode):
                     # Each rule can hold no, one or several patterns. Loop them all here
                     for state, pattern, comment in pattern_list:
                         match_class = ""
-                        disp_match_txt = HTML("")
+                        disp_match_txt = HTML.empty()
                         match_img = ""
                         if rule_matches:
                             # Applies to the given host/service

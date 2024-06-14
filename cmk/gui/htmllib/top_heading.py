@@ -16,7 +16,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
-from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -40,10 +39,8 @@ def top_heading(
     writer.open_div(class_="titlebar")
     writer.open_div()
 
-    # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
-    # here and self.a() escapes the content (with permissive escaping) again. We don't want
-    # to handle "title" permissive.
-    html_title = HTML(escaping.escape_attribute(title))
+    # We don't want to handle "title" permissive.
+    html_title = HTML.with_escaping(title)
     writer.a(
         html_title,
         class_="title",
@@ -95,7 +92,7 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
             )
         ).header
     ) and (set(header_effect.roles).intersection(user.role_ids)):
-        writer.show_warning(HTML(header_effect.message_html))
+        writer.show_warning(HTML.without_escaping(header_effect.message_html))
 
 
 def _make_default_page_state(

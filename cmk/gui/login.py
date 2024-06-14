@@ -371,15 +371,11 @@ class LoginPage(Page):
                 footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
 
             footer.append(
-                HTML(
-                    "&copy; %s"
-                    % HTMLWriter.render_a(
-                        "Checkmk GmbH", href="https://checkmk.com", target="_blank"
-                    )
-                )
+                HTML.without_escaping("&copy; ")
+                + HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank")
             )
 
-            html.write_html(HTML(" - ").join(footer))
+            html.write_html(HTML.without_escaping(" - ").join(footer))
 
             html.close_div()
 

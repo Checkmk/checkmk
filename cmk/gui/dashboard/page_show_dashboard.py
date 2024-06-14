@@ -1109,7 +1109,7 @@ def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> No
         css.append("background")
 
     html.open_div(id_="dashlet_inner_%d" % dashlet.dashlet_id, class_=css)
-    html.write_html(HTML(content))
+    html.write_html(HTML.with_escaping(content))
     html.close_div()
 
 
@@ -1152,7 +1152,7 @@ def ajax_dashlet() -> None:
             dashlet = _fallback_dashlet(name, owner, board, dashlet_spec, ident)
         content = render_dashlet_exception_content(dashlet, e)
 
-    html.write_html(HTML(content))
+    html.write_html(HTML.with_escaping(content))
 
 
 # TODO: This should not be done during runtime at "random" places. Instead the typing and

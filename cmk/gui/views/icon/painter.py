@@ -121,7 +121,7 @@ def _paint_icons(
 
     The icons use a plug-in based mechanism so it is possible to register own icon "handlers".
     """
-    output = HTML()
+    output = HTML.empty()
     for icon in toplevel_icons:
         if isinstance(icon, IconEntry):
             if icon.url_spec:

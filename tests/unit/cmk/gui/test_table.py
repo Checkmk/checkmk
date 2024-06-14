@@ -70,7 +70,7 @@ def test_cell_content_escaping() -> None:
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "<script>alert('A')</script>")
-            table.cell("B", HTML("<script>alert('B')</script>"))
+            table.cell("B", HTML.without_escaping("<script>alert('B')</script>"))
             table.cell("C", "<b>C</b>")
 
         written_text = output_funnel.drain()
@@ -86,7 +86,7 @@ def test_cell_title_escaping() -> None:
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
             table.cell("<script>alert('A')</script>")
-            table.cell(HTML("<script>alert('B')</script>"))
+            table.cell(HTML.without_escaping("<script>alert('B')</script>"))
             table.cell("<b>C</b>")
 
         written_text = output_funnel.drain()

@@ -104,7 +104,12 @@ class TestAuditLogStore:
     @pytest.mark.usefixtures("request_context")
     def test_transport_html(self, store: AuditLogStore) -> None:
         entry = AuditLogStore.Entry(
-            int(time.time()), None, "user", "action", HTML("Mäss<b>ädsch</b>"), None
+            int(time.time()),
+            None,
+            "user",
+            "action",
+            HTML.without_escaping("Mäss<b>ädsch</b>"),
+            None,
         )
         store.append(entry)
         assert list(store.read()) == [entry]
@@ -232,7 +237,7 @@ def test_log_audit_with_html_message() -> None:
             object_ref=None,
             user_id=UserId("calvin"),
             action="bla",
-            message=HTML("Message <b>bla</b>"),
+            message=HTML.without_escaping("Message <b>bla</b>"),
         )
 
     store = AuditLogStore()
@@ -242,7 +247,7 @@ def test_log_audit_with_html_message() -> None:
             object_ref=None,
             user_id="calvin",
             action="bla",
-            text=HTML("Message <b>bla</b>"),
+            text=HTML.without_escaping("Message <b>bla</b>"),
             diff_text=None,
         ),
     ]

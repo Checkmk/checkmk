@@ -68,7 +68,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
     def render(self) -> HTML:
         with output_funnel.plugged():
             self._show_tree()
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _show_tree(self):
         tree = self._get_tree()
@@ -181,7 +181,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
             if show_host:
                 html.a(host.replace(" ", "&nbsp;"), href=host_url)
-                html.b(HTML("&diams;"), class_="bullet")
+                html.b(HTML.without_escaping("&diams;"), class_="bullet")
 
             if not service:
                 html.a(_("Host&nbsp;status"), href=host_url)
@@ -380,7 +380,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         finally:
             if mousecode:
                 if str(effective_state["state"]) in tree[2].get("state_messages", {}):
-                    html.b(HTML("&diams;"), class_="bullet")
+                    html.b(HTML.without_escaping("&diams;"), class_="bullet")
                     html.write_text(tree[2]["state_messages"][str(effective_state["state"])])
 
                 html.close_span()
@@ -392,9 +392,11 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             )
 
             if output:
-                output = HTMLWriter.render_b(HTML("&diams;"), class_="bullet") + output
+                output = (
+                    HTMLWriter.render_b(HTML.without_escaping("&diams;"), class_="bullet") + output
+                )
             else:
-                output = HTML()
+                output = HTML.empty()
 
             css_classes = ["content", "output"]
             html.span(output, class_=css_classes)
@@ -499,7 +501,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
             if self._mirror:
                 tds.reverse()
 
-            html.write_html(HTML("").join(tds))
+            html.write_html(HTML.empty().join(tds))
             html.close_tr()
 
         html.close_table()
@@ -518,7 +520,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
     ) -> list[tuple[HTML, int, list]]:
         with output_funnel.plugged():
             self._show_leaf(tree, show_host)
-            content = HTML(output_funnel.drain())
+            content = HTML.without_escaping(output_funnel.drain())
         return [(content, height, [])]
 
     def _gen_node(
@@ -534,7 +536,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
             with self._show_node(tree, show_host):
                 html.write_text(tree[2]["title"])
             html.close_div()
-            content = HTML(output_funnel.drain())
+            content = HTML.without_escaping(output_funnel.drain())
 
         if leaves:
             leaves[0][2].append((len(leaves), content))

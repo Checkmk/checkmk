@@ -593,22 +593,22 @@ class GUIViewRenderer(ABCViewRenderer):
 
     def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
         if not display_options.enabled(display_options.F):
-            return HTML()
+            return HTML.empty()
 
         with output_funnel.plugged():
             show_filter_form(self.view, show_filters)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _render_painter_options_form(self) -> HTML:
         with output_funnel.plugged():
             painter_options = PainterOptions.get_instance()
             painter_options.show_form(self.view.spec, self.view.painter_options)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _render_command_form(self, info_name: InfoName, command: Command) -> HTML:
         with output_funnel.plugged():
             if not should_show_command_form(self.view.datasource):
-                return HTML()
+                return HTML.empty()
 
             # TODO: Make unique form names (object IDs), investigate whether or not something
             # depends on the form name "actions"
@@ -621,7 +621,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
                 html.hidden_fields()
 
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
         # TODO

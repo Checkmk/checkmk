@@ -250,4 +250,4 @@ def _render_add_to_popup(add_to_type: Literal["dashboard", "report"], source_typ
             f")",
             cssclass="hot",
         )
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())

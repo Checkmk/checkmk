@@ -15,7 +15,6 @@ from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils import escaping
-from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.graph import cmk_graph_url
 
@@ -65,7 +64,7 @@ class PainterPerfometer(Painter):
 
         assert h is not None
         content = (
-            HTMLWriter.render_div(HTML(h), class_=["content"])
+            HTMLWriter.render_div(h, class_=["content"])
             + HTMLWriter.render_div(title, class_=["title"])
             + HTMLWriter.render_div("", class_=["glass"])
         )

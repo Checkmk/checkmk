@@ -32,7 +32,6 @@ from cmk.gui.type_defs import (
     ViewSpec,
     Visual,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
@@ -340,7 +339,7 @@ def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
             treename=tree_id,
             id_="/" + folder[".path"],
             isopen=False,
-            title=HTML(title),
+            title=title,
             padding=6,
         ):
             for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):

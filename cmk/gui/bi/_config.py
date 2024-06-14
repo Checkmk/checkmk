@@ -621,7 +621,9 @@ class ModeBIPacks(ABCBIMode):
                 table.cell(_("Rules"), str(len(pack.rules)), css=["number"])
                 table.cell(
                     _("Contact groups"),
-                    HTML(", ").join(map(self._render_contact_group, pack.contact_groups)),
+                    HTML.without_escaping(", ").join(
+                        map(self._render_contact_group, pack.contact_groups)
+                    ),
                 )
 
     def _render_contact_group(self, c: GroupName) -> HTML:
@@ -923,7 +925,7 @@ class ModeBIRules(ABCBIMode):
         with output_funnel.plugged():
             move_choices = self._show_bulk_move_choices()
             if not move_choices:
-                return HTML()
+                return HTML.empty()
 
             if request.has_var("bulk_moveto"):
                 html.javascript(
@@ -944,7 +946,7 @@ class ModeBIRules(ABCBIMode):
                 "_bulk_move_bi_rules", _("Bulk move"), "submit", form="form_bulk_action_form"
             )
 
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _show_bulk_move_choices(self) -> list[tuple[str, str]]:
         return [
@@ -1040,8 +1042,8 @@ class ModeBIRules(ABCBIMode):
                     if bi_rule.properties.icon:
                         cell_title: HTML | str = (
                             html.render_icon(bi_rule.properties.icon)
-                            + HTML("&nbsp;")
-                            + escaping.escape_to_html(bi_rule.properties.title)
+                            + HTMLWriter.render_nbsp()
+                            + HTML.with_escaping(bi_rule.properties.title)
                         )
                     else:
                         cell_title = escaping.escape_to_html(bi_rule.properties.title)
@@ -1345,7 +1347,7 @@ class ModeBIEditRule(ABCBIMode):
                 "docu_url",
                 TextInput(
                     title=_("Documentation URL"),
-                    help=HTML(
+                    help=HTML.without_escaping(
                         _(
                             "An optional URL pointing to documentation or any other page. This will be "
                             "displayed as an icon %s and open "
@@ -2201,7 +2203,7 @@ class BIModeAggregations(ABCBIMode):
         with output_funnel.plugged():
             move_choices = self._show_bulk_move_choices()
             if not move_choices:
-                return HTML()
+                return HTML.empty()
 
             if request.has_var("bulk_moveto"):
                 html.javascript(
@@ -2221,7 +2223,7 @@ class BIModeAggregations(ABCBIMode):
             html.button(
                 "_bulk_move_bi_aggregations", _("Bulk move"), "submit", form="form_bulk_action_form"
             )
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _show_bulk_move_choices(self) -> Choices:
         return [

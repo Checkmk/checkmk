@@ -127,7 +127,7 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
     try:
         with output_funnel.plugged():
             f.display(value)
-            html.write_html(HTML(output_funnel.drain()))
+            html.write_html(HTML.without_escaping(output_funnel.drain()))
     except LivestatusTestingError:
         raise
     except Exception as e:

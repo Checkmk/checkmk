@@ -670,7 +670,7 @@ class DiscoveryPageRenderer:
             for state, output in sources.values():
                 html.open_tr()
                 html.open_td()
-                html.write_html(HTML(get_html_state_marker(state)))
+                html.write_html(HTML.without_escaping(get_html_state_marker(state)))
                 html.close_td()
                 # Make sure not to show long output
                 html.td(
@@ -770,8 +770,8 @@ class DiscoveryPageRenderer:
             table.cell(_("Host labels"), labels_html, css=["expanding"])
             return
 
-        plugin_names = HTML("")
-        labels_html = HTML("")
+        plugin_names = HTML.empty()
+        labels_html = HTML.empty()
         for label_id, label in host_labels.items():
             plugin_names += HTMLWriter.render_p(label["plugin_name"])
             labels_html += render_labels(
@@ -1129,12 +1129,10 @@ class DiscoveryPageRenderer:
             output, *_details = entry.output.split("\n", 1)
             if output:
                 html.write_html(
-                    HTML(
-                        format_plugin_output(
-                            output,
-                            request=request,
-                            shall_escape=active_config.escape_plugin_output,
-                        )
+                    format_plugin_output(
+                        output,
+                        request=request,
+                        shall_escape=active_config.escape_plugin_output,
                     )
                 )
             return
@@ -1176,7 +1174,7 @@ class DiscoveryPageRenderer:
             rulespec.valuespec.validate_datatype(params, "")
             rulespec.valuespec.validate_value(params, "")
             paramtext = rulespec.valuespec.value_to_html(params)
-            html.write_html(HTML(paramtext))
+            html.write_html(HTML.with_escaping(paramtext))
         except Exception as e:
             if active_config.debug:
                 err = traceback.format_exc()

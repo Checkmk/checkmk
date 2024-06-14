@@ -2031,7 +2031,7 @@ class ABCEditRuleMode(WatoMode):
 
         help_text = self._ruleset.help()
         if help_text:
-            html.div(HTML(help_text), class_="info")
+            html.div(help_text, class_="info")
 
         with html.form_context("rule_editor", method="POST"):
             self._page_form()
@@ -2398,17 +2398,15 @@ class VSExplicitConditions(Transform):
         return (
             _("Note that:")
             + html.render_ul(
-                html.render_li(HTML(_('"not" is the abbreviation for "and not",')))
+                html.render_li(_('"not" is the abbreviation for "and not",'))
                 + html.render_li(
-                    HTML(
-                        _(
-                            'the operators are processed in the priority: "not", "and", "or" - according '
-                            "to the Boolean algebra standards."
-                        )
+                    _(
+                        'the operators are processed in the priority: "not", "and", "or" - according '
+                        "to the Boolean algebra standards."
                     )
                 )
             )
-            + HTML(
+            + HTML.without_escaping(
                 _("For more help have a look at the %s.")
                 % html.render_a(
                     _("documentation"),
@@ -2541,7 +2539,7 @@ class VSExplicitConditions(Transform):
             else:
                 html.li(_("No conditions"), class_="no_conditions")
             html.close_ul()
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
 
 class RuleConditionRenderer:
@@ -2563,7 +2561,7 @@ class RuleConditionRenderer:
     ) -> Iterable[HTML]:
         for taggroup_id, tag_spec in host_tag_conditions.items():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
-                yield HTML(" <i>or</i> ").join(
+                yield HTML.without_escaping(" <i>or</i> ").join(
                     [
                         self._single_tag_condition(
                             taggroup_id,
@@ -2576,7 +2574,9 @@ class RuleConditionRenderer:
                     ]
                 )
             elif isinstance(tag_spec, dict) and "$nor" in tag_spec:
-                yield HTML(_("Neither") + " ") + HTML(" <i>nor</i> ").join(
+                yield HTML.without_escaping(_("Neither") + " ") + HTML.without_escaping(
+                    " <i>nor</i> "
+                ).join(
                     [
                         self._single_tag_condition(
                             taggroup_id,
@@ -2652,13 +2652,7 @@ class RuleConditionRenderer:
             return
 
         labels_html = render_label_groups(label_conditions, object_type)
-        yield HTML(
-            _("%s matching labels: %s")
-            % (
-                object_title,
-                labels_html,
-            )
-        )
+        yield HTML.with_escaping(_("%s matching labels: ") % object_title) + labels_html
 
     def _host_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         if conditions.host_name is None:
@@ -2748,10 +2742,10 @@ class RuleConditionRenderer:
         if len(text_list) == 1:
             condition.append(text_list[0])
         else:
-            condition.append(HTML(", ").join(text_list[:-1]))
+            condition.append(HTML.without_escaping(", ").join(text_list[:-1]))
             condition.append(escape_to_html(_("or ")) + text_list[-1])
 
-        return HTML(" ").join(condition)
+        return HTML.without_escaping(" ").join(condition)
 
     def _service_conditions(  # pylint: disable=too-many-branches
         self,
@@ -2767,7 +2761,7 @@ class RuleConditionRenderer:
             yield escape_to_html(_("Does not match any service"))
             return
 
-        condition = HTML()
+        condition = HTML.empty()
         if item_type == "service":
             condition = escape_to_html(_("Service name"))
         elif item_type == "item":
@@ -2775,7 +2769,7 @@ class RuleConditionRenderer:
                 condition = escape_to_html(item_name)
             else:
                 condition = escape_to_html(_("Item"))
-        condition += HTML(" ")
+        condition += HTML.without_escaping(" ")
 
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"]
@@ -2815,8 +2809,8 @@ class RuleConditionRenderer:
         if len(text_list) == 1:
             condition += text_list[0]
         else:
-            condition += HTML(", ").join(text_list[:-1])
-            condition += escape_to_html(_(" or ")) + text_list[-1]
+            condition += HTML.without_escaping(", ").join(text_list[:-1])
+            condition += _(" or ") + text_list[-1]
 
         if condition:
             yield condition

@@ -114,7 +114,7 @@ def test_render_element_escape_content() -> None:
 
 
 def test_render_element_do_not_escape_html() -> None:
-    tag = render_element("a", HTML("b<script>alert(1)</script>la"), href="ding")
+    tag = render_element("a", HTML.without_escaping("b<script>alert(1)</script>la"), href="ding")
     assert isinstance(tag, HTML)
     assert str(tag) == '<a href="ding">b<script>alert(1)</script>la</a>'
 

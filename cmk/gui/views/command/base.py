@@ -94,7 +94,7 @@ class Command(abc.ABC):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML("")
+        return HTML.empty()
 
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
         return "question"
@@ -127,7 +127,7 @@ class Command(abc.ABC):
         )
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML(
+        return HTML.with_escaping(
             _("Affected %s: %s")
             % (
                 (

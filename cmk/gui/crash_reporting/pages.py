@@ -332,7 +332,9 @@ class PageCrash(ABCCrashReportPage):
                 "The following files located in the local hierarchy of your site are involved in this exception:"
             )
         )
-        warn_text += HTMLWriter.render_ul(HTML("\n").join(map(HTMLWriter.render_li, files)))
+        warn_text += HTMLWriter.render_ul(
+            HTML.without_escaping("\n").join(map(HTMLWriter.render_li, files))
+        )
         warn_text += escaping.escape_to_html(
             _(
                 "Maybe these files are not compatible with your current Checkmk "
@@ -641,7 +643,7 @@ def _show_output_box(title: str, content: bytes) -> None:
     html.h3(title, class_="table")
     html.open_div(class_="log_output")
     html.write_html(
-        HTML(
+        HTML.without_escaping(
             escaping.escape_attribute(content.decode(errors="surrogateescape"))
             .replace("\n", "<br>")
             .replace(" ", "&nbsp;")

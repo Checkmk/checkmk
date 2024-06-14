@@ -148,7 +148,7 @@ def compute_cell_spec(
 ) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
     tdclass, code = paint_function(item.value)
-    html_value = HTML() + code
+    html_value = HTML.with_escaping(code)
     if (
         not html_value
         or item.retention_interval is None
@@ -164,7 +164,7 @@ def compute_cell_spec(
             tdclass,
             HTMLWriter.render_span(
                 html_value
-                + HTML("&nbsp;")
+                + HTMLWriter.render_nbsp()
                 + HTMLWriter.render_img(icon_path_svc_problems, class_=["icon"]),
                 title=_("Data is outdated and will be removed with the next check execution"),
                 css=["muted_text"],
@@ -195,7 +195,7 @@ def _compute_delta_cell_spec(item: _SDDeltaItem, paint_function: PaintFunction) 
         return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
     if item.old == item.new:
         tdclass, rendered_value = paint_function(item.old)
-        return tdclass, HTML(rendered_value)
+        return tdclass, HTML.with_escaping(rendered_value)
     if item.old is not None and item.new is not None:
         tdclass, rendered_old_value = paint_function(item.old)
         tdclass, rendered_new_value = paint_function(item.new)
@@ -293,7 +293,8 @@ class TreeRenderer:
         self._tree_name = f"inv_{hostname}{tree_id}"
 
     def _get_header(self, title: str, key_info: str) -> HTML:
-        header = HTML(title)
+        # Todo (CMK-17819)
+        header = HTML.without_escaping(title)
         if self._show_internal_tree_paths:
             header += " " + HTMLWriter.render_span(f"({key_info})", css="muted_text")
         return header

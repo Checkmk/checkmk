@@ -66,7 +66,7 @@ def get_flashed_messages(
         if isinstance(_flash, tuple):
             msg_type = _flash[0]
             assert _is_valid_msg_type(msg_type)
-            result.append(FlashedMessage(msg=HTML(_flash[1]), msg_type=msg_type))
+            result.append(FlashedMessage(msg=HTML.without_escaping(_flash[1]), msg_type=msg_type))
         else:
-            result.append(FlashedMessage(msg=HTML(_flash), msg_type="message"))
+            result.append(FlashedMessage(msg=HTML.without_escaping(_flash), msg_type="message"))
     return result

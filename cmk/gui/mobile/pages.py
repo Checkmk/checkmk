@@ -11,6 +11,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -50,7 +51,7 @@ NavigationBar = list[tuple[str, str, str, str]]
 
 def mobile_html_head(title: str) -> None:
     html.write_html(
-        HTML(
+        HTML.without_escaping(
             """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
         )
     )
@@ -172,7 +173,8 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
         if top == topic:
             html.open_li()
             html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
-            html.write_html(HTML(title))
+            # Todo (CMK-17819)
+            html.write_html(HTML.without_escaping(title))
             html.close_a()
             html.close_li()
     html.close_ul()
@@ -220,7 +222,8 @@ def page_login() -> None:
     html.open_div(id_="loginfoot")
     html.img("themes/facelift/images/logo_cmk_small.png", class_="logomk")
     html.div(
-        HTML(_('&copy; <a target="_blank" href="https://checkmk.com">Checkmk GmbH</a>')),
+        HTML.without_escaping("&copy; ")
+        + HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank"),
         class_="copyright",
     )
     html.close_div()  # close content-div

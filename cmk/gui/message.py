@@ -337,15 +337,15 @@ def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-
             )
         )
 
-    message += HTMLWriter.render_ul(HTML().join(parts))
+    message += HTMLWriter.render_ul(HTML.empty().join(parts))
     message += HTMLWriter.render_p(_("Recipients: %s") % ", ".join(recipients))
     html.show_message(message)
 
     if errors:
-        error_message = HTML()
+        error_message = HTML.empty()
         for method, method_errors in errors.items():
             error_message += _("Failed to send %s messages to the following users:") % method
-            table_rows = HTML()
+            table_rows = HTML.empty()
             for user_id, exception in method_errors:
                 table_rows += HTMLWriter.render_tr(
                     HTMLWriter.render_td(HTMLWriter.render_tt(user_id))

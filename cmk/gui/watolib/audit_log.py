@@ -64,7 +64,11 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
             if not isinstance(raw, dict):
                 raise ValueError("expected a dictionary")
             # TODO: Parse raw's entries, too, below we have our traditional 'wishful typing'... :-P
-            raw["text"] = HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1]
+            raw["text"] = (
+                HTML.without_escaping(raw["text"][1])
+                if raw["text"][0] == "html"
+                else raw["text"][1]
+            )
             raw["object_ref"] = (
                 ObjectRef.deserialize(raw["object_ref"]) if raw["object_ref"] else None
             )

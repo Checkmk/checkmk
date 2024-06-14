@@ -281,7 +281,7 @@ class Table:
                 str(text) if not isinstance(text, str) else text, escape_links=False
             )
 
-        htmlcode: HTML = content + HTML(output_funnel.drain())
+        htmlcode: HTML = content + HTML.without_escaping(output_funnel.drain())
 
         if isinstance(title, HTML):
             header_title = title
@@ -642,7 +642,9 @@ class Table:
                 first_col = False
                 if actions_enabled:
                     if not header_title:
-                        header_title = HTML("&nbsp;")  # Fixes layout problem with white triangle
+                        header_title = (
+                            HTMLWriter.render_nbsp()
+                        )  # Fixes layout problem with white triangle
 
                     if actions_visible:
                         state = "0"

@@ -37,7 +37,7 @@ def escape_to_html(value: str) -> HTML:
     >>> escape_to_html("foo<b>bar</b>")
     HTML("foo&lt;b&gt;bar&lt;/b&gt;")
     """
-    return HTML(escape(value))
+    return HTML.with_escaping(value)
 
 
 def escape_to_html_permissive(value: str, escape_links: bool = True) -> HTML:
@@ -55,7 +55,7 @@ def escape_to_html_permissive(value: str, escape_links: bool = True) -> HTML:
     >>> escape_to_html_permissive('<a href="mailto:security@checkmk.com">no closing a', escape_links=False)
     HTML("<a href="mailto:security@checkmk.com">no closing a")
     """
-    return HTML(escape_text(value, escape_links=escape_links))
+    return HTML.without_escaping(escape_text(value, escape_links=escape_links))
 
 
 # TODO: Cleanup the accepted types!
@@ -222,7 +222,7 @@ def strip_tags(ht: EscapableEntity) -> str:
 
         Even HTML objects get stripped.
 
-        >>> strip_tags(HTML('<a href="https://example.com">click here</a>'))
+        >>> strip_tags(HTML.without_escaping('<a href="https://example.com">click here</a>'))
         'click here'
 
         Everything we don't know about won't get stripped.

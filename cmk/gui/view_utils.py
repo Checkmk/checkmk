@@ -85,7 +85,7 @@ def format_plugin_output(  # pylint: disable=redefined-outer-name
 
     if newlineishs_to_brs:
         output = output.replace("\\n", "<br>").replace("\n", "<br>")
-    return HTML(output)
+    return HTML.without_escaping(output)
 
 
 def _consolidate_escaping_options(row: Row | None, shall_escape: bool) -> bool:
@@ -181,7 +181,7 @@ def row_limit_exceeded(row_count: int, limit: int | None) -> bool:
 
 def query_limit_exceeded_warn(limit: int | None, user_config: LoggedInUser) -> None:
     """Compare query reply against limits, warn in the GUI about incompleteness"""
-    text = HTML(_("Your query produced more than %d results. ") % limit)
+    text = HTML.with_escaping(_("Your query produced more than %d results. ") % limit)
 
     if request.get_ascii_input("limit", "soft") == "soft" and user_config.may(
         "general.ignore_soft_limit"
@@ -235,22 +235,20 @@ def render_labels(  # pylint: disable=redefined-outer-name
 
 
 def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
-    overall_html = HTML()
+    overall_html = HTML.empty()
 
     is_first_group: bool = True
     for group_op, label_group in label_groups:
-        group_html = HTML()
+        group_html = HTML.empty()
 
         # Render group operator
         if not is_first_group:
             group_op_str = "and not" if group_op == "not" else group_op  # prepend "not" with "and "
             overall_html += (
-                HTML(" ")
-                + HTMLWriter.render_i(group_op_str, class_="andornot_operator")
-                + HTML(" ")
+                " " + HTMLWriter.render_i(group_op_str, class_="andornot_operator") + " "
             )
 
-        group_html += HTML("[")  # open group
+        group_html += "["  # open group
 
         is_first_label: bool = True
         for label_op, label in label_group:
@@ -280,7 +278,7 @@ def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
             )
             is_first_label = False
 
-        group_html += HTML("]")  # close group
+        group_html += "]"  # close group
         overall_html += HTMLWriter.render_div(group_html, class_="label_group")
         is_first_group = False
 
@@ -327,7 +325,9 @@ def _render_tag_groups_or_labels(  # pylint: disable=redefined-outer-name
         for tag_group_id_or_label_key, tag_id_or_label_value in sorted(entries.items())
     ]
     return HTMLWriter.render_tags(
-        HTML(" ").join(elements), class_=["tagify", label_type, "display"], readonly="true"
+        HTML.without_escaping(" ").join(elements),
+        class_=["tagify", label_type, "display"],
+        readonly="true",
     )
 
 

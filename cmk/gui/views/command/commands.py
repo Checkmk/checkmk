@@ -163,7 +163,11 @@ class CommandReschedule(Command):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML("<br><br>") + "Spreading: %s minutes" % request.var("_resched_spread")
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
+            + "Spreading: %s minutes" % request.var("_resched_spread")
+        )
 
     def render(self, what: str) -> None:
         html.open_div(class_="group")
@@ -269,8 +273,9 @@ class CommandNotifications(Command):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML(
-            "<br><br>"
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
             + (
                 _("Notifications will be sent according to the notification rules")
                 if request.var("_enable_notifications")
@@ -543,8 +548,9 @@ class CommandClearModifiedAttributes(Command):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML(
-            "<br><br>"
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
             + _("Resets the commands '%s', '%s' and '%s' to the default state")
             % (
                 CommandToggleActiveChecks().title,
@@ -1244,7 +1250,7 @@ class CommandRemoveAcknowledgments(Command):
         return (
             html.render_div(_("Acknowledgments: ") + str(self._number_of_acknowledgments))
             if self._number_of_acknowledgments
-            else HTML()
+            else HTML.empty()
         )
 
     def _action(
@@ -1610,7 +1616,7 @@ class CommandScheduleDowntimes(Command):
         html.close_div()
 
     def _get_duration_options(self) -> HTML:
-        duration_options = HTML("")
+        duration_options = HTML.empty()
         for nr, time_range in enumerate(active_config.user_downtime_timeranges):
             css_class = ["button", "duration"]
             time_range_end = time_range["end"]
@@ -1848,7 +1854,7 @@ class CommandScheduleDowntimes(Command):
             )
         )
 
-        attributes = HTML("")
+        attributes = HTML.empty()
         if recurring_number_from_html := self.recurring_downtimes.number():
             attributes += HTMLWriter.render_li(
                 _("Repeats every %s")
@@ -2243,7 +2249,7 @@ class CommandRemoveComments(Command):
         return ["comment"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML("")
+        return HTML.empty()
 
     def confirm_dialog_additions(
         self,
@@ -2252,8 +2258,8 @@ class CommandRemoveComments(Command):
         len_action_rows: int,
     ) -> HTML:
         if len_action_rows > 1:
-            return HTML(_("Total comments: %d") % len_action_rows)
-        return HTML(_("Author: %s") % row["comment_author"])
+            return HTML.without_escaping(_("Total comments: %d") % len_action_rows)
+        return HTML.without_escaping(_("Author: ")) + row["comment_author"]
 
     def render(self, what: str) -> None:
         html.open_div(class_="group")

@@ -932,7 +932,7 @@ def _rename_tags_after_confirmation(
             len(affected_rulesets),
         )
 
-    message = HTML()
+    message = HTML.empty()
     affected_folders, affected_hosts, affected_rulesets = change_host_tags(
         operation, TagCleanupMode.CHECK
     )
@@ -947,7 +947,7 @@ def _rename_tags_after_confirmation(
                 + ":"
             )
             _show_affected_folders(affected_folders)
-            message += HTML(output_funnel.drain())
+            message += HTML.without_escaping(output_funnel.drain())
 
     if affected_hosts:
         with output_funnel.plugged():
@@ -959,7 +959,7 @@ def _rename_tags_after_confirmation(
                 + ":"
             )
             _show_affected_hosts(affected_hosts)
-            message += HTML(output_funnel.drain())
+            message += HTML.without_escaping(output_funnel.drain())
 
     if affected_rulesets:
         with output_funnel.plugged():
@@ -967,7 +967,7 @@ def _rename_tags_after_confirmation(
                 _("Rulesets that contain rules with references to the changed tags") + ":"
             )
             _show_affected_rulesets(affected_rulesets)
-            message += HTML(output_funnel.drain())
+            message += HTML.without_escaping(output_funnel.drain())
 
     if message:
         wato_html_head(title=operation.confirm_title(), breadcrumb=breadcrumb)

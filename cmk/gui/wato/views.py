@@ -65,15 +65,15 @@ def get_wato_folder(row: Row, how: str, with_links: bool = True, *, request: Req
     if how == "plain":
         return title_path[-1]
     if how == "abs":
-        return HTML(" / ").join(title_path)
+        return HTML.without_escaping(" / ").join(title_path)
     # We assume that only hosts are show, that are below the current Setup path.
     # If not then better output absolute path then wrong path.
     current_path = request.var("wato_folder")
     if not current_path or not wato_path.startswith(current_path):
-        return HTML(" / ").join(title_path)
+        return HTML.without_escaping(" / ").join(title_path)
 
     depth = current_path.count("/") + 1
-    return HTML(" / ").join(title_path[depth:])
+    return HTML.without_escaping(" / ").join(title_path[depth:])
 
 
 def paint_wato_folder(row: Row, how: str, *, request: Request) -> CellSpec:

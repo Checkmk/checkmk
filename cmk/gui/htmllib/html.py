@@ -180,18 +180,18 @@ class HTMLGenerator(HTMLWriter):
             text = "%s" % text
 
         if not text:
-            return HTML("")
+            return HTML.empty()
 
         stripped: str = text.strip()
         if not stripped:
-            return HTML("")
+            return HTML.empty()
 
-        help_text: str = self.resolve_help_text_macros(stripped)
+        help_text = HTML.without_escaping(self.resolve_help_text_macros(stripped))
 
         self.enable_help_toggle()
         style: str = "display:%s;" % ("flex" if user.show_help else "none")
         inner_html: HTML = HTMLWriter.render_div(self.render_icon("info"), class_="info_icon")
-        inner_html += HTMLWriter.render_div(HTML(help_text), class_="help_text")
+        inner_html += HTMLWriter.render_div(help_text, class_="help_text")
         return HTMLWriter.render_div(inner_html, class_="help", style=style)
 
     @staticmethod
@@ -355,7 +355,7 @@ class HTMLGenerator(HTMLWriter):
         if get_render_mode() != ExperimentalRenderMode.BACKEND:
             javascript_files.append("vue")
         if force or not self._header_sent:
-            self.write_html(HTML("<!DOCTYPE HTML>\n"))
+            self.write_html(HTML.without_escaping("<!DOCTYPE HTML>\n"))
             self.open_html()
             self._head(title, javascript_files)
             self._header_sent = True
@@ -529,7 +529,7 @@ class HTMLGenerator(HTMLWriter):
         class_: CSSSpec | None = None,
     ) -> HTML:
         if value is None:
-            return HTML("")
+            return HTML.empty()
         if add_var:
             self.add_form_var(var)
         return self.render_input(
@@ -1278,7 +1278,7 @@ class HTMLGenerator(HTMLWriter):
         assert href is not None
 
         return HTMLWriter.render_a(
-            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme)),
+            content=HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme),
             href=href,
             title=title,
             id_=id_,
@@ -1418,7 +1418,10 @@ class HTMLGenerator(HTMLWriter):
 
         # TODO: Make method.content return HTML
         return HTMLWriter.render_div(
-            atag + HTML(method.content), class_=classes, id_="popup_trigger_%s" % ident, style=style
+            atag + HTML.without_escaping(method.content),
+            class_=classes,
+            id_="popup_trigger_%s" % ident,
+            style=style,
         )
 
     def element_dragger_url(self, dragging_tag: str, base_url: str) -> None:

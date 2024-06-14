@@ -172,7 +172,7 @@ class ModeRoles(WatoMode):
                 # Users
                 table.cell(
                     _("Users"),
-                    HTML(", ").join(
+                    HTML.without_escaping(", ").join(
                         [
                             HTMLWriter.render_a(
                                 user.get("alias", user_id),

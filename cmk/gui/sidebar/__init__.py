@@ -624,8 +624,12 @@ class SidebarRenderer:
         html.close_div()
 
     def _show_onboarding(self) -> None:
-        html.write_html(HTML('<script type="module" src="onboarding/search.js"></script>'))
-        html.write_html(HTML('<link rel="stylesheet" href="onboarding/search.css">'))
+        html.write_html(
+            HTML.without_escaping('<script type="module" src="onboarding/search.js"></script>')
+        )
+        html.write_html(
+            HTML.without_escaping('<link rel="stylesheet" href="onboarding/search.css">')
+        )
         html.open_div(id_="searchApp")
         html.close_div()
 

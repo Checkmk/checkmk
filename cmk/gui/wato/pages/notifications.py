@@ -1454,7 +1454,7 @@ class ModeNotifications(ABCNotificationsMode):
             )
             html.buttonlink(makeuri(request, []), _("Cancel"))
 
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
     def _get_default_options(self, hostname: str | None, servicename: str | None) -> dict[str, str]:
         if hostname and servicename:

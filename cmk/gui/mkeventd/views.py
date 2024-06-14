@@ -494,7 +494,9 @@ class PainterEventText(Painter):
         return ["event_text"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return "", HTML(escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>"))
+        return "", HTML.without_escaping(
+            escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
+        )
 
 
 class PainterEventMatchGroups(Painter):
@@ -515,11 +517,11 @@ class PainterEventMatchGroups(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         groups = row["event_match_groups"]
         if groups:
-            code = HTML("")
+            code = HTML.empty()
             for text in groups:
                 code += HTMLWriter.render_span(text)
             return "matchgroups", code
-        return "", HTML("")
+        return "", HTML.empty()
 
 
 class PainterEventFirst(Painter):
@@ -643,10 +645,8 @@ class PainterEventHost(Painter):
     def render(self, row: Row, cell: "Cell") -> CellSpec:
         host_name = row.get("host_name", row["event_host"])
 
-        return "", HTML(
-            html.render_a(
-                host_name, _get_event_host_link(host_name, row, cell, request=self.request)
-            )
+        return "", html.render_a(
+            host_name, _get_event_host_link(host_name, row, cell, request=self.request)
         )
 
 
@@ -1282,7 +1282,7 @@ class ECCommand(Command):
         return ["event"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML(
+        return HTML.with_escaping(
             _("Affected %s: %s")
             % (
                 ungettext(
@@ -1420,8 +1420,9 @@ class CommandECChangeState(ECCommand):
     ) -> HTML:
         value = MonitoringState().from_html_vars("_mkeventd_state")
         assert value is not None
-        return HTML(
-            "<br><br>"
+        return (
+            HTMLWriter.render_br()
+            + HTMLWriter.render_br()
             + _("New state: %s")
             % {
                 0: _("OK"),
@@ -1594,12 +1595,12 @@ class CommandECArchiveEventsOfHost(ECCommand):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML() + _(
+        return HTML.empty() + _(
             "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
         ) % request.var("host")
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML("")
+        return HTML.empty()
 
     def render(self, what: str) -> None:
         html.help(

@@ -630,8 +630,10 @@ class ModeObjectParameters(WatoMode):
                 if ruleset.match_type() == "all":
                     if not isinstance(setting, list):
                         raise ValueError(f"Expected list, got {setting}")
-                    html.write_text(
-                        HTML(", ").join([valuespec.value_to_html(value) for value in setting])
+                    html.write_html(
+                        HTML.without_escaping(", ").join(
+                            [valuespec.value_to_html(value) for value in setting]
+                        )
                     )
                 else:
                     html.write_text(valuespec.value_to_html(setting))

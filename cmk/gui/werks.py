@@ -80,10 +80,6 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page_handler("werk", page_werk)
 
 
-def render_description(description: str) -> HTML:
-    return HTML(description)
-
-
 def get_werk_by_id(werk_id: int) -> Werk:
     for werk in load_werk_entries():
         if werk.id == werk_id:
@@ -311,7 +307,7 @@ def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
             html.close_div()
             html.hidden_fields()
 
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def _show_werk_options_controls() -> None:
@@ -374,7 +370,7 @@ def page_werk() -> None:
         css="werkcomp werkcomp%s" % _to_ternary_compatibility(werk),
     )
     werk_table_row(
-        _("Description"), render_description(werk.description), css="nowiki"
+        _("Description"), HTML.without_escaping(werk.description), css="nowiki"
     )  # TODO: remove nowiki
 
     html.close_table()
@@ -734,7 +730,7 @@ def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bo
 
     if werk_table_options["werk_content"]:
         search_text = werk_table_options["werk_content"].lower()
-        text = werk.title + strip_tags(render_description(werk.description))
+        text = werk.title + strip_tags(werk.description)
         if search_text not in text.lower():
             return False
 
@@ -839,7 +835,7 @@ def render_nowiki_werk_description(  # pylint: disable=too-many-branches
             html.close_ul()
 
         html.close_p()
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def insert_manpage_links(text: str) -> HTML:
@@ -859,7 +855,7 @@ def insert_manpage_links(text: str) -> HTML:
             new_parts.append(HTMLWriter.render_a(content=part, href=url))
         else:
             new_parts.append(escape_to_html(part))
-    return HTML(" ").join(new_parts)
+    return HTML.without_escaping(" ").join(new_parts)
 
 
 @request_memoize()

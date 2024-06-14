@@ -358,7 +358,7 @@ class ModeUsers(WatoMode):
         elif self._job_snapshot.is_active:
             # Still running
             html.show_message(
-                HTML(_("User synchronization currently running: ")) + self._job_details_link()
+                _("User synchronization currently running: ") + self._job_details_link()
             )
             url = makeuri(request, [])
             html.immediate_browser_redirect(2, url)
@@ -374,8 +374,7 @@ class ModeUsers(WatoMode):
         elif not self._job_snapshot.acknowledged_by and self._job_snapshot.has_exception:
             # Finished, but not OK - show info message with links to details
             html.show_warning(
-                HTML(_("Last user synchronization ran into an exception: "))
-                + self._job_details_link()
+                _("Last user synchronization ran into an exception: ") + self._job_details_link()
             )
 
         users = userdb.load_users()
@@ -604,7 +603,7 @@ class ModeUsers(WatoMode):
                     folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)])
                     for c in cgs
                 ]
-                cg_html = HTML(", ").join(
+                cg_html = HTML.without_escaping(", ").join(
                     HTMLWriter.render_a(content, href=url)
                     for (content, url) in zip(cg_aliases, cg_urls)
                 )
@@ -794,7 +793,7 @@ class ModeUsers(WatoMode):
                         for role in user_spec["roles"]
                     ]
                     html.write_html(
-                        HTML(", ").join(
+                        HTML.without_escaping(", ").join(
                             HTMLWriter.render_a(alias, href=link) for (link, alias) in role_links
                         )
                     )
@@ -811,7 +810,7 @@ class ModeUsers(WatoMode):
                         for c in cgs
                     ]
                     html.write_html(
-                        HTML(", ").join(
+                        HTML.without_escaping(", ").join(
                             HTMLWriter.render_a(content, href=url)
                             for (content, url) in zip(cg_aliases, cg_urls)
                         )

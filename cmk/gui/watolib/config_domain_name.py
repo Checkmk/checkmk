@@ -312,7 +312,7 @@ class ConfigVariable:
         return True
 
     def hint(self) -> HTML:
-        return HTML()
+        return HTML.empty()
 
 
 class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariable]]):

@@ -1089,13 +1089,13 @@ class ModeFolder(WatoMode):
         permitted_groups, host_contact_groups, _use_for_services = host.groups()
         table.cell(
             _("Permissions"),
-            HTML(", ").join(
+            HTML.without_escaping(", ").join(
                 [self._render_contact_group(contact_group_names, g) for g in permitted_groups]
             ),
         )
         table.cell(
             _("Contact Groups"),
-            HTML(", ").join(
+            HTML.without_escaping(", ").join(
                 [self._render_contact_group(contact_group_names, g) for g in host_contact_groups]
             ),
         )
@@ -1130,9 +1130,9 @@ class ModeFolder(WatoMode):
             html.a(host.folder().alias_path(), href=host.folder().url())
 
     def _limit_labels(self, labels: TagsOrLabels) -> tuple[TagsOrLabels, HTML]:
-        show_all, limit = HTML(""), 3
+        show_all, limit = HTML.empty(), 3
         if len(labels) > limit and request.var("_show_all") != "1":
-            show_all = HTML(" ") + HTMLWriter.render_a(
+            show_all = HTML.without_escaping(" ") + HTMLWriter.render_a(
                 "... (%s)" % _("show all"), href=makeuri(request, [("_show_all", "1")])
             )
             labels = dict(sorted(labels.items())[:limit])
@@ -1203,7 +1203,7 @@ class ModeFolder(WatoMode):
             dropdown = WatoFolderChoices(html_attrs={"form": form_name})
             dropdown.render_input("_bulk_moveto", "")
             html.button("_bulk_move", _("Move"), form=form_name)
-            return HTML(output_funnel.drain())
+            return HTML.without_escaping(output_funnel.drain())
 
 
 # TODO: Split this into one base class and one subclass for folder and hosts

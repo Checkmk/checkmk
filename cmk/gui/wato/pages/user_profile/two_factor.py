@@ -211,7 +211,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             )
         )
         codesdiv = html.render_div(
-            HTML("").join(
+            HTML.empty().join(
                 [html.render_div(code.raw, class_="codelistelement") for code, _v in codes]
             ),
             class_="codelist",
@@ -224,7 +224,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             value=_("Copy codes to clipboard"),
             class_=["button buttonlink"],
         )
-        return HTML("").join([header_msg, message1, codesdiv, message2, copy_button])
+        return HTML.empty().join([header_msg, message1, codesdiv, message2, copy_button])
 
     def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         assert user.id is not None

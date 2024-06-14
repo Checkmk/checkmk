@@ -93,7 +93,7 @@ class Perfometer:
 
 
 def render_perfometer(data: Sequence[tuple[float, str]]) -> HTML:
-    tds = HTML().join(_render_perfometer_td(percentage, color) for percentage, color in data)
+    tds = HTML.empty().join(_render_perfometer_td(percentage, color) for percentage, color in data)
     return HTMLWriter.render_table(HTMLWriter.render_tr(tds))
 
 
@@ -119,7 +119,7 @@ def _render_metricometer(stack: Sequence[Sequence[tuple[int | float, str]]]) -> 
         raise MKGeneralException(
             _("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack
         )
-    h = HTML().join(map(render_perfometer, stack))
+    h = HTML.empty().join(map(render_perfometer, stack))
     if len(stack) == 2:
         h = HTMLWriter.render_div(h, class_="stacked")
     return h

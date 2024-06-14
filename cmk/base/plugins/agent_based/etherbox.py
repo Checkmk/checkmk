@@ -148,8 +148,7 @@ def check_etherbox_temp(
         temperature.check_temperature(
             temp,
             params,
-            unique_name="etherbox_temp_%s" % item,
-            value_store=get_value_store(),
+            value_store_tuple=("etherbox_temp_%s" % item, get_value_store()),
             dev_unit=section.unit_of_measurement,
         )
     )

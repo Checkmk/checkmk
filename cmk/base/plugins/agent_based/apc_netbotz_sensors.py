@@ -134,8 +134,7 @@ def check_apc_netbotz_sensors(
         yield from check_temperature(
             data.reading,
             params,
-            unique_name=f"apc_netbotz_sensors_{sensor_type}_{item}",
-            value_store=get_value_store(),
+            value_store_tuple=(f"apc_netbotz_sensors_{sensor_type}_{item}", get_value_store()),
         )
 
 

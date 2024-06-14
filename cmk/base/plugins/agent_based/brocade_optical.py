@@ -408,8 +408,7 @@ def check_brocade_optical(
         yield from temperature.check_temperature(
             temp,
             None,
-            unique_name="brocade_optical_%s" % item,
-            value_store=get_value_store(),
+            value_store_tuple=("brocade_optical_%s" % item, get_value_store()),
             dev_status=_monitoring_state(iface["temp"], params.get("temp", False)),
         )
     yield from _check_light(
@@ -431,8 +430,10 @@ def check_brocade_optical(
                 temperature.check_temperature(
                     temp,
                     None,
-                    unique_name="brocade_optical_lane%d_%s" % (num, item),
-                    value_store=get_value_store(),
+                    value_store_tuple=(
+                        "brocade_optical_lane%d_%s" % (num, item),
+                        get_value_store(),
+                    ),
                     dev_status=_monitoring_state(lane["temp"], params.get("temp", False)),
                 )
             )

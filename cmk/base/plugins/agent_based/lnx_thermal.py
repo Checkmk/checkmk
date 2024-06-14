@@ -137,8 +137,7 @@ def check_lnx_thermal(item: str, params: TempParamType, section: Section) -> Che
         reading=data.temperature,
         params=params,
         dev_levels=_get_levels(data),
-        unique_name=item,
-        value_store=get_value_store(),
+        value_store_tuple=(item, get_value_store()),
     )
 
 

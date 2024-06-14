@@ -107,8 +107,7 @@ def check_aruba_chassis_temp(
         params=params,
         dev_levels=(chassis.threshold_temp, chassis.threshold_temp),
         dev_unit=chassis.dev_unit,
-        unique_name=item,
-        value_store=get_value_store(),
+        value_store_tuple=(item, get_value_store()),
     )
 
     yield Result(

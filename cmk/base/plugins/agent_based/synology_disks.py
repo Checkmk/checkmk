@@ -89,8 +89,7 @@ def check_synology_disks(item: str, params: Mapping[str, Any], section: Section)
             params={
                 "device_levels_handling": "usr",
             },
-            unique_name=item,
-            value_store=get_value_store(),
+            value_store_tuple=(item, get_value_store()),
         )
     )
     yield from temperature_result[:2]  # ignore statement about level matching set to "usr"

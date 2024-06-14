@@ -146,8 +146,7 @@ def check_bluecoat_sensors_temp(
     yield from check_temperature(
         reading=sensor.value,
         params=params,
-        unique_name=item,
-        value_store=get_value_store(),
+        value_store_tuple=(item, get_value_store()),
         dev_status=0 if sensor.is_ok else 2,
         dev_status_name="OK" if sensor.is_ok else "Not OK",
     )

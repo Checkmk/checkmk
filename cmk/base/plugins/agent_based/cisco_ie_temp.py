@@ -43,8 +43,7 @@ def check(item: SensorId, params: TempParamDict, section: Section) -> CheckResul
     yield from check_temperature(
         reading=temperature,
         params=params,
-        unique_name=item,
-        value_store=get_value_store(),
+        value_store_tuple=(item, get_value_store()),
     )
 
 

@@ -157,7 +157,7 @@ def check_brocade_sfp_temp(item: str, params: TempParamDict, section: Section) -
     port_info = section[port_index]
 
     yield from check_temperature(
-        port_info["temp"], params, unique_name=item, value_store=get_value_store()
+        port_info["temp"], params, value_store_tuple=(item, get_value_store())
     )
 
 

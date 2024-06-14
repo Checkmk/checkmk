@@ -273,8 +273,7 @@ def check_nvidia_smi_temperature(
     yield from check_temperature(
         reading=gpu.temperature.gpu_temp,
         params=params,
-        unique_name=item,
-        value_store=get_value_store(),
+        value_store_tuple=(item, get_value_store()),
     )
 
 

@@ -175,8 +175,7 @@ def check_ups_modulys_battery_temp(
         yield from check_temperature(
             reading=section.temperature,
             params=params,
-            unique_name=f"ups_modulys_battery_temp_{item}",
-            value_store=get_value_store(),
+            value_store_tuple=(f"ups_modulys_battery_temp_{item}", get_value_store()),
         )
 
 

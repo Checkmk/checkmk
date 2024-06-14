@@ -125,8 +125,7 @@ def check_temp(
     yield from check_temperature(
         sensor.reading,
         params,
-        unique_name=f"infoblox_cpu_temp_{item}",
-        value_store=value_store,
+        value_store_tuple=(f"infoblox_cpu_temp_{item}", value_store),
         dev_status=devstate,
         dev_status_name=devstatename,
         dev_unit=sensor.unit,

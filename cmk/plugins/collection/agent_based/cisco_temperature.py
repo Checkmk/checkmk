@@ -591,8 +591,7 @@ def _check_cisco_temperature(
     yield from check_temperature(
         reading,
         params,
-        unique_name="cisco_temperature_%s" % item,
-        value_store=value_store,
+        value_store_tuple=("cisco_temperature_%s" % item, get_value_store()),
         dev_levels=data.get("dev_levels_upper", None),
         dev_levels_lower=data.get("dev_levels_lower", None),
         dev_status=state,

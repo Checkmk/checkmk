@@ -265,8 +265,7 @@ def check_temperature(  # pylint: disable=too-many-branches
     reading: float,
     params: TempParamType,
     *,
-    unique_name: str | None = None,
-    value_store: MutableMapping[str, Any] | None = None,
+    value_store_tuple: tuple[str, MutableMapping[str, Any]] | tuple[None, None] = (None, None),
     dev_unit: str | None = "c",
     dev_levels: tuple[float, float] | None = None,
     dev_levels_lower: tuple[float, float] | None = None,
@@ -281,8 +280,8 @@ def check_temperature(  # pylint: disable=too-many-branches
     Args:
         reading: The numeric temperature value itself.
         params: A dictionary giving the user's configuration. See below.
-        unique_name: The name under which to track performance data for trend computation.
-        value_store: The Value Store to used for trend computation
+        value_store_tuple: A tuple containing the name under which to track performance data for
+            trend computation and the Value Store to used for trend computation.
         dev_unit: The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
         dev_levels: The upper levels (warn, crit)
         dev_levels_lower: The lower levels (warn, crit)
@@ -312,11 +311,7 @@ def check_temperature(  # pylint: disable=too-many-branches
          - cmk/gui/plugins/wato/check_parameters/temperature.py
 
     """
-    if (unique_name is None) ^ (value_store is None):
-        raise ValueError(
-            "Cannot compute trend. Either specify both variables 'unique_name' and 'value_store'"
-            " or none."
-        )
+    unique_name, value_store = value_store_tuple
 
     # Convert legacy tuple params into new dict
     params = _migrate_params(params)

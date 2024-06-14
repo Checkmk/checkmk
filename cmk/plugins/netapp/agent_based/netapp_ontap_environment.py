@@ -107,11 +107,10 @@ def check_environment_threshold(
         yield from check_temperature(
             reading=_scale(data.value, data.value_units),
             params=params,
-            unique_name=_perf_key(f"netapp_environment_thermal_{data.name}"),
+            value_store_tuple=(_perf_key(f"netapp_environment_thermal_{data.name}"), value_store),
             dev_unit=_scale_unit(data.value_units),
             dev_levels=levels[:2],
             dev_levels_lower=levels[2:],
-            value_store=value_store,
         )
         return
 

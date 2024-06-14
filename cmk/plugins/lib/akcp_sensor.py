@@ -154,8 +154,7 @@ def check_akcp_sensor_temp(item: str, params: TempParamDict, section: Section) -
             yield from check_temperature(
                 reading=temperature,
                 params=params,
-                unique_name=f"akcp_sensor_temp_{item}",
-                value_store=get_value_store(),
+                value_store_tuple=(f"akcp_sensor_temp_{item}", get_value_store()),
                 dev_unit=unit_normalised,
                 dev_levels=(high_w, high_c),
                 dev_levels_lower=(low_w, low_c),

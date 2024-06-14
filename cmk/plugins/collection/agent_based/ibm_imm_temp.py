@@ -83,8 +83,7 @@ def _check_ibm_imm_temp(
     yield from check_temperature(
         reading=temperature.temperature,
         params=params,
-        unique_name=item,
-        value_store=value_store,
+        value_store_tuple=(item, value_store),
         dev_levels=temperature.upper_device_levels,
         dev_levels_lower=temperature.lower_device_levels,
     )

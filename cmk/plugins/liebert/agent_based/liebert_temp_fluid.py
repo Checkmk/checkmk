@@ -100,8 +100,7 @@ def check_liebert_temp_fluid(item: str, params: TempParamDict, section: Section)
     yield from check_temperature(
         reading=reading,
         params=params,
-        unique_name=item,
-        value_store=get_value_store(),
+        value_store_tuple=(item, get_value_store()),
         dev_levels=section.upper_device_levels,
         dev_levels_lower=section.lower_device_levels,
     )

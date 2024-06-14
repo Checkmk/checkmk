@@ -571,8 +571,7 @@ def _compute_labels_from_api(
 class _VAxisMinMax(NamedTuple):
     real_range: tuple[float, float]
     distance: float
-    min_value: float
-    max_value: float
+    label_range: tuple[float, float]
 
 
 def _render_legacy_labels(
@@ -611,11 +610,11 @@ def _render_legacy_labels(
         ]
 
     elif stepping == "time":
-        if v_axis_min_max.max_value > 3600 * 24:
+        if v_axis_min_max.label_range[1] > 3600 * 24:
             divide_by = 86400.0
             base = 10
             steps = [(2, 0.5), (5, 1), (10, 2)]
-        elif v_axis_min_max.max_value >= 10:
+        elif v_axis_min_max.label_range[1] >= 10:
             base = 60
             steps = [(2, 0.5), (3, 0.5), (5, 1), (10, 2), (20, 5), (30, 5), (60, 10)]
         else:  # ms
@@ -652,8 +651,7 @@ def _render_legacy_labels(
     # Adds "labels", "max_label_length" and updates "axis_label" in case
     # of units which use a graph global unit
     return _create_vertical_axis_labels(
-        v_axis_min_max.min_value,
-        v_axis_min_max.max_value,
+        v_axis_min_max.label_range,
         unit,
         label_distance,
         sub_distance,
@@ -700,8 +698,8 @@ def _compute_graph_v_axis(
                     _make_formatter(formatter_ident, unit["symbol"]),
                     height_ex,
                     mirrored,
-                    min_y=v_axis_min_max.min_value,
-                    max_y=v_axis_min_max.max_value,
+                    min_y=v_axis_min_max.label_range[0],
+                    max_y=v_axis_min_max.label_range[1],
                 )
             )
         ]
@@ -716,7 +714,7 @@ def _compute_graph_v_axis(
         )
 
     v_axis = VerticalAxis(
-        range=(v_axis_min_max.min_value, v_axis_min_max.max_value),
+        range=v_axis_min_max.label_range,
         real_range=v_axis_min_max.real_range,
         axis_label=None,
         labels=rendered_labels,
@@ -827,18 +825,18 @@ def _compute_v_axis_min_max(
         if max_value != 0:
             max_value += 0.5 * distance_per_ex
 
-    return _VAxisMinMax(real_range, distance, min_value, max_value)
+    return _VAxisMinMax(real_range, distance, (min_value, max_value))
 
 
 # Create labels for the necessary range
 def _create_vertical_axis_labels(
-    min_value: float,
-    max_value: float,
+    label_range: tuple[float, float],
     unit: UnitInfo,
     label_distance: float,
     sub_distance: float,
     mirrored: bool,
 ) -> tuple[list[VerticalAxisLabel], int, str | None]:
+    min_value, max_value = label_range
     # round_to is the precision (number of digits after the decimal point)
     # that we round labels to.
     round_to = max(0, 3 - math.trunc(math.log10(max(abs(min_value), abs(max_value)))))

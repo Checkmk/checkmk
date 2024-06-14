@@ -36,7 +36,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             None,
             False,
-            _VAxisMinMax((0.0, 1.0), 1.0, 0.0, 1.5),
+            _VAxisMinMax((0.0, 1.0), 1.0, (0.0, 1.5)),
             id="default",
         ),
         pytest.param(
@@ -44,7 +44,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             None,
             True,
-            _VAxisMinMax((-1.0, 1.0), 2.0, -2.0, 2.0),
+            _VAxisMinMax((-1.0, 1.0), 2.0, (-2.0, 2.0)),
             id="default-mirrored",
         ),
         #
@@ -53,7 +53,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             None,
             False,
-            _VAxisMinMax((0.01, 0.02), 0.01, 0.005, 0.025),
+            _VAxisMinMax((0.01, 0.02), 0.01, (0.005, 0.025)),
             id="small-pos",
         ),
         pytest.param(
@@ -61,7 +61,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             None,
             True,
-            _VAxisMinMax((-0.02, 0.02), 0.04, -0.04, 0.04),
+            _VAxisMinMax((-0.02, 0.02), 0.04, (-0.04, 0.04)),
             id="small-pos-mirrored",
         ),
         pytest.param(
@@ -69,7 +69,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             None,
             False,
-            _VAxisMinMax((-0.01, 0.02), 0.03, -0.025, 0.035),
+            _VAxisMinMax((-0.01, 0.02), 0.03, (-0.025, 0.035)),
             id="small-neg",
         ),
         pytest.param(
@@ -77,7 +77,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             None,
             True,
-            _VAxisMinMax((-0.02, 0.02), 0.04, -0.04, 0.04),
+            _VAxisMinMax((-0.02, 0.02), 0.04, (-0.04, 0.04)),
             id="small-neg-mirrored",
         ),
         #
@@ -86,7 +86,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             None,
             False,
-            _VAxisMinMax((-5.0, 10.0), 15.0, -12.5, 17.5),
+            _VAxisMinMax((-5.0, 10.0), 15.0, (-12.5, 17.5)),
             id="explicit_vertical_range",
         ),
         pytest.param(
@@ -94,7 +94,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             None,
             True,
-            _VAxisMinMax((-10.0, 10.0), 20.0, -20.0, 20.0),
+            _VAxisMinMax((-10.0, 10.0), 20.0, (-20.0, 20.0)),
             id="explicit_vertical_range-mirrored",
         ),
         pytest.param(
@@ -110,7 +110,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             ],
             None,
             False,
-            _VAxisMinMax((-5.0, 10.0), 15.0, -12.5, 17.5),
+            _VAxisMinMax((-5.0, 10.0), 15.0, (-12.5, 17.5)),
             id="layouted_curves",
         ),
         pytest.param(
@@ -126,7 +126,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             ],
             None,
             True,
-            _VAxisMinMax((-10.0, 10.0), 20.0, -20.0, 20.0),
+            _VAxisMinMax((-10.0, 10.0), 20.0, (-20.0, 20.0)),
             id="layouted_curves-mirrored",
         ),
         pytest.param(
@@ -134,7 +134,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             (-5.0, 10.0),
             False,
-            _VAxisMinMax((0.0, 1.0), 15.0, -5.0, 10.0),
+            _VAxisMinMax((0.0, 1.0), 15.0, (-5.0, 10.0)),
             id="graph_data_vrange",
         ),
         pytest.param(
@@ -142,7 +142,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             [],
             (-5.0, 10.0),
             True,
-            _VAxisMinMax((-1.0, 1.0), 20.0, -10.0, 10.0),
+            _VAxisMinMax((-1.0, 1.0), 20.0, (-10.0, 10.0)),
             id="graph_data_vrange-mirrored",
         ),
     ],
@@ -181,7 +181,7 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax((-500.0, 1000.0), 1500.0, -1250.0, 1750.0),
+            _VAxisMinMax((-500.0, 1000.0), 1500.0, (-1250.0, 1750.0)),
             id="explicit_vertical_range_fixed-and-layouted_curves",
         ),
         pytest.param(
@@ -196,7 +196,7 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax((-500.0, 1000.0), 1500.0, -1250.0, 1750.0),
+            _VAxisMinMax((-500.0, 1000.0), 1500.0, (-1250.0, 1750.0)),
             id="explicit_vertical_range_minimal-and-layouted_curves_smaller",
         ),
         pytest.param(
@@ -211,7 +211,7 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax((-1000.0, 2000.0), 3000.0, -2500.0, 3500.0),
+            _VAxisMinMax((-1000.0, 2000.0), 3000.0, (-2500.0, 3500.0)),
             id="explicit_vertical_range_minimal-and-layouted_curves_larger",
         ),
         pytest.param(
@@ -226,14 +226,14 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax(real_range=(0, 2000.0), distance=2000.0, min_value=0, max_value=3000.0),
+            _VAxisMinMax((0, 2000.0), 2000.0, (0, 3000.0)),
             id="layouted_curves_at_least_zero",
         ),
         pytest.param(
             FixedVerticalRange(min=-500.0, max=1000.0),
             [],
             (-5.0, 10.0),
-            _VAxisMinMax((-500.0, 1000.0), 15.0, -5.0, 10.0),
+            _VAxisMinMax((-500.0, 1000.0), 15.0, (-5.0, 10.0)),
             id="graph_data_vrange-precedence-over-explicit_vertical_range",
         ),
         pytest.param(
@@ -248,7 +248,7 @@ def test__compute_v_axis_min_max(
                 )
             ],
             (-5.0, 10.0),
-            _VAxisMinMax((-500.0, 1000.0), 15.0, -5.0, 10.0),
+            _VAxisMinMax((-500.0, 1000.0), 15.0, (-5.0, 10.0)),
             id="graph_data_vrange-precedence-over-layouted_curves",
         ),
     ],

@@ -9,16 +9,6 @@ FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
-PYTEST_DOC_TEST_OPTS := \
-    --import-mode=importlib \
-    -o pythonpath=. \
-    --doctest-modules \
-    ../cmk \
-    ../omd/packages/omd
-PYTEST_UNIT_TEST_OPTS = \
-    -T unit \
-    $(PYTEST_DOC_TEST_OPTS) \
-    unit
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 BLACK  := $(SCRIPTS)/run-black
@@ -64,8 +54,9 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
-	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
+	test-unit test-unit-all test-unit-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
+	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
 	test-unit-neb test-unit-core
 
@@ -126,14 +117,15 @@ help:
 	@echo "test-typescript-types               - Run TypeScript types check"
 	@echo "test-typescript-types-docker        - Run TypeScript types check in docker"
 	@echo "test-unit                           - Run unit tests"
+	@echo "test-unit-all                       - Run unit tests (including those marked as slow)"
 	@echo "test-unit-cmc                       - Run unit tests for cmc"
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-neb                       - Run unit tests for neb"
-	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
-	@echo "test-unit-resilience                - Run unit tests multiple times and in random order in docker"
 	@echo "test-unit-shell                     - Run shell unit tests"
 	@echo "test-unit-shell-docker              - Run shell unit tests in docker"
+	@echo "test-unit-testlib                   - Run doctests present in testlib-modules"
+	@echo "test-unit-testlib-docker            - Run doctests present in testlib-modules within docker container."
 	@echo "test-werks                          - Run Werks tests"
 	@echo "test-werks-docker                   - Run Werks tests in docker"
 
@@ -390,52 +382,84 @@ test-cycles:
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
-test-unit: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+test-unit-omdlib:
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--doctest-modules \
+		--override-ini="pythonpath=. omd/packages/omd/" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS) \
-		$(PYTEST_OPTS_UNIT_PARALLEL)
+		-- \
+		omd/packages/omd/ \
+		tests/unit/omdlib/
 
-test-unit-xdist:
-	PYTEST_OPTS_UNIT_PARALLEL="--numprocesses=4 --dist=loadfile" \
-	make --quiet test-unit
+test-unit: prepare-protobuf-files
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--import-mode=importlib \
+		--override-ini="pythonpath=." \
+		--random-order-bucket=global \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		--doctest-modules \
+		--numprocesses=4 \
+		--dist=loadfile \
+		-- \
+		cmk \
+		omd/packages/omd \
+		tests/unit
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
-test-unit-xdist-docker:
-	../scripts/run-in-docker.sh make --quiet test-unit-xdist
-
-test-unit-slow: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
-		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
-		$(PYTEST_UNIT_TEST_OPTS)
-
-test-unit-slow-docker:
-	../scripts/run-in-docker.sh make --quiet test-unit-slow
-
-test-unit-resilience: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
-		--count=2 \
+test-unit-all: prepare-protobuf-files
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--import-mode=importlib \
+		--override-ini="pythonpath=." \
 		--random-order-bucket=global \
-	        -m "not non_resilient" \
-		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		--ignore=tests/unit/omdlib/ \
+		--numprocesses=4 \
+		--dist=loadfile \
+		-- \
+		tests/unit
 
-test-unit-resilience-docker:
-	../scripts/run-in-docker.sh make test-unit-resilience
+test-unit-all-docker:
+	../scripts/run-in-docker.sh make --quiet test-unit-all
+
+test-unit-testlib:
+	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T testlib \
+		--config-file=pyproject.toml \
+		--doctest-modules \
+		--override-ini="pythonpath=." \
+		--override-ini="consider_namespace_packages=true" \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		-- \
+		tests/testlib/
+
+test-unit-testlib-docker:
+	../scripts/run-in-docker.sh make test-unit-testlib
 
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
 test-unit-coverage-html: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--import-mode=importlib \
+		--override-ini="pythonpath=." \
 		--cov=cmk \
 		--cov-report=html \
-		--cov-config=.coveragerc_unit \
+		--cov-config="tests/.coveragerc_unit" \
 		--no-cov-on-fail \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		--ignore=tests/unit/omdlib/ \
+		-- \
+		tests/unit
 
 test-unit-shell:
 	./unit-shell/runner.sh

@@ -212,7 +212,7 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
-      COMMAND: "make test-unit-xdist-docker"
+      COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"

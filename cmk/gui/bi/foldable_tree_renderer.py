@@ -5,7 +5,7 @@
 
 import abc
 from contextlib import contextmanager
-from typing import Any, TypeGuard
+from typing import Any, Literal, TypeGuard
 
 import cmk.gui.view_utils
 from cmk.gui.config import active_config
@@ -14,6 +14,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
@@ -35,15 +36,15 @@ BILeafTreeState = tuple[dict[str, Any], Any, dict[str, Any]]
 
 
 class ABCFoldableTreeRenderer(abc.ABC):
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        row,
-        omit_root,
-        expansion_level,
-        only_problems,
-        lazy,
-        wrap_texts=True,
-        show_frozen_difference=False,
+        row: Row,
+        omit_root: bool,
+        expansion_level: int,
+        only_problems: bool,
+        lazy: bool,
+        wrap_texts: Literal["wrap", "nowrap"] = "nowrap",
+        show_frozen_difference: bool = False,
     ) -> None:
         self._row = row
         self._show_frozen_difference = show_frozen_difference
@@ -54,7 +55,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         self._wrap_texts = wrap_texts
         self._load_tree_state()
 
-    def _load_tree_state(self):
+    def _load_tree_state(self) -> None:
         self._treestate = user.get_tree_states("bi")
         if self._expansion_level != user.bi_expansion_level:
             self._treestate = {}
@@ -70,7 +71,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
             self._show_tree()
             return HTML.without_escaping(output_funnel.drain())
 
-    def _show_tree(self):
+    def _show_tree(self) -> None:
         tree = self._get_tree()
         affected_hosts = self._row["aggr_hosts"]
         title = self._row["aggr_tree"]["title"]

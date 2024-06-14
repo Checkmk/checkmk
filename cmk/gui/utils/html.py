@@ -41,7 +41,10 @@ class HTML:
         >>> HTML()._ensure_str(HTML("foo<b>bar</b>"))
         'foo<b>bar</b>'
         """
-        return html.escape(value) if isinstance(value, str) else str(value)
+        if not isinstance(value, (str, HTML)):
+            raise TypeError("value must be a str or HTML object")
+
+        return str(value) if isinstance(value, HTML) else html.escape(value)
 
     def __str__(self) -> str:
         return self._value

@@ -577,7 +577,7 @@ def _check_trees(
 
     yield ActiveCheckResult(0, f"Found {len(inventory_tree)} inventory entries")
 
-    if parameters.sw_missing and inventory_tree.has_table(("software", "packages")):
+    if parameters.sw_missing and not inventory_tree.has_table(("software", "packages")):
         yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
 
     if previous_tree.get_tree(("software",)) != inventory_tree.get_tree(("software",)):

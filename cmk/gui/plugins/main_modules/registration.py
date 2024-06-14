@@ -70,7 +70,7 @@ from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import registration as views_registration
-from cmk.gui.views.command import command_registry
+from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.inventory.row_post_processor import inventory_row_post_processor
 from cmk.gui.views.join_service_rows import join_service_row_post_processor
@@ -261,6 +261,8 @@ def register() -> None:
         icon_and_action_registry,
         snapin_registry,
         endpoint_registry,
+        command_registry,
+        command_group_registry,
     )
     cron.register(page_registry)
     nodevis.register(page_registry, filter_registry, icon_and_action_registry)

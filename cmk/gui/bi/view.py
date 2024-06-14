@@ -46,8 +46,6 @@ from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 from cmk.gui.views.command import (
     Command,
-    command_group_registry,
-    command_registry,
     CommandActionResult,
     CommandGroup,
     CommandSpec,
@@ -1212,7 +1210,3 @@ class CommandFreezeAggregation(Command):
         """Function that is called to execute this action"""
         assert isinstance(command, CommandSpecWithoutSite)
         (frozen_aggregations_dir / Path(command).name).unlink(missing_ok=True)
-
-
-command_group_registry.register(CommandGroupAggregations)
-command_registry.register(CommandFreezeAggregation)

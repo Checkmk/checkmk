@@ -6,7 +6,6 @@
 #include "livestatus/LogCache.h"
 
 #include <compare>
-#include <filesystem>
 #include <system_error>
 #include <utility>
 
@@ -37,14 +36,12 @@ void LogCache::update() {
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
     const auto paths = _mc->paths();
-    addToIndex(
-        std::make_unique<Logfile>(logger(), this, paths->history_file(), true));
+    addToIndex(paths->history_file(), true);
 
     const std::filesystem::path dirpath = paths->history_archive_directory();
     try {
         for (const auto &entry : std::filesystem::directory_iterator(dirpath)) {
-            addToIndex(
-                std::make_unique<Logfile>(logger(), this, entry.path(), false));
+            addToIndex(entry.path(), false);
         }
     } catch (const std::filesystem::filesystem_error &e) {
         if (e.code() != std::errc::no_such_file_or_directory) {
@@ -58,20 +55,20 @@ void LogCache::update() {
     }
 }
 
-void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
-    auto since = logfile->since();
-    if (since == decltype(since){}) {  // TODO(sp) Simulating std::optional?
+void LogCache::addToIndex(const std::filesystem::path &path, bool watch) {
+    try {
+        auto logfile = std::make_unique<Logfile>(logger(), this, path, watch);
+        auto since = logfile->since();
+        if (!_logfiles.emplace(since, std::move(logfile)).second) {
+            // Complain if an entry with that 'since' already exists. Under
+            // normal circumstances this never happens, but the user might have
+            // copied files around by hand.
+            Warning(logger()) << "ignoring duplicate log file " << path;
+        }
+    } catch (generic_error &e) {
+        Warning(logger()) << e;
         return;
     }
-    // make sure that no entry with that 'since' is existing yet.  Under normal
-    // circumstances this never happens, but the user might have copied files
-    // around.
-    if (_logfiles.find(since) != _logfiles.end()) {
-        Warning(logger()) << "ignoring duplicate log file " << logfile->path();
-        return;
-    }
-
-    _logfiles.emplace(since, std::move(logfile));
 }
 
 // This method is called each time a log message is loaded into memory. If the

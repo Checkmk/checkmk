@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -81,7 +82,7 @@ private:
     std::chrono::system_clock::time_point _last_index_update;
 
     void update();
-    void addToIndex(std::unique_ptr<Logfile> logfile);
+    void addToIndex(const std::filesystem::path &path, bool watch);
     [[nodiscard]] Logger *logger() const;
 };
 

@@ -75,13 +75,36 @@ run_optionally_exclusive() {
     # a global file.
     # In case this file does not exist, the lock will not be obtained, making
     # the lock-file itself a switch for turning locking on/off (by existence)
-    if [ -f "${LOCK_FILE}" ]; then
-        [ -n "${VERBOSE}" ] && echo >&2 "lock ${LOCK_FILE} and execute $*"
-        flock "${LOCK_FILE}" "$@"
-    else
-        [ -n "${VERBOSE}" ] && echo >&2 "execute without lock (${LOCK_FILE} does not exist): $*"
-        "$@"
-    fi
+    # see https://jira.lan.tribe29.com/browse/CMK-17651
+
+    # also we re-try to build the image a couple of times, since locking alone
+    # didn't seem to help at all
+    for i in {3..0}; do
+        if [ -f "${LOCK_FILE}" ]; then
+            [ -n "${VERBOSE}" ] && echo >&2 "lock ${LOCK_FILE} and execute $*"
+            flock "${LOCK_FILE}" "$@" 2>&1 | tee docker-build.log
+        else
+            [ -n "${VERBOSE}" ] && echo >&2 "execute without lock (${LOCK_FILE} does not exist): $*"
+            "$@" 2>&1 | tee docker-build.log
+        fi
+
+        RESULT="${PIPESTATUS[0]}"
+        if [ "$RESULT" -eq 0 ]; then
+            break
+        fi
+
+        if ! grep "error reading from server: EOF" docker-build.log; then
+            echo >&2 "We got some random error from 'docker build' - don't retry."
+            exit "$RESULT"
+        fi
+        if [ "$i" -eq 0 ]; then
+            echo >&2 "Tried too often, give up!"
+            exit "$RESULT"
+        fi
+        # print error message and give dockerd some time to recover before we retry
+        echo >&2 "Trying to run $* resulted in errors (try $i), retry in a couple of seconds.."
+        sleep 20
+    done
 }
 
 # shellcheck disable=SC2086

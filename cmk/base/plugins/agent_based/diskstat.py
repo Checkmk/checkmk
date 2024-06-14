@@ -226,7 +226,7 @@ def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
 # }
 def diskstat_extract_name_info(
     string_table: type_defs.StringTable,
-) -> tuple[int | None, type_defs.StringTable, Mapping[Any, str]]:
+):
     name_info = {}  # dict from (major, minor) or str to itemname
     timestamp = None
 

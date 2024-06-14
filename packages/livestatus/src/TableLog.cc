@@ -171,7 +171,7 @@ LogFilter constructFilter(Query &query, size_t max_lines_per_logfile) {
                                   .value_or(~std::bitset<32>())
                                   .to_ulong());
     return {
-        .max_lines_per_logfile = max_lines_per_logfile,
+        .max_lines_per_log_file = max_lines_per_logfile,
         .classmask = classmask,
         .since = since,
         .until = until,
@@ -205,7 +205,7 @@ void for_each_log_entry(
 
             while (true) {
                 const auto *entries = it->second->getEntriesFor(
-                    log_filter.max_lines_per_logfile, log_filter.classmask);
+                    log_filter.max_lines_per_log_file, log_filter.classmask);
                 if (!Logfile::processLogEntries(process_log_entry, entries,
                                                 log_filter)) {
                     break;  // end of time range found

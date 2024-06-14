@@ -10,6 +10,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
     Metric,
     Result,
     Service,
@@ -200,6 +201,7 @@ def check_cmctc_lcp_temp(item: str, params: TempParamType, section: Section) -> 
     yield from check_temperature(
         reading=sensor.reading,
         params=params,
+        value_store=get_value_store(),
         unique_name="cmctc_lcp_temp_%s" % item,
         dev_levels=sensor.levels,
         dev_levels_lower=sensor.levels_lower,

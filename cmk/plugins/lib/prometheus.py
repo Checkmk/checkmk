@@ -22,7 +22,7 @@ def _get_api_url(config: ConnectionConfig) -> str:
     return parse_api_url(
         server_address=config["connection"],
         api_path="api/v1/",
-        protocol=config["protocol"],
+        protocol="http" if config["protocol"] == "http" else "https",
     )
 
 

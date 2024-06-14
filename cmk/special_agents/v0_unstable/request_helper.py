@@ -11,7 +11,7 @@ import os
 import ssl
 from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Session
@@ -168,13 +168,13 @@ class ApiSession(Session):
         return super().request(method, url, verify=self.ssl_verify, **kwargs)
 
 
-def parse_api_url(  # type: ignore[no-untyped-def]
-    server_address,
-    api_path,
-    protocol="http",
-    port=None,
-    url_prefix=None,
-    path_prefix=None,
+def parse_api_url(
+    server_address: str,
+    api_path: str,
+    protocol: Literal["http", "https"] = "http",
+    port: int | None = None,
+    url_prefix: str | None = None,
+    path_prefix: str | None = None,
 ) -> str:
     """Parse the server api address
 

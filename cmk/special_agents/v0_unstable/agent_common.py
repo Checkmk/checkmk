@@ -68,7 +68,7 @@ class SectionManager:
         self._data.clear()
         sys.stdout.flush()
 
-    def writeline(self, line: Any):  # type: ignore[no-untyped-def]
+    def writeline(self, line: Any) -> None:
         sys.stdout.write(str(line))
         sys.stdout.write("\n")
 

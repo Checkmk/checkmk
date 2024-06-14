@@ -31,7 +31,7 @@ import livestatus
 import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils import config_warnings, log, man_pages, tty
+from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
@@ -149,7 +149,6 @@ from cmk.base import (
     check_api,
     config,
     core_config,
-    ip_lookup,
     notify,
     plugin_contexts,
     server_side_calls,

@@ -8,10 +8,10 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.utils import ip_lookup
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
-from cmk.base import ip_lookup
 
 from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, IPv4Config, IPv6Config
 

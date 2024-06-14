@@ -19,7 +19,7 @@ import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils import config_warnings
+from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -34,7 +34,7 @@ from cmk.checkengine.checking import CheckPluginName, ConfiguredService, Service
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base import config, ip_lookup
+from cmk.base import config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 

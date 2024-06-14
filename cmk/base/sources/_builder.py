@@ -13,6 +13,7 @@ from typing import assert_never, Final, Literal
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.tags import ComputedDataSources, TagID
 
 from cmk.snmplib import SNMPBackendEnum
@@ -24,7 +25,6 @@ from cmk.checkengine.fetcher import FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
-from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.server_side_calls import SpecialAgentCommandLine
 
 from ._api import Source

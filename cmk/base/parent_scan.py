@@ -18,11 +18,10 @@ from cmk.utils import tty
 from cmk.utils.caching import cache_manager, DictCache
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 
 from cmk.automations.results import Gateway, GatewayResult
-
-from cmk.base.ip_lookup import IPStackConfig
 
 
 @dataclass(frozen=True, kw_only=True)

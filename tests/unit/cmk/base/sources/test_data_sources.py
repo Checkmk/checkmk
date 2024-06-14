@@ -12,6 +12,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.fetchers import (
@@ -27,7 +28,6 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.parser import NO_SELECTION
 
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
-from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
 
 

@@ -50,7 +50,7 @@ import cmk.utils.store.host_storage
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
-from cmk.utils import config_warnings, password_store, store, tty
+from cmk.utils import config_warnings, ip_lookup, password_store, store, tty
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
@@ -58,6 +58,7 @@ from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
@@ -118,7 +119,7 @@ from cmk.checkengine.parser import (
 from cmk.checkengine.summarize import SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base import default_config, ip_lookup
+from cmk.base import default_config
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
@@ -126,7 +127,6 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_section_plugin_from_legacy,
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
 from cmk.base.sources import SNMPFetcherConfig

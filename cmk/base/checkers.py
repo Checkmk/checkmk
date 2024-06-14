@@ -27,6 +27,7 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.prediction import make_updated_predictions, PredictionStore
@@ -83,7 +84,6 @@ from cmk.base.config import (
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.errorhandling import create_check_crash_dump
-from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import (
     FetcherFactory,
     make_parser,

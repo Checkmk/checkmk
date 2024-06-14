@@ -13,9 +13,10 @@ from typing import Literal
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
-from cmk.utils import tty
+from cmk.utils import ip_lookup, tty
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.paths import tmp_dir
 from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
@@ -38,7 +39,7 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION
 
 import cmk.base.core
-from cmk.base import ip_lookup, sources
+from cmk.base import sources
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
@@ -46,7 +47,6 @@ from cmk.base.config import (
     lookup_ip_address,
     lookup_mgmt_board_ip_address,
 )
-from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import SNMPFetcherConfig, Source
 
 

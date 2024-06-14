@@ -26,6 +26,7 @@ from cmk.utils import store, tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 
 from cmk.checkengine.checking import CheckPluginName
@@ -35,7 +36,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 from cmk.base import config, server_side_calls
 from cmk.base.config import ConfigCache
-from cmk.base.ip_lookup import IPStackConfig
 
 from cmk.discover_plugins import PluginLocation
 

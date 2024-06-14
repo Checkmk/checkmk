@@ -23,7 +23,7 @@ import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import config_warnings, log, store, tty
+from cmk.utils import config_warnings, ip_lookup, log, store, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
@@ -100,7 +100,7 @@ import cmk.base.core_nagios
 import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
-from cmk.base import config, ip_lookup, plugin_contexts, profiling, sources
+from cmk.base import config, plugin_contexts, profiling, sources
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (

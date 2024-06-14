@@ -15,12 +15,12 @@ from typing import Literal
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils import store, tty
+from cmk.utils import ip_lookup, store, tty
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.base.nagios_utils
-from cmk.base import core_config, ip_lookup
+from cmk.base import core_config
 from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
 

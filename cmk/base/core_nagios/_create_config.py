@@ -16,10 +16,11 @@ from typing import Any, cast, IO, Literal
 
 import cmk.utils.config_path
 import cmk.utils.paths
-from cmk.utils import config_warnings, password_store, store, tty
+from cmk.utils import config_warnings, ip_lookup, password_store, store, tty
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
@@ -31,7 +32,7 @@ from cmk.utils.timeperiod import TimeperiodName
 from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.utils
-from cmk.base import config, core_config, ip_lookup, server_side_calls
+from cmk.base import config, core_config, server_side_calls
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
@@ -40,7 +41,6 @@ from cmk.base.core_config import (
     get_labels_from_attributes,
     get_tags_with_groups_from_attributes,
 )
-from cmk.base.ip_lookup import IPStackConfig
 
 from ._precompile_host_checks import precompile_hostchecks
 

@@ -881,11 +881,15 @@ class WerkToPick(NamedTuple):
 
 def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion) -> None:
     # First get the werk_id
-    result = subprocess.run(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
-        capture_output=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        sys.stderr.buffer.write(exc.stderr)
+        sys.exit(exc.returncode)
     found_werk_path: WerkToPick | None = None
     for line in result.stdout.splitlines():
         filename = Path(line.decode("utf-8"))

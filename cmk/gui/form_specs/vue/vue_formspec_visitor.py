@@ -11,7 +11,7 @@ import uuid
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from enum import auto, Enum
-from typing import Any, Generic, Mapping, Sequence, TypeVar
+from typing import Any, Generic, Mapping, Optional, Protocol, Sequence, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -104,16 +104,16 @@ def _get_visitor(form_spec: FormSpec, options: VisitorOptions) -> FormSpecVisito
     return visitor(supported_form_spec, options)
 
 
+class SupportsLocalize(Protocol):
+    def localize(self, localizer: Callable[[str], str]) -> str: ...
+
+
+def _localize(localizable: Optional[SupportsLocalize]) -> str:
+    return "" if localizable is None else localizable.localize(translate_to_current_language)
+
+
 def _get_title_and_help(form_spec: FormSpec) -> tuple[str, str]:
-    title = (
-        "" if form_spec.title is None else form_spec.title.localize(translate_to_current_language)
-    )
-    help_text = (
-        ""
-        if form_spec.help_text is None
-        else form_spec.help_text.localize(translate_to_current_language)
-    )
-    return title, help_text
+    return _localize(form_spec.title), _localize(form_spec.help_text)
 
 
 def _optional_validation(
@@ -170,7 +170,10 @@ class IntegerVisitor(FormSpecVisitor):
         title, help_text = _get_title_and_help(self.form_spec)
         return (
             VueComponents.Integer(
-                title=title, help=help_text, validators=build_vue_validators(self._validators())
+                title=title,
+                help=help_text,
+                label=_localize(self.form_spec.label),
+                validators=build_vue_validators(self._validators()),
             ),
             value,
         )

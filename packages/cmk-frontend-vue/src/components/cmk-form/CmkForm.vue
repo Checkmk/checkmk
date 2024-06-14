@@ -10,7 +10,7 @@ defineProps<{
   validation: ValidationMessages
 }>()
 
-const data = defineModel('data', { type: Object, required: true })
+const data = defineModel<unknown>('data', { required: true })
 const value_as_json = computed(() => {
   return JSON.stringify(data.value)
 })

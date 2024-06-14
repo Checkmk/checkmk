@@ -55,7 +55,8 @@ export default defineConfig(({ command }) => {
       test: {
         // enable jest-like global test APIs
         globals: true,
-        environment: 'jsdom'
+        environment: 'jsdom',
+        setupFiles: ['tests/setup-tests.ts']
       },
       server: {
         strictPort: true,

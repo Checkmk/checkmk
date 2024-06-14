@@ -78,13 +78,11 @@ def render_cache_info(what: str, row: Row) -> str:
 
 
 def paint_host_list(site: SiteId, hosts: list[HostName], *, request: Request) -> CellSpec:
-    return "", HTML(
-        ", ".join(
-            get_host_list_links(
-                site,
-                [str(host) for host in hosts],
-                request=request,
-            )
+    return "", HTML(", ").join(
+        get_host_list_links(
+            site,
+            [str(host) for host in hosts],
+            request=request,
         )
     )
 

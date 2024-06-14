@@ -113,7 +113,7 @@ def _render_host_links(  # pylint: disable=redefined-outer-name
     e = output.index("]", a)
     hosts = output[a + 12 : e].replace(" ", "").split(",")
     h = get_host_list_links(row["site"], hosts, request=request)
-    return output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
+    return output[:a] + "running on " + ", ".join(map(str, h)) + output[e + 1 :]
 
 
 def _normalize_check_http_link(output: str) -> str:
@@ -157,7 +157,7 @@ def _render_url(token: str, last_char: str) -> Iterator[str]:
 
 def get_host_list_links(  # pylint: disable=redefined-outer-name
     site: SiteId, hosts: list[str], *, request: Request
-) -> list[str]:
+) -> list[HTML]:
     entries = []
     for host in hosts:
         args: HTTPVariables = [
@@ -170,7 +170,7 @@ def get_host_list_links(  # pylint: disable=redefined-outer-name
             args.append(("display_options", request.var("display_options")))
 
         url = makeuri_contextless(request, args, filename="view.py")
-        link = str(HTMLWriter.render_a(host, href=url))
+        link = HTMLWriter.render_a(host, href=url)
         entries.append(link)
     return entries
 

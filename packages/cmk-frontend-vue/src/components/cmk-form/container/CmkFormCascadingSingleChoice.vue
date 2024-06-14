@@ -29,9 +29,10 @@ const current_values: Record<string, unknown> = {}
 onBeforeMount(() => {
   props.spec.elements.forEach((element: CascadingSingleChoiceElement) => {
     const key = element.name
-    current_values[key] = element.default_value
     if (data.value[0] === key) {
-      data.value[1] = element.default_value
+      current_values[key] = data.value[1]
+    } else {
+      current_values[key] = element.default_value
     }
   })
 })
@@ -87,10 +88,11 @@ function get_validation_for_child(ident: string): ValidationMessages {
 
 <template>
   <div>
-    <select v-model="value">
+    <select :id="$componentId" v-model="value">
       <option v-for="element in spec.elements" :key="element.name" :value="element.name">
         {{ element.title }}
       </option>
+      <label v-if="$props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
     </select>
   </div>
   <CmkFormDispatcher

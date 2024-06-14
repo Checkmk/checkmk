@@ -211,7 +211,10 @@ class FloatVisitor(FormSpecVisitor):
         title, help_text = _get_title_and_help(self.form_spec)
         return (
             VueComponents.Float(
-                title=title, help=help_text, validators=build_vue_validators(self._validators())
+                title=title,
+                help=help_text,
+                label=_localize(self.form_spec.label),
+                validators=build_vue_validators(self._validators()),
             ),
             value,
         )

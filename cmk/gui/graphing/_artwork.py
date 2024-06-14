@@ -685,7 +685,7 @@ def _compute_graph_v_axis(
     # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
     v_axis_min_max = _compute_v_axis_min_max(
         graph_recipe.explicit_vertical_range,
-        _get_min_max_from_curves(layouted_curves),
+        layouted_curves,
         graph_data_range.vertical_range,
         mirrored,
         height_ex,
@@ -736,12 +736,31 @@ def _apply_mirrored(min_value: float, max_value: float) -> tuple[float, float]:
 
 def _compute_min_max(
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
-    layouted_curves_range: tuple[float | None, float | None],
+    layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
 ) -> tuple[float, float]:
+    def _extract_lc_values() -> Iterator[float]:
+        for curve in layouted_curves:
+            for point in curve["points"]:
+                if isinstance(point, float):
+                    # Line points
+                    yield point
+                elif isinstance(point, tuple):
+                    # Area points
+                    lower, higher = point
+                    if lower is not None:
+                        yield lower
+                    if higher is not None:
+                        yield higher
+
+    lc_min_value, lc_max_value = (
+        (min(lc_values), max(lc_values))
+        if (lc_values := list(_extract_lc_values()))
+        else (None, None)
+    )
+
     min_values = []
     max_values = []
-    lc_min_value, lc_max_value = layouted_curves_range
 
     match explicit_vertical_range:
         case FixedVerticalRange(min=min_value, max=max_value):
@@ -767,16 +786,12 @@ def _compute_min_max(
 
 def _compute_v_axis_min_max(
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
-    layouted_curves_range: tuple[float | None, float | None],
+    layouted_curves: Sequence[LayoutedCurve],
     graph_data_vrange: tuple[float, float] | None,
     mirrored: bool,
     height: SizeEx,
 ) -> _VAxisMinMax:
-    min_value, max_value = _compute_min_max(
-        explicit_vertical_range,
-        layouted_curves_range,
-        mirrored,
-    )
+    min_value, max_value = _compute_min_max(explicit_vertical_range, layouted_curves, mirrored)
 
     # physical range, without extra margin or zooming
     real_range = min_value, max_value
@@ -813,28 +828,6 @@ def _compute_v_axis_min_max(
             max_value += 0.5 * distance_per_ex
 
     return _VAxisMinMax(real_range, distance, min_value, max_value)
-
-
-def _get_min_max_from_curves(
-    layouted_curves: Sequence[LayoutedCurve],
-) -> tuple[float, float] | tuple[None, None]:
-    # Now make sure that all points are within the range.
-    # Enlarge a given range if necessary.
-    def _extract_values() -> Iterator[float]:
-        for curve in layouted_curves:
-            for point in curve["points"]:
-                if isinstance(point, float):
-                    # Line points
-                    yield point
-                elif isinstance(point, tuple):
-                    # Area points
-                    lower, higher = point
-                    if lower is not None:
-                        yield lower
-                    if higher is not None:
-                        yield higher
-
-    return (min(values), max(values)) if (values := list(_extract_values())) else (None, None)
 
 
 # Create labels for the necessary range

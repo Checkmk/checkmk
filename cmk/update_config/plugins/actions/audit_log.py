@@ -21,7 +21,7 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         super().__init__(name=name, title=title, sort_index=sort_index)
         self._audit_log_path: Path = wato_var_dir() / "log" / "wato_audit.log"
         self._audit_log_backup_path: Path = wato_var_dir() / "log" / "wato_audit.log-backup"
-        self._audit_log_target_size: int = 400 * 1024 * 1024  # 300MB in bytes
+        self._audit_log_target_size: int = 300 * 1024 * 1024  # 300MB in bytes
 
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         if not self._audit_log_path.exists():

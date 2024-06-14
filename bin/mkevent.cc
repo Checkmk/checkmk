@@ -152,7 +152,8 @@ int main(int argc, char **argv) {
         strncpy(message, argv[1], sizeof(message) - 1);
     }
 
-    /* If we have a remote host, send the message via syslog to the remote host. */
+    /* If we have a remote host, send the message via syslog to the remote host.
+     */
     int fd;
     if (remote[0] != 0) {
         if (isdigit(remote[0]) == 0) {

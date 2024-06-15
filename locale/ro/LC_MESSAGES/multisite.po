@@ -21792,6 +21792,10 @@ msgstr "Timpul de răspuns preconizat"
 msgid "Expected responses to the given SMTP commands."
 msgstr "Răspunsurile așteptate la comenzile SMTP date."
 
+#, fuzzy
+msgid "Expected specific gateway folder"
+msgstr "Numărul preconizat de noduri de date"
+
 msgid "Expected state"
 msgstr "Starea așteptată"
 
@@ -36689,6 +36693,10 @@ msgstr "Migrarea utilizatorilor către o altă conexiune"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "A migrat %d %s la conectorul '%s': %s."
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "Migrarea utilizatorilor"
 
 msgid "Migrating"
 msgstr "Migrarea"
@@ -72373,6 +72381,10 @@ msgstr "Valoarea %r nu este permisă aici."
 
 msgid "Value Type"
 msgstr "Tip de valoare"
+
+#, fuzzy, python-format
+msgid "Value must be one of '%s'"
+msgstr "trebuie să fie egală cu '%s'"
 
 msgid "Value must be string"
 msgstr "Valoarea trebuie să fie un șir de caractere"

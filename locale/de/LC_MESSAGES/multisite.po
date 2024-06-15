@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-13 10:06+0000\n"
+"PO-Revision-Date: 2024-06-14 05:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -13221,9 +13221,8 @@ msgstr "Berücksichtige die History von"
 msgid "Consider periods of flapping states"
 msgstr "Unstetige Perioden berücksichtigen"
 
-#, fuzzy
 msgid "Consider state of archive log mode: "
-msgstr "Zustand im Archivelog-Modus werten: "
+msgstr "Zustand im Archivelog-Modus berücksichtigen: "
 
 msgid "Consider the input states during discovery to be OK"
 msgstr "Bewertet die Eingangszustände während der Erkennung als OK"
@@ -15723,7 +15722,6 @@ msgstr "Standard-Verfallsdatum (relativ)"
 msgid "Default graph layout"
 msgstr "Standard Graph-Layout"
 
-#, fuzzy
 msgid "Default increment"
 msgstr "Standardinkrement"
 
@@ -15874,9 +15872,8 @@ msgstr ""
 "Zuständen, sprich in das Ergebnis des Checks. Damit überschreiben Sie die "
 "von Check standardmäßig verwendete Zuordnung."
 
-#, fuzzy
 msgid "Define host assignment"
-msgstr "Hostzuweisung festlegen"
+msgstr "Host-Zuweisung festlegen"
 
 msgid "Define levels for pending pods"
 msgstr "Level für ausstehende Pods festlegen"
@@ -16618,7 +16615,6 @@ msgstr "OpenHardwareMonitor (kopflos) verteilen"
 msgid "Deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "Robotmk-Scheduler und Agentenplugin verteilen"
 
@@ -16634,7 +16630,6 @@ msgstr "StorCLI-Plugin verteilen"
 msgid "Deploy Symantec Anti Virus plug-in"
 msgstr "Symantec Anti Virus Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Unitrends plug-ins"
 msgstr "Unitrends Plugins verteilen"
 
@@ -16733,9 +16728,8 @@ msgstr "Plugin, das Agenten automatisch aktualisiert, verteilen"
 msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
 msgstr "Powershell-Plugin verteilen - empfohlen für Windows 2008 und aufwärts"
 
-#, fuzzy
 msgid "Deploy remote desktop licenses plug-in"
-msgstr "Remote-Desktop-Lizenzen-Plugin verteilen"
+msgstr "Lizenzen-Plugin des Remote-Desktops verteilen"
 
 #, python-format
 msgid "Deploy the %s plug-in and its configuration"
@@ -16760,13 +16754,11 @@ msgstr "Checkmk Inventory Plugin verteilen"
 msgid "Deploy the Checkmk object counts plug-in"
 msgstr "Checkmk-Objektzählungs-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Docker container plug-in"
-msgstr "Das Docker Container Plugin verteilen"
+msgstr "Plugin des Docker Containers verteilen"
 
-#, fuzzy
 msgid "Deploy the Docker plug-in"
-msgstr "Das Docker Plugin verteilen"
+msgstr "Docker-Plugin verteilen"
 
 msgid "Deploy the Jolokia plug-in"
 msgstr "Jolokia Plugin verteilen"
@@ -16774,9 +16766,8 @@ msgstr "Jolokia Plugin verteilen"
 msgid "Deploy the MySQL plug-in"
 msgstr "MySQL Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Plesk plug-ins"
-msgstr "Die plesk Plugins verteilen"
+msgstr "Plesk-Plugins verteilen"
 
 msgid "Deploy the PostgreSQL plug-in"
 msgstr "PostgresQL-Plugin verteilen"
@@ -16834,7 +16825,6 @@ msgstr "Verteilung"
 msgid "Deployment problems"
 msgstr "Probleme bei der Verteilung"
 
-#, fuzzy
 msgid ""
 "Deployment status of host {} is corrupted. Consider deleting the "
 "corresponding file on Checkmk-Server at {} and re-registering host {}. "
@@ -16850,11 +16840,9 @@ msgstr "Verteilung"
 msgid "Deprecated"
 msgstr "Veraltet"
 
-#, fuzzy
 msgid "Deprecated HW/SW inventory plug-ins"
 msgstr "Veraltete HW/SW-Inventar-Plugins"
 
-#, fuzzy
 msgid "Deprecated check plug-ins"
 msgstr "Veraltete Check-Plugins"
 
@@ -16918,7 +16906,6 @@ msgstr "Diesen Graph gestalten"
 msgid "Desired replicas"
 msgstr "Gewünschte Replica"
 
-#, fuzzy
 msgid "Desktop group name"
 msgstr "Desktop Gruppenname"
 
@@ -17037,7 +17024,6 @@ msgstr "Gerät verfügbar"
 msgid "Device going online"
 msgstr "Gerät geht online"
 
-#, fuzzy
 msgid "Device number"
 msgstr "Gerätenummer"
 
@@ -17246,10 +17232,9 @@ msgstr "Alle persönlichen Benachrichtigungen deaktivieren"
 msgid "Disable automatic host removal"
 msgstr "Automatische Host-Entfernung deaktivieren"
 
-#, fuzzy
 msgid "Disable automatic user synchronization (use central site users)"
 msgstr ""
-"Keine automatische Benutzersynchronisation (nutze Benutzer der "
+"Automatische Benutzersynchronisation ausschalten (nutze Benutzer der "
 "Zentralinstanz)"
 
 msgid "Disable bulkwalks"
@@ -17602,7 +17587,6 @@ msgstr "Schreibvorgänge auf der Festplatte"
 msgid "Disk write throughput per second"
 msgstr "Datenträger-Schreibdurchsatz pro Sekunde"
 
-#, fuzzy
 msgid "Disk writeback"
 msgstr "Platten-Writeback"
 
@@ -21322,6 +21306,10 @@ msgstr "Erwartete Antwortzeit"
 
 msgid "Expected responses to the given SMTP commands."
 msgstr "Erwartete Antworten der SMTP Befehle."
+
+#, fuzzy
+msgid "Expected specific gateway folder"
+msgstr "Erwartete Anzahl Datenknoten"
 
 msgid "Expected state"
 msgstr "Erwarteter Status"
@@ -36036,6 +36024,10 @@ msgstr "Benutzer auf eine andere Verbindung migrieren"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "%d %s auf Connector '%s': %s migriert"
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "Benutzer migrieren"
 
 msgid "Migrating"
 msgstr "Migration"
@@ -70882,6 +70874,10 @@ msgstr "Der Wert %r ist hier nicht erlaubt."
 
 msgid "Value Type"
 msgstr "Werttyp"
+
+#, fuzzy, python-format
+msgid "Value must be one of '%s'"
+msgstr "muss gleich '%s' sein"
 
 msgid "Value must be string"
 msgstr "Wert muss ein String sein"

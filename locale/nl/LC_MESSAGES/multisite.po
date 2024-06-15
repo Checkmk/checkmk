@@ -21765,6 +21765,10 @@ msgstr "Verwachte responstijd"
 msgid "Expected responses to the given SMTP commands."
 msgstr "Verwachte antwoorden op de gegeven SMTP commando's."
 
+#, fuzzy
+msgid "Expected specific gateway folder"
+msgstr "Verwacht aantal dataknooppunten"
+
 msgid "Expected state"
 msgstr "Verwachte toestand"
 
@@ -36665,6 +36669,10 @@ msgstr "Gebruikers migreren naar een andere verbinding"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "Gemigreerd %d %s naar connector '%s': %s"
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "Gebruikers migreren"
 
 #, fuzzy
 msgid "Migrating"
@@ -72237,6 +72245,10 @@ msgstr "De waarde %r is hier niet toegestaan."
 
 msgid "Value Type"
 msgstr "Waarde Type"
+
+#, fuzzy, python-format
+msgid "Value must be one of '%s'"
+msgstr "moet gelijk zijn aan '%s'"
 
 msgid "Value must be string"
 msgstr "De waarde moet een string zijn"

@@ -21292,6 +21292,10 @@ msgstr "予想される応答時間"
 msgid "Expected responses to the given SMTP commands."
 msgstr "指定されたSMTPコマンドに対する予期される応答。"
 
+#, fuzzy
+msgid "Expected specific gateway folder"
+msgstr "予想されるデータノードの数"
+
 msgid "Expected state"
 msgstr "期待される状態"
 
@@ -35873,6 +35877,10 @@ msgstr "ユーザーを別のコネクタに移行する"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "%d%sをコネクタ'%s'に移行しました:%s"
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "ユーザーを移行する"
 
 msgid "Migrating"
 msgstr "移行する"
@@ -70506,6 +70514,10 @@ msgstr "ここでは値 %r は許可されていません。"
 
 msgid "Value Type"
 msgstr "値型"
+
+#, fuzzy, python-format
+msgid "Value must be one of '%s'"
+msgstr "'%s'と同等でなければならない"
 
 msgid "Value must be string"
 msgstr "値は文字列であること"

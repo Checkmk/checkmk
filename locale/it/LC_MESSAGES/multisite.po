@@ -21556,6 +21556,10 @@ msgstr "Tempo di risposta previsto"
 msgid "Expected responses to the given SMTP commands."
 msgstr "Risposte attese ai comandi SMTP dati."
 
+#, fuzzy
+msgid "Expected specific gateway folder"
+msgstr "Numero previsto di nodi di dati"
+
 msgid "Expected state"
 msgstr "Stato previsto"
 
@@ -36307,6 +36311,10 @@ msgstr "Migrare gli utenti a un'altra connessione"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "Migrato %d %s al connettore '%s': %s"
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "Migrare gli utenti"
 
 msgid "Migrating"
 msgstr "Migrazione"
@@ -71526,6 +71534,10 @@ msgstr "Il valore %r non è consentito qui."
 
 msgid "Value Type"
 msgstr "Tipo di valore"
+
+#, fuzzy, python-format
+msgid "Value must be one of '%s'"
+msgstr "deve essere uguale a '%s'"
 
 msgid "Value must be string"
 msgstr "Il valore deve essere una stringa"

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-06-13 10:06+0000\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
@@ -21960,6 +21960,10 @@ msgstr "Tiempo de respuesta previsto"
 msgid "Expected responses to the given SMTP commands."
 msgstr "Respuestas esperadas a los comandos SMTP dados."
 
+#, fuzzy
+msgid "Expected specific gateway folder"
+msgstr "Número previsto de nodos de datos"
+
 msgid "Expected state"
 msgstr "Estado esperado"
 
@@ -36991,6 +36995,10 @@ msgstr "Migrar usuarios a otra conexión"
 #, python-format
 msgid "Migrated %d %s to connector '%s': %s"
 msgstr "Migrado %d %s a conector '%s': %s"
+
+#, fuzzy
+msgid "Migrated Parents"
+msgstr "Migrar usuarios"
 
 #, fuzzy
 msgid "Migrating"
@@ -72913,6 +72921,10 @@ msgstr "El valor %r no está permitido aquí."
 
 msgid "Value Type"
 msgstr "Tipo de valor"
+
+#, fuzzy, python-format
+msgid "Value must be one of '%s'"
+msgstr "debe ser igual a '%s'"
 
 msgid "Value must be string"
 msgstr "El valor debe ser una cadena"

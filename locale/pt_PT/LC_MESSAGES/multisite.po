@@ -1228,12 +1228,6 @@ msgstr ""
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr "<b>Cuidado:</b> Isso deixará seu ambiente em um estado indefinido."
 
-msgid "<b>Keyword</b> pattern"
-msgstr "<b>Palavra-chave</b> padrão"
-
-msgid "<b>Keyword</b> runtime"
-msgstr "<b>Keyword</b> runtime"
-
 #, fuzzy
 msgid ""
 "<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
@@ -3938,10 +3932,6 @@ msgstr "Adicionar novo estado"
 
 msgid "Add new tag"
 msgstr "Adicionar nova etiqueta"
-
-#, fuzzy
-msgid "Add new threshold"
-msgstr "Adicionar nova função"
 
 msgid "Add new time"
 msgstr "Adicionar novo tempo"
@@ -11030,9 +11020,6 @@ msgstr ""
 "Verifique se o anfitrião está acessível ou não, teste os diferentes métodos "
 "de acesso a um anfitrião, por exemplo, através de agente, SNMPv1, SNMPv2 "
 "para descobrir a configuração de monitorização correcta para esse anfitrião."
-
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
 
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
@@ -21552,8 +21539,10 @@ msgid "Exclude empty tag choices"
 msgstr "Excluir escolhas de etiquetas vazias"
 
 #, fuzzy
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "Excluir os seguintes SIDs (se encontrados)"
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "Consulte apenas os seguintes SIDs (se encontrados)"
 
 msgid "Exclude hosts"
 msgstr "Excluir anfitriões"
@@ -36967,10 +36956,6 @@ msgstr "Máximo"
 msgid "Maximum %s instances of duration greater than %s"
 msgstr "Máximo de %s casos de duração superior a %s"
 
-#, fuzzy
-msgid "Maximum <b>Keyword</b> runtime"
-msgstr "Monitorização da rede"
-
 msgid "Maximum PGA allocated"
 msgstr "PGA máximo atribuído"
 
@@ -38130,6 +38115,9 @@ msgstr "Não é permitida a mistura de CME e não CME."
 
 msgid "Mixed"
 msgstr "Misto"
+
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
 
 msgid "Mobile"
 msgstr "Telemóvel"
@@ -42211,7 +42199,8 @@ msgstr ""
 "href='%s'>regras</a>."
 
 #, fuzzy
-msgid "Only monitor following SIDs (if detected or manually added)"
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "Consulte apenas os seguintes SIDs (se encontrados)"
 
 #, fuzzy
@@ -52842,14 +52831,6 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
 "Define os níveis do total de erros de operação desde a última reposição do "
 "contador."
-
-msgid ""
-"Sets runtime thresholds for keywords within a test based on regular "
-"expressions. It is advisable to write the patterns as precisely as possible, "
-"as a test result can contain hundreds/thousands of keywords. Note that "
-"runtime monitoring is not a feature of Robot Framework, but of Robotmk; a "
-"Robot suite can have an internal OK state, but a WARN state in Checkmk."
-msgstr ""
 
 msgid ""
 "Sets the runtime threshold for the runtime of a test. Note that runtime "
@@ -70833,8 +70814,9 @@ msgstr "Experimente"
 msgid "Try pattern match"
 msgstr "Tentar a correspondência de padrões"
 
-msgid "Try to detect MS SQL instances presented on Server"
-msgstr ""
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
+msgstr "Só é necessário se você tiver várias Instâncias MySQL em um servidor"
 
 msgid "Try to fit text to the available space."
 msgstr "Tente encaixar o texto no espaço disponível."
@@ -81307,6 +81289,24 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "<b>Keyword</b> pattern"
+#~ msgstr "<b>Palavra-chave</b> padrão"
+
+#~ msgid "<b>Keyword</b> runtime"
+#~ msgstr "<b>Keyword</b> runtime"
+
+#, fuzzy
+#~ msgid "Add new threshold"
+#~ msgstr "Adicionar nova função"
+
+#, fuzzy
+#~ msgid "Maximum <b>Keyword</b> runtime"
+#~ msgstr "Monitorização da rede"
+
+#, fuzzy
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "Excluir os seguintes SIDs (se encontrados)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (embalado)"

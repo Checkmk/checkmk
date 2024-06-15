@@ -1238,12 +1238,6 @@ msgstr ""
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr "<b>Atenție:</b> Acest lucru vă va lăsa mediul într-o stare nedefinită."
 
-msgid "<b>Keyword</b> pattern"
-msgstr "<b>Cuvântul cheie</b> model"
-
-msgid "<b>Keyword</b> runtime"
-msgstr "<b>Cuvânt cheie</b> runtime"
-
 #, fuzzy
 msgid ""
 "<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
@@ -3950,9 +3944,6 @@ msgstr "Adăugați un nou statut"
 
 msgid "Add new tag"
 msgstr "Adăugați o nouă etichetă"
-
-msgid "Add new threshold"
-msgstr "Adăugați un nou prag"
 
 msgid "Add new time"
 msgstr "Adăugați o nouă oră"
@@ -11047,10 +11038,6 @@ msgstr ""
 "Verificați dacă gazda este accesibilă sau nu, testați diferitele metode prin "
 "care o gazdă poate fi accesată, de exemplu prin agent, SNMPv1, SNMPv2 pentru "
 "a afla configurația corectă de monitorizare pentru gazda respectivă."
-
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
-"Check-SQL plug-in utilizează diferite metode pentru a găsi instanțe MS SQL"
 
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
@@ -21594,9 +21581,13 @@ msgstr "Excludeți serverul de destinație vserver"
 msgid "Exclude empty tag choices"
 msgstr "Excludeți alegerile de etichete goale"
 
-msgid "Exclude following SIDs (if detected or manually added)"
+#, fuzzy
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
 msgstr ""
-"Excludeți următoarele SID-uri (dacă sunt detectate sau adăugate manual)"
+"Monitorizați numai următoarele SID-uri (dacă sunt detectate sau adăugate "
+"manual)"
 
 msgid "Exclude hosts"
 msgstr "Excludeți gazdele"
@@ -37015,9 +37006,6 @@ msgstr "Maxim"
 msgid "Maximum %s instances of duration greater than %s"
 msgstr "Maximum %s cazuri de durată mai mare de %s"
 
-msgid "Maximum <b>Keyword</b> runtime"
-msgstr "Maxim <b>Cuvânt cheie</b> timp de execuție"
-
 msgid "Maximum PGA allocated"
 msgstr "PGA maxim alocat"
 
@@ -38164,6 +38152,11 @@ msgstr "Nu este permisă amestecul de EMC și non EMC."
 
 msgid "Mixed"
 msgstr "Mixtă"
+
+#, fuzzy
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
+"Check-SQL plug-in utilizează diferite metode pentru a găsi instanțe MS SQL"
 
 msgid "Mobile"
 msgstr "Mobil"
@@ -42278,7 +42271,9 @@ msgstr ""
 "contacte să monitorizeze automat contactele. Atribuirea gazdelor la "
 "grupurile de contacte poate fi definită și prin <a href='%s'>reguli</a>."
 
-msgid "Only monitor following SIDs (if detected or manually added)"
+#, fuzzy
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr ""
 "Monitorizați numai următoarele SID-uri (dacă sunt detectate sau adăugate "
 "manual)"
@@ -52943,20 +52938,6 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
 "Stabilește nivelurile privind totalul erorilor de funcționare de la ultima "
 "resetare a contorului."
-
-msgid ""
-"Sets runtime thresholds for keywords within a test based on regular "
-"expressions. It is advisable to write the patterns as precisely as possible, "
-"as a test result can contain hundreds/thousands of keywords. Note that "
-"runtime monitoring is not a feature of Robot Framework, but of Robotmk; a "
-"Robot suite can have an internal OK state, but a WARN state in Checkmk."
-msgstr ""
-"Stabilește praguri de execuție pentru cuvintele cheie dintr-un test pe baza "
-"expresiilor regulate. Este recomandabil să scrieți tiparele cât mai precis "
-"posibil, deoarece rezultatul unui test poate conține sute/mii de cuvinte "
-"cheie. Rețineți că monitorizarea în timpul execuției nu este o "
-"caracteristică a Robot Framework, ci a Robotmk; o suită Robot poate avea o "
-"stare internă OK, dar o stare WARN în Checkmk."
 
 #, fuzzy
 msgid ""
@@ -71015,7 +70996,8 @@ msgstr "Testeaza"
 msgid "Try pattern match"
 msgstr "Încercați potrivirea modelului"
 
-msgid "Try to detect MS SQL instances presented on Server"
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
 msgstr "Încercați să detectați instanțele MS SQL prezentate pe server"
 
 msgid "Try to fit text to the available space."
@@ -81546,6 +81528,37 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "<b>Keyword</b> pattern"
+#~ msgstr "<b>Cuvântul cheie</b> model"
+
+#~ msgid "<b>Keyword</b> runtime"
+#~ msgstr "<b>Cuvânt cheie</b> runtime"
+
+#~ msgid "Add new threshold"
+#~ msgstr "Adăugați un nou prag"
+
+#~ msgid "Maximum <b>Keyword</b> runtime"
+#~ msgstr "Maxim <b>Cuvânt cheie</b> timp de execuție"
+
+#~ msgid ""
+#~ "Sets runtime thresholds for keywords within a test based on regular "
+#~ "expressions. It is advisable to write the patterns as precisely as "
+#~ "possible, as a test result can contain hundreds/thousands of keywords. "
+#~ "Note that runtime monitoring is not a feature of Robot Framework, but of "
+#~ "Robotmk; a Robot suite can have an internal OK state, but a WARN state in "
+#~ "Checkmk."
+#~ msgstr ""
+#~ "Stabilește praguri de execuție pentru cuvintele cheie dintr-un test pe "
+#~ "baza expresiilor regulate. Este recomandabil să scrieți tiparele cât mai "
+#~ "precis posibil, deoarece rezultatul unui test poate conține sute/mii de "
+#~ "cuvinte cheie. Rețineți că monitorizarea în timpul execuției nu este o "
+#~ "caracteristică a Robot Framework, ci a Robotmk; o suită Robot poate avea "
+#~ "o stare internă OK, dar o stare WARN în Checkmk."
+
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr ""
+#~ "Excludeți următoarele SID-uri (dacă sunt detectate sau adăugate manual)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (ambalat)"

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-13 10:06+0000\n"
+"PO-Revision-Date: 2024-06-14 05:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -1233,12 +1233,6 @@ msgstr ""
 "<b>Achtung:</b>Dies wird - Ihre Umgebung in einem undefinierten Zustand "
 "lassen."
 
-msgid "<b>Keyword</b> pattern"
-msgstr "<b>Stichwort</b>muster"
-
-msgid "<b>Keyword</b> runtime"
-msgstr "<b>Stichwort</b>laufzeit"
-
 msgid ""
 "<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
 "all service instances will be filtered by those tags. Otherwise, all "
@@ -1776,18 +1770,18 @@ msgstr ""
 "enthalten. Wenn Sie dies tun, muss das Muster ein regulärer Ausdruck sein "
 "und mit ~ beginnen. Für jedes <tt>%s</tt> in der Beschreibung muss der "
 "Ausdruck eine „Gruppe“ enthalten. Eine Gruppe ist ein in Klammern "
-"eingeschlossener Unterausdruck, zum Beispiel <tt>(.*)</tt> oder "
-"<tt>([a-zA-Z]+)</tt> oder <tt>(...)</tt>. Wenn das Inventar einen Prozess "
-"findet, der dem Muster entspricht, werden bei der Erstellung des Checks alle "
-"derartigen Gruppen durch die tatsächlichen Werte ersetzt. Auf diese Weise "
-"kann eine Regel mehrere Checks auf einem Host erstellen.</p><p>Wenn das "
-"Muster mehr Gruppen als Vorkommen von <tt>%s</tt> in der Service-"
-"Beschreibung enthält, werden nur die ersten übereinstimmenden Unterausdrücke "
-"für die Service-Beschreibungen verwendet. Die übereinstimmenden "
-"Teilzeichenketten, die den übrigen Gruppen entsprechen, werden jedoch in den "
-"regulären Ausdruck übernommen.</p><p>Alternativ zu <tt>%s</tt> können Sie "
-"auch <tt>%1</tt>, <tt>%2</tt> usw. verwenden. Diese werden dann durch die "
-"erste, zweite, ... passende Gruppe ersetzt. So können Sie Dinge neu anordnen."
+"eingeschlossener Unterausdruck, zum Beispiel <tt>(.*)</tt> oder <tt>([a-zA-"
+"Z]+)</tt> oder <tt>(...)</tt>. Wenn das Inventar einen Prozess findet, der "
+"dem Muster entspricht, werden bei der Erstellung des Checks alle derartigen "
+"Gruppen durch die tatsächlichen Werte ersetzt. Auf diese Weise kann eine "
+"Regel mehrere Checks auf einem Host erstellen.</p><p>Wenn das Muster mehr "
+"Gruppen als Vorkommen von <tt>%s</tt> in der Service-Beschreibung enthält, "
+"werden nur die ersten übereinstimmenden Unterausdrücke für die Service-"
+"Beschreibungen verwendet. Die übereinstimmenden Teilzeichenketten, die den "
+"übrigen Gruppen entsprechen, werden jedoch in den regulären Ausdruck "
+"übernommen.</p><p>Alternativ zu <tt>%s</tt> können Sie auch <tt>%1</tt>, <tt>"
+"%2</tt> usw. verwenden. Diese werden dann durch die erste, zweite, ... "
+"passende Gruppe ersetzt. So können Sie Dinge neu anordnen."
 
 #, fuzzy
 msgid ""
@@ -3902,9 +3896,6 @@ msgstr "Neuen Status hinzufügen"
 
 msgid "Add new tag"
 msgstr "Neuen Tag hinzufügen"
-
-msgid "Add new threshold"
-msgstr "Neuen Schwellwert hinzufügen"
 
 msgid "Add new time"
 msgstr "Neue Zeit hinzufügen"
@@ -6036,9 +6027,9 @@ msgid ""
 msgstr ""
 "Bei der Verarbeitung Ihrer Anfrage ist ein interner Fehler aufgetreten "
 "(Absturz-ID: %s). Sie können dieses Problem an das Checkmk-Team melden, um "
-"bei der Behebung zu helfen. Bitte öffnen Sie die <a href=\"%s\""
-">Absturzberichtsseite</a> und verwenden Sie das Formular, um das Problem zu "
-"melden."
+"bei der Behebung zu helfen. Bitte öffnen Sie die <a href=\"%s"
+"\">Absturzberichtsseite</a> und verwenden Sie das Formular, um das Problem "
+"zu melden."
 
 #, python-format
 msgid ""
@@ -10531,8 +10522,8 @@ msgid ""
 "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/"
 "ineffective)"
 msgstr ""
-"Check HTTP: Verwende HTTPS anstelle von HTTP für SSL/TLS-Verbindungen ("
-"veraltet/ineffektiv)"
+"Check HTTP: Verwende HTTPS anstelle von HTTP für SSL/TLS-Verbindungen "
+"(veraltet/ineffektiv)"
 
 msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAP/EWS-Postfächer prüfen"
@@ -10814,11 +10805,6 @@ msgstr ""
 "verschiedenen Methoden, mit denen auf einen Host zugegriffen werden kann, z. "
 "B. über Agenten, SNMPv1, SNMPv2, um die richtige Monitoring-Konfiguration "
 "für diesen Host herauszufinden."
-
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
-"Check-SQL Plugin verwendet verschiedene Methoden, um MS SQL-Instanzen zu "
-"finden"
 
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
@@ -13240,9 +13226,8 @@ msgstr "Berücksichtige die History von"
 msgid "Consider periods of flapping states"
 msgstr "Unstetige Perioden berücksichtigen"
 
-#, fuzzy
 msgid "Consider state of archive log mode: "
-msgstr "Zustand im Archivelog-Modus werten: "
+msgstr "Zustand im Archivelog-Modus berücksichtigen: "
 
 msgid "Consider the input states during discovery to be OK"
 msgstr "Bewertet die Eingangszustände während der Erkennung als OK"
@@ -15751,7 +15736,6 @@ msgstr "Standard-Verfallsdatum (relativ)"
 msgid "Default graph layout"
 msgstr "Standard Graph-Layout"
 
-#, fuzzy
 msgid "Default increment"
 msgstr "Standardinkrement"
 
@@ -15902,9 +15886,8 @@ msgstr ""
 "Zuständen, sprich in das Ergebnis des Checks. Damit überschreiben Sie die "
 "von Check standardmäßig verwendete Zuordnung."
 
-#, fuzzy
 msgid "Define host assignment"
-msgstr "Hostzuweisung festlegen"
+msgstr "Host-Zuweisung festlegen"
 
 msgid "Define levels for pending pods"
 msgstr "Level für ausstehende Pods festlegen"
@@ -16136,9 +16119,8 @@ msgstr ""
 "Funktion ist standardmäßig deaktiviert, was dazu führt, dass Ihre Mailbox "
 "wächst, wenn Sie sie nicht selbst bereinigen."
 
-#, fuzzy
 msgid "Delete all processed messages belonging to this check"
-msgstr "Verarbeitete Emails dieses Checks löschen"
+msgstr "Löschen aller verarbeiteten Nachrichten, die zu diesem Check gehören"
 
 #, python-format
 msgid "Delete annotation #%d"
@@ -16644,7 +16626,6 @@ msgstr "OpenHardwareMonitor (kopflos) verteilen"
 msgid "Deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "Robotmk-Scheduler und Agentenplugin verteilen"
 
@@ -16660,7 +16641,6 @@ msgstr "StorCLI-Plugin verteilen"
 msgid "Deploy Symantec Anti Virus plug-in"
 msgstr "Symantec Anti Virus Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Unitrends plug-ins"
 msgstr "Unitrends Plugins verteilen"
 
@@ -16759,9 +16739,8 @@ msgstr "Plugin, das Agenten automatisch aktualisiert, verteilen"
 msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
 msgstr "Powershell-Plugin verteilen - empfohlen für Windows 2008 und aufwärts"
 
-#, fuzzy
 msgid "Deploy remote desktop licenses plug-in"
-msgstr "Remote-Desktop-Lizenzen-Plugin verteilen"
+msgstr "Lizenzen-Plugin des Remote-Desktops verteilen"
 
 #, python-format
 msgid "Deploy the %s plug-in and its configuration"
@@ -16786,13 +16765,11 @@ msgstr "Checkmk Inventory Plugin verteilen"
 msgid "Deploy the Checkmk object counts plug-in"
 msgstr "Checkmk-Objektzählungs-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Docker container plug-in"
-msgstr "Das Docker Container Plugin verteilen"
+msgstr "Plugin des Docker Containers verteilen"
 
-#, fuzzy
 msgid "Deploy the Docker plug-in"
-msgstr "Das Docker Plugin verteilen"
+msgstr "Docker-Plugin verteilen"
 
 msgid "Deploy the Jolokia plug-in"
 msgstr "Jolokia Plugin verteilen"
@@ -16800,9 +16777,8 @@ msgstr "Jolokia Plugin verteilen"
 msgid "Deploy the MySQL plug-in"
 msgstr "MySQL Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Plesk plug-ins"
-msgstr "Die plesk Plugins verteilen"
+msgstr "Plesk-Plugins verteilen"
 
 msgid "Deploy the PostgreSQL plug-in"
 msgstr "PostgresQL-Plugin verteilen"
@@ -16819,13 +16795,11 @@ msgstr "SAP-Router-Plugin verteilen"
 msgid "Deploy the SSH daemon configuration plug-in"
 msgstr "SSH Daemon Konfigurationsplugin verteilen"
 
-#, fuzzy
 msgid "Deploy the TSM plug-in and run it asynchronously"
-msgstr "MTR-Plugin asynchron verteilen"
+msgstr "TSM-Plugin verteilen und asynchron ausführen"
 
-#, fuzzy
 msgid "Deploy the TSM plug-in and run it synchronously"
-msgstr "MTR-Plugin asynchron verteilen"
+msgstr "TSM-Plugin verteilen und synchron ausführen"
 
 msgid "Deploy the Zypper plug-in"
 msgstr "Zypper Plugin verteilen"
@@ -16865,7 +16839,6 @@ msgstr "Verteilung"
 msgid "Deployment problems"
 msgstr "Probleme bei der Verteilung"
 
-#, fuzzy
 msgid ""
 "Deployment status of host {} is corrupted. Consider deleting the "
 "corresponding file on Checkmk-Server at {} and re-registering host {}. "
@@ -16875,9 +16848,8 @@ msgstr ""
 "entsprechende Datei auf dem Checkmk-Server unter {} zu löschen und den Host "
 "{} neu zu registrieren. Ausnahme: {}"
 
-#, fuzzy
 msgid "Deployment type"
-msgstr "Verteilung"
+msgstr "Verteilungstyp"
 
 msgid "Deployments"
 msgstr "Verteilung"
@@ -16885,11 +16857,9 @@ msgstr "Verteilung"
 msgid "Deprecated"
 msgstr "Veraltet"
 
-#, fuzzy
 msgid "Deprecated HW/SW inventory plug-ins"
 msgstr "Veraltete HW/SW-Inventar-Plugins"
 
-#, fuzzy
 msgid "Deprecated check plug-ins"
 msgstr "Veraltete Check-Plugins"
 
@@ -16953,7 +16923,6 @@ msgstr "Diesen Graph gestalten"
 msgid "Desired replicas"
 msgstr "Gewünschte Replica"
 
-#, fuzzy
 msgid "Desktop group name"
 msgstr "Desktop Gruppenname"
 
@@ -17036,9 +17005,8 @@ msgstr "Bei der Service-Erkennung festgelegt"
 msgid "Determines how to treat invalid certificate"
 msgstr "Legt fest, wie ein ungültiges Zertifikat zu behandeln ist"
 
-#, fuzzy
 msgid "Developer Tools"
-msgstr "Ressourcen für Entwickler"
+msgstr "Werkzeuge für Entwickler"
 
 msgid "Developer resources"
 msgstr "Ressourcen für Entwickler"
@@ -17076,7 +17044,6 @@ msgstr "Gerät verfügbar"
 msgid "Device going online"
 msgstr "Gerät geht online"
 
-#, fuzzy
 msgid "Device number"
 msgstr "Gerätenummer"
 
@@ -17277,10 +17244,9 @@ msgstr "Alle persönlichen Benachrichtigungen deaktivieren"
 msgid "Disable automatic host removal"
 msgstr "Automatische Host-Entfernung deaktivieren"
 
-#, fuzzy
 msgid "Disable automatic user synchronization (use central site users)"
 msgstr ""
-"Keine automatische Benutzersynchronisation (nutze Benutzer der "
+"Automatische Benutzersynchronisation ausschalten (nutze Benutzer der "
 "Zentralinstanz)"
 
 msgid "Disable bulkwalks"
@@ -17627,7 +17593,6 @@ msgstr "Schreibvorgänge auf der Festplatte"
 msgid "Disk write throughput per second"
 msgstr "Datenträger-Schreibdurchsatz pro Sekunde"
 
-#, fuzzy
 msgid "Disk writeback"
 msgstr "Platten-Writeback"
 
@@ -21101,8 +21066,11 @@ msgstr "Ziel-Vserver ausschließen"
 msgid "Exclude empty tag choices"
 msgstr "Leere Merkmale ausklammern"
 
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "Folgende SIDs ausschließen (falls erkannt oder manuell hinzugefügt)"
+#, fuzzy
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "Nur folgende SIDs überwachen (falls entdeckt oder manuell hinzugefügt)"
 
 msgid "Exclude hosts"
 msgstr "Hosts ausschließen"
@@ -36336,9 +36304,6 @@ msgstr "Maximum"
 msgid "Maximum %s instances of duration greater than %s"
 msgstr "Maximale Anzahl von %s Instanzen mit einer Dauer grösser als %s"
 
-msgid "Maximum <b>Keyword</b> runtime"
-msgstr "Maximale <b>Stichwort</b>laufzeit"
-
 msgid "Maximum PGA allocated"
 msgstr "Maximal zugewiesener PGA"
 
@@ -37480,6 +37445,12 @@ msgstr "Eine Mischung aus CME und Nicht-CME ist nicht erlaubt."
 
 msgid "Mixed"
 msgstr "Gemischt"
+
+#, fuzzy
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
+"Check-SQL Plugin verwendet verschiedene Methoden, um MS SQL-Instanzen zu "
+"finden"
 
 msgid "Mobile"
 msgstr "Mobil"
@@ -41532,7 +41503,9 @@ msgstr ""
 "automatisch Kontakte überwachen lassen. Die Zuordnung von Hosts zu "
 "Kontaktgruppen kann auch über <a href='%s'>Regeln</a> definiert werden."
 
-msgid "Only monitor following SIDs (if detected or manually added)"
+#, fuzzy
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "Nur folgende SIDs überwachen (falls entdeckt oder manuell hinzugefügt)"
 
 #, fuzzy
@@ -52043,20 +52016,6 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
 "Legt die Level für die gesamten Betriebsfehler seit dem letzten Zurücksetzen "
 "des Zählers fest."
-
-msgid ""
-"Sets runtime thresholds for keywords within a test based on regular "
-"expressions. It is advisable to write the patterns as precisely as possible, "
-"as a test result can contain hundreds/thousands of keywords. Note that "
-"runtime monitoring is not a feature of Robot Framework, but of Robotmk; a "
-"Robot suite can have an internal OK state, but a WARN state in Checkmk."
-msgstr ""
-"Legt auf der Grundlage regulärer Ausdrücke Laufzeitschwellwerte für "
-"Stichwörter innerhalb eines Tests fest. Es ist ratsam, die Muster so genau "
-"wie möglich zu schreiben, da ein Testergebnis Hunderte/Tausende von "
-"Stichwörtern enthalten kann. Beachten Sie, dass das Laufzeit-Monitoring "
-"keine Funktion von Robot Framework, sondern von Robotmk ist; eine Robot-"
-"Suite kann intern einen OK-Status, in Checkmk jedoch einen WARN-Status haben."
 
 msgid ""
 "Sets the runtime threshold for the runtime of a test. Note that runtime "
@@ -69553,7 +69512,8 @@ msgstr "Testen"
 msgid "Try pattern match"
 msgstr "Teste Suchmuster"
 
-msgid "Try to detect MS SQL instances presented on Server"
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
 msgstr "Versuche, die auf dem Server vorhandenen MS SQL-Instanzen zu ermitteln"
 
 msgid "Try to fit text to the available space."
@@ -80029,6 +79989,37 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "<b>Keyword</b> pattern"
+#~ msgstr "<b>Stichwort</b>muster"
+
+#~ msgid "<b>Keyword</b> runtime"
+#~ msgstr "<b>Stichwort</b>laufzeit"
+
+#~ msgid "Add new threshold"
+#~ msgstr "Neuen Schwellwert hinzufügen"
+
+#~ msgid "Maximum <b>Keyword</b> runtime"
+#~ msgstr "Maximale <b>Stichwort</b>laufzeit"
+
+#~ msgid ""
+#~ "Sets runtime thresholds for keywords within a test based on regular "
+#~ "expressions. It is advisable to write the patterns as precisely as "
+#~ "possible, as a test result can contain hundreds/thousands of keywords. "
+#~ "Note that runtime monitoring is not a feature of Robot Framework, but of "
+#~ "Robotmk; a Robot suite can have an internal OK state, but a WARN state in "
+#~ "Checkmk."
+#~ msgstr ""
+#~ "Legt auf der Grundlage regulärer Ausdrücke Laufzeitschwellwerte für "
+#~ "Stichwörter innerhalb eines Tests fest. Es ist ratsam, die Muster so "
+#~ "genau wie möglich zu schreiben, da ein Testergebnis Hunderte/Tausende von "
+#~ "Stichwörtern enthalten kann. Beachten Sie, dass das Laufzeit-Monitoring "
+#~ "keine Funktion von Robot Framework, sondern von Robotmk ist; eine Robot-"
+#~ "Suite kann intern einen OK-Status, in Checkmk jedoch einen WARN-Status "
+#~ "haben."
+
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "Folgende SIDs ausschließen (falls erkannt oder manuell hinzugefügt)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (packetiert)"

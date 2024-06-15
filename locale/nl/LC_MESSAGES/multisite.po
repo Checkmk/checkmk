@@ -1235,14 +1235,6 @@ msgstr ""
 "<b> Let op: </b> Dit laat je omgeving in een ongedefinieerde staat achter."
 
 #, fuzzy
-msgid "<b>Keyword</b> pattern"
-msgstr "Netwerkbewaking"
-
-#, fuzzy
-msgid "<b>Keyword</b> runtime"
-msgstr "Netwerkbewaking"
-
-#, fuzzy
 msgid ""
 "<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
 "all service instances will be filtered by those tags. Otherwise, all "
@@ -3946,10 +3938,6 @@ msgstr "Nieuwe status toevoegen"
 
 msgid "Add new tag"
 msgstr "Nieuwe tag toevoegen"
-
-#, fuzzy
-msgid "Add new threshold"
-msgstr "Nieuwe rol toevoegen"
 
 msgid "Add new time"
 msgstr "Nieuwe tijd toevoegen"
@@ -11035,9 +11023,6 @@ msgstr ""
 "methoden waarmee een host kan worden benaderd, bijvoorbeeld via agent, "
 "SNMPv1, SNMPv2 om de juiste bewakingsconfiguratie voor die host te "
 "achterhalen."
-
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
 
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
@@ -21564,8 +21549,10 @@ msgid "Exclude empty tag choices"
 msgstr "Lege tag keuzes uitsluiten"
 
 #, fuzzy
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "Sluit de volgende SID's uit (indien gevonden)"
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "Vraag alleen naar de volgende SID's (indien gevonden)"
 
 msgid "Exclude hosts"
 msgstr "Hosts uitsluiten"
@@ -36988,10 +36975,6 @@ msgstr "Maximum"
 msgid "Maximum %s instances of duration greater than %s"
 msgstr "Maximum %s instanties van duur groter dan %s"
 
-#, fuzzy
-msgid "Maximum <b>Keyword</b> runtime"
-msgstr "Netwerkbewaking"
-
 msgid "Maximum PGA allocated"
 msgstr "Maximaal toegewezen PGA"
 
@@ -38147,6 +38130,9 @@ msgstr ""
 
 msgid "Mixed"
 msgstr "Gemengd"
+
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
 
 msgid "Mobile"
 msgstr "Mobiel"
@@ -42249,7 +42235,8 @@ msgstr ""
 "gedefinieerd door <a href='%s'>regels</a>."
 
 #, fuzzy
-msgid "Only monitor following SIDs (if detected or manually added)"
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "Vraag alleen naar de volgende SID's (indien gevonden)"
 
 #, fuzzy
@@ -52865,14 +52852,6 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
 "Stelt het niveau in van het totale aantal bedrijfsfouten sinds de laatste "
 "reset van de teller."
-
-msgid ""
-"Sets runtime thresholds for keywords within a test based on regular "
-"expressions. It is advisable to write the patterns as precisely as possible, "
-"as a test result can contain hundreds/thousands of keywords. Note that "
-"runtime monitoring is not a feature of Robot Framework, but of Robotmk; a "
-"Robot suite can have an internal OK state, but a WARN state in Checkmk."
-msgstr ""
 
 msgid ""
 "Sets the runtime threshold for the runtime of a test. Note that runtime "
@@ -70888,8 +70867,9 @@ msgstr "Uitproberen"
 msgid "Try pattern match"
 msgstr "Probeer Patroon Overeenstemming"
 
-msgid "Try to detect MS SQL instances presented on Server"
-msgstr ""
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
+msgstr "Alleen nodig als u meerdere MySQL Instances op één server heeft"
 
 msgid "Try to fit text to the available space."
 msgstr "Probeer de tekst in de beschikbare ruimte te passen."
@@ -81423,6 +81403,26 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~ msgid "<b>Keyword</b> pattern"
+#~ msgstr "Netwerkbewaking"
+
+#, fuzzy
+#~ msgid "<b>Keyword</b> runtime"
+#~ msgstr "Netwerkbewaking"
+
+#, fuzzy
+#~ msgid "Add new threshold"
+#~ msgstr "Nieuwe rol toevoegen"
+
+#, fuzzy
+#~ msgid "Maximum <b>Keyword</b> runtime"
+#~ msgstr "Netwerkbewaking"
+
+#, fuzzy
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "Sluit de volgende SID's uit (indien gevonden)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (verpakt)"

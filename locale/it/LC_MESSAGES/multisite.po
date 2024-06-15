@@ -1225,12 +1225,6 @@ msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr ""
 "<b> Attenzione: </b> Questo lascerà l'ambiente in uno stato non definito."
 
-msgid "<b>Keyword</b> pattern"
-msgstr "<b>Parola chiave</b> pattern"
-
-msgid "<b>Keyword</b> runtime"
-msgstr "<b>Parola chiave</b> runtime"
-
 #, fuzzy
 msgid ""
 "<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
@@ -3913,9 +3907,6 @@ msgstr "Aggiungere un nuovo stato"
 
 msgid "Add new tag"
 msgstr "Aggiungi un nuovo tag"
-
-msgid "Add new threshold"
-msgstr "Aggiungere una nuova soglia"
 
 msgid "Add new time"
 msgstr "Aggiungi un nuovo tempo"
@@ -10917,9 +10908,6 @@ msgstr ""
 "Verificare se l'host è raggiungibile o meno, testare i diversi metodi di "
 "accesso a un host, ad esempio tramite agente, SNMPv1, SNMPv2 per scoprire la "
 "configurazione di monitoraggio corretta per quell'host."
-
-msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
-msgstr ""
 
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
@@ -21359,8 +21347,11 @@ msgstr "Escludi il vserver di destinazione"
 msgid "Exclude empty tag choices"
 msgstr "Escludi le scelte di tag vuote"
 
-msgid "Exclude following SIDs (if detected or manually added)"
-msgstr "Escludere i seguenti SID (se rilevati o aggiunti manualmente)"
+#, fuzzy
+msgid ""
+"Exclude from monitoring following database instances (if detected or "
+"manually added)"
+msgstr "Monitora solo i seguenti SID (se rilevati o aggiunti manualmente)"
 
 msgid "Exclude hosts"
 msgstr "Escludi gli host"
@@ -36636,9 +36627,6 @@ msgstr "Massimo"
 msgid "Maximum %s instances of duration greater than %s"
 msgstr "Massimo %s istanze di durata maggiore di %s"
 
-msgid "Maximum <b>Keyword</b> runtime"
-msgstr "Massimo <b>Parola chiave</b> tempo di esecuzione"
-
 msgid "Maximum PGA allocated"
 msgstr "Massimo PGA assegnato"
 
@@ -37781,6 +37769,9 @@ msgstr "Non è consentita la combinazione di ECM e non ECM."
 
 msgid "Mixed"
 msgstr "Misto"
+
+msgid "Mk-sql plug-in uses different methods to detect MS SQL instances"
+msgstr ""
 
 msgid "Mobile"
 msgstr "Mobile"
@@ -41836,7 +41827,9 @@ msgstr ""
 "L'assegnazione degli host ai gruppi di contatto può essere definita anche da "
 "<a href='%s'>regole</a>."
 
-msgid "Only monitor following SIDs (if detected or manually added)"
+#, fuzzy
+msgid ""
+"Only monitor following database instances (if detected or manually added)"
 msgstr "Monitora solo i seguenti SID (se rilevati o aggiunti manualmente)"
 
 #, fuzzy
@@ -52370,14 +52363,6 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
 "Imposta i livelli sul totale degli errori di funzionamento dall'ultimo "
 "azzeramento del contatore."
-
-msgid ""
-"Sets runtime thresholds for keywords within a test based on regular "
-"expressions. It is advisable to write the patterns as precisely as possible, "
-"as a test result can contain hundreds/thousands of keywords. Note that "
-"runtime monitoring is not a feature of Robot Framework, but of Robotmk; a "
-"Robot suite can have an internal OK state, but a WARN state in Checkmk."
-msgstr ""
 
 msgid ""
 "Sets the runtime threshold for the runtime of a test. Note that runtime "
@@ -70198,8 +70183,9 @@ msgstr "Prova"
 msgid "Try pattern match"
 msgstr "Prova il pattern match"
 
-msgid "Try to detect MS SQL instances presented on Server"
-msgstr ""
+#, fuzzy
+msgid "Try to detect MS SQL instances present on Server"
+msgstr "Necessario solo se si hanno più istanze MySQL su un server"
 
 msgid "Try to fit text to the available space."
 msgstr "Cerca di adattare il testo allo spazio disponibile."
@@ -80633,6 +80619,21 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "<b>Keyword</b> pattern"
+#~ msgstr "<b>Parola chiave</b> pattern"
+
+#~ msgid "<b>Keyword</b> runtime"
+#~ msgstr "<b>Parola chiave</b> runtime"
+
+#~ msgid "Add new threshold"
+#~ msgstr "Aggiungere una nuova soglia"
+
+#~ msgid "Maximum <b>Keyword</b> runtime"
+#~ msgstr "Massimo <b>Parola chiave</b> tempo di esecuzione"
+
+#~ msgid "Exclude following SIDs (if detected or manually added)"
+#~ msgstr "Escludere i seguenti SID (se rilevati o aggiunti manualmente)"
 
 #~ msgid " (packaged)"
 #~ msgstr " (pacchetto)"

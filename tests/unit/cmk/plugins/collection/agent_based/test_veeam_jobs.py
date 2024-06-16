@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.veeam_jobs import (
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.collection.agent_based.veeam_jobs import (
     check_veeam_jobs,
     discovery_veeam_jobs,
     parse_veeam_jobs,
 )
-
-from cmk.agent_based.v2 import Result, Service, State
 
 STRING_TABLE = [
     [  # based on customer agent output, this is the most common state

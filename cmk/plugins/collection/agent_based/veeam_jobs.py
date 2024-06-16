@@ -7,10 +7,14 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Result,
+    Service,
+    State,
     StringTable,
 )
 
@@ -78,12 +82,12 @@ def parse_veeam_jobs(string_table: StringTable) -> Mapping[str, Job | None]:
     return section
 
 
-register.agent_section(
+agent_section_veeam_jobs = AgentSection(
     name="veeam_jobs",
     parse_function=parse_veeam_jobs,
 )
 
-register.check_plugin(
+check_plugin_veeam_jobs = CheckPlugin(
     name="veeam_jobs",
     service_name="VEEAM Job %s",
     discovery_function=discovery_veeam_jobs,

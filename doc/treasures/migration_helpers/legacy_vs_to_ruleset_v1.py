@@ -26,10 +26,30 @@ _ADDED_IMPORTS = (
     "from typing import Any",
     "from cmk.rulesets.v1 import Help, Label, Title, Message",
     (
-        "from cmk.rulesets.v1.form_specs import (DefaultValue, DictElement, "
-        "Dictionary, FieldSize, FixedValue, Integer, LevelDirection, migrate_to_float_simple_levels, "
-        "migrate_to_password, Password, SimpleLevels, SingleChoice, SingleChoiceElement, String, "
-        "TimeMagnitude, TimeSpan, validators, BooleanChoice, MultimpleChoice, MultipleChoiceElement,)"
+        "from cmk.rulesets.v1.form_specs import ("
+        "BooleanChoice, "
+        "DefaultValue, "
+        "DictElement, "
+        "Dictionary, "
+        "CascadingSingleChoice, "
+        "CascadingSingleChoiceElement, "
+        "FieldSize, "
+        "FixedValue, "
+        "Integer, "
+        "LevelDirection, "
+        "migrate_to_float_simple_levels, "
+        "migrate_to_password, "
+        "MultimpleChoice, "
+        "MultipleChoiceElement, "
+        "Password, "
+        "SimpleLevels, "
+        "SingleChoice, "
+        "SingleChoiceElement, "
+        "String, "
+        "TimeMagnitude, "
+        "TimeSpan, "
+        "validators, "
+        ")"
     ),
     (
         "from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic, HostAndServiceCondition, HostCondition, "
@@ -109,7 +129,7 @@ class VSTransformer(cst.CSTTransformer):
                     return self._make_string(updated_node)
                 case "Checkbox":
                     return self._make_boolean_choice(updated_node)
-                case "IndividualOrStoredPassword":
+                case "IndividualOrStoredPassword" | "MigrateToIndividualOrStoredPassword":
                     return self._make_password(updated_node)
                 case "Tuple":
                     return self._make_dictionary_from_tuple(updated_node)
@@ -144,8 +164,11 @@ class VSTransformer(cst.CSTTransformer):
         return cst.Call(
             func=cst.Name("Dictionary"),
             args=(
-                *_extract("title", old.args),
-                *_extract("help", old.args),
+                *(
+                    arg
+                    for arg in old.args
+                    if cst.ensure_type(arg.keyword, cst.Name).value != "elements"
+                ),
                 cst.Arg(elements, cst.Name("elements")),
             ),
         )
@@ -185,8 +208,11 @@ class VSTransformer(cst.CSTTransformer):
         return cst.Call(
             func=cst.Name("Dictionary"),
             args=(
-                *_extract("title", old.args),
-                *_extract("help", old.args),
+                *(
+                    arg
+                    for arg in old.args
+                    if cst.ensure_type(arg.keyword, cst.Name).value != "elements"
+                ),
                 cst.Arg(elements, cst.Name("elements")),
             ),
         )
@@ -239,8 +265,8 @@ class VSTransformer(cst.CSTTransformer):
         return cst.Call(
             func=cst.Name("Password"),
             args=(
-                *_extract("title", old.args),
-                *_extract("help", old.args),
+                *old.args,
+                cst.Arg(cst.Name("migrate_to_password"), cst.Name("migrate")),
             ),
         )
 
@@ -270,14 +296,13 @@ class RegistrationTransformer(cst.CSTTransformer):
             return self._construct_check_parameters(old_ruleset.args)
 
         args = {k.value: arg.value for arg in old_ruleset.args if (k := arg.keyword) is not None}
-        if (
-            rule_type == "HostRulespec"
-            and cst.ensure_type(
-                cst.ensure_type(args["name"], cst.Call).func, cst.Attribute
-            ).attr.value
-            == "SpecialAgents"
-        ):
+        group = cst.ensure_type(
+            cst.ensure_type(args["name"], cst.Call).func, cst.Attribute
+        ).attr.value
+        if rule_type == "HostRulespec" and group == "SpecialAgents":
             return self._construct_special_agent(old_ruleset.args)
+        if rule_type == "HostRulespec" and group == "ActiveChecks":
+            return self._construct_active_check(old_ruleset.args)
 
         print(f"not yet implemented rulespec type: {rule_type}", file=sys.stderr)
         return cst.SimpleStatementLine(
@@ -315,7 +340,7 @@ class RegistrationTransformer(cst.CSTTransformer):
             )
         )
 
-    def _construct_special_agent(self, old: Sequence[cst.Arg]) -> cst.SimpleStatementLine:
+    def _construct_active_check(self, old: Sequence[cst.Arg]) -> cst.SimpleStatementLine:
         args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
         name = self._extract_string(cst.ensure_type(args["name"], cst.Call).args[0].value)
         form_spec = args["valuespec"]
@@ -324,6 +349,28 @@ class RegistrationTransformer(cst.CSTTransformer):
             (
                 cst.Assign(
                     targets=(cst.AssignTarget(cst.Name(f"rule_spec_active_check_{name}")),),
+                    value=cst.Call(
+                        func=cst.Name("ActiveCheck"),
+                        args=(
+                            cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
+                            *_extract("title", old),
+                            cst.Arg(cst.Name("Topic"), cst.Name("topic")),
+                            cst.Arg(form_spec, cst.Name("parameter_form")),
+                        ),
+                    ),
+                ),
+            )
+        )
+
+    def _construct_special_agent(self, old: Sequence[cst.Arg]) -> cst.SimpleStatementLine:
+        args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
+        name = self._extract_string(cst.ensure_type(args["name"], cst.Call).args[0].value)
+        form_spec = args["valuespec"]
+
+        return cst.SimpleStatementLine(
+            (
+                cst.Assign(
+                    targets=(cst.AssignTarget(cst.Name(f"rule_spec_special_agent_{name}")),),
                     value=cst.Call(
                         func=cst.Name("SpecialAgent"),
                         args=(

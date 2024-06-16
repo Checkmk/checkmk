@@ -86,7 +86,6 @@ LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea
 
 class VerticalAxis(TypedDict):
     range: tuple[float, float]
-    real_range: tuple[float, float]
     axis_label: str | None
     labels: Sequence[VerticalAxisLabel]
     max_label_length: int
@@ -569,7 +568,6 @@ def _compute_labels_from_api(
 
 
 class _VAxisMinMax(NamedTuple):
-    real_range: tuple[float, float]
     distance: float
     label_range: tuple[float, float]
 
@@ -676,8 +674,6 @@ def _compute_graph_v_axis(
     unit = get_unit_info(graph_recipe.unit)
 
     # Calculate the the value range
-    # real_range -> physical range, without extra margin or zooming
-    #               tuple of (min_value, max_value)
     # distance   -> amount of values visible in vaxis (max_value - min_value)
     # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
     # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
@@ -715,7 +711,6 @@ def _compute_graph_v_axis(
 
     v_axis = VerticalAxis(
         range=v_axis_min_max.label_range,
-        real_range=v_axis_min_max.real_range,
         axis_label=None,
         labels=rendered_labels,
         max_label_length=max_label_length,
@@ -785,19 +780,10 @@ def _compute_v_axis_min_max(
     mirrored: bool,
     height: SizeEx,
 ) -> _VAxisMinMax:
-    min_value, max_value = _compute_min_max(explicit_vertical_range, layouted_curves)
-
-    # In case the graph is mirrored, the 0 line is always exactly in the middle
-    if mirrored:
-        min_value, max_value = _apply_mirrored(min_value, max_value)
-
-    # physical range, without extra margin or zooming
-    real_range = min_value, max_value
-
-    # An explizit range set by user zoom has always
-    # precedence!
-    if graph_data_vrange:
-        min_value, max_value = graph_data_vrange
+    # An explizit range set by user zoom has always precedence!
+    min_value, max_value = graph_data_vrange or _compute_min_max(
+        explicit_vertical_range, layouted_curves
+    )
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
@@ -825,7 +811,7 @@ def _compute_v_axis_min_max(
         if max_value != 0:
             max_value += 0.5 * distance_per_ex
 
-    return _VAxisMinMax(real_range, distance, (min_value, max_value))
+    return _VAxisMinMax(distance, (min_value, max_value))
 
 
 # Create labels for the necessary range

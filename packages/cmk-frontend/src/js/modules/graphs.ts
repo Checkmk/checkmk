@@ -116,7 +116,6 @@ interface VerticalAxisLabel {
 
 interface VerticalAxis {
     range: [number, number];
-    real_range: [number, number];
     axis_label: string | null;
     labels: VerticalAxisLabel[];
     max_label_length: null;

@@ -149,15 +149,21 @@ if inpath smartctl >/dev/null 2>&1; then
                 TEMP=
                 # create temperature output as expected by checks/smart
                 # this is a hack, TODO: change checks/smart to support SCSI-disks
-                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _; do
+                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d e f _; do
                     [ "$a" == Serial ] && echo SN="$c"
                     [ "$a" == Current ] && [ "$b" == Drive ] && [ "$c" == Temperature: ] && echo TEMP="$d"
+                    [ "$a" == Accumulated ] && [ "$b" == power ] && [ "$c" == on ] && echo ON_TIME="$f"
+                    [ "$a" == Accumulated ] && [ "$b" == start-stop ] && echo PWR_CYCLE="$d"
+                    [ "$a" == Elements ] && [ "$c" == grown ] && [ "$d" == defect ] && echo DEFECT="$f"
                 done)"
-                [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
+                [ -n "$TEMP" ] && CMD="echo -e 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
+                [ -n "$ON_TIME" ] && CMD=$CMD"\n9 Power_On_Hours 0x0000 000 000 000 Old_age Always - ${ON_TIME%%:*}"
+                [ -n "$PWR_CYCLE" ] && CMD=$CMD"\n12 Power_Cycle_Count 0x0000 000 000 000 Old_age Always - $PWR_CYCLE"
+                [ -n "$DEFECT" ] && CMD=$CMD"\n5 Reallocated_Sector_Ct 0x0000 000 000 000 Pre-fail Always - $DEFECT"
                 DNAME="${VEND}_${MODEL}_${SN}"
             fi
         else
-            CMD="smartctl -d ata -v 9,raw48 -A $D"
+            CMD="smartctl -d sat -v 9,raw48 -A $D"
         fi
 
         if [ "$VEND" == "NVME" ]; then

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from ast import literal_eval
 from collections.abc import (
     Callable,
@@ -229,7 +230,7 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
     def __init__(
         self,
         *,
-        data: MutableMapping[_ValueStoreKey, Any],
+        data: MutableMapping[_ValueStoreKey, str],
         service_id: tuple[CheckPluginName, Item],
         host_name: HostName,
     ) -> None:
@@ -242,10 +243,21 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
         return (self._prefix[0], self._prefix[1], self._prefix[2], user_key)
 
     def __getitem__(self, key: _UserKey) -> Any:
-        return self._data.__getitem__(self._map_key(key))
+        """
+        Deserialize the original value only here.
+        This is called in the plugins scope, so deserialization
+        should only fail here, not for the whole value store file.
+        """
+        return literal_eval(self._data.__getitem__(self._map_key(key)))
 
     def __setitem__(self, key: _UserKey, value: Any) -> Any:
-        return self._data.__setitem__(self._map_key(key), value)
+        """
+        Immediately serialize the value only here.
+        That way we can be certain we can store and load the whole file,
+        and failure to (de)serialize individual values will only affect the
+        offending plugin.
+        """
+        return self._data.__setitem__(self._map_key(key), repr(value))
 
     def __delitem__(self, key: _UserKey) -> Any:
         return self._data.__delitem__(self._map_key(key))
@@ -277,11 +289,11 @@ class ValueStoreManager:
     STORAGE_PATH = Path(cmk.utils.paths.counters_dir)
 
     def __init__(self, host_name: HostName) -> None:
-        self._value_store: _DiskSyncedMapping[_ValueStoreKey, Any] = _DiskSyncedMapping.make(
-            path=self.STORAGE_PATH / str(host_name),
+        self._value_store: _DiskSyncedMapping[_ValueStoreKey, str] = _DiskSyncedMapping.make(
+            path=self.STORAGE_PATH / host_name,
             log_debug=lambda x: logger.debug("value store: %s", x),
-            serializer=repr,
-            deserializer=literal_eval,
+            serializer=lambda d: json.dumps(list(d.items())),
+            deserializer=lambda raw: {tuple(k): v for k, v in json.loads(raw)},
         )
         self.active_service_interface: MutableMapping[str, Any] | None = None
         self._host_name = host_name

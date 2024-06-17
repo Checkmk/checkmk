@@ -291,7 +291,7 @@ class RegistrationTransformer(cst.CSTTransformer):
     def _make_ruleset_plugin(self, old_ruleset: cst.Call) -> cst.SimpleStatementLine:
         if (rule_type := cst.ensure_type(old_ruleset.func, cst.Name).value) in {
             "CheckParameterRulespecWithItem",
-            "CheckParameterRulespecWithOutItem",
+            "CheckParameterRulespecWithoutItem",
         }:
             return self._construct_check_parameters(old_ruleset.args)
 

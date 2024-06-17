@@ -146,6 +146,15 @@ In latter case the git_hash is replaced with string "latest".
              |
              +-- python-3.12/
 
+## Login
+
+`xfreerdp` can be used to login to windows nodes. The password is stored in Bitwarden [bitwarden](passwords.lan.checkmk.net) under `collections/development/CI`.
+
+```bash
+apt-get install freerdp2-x11
+xfreerdp /u:Administrator /v:agentbuild1.lan.tribe29.com
+```
+
 ## Troubleshooting
 
 ### Failing Windows Builds

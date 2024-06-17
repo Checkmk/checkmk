@@ -19,7 +19,8 @@ import socket
 import subprocess
 import sys
 import time
-from collections.abc import Container, Iterable, Mapping, Sequence
+import uuid
+from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict
 from itertools import islice
@@ -81,6 +82,9 @@ from cmk.automations.results import (
     DeleteHostsKnownRemoteResult,
     DeleteHostsResult,
     DiagHostResult,
+    DiagSpecialAgentHostConfig,
+    DiagSpecialAgentInput,
+    DiagSpecialAgentResult,
     DiscoveredHostLabelsDict,
     GetAgentOutputResult,
     GetCheckInformationResult,
@@ -102,6 +106,7 @@ from cmk.automations.results import (
     SetAutochecksResult,
     SetAutochecksTable,
     SetAutochecksV2Result,
+    SpecialAgentResult,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
     UpdatePasswordsMergedFileResult,
@@ -181,7 +186,12 @@ from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
-from cmk.base.server_side_calls import load_active_checks
+from cmk.base.server_side_calls import (
+    load_active_checks,
+    load_special_agents,
+    SpecialAgent,
+    SpecialAgentCommandLine,
+)
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
@@ -2015,6 +2025,101 @@ class AutomationScanParents(Automation):
 
 
 automations.register(AutomationScanParents())
+
+
+def ip_address_of_host(_host_address: HostAddress, _address_family: socket.AddressFamily) -> None:
+    # TODO: this adds the restriction of only being able to use NO_IP hosts for now. When having an
+    #  implementation for IP hosts, without using the config_cache, this restriction can be removed.
+    return None
+
+
+def get_special_agent_commandline(
+    host_config: DiagSpecialAgentHostConfig,
+    agent_name: str,
+    params: Mapping[str, object],
+    password_store_file: Path,
+    passwords: Mapping[str, str],
+    http_proxies: Mapping[str, Mapping[str, str]],
+) -> Iterator[SpecialAgentCommandLine]:
+    special_agent = SpecialAgent(
+        load_special_agents()[1],
+        {},
+        host_config.host_name,
+        host_config.ip_address,
+        config.get_ssc_host_config(
+            host_config.host_name,
+            host_config.host_alias,
+            host_config.host_primary_family,
+            host_config.ip_stack_config,
+            host_config.host_additional_addresses_ipv4,
+            host_config.host_additional_addresses_ipv6,
+            host_config.macros,
+            ip_address_of_host,
+        ),
+        host_config.host_attrs,
+        http_proxies,
+        passwords,
+        password_store_file,
+    )
+
+    if not params:
+        raise MKAutomationError("No special agent parameters provided.")
+
+    yield from special_agent.iter_special_agent_commands(agent_name, params)
+
+
+class AutomationDiagSpecialAgent(Automation):
+    cmd = "diag-special-agent"
+    needs_config = False
+    needs_checks = False
+
+    def execute(self, args: list[str]) -> DiagSpecialAgentResult:
+        diag_special_agent_input = DiagSpecialAgentInput.deserialize(sys.stdin.read())
+        return DiagSpecialAgentResult(
+            tuple(
+                SpecialAgentResult(*result)
+                for result in self._execute_diag_special_agent(diag_special_agent_input)
+            )
+        )
+
+    @staticmethod
+    def _execute_diag_special_agent(
+        diag_special_agent_input: DiagSpecialAgentInput,
+    ) -> Iterator[tuple[int, str]]:
+        # All passwords are provided by the automation call since we cannot rely that the password
+        # store is available on the remote site.
+        password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
+        try:
+            cmk.utils.password_store.save(diag_special_agent_input.passwords, password_store_file)
+            cmds = get_special_agent_commandline(
+                diag_special_agent_input.host_config,
+                diag_special_agent_input.agent_name,
+                diag_special_agent_input.params,
+                password_store_file,
+                diag_special_agent_input.passwords,
+                diag_special_agent_input.http_proxies,
+            )
+            for cmd in cmds:
+                fetcher = ProgramFetcher(
+                    cmdline=cmd.cmdline,
+                    stdin=cmd.stdin,
+                    is_cmc=diag_special_agent_input.is_cmc,
+                )
+                with fetcher:
+                    fetched = fetcher.fetch(Mode.DISCOVERY)
+            if fetched.is_ok():
+                yield 0, ensure_str_with_fallback(
+                    fetched.ok,
+                    encoding="utf-8",
+                    fallback="latin-1",
+                )
+            yield 1, str(fetched.error)
+        finally:
+            if password_store_file.exists():
+                password_store_file.unlink()
+
+
+automations.register(AutomationDiagSpecialAgent())
 
 
 class AutomationDiagHost(Automation):

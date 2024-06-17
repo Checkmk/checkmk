@@ -6,17 +6,19 @@
 from __future__ import annotations
 
 import json
+import socket
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, astuple, dataclass
-from typing import Any, TypedDict, TypeVar
+from dataclasses import asdict, astuple, dataclass, field
+from typing import Any, Literal, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels, LabelSources
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.plugin_registry import Registry
@@ -483,6 +485,142 @@ class ScanParentsResult(ABCAutomationResult):
 
 
 result_type_registry.register(ScanParentsResult)
+
+
+@dataclass
+class DiagSpecialAgentHostConfig:
+    host_name: HostName
+    host_alias: str
+    ip_address: HostAddress | None = None
+    ip_stack_config: IPStackConfig = IPStackConfig.NO_IP
+    host_attrs: Mapping[str, str] = field(default_factory=dict)
+    macros: Mapping[str, object] = field(default_factory=dict)
+    host_primary_family: Literal[
+        socket.AddressFamily.AF_INET,
+        socket.AddressFamily.AF_INET6,
+    ] = socket.AddressFamily.AF_INET
+    host_additional_addresses_ipv4: list[HostAddress] = field(default_factory=list)
+    host_additional_addresses_ipv6: list[HostAddress] = field(default_factory=list)
+
+    @classmethod
+    def deserialize(cls, serialized_input: str) -> DiagSpecialAgentHostConfig:
+        raw = json.loads(serialized_input)
+        deserialized = {
+            "host_name": HostName(raw["host_name"]),
+            "host_alias": raw["host_alias"],
+        }
+        if "ip_address" in raw:
+            deserialized["ip_address"] = (
+                HostAddress(raw["ip_address"]) if raw["ip_address"] else None
+            )
+        if "ip_stack_config" in raw:
+            deserialized["ip_stack_config"] = IPStackConfig(raw["ip_stack_config"])
+        if "host_attrs" in raw:
+            deserialized["host_attrs"] = raw["host_attrs"]
+        if "macros" in raw:
+            deserialized["macros"] = raw["macros"]
+        if "host_primary_family" in raw:
+            deserialized["host_primary_family"] = cls.deserialize_host_primary_family(
+                raw["host_primary_family"]
+            )
+        if "host_additional_addresses_ipv4" in raw:
+            deserialized["host_additional_addresses_ipv4"] = [
+                HostAddress(ip) for ip in raw["host_additional_addresses_ipv4"]
+            ]
+        if "host_additional_addresses_ipv6" in raw:
+            deserialized["host_additional_addresses_ipv6"] = [
+                HostAddress(ip) for ip in raw["host_additional_addresses_ipv6"]
+            ]
+        return cls(**deserialized)
+
+    @staticmethod
+    def deserialize_host_primary_family(raw: int) -> Literal[
+        socket.AddressFamily.AF_INET,
+        socket.AddressFamily.AF_INET6,
+    ]:
+        address_family = socket.AddressFamily(raw)
+        if address_family is socket.AddressFamily.AF_INET:
+            return socket.AddressFamily.AF_INET
+        if address_family is socket.AddressFamily.AF_INET6:
+            return socket.AddressFamily.AF_INET6
+        raise ValueError(f"Invalid address family: {address_family}")
+
+    def serialize(self, _for_cmk_version: cmk_version.Version) -> str:
+        return json.dumps(
+            {
+                "host_name": str(self.host_name),
+                "host_alias": self.host_alias,
+                "ip_address": str(self.ip_address) if self.ip_address else None,
+                "ip_stack_config": self.ip_stack_config.value,
+                "host_attrs": self.host_attrs,
+                "macros": self.macros,
+                "host_primary_family": self.host_primary_family.value,
+                "host_additional_addresses_ipv4": [
+                    str(ip) for ip in self.host_additional_addresses_ipv4
+                ],
+                "host_additional_addresses_ipv6": [
+                    str(ip) for ip in self.host_additional_addresses_ipv6
+                ],
+            }
+        )
+
+
+@dataclass
+class DiagSpecialAgentInput:
+    host_config: DiagSpecialAgentHostConfig
+    agent_name: str
+    params: Mapping[str, object]
+    passwords: Mapping[str, str]
+    http_proxies: Mapping[str, Mapping[str, str]] = field(default_factory=dict)
+    is_cmc: bool = True
+
+    @classmethod
+    def deserialize(cls, serialized_input: str) -> DiagSpecialAgentInput:
+        raw = json.loads(serialized_input)
+        deserialized = {
+            "host_config": DiagSpecialAgentHostConfig.deserialize(raw["host_config"]),
+            "agent_name": raw["agent_name"],
+            # TODO: at the moment there is no validation for params input possible
+            #  this could change when being able to use the formspec vue visitor for
+            #  (de)serialization in the future.
+            "params": literal_eval(raw["params"]),
+            "passwords": raw["passwords"],
+        }
+        if "http_proxies" in raw:
+            deserialized["http_proxies"] = raw["http_proxies"]
+        if "is_cmc" in raw:
+            deserialized["is_cmc"] = raw["is_cmc"]
+        return cls(**deserialized)
+
+    def serialize(self, _for_cmk_version: cmk_version.Version) -> str:
+        return json.dumps(
+            {
+                "host_config": self.host_config.serialize(_for_cmk_version),
+                "agent_name": self.agent_name,
+                "params": repr(self.params),
+                "passwords": self.passwords,
+                "http_proxies": self.http_proxies,
+                "is_cmc": self.is_cmc,
+            }
+        )
+
+
+@dataclass
+class SpecialAgentResult:
+    return_code: int
+    response: str
+
+
+@dataclass
+class DiagSpecialAgentResult(ABCAutomationResult):
+    results: Sequence[SpecialAgentResult]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "diag-special-agent"
+
+
+result_type_registry.register(DiagSpecialAgentResult)
 
 
 @dataclass

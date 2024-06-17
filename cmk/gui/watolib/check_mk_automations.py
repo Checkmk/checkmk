@@ -9,6 +9,7 @@ from typing import Any, NamedTuple, TypeVar
 
 from livestatus import SiteId
 
+import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
@@ -373,6 +374,22 @@ def scan_parents(
             args=[*params, host_name],
         ),
         results.ScanParentsResult,
+    )
+
+
+def diag_special_agent(
+    site_id: SiteId,
+    diag_special_agent_input: results.DiagSpecialAgentInput,
+) -> results.DiagSpecialAgentResult:
+    return _deserialize(
+        _automation_serialized(
+            "diag-special-agent",
+            siteid=site_id,
+            indata=diag_special_agent_input.serialize(
+                cmk_version.Version.from_str(cmk_version.__version__)
+            ),
+        ),
+        results.DiagSpecialAgentResult,
     )
 
 

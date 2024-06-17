@@ -92,6 +92,9 @@ class NotationFormatter:
         # value > 1
         return self._preformat_large_number(value, use_prefix, use_symbol)
 
+    def _stringify_formatted_value(self, value: int | float) -> str:
+        return str(value)
+
     @abc.abstractmethod
     def _compose(self, formatted: Formatted) -> str:
         raise NotImplementedError()
@@ -103,7 +106,9 @@ class NotationFormatter:
     ) -> str:
         results = []
         for formatted in formatted_parts:
-            text = str(self._apply_precision(formatted.value, compute_auto_precision_digits))
+            text = self._stringify_formatted_value(
+                self._apply_precision(formatted.value, compute_auto_precision_digits)
+            )
             results.append(
                 self._compose(
                     Formatted(
@@ -164,6 +169,16 @@ class NotationFormatter:
 _BASIC_DECIMAL_ATOMS: Final = [1, 2, 5, 10, 20, 50]
 
 
+def _stringify_small_decimal_number(value: float) -> str:
+    assert value > 0
+    text = str(value)
+    if "e" not in text:
+        return text
+    decimals = math.floor(abs(math.log10(value)))
+    int_part = text.split("e", 1)[0].replace(".", "")
+    return f"0.{'0' * decimals}{int_part}"
+
+
 class DecimalFormatter(NotationFormatter):
     def ident(self) -> Literal["Decimal"]:
         return "Decimal"
@@ -177,6 +192,18 @@ class DecimalFormatter(NotationFormatter):
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
         return [Preformatted(value, "", self.symbol)]
+
+    def _stringify_formatted_value(self, value: int | float) -> str:
+        if 0 < abs(value) < 1:
+            # For small decimal numbers we avoid the usage of Python's scientific notation if the
+            # value is too small:
+            # >>> str(.0001)
+            # '0.0001'
+            # >>> str(0.00001)
+            # '1e-05'
+            sign = "" if value > 0 else "-"
+            return f"{sign}{_stringify_small_decimal_number(abs(value))}"
+        return str(value)
 
     def _compose(self, formatted: Formatted) -> str:
         return f"{formatted.text} {formatted.symbol}"

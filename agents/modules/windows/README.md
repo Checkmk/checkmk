@@ -166,4 +166,5 @@ Possible error messages you might encounter are:
 One possible problem is that the builds are not properly created.
 Make sure that the Windows build system is up-to-date in regards of updates, especially the Windows Defender because it might block the creation of artifacts containing files it finds malicious - this is nearly always a false positive.
 To do this go to the Windows Update overview, check for updates and install the updates that are presented to you. If Windows asks for a restart, perform this restart.
+Remmina can be used to log into the Windows nodes. The login details are stored in [bitwarden](passwords.lan.checkmk.net) under collections/development/CI.
 Afterwards try to rebuild.

@@ -860,6 +860,10 @@ class ModeNotifications(ABCNotificationsMode):
     ) -> None:
         custom_vars = dict(zip(resp[0][0], resp[0][1]))
         for key, value in custom_vars.items():
+            # Special case for service level
+            if key == "EC_SL":
+                context["HOST_SL" if prefix == "HOST" else "SVC_SL"] = value
+                continue
             context[f"{prefix}_{key}"] = value
             # TODO in the context of a real notification, some variables are
             # set two times. Why?!

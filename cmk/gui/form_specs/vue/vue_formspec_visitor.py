@@ -586,12 +586,24 @@ class ListVisitor(FormSpecVisitor):
 
 
 class LegacyValuespecVisitor(FormSpecVisitor):
+    """Visitor for LegacyValuespecs. Due to the nature of the legacy valuespecs, we can not
+    directly convert them to Vue components. Instead, we need to generate the HTML code in the backend
+    and pass it to the frontend. The frontend will then render the form as HTML.
+    Since rendering/data/validation are mixed up in the old valuespecs, the functions here do not
+    have a clear distinction
+    """
+
     def __init__(self, form_spec: LegacyValueSpec, options: VisitorOptions) -> None:
         self.form_spec = form_spec
         self.options = options
 
     def parse_value(self, value: Any) -> Any:
+        """Only handles DataOrigin.DISK and default values.
+        Data from the frontend can not be parsed at this stage, since the raw data
+        (including its errors) is required in the followup functions
+        """
         if self.options.data_origin == DataOrigin.DISK and self.form_spec.migrate:
+            # DATA_ORIGIN.DISK
             value = self.form_spec.migrate(value)
 
         if isinstance(value, DEFAULT_VALUE):
@@ -599,22 +611,34 @@ class LegacyValuespecVisitor(FormSpecVisitor):
 
         return value
 
+    def _prepare_request_context(self, value: dict[str, Any]) -> None:
+        assert "input_context" in value
+        for url_key, url_value in value.get("input_context", {}).items():
+            request.set_var(url_key, url_value)
+
     def to_vue(self, value: Any) -> tuple[VueComponents.FormSpec, Value]:
         title, help_text = _get_title_and_help(self.form_spec)
         config: dict[str, Any] = {}
-        if isinstance(value, dict) and "input_context" in value:
+
+        if self.options.data_origin == DataOrigin.FRONTEND:
+            # Try to extract the value from the input_context
+            # On error:   Render the form in error mode, highlighting problem fields
+            # On success: Replace value with the extracted value and rendered it with a new
+            #             varprefix to avoid conflicts with the previous form and stored
+            #             request vars.
+            assert isinstance(value, dict)
+            varprefix = value.get("varprefix", "")
             with request.stashed_vars():
-                varprefix = value.get("varprefix", "")
-                for url_key, url_value in value.get("input_context", {}).items():
-                    request.set_var(url_key, url_value)
+                self._prepare_request_context(value)
 
                 try:
                     value = self.form_spec.valuespec.from_html_vars(varprefix)
                 except MKUserError as e:
                     user_errors.add(e)
                     with output_funnel.plugged():
-                        # Keep in mind that this default value is actually not used,
-                        # but replaced by the request vars
+                        # Keep in mind that this default value is not used, but replaced by the
+                        # previously set request vars. For more (horrible) insights see the
+                        # valuespec ListOf:render_input
                         self.form_spec.valuespec.render_input(
                             varprefix, self.form_spec.valuespec.default_value()
                         )
@@ -627,8 +651,10 @@ class LegacyValuespecVisitor(FormSpecVisitor):
                             ),
                             None,
                         )
+        else:
+            varprefix = f"legacy_varprefix_{uuid.uuid4()}"
 
-        varprefix = f"legacy_varprefix_{uuid.uuid4()}"
+        # Renders data from disk or data which was successfully parsed from frontend
         with output_funnel.plugged():
             self.form_spec.valuespec.render_input(varprefix, value)
             return (
@@ -642,31 +668,33 @@ class LegacyValuespecVisitor(FormSpecVisitor):
             )
 
     def validate(self, value: Any) -> list[VueComponents.ValidationMessage]:
-        if isinstance(value, dict) and "input_context" in value:
-            with request.stashed_vars():
-                varprefix = value.get("varprefix", "")
-                for url_key, url_value in value.get("input_context", {}).items():
-                    request.set_var(url_key, url_value)
-
-                try:
-                    value = self.form_spec.valuespec.from_html_vars(varprefix)
-                    self.form_spec.valuespec.validate_datatype(value, varprefix)
-                    self.form_spec.valuespec.validate_value(value, varprefix)
-                except MKUserError as e:
-                    user_errors.add(e)
-                    return [VueComponents.ValidationMessage(location=[], message=str(e))]
-
-        varprefix = f"legacy_varprefix_{uuid.uuid4()}"
         with output_funnel.plugged():
-            validation_errors = []
             try:
-                self.form_spec.valuespec.render_input(varprefix, value)
+                if self.options.data_origin == DataOrigin.FRONTEND:
+                    assert isinstance(value, dict)
+                    with request.stashed_vars(), output_funnel.plugged():
+                        self._prepare_request_context(value)
+                        varprefix = value.get("varprefix", "")
+                        value = self.form_spec.valuespec.from_html_vars(varprefix)
+                        self.form_spec.valuespec.validate_datatype(value, varprefix)
+                        self.form_spec.valuespec.validate_value(value, varprefix)
+                else:
+                    # DataOrigin.DISK
+                    self.form_spec.valuespec.render_input("", value)
             except MKUserError as e:
-                validation_errors = [VueComponents.ValidationMessage(location=[], message=str(e))]
-            return validation_errors
+                return [VueComponents.ValidationMessage(location=[e.varname or ""], message=str(e))]
+            finally:
+                # If this funnel is not drained it will show up in the html output
+                output_funnel.drain()
+        return []
 
     def to_disk(self, value: Any) -> Any:
-        return value
+        assert self.options.data_origin == DataOrigin.FRONTEND
+        assert isinstance(value, dict)
+        with request.stashed_vars():
+            self._prepare_request_context(value)
+            varprefix = value.get("varprefix", "")
+            return self.form_spec.valuespec.from_html_vars(varprefix)
 
 
 _form_specs_visitor_registry: dict[type, type[FormSpecVisitor]] = {}
@@ -751,6 +779,7 @@ def _process_validation_errors(validation_errors: list[VueComponents.ValidationM
     These user_errors include the field_id of the broken input field and the error text
     """
     # TODO: this function will become obsolete once all errors are shown within the form spec
+    #       and valuespecs render_input no longer relies on the varprefixes in user_errors
     if not validation_errors:
         return
 
@@ -760,22 +789,26 @@ def _process_validation_errors(validation_errors: list[VueComponents.ValidationM
     #    user_errors.add(MKUserError("", error.message))
 
     first_error = validation_errors[0]
-    raise MKUserError("", first_error.message)
+    raise MKUserError(
+        "" if not first_error.location else first_error.location[-1], first_error.message
+    )
 
 
-def render_form_spec(form_spec: FormSpec, field_id: str, default_value: Any) -> None:
-    """Renders the valuespec via vue within a div"""
+def get_vue_value(field_id: str, fallback_value: Any) -> Any:
+    """Returns the value of a vue formular field"""
     if request.has_var(field_id):
-        value = json.loads(request.get_str_input_mandatory(field_id))
-        do_validate = True
-    else:
-        value = default_value
-        do_validate = False
+        return json.loads(request.get_str_input_mandatory(field_id))
+    return fallback_value
 
+
+def render_form_spec(
+    form_spec: FormSpec, field_id: str, value: Any, origin: DataOrigin, do_validate: bool
+) -> None:
+    """Renders the valuespec via vue within a div"""
     try:
         if form_spec.migrate:
             value = form_spec.migrate(value)
-        visitor = _get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.DISK))
+        visitor = _get_visitor(form_spec, VisitorOptions(data_origin=origin))
         parsed_value = visitor.parse_value(value)
         vue_component, vue_value = visitor.to_vue(parsed_value)
         validation = visitor.validate(parsed_value) if do_validate else []

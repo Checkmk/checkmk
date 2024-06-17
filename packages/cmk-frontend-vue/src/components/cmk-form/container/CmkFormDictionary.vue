@@ -83,7 +83,7 @@ function get_validation_for_child(ident: string): ValidationMessages {
           <br />
           <div class="dictelement indent">
             <CmkFormDispatcher
-              v-if="data[dict_element.dict_config.ident] !== undefined"
+              v-if="dict_element.is_active"
               v-model:data="data[dict_element.dict_config.ident]"
               :spec="dict_element.dict_config.parameter_form"
               :validation="get_validation_for_child(dict_element.dict_config.ident)"

@@ -2,7 +2,7 @@
 import { type ValidationMessages } from '@/utils'
 import { FormValidation } from '@/components/cmk-form/'
 import type { LegacyValuespec } from '@/vue_formspec_components'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { select } from 'd3-selection'
 
 const props = defineProps<{
@@ -33,6 +33,17 @@ function collect_data() {
 const emit = defineEmits<{
   (e: 'update:data', value: unknown): void
 }>()
+
+const remaining_validations = computed(() => {
+  const messages: ValidationMessages = []
+  props.validation.forEach((msg) => {
+    messages.push({
+      location: [],
+      message: msg.message
+    })
+  })
+  return messages
+})
 </script>
 
 <template>
@@ -44,5 +55,5 @@ const emit = defineEmits<{
     v-html="spec.html"
   ></form>
   <!--eslint-enable-->
-  <FormValidation :validation="validation"></FormValidation>
+  <FormValidation :validation="remaining_validations"></FormValidation>
 </template>

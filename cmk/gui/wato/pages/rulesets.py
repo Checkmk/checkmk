@@ -42,7 +42,11 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.form_specs.vue.vue_formspec_visitor import parse_data_from_frontend, render_form_spec
+from cmk.gui.form_specs.vue.vue_formspec_visitor import (
+    DataOrigin,
+    parse_data_from_frontend,
+    render_form_spec,
+)
 from cmk.gui.form_specs.vue.vue_lib import form_spec_registry
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -2038,6 +2042,14 @@ class ABCEditRuleMode(WatoMode):
         with html.form_context("rule_editor", method="POST"):
             self._page_form()
 
+    def _get_rule_value_and_origin(self) -> tuple[Any, DataOrigin]:
+        if request.has_var(self._vue_field_id()):
+            return (
+                json.loads(request.get_str_input_mandatory(self._vue_field_id())),
+                DataOrigin.FRONTEND,
+            )
+        return self._rule.value, DataOrigin.DISK
+
     def _page_form(self) -> None:
         # Additonal rule options
         self._vs_rule_options(self._rule).render_input("options", asdict(self._rule.rule_options))
@@ -2060,18 +2072,20 @@ class ABCEditRuleMode(WatoMode):
                 case ExperimentalRenderMode.FRONTEND:
                     forms.section("Current setting as VUE")
                     assert registered_form_spec is not None
+                    value, origin = self._get_rule_value_and_origin()
                     render_form_spec(
                         registered_form_spec,
                         self._vue_field_id(),
-                        self._rule.value,
+                        value,
+                        origin,
+                        True,
                     )
                 case ExperimentalRenderMode.BACKEND_AND_FRONTEND:
                     forms.section("Current setting as VUE")
                     assert registered_form_spec is not None
+                    value, origin = self._get_rule_value_and_origin()
                     render_form_spec(
-                        registered_form_spec,
-                        self._vue_field_id(),
-                        self._rule.value,
+                        registered_form_spec, self._vue_field_id(), value, origin, True
                     )
                     forms.section("Backend rendered (read only)")
                     valuespec.validate_datatype(self._rule.value, "ve")

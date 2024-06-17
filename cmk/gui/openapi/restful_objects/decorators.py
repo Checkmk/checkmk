@@ -81,6 +81,9 @@ WrappedFunc = Callable[[Mapping[str, Any]], cmk_http.Response]
 _logger = logging.getLogger(__name__)
 
 
+ACCEPT_FIELD_TYPE = KnownContentType | list[KnownContentType]
+
+
 class WrappedEndpoint:
     def __init__(
         self,
@@ -292,7 +295,7 @@ class Endpoint:
         deprecated_urls: Mapping[str, int] | None = None,
         update_config_generation: bool = True,
         sort: int = 0,
-        accept: KnownContentType = "application/json",
+        accept: ACCEPT_FIELD_TYPE = "application/json",
     ):
         self.path = path
         self.link_relation = link_relation
@@ -316,7 +319,8 @@ class Endpoint:
         self.valid_from = valid_from
         self.valid_until = valid_until
         self.sort = sort
-        self.accept = accept
+        self.accept = accept if isinstance(accept, list) else [accept]
+
         if deprecated_urls is not None:
             for url in deprecated_urls:
                 if not url.startswith("/"):
@@ -521,14 +525,17 @@ class Endpoint:
 
         # If we have an schema, or doing post/put, we need a content-type
         if self.request_schema and not request.content_type:
+
+            valid_types = ", ".join(self.accept)
+
             raise RestAPIRequestContentTypeException(
-                detail=f"No content-type specified. Possible value is: {self.accept}",
+                detail=f"No content-type specified. Possible value is: {valid_types}",
                 title="Content type not valid for this endpoint.",
             )
 
         content_type, options = parse_options_header(request.content_type)
 
-        if request.content_type and content_type != self.accept:
+        if request.content_type and content_type not in self.accept:
             raise RestAPIRequestContentTypeException(
                 detail=f"Content-Type {content_type!r} not supported for this endpoint.",
                 title="Content type not valid for this endpoint.",
@@ -631,8 +638,13 @@ class Endpoint:
         self, request_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> None:
         try:
-            if (body := decode(self.accept, request, request_schema)) is not None:
+            # request.content_type was previously validated and is accepted by the endpoint or is None.
+            # If there is content_type, then we try to decode the payload
+            content_type, _ = parse_options_header(request.content_type)
+
+            if content_type and (body := decode(content_type, request, request_schema)) is not None:
                 _params["body"] = body
+                _params["content_type"] = content_type
 
         except ValidationError as exc:
             raise RestAPIRequestDataValidationException(

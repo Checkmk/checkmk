@@ -103,6 +103,10 @@ class VSTransformer(cst.CSTTransformer):
         match updated_node:
             case cst.Arg(cst.Call(func=cst.Name("_"), args=args), cst.Name("title")):
                 return cst.Arg(cst.Call(func=cst.Name("Title"), args=args), cst.Name("title"))
+            case cst.Arg(
+                cst.Lambda(body=cst.Call(func=cst.Name("_"), args=args)), cst.Name("title")
+            ):
+                return cst.Arg(cst.Call(func=cst.Name("Title"), args=args), cst.Name("title"))
             case cst.Arg(cst.Call(func=cst.Name("_"), args=args), cst.Name("help")):
                 return cst.Arg(cst.Call(func=cst.Name("Help"), args=args), cst.Name("help_text"))
             case cst.Arg(cst.Call(func=cst.Name("_"), args=args), cst.Name("label")):

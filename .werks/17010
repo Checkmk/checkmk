@@ -1,0 +1,28 @@
+Title: XSS in SQL check parameters
+Class: security
+Compatible: compat
+Component: wato
+Date: 1718618899
+Edition: cre
+Level: 1
+Version: 2.1.0p45
+
+Prior to this Werk an attacher could add HTML to one parameter of the <em>Check SQL database</em> rule which was executed on the overview page.
+
+We found this vulnerability internally.
+
+<strong>Affected Versions</strong>:
+* 2.3.0
+* 2.2.0
+* 2.1.0
+* 2.0.0 (probably older versions as well)
+
+<strong>Indicators of Compromis</strong>:
+The creation of such rules is logged in the audit log. You can therefore check the <code>wato_audit.log</code> either on the terminal or in the UI for entries that contain malicious HTML.
+
+<strong>Vulnerability Management</strong>:
+We have rated the issue with a CVSS Score of 6.5 (Medium) with the following CVSS vector: <code>CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:L</code>
+We assigned CVE-2024-6052 to this vulnerability.
+
+<strong>Changes</strong>:
+This Werk fixes the escaping.

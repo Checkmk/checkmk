@@ -1499,7 +1499,7 @@ class TextAreaUnicode(TextInput):
 
     def value_to_html(self, value: str) -> ValueSpecText:
         if self._monospaced:
-            return html.render_pre(HTML(value), class_="ve_textarea")
+            return html.render_pre(value, class_="ve_textarea")
         return value.replace("\n", "<br>")
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:

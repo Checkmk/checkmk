@@ -126,7 +126,9 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
         )
 
 
-def _get_resource(resource: Mapping[str, Any], metrics=None):  # type: ignore[no-untyped-def]
+def _get_resource(
+    resource: Mapping[str, Any], metrics: Mapping[str, AzureMetric] | None = None
+) -> Resource:
     return Resource(
         resource["id"],
         resource["name"],

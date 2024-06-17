@@ -16,9 +16,7 @@ from cmk.plugins.kube.schemata.section import (
 from cmk.plugins.lib.kube import kube_annotations_to_cmk_labels, kube_labels_to_cmk_labels
 
 
-def result_simple(  # type: ignore[no-untyped-def]
-    display_name: str, notice_only=False
-) -> Callable[[object], Result]:
+def result_simple(display_name: str, notice_only: bool = False) -> Callable[[object], Result]:
     key = "notice" if notice_only else "summary"
 
     def result_func(value: object) -> Result:

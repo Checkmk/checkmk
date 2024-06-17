@@ -180,11 +180,11 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
         )
 
 
-def extract_aws_metrics_by_labels(  # type: ignore[no-untyped-def]
+def extract_aws_metrics_by_labels(
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
     extra_keys: Iterable[str] | None = None,
-    convert_sum_stats_to_rate=True,
+    convert_sum_stats_to_rate: bool = True,
 ) -> Mapping[str, dict[str, Any]]:
     if extra_keys is None:
         extra_keys = []

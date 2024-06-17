@@ -11,15 +11,17 @@ import json
 import logging
 import sys
 import traceback
+from collections.abc import Sequence
 from typing import Any, NotRequired, TypedDict
 
 import requests
 
 from cmk.plugins.lib.prometheus import extract_connection_args, generate_api_session
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
@@ -55,7 +57,7 @@ class AlertmanagerAPI:
     Realizes communication with the Alertmanager API
     """
 
-    def __init__(self, session) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, session: ApiSession) -> None:
         self.session = session
 
     def query_static_endpoint(self, endpoint: str) -> requests.models.Response:
@@ -125,7 +127,7 @@ def parse_rule_data(group_data: list[dict[str, Any]], ignore_alerts: IgnoreAlert
     return groups
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)

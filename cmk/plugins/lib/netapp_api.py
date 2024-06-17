@@ -656,7 +656,7 @@ def check_netapp_vs_traffic(
 def discover_netapp_qtree_quota(
     params: Mapping[str, Any], section: Mapping[str, Qtree]
 ) -> DiscoveryResult:
-    def _get_item_names(qtree: Qtree):  # type: ignore[no-untyped-def]
+    def _get_item_names(qtree: Qtree) -> tuple[str, str]:
         short_name = ".".join([n for n in [qtree.quota, qtree.quota_users] if n])
         long_name = f"{qtree.volume}/{short_name}" if qtree.volume else short_name
         return short_name, long_name

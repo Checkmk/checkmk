@@ -106,17 +106,15 @@ class Uptime(pydantic.BaseModel):
 
 
 class FilesystemInfo:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, name, fstype, mountpoint, size=None, available=None, used=None
-    ) -> None:
+    def __init__(self, name: str, fstype: str, mountpoint: str) -> None:
         self.name = name
         self.fstype = fstype
         self.mountpoint = mountpoint
-        self.size = size
-        self.available = available
-        self.used = used
+        self.size: int | None = None
+        self.available: int | None = None
+        self.used: int | None = None
 
-    def set_entity(self, entity_name, value):
+    def set_entity(self, entity_name: str, value: int) -> None:
         setattr(self, entity_name, value)
 
     def is_complete(self) -> bool:

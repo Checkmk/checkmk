@@ -4,14 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.uptime import parse_snmp_uptime
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+from cmk.plugins.lib.uptime import parse_snmp_uptime
 
 # Description of OIDs used from RFC 1628
 # OID: 1.3.6.1.2.1.33.1.7.3
@@ -76,56 +86,72 @@ _TEST_RESULT_SUMMARY_MAP = {
 }
 
 _SUMMARY_STATE_MAP = {
-    "1": 0,
-    "2": 1,
-    "3": 2,
-    "4": 2,
-    "5": 0,
-    "6": 0,
+    "1": State.OK,
+    "2": State.WARN,
+    "3": State.CRIT,
+    "4": State.CRIT,
+    "5": State.OK,
+    "6": State.OK,
 }
 
 
-def discover_ups_test(info):
-    if info[1]:
-        return [(None, {})]
-    return None
+def discover_ups_test(section: Sequence[StringTable]) -> DiscoveryResult:
+    if section[1]:
+        yield Service()
 
 
-def check_ups_test(_no_item, params, info):
-    uptime_info, bat_info = info
+def check_ups_test(params: Mapping[str, Any], section: Sequence[StringTable]) -> CheckResult:
+    uptime_info, bat_info = section
     if not uptime_info or not bat_info:
         return
 
     results_summary, raw_start_time, ups_test_results_detail = bat_info[0]
-    uptime = parse_snmp_uptime(uptime_info[0][0])
-    start_time = parse_snmp_uptime(raw_start_time)
+    uptime = parse_snmp_uptime([[uptime_info[0][0], ""]])
+    start_time = parse_snmp_uptime([[raw_start_time, ""]])
 
     # The MIB dictates a set of possible values for the test result, which are all
     # included in the result mapping.
     # However, the device could still have a test result that is outside the set of
     # possible values (e.g. "0"). In this case, an UNKNOWN state is chosen because
     # it reflects the truth and the check is able to show further check results.
-    state = _SUMMARY_STATE_MAP.get(results_summary, 3)
+    state = _SUMMARY_STATE_MAP.get(results_summary, State.UNKNOWN)
     details = f" ({ups_test_results_detail})" if ups_test_results_detail else ""
-    yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP.get(results_summary, 'unknown')}{details}"
+    yield Result(
+        state=state,
+        summary=f"Last test: {_TEST_RESULT_SUMMARY_MAP.get(results_summary, 'unknown')}{details}",
+    )
 
-    if (elapsed_time := uptime - start_time) < 0:
-        yield 3, "Could not determine time since start of last test"
+    if (
+        start_time is None
+        or uptime is None
+        or start_time.uptime_sec is None
+        or uptime.uptime_sec is None
+    ):
+        yield Result(
+            state=State.UNKNOWN, summary="Could not determine time since start of last test"
+        )
         return
 
-    if start_time:
-        label = "Time since start of last test"
-    else:
-        yield 0, "No battery test since start of device"
+    if start_time.uptime_sec == 0:
+        yield Result(state=State.OK, summary="No battery test since start of device")
         label = "Uptime"
+        elapsed_time = uptime.uptime_sec
+
+    elif (elapsed_time := uptime.uptime_sec - start_time.uptime_sec) < 0:
+        yield Result(
+            state=State.UNKNOWN, summary="Could not determine time since start of last test"
+        )
+        return
+    else:
+        label = "Time since start of last test"
 
     # Elapsed time since last start of test
-    yield check_levels(
+    yield from check_levels(
         elapsed_time,
-        None,
-        params.get("levels_elapsed_time"),
-        human_readable_func=render.timespan,
-        infoname=label,
+        metric_name=None,
+        levels_upper=params.get("levels_elapsed_time"),
+        render_func=render.timespan,
+        label=label,
     )
 
 
@@ -133,8 +159,8 @@ def parse_ups_test(string_table: Sequence[StringTable]) -> Sequence[StringTable]
     return string_table
 
 
-check_info["ups_test"] = LegacyCheckDefinition(
-    parse_function=parse_ups_test,
+snmp_section_ups_test = SNMPSection(
+    name="ups_test",
     detect=DETECT_UPS_GENERIC,
     fetch=[
         SNMPTree(
@@ -146,6 +172,10 @@ check_info["ups_test"] = LegacyCheckDefinition(
             oids=["3", "5", "4"],
         ),
     ],
+    parse_function=parse_ups_test,
+)
+check_plugin_ups_test = CheckPlugin(
+    name="ups_test",
     service_name="Self Test",
     discovery_function=discover_ups_test,
     check_function=check_ups_test,

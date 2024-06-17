@@ -1320,7 +1320,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "ups_socomec_out_source",
         "ups_socomec_out_voltage",
         "ups_socomec_outphase",
-        "ups_test",
         "varnish",
         "varnish.cache",
         "varnish.client",

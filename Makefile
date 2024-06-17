@@ -33,7 +33,7 @@ CI ?= false
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
-        Pipfile.lock protobuf-files frontend-vue
+        Pipfile.lock protobuf-files frontend-vue .venv
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -286,10 +286,6 @@ documentation:
 sw-documentation-docker:
 	scripts/run-in-docker.sh scripts/run-pipenv run make -C doc/documentation html
 
-.python-$(PYTHON_MAJOR_DOT_MINOR)-stamp:
-	$(RM) .python-*-stamp
-	touch $@
-
 Pipfile.lock:
 	@( \
 		flock $(LOCK_FD); \
@@ -304,22 +300,10 @@ Pipfile.lock:
 		fi \
 	) $(LOCK_FD)>$(LOCK_PATH); \
 
-# Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
-# mode installs the dependencies exactly as specified in the Pipfile.lock.
-# This is extremely fast since the dependencies do not have to be resolved.
-# Cleanup partially created pipenv. This makes us able to automatically repair
-# broken virtual environments which may have been caused by network issues.
-# SETUPTOOLS_ENABLE_FEATURES="legacy-editable" is needed for mypy being able to
-# type check a package that's installed editable:
-# https://github.com/python/mypy/issues/13392
-.venv: Pipfile.lock .python-$(PYTHON_MAJOR_DOT_MINOR)-stamp
+
+# .venv is PHONY because the dependencies are resolved now in the make_venv script
+.venv: Pipfile.lock
 	@( \
-	    echo "Creating .venv..." ; \
-	    flock $(LOCK_FD); \
-	    if [ "$(CI)" == "true" ] || [ "$(PY_VIRT_MAJ_MIN)" != "$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)" ]; then \
-	      echo "INFO: Runs on CI: $(CI), Python version of .venv: $(PY_VIRT_MAJ_MIN), Target python version: $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)"; \
-	      echo "Cleaning up .venv before sync..."; \
-	      $(RM) -r .venv; \
-	    fi; \
-	    ( SKIP_MAKEFILE_CALL=1 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+		flock $(LOCK_FD); \
+		PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) $(REPO_PATH)/scripts/make_venv \
 	) $(LOCK_FD)>$(LOCK_PATH)

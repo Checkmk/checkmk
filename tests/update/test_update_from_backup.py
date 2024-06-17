@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -52,6 +53,9 @@ def _base_site_demo(site_factory_demo):
 
 
 @pytest.mark.cee
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "ubuntu-24.04", reason="Base version not available for Ubuntu 24.04"
+)
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
     assert backup_path.exists()
@@ -124,6 +128,9 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "ubuntu-24.04", reason="Base version not available for Ubuntu 24.04"
+)
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

@@ -68,6 +68,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     /// exist, since otherwise they will be created with root ownership by
     /// poor Docker daemon.
     sh("""
+        # BEGIN COMMON CODE with run-in-docker.sh
         if [ -e "${container_shadow_workspace}/cache" ]; then
             # Bazel creates files without write permission
             chmod -R a+w ${container_shadow_workspace}/cache
@@ -79,6 +80,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         mkdir -p ${checkout_dir}/shared_cargo_folder
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}")"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${reference_repo_dir}")"
+        # END COMMON CODE with run-in-docker.sh
     """);
     println("inside_container(image=${image} docker_args: ${run_args_str})");
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
@@ -87,4 +89,3 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         }
     }
 }
-

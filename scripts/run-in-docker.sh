@@ -29,10 +29,6 @@ GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
 CMD="${*:-bash}"
 
-CONTAINER_SHADOW_WORKSPACE="${CHECKOUT_ROOT}/container_shadow_workspace_local"
-DOCKER_MOUNT_ARGS="-v ${CONTAINER_SHADOW_WORKSPACE}/home:${HOME}"
-: "${CONTAINER_NAME:="ref-$(basename "$(pwd)")-$(sha1sum <<<"${CONTAINER_SHADOW_WORKSPACE}" | cut -c1-10)"}"
-
 # Create directories for build artifacts which we want to have separated
 # in native and containerized builds
 # Here might be coming more, you keep an open eye, too, please
@@ -41,9 +37,12 @@ DOCKER_MOUNT_ARGS="-v ${CONTAINER_SHADOW_WORKSPACE}/home:${HOME}"
 
 if [ "$USER" == "jenkins" ]; then
     # CI
+    CONTAINER_SHADOW_WORKSPACE="$(dirname "${CHECKOUT_ROOT}")/container_shadow_workspace_ci"
     echo >&2 "WARNING: run-in-docker.sh used in CI. This should not happen. Use CI native tools instead"
 else
     # LOCAL
+    CONTAINER_SHADOW_WORKSPACE="${CHECKOUT_ROOT}/container_shadow_workspace_local"
+
     # Make sure a local containerized session does not interfere with
     # native builds. Maybe in the future this script should not be executed in
     # a CI environment (since those come with their own containerization solutions)
@@ -58,31 +57,37 @@ else
     DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/omd_build:${CHECKOUT_ROOT}/omd/build"
 fi
 
+: "${CONTAINER_NAME:="ref-$(basename "$(pwd)")-$(sha1sum <<<"${CONTAINER_SHADOW_WORKSPACE}" | cut -c1-10)"}"
+
 # Don't map ~/.cache but create a temporary folder inside the shadow workspace
+# BEGIN COMMON CODE with docker_image_aliases_helper.groovy
 if [ -e "${CONTAINER_SHADOW_WORKSPACE}/cache" ]; then
     # Bazel creates files without write permission
     chmod -R a+w "${CONTAINER_SHADOW_WORKSPACE}/cache"
 fi
-rm -rf "${CONTAINER_SHADOW_WORKSPACE}/cache"
-mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/cache"
+rm -rf "${CONTAINER_SHADOW_WORKSPACE}"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.cache"
-DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/cache:${HOME}/.cache"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/cache"
+mkdir -p "${CHECKOUT_ROOT}/shared_cargo_folder"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${CHECKOUT_ROOT}")"
+mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${GIT_COMMON_DIR}")"
+# END COMMON CODE with docker_image_aliases_helper.groovy
 
 # Needed for .cargo which is shared between workspaces
 mkdir -p "${HOME}/shared_cargo_folder"
-mkdir -p "${CHECKOUT_ROOT}/shared_cargo_folder"
+
+# UNCONDITIONAL MOUNTS
+DOCKER_MOUNT_ARGS="-v ${CONTAINER_SHADOW_WORKSPACE}/home:${HOME}"
+DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CONTAINER_SHADOW_WORKSPACE}/cache:${HOME}/.cache"
 DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${HOME}/shared_cargo_folder:${CHECKOUT_ROOT}/shared_cargo_folder"
+DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CHECKOUT_ROOT}:${CHECKOUT_ROOT}"
+DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}"
 
 if [ -d "${HOME}/.docker" ]; then
     mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.docker"
     DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${HOME}/.docker:${HOME}/.docker"
 fi
-
-mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${CHECKOUT_ROOT}")"
-DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${CHECKOUT_ROOT}:${CHECKOUT_ROOT}"
-
-mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/$(realpath -s --relative-to="${HOME}" "${GIT_COMMON_DIR}")"
-DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}"
 
 # We're using git reference clones, see also jenkins/global-defaults.yml in checkmk_ci.
 # That's why we need to mount the reference repos.

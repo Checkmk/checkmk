@@ -9,6 +9,7 @@ from typing import Literal
 import pytest
 
 from cmk.gui.graphing._parser import (
+    _stringify_small_decimal_number,
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
@@ -589,7 +590,8 @@ def test_js_render_unit_notation(unit: metrics.Unit, expected: str) -> None:
 )
 def test_render_y_labels(
     formatter: (
-        SIFormatter
+        DecimalFormatter
+        | SIFormatter
         | IECFormatter
         | StandardScientificFormatter
         | EngineeringScientificFormatter
@@ -603,3 +605,42 @@ def test_render_y_labels(
 ) -> None:
     assert formatter.ident() == expected_ident
     assert formatter.render_y_labels(max_y, 5) == expected_labels
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param(
+            0.1023,
+            "0.1023",
+            id="10",
+        ),
+        pytest.param(
+            0.01023,
+            "0.01023",
+            id="100",
+        ),
+        pytest.param(
+            0.001023,
+            "0.001023",
+            id="1000",
+        ),
+        pytest.param(
+            0.0001023,
+            "0.0001023",
+            id="10000",
+        ),
+        pytest.param(
+            0.00001023,
+            "0.00001023",
+            id="pythons-sci-format-100000",
+        ),
+        pytest.param(
+            0.000001023,
+            "0.000001023",
+            id="pythons-sci-format-1000000",
+        ),
+    ],
+)
+def test__stringify_small_decimal_number(value: float, expected: str) -> None:
+    assert _stringify_small_decimal_number(value) == expected

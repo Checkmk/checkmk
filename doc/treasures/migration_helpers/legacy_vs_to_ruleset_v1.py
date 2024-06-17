@@ -14,7 +14,7 @@ It's a quick and dirty, untested hacky thing.
 import argparse
 import subprocess
 import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
 import libcst as cst
@@ -35,13 +35,16 @@ _ADDED_IMPORTS = (
         "CascadingSingleChoiceElement, "
         "FieldSize, "
         "FixedValue, "
+        "Float, "
+        "InputHint, "
         "Integer, "
         "LevelDirection, "
         "migrate_to_float_simple_levels, "
         "migrate_to_password, "
-        "MultimpleChoice, "
+        "MultipleChoice, "
         "MultipleChoiceElement, "
         "Password, "
+        "Percentage, "
         "SimpleLevels, "
         "SingleChoice, "
         "SingleChoiceElement, "
@@ -54,6 +57,23 @@ _ADDED_IMPORTS = (
     (
         "from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic, HostAndServiceCondition, HostCondition, "
         "HostAndItemCondition, CheckParameters, EnforcedService"
+    ),
+)
+
+DEFAULT_TIME_SPAN_ARGS = (
+    cst.Arg(
+        keyword=cst.Name("displayed_magnitudes"),
+        value=cst.Tuple(
+            [
+                cst.Element(
+                    cst.Attribute(
+                        cst.Name("TimeMagnitude"),
+                        cst.Name(magnitude),
+                    )
+                )
+                for magnitude in ["DAY", "HOUR", "MINUTE", "SECOND"]
+            ],
+        ),
     ),
 )
 
@@ -139,6 +159,8 @@ class VSTransformer(cst.CSTTransformer):
                     return self._make_dictionary_from_tuple(updated_node)
                 case "TimeSpan":
                     return self._make_time_span(updated_node)
+                case "SimpleLevels":
+                    return self._make_simple_levels(updated_node)
 
         return updated_node
 
@@ -272,6 +294,112 @@ class VSTransformer(cst.CSTTransformer):
                 *old.args,
                 cst.Arg(cst.Name("migrate_to_password"), cst.Name("migrate")),
             ),
+        )
+
+    def _make_simple_levels(self, old: cst.Call) -> cst.Call:
+        args = {k.value: arg.value for arg in old.args if (k := arg.keyword) is not None}
+        handled_args = ["spec", "unit", "default_value", "default_levels"]
+        kept_args = [
+            arg for arg in old.args if (k := arg.keyword) is None or k.value not in handled_args
+        ]
+
+        template_args = []
+        if (args.get("unit")) is not None:
+            template_args = [
+                cst.Arg(
+                    keyword=cst.Name("unit_symbol"),
+                    value=cst.ensure_type(args["spec"], cst.SimpleString),
+                )
+            ]
+
+        new_args = [
+            cst.Arg(
+                keyword=cst.Name("level_direction"),
+                value=(
+                    cst.Attribute(value=cst.Name("LevelDirection"), attr=cst.Name("UPPER"))
+                    if args.get("direction", "upper") == "upper"
+                    else cst.Attribute(value=cst.Name("LevelDirection"), attr=cst.Name("LOWER"))
+                ),
+            ),
+        ]
+
+        spec = cst.ensure_type(args["spec"], cst.Name)
+        match spec.value:
+            case "Age":
+                new_args.extend(
+                    [
+                        cst.Arg(
+                            cst.Call(cst.Name("TimeSpan"), args=DEFAULT_TIME_SPAN_ARGS),
+                            cst.Name("form_spec_template"),
+                        ),
+                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                        cst.Arg(
+                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
+                        ),
+                    ]
+                )
+            case "Integer":
+                new_args.extend(
+                    [
+                        cst.Arg(
+                            cst.Call(cst.Name(spec.value), args=template_args),
+                            cst.Name("form_spec_template"),
+                        ),
+                        cst.Arg(cst.Name("migrate_to_integer_simple_levels"), cst.Name("migrate")),
+                        cst.Arg(
+                            self._get_simple_level_prefill(args, float_type=False),
+                            cst.Name("prefill_fixed_levels"),
+                        ),
+                    ]
+                )
+            case "Float":
+                new_args.extend(
+                    [
+                        cst.Arg(
+                            cst.Call(cst.Name(spec.value), args=template_args),
+                            cst.Name("form_spec_template"),
+                        ),
+                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                        cst.Arg(
+                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
+                        ),
+                    ]
+                )
+            case "Percentage":
+                new_args.extend(
+                    [
+                        cst.Arg(cst.Call(cst.Name(spec.value)), cst.Name("form_spec_template")),
+                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                        cst.Arg(
+                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
+                        ),
+                    ]
+                )
+
+        return cst.Call(func=cst.Name("SimpleLevels"), args=(*kept_args, *new_args))
+
+    def _get_simple_level_prefill(
+        self, args: Mapping[str, cst.BaseExpression], float_type: bool = True
+    ) -> cst.Call:
+        if (default_value := args.get("default_value")) is not None:
+            return cst.Call(
+                cst.Name("DefaultValue"),
+                args=[cst.Arg(cst.ensure_type(default_value, cst.Tuple))],
+            )
+        if (default_levels := args.get("default_levels")) is not None:
+            return cst.Call(
+                cst.Name("DefaultValue"),
+                args=[cst.Arg(cst.ensure_type(default_levels, cst.Tuple))],
+            )
+
+        elements = (
+            [cst.Element(cst.Float("0.0")), cst.Element(cst.Float("0.0"))]
+            if float_type
+            else [cst.Element(cst.Integer("0")), cst.Element(cst.Integer("0"))]
+        )
+        return cst.Call(
+            cst.Name("InputHint"),
+            args=([cst.Arg(cst.Tuple(elements=elements))]),
         )
 
 

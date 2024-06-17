@@ -1984,7 +1984,7 @@ class ConfigCache:
             hostname=host_name,
             ip_stack_config=ConfigCache.ip_stack_config(host_name),
             is_snmp_host=self.computed_datasources(host_name).is_snmp,
-            snmp_backend=self.get_snmp_backend(host_name),
+            is_use_walk_host=self.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK,
             default_address_family=self.default_address_family(host_name),
             management_address=self.management_address(host_name),
             is_dyndns_host=self.is_dyndns_host(host_name),

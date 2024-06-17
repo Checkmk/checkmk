@@ -12,6 +12,7 @@ Special agent for monitoring Zerto application with Check_MK.
 import argparse
 import logging
 import sys
+from collections.abc import Sequence
 
 import requests
 
@@ -20,7 +21,7 @@ from cmk.utils.password_store import replace_passwords
 LOGGER = logging.getLogger(__name__)
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
 
     # flags
@@ -52,11 +53,11 @@ def parse_arguments(argv):
 
 
 class ZertoRequest:
-    def __init__(self, connection_url, session_id) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, connection_url: str, session_id: str | None) -> None:
         self._endpoint = "%s/vms" % connection_url
         self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
 
-    def get_vms_data(self):
+    def get_vms_data(self) -> Sequence[dict[str, str]]:
         response = requests.get(  # nosec B501, B113 # BNS:016141, BNS:773085
             self._endpoint, headers=self._headers, verify=False
         )
@@ -75,12 +76,12 @@ class ZertoRequest:
 
 
 class ZertoConnection:
-    def __init__(self, hostaddress, username, password) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, hostaddress: str, username: str, password: str) -> None:
         self._credentials = username, password
         self._host = hostaddress
         self.base_url = "https://%s:9669/v1" % self._host
 
-    def get_session_id(self, authentication):
+    def get_session_id(self, authentication: str) -> str | None:
         url = "%s/session/add" % self.base_url
         if authentication == "windows":
             response = requests.post(  # nosec B501, B113 # BNS:016141, BNS:77308
@@ -108,7 +109,7 @@ class AuthError(Exception):
     pass
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     sys.stdout.write("<<<zerto_agent:sep(0)>>>\n")
@@ -117,7 +118,7 @@ def main(argv=None):
         session_id = connection.get_session_id(args.authentication)
     except Exception as e:
         sys.stdout.write(f"Error: {e}\n")
-        sys.exit(0)
+        return 1
     sys.stdout.write("Initialized OK\n")
 
     request = ZertoRequest(connection.base_url, session_id)
@@ -130,3 +131,4 @@ def main(argv=None):
             sys.stdout.write("<<<<>>>>\n")
         except KeyError:
             continue
+    return 0

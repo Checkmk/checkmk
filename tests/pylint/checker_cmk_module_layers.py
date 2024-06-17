@@ -429,6 +429,17 @@ def _is_allowed_for_robotmk_graphing_cee_plugins(
     )
 
 
+def _is_allowed_for_robotmk_rulesets_cee_plugins(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return _in_component(
+        imported=imported,
+        component=Component("cmk.cee.robotmk.checking.rulesets"),
+    )
+
+
 def _is_allowed_for_agent_based_plugin(
     *,
     imported: ModuleName,
@@ -622,6 +633,10 @@ _COMPONENTS = (
     (
         Component("cmk.plugins.robotmk.graphing.cee"),
         _is_allowed_for_robotmk_graphing_cee_plugins,
+    ),
+    (
+        Component("cmk.plugins.robotmk.rulesets.cee"),
+        _is_allowed_for_robotmk_rulesets_cee_plugins,
     ),
     (Component("cmk.plugins"), _is_allowed_for_plugins),
     (Component("cmk.special_agents"), _is_default_allowed_import),

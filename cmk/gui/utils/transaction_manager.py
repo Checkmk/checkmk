@@ -8,10 +8,14 @@ from __future__ import annotations
 import secrets
 import time
 from collections.abc import Callable
-from typing import Protocol
+from typing import Literal, Protocol
 
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.http import request
+
+
+class _TransactionIdInvalid(ValueError):
+    """Exception for transaction id validation"""
 
 
 class ReaderProtocol(Protocol):
@@ -80,6 +84,26 @@ class TransactionManager:
                 cleared_ids.append(valid_id)
         self._writer(cleared_ids[-30:] + self._new_transids)
 
+    def _validate_transaction_id(self, transid: str) -> Literal[True]:
+        if "/" not in transid:
+            raise _TransactionIdInvalid("No '/' in transid")
+
+        try:
+            timestamp = int(transid.split("/", 1)[0])
+        except ValueError:
+            raise _TransactionIdInvalid("Timestamp invalid")
+
+        # If age is too old (one week), it is always
+        # invalid:
+        if time.time() - timestamp >= 604800:  # 7 * 24 hours
+            raise _TransactionIdInvalid("Timestamp expired")
+
+        # Now check, if this transid is a valid one
+        if transid not in self._reader(lock=False):
+            raise _TransactionIdInvalid("Transid not found")
+
+        return True
+
     def transaction_valid(self) -> bool:
         """Checks if the current transaction is valid
 
@@ -98,25 +122,10 @@ class TransactionManager:
         if self._ignore_transids and (not transid or transid == "-1"):
             return True  # automation
 
-        if "/" not in transid:
-            return False
-
-        # Normal user/password auth user handling
-        timestamp_str = transid.split("/", 1)[0]
-
         try:
-            timestamp = int(timestamp_str)
-        except ValueError:
+            return self._validate_transaction_id(transid)
+        except _TransactionIdInvalid:
             return False
-
-        # If age is too old (one week), it is always
-        # invalid:
-        now = time.time()
-        if now - timestamp >= 604800:  # 7 * 24 hours
-            return False
-
-        # Now check, if this transid is a valid one
-        return transid in self._reader(lock=False)
 
     def is_transaction(self) -> bool:
         """Checks, if the current page is a transation, i.e. something that is secured by

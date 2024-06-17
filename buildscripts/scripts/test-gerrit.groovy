@@ -121,6 +121,14 @@ def main() {
                 show_duration("archiveArtifacts") {
                     archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
                 }
+
+                // TODO (TBC): Remove me (see https://tribe29.slack.com/archives/C01EA6ZBG58/p1718360593378499)
+                try {
+                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'packages/**/*CMakeOutput.log*');
+                }
+                catch (e) {
+                    println("Failed to archive CMakeOutput: ${e}");
+                }
             }
         }
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);

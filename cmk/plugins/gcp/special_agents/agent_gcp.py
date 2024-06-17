@@ -18,7 +18,7 @@ from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3.types import Aggregation as GoogleAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
-from google.oauth2 import service_account  # type: ignore[import-untyped]
+from google.oauth2 import service_account
 from googleapiclient.discovery import build, Resource  # type: ignore[import-untyped]
 from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
 
@@ -400,7 +400,6 @@ def _filter_result_sections(
     sections: Iterable[ResultSection],
     filter_by: ResourceFilter,
 ) -> Iterator[ResultSection]:
-
     yield from (
         ResultSection(
             name=result.name,
@@ -498,7 +497,6 @@ def piggy_back(
     assets: Sequence[Asset],
     prefix: str,
 ) -> Iterable[PiggyBackSection]:
-
     sections = list(run_metrics(client, services=service.services))
 
     for host in [a for a in assets if a.asset.asset_type == service.asset_type]:

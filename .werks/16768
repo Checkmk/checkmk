@@ -1,0 +1,14 @@
+Title: Show traceback if a crash occurs during special agents execution
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718634477
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+Currently, in the event of a crash during the execution of a special agent,
+the traceback is not displayed in the user interface
+but is only saved in the crash report on disk.
+
+With this werk, the traceback will also be shown in the user interface.

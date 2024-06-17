@@ -15,6 +15,7 @@ import argparse
 import json
 import logging
 import sys
+import traceback
 from collections.abc import Callable, Sequence
 from types import GeneratorType
 from typing import Any
@@ -153,6 +154,7 @@ def _special_agent_main_core(
             raise
         crash_dump = create_agent_crash_dump()
         sys.stderr.write(crash_dump)
+        sys.stderr.write(f"\n\n{traceback.format_exc()}")
     return 1
 
 

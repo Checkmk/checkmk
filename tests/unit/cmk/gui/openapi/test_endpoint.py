@@ -110,6 +110,34 @@ def install_endpoint(fresh_app_instance):
     endpoint_registry.unregister(test)
 
 
+@pytest.fixture(name="test_multiple_accept_endpoint")
+def install_multi_accept_endpoint(fresh_app_instance):
+    @Endpoint(
+        path="/test_multiple_content_types",
+        method="post",
+        link_relation="help",
+        tag_group="Checkmk Internal",
+        content_type="application/json",
+        update_config_generation=False,
+        skip_locking=True,
+        accept=["application/json", "application/gzip"],
+        request_schema=SomeSchema,
+        response_schema=SomeSchema,
+    )
+    def multiaccept_test(param: Mapping[str, Any]) -> Response:
+        response = Response()
+        response.set_content_type("application/json")
+        response.set_data(json.dumps({"permission": param.get("content_type")}))
+        response.status_code = 200
+        return response
+
+    endpoint_registry.register(multiaccept_test)
+
+    yield multiaccept_test
+
+    endpoint_registry.unregister(multiaccept_test)
+
+
 def test_openapi_endpoint_decorator_resets_used_permissions(
     test_endpoint: WrappedEndpoint, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
@@ -388,6 +416,7 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
     }
 
 
+# ========= Accept parameter related Tests =========
 def test_invalid_content_type(
     test_endpoint_accept_parameter: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
@@ -444,3 +473,28 @@ def test_valid_gzip_file(
         {"Accept": "application/json", "content-type": "application/gzip"},  # headers
         status=204,
     )
+
+
+@pytest.mark.parametrize(
+    "content_type,payload",
+    [
+        ("application/json", json.dumps({"permission": "granted"})),
+        ("application/gzip", base64.b64decode(TEST_TARGZ_FILE)),
+    ],
+)
+def test_endpoint_accept_multiple_types(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    test_multiple_accept_endpoint: WrappedEndpoint,
+    content_type: str,
+    payload: str,
+) -> None:
+
+    res = aut_user_auth_wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/test_multiple_content_types",
+        payload,
+        {"Accept": "application/json", "Content-type": content_type},
+        status=200,
+    )
+
+    assert res.json["permission"] == content_type

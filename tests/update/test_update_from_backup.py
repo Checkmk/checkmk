@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -26,7 +25,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
     base_version = CMKVersion(
-        "2.2.0p21", Edition.CEE, current_base_branch_name(), current_branch_version()
+        "2.2.0p27", Edition.CEE, current_base_branch_name(), current_branch_version()
     )
     return SiteFactory(version=base_version, prefix="")
 
@@ -40,7 +39,7 @@ def _base_site(site_factory: SiteFactory) -> Iterator[Site]:
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
     base_version = CMKVersion(
-        "2.2.0p23", Edition.CCE, current_base_branch_name(), current_branch_version()
+        "2.2.0p27", Edition.CCE, current_base_branch_name(), current_branch_version()
     )
     return SiteFactory(version=base_version, prefix="")
 
@@ -53,11 +52,8 @@ def _base_site_demo(site_factory_demo):
 
 
 @pytest.mark.cee
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") == "ubuntu-24.04", reason="Base version not available for Ubuntu 24.04"
-)
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
-    backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
+    backup_path = qa_test_data_path() / Path("update/backups/update_central_2.2.0p27_backup.tar.gz")
     assert backup_path.exists()
 
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
@@ -128,9 +124,6 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") == "ubuntu-24.04", reason="Base version not available for Ubuntu 24.04"
-)
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:
@@ -138,7 +131,7 @@ def test_update_from_backup_demo(
     lost_services_path = Path(__file__).parent.resolve() / Path("lost_services_demo.json")
 
     # MKPs broken: disabled in the demo site via: 'mkp disable play_checkmk 0.0.1' TODO: investigate
-    backup_path = qa_test_data_path() / Path("update/backups/play.checkmk.com.tar.gz")
+    backup_path = qa_test_data_path() / Path("update/backups/play_2.2.0p27_backup.tar.gz")
     assert backup_path.exists()
 
     base_site = site_factory_demo.restore_site_from_backup(

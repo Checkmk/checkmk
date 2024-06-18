@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import NamedTuple, override
+from typing import NamedTuple
 from urllib.parse import quote_plus
 
 from playwright.sync_api import Locator, Page
@@ -19,7 +19,7 @@ class HostDetails(NamedTuple):
 
 
 class SetupHost(CmkPage):
-    "Represent the page `setup -> Hosts`."
+    """Represent the page `setup -> Hosts`."""
 
     def navigate(self) -> str:
         """Instructions to navigate to `setup -> Hosts` page.
@@ -42,7 +42,7 @@ class SetupHost(CmkPage):
         return self.get_link("Add folder")
 
     def create_host(self, host: HostDetails) -> None:
-        """On `setup -> Hosts` page, createa a new host and activate changes."""
+        """On `setup -> Hosts` page, create a new host and activate changes."""
         # add host
         self.add_host.click()
         self.page.wait_for_url(
@@ -54,17 +54,26 @@ class SetupHost(CmkPage):
         self.main_area.get_input("ipaddress").fill(host.ip)
         # save host
         self.main_area.get_suggestion("Save & view folder").click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
-        )
+        try:
+            self.page.wait_for_url(
+                url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
+            )
+        except Exception as e:
+            if self.main_area.locator("div.error").count() != 0:
+                error_msg = (
+                    f"The following error appears in the UI:\n {self.main_area.get_error_text()}"
+                )
+                e.add_note(error_msg)
+            raise e
+
         # activate changes
         self.get_link("1 change").click()
         self.activate_selected()
         self.expect_success_state()
 
 
-class HostProperties(SetupHost):
-    "Represents page `setup -> Hosts -> <host name> properties`."
+class HostProperties(CmkPage):
+    """Represents page `setup -> Hosts -> <host name> properties`."""
 
     dropdown_buttons: list[str] = [
         "Host",
@@ -91,10 +100,12 @@ class HostProperties(SetupHost):
         self,
         page: Page,
         host: HostDetails,
+        exists: bool = False,
         timeout_assertions: int | None = None,
         timeout_navigation: int | None = None,
     ) -> None:
         self.details = host
+        self._exists = exists
         super().__init__(page, timeout_assertions, timeout_navigation)
 
     def navigate(self) -> str:
@@ -102,24 +113,17 @@ class HostProperties(SetupHost):
 
         This method is used within `CmkPage.__init__`.
         """
-        _ = super().navigate()
-        # host doesn't exist
-        self.create_host()
+        setup_host_page = SetupHost(self.page)
+        if not self._exists:
+            setup_host_page.create_host(self.details)
+            self._exists = True
+            setup_host_page.navigate()
+
         # to host properties
-        self.get_link(self.details.name).click()
+        setup_host_page.get_link(self.details.name).click()
         _url_pattern = quote_plus(f"wato.py?folder=&host={self.details.name}&mode=edit_host")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         return self.page.url
-
-    @override
-    def create_host(self, __: HostDetails | None = None) -> None:
-        """Creates a host.
-
-        ONLY if the host is not listed within `setup -> Hosts` page.
-        """
-        if self.get_link(self.details.name).count() == 0:
-            super().create_host(self.details)
-            _ = super().navigate()
 
     def delete_host(self) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
@@ -132,3 +136,4 @@ class HostProperties(SetupHost):
         self.get_link("1 change").click()
         self.activate_selected()
         self.expect_success_state()
+        self._exists = False

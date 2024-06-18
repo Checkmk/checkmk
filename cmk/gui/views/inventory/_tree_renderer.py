@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
@@ -52,6 +51,7 @@ def make_table_view_name_of_host(view_name: str) -> str:
 
 @dataclass(frozen=True)
 class Column:
+    key: SDKey
     title: str
     paint_function: PaintFunction
     key_info: str
@@ -59,14 +59,12 @@ class Column:
 
 def _make_columns(
     keys: Iterable[SDKey], key_columns: Sequence[SDKey], hint: NodeDisplayHint
-) -> OrderedDict[SDKey, Column]:
-    return OrderedDict(
-        {
-            c: Column(h.title, h.paint_function, f"{c}*" if c in key_columns else c)
-            for c in list(hint.columns) + sorted(set(keys) - set(hint.columns))
-            for h in (hint.get_column_hint(c),)
-        }
-    )
+) -> Sequence[Column]:
+    return [
+        Column(c, h.title, h.paint_function, f"{c}*" if c in key_columns else c)
+        for c in list(hint.columns) + sorted(set(keys) - set(hint.columns))
+        for h in (hint.get_column_hint(c),)
+    ]
 
 
 @total_ordering
@@ -146,19 +144,19 @@ def _sort_pairs(
 
 
 def _sort_rows(
-    table: ImmutableTable, columns: OrderedDict[SDKey, Column], icon_path_svc_problems: str
+    table: ImmutableTable, columns: Sequence[Column], icon_path_svc_problems: str
 ) -> Sequence[Sequence[SDItem]]:
     def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
         return [
             SDItem(
-                k,
+                c.key,
                 c.title,
-                row.get(k),
-                table.retentions.get(ident, {}).get(k),
+                row.get(c.key),
+                table.retentions.get(ident, {}).get(c.key),
                 c.paint_function,
                 icon_path_svc_problems,
             )
-            for k, c in columns.items()
+            for c in columns
         ]
 
     min_type = _MinType()
@@ -167,7 +165,7 @@ def _sort_rows(
         _sort_row(ident, row)
         for ident, row in sorted(
             table.rows_by_ident.items(),
-            key=lambda t: tuple(t[1].get(c) or min_type for c in columns),
+            key=lambda t: tuple(t[1].get(c.key) or min_type for c in columns),
         )
         if not all(v is None for v in row.values())
     ]
@@ -221,13 +219,13 @@ def _sort_delta_pairs(
 
 
 def _sort_delta_rows(
-    table: ImmutableDeltaTable, columns: OrderedDict[SDKey, Column]
+    table: ImmutableDeltaTable, columns: Sequence[Column]
 ) -> Sequence[Sequence[_SDDeltaItem]]:
     def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
         return [
-            _SDDeltaItem(k, c.title, v.old, v.new, c.paint_function)
-            for k, c in columns.items()
-            for v in (row.get(k) or SDDeltaValue(None, None),)
+            _SDDeltaItem(c.key, c.title, v.old, v.new, c.paint_function)
+            for c in columns
+            for v in (row.get(c.key) or SDDeltaValue(None, None),)
         ]
 
     min_type = _MinType()
@@ -239,7 +237,9 @@ def _sort_delta_rows(
         _sort_row(row)
         for row in sorted(
             table.rows,
-            key=lambda r: tuple(_sanitize(r.get(c) or SDDeltaValue(None, None)) for c in columns),
+            key=lambda r: tuple(
+                _sanitize(r.get(c.key) or SDDeltaValue(None, None)) for c in columns
+            ),
         )
         if not all(left == right for left, right in row.values())
     ]
@@ -389,7 +389,7 @@ class TreeRenderer:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
-        for column in columns.values():
+        for column in columns:
             html.th(self._get_header(column.title, column.key_info))
         html.close_tr()
 

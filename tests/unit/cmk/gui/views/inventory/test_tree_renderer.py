@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import OrderedDict
 from collections.abc import Sequence
 
 import pytest
@@ -87,13 +86,13 @@ def test_sort_table_rows_displayhint(
     table: ImmutableTable,
     expected: Sequence[Sequence[SDItem]],
 ) -> None:
-    columns: OrderedDict[SDKey, Column] = OrderedDict(
-        sid=Column("SID", inv_paint_generic, ""),
-        changed=Column("Changed", inv_paint_generic, ""),
-        foo=Column("Foo", inv_paint_generic, ""),
-        flashback=Column("Flashback", inv_paint_generic, ""),
-        other=Column("Other", inv_paint_generic, ""),
-    )
+    columns = [
+        Column(SDKey("sid"), "SID", inv_paint_generic, ""),
+        Column(SDKey("changed"), "Changed", inv_paint_generic, ""),
+        Column(SDKey("foo"), "Foo", inv_paint_generic, ""),
+        Column(SDKey("flashback"), "Flashback", inv_paint_generic, ""),
+        Column(SDKey("other"), "Other", inv_paint_generic, ""),
+    ]
     assert _sort_rows(table, columns, "") == expected
 
 
@@ -156,13 +155,13 @@ def test_sort_deltatable_rows_displayhint(
     delta_table: ImmutableDeltaTable,
     expected: Sequence[Sequence[_SDDeltaItem]],
 ) -> None:
-    columns: OrderedDict[SDKey, Column] = OrderedDict(
-        sid=Column("SID", inv_paint_generic, ""),
-        changed=Column("Changed", inv_paint_generic, ""),
-        foo=Column("Foo", inv_paint_generic, ""),
-        flashback=Column("Flashback", inv_paint_generic, ""),
-        other=Column("Other", inv_paint_generic, ""),
-    )
+    columns = [
+        Column(SDKey("sid"), "SID", inv_paint_generic, ""),
+        Column(SDKey("changed"), "Changed", inv_paint_generic, ""),
+        Column(SDKey("foo"), "Foo", inv_paint_generic, ""),
+        Column(SDKey("flashback"), "Flashback", inv_paint_generic, ""),
+        Column(SDKey("other"), "Other", inv_paint_generic, ""),
+    ]
     assert _sort_delta_rows(delta_table, columns) == expected
 
 
@@ -206,13 +205,21 @@ def test_sort_attributes_pairs_displayhint(
         title="",
         short_title="",
         long_title="",
-        attributes=OrderedDict(
-            a=AttributeDisplayHint("A", "", "", inv_paint_generic, lambda r, l: 0, "", False),
-            b=AttributeDisplayHint("B", "", "", inv_paint_generic, lambda r, l: 0, "", False),
-            d=AttributeDisplayHint("D", "", "", inv_paint_generic, lambda r, l: 0, "", False),
-            c=AttributeDisplayHint("C", "", "", inv_paint_generic, lambda r, l: 0, "", False),
-        ),
-        columns=OrderedDict(),
+        attributes={
+            SDKey("a"): AttributeDisplayHint(
+                "A", "", "", inv_paint_generic, lambda r, l: 0, "", False
+            ),
+            SDKey("b"): AttributeDisplayHint(
+                "B", "", "", inv_paint_generic, lambda r, l: 0, "", False
+            ),
+            SDKey("d"): AttributeDisplayHint(
+                "D", "", "", inv_paint_generic, lambda r, l: 0, "", False
+            ),
+            SDKey("c"): AttributeDisplayHint(
+                "C", "", "", inv_paint_generic, lambda r, l: 0, "", False
+            ),
+        },
+        columns={},
         table_view_name="",
         table_is_show_more=True,
     )
@@ -251,13 +258,21 @@ def test_sort_delta_attributes_pairs_displayhint(
         title="",
         short_title="",
         long_title="",
-        attributes=OrderedDict(
-            a=AttributeDisplayHint("A", "", "", inv_paint_generic, lambda r, l: 0, "", False),
-            b=AttributeDisplayHint("B", "", "", inv_paint_generic, lambda r, l: 0, "", False),
-            d=AttributeDisplayHint("D", "", "", inv_paint_generic, lambda r, l: 0, "", False),
-            c=AttributeDisplayHint("C", "", "", inv_paint_generic, lambda r, l: 0, "", False),
-        ),
-        columns=OrderedDict(),
+        attributes={
+            SDKey("a"): AttributeDisplayHint(
+                "A", "", "", inv_paint_generic, lambda r, l: 0, "", False
+            ),
+            SDKey("b"): AttributeDisplayHint(
+                "B", "", "", inv_paint_generic, lambda r, l: 0, "", False
+            ),
+            SDKey("d"): AttributeDisplayHint(
+                "D", "", "", inv_paint_generic, lambda r, l: 0, "", False
+            ),
+            SDKey("c"): AttributeDisplayHint(
+                "C", "", "", inv_paint_generic, lambda r, l: 0, "", False
+            ),
+        },
+        columns={},
         table_view_name="",
         table_is_show_more=True,
     )
@@ -292,8 +307,8 @@ def test__replace_title_placeholders(
                 title=title,
                 short_title=title,
                 long_title=title,
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),

@@ -85,6 +85,24 @@ def test_discover_redis_info(section, expected):
             [(0, "Version: 6.0.16"), (0, "Socket: /path/mysocket")],
             id="socket",
         ),
+        pytest.param(
+            "/omd/sites/heute/tmp/run/redis:unix-socket",
+            {},
+            {
+                "/omd/sites/heute/tmp/run/redis:unix-socket": {
+                    "error": "Could not connect to Redis at /omd/sites/heute/tmp/run/redis: Permission denied",
+                    "host": "/omd/sites/heute/tmp/run/redis",
+                    "port": "unix-socket",
+                },
+            },
+            [
+                (
+                    2,
+                    "Error: Could not connect to Redis at /omd/sites/heute/tmp/run/redis: Permission denied",
+                )
+            ],
+            id="permission_denied",
+        ),
     ],
 )
 def test_check_redis_info(item, params, section, expected):

@@ -23,6 +23,10 @@ def parse_redis_info(info):
         if not instance:
             continue
 
+        if line[0] == "error":
+            instance[line[0]] = ": ".join(line[1:])
+            continue
+
         if line[0].startswith("#"):
             inst_section = instance.setdefault(line[0].split()[-1], {})
             continue

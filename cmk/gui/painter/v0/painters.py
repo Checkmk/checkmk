@@ -674,7 +674,7 @@ class PainterSvcLongPluginOutput(Painter):
                 ],
             )
             content = (
-                "Lost data due to truncation of long output to "
+                _("Lost data due to truncation of long output to ")
                 + f"{int(max_long_output_size / 1000)}kB "
                 + setting_link_tag
                 + html.render_b("WARN", class_="stmark state1")
@@ -4469,7 +4469,12 @@ class PainterLogDetailsHistory(Painter):
 
     @property
     def columns(self) -> list[ColumnName]:
-        return ["log_long_plugin_output"]
+        return [
+            "log_long_plugin_output",
+            "service_check_command",
+            "service_custom_variables",
+            "host_custom_variables",
+        ]
 
     @property
     def parameters(self) -> Dictionary:
@@ -4496,13 +4501,51 @@ class PainterLogDetailsHistory(Painter):
 
         max_len = params.get("max_len", 0)
         long_output = row["log_long_plugin_output"]
+        long_output_len = len(long_output)
 
         if 0 < max_len < len(long_output):
             long_output = long_output[:max_len] + "..."
 
-        content = format_plugin_output(
-            long_output, request=self.request, row=row, newlineishs_to_brs=True
+        # See werk #15523.
+        is_ps_check = row["service_check_command"] == "check_mk-ps"
+        # We can only display tables if they are complete.
+        displayable = long_output.endswith("</table>")
+        # Only hand over relevant row to ensure correct escaping options in
+        # case of ps_check. Otherwise "ESCAPE_PLUGIN_OUTPUT" would be used in
+        # format_plugin_output()
+        row_to_format = (
+            {"log_long_plugin_output": long_output} if is_ps_check and not displayable else row
         )
+        content = format_plugin_output(
+            long_output,
+            request=self.request,
+            row=row_to_format,
+            newlineishs_to_brs=True,
+        )
+
+        if is_ps_check:
+            content = HTML.without_escaping(str(content).replace("&bsol%3B", "\\"))
+
+        # has to be placed after format_plugin_output() to keep links save from
+        # escaping
+        custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
+        escape_plugin_output = custom_vars.get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
+        if long_output_len > max_len and escape_plugin_output and not displayable:
+            setting_link_tag = self.url_renderer.link_from_filename(
+                "wato.py",
+                html_text="(%s)" % _("Increase limit for future entries"),
+                query_args=[
+                    ("mode", "edit_configvar"),
+                    ("varname", "max_long_output_size"),
+                ],
+            )
+            content = (
+                _("HTML output can not be rendered because of truncated data. ")
+                + setting_link_tag
+                + html.render_b("WARN", class_="stmark state1")
+                + html.render_br()
+                + content
+            )
 
         return paint_stalified(row, content, config=self.config)
 

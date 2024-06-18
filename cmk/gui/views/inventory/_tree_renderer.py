@@ -80,6 +80,7 @@ class _MinType:
 
 class SDItem(NamedTuple):
     key: SDKey
+    title: str
     value: SDValue
     retention_interval: RetentionInterval | None
     paint_function: PaintFunction
@@ -90,12 +91,14 @@ def _sort_pairs(attributes: ImmutableAttributes, hint: NodeDisplayHint) -> Seque
     return [
         SDItem(
             k,
+            h.title,
             attributes.pairs[k],
             attributes.retentions.get(k),
-            hint.get_attribute_hint(k).paint_function,
+            h.paint_function,
         )
         for k in sorted_keys
         if k in attributes.pairs
+        for h in (hint.get_attribute_hint(k),)
     ]
 
 
@@ -104,7 +107,7 @@ def _sort_rows(
 ) -> Sequence[Sequence[SDItem]]:
     def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
         return [
-            SDItem(k, row.get(k), table.retentions.get(ident, {}).get(k), c.paint_function)
+            SDItem(k, c.title, row.get(k), table.retentions.get(ident, {}).get(k), c.paint_function)
             for k, c in columns.items()
         ]
 
@@ -122,6 +125,7 @@ def _sort_rows(
 
 class _SDDeltaItem(NamedTuple):
     key: SDKey
+    title: str
     old: SDValue
     new: SDValue
     paint_function: PaintFunction
@@ -134,12 +138,14 @@ def _sort_delta_pairs(
     return [
         _SDDeltaItem(
             k,
+            h.title,
             attributes.pairs[k].old,
             attributes.pairs[k].new,
-            hint.get_attribute_hint(k).paint_function,
+            h.paint_function,
         )
         for k in sorted_keys
         if k in attributes.pairs
+        for h in (hint.get_attribute_hint(k),)
     ]
 
 
@@ -148,7 +154,7 @@ def _sort_delta_rows(
 ) -> Sequence[Sequence[_SDDeltaItem]]:
     def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
         return [
-            _SDDeltaItem(k, v.old, v.new, c.paint_function)
+            _SDDeltaItem(k, c.title, v.old, v.new, c.paint_function)
             for k, c in columns.items()
             for v in (row.get(k) or SDDeltaValue(None, None),)
         ]
@@ -328,9 +334,8 @@ class TreeRenderer:
 
         html.open_table()
         for item in sorted_pairs:
-            attr_hint = hint.get_attribute_hint(item.key)
             html.open_tr()
-            html.th(self._get_header(attr_hint.title, item.key))
+            html.th(self._get_header(item.title, item.key))
             html.open_td()
             if isinstance(item, SDItem):
                 _tdclass, rendered_value = compute_cell_spec(

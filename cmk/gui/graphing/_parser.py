@@ -50,6 +50,7 @@ class Label:
 class NotationFormatter:
     symbol: str
     precision: metrics.AutoPrecision | metrics.StrictPrecision
+    use_max_digits_for_labels: bool = True
 
     @abc.abstractmethod
     def ident(
@@ -70,7 +71,10 @@ class NotationFormatter:
         raise NotImplementedError()
 
     def _apply_precision(
-        self, value: int | float, compute_auto_precision_digits: Callable[[int, int], int]
+        self,
+        value: int | float,
+        compute_auto_precision_digits: Callable[[int, int], int],
+        use_max_digits_for_labels: bool,
     ) -> float:
         value_floor = math.floor(value)
         if value == value_floor:
@@ -79,7 +83,11 @@ class NotationFormatter:
         if isinstance(self.precision, metrics.AutoPrecision):
             if exponent := abs(math.ceil(math.log10(value - value_floor))):
                 digits = compute_auto_precision_digits(exponent, self.precision.digits)
-        return round(value, min(digits, _MAX_DIGITS))
+        return (
+            round(value, min(digits, _MAX_DIGITS))
+            if use_max_digits_for_labels
+            else round(value, digits)
+        )
 
     def _preformat(
         self, value: int | float, *, use_prefix: str = "", use_symbol: str = ""
@@ -103,11 +111,16 @@ class NotationFormatter:
         self,
         formatted_parts: Sequence[Preformatted],
         compute_auto_precision_digits: Callable[[int, int], int],
+        use_max_digits_for_labels: bool,
     ) -> str:
         results = []
         for formatted in formatted_parts:
             text = self._stringify_formatted_value(
-                self._apply_precision(formatted.value, compute_auto_precision_digits)
+                self._apply_precision(
+                    formatted.value,
+                    compute_auto_precision_digits,
+                    use_max_digits_for_labels,
+                )
             )
             results.append(
                 self._compose(
@@ -125,6 +138,7 @@ class NotationFormatter:
         postformatted = self._postformat(
             self._preformat(abs(value)),
             lambda exponent, digits: max(exponent + 1, digits),
+            True,
         )
         return f"{sign}{postformatted}"
 
@@ -160,6 +174,7 @@ class NotationFormatter:
                 self._postformat(
                     self._preformat(atom * i, use_prefix=first.prefix, use_symbol=first.symbol),
                     lambda exponent, digits: exponent + digits,
+                    self.use_max_digits_for_labels,
                 ),
             )
             for i in range(1, quotient + 1)
@@ -179,7 +194,10 @@ def _stringify_small_decimal_number(value: float) -> str:
     return f"0.{'0' * decimals}{int_part}"
 
 
+@dataclass(frozen=True)
 class DecimalFormatter(NotationFormatter):
+    use_max_digits_for_labels: bool = False
+
     def ident(self) -> Literal["Decimal"]:
         return "Decimal"
 

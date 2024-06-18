@@ -109,7 +109,6 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
-                            additionalData: "$ENTERPRISE: " + process.env.ENTERPRISE + ";",
                             sassOptions: {
                                 // Hand over build options from webpack to SASS
                                 includePaths: ["node_modules"],
@@ -126,7 +125,6 @@ module.exports = {
     },
     plugins: [
         new RemoveEmptyScriptsPlugin(),
-        new webpack.EnvironmentPlugin(["ENTERPRISE"]),
         new WarningsToErrors(),
         new FileManagerPlugin({
             events: {

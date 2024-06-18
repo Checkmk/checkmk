@@ -57,19 +57,11 @@ def test_metric_info_color() -> None:
     assert not [name for name, info in metric_info.items() if not _is_valid_color(info["color"])]
 
 
-_DUPLICATE_METRIC_INFOS = [
-    ["db_read_latency", "read_latency"],
-    ["db_write_latency", "write_latency"],
-]
-
-
-def test_metric_info_duplicates() -> None:
+def test_no_metric_info_duplicates() -> None:
     assert metric_info
 
     duplicates: dict[tuple[tuple[str, object], ...], list[str]] = {}
     for name, info in metric_info.items():
         duplicates.setdefault(tuple(sorted(info.items())), []).append(name)
 
-    assert sorted([names for names in duplicates.values() if len(names) > 1]) == sorted(
-        _DUPLICATE_METRIC_INFOS
-    )
+    assert not any(names for names in duplicates.values() if len(names) > 1)

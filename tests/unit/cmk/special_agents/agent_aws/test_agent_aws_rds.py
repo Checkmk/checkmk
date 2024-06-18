@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Callable, Sequence
 
 import pytest
@@ -84,7 +85,7 @@ def get_rds_sections() -> RDSSections:
         names: object | None, tags: OverallTags
     ) -> tuple[RDSLimits, RDSSummary, RDS]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("rds_names", names)
         config.add_service_tags("rds_tags", tags)
 

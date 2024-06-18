@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
@@ -81,7 +82,7 @@ class FakeLambdaClient:
 
 
 def create_config(names: Sequence[str], tags: OverallTags) -> AWSConfig:
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     config.add_single_service_config("lambda_names", names)
     config.add_service_tags("lambda_tags", tags)
     return config

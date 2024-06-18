@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from unittest.mock import MagicMock
 
@@ -103,7 +104,7 @@ class FakeSNSClient:
 
 
 def _create_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> SNSLimits:
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     config.add_single_service_config("sns_names", [])
     config.add_single_service_config("sns_tags", [])
     fake_sns_client = FakeSNSClient(n_std_topics, n_fifo_topics, n_subs)
@@ -138,7 +139,7 @@ def test_agent_aws_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int
 def get_sns_sections() -> SNSSectionsGetter:
     def _create_sns_sections(names: list[str] | None, tags: OverallTags) -> tuple[SNSSMS, SNS]:
         region = "eu-west-1"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("sns_names", names)
         config.add_service_tags("sns_tags", tags)
 

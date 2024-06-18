@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Callable, Sequence
 
 import pytest
@@ -90,7 +91,7 @@ def get_dynamodb_sections() -> DynamobSections:
         names: object | None, tags: OverallTags
     ) -> dict[str, DynamoDBLimits | DynamoDBSummary | DynamoDBTable]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("dynamodb_names", names)
         config.add_service_tags("dynamodb_tags", tags)
 

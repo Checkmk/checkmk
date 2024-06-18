@@ -6,6 +6,7 @@
 # pylint: disable=redefined-outer-name
 
 import datetime
+from argparse import Namespace as Args
 from collections.abc import Callable
 from typing import Literal
 
@@ -227,7 +228,7 @@ def get_cloudfront_sections() -> Callable[
         names: object | None, tags: OverallTags, assign_to_domain_host: bool
     ) -> tuple[CloudFrontSummary, CloudFront]:
         region = "us-east-1"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
 

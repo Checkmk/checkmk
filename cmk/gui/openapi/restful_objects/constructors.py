@@ -256,29 +256,6 @@ def action_result(
     }
 
 
-class DomainObjectMembers:
-    def __init__(self, base) -> None:  # type: ignore[no-untyped-def]
-        self.base = base
-        self.members: dict[str, dict[str, Any]] = {}
-
-    def object_property(
-        self,
-        name: str,
-        value: Any,
-        prop_format: PropertyFormat,
-        title: str | None = None,
-        linkable: bool = True,
-        links: list[LinkType] | None = None,
-    ) -> dict[str, Any]:
-        self.members[name] = object_property(
-            name, value, prop_format, self.base, title, linkable, links
-        )
-        return self.members[name]
-
-    def to_dict(self):
-        return self.members
-
-
 def object_property_href(
     domain_type: DomainType,
     identifier: str,

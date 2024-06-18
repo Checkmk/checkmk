@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-17 04:31+0000\n"
+"PO-Revision-Date: 2024-06-17 23:11+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -370,9 +370,9 @@ msgstr "%d の変更"
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%dカオス状態は%sから%s(%s)まで変化します"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d check plug-ins using the deprecated API: %s"
-msgstr "%d 非推奨のAPIを使用しているプラグインを確認してください: %s"
+msgstr "%d 非推奨のAPIを使用しているプラグイン: %s"
 
 #, python-format
 msgid "%d columns"
@@ -418,7 +418,7 @@ msgstr "%dアイコンとアクション"
 msgid "%d icons customized"
 msgstr "カスタマイズされた %d アイコン"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d ignored HW/SW inventory plug-ins found: %s"
 msgstr "%d 無視された HW/SW インベントリ・プラグインが見つかりました: %s"
 
@@ -498,7 +498,7 @@ msgstr "%s"
 
 #, python-format
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #, python-format
 msgid "%s (Customer missing)"
@@ -568,7 +568,7 @@ msgstr "%s ホストの %d が開始されました (%s)…"
 msgid "%s for all hosts started..."
 msgstr "すべてのホストの%sが開始されました..."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s has been deleted."
 msgstr "%sは削除されました。"
 
@@ -670,7 +670,7 @@ msgstr "%s操作"
 msgid "%s other %s"
 msgstr "%sその他%s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s per second"
 msgstr "%s/秒"
 
@@ -686,7 +686,7 @@ msgstr "%sレート"
 msgid "%s read %s"
 msgstr "%s 読み取り%s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s requests"
 msgstr "%s リクエスト"
 
@@ -755,7 +755,7 @@ msgstr ""
 msgid "%s: Service discovery: Permission denied"
 msgstr "%s:サービス検出:パーミッションが拒否されました"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s: Services: %s, Host labels: %s"
 msgstr "%s: サービス:%s、ホストラベル:%s"
 
@@ -795,7 +795,6 @@ msgstr ""
 msgid "&lt;None&gt;"
 msgstr "&lt;なし&gt;"
 
-#, fuzzy
 msgid ""
 "'Activate changes' is blocked. Distributed monitoring is not available after "
 "trial expiration, including hosts added via CMCDump"
@@ -924,7 +923,6 @@ msgstr "(サポートされていません)"
 msgid "(nothing selected)"
 msgstr "(何も選択されていません)"
 
-#, fuzzy
 msgid "(only works with the Micro Core)"
 msgstr "(マイクロコアでのみ機能します)"
 
@@ -1059,11 +1057,9 @@ msgstr "100.0 - 200.0ミリ秒"
 msgid "10x14"
 msgstr "10x14"
 
-#, fuzzy
 msgid "12 Volt output lower levels"
 msgstr "12ボルト出力の下位レベル"
 
-#, fuzzy
 msgid "12 Volt output upper levels"
 msgstr "12ボルト出力の上位レベル"
 
@@ -1088,15 +1084,12 @@ msgstr "200.0 - 500.0ミリ秒"
 msgid "3 months"
 msgstr "3ヶ月"
 
-#, fuzzy
 msgid "3.3 Volt output lower levels"
 msgstr "3.3ボルト出力の下位レベル"
 
-#, fuzzy
 msgid "3.3 Volt output upper levels"
 msgstr "3.3ボルト出力の上位レベル"
 
-#, fuzzy
 msgid "30 minutes"
 msgstr "30分"
 
@@ -1115,26 +1108,21 @@ msgstr "3PAR CPG(使用済みスペースと成長)"
 msgid "3PAR Remote Copy"
 msgstr "3PARリモートコピー"
 
-#, fuzzy
 msgid "3PAR capacity (used space and growth)"
 msgstr "3PARの容量(使用済みスペースと拡張)"
 
-#, fuzzy
 msgid "3PAR configuration"
 msgstr "3PARの構成"
 
-#, fuzzy
 msgid "3PAR ports"
 msgstr "3PARポート"
 
 msgid "4xx error rate"
 msgstr "4xxエラー率"
 
-#, fuzzy
 msgid "5 Volt output lower levels"
 msgstr "5ボルト出力の下位レベル"
 
-#, fuzzy
 msgid "5 Volt output upper levels"
 msgstr "5ボルト出力の上位レベル"
 
@@ -1327,7 +1315,6 @@ msgstr ""
 "<b>注意</b>: <i>htpasswd</i>コネクタに移行した場合、ユーザーは次回ログイン時"
 "にパスワードを変更する必要があります。"
 
-#, fuzzy
 msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
 "Python 3.4 installation (or newer) with installed python packages \"pyOpenSSL"
@@ -1413,7 +1400,6 @@ msgstr ""
 "<br>権限に問題がある場合は、サイトユーザーに書き込み権限があることを確認して"
 "ください。"
 
-#, fuzzy
 msgid ""
 "<br>Note: Some files may contain highly sensitive data like passwords. These "
 "files are marked with 'H'. Other files may include IP addresses, host names, "
@@ -1422,7 +1408,7 @@ msgstr ""
 "<br>注意:一部のファイルには、パスワードなどの機密性の高いデータが含まれている"
 "場合があります。これらのファイルは[H]でマークされています。他のファイルには、"
 "IPアドレス、ホスト名、ユーザー名、メールアドレス、または電話番号が含まれる場"
-"合があり、[M]でマークされています。"
+"合'M'でマークされています。"
 
 msgid ""
 "<br>Please note that Checkmk needs this password in clear<br>text during "
@@ -1467,7 +1453,6 @@ msgstr ""
 "も、Checkmkの全体的なパフォーマンスが低下する可能性があるため、この方法で"
 "Checkmkを使用することはお勧めしません。</p>"
 
-#, fuzzy
 msgid ""
 "<p>Having a large number of users configured in Checkmk may decrease the "
 "performance of the web GUI.</p><p>It may be possible that you are using the "
@@ -1558,7 +1543,6 @@ msgstr ""
 "す。詳細については、<a href=\"werk.py?werk=7017\">werk #7017</a>をご覧くださ"
 "い。</p>"
 
-#, fuzzy
 msgid ""
 "<p>In distributed setups it is possible to synchronize the extensions (MKPs "
 "and files in <tt>~/local/</tt>) to the slave sites. These files are "
@@ -1569,8 +1553,8 @@ msgstr ""
 "<p>分散設定のセットアップでは、拡張機能(<tt>~/local/</tt>内のMKPとファイル)を"
 "スレーブサイトに同期することができます。これらのファイルは、すべてのレプリ"
 "ケーションでスレーブサイトと同期され、ファイルが大きい場合は同期が遅くなる可"
-"能性があります。MKP同期を無効にするか、すべての拡張機能が必要かどうかを確認で"
-"きます。</p>"
+"能性があります。MKP同期を無効にするか、すべての拡張機能が必要かどうかを確認す"
+"ることができます。</p>"
 
 #, no-python-format
 msgid ""
@@ -1617,7 +1601,7 @@ msgstr ""
 "apacheプロセスに必要なメモリを正確に見積もることができないため、テストは自動"
 "的にOKになりません。</p>"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Micro Core uses Checkmk checker processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1687,7 +1671,7 @@ msgstr ""
 "されることです。これにより、多数のCheckmkヘルパープロセスが構成されている場合"
 "に負荷のピークが発生する可能性があります。</p>"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Micro Core uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1706,21 +1690,21 @@ msgid ""
 "parallel during startup of the Micro Core, which may cause load peaks when "
 "having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Checkmk Microcoreは、Checkmkヘルパープロセスを使用して、Checkmkで監視され"
-"ているホストのCheckmkおよびCheckmkDiscoveryサービスを実行します。構成された"
-"チェックを処理するのに十分なヘルパープロセスが常に存在する必要があります。</"
-"p><p>ヘルパープールが100%使用されている場合、チェックは時間内に実行されず、"
-"チェックの待ち時間が長くなり、状態が最新になりません。</p><p>可能なアクショ"
-"ン:<ul><li>チェックタイムアウトを減らすことができるかどうかを確認します</"
-"li><li>どのチェック/プラグインが<a href=\"view.py?"
-"view_name=service_check_durations\">最もヘルパープロセス時間を消費しているか"
-"を確認します</a></li><li><a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_fetcher_helpers\"> Checkmkヘルパーの数を増や"
-"す</a></li></ul></p><p>ただし、Checkmkチェックヘルパーは大量のメモリを消費す"
-"るため、構成しすぎないように注意する必要があります。システムは、それらすべて"
-"のメモリ需要を一度に処理できる必要があります。追加の問題は、Microcoreの起動時"
-"にCheckmkヘルパーが並行して初期化されることです。これにより、多数のCheckmkヘ"
-"ルパープロセスが構成されている場合に負荷のピークが発生する可能性があります。"
+"<p>Checkmk Micto Coreは、Checkmkヘルパープロセスを使用して、Checkmkで監視する"
+"ホストのCheckmkサービスとCheckmk Discoveryサービスを実行します。構成された"
+"チェックを処理するには、常に十分な数のヘルパープロセスが必要です。</p><p>ヘル"
+"パー・プールが 100% 使用された場合、チェックは時間内に実行されず、チェックの"
+"待ち時間は長くなり、状態は最新ではなくなります。</p><p>可能なアクション:"
+"<ul><li>チェックのタイムアウトを減らすことができるかどうかチェックしてくださ"
+"い。</li><li>どのチェック/プラグインが<a href=\"view.py?"
+"view_name=service_check_durations\">ヘルパーの処理時間を最も消費しているかを"
+"チェックする。</a></li><li>, <a href=\"wato.py?"
+"mode=edit_configvar&varname=cmc_fetcher_helpers\">Checkmk ヘルパーの数</a></"
+"li></ul></p>を増やす。<p>しかし、Checkmk のチェックヘルパーはメモリを大量に消"
+"費するので、設定しすぎないように注意する必要があります。システムは、一度にす"
+"べてのチェッ ク・ヘルパーのメモリ要求を処理できる必要があります。さらに、"
+"Checkmk ヘルパーは Micro Core の起動時に並列に初期化されるため、Checkmk ヘル"
+"パープロセスが多数設定されていると、負荷のピークが発生する可能性があります。"
 "</p>"
 
 #, fuzzy, no-python-format
@@ -1930,10 +1914,13 @@ msgid ""
 "references the <tt>conda.yaml</tt> file which lists all environment "
 "dependencies. "
 msgstr ""
+"<tt>robot.yaml</tt>RCCのメイン設定ファイルです。これはRobot Frameworkプロジェ"
+"クトのベースディレクトリからの相対パスで指定します。このファイルは <tt>conda."
+"yaml</tt> ファイルも参照し、すべての環境依存関係をリストアップします。 "
 
 #, python-format
 msgid "<tt>sqlnet.ora</tt> permission group %s"
-msgstr ""
+msgstr "<tt>sqlnet.ora</tt>権限グループ%s"
 
 #, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
@@ -3722,6 +3709,9 @@ msgid ""
 "it may be a dedicated installer account in a domain.The values are case "
 "insensitive."
 msgstr ""
+"管理者権限は持たないが、何らかの理由でOracleバイナリへの書き込み権限が必要な"
+"グループとユーザーのみをここに追加します。例えば、ドメイン内のインストーラー"
+"専用アカウントなどです。値は大文字と小文字を区別しません。"
 
 msgid "Add host"
 msgstr "ホストを追加"
@@ -3740,7 +3730,7 @@ msgid "Add host to use this action"
 msgstr "ホストを監視対象に追加"
 
 msgid "Add host/subfolder to use this action"
-msgstr ""
+msgstr "このアクションを使用するホスト/サブフォルダーを追加する"
 
 msgid ""
 "Add hosts to the monitoring and remove hosts from the monitoring. Please "
@@ -4060,7 +4050,7 @@ msgid "Add this metric to dedicated graph"
 msgstr "このメトリックを専用グラフに追加します"
 
 msgid "Add this node to existing root nodes"
-msgstr ""
+msgstr "このノードを既存のルート・ノードに追加する"
 
 msgid "Add time period"
 msgstr "期間を追加する"
@@ -6178,12 +6168,17 @@ msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
 "365 days."
 msgstr ""
+"どのような証明書でも、ある時点で有効期限が切れます。通常の値は90日以内と365日"
+"以内です。"
 
 msgid ""
 "Any valid TCP port may be entered here. The host needs to provide a "
 "certificate on this port. Otherwise the service will be CRIT and report a "
 "handshake error."
 msgstr ""
+"ここには、任意の有効なTCPポートを入力できます。ホストはこのポートに証明書を提"
+"供する必要があります。さもないと、サービスはCRITとなり、ハンドシェイク・エ"
+"ラーを報告します。"
 
 msgid "Apache"
 msgstr "Apache"
@@ -6558,6 +6553,10 @@ msgid ""
 "header. Please note, that in this case still the HTTP methods GET or POST "
 "will be used by default and not HEAD."
 msgstr ""
+"実際のウェブサイトやアプリケーション(ドキュメント本体)を含む完全なドキュメン"
+"トを取得する代わりに、ヘッダーのみを取得することもできます。この場合も、デ"
+"フォルトではHTTPメソッドGETまたはPOSTが使用され、HEADは使用されないことに注意"
+"してください。"
 
 msgid "As client"
 msgstr "クライアントとして"
@@ -6605,6 +6604,10 @@ msgid ""
 "even before the desktop user logs on. The scheduling of such desktop tests "
 "can be delayed via this option until the desktop session is established."
 msgstr ""
+"Checkmk エージェントは、ブート時にスケジューラとともに起動されるため、デスク"
+"トッ プユーザーがログオンする前でも起動されます。このようなデスクトップテスト"
+"のスケジューリングは、デスクトップセッションが確立されるまで、このオプション"
+"を使用して遅らせることができます。"
 
 msgid "Ascending"
 msgstr "上昇"
@@ -7021,7 +7024,7 @@ msgid "Autoextensible"
 msgstr "自動拡張可能"
 
 msgid "Automated environment setup (via RCC)"
-msgstr ""
+msgstr "自動環境セットアップ（RCC経由）"
 
 #, fuzzy, python-format
 msgid ""
@@ -7988,7 +7991,7 @@ msgid "Bazel Cache User"
 msgstr "最大キャッシュ経過時間"
 
 msgid "Bazel Remote Cache"
-msgstr ""
+msgstr "Bazelリモートキャッシュ"
 
 msgid "Beamer lamp operation time"
 msgstr "ビーマーランプの動作時間"
@@ -8048,7 +8051,7 @@ msgid "Beta phase: too many services"
 msgstr "全てのホストとサービスを表示"
 
 msgid "BigQuery table ID"
-msgstr ""
+msgstr "BigQueryテーブルID"
 
 msgid "Biggest input buffer"
 msgstr "最大入力バッファ"
@@ -8863,6 +8866,16 @@ msgid ""
 "Checkmk searches for in the key of the Azure tag, or you can disable the "
 "import of Azure tags altogether."
 msgstr ""
+"デフォルトでは、Checkmk はすべての Azure タグをホスト/サービスラベルとしてイ"
+"ンポートします。インポートされたタグは、ホストとして監視されるリソースグルー"
+"プと VM のホストラベルとして追加され、サービスとして監視されるリソースのサー"
+"ビスラベルとして追加されます。ラベルの構文は'cmk/azure/tag/{key}:{value}'で"
+"す。<br>さらに、リソースグループを表す各ホストには 'cmk/azure/resource_group:"
+"{rg_name}'というホストラベルが与えられ、ホストとして監視されるVMには'cmk/"
+"azure/vm:instance'というホストラベルが与えられますが、これはこのオプションと"
+"は無関係に行われます。<br>CheckmkがAzureタグのキーで検索するパターンを指定す"
+"ることで、インポートするタグをさらに制限することも、Azureタグのインポートを完"
+"全に無効にすることもできます。"
 
 #, fuzzy
 msgid ""
@@ -8898,6 +8911,19 @@ msgid ""
 "html#stopping-when-first-test-case-fails\" target=\"_blank\">How to stop a "
 "suite when the first test fails</a>\". "
 msgstr ""
+"デフォルトでは、Robot Frameworkは<i>すべての</i>テストを実行します。<br>しか"
+"し、テストが相互に依存している場合もあります。例えば、ログインに失敗した場"
+"合、その後のテストを成功させることは不可能です。<br>このオプションを有効にす"
+"ると、テストが失敗した場合、Robot Frameworkは<b>直ちに</b>スイートの実行を停"
+"止します。<br>その後のテスト結果（不合格）は、Checkmkに渡されません; ディスカ"
+"バリーの設定によっては、その結果は（スイートの結果の中にある場合）<b>欠落</"
+"b> するか、そのために生成されたサービスが<b>陳腐化</b>します。<br> <br>  <b>"
+"重要</b>: ここがRobotmkがRobotフレームワークの動作から逸脱している点です。"
+"HTMLログには省略されたテストが残り、(実行されなかったにもかかわらず) "
+"<tt>FAIL</tt> と表示されます。<br> \"<a href=\"http://robotframework.org/"
+"robotframework/latest/RobotFrameworkUserGuide.html#stopping-when-first-test-"
+"case-fails\" target=\"_blank\">How to stop a suite when the first test "
+"fails</a>\"も参照のこと。 "
 
 msgid ""
 "By default, Robotmk executes all plans in the user context of the Checkmk "
@@ -8907,6 +8933,11 @@ msgid ""
 "this are security-related and must be fulfilled by you (auto-login, screen "
 "saver, session lock, ...)"
 msgstr ""
+"デフォルトでは、Robotmk はすべての計画を Checkmk エージェントのユーザコンテキ"
+"ストで実行します。Windows GUI アプリケーションのテストを実行するには、デスク"
+"トップセッションに常時ログオン しているユーザ名を指定します。このための前提条"
+"件は、セキュリティ関連であり、自分で満たす必要があります（自動ログイン、スク"
+"リーンセーバ、セッションロックなど…）"
 
 msgid ""
 "By default, all mailboxes are checked with these parameters. If you specify "
@@ -34718,7 +34749,7 @@ msgid "Match interface %s (regex)"
 msgstr "インターフェイス %s に一致(正規表現)"
 
 msgid "Match multiple directories with **"
-msgstr "Match multiple directories with **"
+msgstr "複数のディレクトリと**でマッチさせる"
 
 msgid "Match notification comment"
 msgstr "通知コメントの一致"
@@ -45541,8 +45572,8 @@ msgid ""
 msgstr ""
 "ファイルを置くディレクトリへのリモートパス。空のままだと、ファイルはユーザの"
 "ホーム・ディレクトリに置かれる。このディレクトリがリモートに存在しなければ、"
-"チェックは失敗します。例：'myDirectory'（ファイルは'~/myDirectory'にアップロ"
-"ードされます）。"
+"チェックは失敗します。例：'myDirectory'（ファイルは'~/myDirectory'にアップ"
+"ロードされます）。"
 
 #, fuzzy
 msgid ""
@@ -51195,7 +51226,7 @@ msgid "Smarthosts"
 msgstr "スマートホスト"
 
 msgid "Smartping"
-msgstr "Smartping"
+msgstr "スマートping"
 
 msgid "Smoke"
 msgstr "スモーク"
@@ -60804,7 +60835,8 @@ msgstr "このノードは凍結したアグリゲーションにのみ含まれ
 msgid ""
 "This notification does not match. See reasons in global notification rule "
 "list."
-msgstr "この通知は一致しません。グローバル通知ルールリストの理由を参照してください。"
+msgstr ""
+"この通知は一致しません。グローバル通知ルールリストの理由を参照してください。"
 
 #, fuzzy
 msgid "This notification matches"
@@ -67088,7 +67120,7 @@ msgid "Transactions"
 msgstr "トランザクション"
 
 msgid "Transferredsize"
-msgstr "Transferredsize"
+msgstr "トランスファーサイズ"
 
 #, python-format
 msgid "Transferring: %d new, %d changed and %d vanished files"
@@ -69589,7 +69621,8 @@ msgstr ""
 msgid ""
 "Use this condition to select services based on the configured service "
 "labels. "
-msgstr "設定されたサービスラベルに基づいてサービスを選択するには、この条件を使用しま"
+msgstr ""
+"設定されたサービスラベルに基づいてサービスを選択するには、この条件を使用しま"
 "す。 "
 
 msgid "Use this custom start URL"
@@ -77408,7 +77441,6 @@ msgstr "y"
 msgid "year"
 msgstr "年"
 
-#, fuzzy
 msgid "years"
 msgstr "年"
 

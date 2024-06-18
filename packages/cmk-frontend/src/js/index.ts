@@ -22,20 +22,25 @@ import * as backup from "./modules/backup";
 import * as bi from "./modules/bi";
 import * as dashboard from "./modules/dashboard";
 import * as element_dragging from "./modules/element_dragging";
-import {figure_registry} from "./modules/figures/cmk_figures";
 import * as cmk_figures from "./modules/figures/cmk_figures";
-import {EventStats, HostStats, ServiceStats} from "./modules/figures/cmk_stats";
-import {TableFigure} from "./modules/figures/cmk_table";
+import {register} from "./modules/figures/register";
 import * as foldable_container from "./modules/foldable_container";
 import * as forms from "./modules/forms";
 import * as graph_integration from "./modules/graph_integration";
 import * as graphs from "./modules/graphs";
+import * as graphs_cee from "./modules/graphs_cee";
 import * as help from "./modules/help";
 import * as host_diagnose from "./modules/host_diagnose";
 import * as hover from "./modules/hover";
 import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
 import {insert_before} from "./modules/layout";
+import * as license_usage_timeseries_graph from "./modules/license_usage/license_usage_timeseries_graph";
 import * as nodevis from "./modules/nodevis/main";
+import * as ntop_alerts from "./modules/ntop/ntop_alerts";
+import * as ntop_flows from "./modules/ntop/ntop_flows";
+import * as ntop_host_details from "./modules/ntop/ntop_host_details";
+import * as ntop_top_talkers from "./modules/ntop/ntop_top_talkers";
+import * as ntop_utils from "./modules/ntop/ntop_utils";
 import * as number_format from "./modules/number_format";
 import * as page_menu from "./modules/page_menu";
 import * as password_meter from "./modules/password_meter";
@@ -60,44 +65,7 @@ import * as visibility_detection from "./modules/visibility_detection";
 import * as wato from "./modules/wato";
 import * as webauthn from "./modules/webauthn";
 
-// Optional import is currently not possible using the ES6 imports
-let graphs_cee;
-let ntop_host_details;
-let ntop_alerts;
-let ntop_flows;
-let ntop_top_talkers;
-let ntop_utils;
-let license_usage_timeseries_graph;
-let register;
-
-function registerRawFigureBaseClasses() {
-    figure_registry.register(TableFigure);
-    figure_registry.register(HostStats);
-    figure_registry.register(ServiceStats);
-    figure_registry.register(EventStats);
-}
-
-registerRawFigureBaseClasses();
-if (process.env.ENTERPRISE !== "no") {
-    register = require("./modules/cee/register.ts");
-    register.registerEnterpriseFigureBaseClasses();
-    require("./modules/cee/figures/cmk_figures_plugins_cee");
-    graphs_cee = require("./modules/cee/graphs_cee");
-    ntop_host_details = require("./modules/cee/ntop/ntop_host_details");
-    ntop_alerts = require("./modules/cee/ntop/ntop_alerts");
-    ntop_flows = require("./modules/cee/ntop/ntop_flows");
-    ntop_top_talkers = require("./modules/cee/ntop/ntop_top_talkers");
-    ntop_utils = require("./modules/cee/ntop/ntop_utils");
-    license_usage_timeseries_graph = require("./modules/cee/license_usage/license_usage_timeseries_graph");
-} else {
-    graphs_cee = null;
-    ntop_host_details = null;
-    ntop_alerts = null;
-    ntop_flows = null;
-    ntop_top_talkers = null;
-    ntop_utils = null;
-    license_usage_timeseries_graph = null;
-}
+register();
 
 type CallableFunctionOptions = {[key: string]: string};
 type CallableFunction = (

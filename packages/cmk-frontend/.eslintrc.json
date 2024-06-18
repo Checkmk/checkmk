@@ -48,15 +48,5 @@
     },
     "ignorePatterns": [
         "*_min.js"
-    ],
-    "overrides": [
-        {
-            "files": [
-                "src/js/modules/cee/**/*.ts"
-            ],
-            "rules": {
-                "license-header/header": [ "error", "./resources/enterprise-license-header.js" ]
-            }
-        }
     ]
 }

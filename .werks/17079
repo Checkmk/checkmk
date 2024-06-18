@@ -1,0 +1,11 @@
+Title: mk_redis: Autodetect Checkmk instances
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1718695661
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+
+Previously the redis agent plugin configured to autodetect would not detect the Checkmk redis instances.
+Now, on hosts running a Checkmk site, these instances can be autodetected as well and monitored as any other redis instance.

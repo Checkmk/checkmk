@@ -72,6 +72,9 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 
 @get_parsed_item_data
 def check_redis_info(item, params, item_data):
+    if (error := item_data.get("error")) is not None:
+        yield 2, f"Error: {error}"
+
     server_data = item_data.get("Server")
     if server_data is None:
         return

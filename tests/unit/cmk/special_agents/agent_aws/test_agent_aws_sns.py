@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Protocol
 
@@ -108,7 +109,7 @@ class FakeSNSClient:
 
 
 def _create_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> SNSLimits:
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     config.add_single_service_config("sns_names", [])
     config.add_single_service_config("sns_tags", [])
     fake_sns_client = FakeSNSClient(n_std_topics, n_fifo_topics, n_subs)
@@ -161,7 +162,7 @@ def get_sns_sections() -> SNSSections:
     ) -> SNSSectionsOut:
         region = "eu-west-1"
         config = AWSConfig(
-            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
         )
         config.add_single_service_config("sns_names", names)
         config.add_service_tags("sns_tags", tags)

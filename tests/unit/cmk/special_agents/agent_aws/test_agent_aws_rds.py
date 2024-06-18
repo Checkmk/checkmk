@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Sequence
 from typing import Protocol
 
@@ -100,7 +101,7 @@ def get_rds_sections() -> RDSSections:
         region = "region"
         config = AWSConfig(
             "hostname",
-            [],
+            Args(),
             ([], []),
             NamingConvention.ip_region_instance,
             tag_import,

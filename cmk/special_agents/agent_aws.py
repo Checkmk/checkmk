@@ -40,7 +40,6 @@ import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
-import cmk.utils.password_store
 from cmk.utils import store
 from cmk.utils.exceptions import MKException
 from cmk.utils.paths import tmp_dir
@@ -54,7 +53,11 @@ from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-viol
     AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
-from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.agent_common import (
+    ConditionalPiggybackSection,
+    SectionWriter,
+    special_agent_main,
+)
 from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import (
     DataCache,
@@ -287,7 +290,7 @@ class AWSConfig:
     def __init__(
         self,
         hostname: str,
-        sys_argv: Sequence[str],
+        sys_argv: Args,
         overall_tags: OverallTags,
         piggyback_naming_convention: NamingConvention,
         tags_option: TagsOption = TagsImportPatternOption.import_all,
@@ -330,10 +333,11 @@ class AWSConfig:
         self.service_config.setdefault(key, value)
 
     @staticmethod
-    def _compute_config_hash(sys_argv: Sequence[str]) -> str:
-        filtered_sys_argv = [
-            arg for arg in sys_argv if arg not in ["--debug", "--verbose", "--no-cache"]
-        ]
+    def _compute_config_hash(sys_argv: Args) -> str:
+        filtered_sys_argv = dict(
+            filter(lambda el: el[0] not in ["debug", "verbose", "no_cache"], vars(sys_argv).items())
+        )
+
         # Be careful to use a hashing mechanism that generates the same hash across
         # different python processes! Otherwise the config file will always be
         # out-of-date
@@ -7427,10 +7431,10 @@ def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     )
 
 
-def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
+def _configure_aws(args: Args) -> AWSConfig:
     aws_config = AWSConfig(
         args.hostname,
-        sys_argv,
+        args,
         (args.overall_tag_key, args.overall_tag_values),
         args.piggyback_naming_convention,
         args.tag_key_pattern,
@@ -7514,24 +7518,17 @@ def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
     return account_id
 
 
-def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-many-branches
-    if sys_argv is None:
-        cmk.utils.password_store.replace_passwords()
-        sys_argv = sys.argv[1:]
-    args = parse_arguments(sys_argv)
+def agent_aws_main(args: Args) -> int:  # pylint: disable=too-many-branches
     _setup_logging(args.debug, args.verbose)
 
-    hostname = args.hostname
     proxy_config = _get_proxy(args)
-
-    aws_config = _configure_aws(args, sys_argv)
+    aws_config = _configure_aws(args)
 
     global_services, regional_services = _sanitize_aws_services_params(
         args.global_services, args.services, r_and_g_aws_services=("wafv2",)
     )
 
     use_cache = aws_config.is_up_to_date() and not args.no_cache
-    has_exceptions = False
 
     # Special distributor for S3 limits which distributes results across different regions
     s3_limits_distributor = ResultDistributorS3Limits()
@@ -7552,12 +7549,8 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
         sys.stdout.write("<<<aws_exceptions>>>\n")
         sys.stdout.write("Exception: %s\n" % ae)
         return 0
-    except Exception as e:
-        logging.info(e)
-        if args.debug:
-            raise
-        return 1
 
+    has_exceptions = False
     for aws_services, aws_regions, aws_sections in [
         (global_services, [args.global_service_region], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
@@ -7569,7 +7562,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
             try:
                 session = _create_session_from_args(args, region, proxy_config)
                 sections = aws_sections(
-                    hostname, session, account_id, debug=args.debug, config=proxy_config
+                    args.hostname, session, account_id, debug=args.debug, config=proxy_config
                 )
                 sections.init_sections(aws_services, region, aws_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)
@@ -7586,13 +7579,17 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
                 has_exceptions = True
                 if args.debug:
                     raise
-    if has_exceptions:
-        return 1
-    return 0
+
+    return 1 if has_exceptions else 0
 
 
 class AwsAccessError(MKException):
     pass
+
+
+def main() -> int:
+    """Main entry point to be used"""
+    return special_agent_main(parse_arguments, agent_aws_main)
 
 
 if __name__ == "__main__":

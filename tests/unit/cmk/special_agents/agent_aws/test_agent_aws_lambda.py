@@ -7,6 +7,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
@@ -86,7 +87,7 @@ def create_config(
 ) -> AWSConfig:
     config = AWSConfig(
         "hostname",
-        [],
+        Args(),
         ([], []),
         NamingConvention.ip_region_instance,
         tag_import,

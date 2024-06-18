@@ -58,8 +58,6 @@ def test_metric_info_color() -> None:
 
 
 _DUPLICATE_METRIC_INFOS = [
-    ["db_read_latency", "read_latency"],
-    ["db_write_latency", "write_latency"],
     ["kube_memory_cluster_allocatable_utilization", "kube_cpu_cluster_allocatable_utilization"],
     ["kube_memory_limit_utilization", "kube_cpu_limit_utilization"],
     ["kube_memory_node_allocatable_utilization", "kube_cpu_node_allocatable_utilization"],

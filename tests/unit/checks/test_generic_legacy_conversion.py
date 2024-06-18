@@ -1020,7 +1020,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "msexch_dag.dbcopy",
         "msexch_dag.contentindex",
         "msexch_dag.copyqueue",
-        "msexch_database",
         "msexch_isclienttype",
         "msexch_isstore",
         "msexch_owa",

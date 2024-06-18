@@ -5,7 +5,8 @@
 """Infoblox services and node services
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
     any_of,
@@ -29,7 +30,7 @@ DETECT_INFOBLOX = any_of(
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.7779.1."),
 )
 
-SERVICE_ID = {
+SERVICE_ID_lower_v9 = {
     "1": "dhcp",
     "2": "dns",
     "3": "ntp",
@@ -92,6 +93,67 @@ SERVICE_ID = {
     "60": "bfd",
     "61": "outbound",
 }
+SERVICE_ID_v9 = {
+    "1": "dhcp",
+    "2": "dns",
+    "3": "ntp",
+    "4": "tftp",
+    "5": "http-file-dist",
+    "6": "ftp",
+    "7": "node-status",
+    "8": "disk-usage",
+    "9": "enet-lan",
+    "10": "enet-lan2",
+    "11": "enet-ha",
+    "12": "enet-mgmt",
+    "13": "lcd",
+    "14": "memory",
+    "15": "replication",
+    "16": "db-object",
+    "17": "raid-summary",
+    "18": "raid-disk1",
+    "19": "raid-disk2",
+    "20": "raid-disk3",
+    "21": "raid-disk4",
+    "22": "raid-disk5",
+    "23": "raid-disk6",
+    "24": "raid-disk7",
+    "25": "raid-disk8",
+    "26": "fan1",
+    "27": "fan2",
+    "28": "fan3",
+    "29": "fan4",
+    "30": "fan5",
+    "31": "fan6",
+    "32": "fan7",
+    "33": "fan8",
+    "34": "power-supply1",
+    "35": "power-supply2",
+    "36": "ntp-sync",
+    "37": "cpu1-temp",
+    "38": "cpu2-temp",
+    "39": "sys-temp",
+    "40": "raid-battery",
+    "41": "cpu-usage",
+    "42": "ospf",
+    "43": "bgp",
+    "44": "mgm-service",
+    "45": "subgrid-conn",
+    "46": "network-capacity",
+    "47": "reporting",
+    "48": "dns-cache-acceleration",
+    "49": "ospf6",
+    "50": "swap-usage",
+    "51": "discovery-consolidator",
+    "52": "discovery-collector",
+    "53": "discovery-capacity",
+    "54": "threat-protection",
+    "55": "cloud-api",
+    "56": "threat-analytics",
+    "57": "taxii",
+    "58": "bfd",
+    "59": "outbound",
+}
 STATUS_ID = {
     "1": "working",
     "2": "warning",
@@ -107,27 +169,40 @@ STATE = {
 }
 
 
+@dataclass(frozen=True)
+class _Version:
+    major: int
+    minor: int
+    patch: int
+
+
+def _parse_version(raw_version: Sequence[Sequence[str]]) -> _Version | None:
+    try:
+        version = raw_version[0][0]
+    except IndexError:
+        return None
+    parts = version.split("-")[0].split(".")
+    try:
+        return _Version(int(parts[0]), int(parts[1]), int(parts[2]))
+    except (IndexError, ValueError):
+        return None
+
+
+def _find_service_id_map(version: _Version | None) -> Mapping[str, str]:
+    # See:
+    # - https://docs.infoblox.com/space/nios85/35418019/SNMP+MIB+Hierarchy ff.
+    # - https://docs.infoblox.com/space/nios90/280760493/SNMP+MIB+Hierarchy
+    if not version:
+        return SERVICE_ID_lower_v9
+    return SERVICE_ID_v9 if version.major >= 9 else SERVICE_ID_lower_v9
+
+
 def parse_infoblox_services(string_table: Sequence[StringTable]) -> Section:
-    """
-    >>> for item, status in parse_infoblox_services([[
-    ...         ['9', '1', 'Running'],
-    ...         ['10', '1', '2% - Primary drive usage is OK.'],
-    ...         ['11', '1', '11.112.133.14'],
-    ...         ['27', '5', ''],
-    ...         ['28', '1', 'FAN 1: 8725 RPM'],
-    ...         ['43', '1', 'CPU Usage: 5%'],
-    ...         ['57', '5', 'Cloud API service is inactive.'],
-    ...         ]]).items():
-    ...     print(item, status)
-    node-status ('working', 'Running')
-    disk-usage ('working', '2% - Primary drive usage is OK.')
-    enet-lan ('working', '11.112.133.14')
-    fan1 ('working', 'FAN 1: 8725 RPM')
-    cpu-usage ('working', 'CPU Usage: 5%')
-    """
+    raw_version, table = string_table
+    service_id_map = _find_service_id_map(_parse_version(raw_version))
     return {
-        SERVICE_ID[service_id]: (status, description)
-        for service_id, status_id, description in string_table[0]
+        service_id_map[service_id]: (status, description)
+        for service_id, status_id, description in table
         for status in (STATUS_ID.get(status_id, "unexpected"),)
         if status not in {"inactive", "unknown"}
     }
@@ -171,6 +246,12 @@ snmp_section_infoblox_services = SNMPSection(
     parse_function=parse_infoblox_services,
     fetch=[
         SNMPTree(
+            base=".1.3.6.1.4.1.7779.3.1.1.2.1",
+            oids=[
+                "7",  # IB-PLATFORMONE-MIB::ibNiosVersion
+            ],
+        ),
+        SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.9.1",
             oids=[
                 "1",  # IB-PLATFORMONE-MIB::ibServiceName
@@ -188,11 +269,18 @@ check_plugin_infoblox_services = CheckPlugin(
     check_function=check_infoblox_services,
 )
 
+
 snmp_section_infoblox_node_services = SNMPSection(
     name="infoblox_node_services",
     detect=DETECT_INFOBLOX,
     parse_function=parse_infoblox_services,
     fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.7779.3.1.1.2.1",
+            oids=[
+                "7",  # IB-PLATFORMONE-MIB::ibNiosVersion
+            ],
+        ),
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1",
             oids=[

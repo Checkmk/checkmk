@@ -187,8 +187,8 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
         levels_lower: Lower level parameters created by the :class:Levels form spec
         metric_name:  The name of the datasource in the RRD that corresponds to this value
                       or None in order not to generate a metric.
-        render_function:  A single argument function to convert the value from float into a
-                      human readable string.
+        render_func:  A single argument function to convert the value from float into a
+                      human-readable string.
         label:        The label to prepend to the output.
         boundaries:   Minimum and maximum to add to the metric.
         notice_only:  Only show up in service output if not OK (otherwise in details).

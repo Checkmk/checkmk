@@ -185,20 +185,16 @@ let babel_loader = {
     },
 };
 
-if (process.env.WEBPACK_MODE === "quick") {
-    babel_loader["test"] = /\.ts?$/;
-} else {
-    babel_loader["test"] = /\.(ts|js)?$/;
-    babel_loader["use"]["options"]["presets"].unshift([
-        "@babel/preset-env",
-        {
-            //debug: true,
-            // This adds polyfills when needed. Requires core-js dependency.
-            // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
-            useBuiltIns: "usage",
-            corejs: 3,
-        },
-    ]);
-}
+babel_loader["test"] = /\.(ts|js)?$/;
+babel_loader["use"]["options"]["presets"].unshift([
+    "@babel/preset-env",
+    {
+        //debug: true,
+        // This adds polyfills when needed. Requires core-js dependency.
+        // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
+        useBuiltIns: "usage",
+        corejs: 3,
+    },
+]);
 
 module.exports.module.rules.unshift(babel_loader);

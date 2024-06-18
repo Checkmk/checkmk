@@ -5,6 +5,7 @@
 
 from collections.abc import Iterable
 from typing import Any, Literal, NewType
+from wsgiref.types import StartResponse, WSGIEnvironment
 
 import docstring_parser
 from werkzeug.exceptions import HTTPException
@@ -63,7 +64,7 @@ class GeneralRestAPIException(HTTPException):
         self.ext = ext
         super().__init__(description=title)
 
-    def __call__(self, environ, start_response) -> Iterable[bytes]:  # type: ignore[no-untyped-def]
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> Iterable[bytes]:
         return self.to_problem()(environ, start_response)
 
     def to_problem(self) -> Response:
@@ -267,7 +268,7 @@ class ProblemException(HTTPException):
         self.ext = ext
         self.fields = fields
 
-    def __call__(self, environ, start_response) -> Iterable[bytes]:  # type: ignore[no-untyped-def]
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> Iterable[bytes]:
         return self.to_problem()(environ, start_response)
 
     def to_problem(self) -> Response:

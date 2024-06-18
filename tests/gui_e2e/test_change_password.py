@@ -78,9 +78,10 @@ def test_user_change_password_success(
     change_password_page.main_area.check_success("Successfully changed password.")
 
     # Logout and then login with the new password
-    page.logout()
+    change_password_page.main_menu.logout()
+    login_page = LoginPage(page.page, navigate_to_page=False)
     new_credentials = CmkCredentials(username=ADMIN_USER, password=new_pw)
-    page.login(new_credentials)
+    login_page.login(new_credentials)
     page.main_area.check_page_title("Main dashboard")
 
     # Reset the password to the original one

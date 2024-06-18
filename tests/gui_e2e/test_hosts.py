@@ -49,7 +49,7 @@ def test_create_and_delete_a_host(logged_in_page: LoginPage) -> None:
     host.page.wait_for_url(url=re.compile(quote_plus("view_name=allhost")), wait_until="load")
     host.select_host(host.details.name)
     # Cleanup: delete host
-    _ = host.navigate()
+    host.navigate()
     host.delete_host()
 
 

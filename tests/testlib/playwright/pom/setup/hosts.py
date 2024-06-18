@@ -7,7 +7,7 @@ import re
 from typing import NamedTuple
 from urllib.parse import quote_plus
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import expect, Locator, Page
 
 from tests.testlib.playwright.pom.page import CmkPage
 
@@ -21,7 +21,10 @@ class HostDetails(NamedTuple):
 class SetupHost(CmkPage):
     """Represent the page `setup -> Hosts`."""
 
-    def navigate(self) -> str:
+    def __init__(self, page: Page, navigate_to_page: bool = True) -> None:
+        super().__init__(page, navigate_to_page)
+
+    def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts` page.
 
         This method is used within `CmkPage.__init__`.
@@ -31,7 +34,11 @@ class SetupHost(CmkPage):
         # wait for page to load
         _url_pattern: str = quote_plus("wato.py?mode=folder")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-        return self.page.url
+        self._validate_page()
+
+    def _validate_page(self) -> None:
+        expect(self.get_link("Add host")).to_be_visible()
+        expect(self.get_link("Add folder")).to_be_visible()
 
     @property
     def add_host(self) -> Locator:
@@ -101,14 +108,16 @@ class HostProperties(CmkPage):
         page: Page,
         host: HostDetails,
         exists: bool = False,
+        navigate_to_page: bool = True,
         timeout_assertions: int | None = None,
         timeout_navigation: int | None = None,
     ) -> None:
         self.details = host
         self._exists = exists
-        super().__init__(page, timeout_assertions, timeout_navigation)
+        self.page_title = f"Properties of host {host.name}"
+        super().__init__(page, navigate_to_page, timeout_assertions, timeout_navigation)
 
-    def navigate(self) -> str:
+    def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts -> <host name> properties` page.
 
         This method is used within `CmkPage.__init__`.
@@ -118,12 +127,17 @@ class HostProperties(CmkPage):
             setup_host_page.create_host(self.details)
             self._exists = True
             setup_host_page.navigate()
-
         # to host properties
         setup_host_page.get_link(self.details.name).click()
         _url_pattern = quote_plus(f"wato.py?folder=&host={self.details.name}&mode=edit_host")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-        return self.page.url
+        self._validate_page()
+
+    def _validate_page(self) -> None:
+        self.main_area.check_page_title(self.page_title)
+        expect(self.main_area.get_text(text=HostProperties.dropdown_buttons[0])).to_be_visible()
+        expect(self.main_area.get_text(text=HostProperties.links[0])).to_be_visible()
+        expect(self.main_area.get_text(text=HostProperties.properties[0])).to_be_visible()
 
     def delete_host(self) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""

@@ -7,7 +7,7 @@ import re
 from typing import Literal, override
 from urllib.parse import parse_qs, urljoin, urlparse
 
-from playwright.sync_api import expect, Page, Response
+from playwright.sync_api import expect, Locator, Page, Response
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.page import CmkPage
@@ -16,20 +16,22 @@ from tests.testlib.playwright.pom.page import CmkPage
 class LoginPage(CmkPage):
     """Represents the login page of Checkmk GUI."""
 
+    url_suffix = r"login.py"
+
     def __init__(
         self,
         page: Page,
-        site_url: str,  # URL to one of the pages on Checkmk GUI
+        site_url: str | None = None,  # URL to one of the pages on Checkmk GUI
+        navigate_to_page: bool = True,
         mobile_device: bool = False,
         timeout_assertions: int | None = None,
         timeout_navigation: int | None = None,
     ) -> None:
         self.site_url = site_url
         self._mobile_device: bool = mobile_device
-        self._logged_in: bool = False
-        super().__init__(page, timeout_assertions, timeout_navigation)
+        super().__init__(page, navigate_to_page, timeout_assertions, timeout_navigation)
 
-    def navigate(self) -> str:
+    def navigate(self) -> None:
         """Navigate to login page, like a Checkmk GUI user.
 
         Works ONLY when the user is logged out.
@@ -37,25 +39,42 @@ class LoginPage(CmkPage):
         `site_url` can refer to any Checkmk GUI page.
         Returns the URL of login page. Returns an empty-string when user is already logged in.
         """
-        if not self._logged_in:
+        if self.site_url:
             self.page.goto(self.site_url, wait_until="load")
-            expect(self.page).to_have_url(re.compile(r"login.py"))
-            self._validate_credential_elements_on_page()
-            return self.page.url
-        return ""
+            self._validate_page()
+        else:
+            raise ValueError("No site URL provided to navigate to login page.")
+
+    def _validate_page(self) -> None:
+        """Check if the current page is the login page."""
+        expect(self.page).to_have_url(re.compile(self.url_suffix))
+        expect(self.username_input).to_be_visible()
+        expect(self.username_input).to_be_empty()
+        expect(self.password_input).to_be_visible()
+        expect(self.password_input).to_be_empty()
+
+    @property
+    def username_input(self) -> Locator:
+        return self.page.locator("#input_user")
+
+    @property
+    def password_input(self) -> Locator:
+        return self.page.locator("#input_pass")
+
+    @property
+    def login_button(self) -> Locator:
+        return self.page.locator("#_login")
 
     def login(self, credentials: CmkCredentials, expected_url: str | None = None) -> None:
         """Login to Checkmk GUI.
 
         By default, the credentials provided to `LoginPage` are used.
         """
-        if not self._logged_in:
-            self.page.locator("#input_user").fill(credentials.username)
-            self.page.locator("#input_pass").fill(credentials.password)
-            self.page.locator("#_login").click()
-            _url_pattern = re.escape(expected_url or self._target_page())
-            self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-            self._logged_in = True
+        self.username_input.fill(credentials.username)
+        self.password_input.fill(credentials.password)
+        self.login_button.click()
+        _url_pattern = re.escape(expected_url or self._target_page())
+        self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
 
     def _target_page(self) -> str:
         """Returns the URL of the page to be navigated after successful login.
@@ -82,19 +101,6 @@ class LoginPage(CmkPage):
             _url = _target_url_at("start_url", urlparse(_url).query)[-1]
         return _url
 
-    def logout(self) -> None:
-        if self._logged_in:
-            self.main_menu.user_logout.click()
-            self.page.wait_for_url(url=re.compile("login.py$"), wait_until="load")
-            self._validate_credential_elements_on_page()
-            self._logged_in = False
-
-    def _validate_credential_elements_on_page(self) -> None:
-        expect(self.page.locator("#input_user")).to_be_visible()
-        expect(self.page.locator("#input_user")).to_be_empty()
-        expect(self.page.locator("#input_pass")).to_be_visible()
-        expect(self.page.locator("#input_pass")).to_be_empty()
-
     @override
     def go(
         self,
@@ -103,4 +109,8 @@ class LoginPage(CmkPage):
         referer: str | None = None,
     ) -> Response | None:
         """calls page.goto() but will accept relative urls"""
-        return self.page.goto(urljoin(self.site_url, url), wait_until=wait_until, referer=referer)
+        if self.site_url:
+            return self.page.goto(
+                urljoin(self.site_url, url), wait_until=wait_until, referer=referer
+            )
+        raise ValueError("No site URL provided")

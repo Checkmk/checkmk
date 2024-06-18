@@ -42,8 +42,9 @@ def test_totp(test_site: Site, logged_in_page: LoginPage, credentials: CmkCreden
     logged_in_page.main_area.get_suggestion("Save").click()
 
     # Log out stuff here
-    logged_in_page.logout()
-    logged_in_page.login(credentials, "user_login_two_factor.py")
+    logged_in_page.main_menu.logout()
+    login_page = LoginPage(logged_in_page.page, navigate_to_page=False)
+    login_page.login(credentials, "user_login_two_factor.py")
     logged_in_page.get_input("_totp_code").fill("1")
     logged_in_page.get_input("_use_totp_code").click()
 

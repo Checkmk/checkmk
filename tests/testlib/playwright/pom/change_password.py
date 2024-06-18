@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import expect, Locator, Page
 
 from tests.testlib.playwright.pom.page import CmkPage
 
@@ -14,15 +14,19 @@ class ChangePassword(CmkPage):
 
     page_title: str = "Change password"
 
-    def __init__(self, page: Page) -> None:
-        super().__init__(page)
+    def __init__(self, page: Page, navigate_to_page: bool = True) -> None:
+        super().__init__(page, navigate_to_page)
 
-    def navigate(self) -> str:
+    def navigate(self) -> None:
         """Navigate to change password page, like a Checkmk GUI user."""
-        self.click_and_wait(self.main_menu.user_change_password, navigate=True)
-        self.main_area.check_page_title(self.page_title)
+        self.main_menu.user_change_password.click()
         self.main_area.page.wait_for_load_state("load")
-        return self.page.url
+        self._validate_page()
+
+    def _validate_page(self) -> None:
+        self.main_area.check_page_title(self.page_title)
+        expect(self.current_password_input).to_be_visible()
+        expect(self.new_password_input).to_be_visible()
 
     @property
     def current_password_input(self) -> Locator:

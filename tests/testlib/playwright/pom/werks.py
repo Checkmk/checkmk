@@ -12,11 +12,12 @@ class Werks(CmkPage):
     page_title: str = "Change log (Werks)"
     dropdown_buttons: list[str] = ["Werks", "Display", "Help"]
 
-    def navigate(self) -> str:
+    def navigate(self) -> None:
         self.click_and_wait(self.main_menu.help_werks, navigate=True)
+        self._validate_page()
+
+    def _validate_page(self) -> None:
         self.main_area.check_page_title(self.page_title)
-        self.main_area.page.wait_for_load_state("load")
-        return self.page.url
 
     def get_recent_werks(self, count: int = 100) -> dict[int, str]:
         """Group werks by `Day of creation` using the filter mechanism."""

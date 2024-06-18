@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from abc import abstractmethod
 from typing import Literal, overload
 from urllib.parse import urljoin
@@ -18,23 +19,36 @@ class CmkPage(LocatorHelper):
     def __init__(
         self,
         page: Page,
+        navigate_to_page: bool = True,
         timeout_assertions: int | None = None,
         timeout_navigation: int | None = None,
     ) -> None:
         super().__init__(page, timeout_assertions, timeout_navigation)
+        self._navigate_to_page = navigate_to_page
         self.main_menu = MainMenu(self.page)
         self.main_area = MainArea(self.page)
         self.sidebar = Sidebar(self.page)
-        self._url: str = self.navigate()
+        if self._navigate_to_page:
+            self.navigate()
+        else:
+            self._validate_page()
+        self._url = self.page.url
 
     @abstractmethod
-    def navigate(self) -> str:
+    def navigate(self) -> None:
         """Navigate to the page.
 
-        Navigation steps are performed relative to the parent page.
-        Returns URL of the page.
+        Perform navigation steps, wait for the page to load and validate
+        the correct page is displayed by using the `_validate_page` method.
         """
-        return ""
+
+    @abstractmethod
+    def _validate_page(self) -> None:
+        """Validate correct page is displayed.
+
+        Ensure the expected page is displayed by checking the page title,
+        url or other elements that are unique to the page.
+        """
 
     def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator(selector)
@@ -269,6 +283,10 @@ class MainMenu(LocatorHelper):
     @property
     def help_werks(self) -> Locator:
         return self.help_menu("Change log (Werks)")
+
+    def logout(self) -> None:
+        self.user_logout.click()
+        self.page.wait_for_url(url=re.compile("login.py$"), wait_until="load")
 
 
 class MainArea(LocatorHelper):

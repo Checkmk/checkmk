@@ -24,8 +24,9 @@ def test_user_color_theme(logged_in_page: LoginPage, credentials: CmkCredentials
     assert default_value != changed_value, "Changed color theme is not properly reflected!"
 
     # logging out and logging in to make sure the value is saved
-    logged_in_page.logout()
-    logged_in_page.login(credentials)
+    logged_in_page.main_menu.logout()
+    login_page = LoginPage(logged_in_page.page, navigate_to_page=False)
+    login_page.login(credentials)
     saved_label = _loc.get_attribute("value")
     saved_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
     assert saved_label == changed_label, "Saved color theme is not properly displayed!"
@@ -55,8 +56,9 @@ def test_user_sidebar_position(logged_in_page: LoginPage, credentials: CmkCreden
     assert default_value != changed_value, "Changed sidebar position is not properly reflected!"
 
     # logging out and logging in to make sure the value is saved
-    logged_in_page.logout()
-    logged_in_page.login(credentials)
+    logged_in_page.main_menu.logout()
+    login_page = LoginPage(logged_in_page.page, navigate_to_page=False)
+    login_page.login(credentials)
     saved_label = str(_loc.get_attribute("value"))
     saved_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
     assert saved_label == changed_label, "Saved sidebar position is not properly displayed!"

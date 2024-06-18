@@ -28,17 +28,18 @@ def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCred
     change_password_page = ChangePassword(logged_in_page.page)
     change_password_page.change_password(credentials.password, "not-cmk-really-not")
     change_password_page.main_area.check_success("Successfully changed password.")
-    page.logout()
+    change_password_page.main_menu.logout()
+    login_page = LoginPage(page.page, navigate_to_page=False)
 
     # check old password, shouldn't work anymore
     with pytest.raises(PWTimeoutError):
-        page.login(credentials)
-    page.check_error("Incorrect username or password. Please try again.")
+        login_page.login(credentials)
+    login_page.check_error("Incorrect username or password. Please try again.")
 
     # changing it back for other tests
     test_site.reset_admin_password()
 
-    page.login(credentials)
+    login_page.login(credentials)
     page.main_area.check_page_title("Main dashboard")
 
 

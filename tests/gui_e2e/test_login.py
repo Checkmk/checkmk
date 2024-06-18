@@ -38,5 +38,5 @@ def test_redirected_to_desired_page(
     cmk_page = url.replace(r"<SITE_ID>", test_site.id)
     visit_url = urljoin(test_site.internal_url, cmk_page)
 
-    login_page = LoginPage(page, visit_url, mobile_device)
+    login_page = LoginPage(page, visit_url, mobile_device=mobile_device)
     login_page.login(credentials)

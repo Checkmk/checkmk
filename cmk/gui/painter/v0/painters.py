@@ -4289,7 +4289,12 @@ class PainterLogDetailsHistory(Painter):
 
     @property
     def columns(self) -> list[ColumnName]:
-        return ["log_long_plugin_output"]
+        return [
+            "log_long_plugin_output",
+            "service_check_command",
+            "service_custom_variables",
+            "host_custom_variables",
+        ]
 
     @property
     def parameters(self) -> Dictionary:
@@ -4316,14 +4321,51 @@ class PainterLogDetailsHistory(Painter):
 
         max_len = params.get("max_len", 0)
         long_output = row["log_long_plugin_output"]
+        long_output_len = len(long_output)
 
         if 0 < max_len < len(long_output):
             long_output = long_output[:max_len] + "..."
 
-        content = format_plugin_output(long_output, row)
+        # See werk #15523.
+        is_ps_check = row["service_check_command"] == "check_mk-ps"
+        # We can only display tables if they are complete.
+        displayable = long_output.endswith("</table>")
+        # Only hand over relevant row to ensure correct escaping options in
+        # case of ps_check. Otherwise "ESCAPE_PLUGIN_OUTPUT" would be used in
+        # format_plugin_output()
+        row_to_format = (
+            {"log_long_plugin_output": long_output} if is_ps_check and not displayable else row
+        )
+        content = format_plugin_output(
+            output=long_output,
+            row=row_to_format,
+        )
+
+        # has to be placed after format_plugin_output() to keep links save from
+        # escaping
+        custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
+        escape_plugin_output = custom_vars.get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
+        if long_output_len > max_len and escape_plugin_output and not displayable:
+            setting_url = makeuri_contextless(
+                request,
+                [
+                    ("mode", "edit_configvar"),
+                    ("varname", "max_long_output_size"),
+                ],
+                filename="wato.py",
+            )
+            content.value = (
+                "HTML output can not be rendered because of truncated data. "
+                f'{html.render_a("(%s)" % _("Increase limit for future entries"), href=setting_url)}'
+                f'{html.render_b("WARN", class_="stmark state1")}<br>'
+                f"{content.value}"
+            )
 
         # In long output we get newlines which should also be displayed in the GUI
         content.value = content.value.replace("\\n", "<br>").replace("\n", "<br>")
+
+        if is_ps_check:
+            content.value = content.value.replace("&bsol%3B", "\\")
 
         return paint_stalified(row, content)
 

@@ -327,19 +327,7 @@ class TreeRenderer:
             header += " " + HTMLWriter.render_span(f"({key_info})", css="muted_text")
         return header
 
-    def _show_attributes(
-        self,
-        attributes: ImmutableAttributes | ImmutableDeltaAttributes,
-        hint: NodeDisplayHint,
-    ) -> None:
-        sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem] = (
-            _sort_pairs(attributes, hint, self._theme.detect_icon_path("svc_problems", "icon_"))
-            if isinstance(attributes, ImmutableAttributes)
-            else _sort_delta_pairs(attributes, hint)
-        )
-        if not sorted_pairs:
-            return
-
+    def _show_attributes(self, sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]) -> None:
         html.open_table()
         for item in sorted_pairs:
             html.open_tr()
@@ -354,19 +342,11 @@ class TreeRenderer:
 
     def _show_table(
         self,
-        table: ImmutableTable | ImmutableDeltaTable,
-        hint: NodeDisplayHint,
+        table_view_name: str,
+        columns: Sequence[Column],
+        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]],
     ) -> None:
-        columns = _make_columns({k for r in table.rows for k in r}, table.key_columns, hint)
-        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
-            _sort_rows(table, columns, self._theme.detect_icon_path("svc_problems", "icon_"))
-            if isinstance(table, ImmutableTable)
-            else _sort_delta_rows(table, columns)
-        )
-        if not sorted_rows:
-            return
-
-        if hint.table_view_name:
+        if table_view_name:
             # Link to Multisite view with exactly this table
             html.div(
                 HTMLWriter.render_a(
@@ -376,7 +356,7 @@ class TreeRenderer:
                         [
                             (
                                 "view_name",
-                                make_table_view_name_of_host(hint.table_view_name),
+                                make_table_view_name_of_host(table_view_name),
                             ),
                             ("host", self._host_name),
                         ],
@@ -438,9 +418,27 @@ class TreeRenderer:
 
     def show(self, tree: ImmutableTree | ImmutableDeltaTree, tree_id: str = "") -> None:
         hint = self._hints.get_node_hint(tree.path)
-        self._show_attributes(tree.attributes, hint)
-        self._show_table(tree.table, hint)
-        for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
-            if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
-                # sorted tries to find the common base class, which is object :(
-                self._show_node(node, tree_id)
+
+        columns = _make_columns(
+            {k for r in tree.table.rows for k in r}, tree.table.key_columns, hint
+        )
+        sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
+        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
+        match tree:
+            case ImmutableTree():
+                sorted_pairs = _sort_pairs(
+                    tree.attributes, hint, self._theme.detect_icon_path("svc_problems", "icon_")
+                )
+                sorted_rows = _sort_rows(
+                    tree.table, columns, self._theme.detect_icon_path("svc_problems", "icon_")
+                )
+            case ImmutableDeltaTree():
+                sorted_pairs = _sort_delta_pairs(tree.attributes, hint)
+                sorted_rows = _sort_delta_rows(tree.table, columns)
+
+        if sorted_pairs:
+            self._show_attributes(sorted_pairs)
+        if sorted_rows:
+            self._show_table(hint.table_view_name, columns, sorted_rows)
+        for name in sorted(tree.nodes_by_name):
+            self._show_node(tree.nodes_by_name[name], tree_id)

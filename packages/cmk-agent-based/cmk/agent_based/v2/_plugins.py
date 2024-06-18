@@ -68,7 +68,7 @@ class AgentSection(Generic[_Section]):
       host_label_function: The function responsible for extracting host labels from the parsed data.
                            For unparameterized host label functions, it must accept exactly one
                            argument by the name 'section'.
-                           When used in conjuction with a ruleset, it must accept two arguments:
+                           When used in conjunction with a ruleset, it must accept two arguments:
                            'params' and 'section'.
                            The type of 'params' depends on the ruleset type. It will be a single
                            mapping for `MERGED` rulesets and a sequence of mappings for `ALL`
@@ -216,7 +216,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
       host_label_function: The function responsible for extracting host labels from the parsed data.
                            For unparameterized host label functions, it must accept exactly one
                            argument by the name 'section'.
-                           When used in conjuction with a ruleset, it must accept two arguments:
+                           When used in conjunction with a ruleset, it must accept two arguments:
                            'params' and 'section'.
                            The type of 'params' depends on the ruleset type. It will be a single
                            mapping for `MERGED` rulesets and a sequence of mappings for `ALL`

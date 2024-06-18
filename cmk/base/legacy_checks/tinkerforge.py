@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,no-untyped-def"
+# mypy: disable-error-code="var-annotated"
 
 import time
+from collections.abc import Sequence
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
@@ -106,7 +107,10 @@ def check_tinkerforge_humidity(item, params, parsed):
 
 
 def check_tinkerforge_motion(item, params, parsed):
-    def test_in_period(time_tuple, periods) -> bool:
+    def test_in_period(
+        time_tuple: tuple[int, int],
+        periods: Sequence[tuple[tuple[int, int], tuple[int, int]]],
+    ) -> bool:
         time_mins = time_tuple[0] * 60 + time_tuple[1]
         for per in periods:
             per_mins_low = per[0][0] * 60 + per[0][1]

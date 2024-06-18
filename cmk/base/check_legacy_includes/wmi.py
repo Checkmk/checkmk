@@ -39,11 +39,11 @@ class WMITableLegacy(WMITable):
     Needed since WMITable.get raises IgnoreResultsError
     """
 
-    def get(  # type: ignore[no-untyped-def]
+    def get(
         self,
         row: str | int,
         column: str | int,
-        silently_skip_timed_out=False,
+        silently_skip_timed_out: bool = False,
     ) -> str | None:
         if not silently_skip_timed_out and self.timed_out:
             raise IgnoreResultsError("WMI query timed out")
@@ -97,12 +97,12 @@ def wmi_filter_global_only(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
+def inventory_wmi_table_instances(
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, str | int], bool] | None = None,
     levels: Mapping[str, object] | None = None,
-):
+) -> list[tuple]:
     if required_tables is None:
         required_tables = tables
 
@@ -124,11 +124,11 @@ def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
     return [(row, levels or {}) for row in potential_instances if filt is None or filt(tables, row)]
 
 
-def inventory_wmi_table_total(  # type: ignore[no-untyped-def]
+def inventory_wmi_table_total(
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, None], bool] | None = None,
-):
+) -> list[tuple[None, dict]]:
     if required_tables is None:
         required_tables = tables
 
@@ -170,13 +170,13 @@ def get_levels_quadruple(params: tuple | dict[str, tuple] | None) -> tuple | Non
     return upper + lower
 
 
-def wmi_yield_raw_persec(  # type: ignore[no-untyped-def]
+def wmi_yield_raw_persec(
     table: WMITable,
     row: str | int,
     column: str | int,
     infoname: str | None,
     perfvar: str | None,
-    levels=None,
+    levels: tuple | dict[str, tuple] | None = None,
 ) -> CheckResult:
     if table is None:
         # This case may be when a check was discovered with a table which subsequently disappeared again.
@@ -208,13 +208,13 @@ def wmi_yield_raw_persec(  # type: ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_counter(  # type: ignore[no-untyped-def]
+def wmi_yield_raw_counter(
     table: WMITable,
     row: str | int,
     column: str | int,
     infoname: str | None,
     perfvar: str | None,
-    levels=None,
+    levels: tuple | dict[str, tuple] | None = None,
     unit: str = "",
 ) -> CheckResult:
     if row == "":

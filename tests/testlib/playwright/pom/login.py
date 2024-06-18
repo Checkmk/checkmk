@@ -29,7 +29,6 @@ class LoginPage(CmkPage):
         self._logged_in: bool = False
         super().__init__(page, timeout_assertions, timeout_navigation)
 
-    @override
     def navigate(self) -> str:
         """Navigate to login page, like a Checkmk GUI user.
 

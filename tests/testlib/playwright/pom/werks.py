@@ -3,15 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import override
-
 from tests.testlib.playwright.pom.page import CmkPage
 
 
 class Werks(CmkPage):
     page_title: str = "Change log (Werks)"
 
-    @override
     def navigate(self) -> str:
         self.click_and_wait(self.main_menu.help_werks, navigate=True)
         self.main_area.check_page_title(self.page_title)

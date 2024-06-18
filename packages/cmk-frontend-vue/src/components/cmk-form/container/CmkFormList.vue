@@ -124,8 +124,8 @@ function setup_drag_handler() {
     .on('end.drag', () => drag_end())
   const elements = select(table_ref.value)
     .selectChildren<HTMLTableRowElement, null>('tr')
-    .selectChildren<HTMLTableCellElement, null>('td.' + class_vlof_buttons)
-    .select<HTMLImageElement>('img.' + class_element_dragger)
+    .selectChildren<HTMLTableCellElement, null>(`td.${class_vlof_buttons}`)
+    .select<HTMLImageElement>(`img.${class_element_dragger}`)
   elements.call(drag_handler)
 }
 

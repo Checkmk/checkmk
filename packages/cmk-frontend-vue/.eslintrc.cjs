@@ -14,6 +14,8 @@ module.exports = {
     ecmaVersion: 'latest'
   },
   rules: {
-    curly: 'error'
+    curly: 'error',
+    'prefer-template': 'error',
+    'vue/prefer-template': 'error',
   }
 }

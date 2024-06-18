@@ -18,8 +18,8 @@
     "not op_mini all"
   ],
   "scripts": {
-    "build": "MANAGED=no webpack",
-    "build-watch": "MANAGED=no npx webpack --mode development --watch",
+    "build": "webpack",
+    "build-watch": "npx webpack --mode development --watch",
     "test": "python3 scripts/test_scss_content.py",
     "test-eslint": "eslint --max-warnings 0 --no-color './src/js/**/*.{j,t}s'",
     "test-tsc": "tsc",

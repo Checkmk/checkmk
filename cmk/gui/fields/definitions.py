@@ -12,7 +12,7 @@ import re
 import typing
 import uuid
 import warnings
-from collections.abc import Mapping
+from collections.abc import Callable, Collection, Mapping
 from datetime import datetime, timezone
 from typing import Any, Literal
 
@@ -98,7 +98,7 @@ class PythonString(base.String):
 
     """
 
-    def _serialize(self, value, attr, obj, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
+    def _serialize(self, value: str, attr: object, obj: object, **kwargs: Any) -> str:
         return repr(value)
 
     def _deserialize(self, value, attr, data, **kwargs):
@@ -215,7 +215,7 @@ class FolderField(base.String):
                 raise self.make_error("not_found", folder_id=value)
         return None
 
-    def _serialize(self, value, attr, obj, **kwargs) -> str:  # type: ignore[no-untyped-def]
+    def _serialize(self, value: str, attr: object, obj: object, **kwargs: Any) -> str:
         if isinstance(value, str):
             if not value.startswith("/"):
                 value = f"/{value}"
@@ -476,12 +476,12 @@ class _ListOfColumns(base.List):
         "unknown_column": "Unknown default column: {table_name}.{column_name}",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
         cls_or_instance: _fields.Field | type,
         table: type[Table],
         mandatory: list[str] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(cls_or_instance, **kwargs)
         self.table = table
@@ -552,19 +552,19 @@ class HostField(base.String):
         "invalid_name": "The provided name for host {host_name!r} is invalid: {invalid_reason!r}",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        example="example.com",
-        pattern=HOST_NAME_REGEXP,
-        required=True,
-        validate=None,
+        example: str = "example.com",
+        pattern: str = HOST_NAME_REGEXP,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
         should_exist: bool | None = True,
         should_be_monitored: bool | None = None,
         should_be_cluster: bool | None = None,
         skip_validation_on_view: bool = False,
         permission_type: Literal["setup_write", "setup_read", "monitor"] = "monitor",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         if not should_exist and should_be_cluster is not None:
             raise ValueError("Can't be missing and checking for cluster status!")
 
@@ -847,9 +847,7 @@ class CustomHostAttributes(ValueTypedDictSchema):
     )
 
     @post_load
-    def _valid(  # type: ignore[no-untyped-def]
-        self, data: dict[str, Any], **kwargs
-    ) -> dict[str, Any]:
+    def _valid(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         # NOTE
         # If an attribute gets deleted AFTER it has already been set to a host or a folder,
         # then this would break here. We therefore can't validate outbound data as thoroughly
@@ -929,9 +927,7 @@ class TagGroupAttributes(ValueTypedDictSchema):
         return allowed_ids
 
     @pre_dump
-    def _pre_dump(  # type: ignore[no-untyped-def]
-        self, data: dict[str, str], **kwargs
-    ) -> dict[str, str]:
+    def _pre_dump(self, data: dict[str, str], **kwargs: Any) -> dict[str, str]:
         rv: dict[str, str] = {}
         for key, value in data.items():
             allowed_ids = self._validate_tag_group(key)
@@ -944,9 +940,7 @@ class TagGroupAttributes(ValueTypedDictSchema):
         return rv
 
     @post_load
-    def _post_load(  # type: ignore[no-untyped-def]
-        self, data: dict[str, str], **kwargs
-    ) -> dict[str, str]:
+    def _post_load(self, data: dict[str, str], **kwargs: Any) -> dict[str, str]:
         rv: dict[str, str] = {}
         for key, value in data.items():
             allowed_ids = self._validate_tag_group(key)
@@ -1073,16 +1067,16 @@ class _CustomerField(base.String):
         "should_not_exist": "Customer {customer!r} already exists.",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        example="provider",
-        description="By specifying a customer, you configure on which sites the user object will be "
+        example: str = "provider",
+        description: str = "By specifying a customer, you configure on which sites the user object will be "
         "available. 'global' will make the object available on all sites.",
-        required=True,
-        validate=None,
-        allow_global=True,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
+        allow_global: bool = True,
         should_exist: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ):
         self._should_exist = should_exist
         self._allow_global = allow_global
@@ -1131,15 +1125,15 @@ class GroupField(base.String):
         "invalid_name": "The provided name {name!r} is invalid",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        group_type,
-        example,
-        required=True,
-        validate=None,
+        group_type: Literal["host", "service", "contact"],
+        example: str,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
         should_exist: bool = True,
         should_be_monitored: bool | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         self._group_type = group_type
         self._should_exist = should_exist
@@ -1183,13 +1177,13 @@ class PasswordIdent(base.String):
         "contains_colon": "Identifier {name!r} contains a colon.",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        example,
-        required=True,
-        validate=None,
+        example: str,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
         should_exist: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ):
         self._should_exist = should_exist
         super().__init__(
@@ -1199,7 +1193,7 @@ class PasswordIdent(base.String):
             **kwargs,
         )
 
-    def _validate(self, value: str):  # type: ignore[no-untyped-def]
+    def _validate(self, value: str) -> None:
         super()._validate(value)
 
         pattern: re.Pattern[str] = regex(REGEX_ID, re.ASCII)
@@ -1361,8 +1355,8 @@ class X509ReqPEMFieldUUID(base.String):
         except ValueError:
             raise self.make_error("cn_no_uuid", cn=cn)
 
-    def _deserialize(  # type: ignore[no-untyped-def]
-        self, value, attr, data, **kwargs
+    def _deserialize(
+        self, value: object, attr: object, data: object, **kwargs: Any
     ) -> CertificateSigningRequest:
         try:
             return load_pem_x509_csr(
@@ -1387,26 +1381,26 @@ class UserRoleID(base.String):
         "should_be_builtin": "The role should be a builtin role but it's not: {role!r}",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
         presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
         userrole_type: Literal["should_be_custom", "should_be_builtin", "ignore"] = "ignore",
-        required=False,
-        **kwargs,
+        required: bool = False,
+        **kwargs: Any,
     ) -> None:
         super().__init__(required=required, **kwargs)
         self.presence = presence
         self.userrole_type = userrole_type
 
-    def _validate(self, value) -> None:  # type: ignore[no-untyped-def]
+    def _validate(self, value: str) -> None:
         super()._validate(value)
 
         if self.presence == "should_not_exist":
-            if userroles.role_exists(value):
+            if userroles.role_exists(userroles.RoleID(value)):
                 raise self.make_error("should_not_exist", role=value)
 
         elif self.presence == "should_exist":
-            if not userroles.role_exists(value):
+            if not userroles.role_exists(userroles.RoleID(value)):
                 raise self.make_error("should_exist", role=value)
 
         if self.userrole_type == "should_be_builtin":
@@ -1423,8 +1417,11 @@ class PermissionField(base.String):
         "invalid_permission": "The specified permission name doesn't exist: {value!r}",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
-        self, required=True, validate=None, **kwargs
+    def __init__(
+        self,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
+        **kwargs: Any,
     ) -> None:
         super().__init__(
             example="general.edit_profile",
@@ -1434,7 +1431,7 @@ class PermissionField(base.String):
             **kwargs,
         )
 
-    def _validate(self, value) -> None:  # type: ignore[no-untyped-def]
+    def _validate(self, value: str) -> None:
         super()._validate(value)
         if value not in permission_registry:
             raise self.make_error("invalid_permission", value=value)
@@ -1447,13 +1444,13 @@ class Username(base.String):
         "invalid_name": "Username {username!r} is not a valid checkmk username",
     }
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        example,
-        required=True,
-        validate=None,
+        example: str,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
         should_exist: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ):
         self._should_exist = should_exist
         super().__init__(
@@ -1517,7 +1514,7 @@ class FolderIDField(FolderField):
         super().__init__(**kwargs)
         self.presence = presence
 
-    def _deserialize(self, value: str, attr, data, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
+    def _deserialize(self, value: str, attr: object, data: object, **kwargs: Any) -> str | None:
         folder: Folder | None = None
         try:
             folder = super()._deserialize(value, attr, data)
@@ -1533,7 +1530,7 @@ class FolderIDField(FolderField):
 
         return folder.path()
 
-    def _serialize(self, value: str, attr, obj, **kwargs) -> str:  # type: ignore[no-untyped-def]
+    def _serialize(self, value: str, attr: object, obj: object, **kwargs: Any) -> str:
         folder_path = super()._serialize(value, attr, obj, **kwargs)
         return folder_path.replace("/", "~")
 

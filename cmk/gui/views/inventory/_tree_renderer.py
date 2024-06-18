@@ -82,20 +82,31 @@ class SDItem(NamedTuple):
     key: SDKey
     value: SDValue
     retention_interval: RetentionInterval | None
+    paint_function: PaintFunction
 
 
-def _sort_pairs(attributes: ImmutableAttributes, key_order: Sequence[SDKey]) -> Sequence[SDItem]:
-    sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
+def _sort_pairs(attributes: ImmutableAttributes, hint: NodeDisplayHint) -> Sequence[SDItem]:
+    sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
     return [
-        SDItem(k, attributes.pairs[k], attributes.retentions.get(k))
+        SDItem(
+            k,
+            attributes.pairs[k],
+            attributes.retentions.get(k),
+            hint.get_attribute_hint(k).paint_function,
+        )
         for k in sorted_keys
         if k in attributes.pairs
     ]
 
 
-def _sort_rows(table: ImmutableTable, columns: Iterable[SDKey]) -> Sequence[Sequence[SDItem]]:
+def _sort_rows(
+    table: ImmutableTable, columns: OrderedDict[SDKey, Column]
+) -> Sequence[Sequence[SDItem]]:
     def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
-        return [SDItem(c, row.get(c), table.retentions.get(ident, {}).get(c)) for c in columns]
+        return [
+            SDItem(k, row.get(k), table.retentions.get(ident, {}).get(k), c.paint_function)
+            for k, c in columns.items()
+        ]
 
     min_type = _MinType()
 
@@ -113,27 +124,33 @@ class _SDDeltaItem(NamedTuple):
     key: SDKey
     old: SDValue
     new: SDValue
+    paint_function: PaintFunction
 
 
 def _sort_delta_pairs(
-    attributes: ImmutableDeltaAttributes, key_order: Sequence[SDKey]
+    attributes: ImmutableDeltaAttributes, hint: NodeDisplayHint
 ) -> Sequence[_SDDeltaItem]:
-    sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
+    sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
     return [
-        _SDDeltaItem(k, attributes.pairs[k].old, attributes.pairs[k].new)
+        _SDDeltaItem(
+            k,
+            attributes.pairs[k].old,
+            attributes.pairs[k].new,
+            hint.get_attribute_hint(k).paint_function,
+        )
         for k in sorted_keys
         if k in attributes.pairs
     ]
 
 
 def _sort_delta_rows(
-    table: ImmutableDeltaTable, columns: Iterable[SDKey]
+    table: ImmutableDeltaTable, columns: OrderedDict[SDKey, Column]
 ) -> Sequence[Sequence[_SDDeltaItem]]:
     def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
         return [
-            _SDDeltaItem(c, v.old, v.new)
-            for c in columns
-            for v in (row.get(c) or SDDeltaValue(None, None),)
+            _SDDeltaItem(k, v.old, v.new, c.paint_function)
+            for k, c in columns.items()
+            for v in (row.get(k) or SDDeltaValue(None, None),)
         ]
 
     min_type = _MinType()
@@ -151,11 +168,9 @@ def _sort_delta_rows(
     ]
 
 
-def compute_cell_spec(
-    item: SDItem, paint_function: PaintFunction, icon_path_svc_problems: str
-) -> tuple[str, HTML]:
+def compute_cell_spec(item: SDItem, icon_path_svc_problems: str) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
-    tdclass, code = paint_function(item.value)
+    tdclass, code = item.paint_function(item.value)
     html_value = HTML.with_escaping(code)
     if (
         not html_value
@@ -194,19 +209,19 @@ def compute_cell_spec(
     return tdclass, html_value
 
 
-def _compute_delta_cell_spec(item: _SDDeltaItem, paint_function: PaintFunction) -> tuple[str, HTML]:
+def _compute_delta_cell_spec(item: _SDDeltaItem) -> tuple[str, HTML]:
     if item.old is None and item.new is not None:
-        tdclass, rendered_value = paint_function(item.new)
+        tdclass, rendered_value = item.paint_function(item.new)
         return tdclass, HTMLWriter.render_span(rendered_value, css="invnew")
     if item.old is not None and item.new is None:
-        tdclass, rendered_value = paint_function(item.old)
+        tdclass, rendered_value = item.paint_function(item.old)
         return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
     if item.old == item.new:
-        tdclass, rendered_value = paint_function(item.old)
+        tdclass, rendered_value = item.paint_function(item.old)
         return tdclass, HTML.with_escaping(rendered_value)
     if item.old is not None and item.new is not None:
-        tdclass, rendered_old_value = paint_function(item.old)
-        tdclass, rendered_new_value = paint_function(item.new)
+        tdclass, rendered_old_value = item.paint_function(item.old)
+        tdclass, rendered_new_value = item.paint_function(item.new)
         return (
             tdclass,
             HTMLWriter.render_span(rendered_old_value, css="invold")
@@ -304,9 +319,9 @@ class TreeRenderer:
         hint: NodeDisplayHint,
     ) -> None:
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem] = (
-            _sort_pairs(attributes, list(hint.attributes))
+            _sort_pairs(attributes, hint)
             if isinstance(attributes, ImmutableAttributes)
-            else _sort_delta_pairs(attributes, list(hint.attributes))
+            else _sort_delta_pairs(attributes, hint)
         )
         if not sorted_pairs:
             return
@@ -320,11 +335,10 @@ class TreeRenderer:
             if isinstance(item, SDItem):
                 _tdclass, rendered_value = compute_cell_spec(
                     item,
-                    attr_hint.paint_function,
                     self._theme.detect_icon_path("svc_problems", "icon_"),
                 )
             else:
-                _tdclass, rendered_value = _compute_delta_cell_spec(item, attr_hint.paint_function)
+                _tdclass, rendered_value = _compute_delta_cell_spec(item)
             html.write_html(rendered_value)
             html.close_td()
             html.close_tr()
@@ -378,14 +392,10 @@ class TreeRenderer:
                 if isinstance(item, SDItem):
                     tdclass, rendered_value = compute_cell_spec(
                         item,
-                        columns[item.key].paint_function,
                         self._theme.detect_icon_path("svc_problems", "icon_"),
                     )
                 else:
-                    tdclass, rendered_value = _compute_delta_cell_spec(
-                        item,
-                        columns[item.key].paint_function,
-                    )
+                    tdclass, rendered_value = _compute_delta_cell_spec(item)
                 html.open_td(class_=tdclass)
                 html.write_html(rendered_value)
                 html.close_td()

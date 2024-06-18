@@ -19,7 +19,8 @@ from cmk.utils.structured_data import (
     SDPath,
 )
 
-from cmk.gui.views.inventory._display_hints import NodeDisplayHint
+from cmk.gui.views.inventory._display_hints import AttributeDisplayHint, NodeDisplayHint
+from cmk.gui.views.inventory._paint_functions import inv_paint_generic
 from cmk.gui.views.inventory._tree_renderer import (
     _replace_title_placeholders,
     _SDDeltaItem,
@@ -27,6 +28,7 @@ from cmk.gui.views.inventory._tree_renderer import (
     _sort_delta_rows,
     _sort_pairs,
     _sort_rows,
+    Column,
     SDItem,
 )
 
@@ -57,18 +59,20 @@ from cmk.gui.views.inventory._tree_renderer import (
             ),
             [
                 [
-                    SDItem("sid", "SID 1", None),
-                    SDItem("changed", None, None),
-                    SDItem("foo", None, None),
-                    SDItem("flashback", "Flashback 1", None),
-                    SDItem("other", "Other 1", None),
+                    SDItem("sid", "SID 1", None, inv_paint_generic),
+                    SDItem("changed", None, None, inv_paint_generic),
+                    SDItem("foo", None, None, inv_paint_generic),
+                    SDItem("flashback", "Flashback 1", None, inv_paint_generic),
+                    SDItem("other", "Other 1", None, inv_paint_generic),
                 ],
                 [
-                    SDItem("sid", "SID 2", RetentionInterval(1, 2, 3, "previous")),
-                    SDItem("changed", None, None),
-                    SDItem("foo", None, None),
-                    SDItem("flashback", "Flashback 2", None),
-                    SDItem("other", "Other 2", None),
+                    SDItem(
+                        "sid", "SID 2", RetentionInterval(1, 2, 3, "previous"), inv_paint_generic
+                    ),
+                    SDItem("changed", None, None, inv_paint_generic),
+                    SDItem("foo", None, None, inv_paint_generic),
+                    SDItem("flashback", "Flashback 2", None, inv_paint_generic),
+                    SDItem("other", "Other 2", None, inv_paint_generic),
                 ],
             ],
         ),
@@ -78,13 +82,14 @@ def test_sort_table_rows_displayhint(
     table: ImmutableTable,
     expected: Sequence[Sequence[SDItem]],
 ) -> None:
-    assert (
-        _sort_rows(
-            table,
-            [SDKey("sid"), SDKey("changed"), SDKey("foo"), SDKey("flashback"), SDKey("other")],
-        )
-        == expected
+    columns: OrderedDict[SDKey, Column] = OrderedDict(
+        sid=Column("", inv_paint_generic, ""),
+        changed=Column("", inv_paint_generic, ""),
+        foo=Column("", inv_paint_generic, ""),
+        flashback=Column("", inv_paint_generic, ""),
+        other=Column("", inv_paint_generic, ""),
     )
+    assert _sort_rows(table, columns) == expected
 
 
 @pytest.mark.parametrize(
@@ -117,18 +122,18 @@ def test_sort_table_rows_displayhint(
             ),
             [
                 [
-                    _SDDeltaItem(SDKey("sid"), "SID 1", None),
-                    _SDDeltaItem(SDKey("changed"), "Changed 11", "Changed 12"),
-                    _SDDeltaItem(SDKey("foo"), None, None),
-                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 1"),
-                    _SDDeltaItem(SDKey("other"), "Other 1", "Other 1"),
+                    _SDDeltaItem(SDKey("sid"), "SID 1", None, inv_paint_generic),
+                    _SDDeltaItem(SDKey("changed"), "Changed 11", "Changed 12", inv_paint_generic),
+                    _SDDeltaItem(SDKey("foo"), None, None, inv_paint_generic),
+                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 1", inv_paint_generic),
+                    _SDDeltaItem(SDKey("other"), "Other 1", "Other 1", inv_paint_generic),
                 ],
                 [
-                    _SDDeltaItem(SDKey("sid"), "SID 2", None),
-                    _SDDeltaItem(SDKey("changed"), "Changed 21", "Changed 22"),
-                    _SDDeltaItem(SDKey("foo"), None, None),
-                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 2"),
-                    _SDDeltaItem(SDKey("other"), "Other 2", "Other 2"),
+                    _SDDeltaItem(SDKey("sid"), "SID 2", None, inv_paint_generic),
+                    _SDDeltaItem(SDKey("changed"), "Changed 21", "Changed 22", inv_paint_generic),
+                    _SDDeltaItem(SDKey("foo"), None, None, inv_paint_generic),
+                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 2", inv_paint_generic),
+                    _SDDeltaItem(SDKey("other"), "Other 2", "Other 2", inv_paint_generic),
                 ],
             ],
         ),
@@ -138,13 +143,14 @@ def test_sort_deltatable_rows_displayhint(
     delta_table: ImmutableDeltaTable,
     expected: Sequence[Sequence[_SDDeltaItem]],
 ) -> None:
-    assert (
-        _sort_delta_rows(
-            delta_table,
-            [SDKey("sid"), SDKey("changed"), SDKey("foo"), SDKey("flashback"), SDKey("other")],
-        )
-        == expected
+    columns: OrderedDict[SDKey, Column] = OrderedDict(
+        sid=Column("", inv_paint_generic, ""),
+        changed=Column("", inv_paint_generic, ""),
+        foo=Column("", inv_paint_generic, ""),
+        flashback=Column("", inv_paint_generic, ""),
+        other=Column("", inv_paint_generic, ""),
     )
+    assert _sort_delta_rows(delta_table, columns) == expected
 
 
 @pytest.mark.parametrize(
@@ -162,10 +168,10 @@ def test_sort_deltatable_rows_displayhint(
                 retentions={SDKey("c"): RetentionInterval(1, 2, 3, "previous")},
             ),
             [
-                SDItem(SDKey("a"), "A", None),
-                SDItem(SDKey("b"), "B", None),
-                SDItem(SDKey("d"), "D", None),
-                SDItem(SDKey("c"), "C", RetentionInterval(1, 2, 3, "previous")),
+                SDItem(SDKey("a"), "A", None, inv_paint_generic),
+                SDItem(SDKey("b"), "B", None, inv_paint_generic),
+                SDItem(SDKey("d"), "D", None, inv_paint_generic),
+                SDItem(SDKey("c"), "C", RetentionInterval(1, 2, 3, "previous"), inv_paint_generic),
             ],
         ),
     ],
@@ -174,7 +180,23 @@ def test_sort_attributes_pairs_displayhint(
     attributes: ImmutableAttributes,
     expected: Sequence[SDItem],
 ) -> None:
-    assert _sort_pairs(attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")]) == expected
+    hint = NodeDisplayHint(
+        path=(),
+        icon="",
+        title="",
+        short_title="",
+        long_title="",
+        attributes=OrderedDict(
+            a=AttributeDisplayHint("A", "", "", inv_paint_generic, lambda r, l: 0, "", False),
+            b=AttributeDisplayHint("B", "", "", inv_paint_generic, lambda r, l: 0, "", False),
+            d=AttributeDisplayHint("D", "", "", inv_paint_generic, lambda r, l: 0, "", False),
+            c=AttributeDisplayHint("C", "", "", inv_paint_generic, lambda r, l: 0, "", False),
+        ),
+        columns=OrderedDict(),
+        table_view_name="",
+        table_is_show_more=True,
+    )
+    assert _sort_pairs(attributes, hint) == expected
 
 
 @pytest.mark.parametrize(
@@ -191,10 +213,10 @@ def test_sort_attributes_pairs_displayhint(
                 }
             ),
             [
-                _SDDeltaItem(SDKey("a"), "A1", "A2"),
-                _SDDeltaItem(SDKey("b"), "B", None),
-                _SDDeltaItem(SDKey("d"), None, "D"),
-                _SDDeltaItem(SDKey("c"), "C", "C"),
+                _SDDeltaItem(SDKey("a"), "A1", "A2", inv_paint_generic),
+                _SDDeltaItem(SDKey("b"), "B", None, inv_paint_generic),
+                _SDDeltaItem(SDKey("d"), None, "D", inv_paint_generic),
+                _SDDeltaItem(SDKey("c"), "C", "C", inv_paint_generic),
             ],
         ),
     ],
@@ -203,10 +225,23 @@ def test_sort_delta_attributes_pairs_displayhint(
     delta_attributes: ImmutableDeltaAttributes,
     expected: Sequence[_SDDeltaItem],
 ) -> None:
-    assert (
-        _sort_delta_pairs(delta_attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")])
-        == expected
+    hint = NodeDisplayHint(
+        path=(),
+        icon="",
+        title="",
+        short_title="",
+        long_title="",
+        attributes=OrderedDict(
+            a=AttributeDisplayHint("A", "", "", inv_paint_generic, lambda r, l: 0, "", False),
+            b=AttributeDisplayHint("B", "", "", inv_paint_generic, lambda r, l: 0, "", False),
+            d=AttributeDisplayHint("D", "", "", inv_paint_generic, lambda r, l: 0, "", False),
+            c=AttributeDisplayHint("C", "", "", inv_paint_generic, lambda r, l: 0, "", False),
+        ),
+        columns=OrderedDict(),
+        table_view_name="",
+        table_is_show_more=True,
     )
+    assert _sort_delta_pairs(delta_attributes, hint) == expected
 
 
 @pytest.mark.parametrize(

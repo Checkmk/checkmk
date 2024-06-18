@@ -119,15 +119,8 @@ def main() {
                 )]);
 
                 show_duration("archiveArtifacts") {
-                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
-                }
-
-                // TODO (TBC): Remove me (see https://tribe29.slack.com/archives/C01EA6ZBG58/p1718360593378499)
-                try {
-                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'packages/**/*CMakeOutput.log*');
-                }
-                catch (e) {
-                    println("Failed to archive CMakeOutput: ${e}");
+                    // TODO (TBC): Remove archiving the CMakeOutput.log (see https://tribe29.slack.com/archives/C01EA6ZBG58/p1718360593378499)
+                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*,packages/**/*CMakeOutput.log*');
                 }
             }
         }

@@ -183,24 +183,6 @@ def patch_folders(edition) {
     }
 }
 
-def patch_themes(EDITION) {
-    def THEME_LIST = ["facelift", "modern-dark"]
-    switch(EDITION) {
-        case 'raw':
-            // Workaround since scss does not support conditional includes
-            THEME_LIST.each { THEME ->
-                sh """
-                    echo '@mixin graphs_cee {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_graphs_cee.scss
-                    echo '@mixin reporting {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_reporting.scss
-                    echo '@mixin ntop {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_ntop.scss
-                    echo '@mixin license_usage {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_license_usage.scss
-                    echo '@mixin robotmk {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_robotmk.scss
-                """
-            }
-            break
-    }
-}
-
 def patch_demo(EDITION) {
     if (EDITION == 'free') {
         sh('''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make''');
@@ -214,7 +196,6 @@ def set_version(cmk_version) {
 def configure_checkout_folder(edition, cmk_version) {
     assert edition in REPO_PATCH_RULES: "edition=${edition} not known";
     patch_folders(edition);
-    patch_themes(edition);
     patch_demo(edition);
     set_version(cmk_version);
 }

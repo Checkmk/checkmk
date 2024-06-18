@@ -1,0 +1,422 @@
+@charset "UTF-8";
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+div.ntop_interface_quickstats {
+  margin: 0.5rem;
+
+  td {
+    &.ifid_chooser {
+      background: $color-table-border;
+      border-radius: 0.25rem;
+    }
+
+    a {
+      padding: 6px;
+      text-decoration: none;
+      border-radius: 0.25rem;
+
+      &.engaged_alerts,
+      &.alerted_flows {
+        background-color: $color-state-2-background;
+      }
+
+      &.num_local_hosts {
+        color: $black;
+        background: $color-state-success-background;
+      }
+
+      &.throughput_bps,
+      &.num_remote_hosts,
+      &.num_devices,
+      &.num_flows {
+        background: $color-table-border;
+      }
+
+      img {
+        margin-bottom: 2px;
+      }
+    }
+
+    &.ifid_chooser img,
+    a.num_remote_hosts img {
+      filter: $dark-image-invert;
+    }
+
+    a.alerted_flows,
+    a.engaged_alerts {
+      color: $white;
+    }
+  }
+}
+
+div.ntop {
+  .dc-chart {
+    rect.bar,
+    rect.bar {
+      fill: $darkgrey;
+    }
+  }
+
+  .brush {
+    rect.selection {
+      fill: $hostdown;
+      fill-opacity: 0.6;
+    }
+  }
+
+  img.icon.rotate {
+    transform: rotate(180deg);
+  }
+
+  div.loading_img {
+    display: block;
+    height: 25px;
+  }
+
+  a.ntop_link {
+    color: $orange-2 !important;
+  }
+
+  table.table,
+  .ntop_host table {
+    @extend .data;
+
+    tr {
+      @extend .data;
+
+      &:not(.header) {
+        &:nth-child(even) {
+          background: $odd-tr-bg-color;
+        }
+
+        &:nth-child(odd) {
+          background: $even-tr-bg-color;
+        }
+      }
+    }
+
+    th:first-child {
+      padding-left: 6px;
+    }
+
+    td.number {
+      width: 100px;
+      text-align: right;
+    }
+
+    td.empty {
+      padding: 0;
+    }
+
+    td.host {
+      padding: 2px 8px;
+      font-weight: $font-weight-default;
+    }
+  }
+
+  .filter_graphs {
+    margin: 1rem 0;
+  }
+
+  div.breakdown_bar {
+    display: flex;
+    height: 18px;
+    overflow: hidden;
+    line-height: 1.5rem;
+    color: $grey-3;
+    text-align: center;
+
+    div:first-child {
+      border-bottom-left-radius: 3px;
+      border-top-left-radius: 3px;
+    }
+
+    div:last-child {
+      border-top-right-radius: 3px;
+      border-bottom-right-radius: 3px;
+    }
+
+    .bytes_sent {
+      background: $color-state-3-background;
+    }
+
+    .bytes_rcvd {
+      background: $color-state-5-background;
+    }
+  }
+
+  // HOST DETAILS //
+  .ntop_host table.ntop_overview {
+    border-collapse: collapse;
+
+    thead th {
+      padding: 0.25rem;
+      font-size: $font-size-large;
+      vertical-align: middle;
+      border-bottom: 2px solid $grey-3;
+    }
+
+    tr {
+      th {
+        width: 300px;
+        padding: 0.75rem;
+        color: $font-color;
+        text-align: left;
+        text-transform: none;
+        vertical-align: middle;
+      }
+
+      .align-center {
+        text-align: center;
+      }
+
+      td {
+        height: 2rem;
+        padding: 0.25rem 1rem;
+        vertical-align: middle;
+      }
+
+      td.max_width {
+        width: 100%;
+      }
+
+      td.subheader {
+        width: 100px;
+      }
+
+      td.in_row_header {
+        text-align: right;
+      }
+
+      td.number {
+        width: 300px;
+      }
+    }
+  }
+
+  div#ntop_host_traffic_breakdown,
+  div#ntop_host_apps_applications,
+  div#ntop_host_apps_categories {
+    margin-top: 12px;
+
+    td:first-child {
+      width: 400px;
+      max-width: 400px;
+    }
+  }
+
+  // DASHBOARD
+  .dashboard_ntop_dashboard {
+    .bold {
+      padding: 0.8rem 1rem;
+      font-weight: bold;
+    }
+
+    .talker_name {
+      min-width: 300px;
+      padding-left: 1rem;
+    }
+
+    .traffic_text {
+      min-width: 100px;
+      padding-right: 1rem;
+      text-align: right;
+    }
+  }
+
+  // ALERTS //
+  .ntop_alerts {
+    div.description_filter {
+      display: table-cell;
+      label {
+        padding-right: 10px;
+      }
+    }
+
+    div.status {
+      display: table-cell;
+      width: 600px;
+      height: 28px;
+      label {
+        padding-left: 32px;
+        box-decoration-break: clone;
+      }
+    }
+
+    div.fetch_filters {
+      .dropdown {
+        padding-right: 10px;
+        label {
+          padding-right: 10px;
+        }
+      }
+      padding-bottom: 20px;
+    }
+
+    td.date {
+      min-width: 120px;
+    }
+
+    td.duration {
+      min-width: 50px;
+    }
+
+    td.severity {
+      min-width: 50px;
+      background-size: 10% 80%;
+    }
+
+    td.alert_type {
+      min-width: 120px;
+      margin: 2px;
+    }
+
+    td.description {
+      width: 100%;
+      max-width: 500px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    td.actions {
+      min-width: 150px;
+    }
+  }
+
+  // FLOWS //
+  .ntop_flows {
+    div.filters div.filter {
+      display: inline-block;
+      margin: 0 12px 6px 0;
+    }
+
+    table.data th,
+    table.data td {
+      min-width: unset;
+    }
+
+    table.data th {
+      padding-right: 12px;
+    }
+
+    td.key {
+      width: 50px;
+    }
+
+    td.application,
+    td.protocol {
+      width: 100px;
+    }
+
+    td.client,
+    td.server {
+      min-width: 260px;
+    }
+
+    td.duration,
+    td.score {
+      width: 80px;
+    }
+
+    td.breakdown {
+      width: 120px;
+    }
+  }
+
+  // TOP TALKERS //
+  table.top_talkers {
+    td.figure {
+      width: 500px;
+      vertical-align: top;
+    }
+
+    td.number {
+      width: 100px;
+      text-align: right;
+    }
+
+    td.ntop_host_name {
+      min-width: 400px;
+
+      a:not(:hover) {
+        text-decoration: none;
+      }
+    }
+
+    svg.renderer {
+      margin-left: 15px;
+    }
+
+    path.area {
+      opacity: 1;
+    }
+  }
+
+  // BADGE //
+  .badge {
+    display: inline-block;
+    padding: 0.5em;
+    margin: 2px;
+    font-size: $font-size-normal;
+    font-weight: bold;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+    width: 70px;
+  }
+
+  .badge-info,
+  .badge-explore,
+  .badge-disable,
+  .badge-release {
+    background-color: $color-state-5-background;
+  }
+
+  .badge-delete {
+    background-color: $color-state-2-background;
+  }
+}
+
+// PAINTER //
+
+.ntop_painter_pie_chart {
+  min-height: 216px;
+}
+
+#ntop_host_details {
+  min-height: 257px;
+}
+
+#ntop_protocol_breakdown {
+  min-height: 110px;
+  padding-top: $ntop-protocol-painter-padding-top;
+}
+
+.link_to_ntop_host {
+  position: absolute;
+  top: 3px;
+  right: 0;
+  height: 1rem;
+  padding: 1rem;
+}
+
+.dc-chart .pie-slice.external {
+  fill: $font-color;
+}
+
+div#peers_table td {
+  &._0 {
+    width: 400px;
+    max-width: 400px;
+  }
+
+  &._1 {
+    width: 200px;
+    max-width: 200px;
+  }
+}

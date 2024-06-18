@@ -1,0 +1,55 @@
+@charset "UTF-8";
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+/* Graph collections */
+table.graph_collection td.controls {
+  width: 24px;
+}
+
+/* Graph designer */
+ul.metric_operation {
+  padding-left: 10px;
+  margin-top: 0;
+  -webkit-padding-start: 20px;
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0;
+  padding-start: 10px;
+
+  li {
+    padding-left: 0;
+    margin-left: 10px;
+  }
+}
+
+div.metricchoice {
+  display: inline-block;
+}
+
+table.graph_designer_metrics {
+  &.data {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  a.onoff img.iconbutton {
+    width: 60px;
+    height: 16px;
+  }
+}
+
+/* metrics table in painter svc_metrics */
+table.metricstable {
+  td.value {
+    padding-left: 10px;
+    text-align: right;
+  }
+
+  img {
+    position: relative;
+    top: -1px;
+    width: 14px;
+    height: 14px;
+  }
+}

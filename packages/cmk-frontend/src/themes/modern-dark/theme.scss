@@ -32,22 +32,8 @@
 @import "../facelift/scss/_graphs.scss";
 @import "../facelift/scss/_info.scss";
 @import "../facelift/scss/_password_meter.scss";
-
-// CEE specific files. Would love to add some kind of conditional import here,
-// but that is simply not possible at the moment using SCSS. Hack around this
-// using symlinks in the git during development and replace the links with empty
-// files during the build procedure of other editions.
-// Note: In case you add something here, you will have to add some dummy files
-// to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
-@import "../facelift/scss/cee/_graphs_cee.scss";
-@import "../facelift/scss/cee/_reporting.scss";
-@import "../facelift/scss/cee/_ntop.scss";
-@import "../facelift/scss/cee/_license_usage.scss";
-@import "../facelift/scss/cee/_robotmk.scss";
-@if $ENTERPRISE == "yes" {
-  @include graphs_cee;
-  @include reporting;
-  @include ntop;
-  @include license_usage;
-  @include robotmk;
-}
+@import "../facelift/scss/_graphs_cee.scss";
+@import "../facelift/scss/_reporting.scss";
+@import "../facelift/scss/_ntop.scss";
+@import "../facelift/scss/_license_usage.scss";
+@import "../facelift/scss/_robotmk.scss";

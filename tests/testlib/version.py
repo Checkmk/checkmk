@@ -230,12 +230,12 @@ class CMKVersion:
 def version_from_env(
     *,
     fallback_version_spec: str | None = None,
-    fallback_edition: Edition | None = None,
+    fallback_edition: Edition = Edition.CEE,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> CMKVersion:
     return CMKVersion(
         version_spec_from_env(fallback_version_spec or CMKVersion.DAILY),
-        edition_from_env(fallback_edition or Edition.CEE),
+        edition_from_env(fallback_edition),
         branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
     )
 

@@ -1,0 +1,11 @@
+Title: Add support for monitoring oracle 23ai
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1718714220
+Edition: cre
+Level: 1
+Version: 2.2.0p28
+
+We extended the regular expression to detect processes of Oracle 23ai, we now
+also search for <code>db_pmon_</code>.

@@ -3195,7 +3195,7 @@ main_queries() {
     # => Ignore a running ASM-Instance!
     # shellcheck disable=SC2016
     SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' |
-        "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' |
+        "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_|^db_pmon_' |
         cut -d"_" -f3- | sort)
 
     # Load config AFTER we got the SIDS since we allow users to use this variable in their config

@@ -330,8 +330,8 @@ def _paint_host_inventory_attribute(
             attributes.pairs.get(key),
             attributes.retentions.get(key),
             paint_function,
+            theme.detect_icon_path("svc_problems", "icon_"),
         ),
-        theme.detect_icon_path("svc_problems", "icon_"),
     )
 
 
@@ -401,8 +401,8 @@ def _paint_host_inventory_column(
             row[ident],
             row.get("_".join([ident, "retention_interval"])),
             paint_function,
+            theme.detect_icon_path("svc_problems", "icon_"),
         ),
-        theme.detect_icon_path("svc_problems", "icon_"),
     )
 
 

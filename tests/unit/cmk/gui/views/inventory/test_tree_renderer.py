@@ -59,11 +59,11 @@ from cmk.gui.views.inventory._tree_renderer import (
             ),
             [
                 [
-                    SDItem("sid", "SID", "SID 1", None, inv_paint_generic),
-                    SDItem("changed", "Changed", None, None, inv_paint_generic),
-                    SDItem("foo", "Foo", None, None, inv_paint_generic),
-                    SDItem("flashback", "Flashback", "Flashback 1", None, inv_paint_generic),
-                    SDItem("other", "Other", "Other 1", None, inv_paint_generic),
+                    SDItem("sid", "SID", "SID 1", None, inv_paint_generic, ""),
+                    SDItem("changed", "Changed", None, None, inv_paint_generic, ""),
+                    SDItem("foo", "Foo", None, None, inv_paint_generic, ""),
+                    SDItem("flashback", "Flashback", "Flashback 1", None, inv_paint_generic, ""),
+                    SDItem("other", "Other", "Other 1", None, inv_paint_generic, ""),
                 ],
                 [
                     SDItem(
@@ -72,11 +72,12 @@ from cmk.gui.views.inventory._tree_renderer import (
                         "SID 2",
                         RetentionInterval(1, 2, 3, "previous"),
                         inv_paint_generic,
+                        "",
                     ),
-                    SDItem("changed", "Changed", None, None, inv_paint_generic),
-                    SDItem("foo", "Foo", None, None, inv_paint_generic),
-                    SDItem("flashback", "Flashback", "Flashback 2", None, inv_paint_generic),
-                    SDItem("other", "Other", "Other 2", None, inv_paint_generic),
+                    SDItem("changed", "Changed", None, None, inv_paint_generic, ""),
+                    SDItem("foo", "Foo", None, None, inv_paint_generic, ""),
+                    SDItem("flashback", "Flashback", "Flashback 2", None, inv_paint_generic, ""),
+                    SDItem("other", "Other", "Other 2", None, inv_paint_generic, ""),
                 ],
             ],
         ),
@@ -93,7 +94,7 @@ def test_sort_table_rows_displayhint(
         flashback=Column("Flashback", inv_paint_generic, ""),
         other=Column("Other", inv_paint_generic, ""),
     )
-    assert _sort_rows(table, columns) == expected
+    assert _sort_rows(table, columns, "") == expected
 
 
 @pytest.mark.parametrize(
@@ -180,11 +181,16 @@ def test_sort_deltatable_rows_displayhint(
                 retentions={SDKey("c"): RetentionInterval(1, 2, 3, "previous")},
             ),
             [
-                SDItem(SDKey("a"), "A", "A", None, inv_paint_generic),
-                SDItem(SDKey("b"), "B", "B", None, inv_paint_generic),
-                SDItem(SDKey("d"), "D", "D", None, inv_paint_generic),
+                SDItem(SDKey("a"), "A", "A", None, inv_paint_generic, ""),
+                SDItem(SDKey("b"), "B", "B", None, inv_paint_generic, ""),
+                SDItem(SDKey("d"), "D", "D", None, inv_paint_generic, ""),
                 SDItem(
-                    SDKey("c"), "C", "C", RetentionInterval(1, 2, 3, "previous"), inv_paint_generic
+                    SDKey("c"),
+                    "C",
+                    "C",
+                    RetentionInterval(1, 2, 3, "previous"),
+                    inv_paint_generic,
+                    "",
                 ),
             ],
         ),
@@ -210,7 +216,7 @@ def test_sort_attributes_pairs_displayhint(
         table_view_name="",
         table_is_show_more=True,
     )
-    assert _sort_pairs(attributes, hint) == expected
+    assert _sort_pairs(attributes, hint, "") == expected
 
 
 @pytest.mark.parametrize(

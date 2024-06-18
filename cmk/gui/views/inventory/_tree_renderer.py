@@ -84,9 +84,12 @@ class SDItem(NamedTuple):
     value: SDValue
     retention_interval: RetentionInterval | None
     paint_function: PaintFunction
+    icon_path_svc_problems: str
 
 
-def _sort_pairs(attributes: ImmutableAttributes, hint: NodeDisplayHint) -> Sequence[SDItem]:
+def _sort_pairs(
+    attributes: ImmutableAttributes, hint: NodeDisplayHint, icon_path_svc_problems: str
+) -> Sequence[SDItem]:
     sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
     return [
         SDItem(
@@ -95,6 +98,7 @@ def _sort_pairs(attributes: ImmutableAttributes, hint: NodeDisplayHint) -> Seque
             attributes.pairs[k],
             attributes.retentions.get(k),
             h.paint_function,
+            icon_path_svc_problems,
         )
         for k in sorted_keys
         if k in attributes.pairs
@@ -103,11 +107,18 @@ def _sort_pairs(attributes: ImmutableAttributes, hint: NodeDisplayHint) -> Seque
 
 
 def _sort_rows(
-    table: ImmutableTable, columns: OrderedDict[SDKey, Column]
+    table: ImmutableTable, columns: OrderedDict[SDKey, Column], icon_path_svc_problems: str
 ) -> Sequence[Sequence[SDItem]]:
     def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
         return [
-            SDItem(k, c.title, row.get(k), table.retentions.get(ident, {}).get(k), c.paint_function)
+            SDItem(
+                k,
+                c.title,
+                row.get(k),
+                table.retentions.get(ident, {}).get(k),
+                c.paint_function,
+                icon_path_svc_problems,
+            )
             for k, c in columns.items()
         ]
 
@@ -174,7 +185,7 @@ def _sort_delta_rows(
     ]
 
 
-def compute_cell_spec(item: SDItem, icon_path_svc_problems: str) -> tuple[str, HTML]:
+def compute_cell_spec(item: SDItem) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
     tdclass, code = item.paint_function(item.value)
     html_value = HTML.with_escaping(code)
@@ -194,7 +205,7 @@ def compute_cell_spec(item: SDItem, icon_path_svc_problems: str) -> tuple[str, H
             HTMLWriter.render_span(
                 html_value
                 + HTMLWriter.render_nbsp()
-                + HTMLWriter.render_img(icon_path_svc_problems, class_=["icon"]),
+                + HTMLWriter.render_img(item.icon_path_svc_problems, class_=["icon"]),
                 title=_("Data is outdated and will be removed with the next check execution"),
                 css=["muted_text"],
             ),
@@ -325,7 +336,7 @@ class TreeRenderer:
         hint: NodeDisplayHint,
     ) -> None:
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem] = (
-            _sort_pairs(attributes, hint)
+            _sort_pairs(attributes, hint, self._theme.detect_icon_path("svc_problems", "icon_"))
             if isinstance(attributes, ImmutableAttributes)
             else _sort_delta_pairs(attributes, hint)
         )
@@ -338,10 +349,7 @@ class TreeRenderer:
             html.th(self._get_header(item.title, item.key))
             html.open_td()
             if isinstance(item, SDItem):
-                _tdclass, rendered_value = compute_cell_spec(
-                    item,
-                    self._theme.detect_icon_path("svc_problems", "icon_"),
-                )
+                _tdclass, rendered_value = compute_cell_spec(item)
             else:
                 _tdclass, rendered_value = _compute_delta_cell_spec(item)
             html.write_html(rendered_value)
@@ -356,7 +364,7 @@ class TreeRenderer:
     ) -> None:
         columns = _make_columns({k for r in table.rows for k in r}, table.key_columns, hint)
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
-            _sort_rows(table, columns)
+            _sort_rows(table, columns, self._theme.detect_icon_path("svc_problems", "icon_"))
             if isinstance(table, ImmutableTable)
             else _sort_delta_rows(table, columns)
         )
@@ -395,10 +403,7 @@ class TreeRenderer:
             for item in row:
                 # TODO separate tdclass from rendered value
                 if isinstance(item, SDItem):
-                    tdclass, rendered_value = compute_cell_spec(
-                        item,
-                        self._theme.detect_icon_path("svc_problems", "icon_"),
-                    )
+                    tdclass, rendered_value = compute_cell_spec(item)
                 else:
                     tdclass, rendered_value = _compute_delta_cell_spec(item)
                 html.open_td(class_=tdclass)

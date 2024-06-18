@@ -616,8 +616,8 @@ msgstr "%d dagen over in uw Checkmk proefperiode"
 msgid "%s left in your free trial"
 msgstr " links in uw gratis proefperiode"
 
-#, python-format
-msgid "%s matching labels: %s"
+#, fuzzy, python-format
+msgid "%s matching labels: "
 msgstr "%s overeenkomende labels: %s"
 
 #, python-format
@@ -761,11 +761,6 @@ msgstr "%s: Diensten: %s, Host Labels: %s"
 #, python-format
 msgid "%s: Uses SSL"
 msgstr "%s: Gebruikt SSL"
-
-msgid ""
-"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
-msgstr ""
-"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 
 msgid "&lt;None&gt;"
 msgstr "&lt;Geen&gt;"
@@ -7112,8 +7107,8 @@ msgstr "Auteur"
 msgid "Author comment (regex)"
 msgstr "Commentaar van de auteur"
 
-#, fuzzy, python-format
-msgid "Author: %s"
+#, fuzzy
+msgid "Author: "
 msgstr "Auteur"
 
 #, fuzzy
@@ -23216,6 +23211,10 @@ msgid ""
 msgstr ""
 "Mappen groeperen uw hosts, kunnen attributen erven en kunnen rechten hebben."
 
+#, fuzzy
+msgid "Folders: "
+msgstr "Map: %s"
+
 msgid "Folio"
 msgstr "Folio"
 
@@ -28287,6 +28286,10 @@ msgid ""
 msgstr ""
 "Hosts, Diensten, Groepen, Tijdsperiodes, Business Intelligence en Monitoring "
 "Configuratie"
+
+#, fuzzy
+msgid "Hosts: "
+msgstr "Hosts"
 
 #, python-format
 msgid "Hosts: %d created, %d modified, %d deleted"
@@ -81403,6 +81406,11 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
+#~ msgstr ""
+#~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 
 #, fuzzy
 #~ msgid "<b>Keyword</b> pattern"

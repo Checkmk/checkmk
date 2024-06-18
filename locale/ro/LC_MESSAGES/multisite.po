@@ -616,8 +616,8 @@ msgstr "%s rămas în perioada de probă Checkmk"
 msgid "%s left in your free trial"
 msgstr "rămasă în procesul gratuit"
 
-#, python-format
-msgid "%s matching labels: %s"
+#, fuzzy, python-format
+msgid "%s matching labels: "
 msgstr "%s etichete corespunzătoare: %s"
 
 #, python-format
@@ -765,11 +765,6 @@ msgstr "%s: Servicii: %s, Etichete gazdă: %s"
 #, python-format
 msgid "%s: Uses SSL"
 msgstr "%s: Utilizează SSL"
-
-msgid ""
-"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
-msgstr ""
-"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 
 msgid "&lt;None&gt;"
 msgstr "&lt;Nimic&gt;"
@@ -7111,8 +7106,8 @@ msgstr "Autor"
 msgid "Author comment (regex)"
 msgstr "Comentariul autorului (regex)"
 
-#, python-format
-msgid "Author: %s"
+#, fuzzy
+msgid "Author: "
 msgstr "Autor: %s"
 
 msgid "Authority"
@@ -23244,6 +23239,10 @@ msgid ""
 msgstr ""
 "Dosarele grupează gazdele, pot moșteni atribute și pot avea permisiuni."
 
+#, fuzzy
+msgid "Folders: "
+msgstr "Dosar: %s"
+
 msgid "Folio"
 msgstr "Folio"
 
@@ -28300,6 +28299,10 @@ msgid ""
 msgstr ""
 "Gazde, Servicii, Grupuri, Perioade de timp, Business Intelligence și "
 "Configurație de monitorizare"
+
+#, fuzzy
+msgid "Hosts: "
+msgstr "Gazde"
 
 #, python-format
 msgid "Hosts: %d created, %d modified, %d deleted"
@@ -81528,6 +81531,11 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid ""
+#~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
+#~ msgstr ""
+#~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 
 #~ msgid "<b>Keyword</b> pattern"
 #~ msgstr "<b>Cuvântul cheie</b> model"

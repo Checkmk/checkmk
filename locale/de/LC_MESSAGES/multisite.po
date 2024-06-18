@@ -616,8 +616,8 @@ msgstr "%s in Ihrem Checkmk-Testzeitraum übrig"
 msgid "%s left in your free trial"
 msgstr "%s im kostenlosen Testzeitraum verbleibend"
 
-#, python-format
-msgid "%s matching labels: %s"
+#, fuzzy, python-format
+msgid "%s matching labels: "
 msgstr "%s übereinstimmende Labels: %s"
 
 #, python-format
@@ -765,11 +765,6 @@ msgstr "%s: Services: %s, Host-Labels: %s"
 #, python-format
 msgid "%s: Uses SSL"
 msgstr "%s: Verwendet SSL"
-
-msgid ""
-"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
-msgstr ""
-"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 
 msgid "&lt;None&gt;"
 msgstr "&lt;keine&gt;"
@@ -6972,8 +6967,8 @@ msgstr "Autor"
 msgid "Author comment (regex)"
 msgstr "Kommentar des Autors (regex)"
 
-#, python-format
-msgid "Author: %s"
+#, fuzzy
+msgid "Author: "
 msgstr "Autor: %s"
 
 msgid "Authority"
@@ -22712,6 +22707,10 @@ msgstr ""
 "Ordner gruppieren Hosts, können Attribute vererben und können Berechtigungen "
 "haben."
 
+#, fuzzy
+msgid "Folders: "
+msgstr "Ordner: %s"
+
 msgid "Folio"
 msgstr "Folio"
 
@@ -27705,6 +27704,10 @@ msgid ""
 msgstr ""
 "Hosts, Services, Gruppen, Zeitperioden, Business Intelligence und Monitoring-"
 "Einstellungen"
+
+#, fuzzy
+msgid "Hosts: "
+msgstr "Hosts"
 
 #, python-format
 msgid "Hosts: %d created, %d modified, %d deleted"
@@ -79989,6 +79992,11 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
+#~ msgstr ""
+#~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 
 #~ msgid "<b>Keyword</b> pattern"
 #~ msgstr "<b>Stichwort</b>muster"

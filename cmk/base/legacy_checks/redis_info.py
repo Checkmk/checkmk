@@ -77,6 +77,10 @@ def discover_redis_info(section):
 def check_redis_info(item, params, parsed):
     if not (item_data := parsed.get(item)):
         return
+
+    if (error := item_data.get("error")) is not None:
+        yield 2, f"Error: {error}"
+
     server_data = item_data.get("Server")
     if server_data is None:
         return

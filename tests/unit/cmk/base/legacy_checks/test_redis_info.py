@@ -80,11 +80,29 @@ def test_discover_redis_info(section, expected):
             [(0, "Version: 6.0.16"), (0, "Socket: /path/mysocket")],
             id="socket",
         ),
+        pytest.param(
+            "/omd/sites/heute/tmp/run/redis:unix-socket",
+            {},
+            {
+                "/omd/sites/heute/tmp/run/redis:unix-socket": {
+                    "error": "Could not connect to Redis at /omd/sites/heute/tmp/run/redis: Permission denied",
+                    "host": "/omd/sites/heute/tmp/run/redis",
+                    "port": "unix-socket",
+                },
+            },
+            [
+                (
+                    2,
+                    "Error: Could not connect to Redis at /omd/sites/heute/tmp/run/redis: Permission denied",
+                )
+            ],
+            id="permission_denied",
+        ),
     ],
 )
 def test_check_redis_info(item, params, section, expected):
     with time_machine.travel(
-        datetime.datetime.fromisoformat("2019-12-06T11:36:00").replace(tzinfo=ZoneInfo("UTC")),
+        datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
         tick=False,
     ):
 
@@ -144,7 +162,7 @@ def test_discover_redis_info_persistence(section, expected):
             [
                 (0, "Last RDB save operation: successful"),
                 (0, "Last AOF rewrite operation: successful"),
-                (0, "Last successful RDB save: 2019-12-06 08:45:57"),
+                (0, "Last successful RDB save: 2019-12-06 07:45:57"),
                 (0, "Number of changes since last dump: 0", [("changes_sld", "0", None, None)]),
             ],
             id="full_persistence",
@@ -152,7 +170,12 @@ def test_discover_redis_info_persistence(section, expected):
     ],
 )
 def test_check_redis_info_persistence(item, params, section, expected):
-    assert list(check_redis_info_persistence(item, params, section)) == expected
+
+    with time_machine.travel(
+        datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
+        tick=False,
+    ):
+        assert list(check_redis_info_persistence(item, params, section)) == expected
 
 
 @pytest.mark.parametrize(

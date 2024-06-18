@@ -66,6 +66,40 @@ from cmk.base.check_legacy_includes.redis import parse_redis_info
             },
             id="socket",
         ),
+        pytest.param(
+            [
+                [
+                    "[[[/omd/sites/heute/tmp/run/redis;unix-socket|/omd/sites/heute/tmp/run/redis|unix-socket]]]"
+                ],
+            ],
+            {
+                "/omd/sites/heute/tmp/run/redis:unix-socket": {
+                    "host": "/omd/sites/heute/tmp/run/redis",
+                    "port": "unix-socket",
+                }
+            },
+            id="checkmk_instance",
+        ),
+        pytest.param(
+            [
+                [
+                    "[[[/omd/sites/heute/tmp/run/redis;unix-socket|/omd/sites/heute/tmp/run/redis|unix-socket]]]"
+                ],
+                [
+                    "error",
+                    "Could not connect to Redis at /omd/sites/heute/tmp/run/redis",
+                    "Permission denied",
+                ],
+            ],
+            {
+                "/omd/sites/heute/tmp/run/redis:unix-socket": {
+                    "error": "Could not connect to Redis at /omd/sites/heute/tmp/run/redis: Permission denied",
+                    "host": "/omd/sites/heute/tmp/run/redis",
+                    "port": "unix-socket",
+                },
+            },
+            id="permission_denied",
+        ),
     ],
 )
 def test_parse_redis_info(string_table, expected):

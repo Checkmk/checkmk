@@ -53,7 +53,6 @@ module.exports = {
         side: "./src/js/side_index.ts",
         facelift: "./src/themes/facelift/theme.scss",
         modern_dark: "./src/themes/modern-dark/theme.scss",
-        // cma: "./src/themes/facelift/cma_facelift.scss", TODO: fork this into cma repo, see CMK-16648
     },
     output: {
         filename: "js/[name]_min.js",

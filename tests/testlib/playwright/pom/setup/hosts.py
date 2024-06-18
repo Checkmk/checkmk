@@ -41,9 +41,6 @@ class SetupHost(CmkPage):
     def add_folder(self) -> Locator:
         return self.get_link("Add folder")
 
-    def popup_menu(self, name: str, exact: bool = True) -> Locator:
-        return self.main_area.locator().get_by_role(role="heading", name=name, exact=exact)
-
     def create_host(self, host: HostDetails) -> None:
         """On `setup -> Hosts` page, createa a new host and activate changes."""
         # add host
@@ -69,7 +66,7 @@ class SetupHost(CmkPage):
 class HostProperties(SetupHost):
     "Represents page `setup -> Hosts -> <host name> properties`."
 
-    popup_menus: list[str] = [
+    dropdown_buttons: list[str] = [
         "Host",
         "Display",
         "Help",
@@ -126,7 +123,7 @@ class HostProperties(SetupHost):
 
     def delete_host(self) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
-        self.popup_menu("Host").click()
+        self.dropdown_button("Host").click()
         self.get_link("Delete").click()
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         self.page.wait_for_url(

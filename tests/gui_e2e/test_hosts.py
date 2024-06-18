@@ -28,7 +28,7 @@ def fixture_host(logged_in_page: LoginPage) -> Iterator[HostProperties]:
 
 def test_navigate_to_host_properties(host: HostProperties) -> None:
     # - sanity checks
-    for link in HostProperties.popup_menus + HostProperties.links + HostProperties.properties:
+    for link in HostProperties.dropdown_buttons + HostProperties.links + HostProperties.properties:
         locator = host.main_area.get_text(text=link, first=False)
         expect(locator).to_have_count(1)
 

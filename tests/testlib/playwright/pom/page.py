@@ -94,6 +94,9 @@ class CmkPage(LocatorHelper):
         """
         return self.page.goto(urljoin(self._url, url), wait_until=wait_until, referer=referer)
 
+    def dropdown_button(self, name: str, exact: bool = True) -> Locator:
+        return self.main_area.locator().get_by_role(role="heading", name=name, exact=exact)
+
 
 class MainMenu(LocatorHelper):
     """functionality to find items from the main menu"""

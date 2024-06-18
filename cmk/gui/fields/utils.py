@@ -6,7 +6,7 @@
 import collections
 import functools
 import typing
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, Literal, NamedTuple, TypedDict, TypeVar
 
 from marshmallow import ValidationError
@@ -280,8 +280,8 @@ def _field_from_attr(attr):
     return fields.String(**kwargs)
 
 
-def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type: ignore[no-untyped-def]
-    dict_ = schema_dict.copy()
+def _schema_from_dict(name: str, schema_dict: Mapping[str, Any]) -> type[BaseSchema]:
+    dict_ = {**schema_dict}
     dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
 

@@ -86,6 +86,45 @@ class SDItem(NamedTuple):
     paint_function: PaintFunction
     icon_path_svc_problems: str
 
+    def compute_cell_spec(self) -> tuple[str, HTML]:
+        tdclass, code = self.paint_function(self.value)
+        html_value = HTML.with_escaping(code)
+        if (
+            not html_value
+            or self.retention_interval is None
+            or self.retention_interval.source == "current"
+        ):
+            return tdclass, html_value
+
+        now = int(time.time())
+        valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
+        keep_until = valid_until + self.retention_interval.retention_interval
+        if now > keep_until:
+            return (
+                tdclass,
+                HTMLWriter.render_span(
+                    html_value
+                    + HTMLWriter.render_nbsp()
+                    + HTMLWriter.render_img(self.icon_path_svc_problems, class_=["icon"]),
+                    title=_("Data is outdated and will be removed with the next check execution"),
+                    css=["muted_text"],
+                ),
+            )
+        if now > valid_until:
+            return (
+                tdclass,
+                HTMLWriter.render_span(
+                    html_value,
+                    title=_("Data was provided at %s and is considered valid until %s")
+                    % (
+                        cmk.utils.render.date_and_time(self.retention_interval.cached_at),
+                        cmk.utils.render.date_and_time(keep_until),
+                    ),
+                    css=["muted_text"],
+                ),
+            )
+        return tdclass, html_value
+
 
 def _sort_pairs(
     attributes: ImmutableAttributes, hint: NodeDisplayHint, icon_path_svc_problems: str
@@ -141,6 +180,27 @@ class _SDDeltaItem(NamedTuple):
     new: SDValue
     paint_function: PaintFunction
 
+    def compute_cell_spec(self) -> tuple[str, HTML]:
+        if self.old is None and self.new is not None:
+            tdclass, rendered_value = self.paint_function(self.new)
+            return tdclass, HTMLWriter.render_span(rendered_value, css="invnew")
+        if self.old is not None and self.new is None:
+            tdclass, rendered_value = self.paint_function(self.old)
+            return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
+        if self.old == self.new:
+            tdclass, rendered_value = self.paint_function(self.old)
+            return tdclass, HTML.with_escaping(rendered_value)
+        if self.old is not None and self.new is not None:
+            tdclass, rendered_old_value = self.paint_function(self.old)
+            tdclass, rendered_new_value = self.paint_function(self.new)
+            return (
+                tdclass,
+                HTMLWriter.render_span(rendered_old_value, css="invold")
+                + " → "
+                + HTMLWriter.render_span(rendered_new_value, css="invnew"),
+            )
+        raise NotImplementedError()
+
 
 def _sort_delta_pairs(
     attributes: ImmutableDeltaAttributes, hint: NodeDisplayHint
@@ -183,69 +243,6 @@ def _sort_delta_rows(
         )
         if not all(left == right for left, right in row.values())
     ]
-
-
-def compute_cell_spec(item: SDItem) -> tuple[str, HTML]:
-    # TODO separate tdclass from rendered value
-    tdclass, code = item.paint_function(item.value)
-    html_value = HTML.with_escaping(code)
-    if (
-        not html_value
-        or item.retention_interval is None
-        or item.retention_interval.source == "current"
-    ):
-        return tdclass, html_value
-
-    now = int(time.time())
-    valid_until = item.retention_interval.cached_at + item.retention_interval.cache_interval
-    keep_until = valid_until + item.retention_interval.retention_interval
-    if now > keep_until:
-        return (
-            tdclass,
-            HTMLWriter.render_span(
-                html_value
-                + HTMLWriter.render_nbsp()
-                + HTMLWriter.render_img(item.icon_path_svc_problems, class_=["icon"]),
-                title=_("Data is outdated and will be removed with the next check execution"),
-                css=["muted_text"],
-            ),
-        )
-    if now > valid_until:
-        return (
-            tdclass,
-            HTMLWriter.render_span(
-                html_value,
-                title=_("Data was provided at %s and is considered valid until %s")
-                % (
-                    cmk.utils.render.date_and_time(item.retention_interval.cached_at),
-                    cmk.utils.render.date_and_time(keep_until),
-                ),
-                css=["muted_text"],
-            ),
-        )
-    return tdclass, html_value
-
-
-def _compute_delta_cell_spec(item: _SDDeltaItem) -> tuple[str, HTML]:
-    if item.old is None and item.new is not None:
-        tdclass, rendered_value = item.paint_function(item.new)
-        return tdclass, HTMLWriter.render_span(rendered_value, css="invnew")
-    if item.old is not None and item.new is None:
-        tdclass, rendered_value = item.paint_function(item.old)
-        return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
-    if item.old == item.new:
-        tdclass, rendered_value = item.paint_function(item.old)
-        return tdclass, HTML.with_escaping(rendered_value)
-    if item.old is not None and item.new is not None:
-        tdclass, rendered_old_value = item.paint_function(item.old)
-        tdclass, rendered_new_value = item.paint_function(item.new)
-        return (
-            tdclass,
-            HTMLWriter.render_span(rendered_old_value, css="invold")
-            + " → "
-            + HTMLWriter.render_span(rendered_new_value, css="invnew"),
-        )
-    raise NotImplementedError()
 
 
 # Ajax call for fetching parts of the tree
@@ -347,11 +344,9 @@ class TreeRenderer:
         for item in sorted_pairs:
             html.open_tr()
             html.th(self._get_header(item.title, item.key))
+            # TODO separate tdclass from rendered value
+            _tdclass, rendered_value = item.compute_cell_spec()
             html.open_td()
-            if isinstance(item, SDItem):
-                _tdclass, rendered_value = compute_cell_spec(item)
-            else:
-                _tdclass, rendered_value = _compute_delta_cell_spec(item)
             html.write_html(rendered_value)
             html.close_td()
             html.close_tr()
@@ -402,10 +397,7 @@ class TreeRenderer:
             html.open_tr(class_="even0")
             for item in row:
                 # TODO separate tdclass from rendered value
-                if isinstance(item, SDItem):
-                    tdclass, rendered_value = compute_cell_spec(item)
-                else:
-                    tdclass, rendered_value = _compute_delta_cell_spec(item)
+                tdclass, rendered_value = item.compute_cell_spec()
                 html.open_td(class_=tdclass)
                 html.write_html(rendered_value)
                 html.close_td()

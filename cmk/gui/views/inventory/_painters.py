@@ -40,7 +40,7 @@ from ._display_hints import (
     inv_display_hints,
     NodeDisplayHint,
 )
-from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
+from ._tree_renderer import SDItem, TreeRenderer
 from .registry import PaintFunction
 
 
@@ -323,16 +323,14 @@ def _paint_host_inventory_attribute(
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
-    return compute_cell_spec(
-        SDItem(
-            key,
-            title,
-            attributes.pairs.get(key),
-            attributes.retentions.get(key),
-            paint_function,
-            theme.detect_icon_path("svc_problems", "icon_"),
-        ),
-    )
+    return SDItem(
+        key,
+        title,
+        attributes.pairs.get(key),
+        attributes.retentions.get(key),
+        paint_function,
+        theme.detect_icon_path("svc_problems", "icon_"),
+    ).compute_cell_spec()
 
 
 def attribute_painter_from_hint(
@@ -394,16 +392,14 @@ def _paint_host_inventory_column(
 ) -> CellSpec:
     if ident not in row:
         return "", ""
-    return compute_cell_spec(
-        SDItem(
-            SDKey(ident),
-            title,
-            row[ident],
-            row.get("_".join([ident, "retention_interval"])),
-            paint_function,
-            theme.detect_icon_path("svc_problems", "icon_"),
-        ),
-    )
+    return SDItem(
+        SDKey(ident),
+        title,
+        row[ident],
+        row.get("_".join([ident, "retention_interval"])),
+        paint_function,
+        theme.detect_icon_path("svc_problems", "icon_"),
+    ).compute_cell_spec()
 
 
 def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPainterFromHint:

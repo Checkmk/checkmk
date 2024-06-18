@@ -287,8 +287,7 @@ def main() {
                         ) {
                             stage("${distro} initialize workspace") {
                                 cleanup_directory("${WORKSPACE}/versions");
-                                sh("rm -rf ${distro_dir}");
-                                sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
+                                sh("rsync --exclude='*.venv*' -a ${checkout_dir}/ ${distro_dir}/");
                                 sh("rm -rf ${distro_dir}/bazel_execution_log*");
                             }
 

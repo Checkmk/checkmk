@@ -133,7 +133,7 @@ ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 BOM := bill-of-materials.json
 
-.PHONY: install cma rpm deb clean install-clean
+.PHONY: install cma rpm deb clean install-clean venv
 
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL)
@@ -287,6 +287,9 @@ debian/control: debian/control.in
 	    -e '/Depends:/s/@/ /g' \
 	   debian/control.in > debian/control
 
+venv:
+	$(MAKE) -C ../ .venv
+
 # Called by our release system to build DEB packages
 #
 # Check out "man debuild" and "man dpkg-buildpackage" to get a description of
@@ -299,7 +302,7 @@ debian/control: debian/control.in
 # a) add -nc fo jessie/trusty/xenial
 # b) drop the "clean" argument for newer distros
 # c) remove the dh_prep from debian/rules
-deb: debian/changelog debian/control
+deb: venv debian/changelog debian/control
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
 	    TARGET="-us -uc -B" ; \
 	else \

@@ -1146,7 +1146,7 @@ class RuleSearchOptions(base.BaseSchema):
     )
 
 
-def _unpack_operator(v) -> ApiOperator:  # type: ignore[no-untyped-def]
+def _unpack_operator(v: HostOrServiceConditions) -> ApiOperator:
     """Unpacks the operator from a condition value
 
     Examples:

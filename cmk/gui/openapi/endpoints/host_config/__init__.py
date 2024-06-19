@@ -357,7 +357,7 @@ def _bulk_host_action_response(
         ),
     ],
 )
-def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
+def list_hosts(param: Mapping[str, Any]) -> Response:
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
     effective_attributes: bool = param["effective_attributes"]

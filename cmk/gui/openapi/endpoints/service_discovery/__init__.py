@@ -38,7 +38,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
@@ -115,7 +115,7 @@ class APIDiscoveryAction(enum.Enum):
     tabula_rasa = "tabula_rasa"
 
 
-def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
+def _discovery_mode(default_mode: str) -> fields.String:
     # TODO: documentation should be separated for bulk discovery
     return fields.String(
         description="""The mode of the discovery action. The 'refresh' mode starts a new service
@@ -530,10 +530,10 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
     raise ValueError(f"Key {internal_phase_name} not found in dict.")
 
 
-def serialize_discovery_result(  # type: ignore[no-untyped-def]
+def serialize_discovery_result(
     host: Host,
     discovery_result: DiscoveryResult,
-):
+) -> DomainObject:
     services = {}
     host_name = host.name()
     for entry in discovery_result.check_table:

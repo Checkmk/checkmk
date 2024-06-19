@@ -32,5 +32,5 @@ json_string=$(jq --null-input \
 
 echo "$json_string" | jq "." | sudo tee /etc/cse/admin_panel_url.json >/dev/null
 
-export PYTHONPATH="${REPO_PATH}:${REPO_PATH}/tests/testlib"
-"${REPO_PATH}/scripts/run-pipenv" run uvicorn cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"
+export PYTHONPATH="${REPO_PATH}"
+"${REPO_PATH}/scripts/run-pipenv" run uvicorn tests.testlib.cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"

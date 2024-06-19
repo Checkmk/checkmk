@@ -1,0 +1,54 @@
+Title: Don't show automation secret in the audit log (addresses CVE-2024-28830)
+Class: security
+Compatible: incomp
+Component: wato
+Date: 1718799000
+Edition: cre
+Level: 2
+Version: 2.2.0p28
+
+By default only admin users are able to see the audit log. Guests and normal
+monitoring users do not have acces to the audit log.
+
+Werk #13330 already fixed a problem where passwords were shown in the audit log.
+This werk now addresses the problem, that still automation secrets of
+automation user were logged in clear text to the audit log, e.g. on change of
+the automation secret via REST-API or the user interface.
+
+Existing automation secrets in the audit log should be removed automatically
+during the update but please double check that no automation secrets remain in
+the log (see next paragraph for details).
+
+A backup of the original audit log (before automation secrets were removed) is
+copied to "~/var/check_mk/wato/log/sanitize_backup". If anything goes wrong
+during the update, you have to copy the files back to ~var/check_mk/wato/log
+and remove the automation secrets manually. If the update works as expected,
+you can remove the backup files.
+
+In distributed setups which do not replicate the configuration, automation
+secrets are replaced during the update of each site.
+
+In setups which replicate the configuration from central to remote sites no
+automation secrets should be present in the logs of the remote site, since only
+information about the activation is logged. Only if you switched to a
+replicated setup after the upgrade to the 2.0, automation secrets can be
+present in the logs. Since automation secrets may be in this scenario as well,
+the steps described before also apply.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Mitigations</em>:
+
+Remove automation secrets manually within the files located in
+~var/check_mk/wato/log.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of <2.7 (Low)> with the following
+CVSS vector: <code>CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:L/I:N/A:N</code> and assigned CVE
+<code>CVE-2024-28830</code>.

@@ -10,17 +10,16 @@ from collections.abc import Iterable, Mapping
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-import cmk.plugins.lib.pulse_secure as pulse_secure
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.plugins.lib import pulse_secure
 
 Section = Mapping[str, int]
 
 KEY_PULSE_SECURE_CPU = "cpu_util"
 
 
-def parse_pulse_secure_cpu_util(string_table: StringTable) -> Section:
+def parse_pulse_secure_cpu_util(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, KEY_PULSE_SECURE_CPU)
 
 

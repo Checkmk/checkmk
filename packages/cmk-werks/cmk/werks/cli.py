@@ -19,13 +19,14 @@ import sys
 import termios
 import time
 import tty
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
 from typing import Literal, NamedTuple, NoReturn
 
+from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
-from .config import Config, load_config
+from .config import Config, load_config, try_load_current_version_from_defines_make
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
 from .parse import WerkV2ParseResult
@@ -245,6 +246,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser_show.set_defaults(func=main_show)
 
+    # PREVIEW
+    parser_preview = subparsers.add_parser("preview", help="Preview html rendering of a werk")
+    parser_preview.add_argument(
+        "id",
+    )
+    parser_preview.set_defaults(func=main_preview)
+
     # URL
     parser_url = subparsers.add_parser("url", help="Show the online URL of a werk")
     parser_url.add_argument("id", type=int, help="werk ID")
@@ -307,7 +315,8 @@ def get_last_werk() -> WerkId:
 
 @cache
 def get_config() -> Config:
-    return load_config(Path("config"), Path("../defines.make"))
+    current_version = try_load_current_version_from_defines_make(Path("../defines.make"))
+    return load_config(Path("config"), current_version=current_version)
 
 
 def load_werks() -> dict[WerkId, Werk]:
@@ -499,7 +508,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
     # in one class are orred. Multiple types are anded.
 
     werks: list[Werk] = list(load_werks().values())
-    versions = {werk.content.metadata["version"] for werk in werks}
+    versions = sorted({werk.content.metadata["version"] for werk in werks})
 
     filters: dict[str, list[str]] = {}
 
@@ -872,11 +881,15 @@ class WerkToPick(NamedTuple):
 
 def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion) -> None:
     # First get the werk_id
-    result = subprocess.run(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
-        capture_output=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        sys.stderr.buffer.write(exc.stderr)
+        sys.exit(exc.returncode)
     found_werk_path: WerkToPick | None = None
     for line in result.stdout.splitlines():
         filename = Path(line.decode("utf-8"))
@@ -1022,6 +1035,33 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
     else:
         bail_out("Cannot commit.")
+
+
+def main_preview(args: argparse.Namespace) -> None:
+    werk_path = werk_path_by_id(WerkId(args.id))
+    werk = cmk_werks_load_werk(
+        file_content=Path(werk_path).read_text(encoding="utf-8"), file_name=werk_path.name
+    )
+
+    def meta_data() -> Iterator[str]:
+        for item in werk.model_fields:
+            if item in {"title", "description"}:
+                continue
+            yield f"<dt>{item}<dt><dd>{getattr(werk, item)}</dd>"
+
+    definition_list = "\n".join(meta_data())
+    print(
+        f'<!DOCTYPE html><html lang="en" style="font-family:sans-serif;">'
+        "<head>"
+        f"<title>Preview of werk {args.id}</title>"
+        "</head>"
+        f'<body style="background-color:#ccc; max-width:1600px; padding: 10px; margin:auto;">'
+        f"<h1>{werk.title}</h1>"
+        f'<div style="background-color:#fff; padding: 10px;">{werk.description}</div>'
+        f"<dl>{definition_list}</dl>"
+        "</body>"
+        "</html>"
+    )
 
 
 def get_werk_file_version() -> WerkVersion:

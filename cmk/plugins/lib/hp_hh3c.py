@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from enum import Enum
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
 
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"
 OID_SysObjectID = ".1.3.6.1.2.1.1.2.0"
@@ -22,7 +23,7 @@ class DeviceStatus(Enum):
 Section = dict[str, int]
 
 
-def parse_hp_hh3c_device(string_table: list[StringTable]) -> Section:
+def parse_hp_hh3c_device(string_table: Sequence[StringTable]) -> Section:
     return {s[0]: int(s[1]) for s in string_table[0]}
 
 

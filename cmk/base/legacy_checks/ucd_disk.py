@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
 
 # .1.3.6.1.4.1.2021.9.1.2.1 /         --> UCD-SNMP-MIB::dskPath.1
@@ -22,12 +21,22 @@ def inventory_ucd_disk(info):
 
 
 def check_ucd_disk(item, params, info):
-    for disk_path, disk_total_str, disk_avail_str in info:
+    """Provided elements are
+    2: dskPath
+    6: dskTotal (kb)
+    7: dskAvail (kb)
+    see https://oidref.com/1.3.6.1.4.1.2021.9.1
+    """
+    for disk_path, disk_total_kb_str, disk_avail_kb_str in info:
         if disk_path == item:
-            disk_total_mb = float(disk_total_str) / 1024
-            disk_avail_mb = float(disk_avail_str) / 1024
             return df_check_filesystem_single(
-                item, disk_total_mb, disk_avail_mb, 0, None, None, params
+                mountpoint=item,
+                size_mb=float(disk_total_kb_str) / 1024,
+                avail_mb=float(disk_avail_kb_str) / 1024,
+                reserved_mb=0,
+                inodes_total=None,
+                inodes_avail=None,
+                params=params,
             )
     return None
 

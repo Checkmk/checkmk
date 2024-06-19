@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """This module contains functionality for dealing with X509 certificates.
 
 At the moment, only certificates based on RSA keys are supported.
@@ -35,24 +37,25 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import NamedTuple, TypeAlias
+from typing import assert_never, NamedTuple, TypeAlias
 
 import cryptography
 import cryptography.hazmat.primitives.asymmetric as asym
-import cryptography.x509 as x509
+from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 
 from cmk.utils.crypto.keys import (
     EncryptedPrivateKeyPEM,
     InvalidSignatureError,
+    is_supported_public_key_type,
     PlaintextPrivateKeyPEM,
     PrivateKey,
+    PrivateKeyType,
     PublicKey,
 )
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError, MKCryptoException, SerializedPEM
-from cmk.utils.site import omd_site
 
 
 class CertificatePEM(SerializedPEM):
@@ -73,30 +76,29 @@ class CertificateWithPrivateKey(NamedTuple):
     def generate_self_signed(
         cls,
         common_name: str,
-        organization: str | None = None,  # defaults to "Checkmk Site <SITE>"
-        organizational_unit_name: str | None = None,
+        organization: str,
+        organizational_unit: str | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
-        start_date: datetime | None = None,  # defaults to now
         subject_alt_dns_names: list[str] | None = None,
         is_ca: bool = False,
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
         # Note: Various places in the code expect our own certs to use RSA at the moment.
-        # At least: agent bakery and backups via key_mgmt.py, as well as the license server.
+        # At least: Agent Bakery and backups via key_mgmt.py, as well as the license server.
         private_key = PrivateKey.generate_rsa(key_size)
         name = X509Name.create(
             common_name=common_name,
-            organization_name=organization or f"Checkmk Site {omd_site()}",
-            organizational_unit=organizational_unit_name,
+            organization_name=organization,
+            organizational_unit=organizational_unit,
         )
         certificate = Certificate._create(
             subject_public_key=private_key.public_key,
             subject_name=name,
             subject_alt_dns_names=subject_alt_dns_names,
             expiry=expiry,
-            start_date=start_date or Certificate._naive_utcnow(),
+            start_date=datetime.now(tz=timezone.utc),
             is_ca=is_ca,
             issuer_signing_key=private_key,
             issuer_name=name,
@@ -175,7 +177,7 @@ class CertificateWithPrivateKey(NamedTuple):
             issuer_signing_key=self.private_key,
             issuer_name=self.certificate.subject,
             expiry=expiry,
-            start_date=Certificate._naive_utcnow(),
+            start_date=datetime.now(tz=timezone.utc),
             is_ca=False,
         )
 
@@ -290,9 +292,9 @@ class Certificate:
         Internal method to create a new certificate. It makes a lot of assumptions about how our
         certificates are used and is not suitable for general use.
         """
-        assert not Certificate._is_timezone_aware(
+        assert Certificate._is_timezone_aware(
             start_date
-        ), "Certificate expiry must use naive datetimes"
+        ), "Certificate expiry must use timzone-aware datetimes"
 
         builder = (
             x509.CertificateBuilder()
@@ -343,9 +345,13 @@ class Certificate:
                 critical=False,
             )
 
-        return cls(
-            builder.sign(private_key=issuer_signing_key._key, algorithm=HashAlgorithm.Sha512.value)
+        hash_algo = (
+            hash_.value
+            if (hash_ := Certificate._preferred_signing_hash_algorithm(issuer_signing_key._key))
+            is not None
+            else None
         )
+        return cls(builder.sign(private_key=issuer_signing_key._key, algorithm=hash_algo))
 
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
@@ -376,7 +382,7 @@ class Certificate:
     @property
     def public_key(self) -> PublicKey:
         key = self._cert.public_key()
-        assert not isinstance(key, (asym.x448.X448PublicKey, asym.x25519.X25519PublicKey))
+        assert is_supported_public_key_type(key)
         return PublicKey(key)
 
     @property
@@ -397,11 +403,13 @@ class Certificate:
 
     @property
     def not_valid_before(self) -> datetime:
-        return self._cert.not_valid_before
+        """The beginning of the certificate's validity period in UTC as a timezone-aware datetime"""
+        return self._cert.not_valid_before_utc
 
     @property
     def not_valid_after(self) -> datetime:
-        return self._cert.not_valid_after
+        """The end of the certificate's validity period in UTC as a timezone-aware datetime"""
+        return self._cert.not_valid_after_utc
 
     def verify_is_signed_by(self, signer: Certificate) -> None:
         """
@@ -470,22 +478,22 @@ class Certificate:
         if allowed_drift is None:
             allowed_drift = relativedelta(hours=+2)
 
-        if self._is_not_valid_before(Certificate._naive_utcnow() + allowed_drift):
+        if self._is_not_valid_before(datetime.now(tz=timezone.utc) + allowed_drift):
             raise InvalidExpiryError(
-                f"Certificate is not yet valid (not_valid_before: {self._cert.not_valid_before})"
+                f"Certificate is not yet valid (not_valid_before: {self.not_valid_before})"
             )
-        if self._is_expired_after(Certificate._naive_utcnow() - allowed_drift):
+        if self._is_expired_after(datetime.now(tz=timezone.utc) - allowed_drift):
             raise InvalidExpiryError(
-                f"Certificate is expired (not_valid_after: {self._cert.not_valid_after})"
+                f"Certificate is expired (not_valid_after: {self.not_valid_after})"
             )
 
     def _is_not_valid_before(self, time: datetime) -> bool:
-        assert not Certificate._is_timezone_aware(time)
-        return time < self._cert.not_valid_before
+        assert Certificate._is_timezone_aware(time)
+        return time < self.not_valid_before
 
     def _is_expired_after(self, time: datetime) -> bool:
-        assert not Certificate._is_timezone_aware(time)
-        return time > self._cert.not_valid_after
+        assert Certificate._is_timezone_aware(time)
+        return time > self.not_valid_after
 
     def days_til_expiry(self) -> int:
         """
@@ -497,7 +505,7 @@ class Certificate:
         If the certificate's "not_valid_after" time lies in the past, a negative value will be
         returned.
         """
-        return (self._cert.not_valid_after - datetime.now()).days
+        return (self.not_valid_after - datetime.now(tz=timezone.utc)).days
 
     def fingerprint(self, algorithm: HashAlgorithm) -> bytes:
         """return the fingerprint
@@ -537,13 +545,18 @@ class Certificate:
         return dt.tzinfo is not None
 
     @staticmethod
-    def _naive_utcnow() -> datetime:
+    def _preferred_signing_hash_algorithm(key: PrivateKeyType) -> HashAlgorithm | None:
         """
-        Create a not timezone aware, "naive", datetime at UTC now. This mimics the deprecated
-        datetime.utcnow(), but we still need it to be naive because that's what pyca/cryptography
-        certificates use. See also https://github.com/pyca/cryptography/issues/9186.
+        Choose the signature hash algorithm based on the type of the private key.
+        Some keys (Ed25519 and Ed448) must use 'None'.
         """
-        return datetime.now(tz=timezone.utc).replace(tzinfo=None)
+        match key:
+            case asym.ed25519.Ed25519PrivateKey() | asym.ed448.Ed448PrivateKey():
+                return None
+            case asym.rsa.RSAPrivateKey() | asym.ec.EllipticCurvePrivateKey():
+                return HashAlgorithm.Sha512
+            case unreachable:
+                assert_never(unreachable)
 
 
 X509NameOid: TypeAlias = x509.oid.NameOID
@@ -653,8 +666,14 @@ class CertificateSigningRequest:
                 The private key is needed to sign the CSR and prove ownership of the public key.
         """
 
+        hash_algo = (
+            hash_.value
+            if (hash_ := Certificate._preferred_signing_hash_algorithm(subject_private_key._key))
+            is not None
+            else None
+        )
         builder = x509.CertificateSigningRequestBuilder().subject_name(subject_name.name)
-        return cls(builder.sign(subject_private_key._key, HashAlgorithm.Sha512.value))
+        return cls(builder.sign(subject_private_key._key, hash_algo))
 
     @property
     def subject(self) -> X509Name:
@@ -663,7 +682,7 @@ class CertificateSigningRequest:
     @property
     def public_key(self) -> PublicKey:
         key = self.csr.public_key()
-        assert not isinstance(key, (asym.x448.X448PublicKey, asym.x25519.X25519PublicKey))
+        assert is_supported_public_key_type(key)
         return PublicKey(key)
 
     @property

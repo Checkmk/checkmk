@@ -54,6 +54,9 @@ Application = LazyImportProfilingMiddleware(
     app_factory_kwargs={},
     config_loader=ProfileConfigLoader(
         fetch_actual_config=load_actual_config,
-        fetch_default_config=load_default_config,
+        # first request needs to handle the config settings. This actually forces the import of most of cmk, which
+        # should have been avoided. If this is needed, the logging setup part should be moved to a place where not
+        # much else is imported.
+        fetch_default_config=load_actual_config,
     ),
 )

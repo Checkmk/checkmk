@@ -6,20 +6,18 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.bluecat import DETECT_BLUECAT
 
 
-def inventory_bluecat_ha(info):
+def discover_bluecat_ha(section: StringTable) -> DiscoveryResult:
     # Only add if device is not in standalone mode
-    if info[0][0] != "1":
-        return [(None, None)]
-    return []
+    if section and section[0][0] != "1":
+        yield Service()
 
 
-def check_bluecat_ha(item, params, info):
+def check_bluecat_ha(_no_item, params, info):
     oper_state = int(info[0][0])
     oper_states = {
         1: "standalone",
@@ -52,7 +50,7 @@ check_info["bluecat_ha"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="HA State",
-    discovery_function=inventory_bluecat_ha,
+    discovery_function=discover_bluecat_ha,
     check_function=check_bluecat_ha,
     check_ruleset_name="bluecat_ha",
     check_default_parameters={

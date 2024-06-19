@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_SCREENOS
 
 
@@ -43,8 +42,8 @@ def check_juniper_screenos_cpu(_no_item, params, info):
     return state, message, perf
 
 
-def parse_juniper_screenos_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_juniper_screenos_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["juniper_screenos_cpu"] = LegacyCheckDefinition(

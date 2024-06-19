@@ -6,11 +6,12 @@
 import pytest
 from playwright.sync_api import BrowserContext, expect
 
-from tests.testlib.playwright.helpers import Keys, PPage
+from tests.testlib.playwright.helpers import Keys
+from tests.testlib.playwright.pom.login import LoginPage
 
 
 @pytest.mark.parametrize("snapin_id", [("snapin_container_time"), ("snapin_container_speedometer")])
-def test_add_remove_snapin(logged_in_page: PPage, snapin_id: str) -> None:
+def test_add_remove_snapin(logged_in_page: LoginPage, snapin_id: str) -> None:
     """add and remove a snapin (aka a sidebar element)"""
 
     logged_in_page.goto_add_sidebar_element()
@@ -26,13 +27,10 @@ def test_add_remove_snapin(logged_in_page: PPage, snapin_id: str) -> None:
     logged_in_page.main_area.locator(f"div#{snapin_id}").wait_for(state="attached")
 
 
-def test_monitor_searchbar(logged_in_page: PPage, context: BrowserContext) -> None:
+def test_monitor_searchbar(logged_in_page: LoginPage, context: BrowserContext) -> None:
     """Navigate to the CPU inventory from the monitor searchbar."""
 
-    megamenu = logged_in_page.megamenu_monitoring
-    megamenu.click()
-    search_bar = logged_in_page.monitor_searchbar
-    search_bar.fill("all hosts")
+    logged_in_page.main_menu.monitor_searchbar.fill("all hosts")
 
     expect(logged_in_page.locator("#Monitor")).to_contain_text("All hosts")
     expect(logged_in_page.locator("#Monitor")).to_contain_text("CPU inventory of all hosts")

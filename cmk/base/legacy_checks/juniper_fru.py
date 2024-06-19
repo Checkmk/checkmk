@@ -54,8 +54,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.juniper import DETECT_JUNIPER
 
 #   .--psu-----------------------------------------------------------------.
@@ -118,6 +118,10 @@ def check_juniper_fru(item, _no_params, parsed):
     return None
 
 
+def discover_juniper_fru(info):
+    return inventory_juniper_fru(info, ("7", "18"))
+
+
 check_info["juniper_fru"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER,
     fetch=SNMPTree(
@@ -126,9 +130,14 @@ check_info["juniper_fru"] = LegacyCheckDefinition(
     ),
     parse_function=parse_juniper_fru,
     service_name="Power Supply FRU %s",
-    discovery_function=lambda info: inventory_juniper_fru(info, ("7", "18")),
+    discovery_function=discover_juniper_fru,
     check_function=check_juniper_fru,
 )
+
+
+def discover_juniper_fru_fan(info):
+    return inventory_juniper_fru(info, ("13",))
+
 
 # .
 #   .--fan-----------------------------------------------------------------.
@@ -143,6 +152,6 @@ check_info["juniper_fru"] = LegacyCheckDefinition(
 check_info["juniper_fru.fan"] = LegacyCheckDefinition(
     service_name="Fan FRU %s",
     sections=["juniper_fru"],
-    discovery_function=lambda info: inventory_juniper_fru(info, ("13",)),
+    discovery_function=discover_juniper_fru_fan,
     check_function=check_juniper_fru,
 )

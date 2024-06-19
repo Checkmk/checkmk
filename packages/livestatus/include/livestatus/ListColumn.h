@@ -21,13 +21,14 @@
 #include "livestatus/ListFilter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/opids.h"
 class Aggregator;
 class User;
 
 namespace column::detail {
 // Specialize this function in the classes deriving ListColumn.
-template <class U>
+template <typename U>
 std::string serialize(const U &);
 
 template <>
@@ -36,14 +37,14 @@ inline std::string serialize(const std::string &s) {
 }
 }  // namespace column::detail
 
-template <class U>
+template <typename U>
 struct ListColumnRenderer {
     using value_type = U;
     virtual ~ListColumnRenderer() = default;
     virtual void output(ListRenderer &l, const U &value) const = 0;
 };
 
-template <class U>
+template <typename U>
 struct SimpleListColumnRenderer : ListColumnRenderer<U> {
     void output(ListRenderer &l, const U &value) const override {
         l.output(column::detail::serialize<U>(value));
@@ -52,7 +53,7 @@ struct SimpleListColumnRenderer : ListColumnRenderer<U> {
 
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty vector.
-template <class T, class U = std::string>
+template <typename T, typename U = std::string>
 class ListColumn : public Column {
 public:
     using f0_t = std::function<std::vector<U>(const T &)>;
@@ -94,6 +95,11 @@ public:
                 return getValue(row, user, timezone_offset);
             },
             relOp, value, logger());
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        throw std::runtime_error("sorting on list column '" + name() +
+                                 "' not supported");
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

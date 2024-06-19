@@ -9,13 +9,12 @@ does not offer stable APIs. The code may change at any time."""
 
 from __future__ import annotations
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 import enum
 import functools
 import os
 import re
-import subprocess
 import sys
 import time
 from collections.abc import Sequence
@@ -25,6 +24,7 @@ from pathlib import Path
 from typing import Any, Final, NamedTuple, Self
 
 import cmk.utils.paths
+from cmk.utils.site import get_omd_config
 
 
 class _EditionValue(NamedTuple):
@@ -43,6 +43,13 @@ class Edition(_EditionValue, enum.Enum):
     @classmethod
     def from_version_string(cls, raw: str) -> Edition:
         return cls[raw.split(".")[-1].upper()]
+
+    @classmethod
+    def from_long_edition(cls, long: str) -> Edition:
+        for e in cls:
+            if e.long == long:
+                return e
+        raise RuntimeError(f"Unknown long edition: {long}")
 
 
 @cache
@@ -202,9 +209,11 @@ class Version:
         (major, minor, sub, year, month, day) = match.group(1, 2, 3, 4, 5, 6)
 
         return cls(
-            None
-            if all(x is None for x in (major, minor, sub))
-            else _BaseVersion(int(major), int(minor), int(sub)),
+            (
+                None
+                if all(x is None for x in (major, minor, sub))
+                else _BaseVersion(int(major), int(minor), int(sub))
+            ),
             _Release(RType.daily, _BuildDate(int(year), int(month), int(day))),
         )
 
@@ -352,8 +361,7 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-class VersionsCompatible:
-    ...
+class VersionsCompatible: ...
 
 
 class VersionsIncompatible:
@@ -365,7 +373,9 @@ class VersionsIncompatible:
 
 
 def versions_compatible(
-    from_v: Version, to_v: Version, /
+    from_v: Version,
+    to_v: Version,
+    /,
 ) -> VersionsCompatible | VersionsIncompatible:
     """Whether or not two versions are compatible (e.g. for omd update or remote automation calls)
 
@@ -517,7 +527,9 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
 
 
 def _check_minimum_patch_release(
-    from_v: Version, to_v: Version, /
+    from_v: Version,
+    to_v: Version,
+    /,
 ) -> VersionsCompatible | VersionsIncompatible:
     if to_v.base is None:
         return VersionsCompatible()
@@ -587,17 +599,4 @@ def _get_os_info() -> str:
 
 
 def _current_monitoring_core() -> str:
-    try:
-        completed_process = subprocess.run(
-            ["omd", "config", "show", "CORE"],
-            close_fds=True,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            encoding="utf-8",
-            check=False,
-        )
-    except FileNotFoundError:
-        # Allow running unit tests on systems without omd installed (e.g. on travis)
-        return "UNKNOWN"
-    return completed_process.stdout.rstrip()
+    return get_omd_config().get("CONFIG_CORE", "UNKNOWN")

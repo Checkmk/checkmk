@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import get_value_store, render, StringTable
 
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
@@ -155,7 +154,7 @@ def check_siemens_plc_duration(item, params, info):
             if old_seconds is not None and old_seconds > seconds:
                 return (
                     2,
-                    f"Reduced from {get_age_human_readable(old_seconds)} to {get_age_human_readable(seconds)}",
+                    f"Reduced from {render.time_offset(old_seconds)} to {render.time_offset(seconds)}",
                     perfdata,
                 )
 
@@ -168,7 +167,7 @@ def check_siemens_plc_duration(item, params, info):
             elif warn is not None and seconds >= warn:
                 state = 1
 
-            return state, get_age_human_readable(seconds), perfdata
+            return state, render.time_offset(seconds), perfdata
     return None
 
 

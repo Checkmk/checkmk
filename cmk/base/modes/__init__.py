@@ -8,13 +8,14 @@ from __future__ import annotations
 import textwrap
 from collections.abc import Callable, Sequence
 
+from cmk.utils import tty
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.hostaddress import HostName, Hosts
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
+from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.tags import TagID
 
-import cmk.base.config as config
 from cmk.base.config import ConfigCache
 
 OptionSpec = str
@@ -165,14 +166,14 @@ class Modes:
 
                 num_found = 0
                 for hostname in valid_hosts:
-                    if config.hosttags_match_taglist(
+                    if hosttags_match_taglist(
                         config_cache.tag_list(hostname), (TagID(_) for _ in tagspec)
                     ):
                         hostlist.append(hostname)
                         num_found += 1
                 if num_found == 0:
                     raise MKBailOut(
-                        "Hostname or tag specification '%s' does " "not match any host." % arg
+                        "Host name or tag specification '%s' does " "not match any host." % arg
                     )
         return hostlist
 
@@ -216,19 +217,34 @@ class Modes:
 class Option:
     def __init__(
         self,
+        *,
         long_option: str,
         short_help: str,
         short_option: str | None = None,
+        # ----------------------------------------------------------------------
+        # TODO: To avoid nonsensical and/or contradicting value combinations,
+        # all these argument-related parameters below should actually be a
+        # *single* parameter, see their intrinsic relations below.
         argument: bool = False,
         argument_descr: str | None = None,
         argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
         count: bool = False,
+        # ----------------------------------------------------------------------
         handler_function: OptionFunction | None = None,
-        *,
         deprecated_long_options: set[str] | None = None,
     ) -> None:
         super().__init__()
+
+        # We have an argument description if and only if we have an argument.
+        assert (argument_descr is not None) == argument
+        # Having a conversion function implies that we have an argument.
+        assert (argument_conv is None) or argument
+        # Being optional implies that we actually have an argument.
+        assert not argument_optional or argument
+        # Counting an option and having an argument is mutually exclusive.
+        assert not (count and argument)
+
         self.long_option = long_option
         self.short_help = short_help
         self.short_option = short_option
@@ -310,6 +326,7 @@ class Option:
 class Mode(Option):
     def __init__(
         self,
+        *,
         long_option: OptionName,
         handler_function: ModeFunction,
         short_help: str,
@@ -324,13 +341,13 @@ class Mode(Option):
         sub_options: list[Option] | None = None,
     ) -> None:
         super().__init__(
-            long_option,
-            short_help,
-            short_option,
-            argument,
-            argument_descr,
-            argument_conv,
-            argument_optional,
+            long_option=long_option,
+            short_help=short_help,
+            short_option=short_option,
+            argument=argument,
+            argument_descr=argument_descr,
+            argument_conv=argument_conv,
+            argument_optional=argument_optional,
             handler_function=handler_function,
         )
         self.long_help = long_help
@@ -403,7 +420,11 @@ class Mode(Option):
                     continue
 
                 if option.is_deprecated_option(o):
-                    console.warning("%r is deprecated in favour of option %r", o, option.name())
+                    console.warning(
+                        tty.format_warning(
+                            f"{o!r} is deprecated in favour of option {option.name()!r}"
+                        )
+                    )
 
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)
@@ -417,12 +438,11 @@ class Mode(Option):
                         options[option.name()] = value + 1
                         continue
                     val = True
-                else:
-                    if option.argument_conv:
-                        try:
-                            val = option.argument_conv(a)
-                        except ValueError:
-                            raise MKGeneralException("%s: Invalid argument" % o)
+                elif option.argument_conv:
+                    try:
+                        val = option.argument_conv(a)
+                    except ValueError:
+                        raise MKGeneralException("%s: Invalid argument" % o)
 
                 options[option.name()] = val
 

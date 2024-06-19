@@ -10,9 +10,12 @@ from uuid import UUID
 
 import livestatus
 
-from cmk.utils import paths, store
-from cmk.utils.licensing.handler import LicenseState
+from cmk.utils import paths
 from cmk.utils.paths import log_dir
+
+
+def get_licensing_logger() -> logging.Logger:
+    return logging.getLogger("licensing")
 
 
 def init_logging() -> logging.Logger:
@@ -23,7 +26,7 @@ def init_logging() -> logging.Logger:
     handler = logging.FileHandler(filename=Path(log_dir, "licensing.log"), encoding="utf-8")
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger("licensing")
+    logger = get_licensing_logger()
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
     logger.propagate = False
@@ -70,11 +73,9 @@ def get_licensed_state_file_path() -> Path:
     return paths.licensing_dir / "licensed_state"
 
 
-def write_licensed_state(file_path: Path, state: LicenseState) -> None:
-    state_repr = 1 if state is LicenseState.LICENSED else 0
-    with store.locked(file_path):
-        file_path.write_text(str(state_repr))
-
-
 def get_state_file_created_file_path() -> Path:
     return paths.licensing_dir / "state_file_created"
+
+
+def get_state_change_path() -> Path:
+    return paths.licensing_dir / "state_change"

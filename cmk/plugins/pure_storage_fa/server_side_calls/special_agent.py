@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
-from typing import Literal
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -19,30 +18,31 @@ from cmk.server_side_calls.v1 import (
 
 class Params(BaseModel, frozen=True):
     timeout: int | None = None
-    ssl: bool | str = True
-    api_token: tuple[Literal["password", "store"], str]
+    ssl: tuple[str, str | None] = ("hostname", None)
+    api_token: Secret
 
 
 def commands_function(
     params: Params,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, object],
 ) -> Iterator[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = (
         ["--timeout", str(params.timeout)] if params.timeout else []
     )
 
-    if params.ssl is False:
+    ssl_config_ident, ssl_config_value = params.ssl
+    if ssl_config_ident == "deactivated":
         command_arguments.append("--no-cert-check")
-    elif params.ssl is True:
+    elif ssl_config_ident == "hostname":
         command_arguments += ["--cert-server-name", host_config.name]
     else:
-        command_arguments += ["--cert-server-name", str(params.ssl)]
+        ssl_server = replace_macros(str(ssl_config_value), host_config.macros)
+        command_arguments += ["--cert-server-name", ssl_server]
 
-    command_arguments += ["--api-token", get_secret_from_params(*params.api_token)]
+    command_arguments += ["--api-token", params.api_token.unsafe()]
 
     yield SpecialAgentCommand(
-        command_arguments=[*command_arguments, host_config.address or host_config.name]
+        command_arguments=[*command_arguments, host_config.primary_ip_config.address]
     )
 
 

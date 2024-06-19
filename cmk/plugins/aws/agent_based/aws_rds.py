@@ -7,17 +7,19 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     AgentSection,
-    check_levels_fixed,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     IgnoreResultsError,
     render,
     Result,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.aws.lib import (
     aws_get_counts_rate_human_readable,
     aws_rds_service_item,
@@ -137,7 +139,7 @@ check_plugin_aws_rds_network_io = CheckPlugin(
     sections=["aws_rds"],
     service_name="AWS/RDS %s Network IO",
     discovery_function=discover_aws_rds_network_io,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_aws_rds_network_io,
 )
@@ -339,7 +341,7 @@ def check_aws_rds_cpu_credits(
 
     yield Result(state=State.OK, summary=f"CPU Credit Usage: {metrics['CPUCreditUsage']:.2f}")
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=metrics["CPUCreditBalance"],
         metric_name="aws_cpu_credit_balance",
         levels_lower=params.get("balance_levels_lower", (None, None)),
@@ -347,7 +349,7 @@ def check_aws_rds_cpu_credits(
     )
 
     if metrics.get("BurstBalance"):
-        yield from check_levels_fixed(
+        yield from check_levels(
             value=metrics["BurstBalance"],
             metric_name="aws_burst_balance",
             levels_lower=params.get("burst_balance_levels_lower", (None, None)),
@@ -400,7 +402,7 @@ def check_aws_rds_bin_log_usage(
         return
 
     usage = 100.0 * bin_log_usage / allocated_storage
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=usage,
         metric_name="aws_rds_bin_log_disk_usage",
         levels_upper=params.get("levels"),
@@ -464,7 +466,7 @@ def check_aws_rds_transaction_logs_usage(
         return
 
     usage = 100.0 * transaction_logs_space / allocated_storage
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=usage,
         metric_name="aws_rds_transaction_logs_disk_usage",
         levels_upper=params.get("levels"),
@@ -528,7 +530,7 @@ def check_aws_rds_replication_slot_usage(
         return
 
     usage = 100.0 * replication_slot_space / allocated_storage
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=usage,
         metric_name="aws_rds_replication_slot_disk_usage",
         levels_upper=params.get("levels"),
@@ -572,7 +574,7 @@ def check_aws_rds_connections(
     if (metrics := section.get(item)) is None:
         return
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=metrics["DatabaseConnections"],
         metric_name="aws_rds_connections",
         levels_upper=params.get("levels"),
@@ -616,7 +618,7 @@ def check_aws_rds_replica_lag(
     if (metrics := section.get(item)) is None:
         return
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=metrics["ReplicaLag"],
         metric_name="aws_rds_replica_lag",
         levels_upper=params.get("lag_levels"),
@@ -625,7 +627,7 @@ def check_aws_rds_replica_lag(
     )
 
     if (oldest_replica_lag_space := metrics.get("OldestReplicationSlotLag")) is not None:
-        yield from check_levels_fixed(
+        yield from check_levels(
             value=oldest_replica_lag_space,
             metric_name="aws_rds_oldest_replication_slot_lag",
             levels_upper=params.get("slot_levels"),

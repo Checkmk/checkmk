@@ -9,14 +9,11 @@ import logging
 import sys
 from typing import Any
 
-import urllib3
 from jira import JIRA
 from jira.exceptions import JIRAError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from cmk.utils.password_store import replace_passwords
-
-urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 
 
 def main(argv=None):
@@ -265,7 +262,7 @@ def parse_arguments(argv):
         action="append",
         help="The names of workflows of the given project",
     )
-    parser.add_argument("--jql-desc", nargs=1, action="append", help="Service description.")
+    parser.add_argument("--jql-desc", nargs=1, action="append", help="Service name.")
     parser.add_argument("--jql-query", nargs=1, action="append", help="JQL search string.")
     parser.add_argument(
         "--jql-result",
@@ -285,7 +282,7 @@ def parse_arguments(argv):
     parser.add_argument(
         "--jql-limit", nargs=1, action="append", help="Maximum number of processed search results."
     )
-    parser.add_argument("--hostname", required=True, help="JIRA server to use")
+    parser.add_argument("--hostname", required=True, help="Jira server to use")
 
     return parser.parse_args(argv)
 

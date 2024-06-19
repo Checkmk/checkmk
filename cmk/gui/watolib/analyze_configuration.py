@@ -17,10 +17,10 @@ from cmk.utils.site import omd_site
 from cmk.utils.statename import short_service_state_name
 
 import cmk.gui.sites
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.utils import escaping
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.sites import get_effective_global_setting
 
@@ -171,9 +171,9 @@ class ACTest:
                 return
 
             yield ACTestResult(
-                state=ACResultState.worst(r.state for r in results)
-                if results
-                else ACResultState.OK,
+                state=(
+                    ACResultState.worst(r.state for r in results) if results else ACResultState.OK
+                ),
                 text=", ".join(r.state_marked_text for r in results),
                 test_id=self.id(),
                 category=self.category(),

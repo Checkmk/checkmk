@@ -5,65 +5,65 @@
 
 import pytest
 
-from cmk.graphing.v1 import perfometer
+from cmk.graphing.v1 import perfometers
 
 
 def test_closed_error_empty_bound() -> None:
     with pytest.raises(ValueError):
-        perfometer.Closed("")
+        perfometers.Closed("")
 
 
 def test_open_error_empty_bound() -> None:
     with pytest.raises(ValueError):
-        perfometer.Open("")
+        perfometers.Open("")
 
 
 def test_perfometer_error_empty_name() -> None:
-    focus_range = perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100))
+    focus_range = perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100))
     segments = ["metric-name"]
     with pytest.raises(ValueError):
-        perfometer.Perfometer(name="", focus_range=focus_range, segments=segments)
+        perfometers.Perfometer(name="", focus_range=focus_range, segments=segments)
 
 
 def test_perfometer_error_missing_segments() -> None:
     name = "name"
-    focus_range = perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100))
+    focus_range = perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100))
     with pytest.raises(AssertionError):
-        perfometer.Perfometer(name=name, focus_range=focus_range, segments=[])
+        perfometers.Perfometer(name=name, focus_range=focus_range, segments=[])
 
 
 def test_perfometer_error_segments_empty_name() -> None:
     name = "name"
-    focus_range = perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100))
+    focus_range = perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100))
     with pytest.raises(ValueError):
-        perfometer.Perfometer(name=name, focus_range=focus_range, segments=[""])
+        perfometers.Perfometer(name=name, focus_range=focus_range, segments=[""])
 
 
 def test_bidirectional_error_empty_name() -> None:
-    left = perfometer.Perfometer(
+    left = perfometers.Perfometer(
         name="left",
-        focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
         segments=["metric-name-1"],
     )
-    right = perfometer.Perfometer(
+    right = perfometers.Perfometer(
         name="right",
-        focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
         segments=["metric-name-2"],
     )
     with pytest.raises(ValueError):
-        perfometer.Bidirectional(name="", left=left, right=right)
+        perfometers.Bidirectional(name="", left=left, right=right)
 
 
 def test_stacked_error_empty_name() -> None:
-    lower = perfometer.Perfometer(
+    lower = perfometers.Perfometer(
         name="lower",
-        focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
         segments=["metric-name-1"],
     )
-    upper = perfometer.Perfometer(
+    upper = perfometers.Perfometer(
         name="upper",
-        focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
         segments=["metric-name-2"],
     )
     with pytest.raises(ValueError):
-        perfometer.Stacked(name="", lower=lower, upper=upper)
+        perfometers.Stacked(name="", lower=lower, upper=upper)

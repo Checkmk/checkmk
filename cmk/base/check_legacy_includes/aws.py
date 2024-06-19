@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import functools
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from typing import TypeVar
 
 from cmk.base.check_api import check_levels, CheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
@@ -70,7 +70,7 @@ def check_aws_limits(aws_service, params, parsed_region_data):
     - levels: use plain resource_key
     - performance data: aws_%s_%s % AWS resource, resource_key
     """
-    long_output = []
+    long_output: list[tuple[int, str]] = []
     levels_reached = set()
     max_state = 0
     perfdata = []
@@ -103,7 +103,6 @@ def check_aws_limits(aws_service, params, parsed_region_data):
             None,
             (warn, crit),
             human_readable_func=render.percent,
-            statemarkers=True,
             infoname="Usage",
         )
 
@@ -111,15 +110,16 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         if state:
             levels_reached.add(resource_title)
             infotext += f", {extrainfo}"
-        long_output.append(infotext)
+        long_output.append((state, infotext))
 
     if levels_reached:
         yield max_state, "Levels reached: %s" % ", ".join(sorted(levels_reached)), perfdata
     else:
         yield 0, "No levels reached", perfdata
 
-    if long_output:
-        yield 0, "\n%s" % "\n".join(sorted(long_output))
+    # use `notice` upon migration!
+    for state, details in sorted(long_output, key=lambda x: x[1]):
+        yield state, f"\n{details}"
 
 
 def aws_get_float_human_readable(value: float, unit: str = "") -> str:
@@ -210,22 +210,11 @@ def check_aws_metrics(
         raise IgnoreResultsError("Currently no data from AWS")
 
 
-def aws_get_parsed_item_data(check_function: Callable) -> Callable:
-    """
-    Modified version of get_parsed_item_data which lets services go stale instead of UNKN if the
-    item is not found.
-    """
+_Data = TypeVar("_Data")
 
-    @functools.wraps(check_function)
-    def wrapped_check_function(item, params, parsed):
-        if not isinstance(parsed, dict):
-            return (
-                3,
-                "Wrong usage of decorator function 'aws_get_parsed_item_data': parsed is "
-                "not a dict",
-            )
-        if item not in parsed:
-            raise IgnoreResultsError("Currently no data from AWS")
-        return check_function(item, params, parsed[item])
 
-    return wrapped_check_function
+def get_data_or_go_stale(item: str, section: Mapping[str, _Data]) -> _Data:
+    try:
+        return section[item]
+    except KeyError:
+        raise IgnoreResultsError("Currently no data from AWS")

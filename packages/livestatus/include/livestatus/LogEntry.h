@@ -12,7 +12,6 @@
 #include <string_view>
 
 #include "livestatus/Interface.h"
-#include "livestatus/StringUtils.h"
 
 inline double badness(ServiceState state) {
     // unknown is effectively between warning and critical
@@ -84,7 +83,7 @@ enum class LogEntryParam {
 class LogEntry {
 public:
     // NOTE: We have to keep this enum in sync with the table in
-    // cmk.gui.plugins.visuals.filters.FilterLogClass on the Python side.
+    // cmk.gui.query_filters.log_class_options() on the Python side.
     enum class Class {
         info = 0,             // all messages not in any other class
         alert = 1,            // alerts: the change service/host state
@@ -136,9 +135,9 @@ public:
     [[nodiscard]] std::string plugin_output() const {
         return std::string{plugin_output_};
     }
-    [[nodiscard]] std::string long_plugin_output() const {
-        return mk::to_multi_line(std::string{long_plugin_output_});
-    }
+    [[nodiscard]] std::string long_plugin_output() const;
+    // See also `cmc::MonitoringLog::decode()`
+    static std::string encode(const std::string &str);
 
 private:
     size_t lineno_;

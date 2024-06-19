@@ -14,12 +14,12 @@ def main() {
 
     dir("${checkout_dir}") {
         stage("make setversion") {
-            bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion")
+            bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion");
         }
 
         windows.build(
             TARGET: 'cmk_agent_ctl_no_sign',
-        )
+        );
     }
 }
 

@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 
@@ -27,6 +26,11 @@ def parse_viprinet_power(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_viprinet_power(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
 check_info["viprinet_power"] = LegacyCheckDefinition(
     parse_function=parse_viprinet_power,
     detect=DETECT_VIPRINET,
@@ -35,6 +39,6 @@ check_info["viprinet_power"] = LegacyCheckDefinition(
         oids=["5"],
     ),
     service_name="Power-Supply",
-    discovery_function=lambda info: len(info) > 0 and [(None, None)] or [],
+    discovery_function=discover_viprinet_power,
     check_function=check_viprinet_power,
 )

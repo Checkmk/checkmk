@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 # Diese OIDs liefern nicht die LOAD, wie man annehmen könnte, sondern die
 # UTILIZATION, da ausschließlich die Auslastung der CPU berücksichtigt wird.
@@ -37,7 +36,7 @@ def check_bintec_cpu(_no_item, params, info):
     yield from check_cpu_util(util, params)
 
 
-# Migration NOTE: Create a separate section, but a common check plugin for
+# Migration NOTE: Create a separate section, but a common check plug-in for
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!

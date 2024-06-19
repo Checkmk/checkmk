@@ -9,9 +9,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import Annotated, Literal, Union
+from typing import Annotated, final, Literal, NamedTuple
 
-from pydantic import BaseModel, Field, field_validator, PlainValidator, SerializeAsAny, TypeAdapter
+from pydantic import BaseModel, computed_field, field_validator, PlainValidator, SerializeAsAny
 
 from livestatus import SiteId
 
@@ -24,114 +24,105 @@ from cmk.gui.time_series import TimeSeries
 
 from ._graph_render_config import GraphRenderOptions
 from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
-from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, TranslatedMetric
+from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, RRDDataKey
 
-HorizontalRule = tuple[float, str, str, str]
+
+class HorizontalRule(NamedTuple):
+    value: float
+    rendered_value: str
+    color: str
+    title: str
 
 
 @dataclass(frozen=True)
-class NeededElementForTranslation:
+class TranslationKey:
     host_name: HostName
     service_name: ServiceName
-
-
-@dataclass(frozen=True)
-class NeededElementForRRDDataKey:
-    # TODO Intermediate step, will be cleaned up:
-    # Relates to MetricOperation::rrd with SiteId, etc.
-    site_id: SiteId
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: str
-    consolidation_func_name: GraphConsoldiationFunction | None
-    scale: float
-
-
-RetranslationMap = Mapping[
-    tuple[HostName, ServiceName], Mapping[MetricName, tuple[SiteId, TranslatedMetric]]
-]
 
 
 class MetricOperation(BaseModel, ABC, frozen=True):
-    ident: str
-
     @staticmethod
     @abstractmethod
-    def name() -> str:
-        raise NotImplementedError()
+    def operation_name() -> str: ...
 
     @abstractmethod
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        raise NotImplementedError()
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]: ...
 
     @abstractmethod
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        raise NotImplementedError()
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]: ...
 
     def fade_odd_color(self) -> bool:
         return True
 
+    # mypy does not support other decorators on top of @property:
+    # https://github.com/python/mypy/issues/14461
+    # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
+    @computed_field  # type: ignore[misc]
+    @property
+    @final
+    def ident(self) -> str:
+        return self.operation_name()
+
 
 class MetricOperationRegistry(Registry[type[MetricOperation]]):
     def plugin_name(self, instance: type[MetricOperation]) -> str:
-        return instance.name()
+        return instance.operation_name()
 
 
 metric_operation_registry = MetricOperationRegistry()
 
 
 def parse_metric_operation(raw: object) -> MetricOperation:
-    parsed = TypeAdapter(
-        Annotated[
-            Union[*metric_operation_registry.values()],
-            Field(discriminator="ident"),
-        ],
-    ).validate_python(raw)
-    # mypy apparently doesn't understand TypeAdapter.validate_python
-    assert isinstance(parsed, MetricOperation)
-    return parsed
+    match raw:
+        case MetricOperation():
+            return raw
+        case {"ident": str(ident), **rest}:
+            return metric_operation_registry[ident].model_validate(rest)
+        case dict():
+            raise ValueError("Missing 'ident' key in metric operation")
+    raise TypeError(raw)
 
 
 class MetricOpConstant(MetricOperation, frozen=True):
-    ident: Literal["constant"] = "constant"
     value: float
 
     @staticmethod
-    def name() -> str:
-        return "metric_op_constant"
+    def operation_name() -> Literal["constant"]:
+        return "constant"
 
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return self
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         num_points, twindow = derive_num_points_twindow(rrd_data)
         return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
 
 
+class MetricOpConstantNA(MetricOperation, frozen=True):
+    @staticmethod
+    def operation_name() -> Literal["constant_na"]:
+        return "constant_na"
+
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield from ()
+
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        num_points, twindow = derive_num_points_twindow(rrd_data)
+        return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
+
+
 class MetricOpOperator(MetricOperation, frozen=True):
-    ident: Literal["operator"] = "operator"
     operator_name: Operators
-    operands: Sequence[Annotated[MetricOperation, PlainValidator(parse_metric_operation)]] = []
+    operands: Sequence[
+        Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
+    ] = []
 
     @staticmethod
-    def name() -> str:
-        return "metric_op_operator"
+    def operation_name() -> Literal["operator"]:
+        return "operator"
 
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield from (ne for o in self.operands for ne in o.needed_elements())
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return MetricOpOperator(
-            operator_name=self.operator_name,
-            operands=[o.reverse_translate(retranslation_map) for o in self.operands],
-        )
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield from (k for o in self.operands for k in o.keys())
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         if result := time_series_math(
@@ -148,7 +139,6 @@ class MetricOpOperator(MetricOperation, frozen=True):
 
 
 class MetricOpRRDSource(MetricOperation, frozen=True):
-    ident: Literal["rrd"] = "rrd"
     site_id: SiteId
     host_name: HostName
     service_name: ServiceName
@@ -157,11 +147,11 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
     scale: float
 
     @staticmethod
-    def name() -> str:
-        return "metric_op_rrd"
+    def operation_name() -> Literal["rrd"]:
+        return "rrd"
 
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield NeededElementForRRDDataKey(
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield RRDDataKey(
             self.site_id,
             self.host_name,
             self.service_name,
@@ -170,28 +160,9 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
             self.scale,
         )
 
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        site_id, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
-        metrics: list[MetricOperation] = [
-            MetricOpRRDSource(
-                site_id=site_id,
-                host_name=self.host_name,
-                service_name=self.service_name,
-                metric_name=name,
-                consolidation_func_name=self.consolidation_func_name,
-                scale=scale,
-            )
-            for name, scale in zip(trans["orig_name"], trans["scale"])
-        ]
-
-        if len(metrics) > 1:
-            return MetricOpOperator(operator_name="MERGE", operands=metrics)
-
-        return metrics[0]
-
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         if (
-            key := (
+            key := RRDDataKey(
                 self.site_id,
                 self.host_name,
                 self.service_name,
@@ -212,43 +183,59 @@ MetricOpOperator.model_rebuild()
 class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
-    operation: Annotated[MetricOperation, PlainValidator(parse_metric_operation)]
+    operation: Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
     unit: str
     color: str
     visible: bool
 
 
 class GraphSpecification(BaseModel, ABC, frozen=True):
-    graph_type: str
-
     @staticmethod
     @abstractmethod
-    def name() -> str:
-        ...
+    def graph_type_name() -> str: ...
 
     @abstractmethod
-    def recipes(self) -> Sequence[GraphRecipe]:
-        ...
+    def recipes(self) -> Sequence[GraphRecipe]: ...
+
+    # mypy does not support other decorators on top of @property:
+    # https://github.com/python/mypy/issues/14461
+    # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
+    @computed_field  # type: ignore[misc]
+    @property
+    @final
+    def graph_type(self) -> str:
+        return self.graph_type_name()
 
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
     def plugin_name(self, instance: type[GraphSpecification]) -> str:
-        return instance.name()
+        return instance.graph_type_name()
 
 
 graph_specification_registry = GraphSpecificationRegistry()
 
 
-def parse_raw_graph_specification(raw: Mapping[str, object]) -> GraphSpecification:
-    parsed = TypeAdapter(
-        Annotated[
-            Union[*graph_specification_registry.values()],
-            Field(discriminator="graph_type"),
-        ],
-    ).validate_python(raw)
-    # mypy apparently doesn't understand TypeAdapter.validate_python
-    assert isinstance(parsed, GraphSpecification)
-    return parsed
+def parse_raw_graph_specification(raw: object) -> GraphSpecification:
+    match raw:
+        case GraphSpecification():
+            return raw
+        case {"graph_type": str(graph_type), **rest}:
+            return graph_specification_registry[graph_type].model_validate(rest)
+        case dict():
+            raise ValueError("Missing 'graph_type' key in graph specification")
+    raise TypeError(raw)
+
+
+class FixedVerticalRange(BaseModel, frozen=True):
+    type: Literal["fixed"] = "fixed"
+    min: float | None
+    max: float | None
+
+
+class MinimalVerticalRange(BaseModel, frozen=True):
+    type: Literal["minimal"] = "minimal"
+    min: float | None
+    max: float | None
 
 
 class GraphDataRange(BaseModel, frozen=True):
@@ -264,21 +251,20 @@ class AdditionalGraphHTML(BaseModel, frozen=True):
     html: str
 
 
-class GraphRecipeBase(BaseModel, frozen=True):
+class GraphRecipe(BaseModel, frozen=True):
     title: str
     unit: str
-    explicit_vertical_range: tuple[float | None, float | None]
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool
     consolidation_function: GraphConsoldiationFunction | None
-    metrics: Sequence[GraphMetric]
+    # TODO: Use Sequence once https://github.com/pydantic/pydantic/issues/9319 is resolved
+    # Internal marker: pydantic-9319
+    metrics: list[GraphMetric]
     additional_html: AdditionalGraphHTML | None = None
     render_options: GraphRenderOptions = GraphRenderOptions()
     data_range: GraphDataRange | None = None
     mark_requested_end_time: bool = False
-
-
-class GraphRecipe(GraphRecipeBase, frozen=True):
     # https://docs.pydantic.dev/2.4/concepts/serialization/#subclass-instances-for-fields-of-basemodel-dataclasses-typeddict
     # https://docs.pydantic.dev/2.4/concepts/serialization/#serializing-with-duck-typing
     specification: SerializeAsAny[GraphSpecification]

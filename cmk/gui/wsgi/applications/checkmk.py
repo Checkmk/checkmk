@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import flask
+from werkzeug.exceptions import RequestEntityTooLarge
 
 import livestatus
 
@@ -122,7 +123,13 @@ def _render_exception(e: Exception, title: str) -> Response:
 
     if not fail_silently():
         make_header(html, title, Breadcrumb())
+        html.open_ts_container(
+            container="div",
+            function_name="insert_before",
+            options={"targetElementId": "main_page_content"},
+        )
         html.show_error(str(e))
+        html.close_div()
         html.footer()
 
     return response
@@ -219,6 +226,9 @@ def _process_request(  # pylint: disable=too-many-branches
     except MKException as e:
         resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
+
+    except RequestEntityTooLarge as e:
+        resp = _render_exception(e, title=_("Request too large"))
 
     except Exception:
         resp = handle_unhandled_exception()

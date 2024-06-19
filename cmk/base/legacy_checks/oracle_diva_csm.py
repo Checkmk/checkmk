@@ -36,9 +36,8 @@ from collections.abc import Sequence
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 
 def item_name_oracle_diva_csm(name, element_id):
@@ -82,6 +81,14 @@ def parse_oracle_diva_csm(string_table: Sequence[StringTable]) -> Sequence[Strin
     return string_table
 
 
+def discover_oracle_diva_csm(info):
+    return inventory_oracle_diva_csm_status("Library", 0, info)
+
+
+def check_oracle_diva_csm(item, params, info):
+    return check_oracle_diva_csm_status("Library", 0, item, params, info)
+
+
 check_info["oracle_diva_csm"] = LegacyCheckDefinition(
     parse_function=parse_oracle_diva_csm,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
@@ -112,37 +119,56 @@ check_info["oracle_diva_csm"] = LegacyCheckDefinition(
         ),
     ],
     service_name="DIVA Status %s",
-    discovery_function=lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
-    check_function=lambda item, params, info: check_oracle_diva_csm_status(
-        "Library", 0, item, params, info
-    ),
+    discovery_function=discover_oracle_diva_csm,
+    check_function=check_oracle_diva_csm,
 )
+
+
+def discover_oracle_diva_csm_drive(info):
+    return inventory_oracle_diva_csm_status("Drive", 1, info)
+
+
+def check_oracle_diva_csm_drive(item, params, info):
+    return check_oracle_diva_csm_status("Drive", 1, item, params, info)
+
 
 check_info["oracle_diva_csm.drive"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
-    discovery_function=lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
-    check_function=lambda item, params, info: check_oracle_diva_csm_status(
-        "Drive", 1, item, params, info
-    ),
+    discovery_function=discover_oracle_diva_csm_drive,
+    check_function=check_oracle_diva_csm_drive,
 )
+
+
+def discover_oracle_diva_csm_actor(info):
+    return inventory_oracle_diva_csm_status("Actor", 2, info)
+
+
+def check_oracle_diva_csm_actor(item, params, info):
+    return check_oracle_diva_csm_status("Actor", 2, item, params, info)
+
 
 check_info["oracle_diva_csm.actor"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
-    discovery_function=lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
-    check_function=lambda item, params, info: check_oracle_diva_csm_status(
-        "Actor", 2, item, params, info
-    ),
+    discovery_function=discover_oracle_diva_csm_actor,
+    check_function=check_oracle_diva_csm_actor,
 )
+
+
+def discover_oracle_diva_csm_archive(info):
+    return inventory_oracle_diva_csm_status("Manager", 3, info)
+
+
+def check_oracle_diva_csm_archive(item, params, info):
+    return check_oracle_diva_csm_status("Manager", 3, item, params, info)
+
 
 check_info["oracle_diva_csm.archive"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
-    discovery_function=lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
-    check_function=lambda item, params, info: check_oracle_diva_csm_status(
-        "Manager", 3, item, params, info
-    ),
+    discovery_function=discover_oracle_diva_csm_archive,
+    check_function=check_oracle_diva_csm_archive,
 )
 
 # .

@@ -5,7 +5,7 @@
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import NamedTuple
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 ScaleioSection = Mapping[str, Mapping[str, Sequence[str]]]
 

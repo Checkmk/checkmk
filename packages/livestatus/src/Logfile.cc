@@ -19,7 +19,7 @@
 
 namespace {
 std::chrono::system_clock::time_point firstTimestampOf(
-    const std::filesystem::path &path, Logger *logger) {
+    const std::filesystem::path &path) {
     std::string line;
     if (std::ifstream is{path}; is && std::getline(is, line)) {
         try {
@@ -28,10 +28,7 @@ std::chrono::system_clock::time_point firstTimestampOf(
             errno = EINVAL;
         }
     }
-    const generic_error ge{"cannot determine first timestamp of " +
-                           path.string()};
-    Warning(logger) << ge;
-    return {};
+    throw generic_error{"cannot determine first timestamp of " + path.string()};
 }
 }  // namespace
 
@@ -40,7 +37,7 @@ Logfile::Logfile(Logger *logger, LogCache *log_cache,
     : _logger(logger)
     , _log_cache(log_cache)
     , _path(std::move(path))
-    , _since(firstTimestampOf(_path, _logger))
+    , _since(firstTimestampOf(_path))
     , _watch(watch)
     , _read_pos{}
     , _lineno(0)

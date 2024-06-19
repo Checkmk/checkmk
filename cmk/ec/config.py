@@ -13,9 +13,7 @@ from collections.abc import (
     Sequence,
 )
 from re import Pattern
-from typing import Any, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.utils.exceptions import MKException
 from cmk.utils.translations import TranslationOptions
@@ -81,6 +79,7 @@ class EventLimits(TypedDict):
 
 LogLevel = int
 
+# TODO: Use keys which are valid identifiers
 LogConfig = TypedDict(
     "LogConfig",
     {
@@ -160,6 +159,7 @@ class Rule(TypedDict, total=False):
     comment: str
     contact_groups: ContactGroups
     count: Count
+    customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
     description: str
     docu_url: str
     disabled: bool
@@ -187,6 +187,7 @@ class Rule(TypedDict, total=False):
     set_text: str
     sl: ServiceLevel
     state: State
+    drop: bool | Literal["skip_pack"]
 
 
 class ECRulePackSpec(TypedDict, total=False):
@@ -198,7 +199,7 @@ class ECRulePackSpec(TypedDict, total=False):
 
 
 class MkpRulePackBindingError(MKException):
-    """Base class for exceptions related to rule pack binding"""
+    """Base class for exceptions related to rule pack binding."""
 
 
 class MkpRulePackProxy(MutableMapping[str, Any]):
@@ -247,13 +248,13 @@ class MkpRulePackProxy(MutableMapping[str, Any]):
         return len(self.keys())
 
     def keys(self) -> KeysView[str]:
-        """List of keys of this rule pack"""
+        """List of keys of this rule pack."""
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack.keys()
 
     def bind_to(self, mkp_rule_pack: ECRulePackSpec) -> None:
-        """Binds this rule pack to the given MKP rule pack"""
+        """Binds this rule pack to the given MKP rule pack."""
         if self.id_ != mkp_rule_pack["id"]:
             raise MkpRulePackBindingError(
                 f"The IDs of {self} and {mkp_rule_pack} cannot be different."
@@ -319,7 +320,7 @@ class SNMPCredential(SNMPCredentialBase, total=False):
 # This is what we get from the outside.
 class ConfigFromWATO(TypedDict):
     actions: Sequence[Action]
-    archive_mode: Literal["file", "mongodb"]
+    archive_mode: Literal["file", "mongodb", "sqlite"]
     archive_orphans: bool
     debug_rules: bool
     event_limit: EventLimits
@@ -337,6 +338,8 @@ class ConfigFromWATO(TypedDict):
     rule_optimizer: bool
     rule_packs: Sequence[ECRulePack]
     rules: Collection[Rule]
+    sqlite_housekeeping_interval: int
+    sqlite_freelist_size: int
     snmp_credentials: Iterable[SNMPCredential]
     socket_queue_len: int
     statistics_interval: int

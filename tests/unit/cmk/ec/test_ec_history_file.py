@@ -2,19 +2,20 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# flake8: noqa
 """EC History file backend"""
 
+import datetime
 import logging
 import shlex
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import time_machine
 
 from cmk.utils.hostaddress import HostName
 
+import cmk.ec.export as ec
 from cmk.ec.config import Config
-from cmk.ec.event import Event
 from cmk.ec.history import _current_history_period
 from cmk.ec.history_file import (
     _grep_pipeline,
@@ -29,8 +30,8 @@ from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 def test_file_add_get(history: FileHistory) -> None:
     """Add 2 documents to history, get filtered result with 1 document."""
 
-    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
-    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+    event1 = ec.Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
+    event2 = ec.Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
 
     history.add(event=event1, what="NEW")
     history.add(event=event2, what="NEW")
@@ -57,14 +58,11 @@ def test_file_add_get(history: FileHistory) -> None:
 
 def test_current_history_period(config: Config) -> None:
     """timestamp of the beginning of the current history period correctly returned."""
-
-    with on_time(1550000000.0, "CET"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1550000000.0, tz=ZoneInfo("CET"))):
         assert _current_history_period(config=config) == 1549929600
 
-    with on_time(1550000000.0, "CET"):
-        assert (
-            _current_history_period(config={**config, "history_rotation": "weekly"}) == 1549843200
-        )
+    with time_machine.travel(datetime.datetime.fromtimestamp(1550000000.0, tz=ZoneInfo("CET"))):
+        assert _current_history_period(config=config | {"history_rotation": "weekly"}) == 1549843200
 
 
 def test_convert_history_line() -> None:

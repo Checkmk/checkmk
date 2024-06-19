@@ -10,9 +10,8 @@ from cmk.base.check_legacy_includes.oracle import (
     oracle_handle_ora_errors_discovery,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 
 # <<<oracle_logswitches>>>
 # pengt  15

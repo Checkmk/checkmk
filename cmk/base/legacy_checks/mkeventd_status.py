@@ -13,9 +13,10 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+from cmk.agent_based.v2 import get_rate, get_value_store, render
 
 
 def parse_mkeventd_status(string_table):
@@ -26,7 +27,7 @@ def parse_mkeventd_status(string_table):
         try:
             data = json.loads(line[0])
         except ValueError:
-            # The agent plugin asks the event console for json OutputFormat, but
+            # The agent plug-in asks the event console for json OutputFormat, but
             # older versions always provide python format - even when other format
             # was requested. Skipping the site. Won't eval data from other systems.
             continue
@@ -62,7 +63,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
         ("num_open_events", status["num_open_events"])
     ]
 
-    yield 0, "Virtual memory: %s" % get_bytes_human_readable(status["virtual_memory_size"]), [
+    yield 0, "Virtual memory: %s" % render.bytes(status["virtual_memory_size"]), [
         ("process_virtual_size", status["virtual_memory_size"])
     ]
 

@@ -5,41 +5,33 @@
 """Module to hold shared code for main module internals and the plugins"""
 
 import http
+import re
 import shlex
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, NamedTuple, NewType, NotRequired, Self
-
-from typing_extensions import TypedDict
+from typing import Literal, NamedTuple, NewType, NotRequired, Self, TypedDict
 
 from livestatus import livestatus_lql
 
 import cmk.utils.regex
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
+from cmk.utils.plugin_registry import Registry
 
-import cmk.gui.sites as sites
-from cmk.gui.config import active_config
+from cmk.gui import sites
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
 
 from cmk.discover_plugins import DiscoveredPlugins
-from cmk.graphing.v1 import (
-    graph,
-    metric,
-    perfometer,
-    PhysicalUnit,
-    ScientificUnit,
-    translation,
-    Unit,
-)
+from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 
-from ._color import get_palette_color_by_index, parse_color_into_hexrgb
+from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._expression import (
     Constant,
     CriticalOf,
@@ -56,8 +48,8 @@ from ._expression import (
     Sum,
     WarningOf,
 )
-from ._loader import load_graphing_plugins
-from ._parser import parse_color, parse_unit
+from ._loader import graphs_from_api, perfometers_from_api
+from ._parser import parse_color, parse_or_add_unit
 from ._type_defs import (
     GraphConsoldiationFunction,
     LineType,
@@ -73,10 +65,41 @@ class ScalarDefinition(NamedTuple):
     title: str
 
 
+class MetricUnitColor(TypedDict):
+    unit: str
+    color: str
+
+
 class MetricDefinition(NamedTuple):
     expression: MetricExpression
     line_type: LineType
     title: str = ""
+
+    def compute_title(self, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
+        if self.title:
+            return self.title
+        return translated_metrics[next(self.expression.metrics()).name]["title"]
+
+    def compute_unit_color(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        optional_metrics: Sequence[str],
+    ) -> MetricUnitColor | None:
+        try:
+            result = self.expression.evaluate(translated_metrics)
+        except KeyError as err:  # because metric_name is not in translated_metrics
+            metric_name = err.args[0]
+            if optional_metrics and metric_name in optional_metrics:
+                return None
+            raise MKGeneralException(
+                _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
+                % (
+                    self.expression,
+                    metric_name,
+                    ", ".join(sorted(translated_metrics.keys())) or "None",
+                )
+            )
+        return MetricUnitColor(unit=result.unit_info["id"], color=result.color)
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -143,108 +166,92 @@ def _parse_raw_metric_definition(
     )
 
 
-def _parse_raw_graph_range(
-    raw_graph_range: tuple[int | str, int | str] | None
-) -> tuple[MetricExpression, MetricExpression] | None:
-    if raw_graph_range is None:
-        return None
-    return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
-
-
-def _parse_or_add_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> str:
-    unit_name = unit.name if isinstance(unit, Unit) else unit.symbol
-    if unit_name not in set(unit_info.keys()):
-        unit_info[unit_name] = parse_unit(unit)
-    return unit_name
-
-
 def _parse_quantity(
     quantity: (
         str
-        | metric.Constant
-        | metric.WarningOf
-        | metric.CriticalOf
-        | metric.MinimumOf
-        | metric.MaximumOf
-        | metric.Sum
-        | metric.Product
-        | metric.Difference
-        | metric.Fraction
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
     ),
     line_type: Literal["line", "-line", "stack", "-stack"],
 ) -> MetricDefinition:
     match quantity:
         case str():
-            metric_ = metric_info[quantity]
             return MetricDefinition(
                 expression=Metric(quantity),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=str(get_extended_metric_info(quantity)["title"]),
             )
-        case metric.Constant():
+        case metrics.Constant():
             return MetricDefinition(
                 expression=Constant(
                     quantity.value,
-                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_unit_name=parse_or_add_unit(quantity.unit)["id"],
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
-        case metric.WarningOf():
-            metric_ = metric_info[quantity.name]
+        case metrics.WarningOf():
+            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
-                expression=WarningOf(Metric(quantity.name)),
+                expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=_("Warning of %s") % metric_["title"],
             )
-        case metric.CriticalOf():
-            metric_ = metric_info[quantity.name]
+        case metrics.CriticalOf():
+            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
-                expression=CriticalOf(Metric(quantity.name)),
+                expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=_("Critical of %s") % metric_["title"],
             )
-        case metric.MinimumOf():
-            metric_ = metric_info[quantity.name]
+        case metrics.MinimumOf():
+            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=MinimumOf(
-                    Metric(quantity.name),
+                    Metric(quantity.metric_name),
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
-        case metric.MaximumOf():
-            metric_ = metric_info[quantity.name]
+        case metrics.MaximumOf():
+            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=MaximumOf(
-                    Metric(quantity.name),
+                    Metric(quantity.metric_name),
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
-        case metric.Sum():
+        case metrics.Sum():
             return MetricDefinition(
                 expression=Sum(
                     [_parse_quantity(s, line_type).expression for s in quantity.summands],
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
-        case metric.Product():
+        case metrics.Product():
             return MetricDefinition(
                 expression=Product(
                     [_parse_quantity(f, line_type).expression for f in quantity.factors],
-                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_unit_name=parse_or_add_unit(quantity.unit)["id"],
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
-        case metric.Difference():
+        case metrics.Difference():
             return MetricDefinition(
                 expression=Difference(
                     minuend=_parse_quantity(quantity.minuend, line_type).expression,
@@ -252,36 +259,31 @@ def _parse_quantity(
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
-        case metric.Fraction():
+        case metrics.Fraction():
             return MetricDefinition(
                 expression=Fraction(
                     dividend=_parse_quantity(quantity.dividend, line_type).expression,
                     divisor=_parse_quantity(quantity.divisor, line_type).expression,
-                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_unit_name=parse_or_add_unit(quantity.unit)["id"],
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
 
 
-def _parse_minimal_range(
-    minimal_range: graph.MinimalRange,
-) -> tuple[MetricExpression, MetricExpression]:
-    return (
-        (
-            Constant(minimal_range.lower)
-            if isinstance(minimal_range.lower, (int, float))
-            else _parse_quantity(minimal_range.lower, "line").expression
-        ),
-        (
-            Constant(minimal_range.upper)
-            if isinstance(minimal_range.upper, (int, float))
-            else _parse_quantity(minimal_range.upper, "line").expression
-        ),
-    )
+@dataclass(frozen=True, kw_only=True)
+class FixedGraphTemplateRange:
+    min: MetricExpression
+    max: MetricExpression
+
+
+@dataclass(frozen=True, kw_only=True)
+class MinimalGraphTemplateRange:
+    min: MetricExpression
+    max: MetricExpression
 
 
 @dataclass(frozen=True)
@@ -292,7 +294,7 @@ class GraphTemplate:
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
     consolidation_function: GraphConsoldiationFunction | None
-    range: tuple[MetricExpression, MetricExpression] | None
+    range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool
     metrics: Sequence[MetricDefinition]
 
@@ -335,122 +337,126 @@ class GraphTemplate:
             conflicting_metrics=template.get("conflicting_metrics", []),
             optional_metrics=template.get("optional_metrics", []),
             consolidation_function=template.get("consolidation_function"),
-            range=_parse_raw_graph_range(template.get("range")),
+            range=(
+                _parse_raw_graph_range(raw_range) if (raw_range := template.get("range")) else None
+            ),
             omit_zero_metrics=template.get("omit_zero_metrics", False),
-            # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
-            # https://github.com/python/mypy/issues/1178
             metrics=[_parse_raw_metric_definition(r) for r in template["metrics"]],
         )
 
     @classmethod
-    def from_graph(cls, graph_: graph.Graph) -> Self:
-        metrics = [_parse_quantity(l, "stack") for l in graph_.compound_lines]
+    def from_graph(cls, graph: graphs.Graph) -> Self:
+        metrics_ = [_parse_quantity(l, "stack") for l in graph.compound_lines]
         scalars: list[ScalarDefinition] = []
-        for line in graph_.simple_lines:
+        for line in graph.simple_lines:
             match line:
                 case (
-                    metric.WarningOf()
-                    | metric.CriticalOf()
-                    | metric.MinimumOf()
-                    | metric.MaximumOf()
+                    metrics.WarningOf()
+                    | metrics.CriticalOf()
+                    | metrics.MinimumOf()
+                    | metrics.MaximumOf()
                 ):
                     parsed = _parse_quantity(line, "line")
                     scalars.append(ScalarDefinition(parsed.expression, parsed.title))
                 case _:
-                    metrics.append(_parse_quantity(line, "line"))
+                    metrics_.append(_parse_quantity(line, "line"))
         return cls(
-            id=graph_.name,
-            title=graph_.title.localize(_),
+            id=graph.name,
+            title=graph.title.localize(translate_to_current_language),
             range=(
-                None if graph_.minimal_range is None else _parse_minimal_range(graph_.minimal_range)
+                None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)
             ),
-            metrics=metrics,
+            metrics=metrics_,
             scalars=list(scalars),
-            optional_metrics=graph_.optional,
-            conflicting_metrics=graph_.conflicting,
+            optional_metrics=graph.optional,
+            conflicting_metrics=graph.conflicting,
             consolidation_function=None,
             omit_zero_metrics=False,
         )
 
     @classmethod
-    def from_bidirectional(cls, graph_: graph.Bidirectional) -> Self:
-        lower_ranges = []
-        upper_ranges = []
-        if graph_.lower.minimal_range is not None:
-            lower_range = _parse_minimal_range(graph_.lower.minimal_range)
-            lower_ranges.append(lower_range[0])
-            upper_ranges.append(lower_range[1])
-        if graph_.upper.minimal_range is not None:
-            upper_range = _parse_minimal_range(graph_.upper.minimal_range)
-            lower_ranges.append(upper_range[0])
-            upper_ranges.append(upper_range[1])
+    def from_bidirectional(cls, graph: graphs.Bidirectional) -> Self:
+        ranges_min = []
+        ranges_max = []
+        if graph.lower.minimal_range is not None:
+            lower_range = _parse_minimal_range(graph.lower.minimal_range)
+            ranges_min.append(lower_range.min)
+            ranges_max.append(lower_range.max)
+        if graph.upper.minimal_range is not None:
+            upper_range = _parse_minimal_range(graph.upper.minimal_range)
+            ranges_min.append(upper_range.min)
+            ranges_max.append(upper_range.max)
 
-        metrics = [_parse_quantity(l, "-stack") for l in graph_.lower.compound_lines] + [
-            _parse_quantity(l, "stack") for l in graph_.upper.compound_lines
+        metrics_ = [_parse_quantity(l, "-stack") for l in graph.lower.compound_lines] + [
+            _parse_quantity(l, "stack") for l in graph.upper.compound_lines
         ]
         scalars: list[ScalarDefinition] = []
-        for line in graph_.lower.simple_lines:
+        for line in graph.lower.simple_lines:
             match line:
                 case (
-                    metric.WarningOf()
-                    | metric.CriticalOf()
-                    | metric.MinimumOf()
-                    | metric.MaximumOf()
+                    metrics.WarningOf()
+                    | metrics.CriticalOf()
+                    | metrics.MinimumOf()
+                    | metrics.MaximumOf()
                 ):
                     parsed = _parse_quantity(line, "-line")
                     scalars.append(ScalarDefinition(parsed.expression, parsed.title))
                 case _:
-                    metrics.append(_parse_quantity(line, "-line"))
-        for line in graph_.upper.simple_lines:
+                    metrics_.append(_parse_quantity(line, "-line"))
+        for line in graph.upper.simple_lines:
             match line:
                 case (
-                    metric.WarningOf()
-                    | metric.CriticalOf()
-                    | metric.MinimumOf()
-                    | metric.MaximumOf()
+                    metrics.WarningOf()
+                    | metrics.CriticalOf()
+                    | metrics.MinimumOf()
+                    | metrics.MaximumOf()
                 ):
                     parsed = _parse_quantity(line, "line")
                     scalars.append(ScalarDefinition(parsed.expression, parsed.title))
                 case _:
-                    metrics.append(_parse_quantity(line, "line"))
+                    metrics_.append(_parse_quantity(line, "line"))
         return cls(
-            id=graph_.name,
-            title=graph_.title.localize(_),
+            id=graph.name,
+            title=graph.title.localize(translate_to_current_language),
             range=(
-                (Minimum(lower_ranges), Maximum(upper_ranges))
-                if lower_ranges and upper_ranges
+                MinimalGraphTemplateRange(
+                    min=Minimum(ranges_min),
+                    max=Maximum(ranges_max),
+                )
+                if ranges_min and ranges_max
                 else None
             ),
-            metrics=metrics,
+            metrics=metrics_,
             scalars=scalars,
-            optional_metrics=list(graph_.lower.optional) + list(graph_.upper.optional),
-            conflicting_metrics=list(graph_.lower.conflicting) + list(graph_.upper.conflicting),
+            optional_metrics=list(graph.lower.optional) + list(graph.upper.optional),
+            conflicting_metrics=list(graph.lower.conflicting) + list(graph.upper.conflicting),
             consolidation_function=None,
             omit_zero_metrics=False,
         )
 
-    def compute_range(
-        self, translated_metrics: Mapping[str, TranslatedMetric]
-    ) -> tuple[float | None, float | None]:
-        if self.range is None:
-            return None, None
 
-        try:
-            from_ = self.range[0].evaluate(translated_metrics).value
-        except Exception:
-            from_ = None
-
-        try:
-            to = self.range[1].evaluate(translated_metrics).value
-        except Exception:
-            to = None
-
-        return from_, to
+def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
+    return FixedGraphTemplateRange(
+        min=parse_expression(raw_graph_range[0], {}),
+        max=parse_expression(raw_graph_range[1], {}),
+    )
 
 
-class MetricUnitColor(TypedDict):
-    unit: str
-    color: str
+def _parse_minimal_range(
+    minimal_range: graphs.MinimalRange,
+) -> MinimalGraphTemplateRange:
+    return MinimalGraphTemplateRange(
+        min=(
+            Constant(minimal_range.lower)
+            if isinstance(minimal_range.lower, (int, float))
+            else _parse_quantity(minimal_range.lower, "line").expression
+        ),
+        max=(
+            Constant(minimal_range.upper)
+            if isinstance(minimal_range.upper, (int, float))
+            else _parse_quantity(minimal_range.upper, "line").expression
+        ),
+    )
 
 
 class CheckMetricEntry(TypedDict, total=False):
@@ -472,6 +478,7 @@ class MetricInfo(_MetricInfoMandatory, total=False):
 
 
 class _MetricInfoExtendedMandatory(TypedDict):
+    name: MetricName
     title: str | LazyString
     unit: UnitInfo
     color: str
@@ -508,7 +515,7 @@ class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
         self._item_index = start_index or 0
 
     def append(self, item: RawGraphTemplate) -> None:
-        # Avoid duplicate graph definitions in case the metric plugins are loaded multiple times.
+        # Avoid duplicate graph definitions in case the metric plug-ins are loaded multiple times.
         # Otherwise, we get duplicate graphs in the UI.
         if self._item_already_appended(item):
             return
@@ -524,38 +531,57 @@ class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
 
 
 metric_info: dict[MetricName, MetricInfo] = {}
+
+
+class MetricsFromAPI(Registry[MetricInfoExtended]):
+    def plugin_name(self, instance: MetricInfoExtended) -> str:
+        return instance["name"]
+
+
+metrics_from_api = MetricsFromAPI()
+
+
+def registered_metrics() -> Iterator[tuple[str, str]]:
+    for metric_id, mie in metrics_from_api.items():
+        yield metric_id, str(mie["title"])
+    for metric_id, mi in metric_info.items():
+        yield metric_id, str(mi["title"])
+
+
 check_metrics: dict[str, dict[MetricName, CheckMetricEntry]] = {}
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")
 
 
-def _parse_check_command(
-    check_command: translation.PassiveCheck
-    | translation.ActiveCheck
-    | translation.HostCheckCommand
-    | translation.NagiosPlugin,
+def _parse_check_command_from_api(
+    check_command: (
+        translations.PassiveCheck
+        | translations.ActiveCheck
+        | translations.HostCheckCommand
+        | translations.NagiosPlugin
+    ),
 ) -> str:
     match check_command:
-        case translation.PassiveCheck():
+        case translations.PassiveCheck():
             return (
                 check_command.name
                 if check_command.name.startswith("check_mk-")
                 else f"check_mk-{check_command.name}"
             )
-        case translation.ActiveCheck():
+        case translations.ActiveCheck():
             return (
                 check_command.name
                 if check_command.name.startswith("check_mk_active-")
                 else f"check_mk_active-{check_command.name}"
             )
-        case translation.HostCheckCommand():
+        case translations.HostCheckCommand():
             return (
                 check_command.name
                 if check_command.name.startswith("check-mk-")
                 else f"check-mk-{check_command.name}"
             )
-        case translation.NagiosPlugin():
+        case translations.NagiosPlugin():
             return (
                 check_command.name
                 if check_command.name.startswith("check_")
@@ -564,43 +590,54 @@ def _parse_check_command(
 
 
 def _parse_translation(
-    translation_: translation.Renaming | translation.Scaling | translation.RenamingAndScaling,
+    translation: translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
 ) -> CheckMetricEntry:
-    match translation_:
-        case translation.Renaming():
-            return {"name": translation_.rename_to}
-        case translation.Scaling():
-            return {"scale": translation_.scale_by}
-        case translation.RenamingAndScaling():
-            return {"name": translation_.rename_to, "scale": translation_.scale_by}
+    match translation:
+        case translations.RenameTo():
+            return {"name": translation.metric_name}
+        case translations.ScaleBy():
+            return {"scale": translation.factor}
+        case translations.RenameToAndScaleBy():
+            return {"name": translation.metric_name, "scale": translation.factor}
 
 
 def add_graphing_plugins(
     plugins: DiscoveredPlugins[
-        metric.Metric
-        | translation.Translation
-        | perfometer.Perfometer
-        | perfometer.Bidirectional
-        | perfometer.Stacked
-        | graph.Graph
-        | graph.Bidirectional
+        metrics.Metric
+        | translations.Translation
+        | perfometers.Perfometer
+        | perfometers.Bidirectional
+        | perfometers.Stacked
+        | graphs.Graph
+        | graphs.Bidirectional
     ],
 ) -> None:
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for plugin in plugins.plugins.values():
-        if isinstance(plugin, metric.Metric):
-            metric_info[MetricName(plugin.name)] = {
-                "title": plugin.title.localize(_),
-                "unit": _parse_or_add_unit(plugin.unit),
-                "color": parse_color(plugin.color),
-            }
+        if isinstance(plugin, metrics.Metric):
+            metrics_from_api.register(
+                MetricInfoExtended(
+                    name=plugin.name,
+                    title=plugin.title.localize(translate_to_current_language),
+                    unit=parse_or_add_unit(plugin.unit),
+                    color=parse_color(plugin.color),
+                )
+            )
 
-        elif isinstance(plugin, translation.Translation):
+        elif isinstance(plugin, translations.Translation):
             for check_command in plugin.check_commands:
-                check_metrics[_parse_check_command(check_command)] = {
-                    MetricName(old_name): _parse_translation(translation_)
-                    for old_name, translation_ in plugin.translations.items()
+                check_metrics[_parse_check_command_from_api(check_command)] = {
+                    MetricName(old_name): _parse_translation(translation)
+                    for old_name, translation in plugin.translations.items()
                 }
+
+        elif isinstance(
+            plugin, (perfometers.Perfometer, perfometers.Bidirectional, perfometers.Stacked)
+        ):
+            perfometers_from_api.register(plugin)
+
+        elif isinstance(plugin, (graphs.Graph, graphs.Bidirectional)):
+            graphs_from_api.register(plugin)
 
 
 # .
@@ -667,36 +704,44 @@ def _parse_perf_values(
     return varname, value, other_parts
 
 
+_VALUE_AND_UNIT = re.compile(r"([0-9.,-]*)(.*)")
+
+
 def _split_unit(value_text: str) -> tuple[float | None, str | None]:
     "separate value from unit"
-
-    if not value_text.strip():
+    if not value_text or value_text.isspace():
         return None, None
+    value_and_unit = re.match(_VALUE_AND_UNIT, value_text)
+    assert value_and_unit is not None  # help mypy a bit, the regex always matches
+    return _float_or_int(value_and_unit[1]) if value_and_unit[1] else None, value_and_unit[2]
 
-    def digit_unit_split(value_text: str) -> int:
-        for i, char in enumerate(value_text):
-            if char not in "0123456789.,-":
-                return i
-        return len(value_text)
 
-    cut_unit = digit_unit_split(value_text)
+def _compute_lookup_metric_name(metric_name: str) -> str:
+    if metric_name.startswith("predict_lower_"):
+        return metric_name[14:]
+    if metric_name.startswith("predict_"):
+        return metric_name[8:]
+    return metric_name
 
-    unit_name = value_text[cut_unit:]
-    if value_text[:cut_unit]:
-        return _float_or_int(value_text[:cut_unit]), unit_name
 
-    return None, unit_name
+def _parse_check_command(check_command: str) -> str:
+    # This function handles very special and known cases.
+    parts = check_command.split("!", 1)
+    if parts[0] == "check-mk-custom" and len(parts) >= 2:
+        if parts[1].startswith("check_ping") or parts[1].startswith("./check_ping"):
+            return "check_ping"
+    return parts[0]
 
 
 def parse_perf_data(
-    perf_data_string: str, check_command: str | None = None
+    perf_data_string: str, check_command: str | None = None, *, config: Config
 ) -> tuple[Perfdata, str]:
     """Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
     if check_command is None:
         check_command = ""
     elif hasattr(check_command, "split"):
-        check_command = check_command.split("!")[0]
+        check_command = _parse_check_command(check_command)
 
     # Split the perf data string into parts. Preserve quoted strings!
     parts = _split_perf_data(perf_data_string)
@@ -723,6 +768,7 @@ def parse_perf_data(
             perf_data.append(
                 PerfDataTuple(
                     varname,
+                    _compute_lookup_metric_name(varname),
                     value,
                     unit_name,
                     _float_or_int(value_parts[0]),
@@ -733,8 +779,37 @@ def parse_perf_data(
             )
         except Exception as exc:
             logger.exception("Failed to parse perfdata '%s'", perf_data_string)
-            if active_config.debug:
+            if config.debug:
                 raise exc
+
+    return perf_data, check_command
+
+
+def parse_perf_data_from_performance_data_livestatus_column(
+    perf_data_mapping: Mapping[str, float], check_command: str | None = None
+) -> tuple[Perfdata, str]:
+    """Convert new_perf_data into perf_data"""
+    # Strip away arguments like in "check_http!-H checkmk.com"
+    if check_command is None:
+        check_command = ""
+    elif hasattr(check_command, "split"):
+        check_command = check_command.split("!")[0]
+
+    check_command = check_command.replace(".", "_")  # see function maincheckify
+
+    perf_data: Perfdata = [
+        PerfDataTuple(
+            varname,
+            _compute_lookup_metric_name(varname),
+            value,
+            "",
+            None,
+            None,
+            None,
+            None,
+        )
+        for varname, value in perf_data_mapping.items()
+    ]
 
     return perf_data, check_command
 
@@ -782,29 +857,31 @@ def lookup_metric_translations_for_check_command(
         return None
     return all_translations.get(
         check_command,
-        all_translations.get(
-            check_command.replace(
-                "check_mk-mgmt_",
-                "check_mk-",
-                1,
+        (
+            all_translations.get(
+                check_command.replace(
+                    "check_mk-mgmt_",
+                    "check_mk-",
+                    1,
+                )
             )
-        )
-        if check_command.startswith("check_mk-mgmt_")
-        else None,
+            if check_command.startswith("check_mk-mgmt_")
+            else None
+        ),
     )
 
 
 def find_matching_translation(
     metric_name: MetricName,
-    translations: Mapping[MetricName, CheckMetricEntry],
+    translations_: Mapping[MetricName, CheckMetricEntry],
 ) -> CheckMetricEntry:
-    if translation_ := translations.get(metric_name):
-        return translation_
-    for orig_metric_name, translation_ in translations.items():
+    if translation := translations_.get(metric_name):
+        return translation
+    for orig_metric_name, translation in translations_.items():
         if orig_metric_name.startswith("~") and cmk.utils.regex.regex(orig_metric_name[1:]).match(
             metric_name
         ):  # Regex entry
-            return translation_
+            return translation
     return {}
 
 
@@ -828,7 +905,7 @@ def _scalar_bounds(perf_data_tuple: PerfDataTuple, scale: float) -> ScalarBounds
 def _normalize_perf_data(
     perf_data_tuple: PerfDataTuple, check_command: str
 ) -> tuple[str, _NormalizedPerfData]:
-    translation_entry = perfvar_translation(perf_data_tuple.metric_name, check_command)
+    translation_entry = perfvar_translation(perf_data_tuple.lookup_metric_name, check_command)
 
     new_entry = _NormalizedPerfData(
         orig_name=[perf_data_tuple.metric_name],
@@ -839,21 +916,68 @@ def _normalize_perf_data(
         auto_graph=translation_entry["auto_graph"],
     )
 
+    if perf_data_tuple.metric_name.startswith("predict_lower_"):
+        return f"predict_lower_{translation_entry['name']}", new_entry
+    if perf_data_tuple.metric_name.startswith("predict_"):
+        return f"predict_{translation_entry['name']}", new_entry
     return translation_entry["name"], new_entry
 
 
-def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExtended, int]:
+def _get_legacy_metric_info(
+    metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
+) -> MetricInfo:
     if metric_name in metric_info:
-        mi = metric_info[metric_name]
-    else:
-        color_index += 1
+        return metric_info[metric_name]
+    color_counter.update({"metric": 1})
+    return MetricInfo(
+        title=metric_name.title(),
+        unit="",
+        color=get_palette_color_by_index(color_counter["metric"]),
+    )
+
+
+def _get_extended_metric_info(
+    metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
+) -> MetricInfoExtended:
+    if metric_name.startswith("predict_lower_"):
+        if (lookup_metric_name := metric_name[14:]) in metrics_from_api:
+            mfa = metrics_from_api[lookup_metric_name]
+            return MetricInfoExtended(
+                name=metric_name,
+                title=_("Prediction of ") + mfa["title"] + _(" (lower levels)"),
+                unit=mfa["unit"],
+                color=get_gray_tone(color_counter),
+            )
+
+        mi_ = _get_legacy_metric_info(lookup_metric_name, color_counter)
         mi = MetricInfo(
-            title=metric_name.title(),
-            unit="",
-            color=get_palette_color_by_index(color_index),
+            title=_("Prediction of ") + mi_["title"] + _(" (lower levels)"),
+            unit=mi_["unit"],
+            color=get_gray_tone(color_counter),
         )
+    elif metric_name.startswith("predict_"):
+        if (lookup_metric_name := metric_name[8:]) in metrics_from_api:
+            mfa = metrics_from_api[lookup_metric_name]
+            return MetricInfoExtended(
+                name=metric_name,
+                title=_("Prediction of ") + mfa["title"] + _(" (upper levels)"),
+                unit=mfa["unit"],
+                color=get_gray_tone(color_counter),
+            )
+
+        mi_ = _get_legacy_metric_info(lookup_metric_name, color_counter)
+        mi = MetricInfo(
+            title=_("Prediction of ") + mi_["title"] + _(" (upper levels)"),
+            unit=mi_["unit"],
+            color=get_gray_tone(color_counter),
+        )
+    elif metric_name in metrics_from_api:
+        return metrics_from_api[metric_name]
+    else:
+        mi = _get_legacy_metric_info(metric_name, color_counter)
 
     mie = MetricInfoExtended(
+        name=metric_name,
         title=mi["title"],
         unit=unit_info[mi["unit"]],
         color=parse_color_into_hexrgb(mi["color"]),
@@ -863,7 +987,11 @@ def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExten
     if "render" in mi:
         mie["render"] = mi["render"]
 
-    return mie, color_index
+    return mie
+
+
+def get_extended_metric_info(metric_name: str) -> MetricInfoExtended:
+    return _get_extended_metric_info(metric_name, Counter())
 
 
 def _translated_metric_scalar(
@@ -882,7 +1010,7 @@ def _translated_metric_scalar(
 
 
 def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, TranslatedMetric]:
-    """Convert Ascii-based performance data as output from a check plugin
+    """Convert Ascii-based performance data as output from a check plug-in
     into floating point numbers, do scaling if necessary.
 
     Simple example for perf_data: [(u'temp', u'48.1', u'', u'70', u'80', u'', u'')]
@@ -890,12 +1018,10 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
     translated_metrics: dict[str, TranslatedMetric] = {}
-    color_index = 0
+    color_counter: Counter[Literal["metric", "predictive"]] = Counter()
     for entry in perf_data:
-        metric_name: str
-
         metric_name, normalized = _normalize_perf_data(entry, check_command)
-        mi, color_index = get_metric_info(metric_name, color_index)
+        mi = _get_extended_metric_info(metric_name, color_counter)
         unit_conversion = mi["unit"].get("conversion", lambda v: v)
 
         # https://github.com/python/mypy/issues/6462
@@ -922,6 +1048,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
             ]
         else:
             translated_metrics[metric_name] = new_entry
+
     return translated_metrics
 
 
@@ -951,9 +1078,13 @@ def available_metrics_translated(
     if not rrd_metrics:
         return {}
 
-    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
+    perf_data, check_command = parse_perf_data(
+        perf_data_string, check_command, config=active_config
+    )
     rrd_perf_data_string = _perf_data_string_from_metric_names(rrd_metrics)
-    rrd_perf_data, check_command = parse_perf_data(rrd_perf_data_string, check_command)
+    rrd_perf_data, check_command = parse_perf_data(
+        rrd_perf_data_string, check_command, config=active_config
+    )
     if not rrd_perf_data + perf_data:
         return {}
 
@@ -992,14 +1123,14 @@ def translated_metrics_from_row(row: Row) -> Mapping[str, TranslatedMetric]:
 #   '----------------------------------------------------------------------'
 
 
-def graph_templates_internal() -> dict[str, GraphTemplate]:
+def _graph_templates_internal() -> dict[str, GraphTemplate]:
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     graph_templates: dict[str, GraphTemplate] = {}
-    for plugin in load_graphing_plugins().plugins.values():
-        if isinstance(plugin, graph.Graph):
-            graph_templates[plugin.name] = GraphTemplate.from_graph(plugin)
-        elif isinstance(plugin, graph.Bidirectional):
-            graph_templates[plugin.name] = GraphTemplate.from_bidirectional(plugin)
+    for graph in graphs_from_api.values():
+        if isinstance(graph, graphs.Graph):
+            graph_templates[graph.name] = GraphTemplate.from_graph(graph)
+        elif isinstance(graph, graphs.Bidirectional):
+            graph_templates[graph.name] = GraphTemplate.from_bidirectional(graph)
     for template_id, template in graph_info.items():
         if template_id not in graph_templates:
             graph_templates[template_id] = GraphTemplate.from_template(template_id, template)
@@ -1010,7 +1141,7 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
-        [(k, v.title or k) for k, v in graph_templates_internal().items()],
+        [(k, v.title or k) for k, v in _graph_templates_internal().items()],
         key=lambda k_v: k_v[1],
     )
 
@@ -1018,7 +1149,7 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
 def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return GraphTemplate.from_name(template_id)
-    if template := graph_templates_internal().get(template_id):
+    if template := _graph_templates_internal().get(template_id):
         return template
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
@@ -1032,20 +1163,35 @@ def get_graph_templates(
 
     explicit_templates = list(
         _get_explicit_graph_templates(
-            graph_templates_internal().values(),
+            _graph_templates_internal().values(),
             translated_metrics,
         )
     )
     yield from explicit_templates
     yield from _get_implicit_graph_templates(
         translated_metrics,
-        set(
-            m.name
-            for gt in explicit_templates
-            for md in gt.metrics
-            for m in md.expression.metrics()
-        ),
+        {m.name for gt in explicit_templates for md in gt.metrics for m in md.expression.metrics()},
     )
+
+
+def _compute_predictive_metrics(
+    translated_metrics: Mapping[str, TranslatedMetric], metrics_: Sequence[MetricDefinition]
+) -> Iterator[MetricDefinition]:
+    for metric_defintion in metrics_:
+        line_type: Literal["line", "-line"] = (
+            "-line" if metric_defintion.line_type.startswith("-") else "line"
+        )
+        for metric in metric_defintion.expression.metrics():
+            if (predict_metric_name := f"predict_{metric.name}") in translated_metrics:
+                yield MetricDefinition(
+                    expression=Metric(predict_metric_name),
+                    line_type=line_type,
+                )
+            if (predict_lower_metric_name := f"predict_lower_{metric.name}") in translated_metrics:
+                yield MetricDefinition(
+                    expression=Metric(predict_lower_metric_name),
+                    line_type=line_type,
+                )
 
 
 def _get_explicit_graph_templates(
@@ -1053,7 +1199,7 @@ def _get_explicit_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterable[GraphTemplate]:
     for graph_template in graph_templates:
-        if metrics := applicable_metrics(
+        if metrics_ := applicable_metrics(
             metrics_to_consider=graph_template.metrics,
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
@@ -1068,7 +1214,9 @@ def _get_explicit_graph_templates(
                 consolidation_function=graph_template.consolidation_function,
                 range=graph_template.range,
                 omit_zero_metrics=graph_template.omit_zero_metrics,
-                metrics=metrics,
+                metrics=(
+                    list(metrics_) + list(_compute_predictive_metrics(translated_metrics, metrics_))
+                ),
             )
 
 
@@ -1087,7 +1235,7 @@ def applicable_metrics(
     conflicting_metrics: Iterable[str],
     optional_metrics: Sequence[str],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> list[MetricDefinition]:
+) -> Sequence[MetricDefinition]:
     # Skip early on conflicting_metrics
     for var in conflicting_metrics:
         if var in translated_metrics:
@@ -1138,9 +1286,7 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
 
 
 def metric_title(metric_name: MetricName) -> str:
-    if metric_name in metric_info:
-        return str(metric_info[metric_name]["title"])
-    return metric_name.title()
+    return str(get_extended_metric_info(metric_name)["title"])
 
 
 # .

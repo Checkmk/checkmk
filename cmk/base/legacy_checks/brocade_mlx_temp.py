@@ -7,8 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.brocade import DETECT_MLX
 
 
@@ -35,7 +35,7 @@ def inventory_brocade_mlx_temp(parsed):
 def check_brocade_mlx_temp(item, params, parsed):
     if item in parsed:
         return check_temperature(parsed[item], params, "brocade_mlx_temp_%s" % item)
-    if "Module" in item and not "Sensor" in item:
+    if "Module" in item and "Sensor" not in item:
         # item discovered in 1.2.6 had the sensor-id stripped and module id replaced
         # so it's impossible to look by that name
         return 3, "check had an incompatible change, please re-discover this host"

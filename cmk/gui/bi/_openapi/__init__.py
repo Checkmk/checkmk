@@ -22,9 +22,10 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.bi import BIManager, get_cached_bi_packs
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
@@ -168,7 +169,7 @@ def post_bi_rule(params: Mapping[str, Any]) -> Response:
     return _update_bi_rule(params, must_exist=False)
 
 
-def _update_bi_rule(params, must_exist: bool):  # type: ignore[no-untyped-def]
+def _update_bi_rule(params: Mapping[str, Any], must_exist: bool) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
@@ -267,7 +268,7 @@ class BIAggregationStateResponseSchema(Schema):
 
 @Endpoint(
     constructors.domain_type_action_href("bi_aggregation", "aggregation_state"),
-    "cmk/get_bi_aggregation_state",
+    "cmk/bi_aggregation_state_post",
     method="post",
     convert_response=False,
     request_schema=BIAggregationStateRequestSchema,
@@ -277,12 +278,34 @@ class BIAggregationStateResponseSchema(Schema):
     skip_locking=True,
     update_config_generation=False,
 )
-def get_bi_aggregation_state(params: Mapping[str, Any]) -> Response:
+def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
+
+    # This endpoint is being kept for backward compatibility.
+    # We now provide the same endpoint via the GET method.
+
     user.need_permission("wato.bi_rules")
     filter_config = params.get("body", {})
     filter_names = filter_config.get("filter_names")
     filter_groups = filter_config.get("filter_groups")
+    return serve_json(_aggregation_state(filter_names=filter_names, filter_groups=filter_groups))
+
+
+@Endpoint(
+    constructors.domain_type_action_href("bi_aggregation", "aggregation_state"),
+    "cmk/bi_aggregation_state_get",
+    method="get",
+    convert_response=False,
+    query_params=[BIAggregationStateRequestSchema],
+    response_schema=BIAggregationStateResponseSchema,
+    permissions_required=RO_PERMISSIONS,
+    tag_group="Monitoring",
+)
+def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
+    """Get the state of BI aggregations"""
+    user.need_permission("wato.bi_rules")
+    filter_names = params.get("filter_names")
+    filter_groups = params.get("filter_groups")
     return serve_json(_aggregation_state(filter_names=filter_names, filter_groups=filter_groups))
 
 
@@ -348,7 +371,7 @@ def _aggregation_state(
                 "output": node_result_bundle.actual_result.output,
                 "hosts": required_hosts,
                 "acknowledged": node_result_bundle.actual_result.acknowledged,
-                "in_downtime": node_result_bundle.actual_result.downtime_state != 0,
+                "in_downtime": node_result_bundle.actual_result.in_downtime != 0,
                 "in_service_period": node_result_bundle.actual_result.in_service_period,
                 "infos": collect_infos(node_result_bundle, is_single_host_aggregation),
             }
@@ -426,7 +449,7 @@ def post_bi_aggregation(params: Mapping[str, Any]) -> Response:
     return _update_bi_aggregation(params, must_exist=False)
 
 
-def _update_bi_aggregation(params, must_exist: bool):  # type: ignore[no-untyped-def]
+def _update_bi_aggregation(params: Mapping[str, Any], must_exist: bool) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
@@ -502,18 +525,17 @@ def get_bi_packs(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-    packs = [
-        constructors.collection_item(
-            domain_type="bi_pack",
-            identifier=pack.id,
-            title=pack.title,
-        )
-        for pack in bi_packs.packs.values()
-    ]
 
     collection_object = constructors.collection_object(
         domain_type="bi_pack",
-        value=packs,
+        value=[
+            constructors.collection_item(
+                domain_type="bi_pack",
+                identifier=pack.id,
+                title=pack.title,
+            )
+            for pack in bi_packs.packs.values()
+        ],
         links=[constructors.link_rel("self", constructors.collection_href("bi_pack"))],
     )
     return serve_json(collection_object)
@@ -660,7 +682,7 @@ def post_bi_pack(params: Mapping[str, Any]) -> Response:
     return _update_bi_pack(params, must_exist=False)
 
 
-def _update_bi_pack(params, must_exist: bool) -> Response:  # type: ignore[no-untyped-def]
+def _update_bi_pack(params: Mapping[str, Any], must_exist: bool) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     user.need_permission("wato.bi_admin")
@@ -695,7 +717,8 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(put_bi_rule)
     endpoint_registry.register(post_bi_rule)
     endpoint_registry.register(delete_bi_rule)
-    endpoint_registry.register(get_bi_aggregation_state)
+    endpoint_registry.register(bi_aggregation_state_post)
+    endpoint_registry.register(bi_aggregation_state_get)
     endpoint_registry.register(get_bi_aggregation)
     endpoint_registry.register(put_bi_aggregation)
     endpoint_registry.register(post_bi_aggregation)

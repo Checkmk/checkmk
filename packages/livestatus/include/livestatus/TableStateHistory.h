@@ -11,53 +11,47 @@
 #include <memory>
 #include <string>
 
-#include "livestatus/LogCache.h"
-#include "livestatus/Logfile.h"
 #include "livestatus/Table.h"
+
 class Column;
 class ColumnOffsets;
 class Filter;
 class HostServiceState;
-class LogEntry;
 class ICore;
+class LogCache;
+class LogEntry;
+class LogFiles;
 class Query;
 class User;
 
 class TableStateHistory : public Table {
 public:
     TableStateHistory(ICore *mc, LogCache *log_cache);
-    static void addColumns(Table *table, const std::string &prefix,
+    static void addColumns(Table *table, const ICore &core,
+                           const std::string &prefix,
                            const ColumnOffsets &offsets);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
     [[nodiscard]] std::shared_ptr<Column> column(
         std::string colname) const override;
     static std::unique_ptr<Filter> createPartialFilter(const Query &query);
 
 private:
-    LogCache *_log_cache;
-    bool _abort_query;
+    LogCache *log_cache_;
+    bool abort_query_;
 
     enum class ModificationStatus { unchanged, changed };
 
-    void answerQueryInternal(Query &query, const User &user,
+    void answerQueryInternal(Query &query, const User &user, const ICore &core,
                              const LogFiles &log_files);
-    const Logfile::map_type *getEntries(Logfile *logfile);
-    void getPreviousLogentry(const LogFiles &log_files,
-                             LogFiles::const_iterator &it_logs,
-                             const Logfile::map_type *&entries,
-                             Logfile::const_iterator &it_entries);
-    LogEntry *getNextLogentry(const LogFiles &log_files,
-                              LogFiles::const_iterator &it_logs,
-                              const Logfile::map_type *&entries,
-                              Logfile::const_iterator &it_entries);
     void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hss);
     ModificationStatus updateHostServiceState(
-        Query &query, const User &user,
+        Query &query, const User &user, const ICore &core,
         std::chrono::system_clock::duration query_timeframe,
         const LogEntry *entry, HostServiceState *hss, bool only_update,
         const std::map<std::string, int> &notification_periods);

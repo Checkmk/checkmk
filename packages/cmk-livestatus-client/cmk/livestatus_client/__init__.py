@@ -26,9 +26,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, NamedTuple, NewType, TypedDict
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
@@ -185,6 +183,10 @@ class MKLivestatusNotFoundError(MKLivestatusException):
 
 
 class MKLivestatusTableNotFoundError(MKLivestatusException):
+    pass
+
+
+class MKLivestatusPayloadTooLargeError(MKLivestatusQueryError):
     pass
 
 
@@ -477,7 +479,7 @@ def parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, i
         >>> parse_socket_url('Hallo Welt!')
         Traceback (most recent call last):
         ...
-        cmk.livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. \
+        livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. \
 Must begin with 'tcp:', 'tcp6:' or 'unix:'
 
     """
@@ -767,6 +769,9 @@ class SingleSiteConnection(Helpers):
             error_info = data.decode("utf-8")
             if code == "404":
                 raise MKLivestatusTableNotFoundError(f"Not Found ({code}): {error_info!r}")
+
+            if code == "413":
+                raise MKLivestatusPayloadTooLargeError(error_info)
 
             if code == "502":
                 raise MKLivestatusBadGatewayError(error_info)
@@ -1333,7 +1338,12 @@ class LocalConnection(SingleSiteConnection):
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context."
             )
-        super().__init__("unix:" + omd_root + "/tmp/run/live", SiteId("local"), *args, **kwargs)
+        super().__init__(
+            "unix:" + omd_root + "/tmp/run/live",  # nosec B108 # BNS:7a2427
+            SiteId("local"),
+            *args,
+            **kwargs,
+        )
 
 
 def _combine_query(query: str, headers: str | list[str]) -> str:
@@ -1443,7 +1453,7 @@ def get_rrd_data(
     fromtime: int,
     untiltime: int,
     max_entries: int = 400,
-) -> RRDResponse:
+) -> RRDResponse | None:
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 
     returns a TimeSeries object holding interval and data information
@@ -1472,16 +1482,20 @@ def get_rrd_data(
 
     lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
 
-    if (response := connection.query_value(lql)) is None:
-        raise MKLivestatusQueryError("Cannot get historic data")
+    try:
+        response = connection.query_value(lql)
+    except MKLivestatusNotFoundError:
+        return None
+
+    if response is None:  # It is not obvious to me if this can be the case or not.
+        return None
 
     raw_start, raw_end, raw_step, *values = response
 
     return (
         # According to a comment in RRDColumn.cc we should have `raw_step >= step` (which is 1)
         # However, it is zero for empty responses (non existing metrics, for instance).
-        # Not sure if we shouldn't rather raise.
-        RRDResponse(range(0), [])
+        None
         if (step := int(raw_step)) == 0
         else RRDResponse(range(int(raw_start), int(raw_end), step), values)
     )

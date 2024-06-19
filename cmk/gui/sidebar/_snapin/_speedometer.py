@@ -5,7 +5,7 @@
 
 import json
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _

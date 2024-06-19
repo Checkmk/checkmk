@@ -6,12 +6,19 @@
 from collections.abc import Iterable, Mapping
 from itertools import chain
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, OIDEnd, SNMPTree, startswith
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import (
+    any_of,
+    DiscoveryResult,
+    OIDEnd,
+    Service,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 # 19:1100, 38:822X
 # .1.3.6.1.4.1.28507.**.1.6.1.1.3.1 498 --> GUDEADS-EPC****-MIB::epc****HygroSensor.1
@@ -27,7 +34,7 @@ def parse_gude_humidity(string_table: list[StringTable]) -> Section:
     }
 
 
-def inventory_gude_humidity(section: Section) -> DiscoveryResult:
+def discover_gude_humidity(section: Section) -> DiscoveryResult:
     yield from (Service(item=name) for name, reading in section.items() if reading != -999.9)
 
 
@@ -55,7 +62,7 @@ check_info["gude_humidity"] = LegacyCheckDefinition(
     ],
     parse_function=parse_gude_humidity,
     service_name="Humidity %s",
-    discovery_function=inventory_gude_humidity,
+    discovery_function=discover_gude_humidity,
     check_function=check_gude_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={

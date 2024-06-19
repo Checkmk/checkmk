@@ -6,7 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import exists, OIDBytes, type_defs
+from cmk.agent_based.v1.type_defs import StringByteTable
+from cmk.agent_based.v2 import CheckResult, exists, OIDBytes
 
 from . import interfaces
 
@@ -307,14 +308,16 @@ def _port_mapping(name: str, port_map: Mapping[str, str]) -> str | None:
     return (
         f"maps to {port_map.get(name, '')}"
         if name in port_map
-        else f"belongs to {' and '.join(k for k, v in port_map.items() if v == name)}"
-        if name in port_map.values()
-        else None
+        else (
+            f"belongs to {' and '.join(k for k, v in port_map.items() if v == name)}"
+            if name in port_map.values()
+            else None
+        )
     )
 
 
 def generic_parse_if64(
-    string_table: type_defs.StringByteTable,
+    string_table: StringByteTable,
     port_map: Mapping[str, str] | None = None,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
@@ -350,9 +353,9 @@ def generic_parse_if64(
 
 
 def parse_if64(
-    string_table: type_defs.StringByteTable,
+    string_table: StringByteTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
-    preprocessed_lines: type_defs.StringByteTable = []
+    preprocessed_lines: StringByteTable = []
     for line in string_table:
         # some DLINK switches apparently report a broken interface with index 0, filter that out
         if interfaces.saveint(line[0]) > 0:
@@ -378,7 +381,7 @@ def generic_check_if64(
     item: str,
     params: Mapping[str, Any],
     section: interfaces.Section[interfaces.TInterfaceType],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,
         params,

@@ -6,11 +6,10 @@
 # .1.3.6.1.4.1.20632.2.5 2
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
 
 
@@ -23,13 +22,13 @@ def check_barracuda_mail_latency(_no_item, params, info):
         int(info[0][0]),
         "mail_latency",
         params["levels"],
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.timespan,
         infoname="Average",
     )
 
 
-def parse_barracuda_mail_latency(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_barracuda_mail_latency(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["barracuda_mail_latency"] = LegacyCheckDefinition(

@@ -11,11 +11,10 @@ import os
 import ssl
 from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
-from typing import Any
+from typing import Any, Literal, TypedDict
 from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Session
-from typing_extensions import TypedDict
 
 StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
@@ -50,27 +49,25 @@ class HTTPSConfigurableConnection(HTTPSConnection):
     IGNORE = "__ignore"
 
     def __init__(self, host: str, ca_file: str | None = None) -> None:
-        super().__init__(host)
         self.__ca_file = ca_file
+        context = ssl.create_default_context(
+            cafile=None if ca_file == HTTPSConfigurableConnection.IGNORE else ca_file
+        )
+        if self.__ca_file:
+            if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+            else:
+                context.verify_mode = ssl.CERT_REQUIRED
+                context.check_hostname = True
+
+        super().__init__(host, context=context)
 
     def connect(self) -> None:
         if not self.__ca_file:
             HTTPSConnection.connect(self)
         else:
             HTTPConnection.connect(self)
-            # TODO: Use SSLContext.wrap_socket() instead of the deprecated ssl.wrap_socket()!
-            # See https://docs.python.org/3/library/ssl.html#socket-creation
-            if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
-                self.sock = ssl.wrap_socket(  # pylint: disable=deprecated-method
-                    self.sock,
-                    cert_reqs=ssl.CERT_NONE,
-                )
-            else:
-                self.sock = ssl.wrap_socket(  # pylint: disable=deprecated-method
-                    self.sock,
-                    ca_certs=self.__ca_file,
-                    cert_reqs=ssl.CERT_REQUIRED,
-                )
 
 
 class HTTPSAuthHandler(HTTPSHandler):
@@ -171,18 +168,18 @@ class ApiSession(Session):
         return super().request(method, url, verify=self.ssl_verify, **kwargs)
 
 
-def parse_api_url(  # type: ignore[no-untyped-def]
-    server_address,
-    api_path,
-    protocol="http",
-    port=None,
-    url_prefix=None,
-    path_prefix=None,
+def parse_api_url(
+    server_address: str,
+    api_path: str,
+    protocol: Literal["http", "https"] = "http",
+    port: int | None = None,
+    url_prefix: str | None = None,
+    path_prefix: str | None = None,
 ) -> str:
     """Parse the server api address
 
     custom url always has priority over other options, if not specified the address contains
-    either the ip-address or the hostname in the url
+    either the ip address or the hostname in the url
 
     the protocol should not be specified through the custom url
 
@@ -192,7 +189,7 @@ def parse_api_url(  # type: ignore[no-untyped-def]
             where the API can be queried
 
         server_address:
-            hostname or ip-address to the server
+            hostname or ip address to the server
 
         protocol:
             the transfer protocol (http or https)

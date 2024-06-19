@@ -5,6 +5,8 @@
 
 from collections.abc import Sequence
 
+from cmk.utils.version import edition, Edition
+
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -34,6 +36,11 @@ class NotificationParameterMail(NotificationParameter):
             title=_("Create notification with the following parameters"),
             # must be called at run time!!
             elements=self._parameter_elements,
+            hidden_keys=(
+                ["from", "url_prefix", "disable_multiplexing", "smtp"]
+                if edition() == Edition.CSE
+                else []
+            ),
         )
 
     def _parameter_elements(self) -> list[DictionaryEntry]:
@@ -45,18 +52,18 @@ class NotificationParameterMail(NotificationParameter):
                         title=_("Display additional information"),
                         choices=[
                             ("omdsite", _("Site ID")),
-                            ("hosttags", _("Tags of the Host")),
-                            ("address", _("IP Address of Host")),
-                            ("abstime", _("Absolute Time of Alert")),
-                            ("reltime", _("Relative Time of Alert")),
-                            ("longoutput", _("Additional Plugin Output")),
-                            ("ack_author", _("Acknowledgement Author")),
-                            ("ack_comment", _("Acknowledgement Comment")),
-                            ("notification_author", _("Notification Author")),
-                            ("notification_comment", _("Notification Comment")),
+                            ("hosttags", _("Tags of the host")),
+                            ("address", _("IP address of Host")),
+                            ("abstime", _("Absolute time of alert")),
+                            ("reltime", _("Relative time of alert")),
+                            ("longoutput", _("Additional plug-in output")),
+                            ("ack_author", _("Acknowledgement author")),
+                            ("ack_comment", _("Acknowledgement comment")),
+                            ("notification_author", _("Notification author")),
+                            ("notification_comment", _("Notification comment")),
                             ("perfdata", _("Metrics")),
                             ("graph", _("Time series graph")),
-                            ("notesurl", _("Custom Host/Service Notes URL")),
+                            ("notesurl", _("Custom host/service notes URL")),
                             ("context", _("Complete variable list (for testing)")),
                         ],
                         default_value=["graph", "abstime", "address", "longoutput"],
@@ -115,7 +122,7 @@ class NotificationParameterMail(NotificationParameter):
                             "are displayed. If you do not use bulk notifications this option is ignored. "
                             "Note that each graph increases the size of the mail and takes time to render"
                             "on the monitoring server. Therefore, large bulks may exceed the maximum "
-                            "size for attachements or the plugin may run into a timeout so that a failed "
+                            "size for attachements or the plug-in may run into a timeout so that a failed "
                             "notification is produced."
                         ),
                         default_value=5,
@@ -180,7 +187,9 @@ $LONGSERVICEOUTPUT$
             ]
         )
         return Dictionary(
-            title=_("Create notification with the following parameters"), elements=elements
+            title=_("Create notification with the following parameters"),
+            elements=elements,
+            hidden_keys=(["from", "disable_multiplexing"] if edition() == Edition.CSE else []),
         )
 
 

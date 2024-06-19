@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.5.1.10.0 1
@@ -30,6 +29,10 @@ def parse_fireeye_lic_active(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_fireeye_lic_active(info):
+    return inventory_fireeye_generic(info, False)
+
+
 check_info["fireeye_lic_active"] = LegacyCheckDefinition(
     parse_function=parse_fireeye_lic_active,
     detect=DETECT,
@@ -38,6 +41,6 @@ check_info["fireeye_lic_active"] = LegacyCheckDefinition(
         oids=["10", "11", "12"],
     ),
     service_name="Active Licenses",
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    discovery_function=discover_fireeye_lic_active,
     check_function=check_fireeye_lic_active,
 )

@@ -6,14 +6,10 @@
 
 # mypy: disable-error-code="var-annotated,arg-type"
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+from cmk.agent_based.v2 import render
 
 
 def parse_emcvnx_storage_pools(string_table):
@@ -99,9 +95,9 @@ def check_emcvnx_storage_pools(item, params, parsed):
         ) % (
             state,
             status,
-            get_bytes_human_readable(user_capacity),
-            get_bytes_human_readable(consumed_capacity),
-            get_bytes_human_readable(avail_capacity),
+            render.bytes(user_capacity),
+            render.bytes(consumed_capacity),
+            render.bytes(avail_capacity),
         )
 
         state = 0
@@ -114,8 +110,8 @@ def check_emcvnx_storage_pools(item, params, parsed):
                 state = 1
             if state:
                 infotext += " (warn/crit at {}/{})".format(
-                    get_bytes_human_readable(perc_full_warn),
-                    get_bytes_human_readable(perc_full_crit),
+                    render.bytes(perc_full_warn),
+                    render.bytes(perc_full_crit),
                 )
 
         yield state, infotext
@@ -124,8 +120,8 @@ def check_emcvnx_storage_pools(item, params, parsed):
             + "Total subscribed capacity: %s"
         ) % (
             render.percent(percent_subscribed),
-            get_bytes_human_readable(over_subscribed),
-            get_bytes_human_readable(total_subscribed_capacity),
+            render.bytes(over_subscribed),
+            render.bytes(total_subscribed_capacity),
         ), [
             ("emcvnx_consumed_capacity", consumed_capacity),
             ("emcvnx_avail_capacity", avail_capacity),
@@ -201,7 +197,7 @@ def check_emcvnx_storage_pools_tiering(item, params, parsed):
                 "emcvnx_move_%s" % short_dir,
                 None,
                 infoname="Move %s" % short_dir,
-                human_readable_func=get_bytes_human_readable,
+                human_readable_func=render.bytes,
             )
 
     move_completed_raw = data.get("Data Movement Completed (GBs)")
@@ -212,7 +208,7 @@ def check_emcvnx_storage_pools_tiering(item, params, parsed):
             "emcvnx_move_completed",
             None,
             infoname="Movement completed",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
         )
 
     time_to_complete = data.get("Estimated Time to Complete")
@@ -224,7 +220,7 @@ def check_emcvnx_storage_pools_tiering(item, params, parsed):
             "emcvnx_time_to_complete",
             params["time_to_complete"],
             infoname="Age",
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.timespan,
         )
 
 
@@ -267,7 +263,7 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
             None,
             None,
             infoname="User capacity",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
         )
 
     consumed_capacity_raw = data.get("%s_Consumed Capacity (GBs)" % tier_name)
@@ -278,7 +274,7 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
             "emcvnx_consumed_capacity",
             None,
             infoname="Consumed capacity",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
         )
 
     avail_capacity_raw = data.get("%s_Available Capacity (GBs)" % tier_name)
@@ -289,7 +285,7 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
             "emcvnx_avail_capacity",
             None,
             infoname="Available capacity",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
         )
 
     percent_subscribed_raw = data.get("%s_Percent Subscribed" % tier_name)
@@ -313,7 +309,7 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
                 "emcvnx_targeted_%s" % short_dir,
                 None,
                 infoname="Move %s" % short_dir,
-                human_readable_func=get_bytes_human_readable,
+                human_readable_func=render.bytes,
             )
 
 
@@ -335,9 +331,7 @@ check_info["emcvnx_storage_pools.tieringtypes"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def _emcvnx_get_text_perf(
-    data, key, perfname, format_func=get_bytes_human_readable, factor=1024**3
-):
+def _emcvnx_get_text_perf(data, key, perfname, format_func=render.bytes, factor=1024**3):
     field = data.get(key, "unknown")
     try:
         value = float(field) * factor

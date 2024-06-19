@@ -10,7 +10,7 @@ from collections.abc import Collection
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -50,7 +50,7 @@ class ModeRandomHosts(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 

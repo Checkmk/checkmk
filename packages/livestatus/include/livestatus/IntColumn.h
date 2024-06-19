@@ -18,12 +18,14 @@
 #include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/IntFilter.h"
+#include "livestatus/IntSorter.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/User.h"
 #include "livestatus/opids.h"
 class Row;
 
-template <class T, int32_t Default = 0>
+template <typename T, int32_t Default = 0>
 class IntColumn : public Column {
 public:
     using value_type = int32_t;
@@ -60,6 +62,19 @@ public:
             [this](Row row, const User &user) { return getValue(row, user); });
     }
 
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<IntSorter>(
+            [this](Row row, const std::optional<std::string> &key,
+                   const User &user) {
+                if (key) {
+                    throw std::runtime_error("int column '" + name() +
+                                             "' does not expect key '" +
+                                             (*key) + "'");
+                }
+                return getValue(row, user);
+            });
+    }
+
     // TODO(sp): The only 2 places where auth_user is actually used are
     // HostListState::getValue() and ServiceListState::getValue(). These methods
     // aggregate values for hosts/services, but they should do this only for
@@ -84,7 +99,7 @@ namespace column::detail {
 constexpr int32_t toInt32(bool b) { return b ? 1 : 0; }
 }  // namespace column::detail
 
-template <class T, bool Default = false>
+template <typename T, bool Default = false>
 class BoolColumn : public IntColumn<T, column::detail::toInt32(Default)> {
 public:
     BoolColumn(const std::string &name, const std::string &description,

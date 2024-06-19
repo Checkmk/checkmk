@@ -10,11 +10,10 @@
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
 
 
 def inventory_oracle_longactivesessions(info):
@@ -43,7 +42,7 @@ def check_oracle_longactivesessions(item, params, info):
                 sidnr,
                 serial,
                 process,
-                get_age_human_readable(int(last_call_el)),
+                render.timespan(int(last_call_el)),
                 machine,
                 osuser,
                 program,

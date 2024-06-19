@@ -23,7 +23,9 @@
 #include "livestatus/global_counters.h"
 #include "livestatus/mk_inventory.h"
 
-TableStatus::TableStatus(ICore *mc) : Table(mc) {
+using row_type = ICore;
+
+TableStatus::TableStatus(ICore *mc) {
     const ColumnOffsets offsets{};
     addCounterColumns("neb_callbacks", "NEB callbacks", offsets,
                       Counter::neb_callbacks);
@@ -85,257 +87,275 @@ TableStatus::TableStatus(ICore *mc) : Table(mc) {
                       "number of elements in the queue / size of the queue",
                       offsets, Counter::rrdcached_queue_usage);
 
-    addColumn(std::make_unique<IntColumn<ICore>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "nagios_pid", "The process ID of the monitoring core", offsets,
-        [](const ICore &r) { return r.pid(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        [](const row_type &row) { return row.pid(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "core_pid", "The process ID of the monitoring core", offsets,
-        [](const ICore &r) { return r.pid(); }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+        [](const row_type &row) { return row.pid(); }));
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "enable_notifications",
         "Whether notifications are enabled in general (0/1)", offsets,
-        [](const ICore &r) {
-            return r.globalFlags()->enable_notifications();
+        [](const row_type &row) {
+            return row.globalFlags()->enable_notifications();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "execute_service_checks",
         "Whether active service checks are activated in general (0/1)", offsets,
-        [](const ICore &r) {
-            return r.globalFlags()->execute_service_checks();
+        [](const row_type &row) {
+            return row.globalFlags()->execute_service_checks();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "accept_passive_service_checks",
         "Whether passive service checks are activated in general (0/1)",
-        offsets, [](const ICore &r) {
-            return r.globalFlags()->accept_passive_service_checks();
+        offsets, [](const row_type &row) {
+            return row.globalFlags()->accept_passive_service_checks();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "execute_host_checks",
         "Whether host checks are executed in general (0/1)", offsets,
-        [](const ICore &r) { return r.globalFlags()->execute_host_checks(); }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+        [](const row_type &row) {
+            return row.globalFlags()->execute_host_checks();
+        }));
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "accept_passive_host_checks",
         "Whether passive host checks are accepted in general (0/1)", offsets,
-        [](const ICore &r) {
-            return r.globalFlags()->accept_passive_hostchecks();
+        [](const row_type &row) {
+            return row.globalFlags()->accept_passive_hostchecks();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "obsess_over_services",
         "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
-        offsets, [](const ICore &r) {
-            return r.globalFlags()->obsess_over_services();
+        offsets, [](const row_type &row) {
+            return row.globalFlags()->obsess_over_services();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "obsess_over_hosts",
         "Whether Nagios will obsess over host checks (0/1)", offsets,
-        [](const ICore &r) { return r.globalFlags()->obsess_over_hosts(); }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+        [](const row_type &row) {
+            return row.globalFlags()->obsess_over_hosts();
+        }));
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "check_service_freshness",
         "Whether service freshness checking is activated in general (0/1)",
-        offsets, [](const ICore &r) {
-            return r.globalFlags()->check_service_freshness();
+        offsets, [](const row_type &row) {
+            return row.globalFlags()->check_service_freshness();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "check_host_freshness",
         "Whether host freshness checking is activated in general (0/1)",
-        offsets, [](const ICore &r) {
-            return r.globalFlags()->check_host_freshness();
+        offsets, [](const row_type &row) {
+            return row.globalFlags()->check_host_freshness();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "enable_flap_detection",
         "Whether flap detection is activated in general (0/1)", offsets,
-        [](const ICore &r) {
-            return r.globalFlags()->enable_flap_detection();
+        [](const row_type &row) {
+            return row.globalFlags()->enable_flap_detection();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "process_performance_data",
         "Whether processing of performance data is activated in general (0/1)",
-        offsets, [](const ICore &r) {
-            return r.globalFlags()->process_performance_data();
+        offsets, [](const row_type &row) {
+            return row.globalFlags()->process_performance_data();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "enable_event_handlers",
         "Whether alert handlers are activated in general (0/1)", offsets,
-        [](const ICore &r) {
-            return r.globalFlags()->enable_event_handlers();
+        [](const row_type &row) {
+            return row.globalFlags()->enable_event_handlers();
         }));
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",
-        offsets, [](const ICore &r) {
-            return r.globalFlags()->check_external_commands();
+        offsets, [](const row_type &row) {
+            return row.globalFlags()->check_external_commands();
         }));
-    addColumn(std::make_unique<TimeColumn<ICore>>(
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "program_start",
         "The time of the last program start or configuration reload as UNIX timestamp",
-        offsets, [](const ICore &r) { return r.programStartTime(); }));
-    addColumn(std::make_unique<TimeColumn<ICore>>(
+        offsets, [](const row_type &row) { return row.programStartTime(); }));
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp", offsets,
-        [](const ICore &r) { return r.lastCommandCheckTime(); }));
-    addColumn(std::make_unique<TimeColumn<ICore>>(
+        [](const row_type &row) { return row.lastCommandCheckTime(); }));
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "last_log_rotation", "Time time of the last log file rotation", offsets,
-        [](const ICore &r) { return r.last_logfile_rotation(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        [](const row_type &row) { return row.last_logfile_rotation(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "interval_length", "The default interval length", offsets,
-        [](const ICore &r) { return r.intervalLength(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        [](const row_type &row) { return row.intervalLength(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "max_long_output_size", "Maximum length of long output", offsets,
-        [](const ICore &r) { return r.maxLongOutputSize(); }));
+        [](const row_type &row) { return row.maxLongOutputSize(); }));
 
-    addColumn(std::make_unique<IntColumn<ICore>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "num_hosts", "The total number of hosts", offsets,
-        [](const ICore &r) { return r.numHosts(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        [](const row_type &row) { return row.numHosts(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "num_services", "The total number of services", offsets,
-        [](const ICore &r) { return r.numServices(); }));
+        [](const row_type &row) { return row.numServices(); }));
 
-    addColumn(std::make_unique<StringColumn<ICore>>(
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "program_version", "The version of the monitoring daemon", offsets,
-        [](const ICore &r) { return r.programVersion(); }));
-    addColumn(std::make_unique<StringColumn<ICore>>(
+        [](const row_type &row) { return row.programVersion(); }));
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "edition", "The edition of the site", offsets,
-        [](const ICore &r) { return r.edition(); }));
+        [](const row_type &row) { return row.edition(); }));
 
     // External command buffer
-    addColumn(std::make_unique<IntColumn<ICore>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands", offsets,
-        [](const ICore &r) { return r.externalCommandBufferSlots(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        [](const row_type &row) { return row.externalCommandBufferSlots(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer", offsets,
-        [](const ICore &r) { return r.externalCommandBufferUsage(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        [](const row_type &row) { return row.externalCommandBufferUsage(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer",
-        offsets, [](const ICore &r) { return r.externalCommandBufferMax(); }));
+        offsets,
+        [](const row_type &row) { return row.externalCommandBufferMax(); }));
 
     // Livestatus' own status
     // TODO(sp) Use "r" instead of "mc" when numCachedLogMessages is const
-    addColumn(std::make_unique<IntColumn<ICore>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "cached_log_messages",
         "The current number of log messages MK Livestatus keeps in memory",
-        offsets, [mc](const ICore & /*r*/) {
+        offsets, [mc](const row_type & /*row*/) {
             return static_cast<int32_t>(mc->numCachedLogMessages());
         }));
-    addColumn(std::make_unique<StringColumn<ICore>>(
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "livestatus_version", "The version of the MK Livestatus module",
-        offsets, [](const ICore &r) { return r.livestatusVersion(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        offsets, [](const row_type &row) { return row.livestatusVersion(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus", offsets,
-        [](const ICore &r) { return r.livestatusActiveConnectionsNum(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        [](const row_type &row) {
+            return row.livestatusActiveConnectionsNum();
+        }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "livestatus_queued_connections",
         "The current number of queued connections to MK Livestatus", offsets,
-        [](const ICore &r) { return r.livestatusQueuedConnectionsNum(); }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+        [](const row_type &row) {
+            return row.livestatusQueuedConnectionsNum();
+        }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
-        offsets, [](const ICore &r) { return r.livestatusThreadsNum(); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        offsets,
+        [](const row_type &row) { return row.livestatusThreadsNum(); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "livestatus_usage",
         "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, [](const ICore &r) { return r.livestatusUsage(); }));
+        offsets, [](const row_type &row) { return row.livestatusUsage(); }));
 
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "average_latency_generic",
         "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
-        offsets, [](const ICore &r) { return r.averageLatencyGeneric(); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        offsets,
+        [](const row_type &row) { return row.averageLatencyGeneric(); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "average_latency_real_time",
         "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
-        offsets, [](const ICore &r) { return r.averageLatencyRealTime(); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        offsets,
+        [](const row_type &row) { return row.averageLatencyRealTime(); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "average_latency_fetcher",
         "The average latency for executing Check_MK fetchers (i.e. the time the start of the execution is behind the schedule)",
-        offsets, [](const ICore &r) { return r.averageLatencyFetcher(); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        offsets,
+        [](const row_type &row) { return row.averageLatencyFetcher(); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "average_latency_checker",
         "The average latency for executing Check_MK checkers (i.e. the time the start of the execution is behind the schedule)",
-        offsets, [](const ICore &r) { return r.averageLatencyChecker(); }));
+        offsets,
+        [](const row_type &row) { return row.averageLatencyChecker(); }));
 
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "helper_usage_generic",
         "The average usage of the active check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, [](const ICore &r) { return r.helperUsageGeneric(); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        offsets, [](const row_type &row) { return row.helperUsageGeneric(); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, [](const ICore &r) { return r.helperUsageRealTime(); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        offsets,
+        [](const row_type &row) { return row.helperUsageRealTime(); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "helper_usage_fetcher",
         "The average usage of the fetcher helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, [](const ICore &r) { return r.helperUsageFetcher(); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        offsets, [](const row_type &row) { return row.helperUsageFetcher(); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "helper_usage_checker",
         "The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, [](const ICore &r) { return r.helperUsageChecker(); }));
+        offsets, [](const row_type &row) { return row.helperUsageChecker(); }));
 
-    addColumn(std::make_unique<BoolColumn<ICore>>(
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "has_event_handlers",
         "Whether or not at alert handler rules are configured (0/1)", offsets,
-        [](const ICore &r) { return r.hasEventHandlers(); }));
+        [](const row_type &row) { return row.hasEventHandlers(); }));
 
     // Special stuff for Check_MK
-    addColumn(std::make_unique<TimeColumn<ICore>>(
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        offsets, [](const ICore &r) {
-            return mk_inventory_last(r.paths()->inventory_directory() /
+        offsets, [](const row_type &row) {
+            return mk_inventory_last(row.paths()->inventory_directory() /
                                      ".last");
         }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "num_queued_notifications",
         "The number of queued notifications which have not yet been delivered to the notification helper",
-        offsets, [](const ICore &r) {
-            return static_cast<int32_t>(r.numQueuedNotifications());
+        offsets, [](const row_type &row) {
+            return static_cast<int32_t>(row.numQueuedNotifications());
         }));
-    addColumn(std::make_unique<IntColumn<ICore>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "num_queued_alerts",
         "The number of queued alerts which have not yet been delivered to the alert helper",
-        offsets, [](const ICore &r) {
-            return static_cast<int32_t>(r.numQueuedAlerts());
+        offsets, [](const row_type &row) {
+            return static_cast<int32_t>(row.numQueuedAlerts());
         }));
-    addColumn(std::make_unique<BlobColumn<ICore>>(
+    addColumn(std::make_unique<BlobColumn<row_type>>(
         "license_usage_history", "Historic license usage information", offsets,
-        BlobFileReader<ICore>{[mc](const ICore & /*r*/) {
+        BlobFileReader<row_type>{[mc](const row_type & /*row*/) {
             return mc->paths()->license_usage_history_file();
         }}));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "average_runnable_jobs_fetcher",
         "The average count of scheduled fetcher jobs which have not yet been processed",
         offsets,
-        [](const ICore &r) { return r.averageRunnableJobsChecker(); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        [](const row_type &row) { return row.averageRunnableJobsChecker(); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         "average_runnable_jobs_checker",
         "The average count of queued replies which have not yet been delivered to the checker helpers",
         offsets,
-        [](const ICore &r) { return r.averageRunnableJobsChecker(); }));
-    addColumn(std::make_unique<TimeColumn<ICore>>(
+        [](const row_type &row) { return row.averageRunnableJobsChecker(); }));
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "state_file_created", "The time when state file had been created",
-        offsets, [](const ICore &r) { return r.stateFileCreatedTime(); }));
+        offsets,
+        [](const row_type &row) { return row.stateFileCreatedTime(); }));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,
                                     const std::string &description,
                                     const ColumnOffsets &offsets,
                                     Counter which) {
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         name, "The number of " + description + " since program start", offsets,
-        [which](const ICore & /*r*/) { return counterValue(which); }));
-    addColumn(std::make_unique<DoubleColumn<ICore>>(
+        [which](const row_type & /*row*/) { return counterValue(which); }));
+    addColumn(std::make_unique<DoubleColumn<row_type>>(
         name + "_rate", "The averaged number of " + description + " per second",
-        offsets, [which](const ICore & /*r*/) { return counterRate(which); }));
+        offsets,
+        [which](const row_type & /*row*/) { return counterRate(which); }));
 }
 
 std::string TableStatus::name() const { return "status"; }
 
 std::string TableStatus::namePrefix() const { return "status_"; }
 
-void TableStatus::answerQuery(Query &query, const User & /*user*/) {
-    query.processDataset(Row{core()});
+void TableStatus::answerQuery(Query &query, const User & /*user*/,
+                              const ICore &core) {
+    query.processDataset(Row{&core});
 }
 
-Row TableStatus::getDefault() const { return Row{core()}; }
+Row TableStatus::getDefault(const ICore &core) const { return Row{&core}; }

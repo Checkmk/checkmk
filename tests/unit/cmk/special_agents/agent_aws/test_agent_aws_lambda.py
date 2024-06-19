@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=redefined-outer-name
 
 from collections.abc import Iterator, Mapping, Sequence
@@ -23,6 +25,8 @@ from cmk.special_agents.agent_aws import (
     NamingConvention,
     OverallTags,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import (
@@ -51,9 +55,6 @@ class PaginatorProvisionedConcurrencyConfigs:
 
 
 class FakeLambdaClient:
-    def __init__(self, skip_entities=None) -> None:  # type: ignore[no-untyped-def]
-        self._skip_entities = {} if not skip_entities else skip_entities
-
     def get_paginator(self, operation_name: str) -> Any:
         if operation_name == "list_functions":
             return PaginatorListFunctions()
@@ -64,7 +65,7 @@ class FakeLambdaClient:
     def list_tags(self, Resource: str) -> Mapping[str, Mapping[Entity, Entity]]:
         tags: Mapping[Entity, Entity] = {}
         if Resource == "arn:aws:lambda:eu-central-1:123456789:function:FunctionName-0":
-            tags = LambdaListTagsInstancesIB.create_instances(amount=1)
+            tags = LambdaListTagsInstancesIB.create_instances(amount=3)
         return {"Tags": tags}
 
     def get_account_settings(self) -> Mapping[str, Any]:
@@ -80,15 +81,25 @@ class FakeLambdaClient:
         }
 
 
-def create_config(names: Sequence[str], tags: OverallTags) -> AWSConfig:
-    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+def create_config(
+    names: Sequence[str] | None, tags: OverallTags, tag_import: TagsOption
+) -> AWSConfig:
+    config = AWSConfig(
+        "hostname",
+        [],
+        ([], []),
+        NamingConvention.ip_region_instance,
+        tag_import,
+    )
     config.add_single_service_config("lambda_names", names)
     config.add_service_tags("lambda_tags", tags)
     return config
 
 
 def get_lambda_sections(
-    names: Sequence[str], tags: OverallTags
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    tag_import: TagsOption = TagsImportPatternOption.import_all,
 ) -> tuple[
     LambdaRegionLimits,
     LambdaSummary,
@@ -100,11 +111,11 @@ def get_lambda_sections(
 
     # TODO: FakeLambdaClient shoud actually subclass LambdaClient, etc.
     return _create_lamdba_sections(
-        FakeLambdaClient(False),  # type: ignore[arg-type]
+        FakeLambdaClient(),  # type: ignore[arg-type]
         FakeCloudwatchClient(),  # type: ignore[arg-type]
         FakeCloudwatchClientLogsClient(),  # type: ignore[arg-type]
         "region",
-        create_config(names, tags),
+        create_config(names, tags, tag_import),
         distributor,
     )
 
@@ -280,6 +291,7 @@ def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
                 "results": [[]],
                 "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
                 "status": "Running",
+                "encryptionKey": "I made this up to make mypy happy",
                 "ResponseMetadata": {
                     "RequestId": "0bb17f7e-1230-474a-a9dc-93d583a6a01a",
                     "HostId": "I made this up to make mypy happy",
@@ -297,3 +309,30 @@ def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
         sleep_duration=0.001,
     )
     assert result is None
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (TagsImportPatternOption.import_all, ["Tag-0", "Tag-1", "Tag-2"]),
+        (r".*-1$", ["Tag-1"]),
+        (TagsImportPatternOption.ignore_all, []),
+    ],
+)
+def test_agent_aws_lambda_tags_are_filtered(
+    tag_import: TagsOption,
+    expected_tags: list[str],
+) -> None:
+    (
+        _lambda_limits,
+        lambda_summary,
+        _lambda_provisioned_concurrency_configuration,
+        _lambda_cloudwatch,
+        _lambda_cloudwatch_insights,
+    ) = get_lambda_sections(None, (None, None), tag_import)
+    results = lambda_summary.run().results
+
+    assert len(results) == 1
+    # We assume all functions follow the same schema so we don't repeat the test n times
+    row = results[0].content[0]
+    assert list(row["TagsForCmkLabels"].keys()) == expected_tags

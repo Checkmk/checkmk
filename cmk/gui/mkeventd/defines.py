@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.i18n import _, _l
-from cmk.gui.valuespec import DropdownChoiceEntries
 
-syslog_priorities: DropdownChoiceEntries = list(ec.SyslogPriority.NAMES.items())
-syslog_facilities: DropdownChoiceEntries = list(ec.SyslogFacility.NAMES.items())
+syslog_priorities: Sequence[tuple[int, str]] = list(ec.SyslogPriority.NAMES.items())
+syslog_facilities: Sequence[tuple[int, str]] = list(ec.SyslogFacility.NAMES.items())
 
 phase_names = {
     "counting": _("counting"),

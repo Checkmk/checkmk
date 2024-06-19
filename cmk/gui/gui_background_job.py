@@ -12,8 +12,8 @@ import cmk.utils.plugin_registry
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.log as log
 from cmk.gui import background_job as background_job
+from cmk.gui import log
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -291,7 +291,7 @@ class JobRenderer:
                 continue
             html.open_tr()
             html.th(left)
-            html.td(HTML(right))
+            html.td(HTML.without_escaping(right))
             html.close_tr()
 
         # Exceptions
@@ -315,8 +315,8 @@ class JobRenderer:
         html.th(_("Progress info"))
         html.open_td()
         html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
-        html.pre(HTML("\n").join(loginfo["JobProgressUpdate"]))
-        html.pre(HTML("\n".join(loginfo["JobResult"])))
+        html.pre(HTML.without_escaping("\n").join(loginfo["JobProgressUpdate"]))
+        html.pre(HTML.without_escaping("\n".join(loginfo["JobResult"])))
         html.close_div()
         html.close_td()
         html.close_tr()
@@ -450,14 +450,16 @@ class JobRenderer:
         loginfo = job_status.loginfo
         if loginfo:
             if job_status.state == background_job.JobStatusStates.EXCEPTION:
-                html.td(HTML("<br>".join(loginfo["JobException"])), css="job_last_progress")
+                html.td(
+                    HTMLWriter.render_br().join(loginfo["JobException"]), css="job_last_progress"
+                )
             else:
                 progress_text = ""
                 if loginfo["JobProgressUpdate"]:
                     progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
-                html.td(HTML(progress_text), css="job_last_progress")
+                html.td(HTML.without_escaping(progress_text), css="job_last_progress")
 
-            html.td(HTML("<br>".join(loginfo["JobResult"])), css="job_result")
+            html.td(HTMLWriter.render_br().join(loginfo["JobResult"]), css="job_result")
         else:
             html.td("", css="job_last_progress")
             html.td("", css="job_result")
@@ -497,7 +499,7 @@ class ActionHandler:
         self._did_stop_job = False
         self._did_delete_job = False
 
-    def confirm_dialog_opened(self):
+    def confirm_dialog_opened(self) -> bool:
         for action_var in [self.stop_job_var, self.delete_job_var]:
             if request.has_var(action_var):
                 return True
@@ -515,16 +517,16 @@ class ActionHandler:
             return True
         return False
 
-    def did_acknowledge_job(self):
+    def did_acknowledge_job(self) -> bool:
         return self._did_acknowledge_job
 
-    def did_stop_job(self):
+    def did_stop_job(self) -> bool:
         return self._did_stop_job
 
-    def did_delete_job(self):
+    def did_delete_job(self) -> bool:
         return self._did_delete_job
 
-    def acknowledge_job(self):
+    def acknowledge_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.acknowledge_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():
@@ -533,7 +535,7 @@ class ActionHandler:
         self._did_acknowledge_job = True
         job.acknowledge(user.id)
 
-    def stop_job(self):
+    def stop_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.stop_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():
@@ -548,7 +550,7 @@ class ActionHandler:
             self._did_stop_job = True
             html.show_message(_("Background job has been stopped"))
 
-    def delete_job(self):
+    def delete_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.delete_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():

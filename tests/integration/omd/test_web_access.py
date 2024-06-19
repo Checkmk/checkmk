@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
-from tests.testlib import CMKWebSession
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
 from tests.testlib.site import Site
+from tests.testlib.web_session import CMKWebSession
 
 
 def test_www_dir(site: Site) -> None:
@@ -70,7 +69,7 @@ def test_cmk_automation(site: Site) -> None:
     assert response.text == "Missing secret for automation command."
 
 
-@pytest.mark.usefixtures("skip_in_raw_edition")
+@skip_if_raw_edition
 def test_cmk_deploy_agent(site: Site) -> None:
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/deploy_agent.py" % site.id)

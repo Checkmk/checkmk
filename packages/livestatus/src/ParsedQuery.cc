@@ -9,8 +9,11 @@
 #include <charconv>
 #include <cmath>
 #include <compare>
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <map>
+#include <ranges>
 #include <ratio>
 #include <stdexcept>
 #include <system_error>
@@ -18,15 +21,13 @@
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
 #include "livestatus/Column.h"
-#include "livestatus/ICore.h"
 #include "livestatus/NullColumn.h"
 #include "livestatus/OringFilter.h"
+#include "livestatus/StatsColumn.h"
 #include "livestatus/StringUtils.h"
-#include "livestatus/Table.h"
 #include "livestatus/opids.h"
 
-using namespace std::chrono_literals;
-using namespace std::string_view_literals;
+using namespace std::literals;
 
 namespace {
 std::string_view nextStringArgument(std::string_view &str) {
@@ -57,20 +58,12 @@ void checkNoArguments(std::string_view str) {
 }
 }  // namespace
 
-ParsedQuery::ParsedQuery(const std::list<std::string> &lines,
-                         const Table &table, OutputBuffer &output)
-    : user{std::make_unique<NoAuthUser>()} {
+ParsedQuery::ParsedQuery(
+    const std::vector<std::string> &lines,
+    const std::function<std::vector<std::shared_ptr<Column>>()> &all_columns,
+    const ColumnCreator &make_column) {
     FilterStack filters;
     FilterStack wait_conditions;
-    auto make_column = [&table](std::string_view colname) {
-        return table.column(std::string{colname});
-    };
-    auto find_user = [&table](std::string_view name) {
-        return table.core()->find_user(std::string{name});
-    };
-    auto get = [&table](std::string_view primary_key) {
-        return table.get(std::string{primary_key});
-    };
     for (const auto &line_str : lines) {
         std::string_view line{line_str};
         auto header = line.substr(0, line.find(':'));
@@ -105,7 +98,7 @@ ParsedQuery::ParsedQuery(const std::list<std::string> &lines,
             } else if (header == "Timelimit"sv) {
                 parseTimelimitLine(line);
             } else if (header == "AuthUser"sv) {
-                parseAuthUserHeader(line, find_user);
+                parseAuthUserHeader(line);
             } else if (header == "Separators"sv) {
                 parseSeparatorsLine(line);
             } else if (header == "OutputFormat"sv) {
@@ -127,27 +120,29 @@ ParsedQuery::ParsedQuery(const std::list<std::string> &lines,
             } else if (header == "WaitTrigger"sv) {
                 parseWaitTriggerLine(line);
             } else if (header == "WaitObject"sv) {
-                parseWaitObjectLine(line, get);
+                parseWaitObjectLine(line);
             } else if (header == "WaitTimeout"sv) {
                 parseWaitTimeoutLine(line);
             } else if (header == "Localtime"sv) {
                 parseLocaltimeLine(line);
+            } else if (header == "OrderBy"sv) {
+                parseOrderBy(line, make_column);
             } else {
                 throw std::runtime_error("undefined request header");
             }
         } catch (const std::runtime_error &e) {
-            output.setError(OutputBuffer::ResponseCode::bad_request,
-                            "while processing header '" + std::string{header} +
-                                "' for table '" + table.name() +
-                                "': " + e.what());
+            if (!error) {
+                error = "while processing header '" + std::string{header} +
+                        "': "s + e.what();
+            }
         }
     }
 
     if (columns.empty() && stats_columns.empty()) {
-        table.any_column([this](const auto &c) {
-            return columns.push_back(c), all_column_names.insert(c->name()),
-                   false;
-        });
+        for (const auto &c : all_columns()) {
+            columns.push_back(c);
+            all_column_names.insert(c->name());
+        }
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
         show_column_headers = true;
@@ -156,16 +151,22 @@ ParsedQuery::ParsedQuery(const std::list<std::string> &lines,
     filter = AndingFilter::make(Filter::Kind::row, filters);
     wait_condition =
         AndingFilter::make(Filter::Kind ::wait_condition, wait_conditions);
-    output.setResponseHeader(response_header);
 }
 
 namespace {
-[[noreturn]] void stack_underflow(int expected, int actual) {
-    throw std::runtime_error("cannot combine filters: expecting " +
-                             std::to_string(expected) + " " +
-                             (expected == 1 ? "filter" : "filters") +
-                             ", but only " + std::to_string(actual) + " " +
-                             (actual == 1 ? "is" : "are") + " on stack");
+template <typename Stack>
+Stack popN(Stack &stack, size_t n) {
+    if (stack.size() < n) {
+        throw std::runtime_error(
+            "cannot combine filters: expecting " + std::to_string(n) + " " +
+            (n == 1 ? "filter" : "filters") + ", but only " +
+            std::to_string(stack.size()) + " " +
+            (stack.size() == 1 ? "is" : "are") + " on stack");
+    }
+    Stack result;
+    std::move(stack.end() - n, stack.end(), std::back_inserter(result));
+    stack.erase(stack.end() - n, stack.end());
+    return result;
 }
 }  // namespace
 
@@ -174,54 +175,28 @@ void ParsedQuery::parseAndOrLine(std::string_view line, Filter::Kind kind,
                                  const LogicalConnective &connective,
                                  FilterStack &filters) {
     auto number = nextNonNegativeIntegerArgument(line);
-    Filters subfilters;
-    for (auto i = 0; i < number; ++i) {
-        if (filters.empty()) {
-            stack_underflow(number, i);
-        }
-        subfilters.push_back(std::move(filters.back()));
-        filters.pop_back();
-    }
-    std::reverse(subfilters.begin(), subfilters.end());
-    filters.push_back(connective(kind, subfilters));
+    filters.push_back(connective(kind, popN(filters, number)));
 }
 
 // static
 void ParsedQuery::parseNegateLine(std::string_view line, FilterStack &filters) {
     checkNoArguments(line);
-    if (filters.empty()) {
-        stack_underflow(1, 0);
-    }
-    auto top = std::move(filters.back());
-    filters.pop_back();
-    filters.push_back(top->negate());
+    filters.push_back(popN(filters, 1)[0]->negate());
 }
 
 void ParsedQuery::parseStatsAndOrLine(std::string_view line,
                                       const LogicalConnective &connective) {
     auto number = nextNonNegativeIntegerArgument(line);
-    Filters subfilters;
-    for (auto i = 0; i < number; ++i) {
-        if (stats_columns.empty()) {
-            stack_underflow(number, i);
-        }
-        subfilters.push_back(stats_columns.back()->stealFilter());
-        stats_columns.pop_back();
-    }
-    std::reverse(subfilters.begin(), subfilters.end());
+    auto v = popN(stats_columns, number) |  // TODO(sp): simplify with C++23
+             std::views::transform([](auto &c) { return c->stealFilter(); });
     stats_columns.push_back(std::make_unique<StatsColumnCount>(
-        connective(Filter::Kind::stats, subfilters)));
+        connective(Filter::Kind::stats, Filters{v.begin(), v.end()})));
 }
 
 void ParsedQuery::parseStatsNegateLine(std::string_view line) {
     checkNoArguments(line);
-    if (stats_columns.empty()) {
-        stack_underflow(1, 0);
-    }
-    auto to_negate = stats_columns.back()->stealFilter();
-    stats_columns.pop_back();
-    stats_columns.push_back(
-        std::make_unique<StatsColumnCount>(to_negate->negate()));
+    stats_columns.push_back(std::make_unique<StatsColumnCount>(
+        popN(stats_columns, 1)[0]->stealFilter()->negate()));
 }
 
 namespace {
@@ -338,26 +313,26 @@ const std::map<std::string_view, AggregationFactory> stats_ops{
 
 void ParsedQuery::parseStatsLine(std::string_view line,
                                  const ColumnCreator &make_column) {
-    // first token is either aggregation operator or column name
-    std::string column_name;
-    std::unique_ptr<StatsColumn> sc;
-    auto col_or_op = nextStringArgument(line);
-    auto it = stats_ops.find(col_or_op);
+    // The first token is either the column name or the aggregation operator.
+    auto col_or_aggr = nextStringArgument(line);
+    auto it = stats_ops.find(col_or_aggr);
     if (it == stats_ops.end()) {
-        column_name = col_or_op;
+        auto column_name = std::string{col_or_aggr};
         auto rel_op = relationalOperatorForName(nextStringArgument(line));
         line.remove_prefix(
             std::min(line.size(), line.find_first_not_of(mk::whitespace)));
-        sc = std::make_unique<StatsColumnCount>(
+        auto value = std::string{line};
+        stats_columns.push_back(std::make_unique<StatsColumnCount>(
             make_column(column_name)
-                ->createFilter(Filter::Kind::stats, rel_op, std::string{line}));
+                ->createFilter(Filter::Kind::stats, rel_op, value)));
+        all_column_names.insert(column_name);
     } else {
-        column_name = nextStringArgument(line);
-        sc = std::make_unique<StatsColumnOp>(it->second,
-                                             make_column(column_name));
+        auto aggregation_factory = it->second;
+        auto column_name = std::string{nextStringArgument(line)};
+        stats_columns.push_back(std::make_unique<StatsColumnOp>(
+            aggregation_factory, make_column(column_name)));
+        all_column_names.insert(column_name);
     }
-    stats_columns.push_back(std::move(sc));
-    all_column_names.insert(column_name);
     // Default to old behaviour: do not output column headers if we do Stats
     // queries
     show_column_headers = false;
@@ -365,28 +340,23 @@ void ParsedQuery::parseStatsLine(std::string_view line,
 
 void ParsedQuery::parseFilterLine(std::string_view line, FilterStack &filters,
                                   const ColumnCreator &make_column) {
-    auto column_name = nextStringArgument(line);
+    auto column_name = std::string{nextStringArgument(line)};
     auto rel_op = relationalOperatorForName(nextStringArgument(line));
     line.remove_prefix(
         std::min(line.size(), line.find_first_not_of(mk::whitespace)));
-    auto sub_filter =
-        make_column(column_name)
-            ->createFilter(Filter::Kind::row, rel_op, std::string{line});
-    filters.push_back(std::move(sub_filter));
-    all_column_names.insert(std::string{column_name});
+    auto value = std::string{line};
+    filters.push_back(make_column(column_name)
+                          ->createFilter(Filter::Kind::row, rel_op, value));
+    all_column_names.insert(column_name);
 }
 
-void ParsedQuery::parseAuthUserHeader(
-    std::string_view line,
-    const std::function<std::unique_ptr<const User>(std::string_view)>
-        &find_user) {
-    user = find_user(line);
-}
+void ParsedQuery::parseAuthUserHeader(std::string_view line) { user = line; }
 
 void ParsedQuery::parseColumnsLine(std::string_view line,
                                    const ColumnCreator &make_column) {
     while (!line.empty()) {
-        auto column_name = line.substr(0, line.find_first_of(mk::whitespace));
+        auto column_name =
+            std::string{line.substr(0, line.find_first_of(mk::whitespace))};
         line.remove_prefix(std::min(
             line.size(),
             line.find_first_not_of(mk::whitespace, column_name.size())));
@@ -397,12 +367,11 @@ void ParsedQuery::parseColumnsLine(std::string_view line,
             // TODO(sp): Do we still need this fallback now that we require the
             // remote sites to be updated before the central site? We don't do
             // this for stats/filter lines, either.
-            column = std::make_shared<NullColumn>(std::string{column_name},
-                                                  "non-existing column",
-                                                  ColumnOffsets{});
+            column = std::make_shared<NullColumn>(
+                column_name, "non-existing column", ColumnOffsets{});
         }
         columns.push_back(column);
-        all_column_names.insert(std::string{column_name});
+        all_column_names.insert(column_name);
     }
     show_column_headers = false;
 }
@@ -494,13 +463,8 @@ void ParsedQuery::parseWaitTriggerLine(std::string_view line) {
     wait_trigger = Triggers::find(std::string{nextStringArgument(line)});
 }
 
-void ParsedQuery::parseWaitObjectLine(
-    std::string_view line, const std::function<Row(std::string_view)> &get) {
-    wait_object = get(line);
-    if (wait_object.isNull()) {
-        throw std::runtime_error("primary key '" + std::string{line} +
-                                 "' not found or not supported by this table");
-    }
+void ParsedQuery::parseWaitObjectLine(std::string_view line) {
+    wait_object = line;
 }
 
 void ParsedQuery::parseLocaltimeLine(std::string_view line) {
@@ -518,4 +482,29 @@ void ParsedQuery::parseLocaltimeLine(std::string_view line) {
             "timezone difference greater than or equal to 24 hours"};
     }
     timezone_offset = offset;
+}
+
+void ParsedQuery::parseOrderBy(std::string_view line,
+                               const ColumnCreator &make_column) {
+    // Use this header as: `OrderBy: COLUMN_NAME [asc,desc]`
+    auto column = mk::next_argument(line);
+    mk::skip_whitespace(line);
+    auto direction = [line]() {
+        if (line.empty() || line == "asc"sv) {
+            return OrderByDirection::ascending;
+        }
+        if (line == "desc"sv) {
+            return OrderByDirection::descending;
+        }
+        throw std::runtime_error("expected 'asc' or 'desc'");
+    };
+    auto dot = column.find('.');
+    order_by.push_back(
+        dot == std::string_view::npos
+            ? OrderBy{.column = make_column(column),
+                      .key = {},
+                      .direction = direction()}
+            : OrderBy{.column = make_column(column.substr(0, dot)),
+                      .key = column.substr(dot + 1),
+                      .direction = direction()});
 }

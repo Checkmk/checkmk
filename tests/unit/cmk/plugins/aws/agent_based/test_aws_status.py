@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import datetime
 import random
 import time
@@ -93,7 +95,7 @@ def test_parse_string_table() -> None:
       </channel>
     </rss>
     """
-    string_table = [[AgentOutputFactory.build(rss_str=rss_str).json()]]
+    string_table = [[AgentOutputFactory.build(rss_str=rss_str).model_dump_json()]]
     # Act
     section = aws_status.parse_string_table(string_table)
     # Assert

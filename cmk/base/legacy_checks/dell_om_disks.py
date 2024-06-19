@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 
 
@@ -76,7 +75,7 @@ def check_dell_om_disks(item, _no_params, info):
             smart = saveint(smart)
             mt = saveint(mt)
             size = saveint(sizeMB) * 1024 * 1024
-            msg = [f"{name} ({pid}, {get_bytes_human_readable(size)})"]
+            msg = [f"{name} ({pid}, {render.bytes(size)})"]
             label = ""
             if smart == 2:
                 dstate = 34

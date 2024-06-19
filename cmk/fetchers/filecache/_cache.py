@@ -46,19 +46,17 @@ Cache hierarchy
 from __future__ import annotations
 
 import abc
-import copy
 import enum
 import logging
 import os
-from collections.abc import Mapping, Sized
+import time
+from collections.abc import Sized
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
-import cmk.utils
-import cmk.utils.paths
 import cmk.utils.store as _store
 from cmk.utils.exceptions import MKFetcherError, MKGeneralException, MKTimeout
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 
 from .._abstract import Mode
@@ -106,7 +104,6 @@ class FileCacheMode(enum.IntFlag):
 class FileCache(Generic[_TRawData], abc.ABC):
     def __init__(
         self,
-        hostname: HostName,
         *,
         path_template: str,
         max_age: MaxAge,
@@ -115,7 +112,6 @@ class FileCache(Generic[_TRawData], abc.ABC):
         file_cache_mode: FileCacheMode | int,
     ) -> None:
         super().__init__()
-        self.hostname: Final = hostname
         self.path_template: Final = path_template
         self.max_age = max_age
         # TODO(ml): Make sure simulation and use_only_cache are identical
@@ -131,7 +127,6 @@ class FileCache(Generic[_TRawData], abc.ABC):
             f"{type(self).__name__}("
             + ", ".join(
                 (
-                    f"{self.hostname}",
                     f"path_template={self.path_template}",
                     f"max_age={self.max_age}",
                     f"simulation={self.simulation}",
@@ -147,7 +142,6 @@ class FileCache(Generic[_TRawData], abc.ABC):
             return NotImplemented
         return all(
             (
-                self.hostname == other.hostname,
                 self.path_template == other.path_template,
                 self.max_age == other.max_age,
                 self.simulation == other.simulation,
@@ -155,22 +149,6 @@ class FileCache(Generic[_TRawData], abc.ABC):
                 self.file_cache_mode == other.file_cache_mode,
             )
         )
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "hostname": str(self.hostname),
-            "path_template": self.path_template,
-            "max_age": self.max_age,
-            "simulation": self.simulation,
-            "use_only_cache": self.use_only_cache,
-            "file_cache_mode": self.file_cache_mode,
-        }
-
-    @classmethod
-    def from_json(cls: type[TFileCache], serialized: Mapping[str, Any]) -> TFileCache:
-        serialized_ = copy.deepcopy(dict(serialized))
-        max_age = MaxAge(*serialized_.pop("max_age"))
-        return cls(max_age=max_age, **serialized_)
 
     @staticmethod
     @abc.abstractmethod
@@ -213,20 +191,20 @@ class FileCache(Generic[_TRawData], abc.ABC):
         return raw_data
 
     @staticmethod
-    def _make_path(template: str, *, hostname: HostName, mode: Mode) -> Path:
+    def _make_path(template: str, *, mode: Mode) -> Path:
         # This is a kind of arbitrary mini-language but explicit in the
         # caller and easy to extend in the future.  If somebody has a
         # better idea to allow a serializable and parametrizable path
         # creation, that's fine with me.
-        return Path(template.format(mode=mode.name.lower(), hostname=hostname))
+        return Path(template.format(mode=mode.name.lower()))
 
     def _read(self, mode: Mode) -> _TRawData | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
-        path = self._make_path(self.path_template, hostname=self.hostname, mode=mode)
+        path = self._make_path(self.path_template, mode=mode)
         try:
-            cachefile_age = cmk.utils.cachefile_age(path)
+            cachefile_age = time.time() - path.stat().st_mtime
         except FileNotFoundError:
             self._logger.debug("Not using cache (does not exist)")
             return None
@@ -258,7 +236,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
         if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
             return
 
-        path = self._make_path(self.path_template, hostname=self.hostname, mode=mode)
+        path = self._make_path(self.path_template, mode=mode)
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
         except MKTimeout:
@@ -276,9 +254,8 @@ class FileCache(Generic[_TRawData], abc.ABC):
 
 
 class NoCache(FileCache[_TRawData]):
-    def __init__(self, hostname: HostName, *args: object, **kw: object) -> None:
+    def __init__(self, *args: object, **kw: object) -> None:
         super().__init__(
-            hostname,
             path_template=str(os.devnull),
             max_age=MaxAge.zero(),
             simulation=False,
@@ -295,7 +272,8 @@ class NoCache(FileCache[_TRawData]):
         raise TypeError("NoCache")
 
 
-class FileCacheOptions(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class FileCacheOptions:
     # TODO(ml): Split between fetcher and checker options; maybe also find
     # better names.
 

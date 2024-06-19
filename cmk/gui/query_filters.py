@@ -16,8 +16,7 @@ import livestatus
 from cmk.utils.labels import LabelGroups
 from cmk.utils.tags import TagGroupID
 
-import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
+from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -153,13 +152,13 @@ class SingleOptionQuery(Query):
 
 
 class TristateQuery(SingleOptionQuery):
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
         *,
-        ident,
+        ident: str,
         filter_code: Callable[[bool], FilterHeader],
         filter_row: Callable[[bool, Row], bool] | None = None,
-        options=None,
+        options: SitesOptions | None = None,
     ):
         super().__init__(
             ident=ident,
@@ -403,8 +402,9 @@ class TimeQuery(NumberRangeQuery):
             return None
 
         try:
-            count = int(value[var])
-            secs = count * int(rangename)
+            if (count := value.get(var)) is None:
+                return None
+            secs = int(count) * int(rangename)
             return int(time.time()) - secs
         except ValueError:
             return None
@@ -513,7 +513,7 @@ def re_ignorecase(text: str, varprefix: str) -> re.Pattern:
 
 def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], bool]:
     regex = re_ignorecase(filtertext, column)
-    return lambda row: bool(regex.search(row.get(column, "")))
+    return lambda row: bool(regex.search(str(row.get(column, ""))))
 
 
 class CheckCommandQuery(TextQuery):
@@ -602,23 +602,21 @@ def ip_address_family_options() -> SitesOptions:
 
 
 def address_families(family: str) -> FilterHeader:
-    if family == "both":
-        return lq_logic("Filter: tags =", ["ip-v4 ip-v4", "ip-v6 ip-v6"], "Or")
-
-    if family[0] == "4":
-        tag = livestatus.lqencode("ip-v4")
-    elif family[0] == "6":
-        tag = livestatus.lqencode("ip-v6")
-    filt = f"Filter: tags = {tag} {tag}\n"
-
-    if family.endswith("_only"):
-        if family[0] == "4":
-            tag = livestatus.lqencode("ip-v6")
-        elif family[0] == "6":
-            tag = livestatus.lqencode("ip-v4")
-        filt += f"Filter: tags != {tag} {tag}\n"
-
-    return filt
+    v4_key_val_str = "ip-v4 ip-v4"
+    v6_key_val_str = "ip-v6 ip-v6"
+    match family:
+        case "both":
+            return lq_logic("Filter: tags =", [v4_key_val_str, v6_key_val_str], "Or")
+        case "4":
+            return f"Filter: tags = {v4_key_val_str}\n"
+        case "4_only":
+            return f"Filter: tags = {v4_key_val_str}\nFilter: tags != {v6_key_val_str}\n"
+        case "6":
+            return f"Filter: tags = {v6_key_val_str}\n"
+        case "6_only":
+            return f"Filter: tags = {v6_key_val_str}\nFilter: tags != {v4_key_val_str}\n"
+        case _:
+            raise ValueError()
 
 
 def ip_address_families_options() -> SitesOptions:
@@ -738,7 +736,7 @@ class TagsQuery(ABCTagsQuery):
 
     def parse_value(self, value: FilterHTTPVariables) -> Labels:
         # Do not restrict to a certain number, because we'd like to link to this
-        # via an URL, e.g. from the virtual host tree snapin
+        # via an URL, e.g. from the virtual host tree snap-in
         num = 0
         while value.get("%s_%d_grp" % (self.var_prefix, num)):
             prefix = "%s_%d" % (self.var_prefix, num)
@@ -767,7 +765,7 @@ class AuxTagsQuery(ABCTagsQuery):
 
     def parse_value(self, value: FilterHTTPVariables) -> Labels:
         # Do not restrict to a certain number, because we'd like to link to this
-        # via an URL, e.g. from the virtual host tree snapin
+        # via an URL, e.g. from the virtual host tree snap-in
         num = 0
         while (this_tag := value.get("%s_%d" % (self.var_prefix, num))) is not None:
             if this_tag:
@@ -876,7 +874,7 @@ def empty_hostgroup_filter(value: FilterHTTPVariables) -> FilterHeader:
 def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHeader:
     "When VALUE keys are the options, return filterheaders that equal column to option."
 
-    def drop_column_prefix(var: str):  # type: ignore[no-untyped-def]
+    def drop_column_prefix(var: str) -> str:
         if var.startswith(column + "_"):
             return var[len(column) + 1 :]
         return var
@@ -886,7 +884,7 @@ def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHea
     return lq_logic("Filter: %s =" % column, selected, "Or")
 
 
-def svc_state_min_options(prefix: str):  # type: ignore[no-untyped-def]
+def svc_state_min_options(prefix: str) -> list[tuple[str, str]]:
     return [
         (prefix + "0", _("OK")),
         (prefix + "1", _("WARN")),
@@ -972,7 +970,7 @@ def log_class_filter(value: FilterHTTPVariables) -> FilterHeader:
 def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
     values = context.get(ident, {})
 
-    def _add_row(row) -> bool:  # type: ignore[no-untyped-def]
+    def _add_row(row: Row) -> bool:
         # Apply filter if and only if a filter value is set
         if (oper_status := row.get("invinterface_oper_status")) is not None and (
             filter_key := "%s_%d" % (ident, oper_status)
@@ -986,7 +984,7 @@ def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) 
 def cre_sites_options() -> SitesOptions:
     return sorted(
         [
-            (sitename, site_config.get_site_config(sitename)["alias"])
+            (sitename, site_config.get_site_config(active_config, sitename)["alias"])
             for sitename, state in sites.states().items()
             if state["state"] == "online"
         ],

@@ -23,69 +23,71 @@
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
+using row_type = IDowntime;
+
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableDowntimes::TableDowntimes(ICore *mc) : Table(mc) {
+TableDowntimes::TableDowntimes(ICore *mc) {
     const ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<IDowntime>>(
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "author", "The contact that scheduled the downtime", offsets,
-        [](const IDowntime &r) { return r.author(); }));
-    addColumn(std::make_unique<StringColumn<IDowntime>>(
+        [](const row_type &row) { return row.author(); }));
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "comment", "A comment text", offsets,
-        [](const IDowntime &r) { return r.comment(); }));
-    addColumn(std::make_unique<IntColumn<IDowntime>>(
+        [](const row_type &row) { return row.comment(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "id", "The id of the downtime", offsets,
-        [](const IDowntime &r) { return r.id(); }));
-    addColumn(std::make_unique<TimeColumn<IDowntime>>(
+        [](const row_type &row) { return row.id(); }));
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
-        [](const IDowntime &r) { return r.entry_time(); }));
+        [](const row_type &row) { return row.entry_time(); }));
     // Totally redundant column...
-    addColumn(std::make_unique<IntColumn<IDowntime>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "type", "1 for a service downtime, 2 for a host downtime", offsets,
-        [](const IDowntime &r) { return r.isService() ? 1 : 2; }));
-    addColumn(std::make_unique<BoolColumn<IDowntime>>(
+        [](const row_type &row) { return row.isService() ? 1 : 2; }));
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", offsets,
-        [](const IDowntime &r) { return r.isService(); }));
-    addColumn(std::make_unique<TimeColumn<IDowntime>>(
+        [](const row_type &row) { return row.isService(); }));
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "start_time", "The start time of the downtime as UNIX timestamp",
-        offsets, [](const IDowntime &r) { return r.start_time(); }));
-    addColumn(std::make_unique<TimeColumn<IDowntime>>(
+        offsets, [](const row_type &row) { return row.start_time(); }));
+    addColumn(std::make_unique<TimeColumn<row_type>>(
         "end_time", "The end time of the downtime as UNIX timestamp", offsets,
-        [](const IDowntime &r) { return r.end_time(); }));
-    addColumn(std::make_unique<BoolColumn<IDowntime>>(
+        [](const row_type &row) { return row.end_time(); }));
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible", offsets,
-        [](const IDowntime &r) { return r.fixed(); }));
-    addColumn(std::make_unique<BoolColumn<IDowntime>>(
+        [](const row_type &row) { return row.fixed(); }));
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "origin",
         "A 0 if the downtime has been set by a command, a 1 if it has been configured by a rule",
-        offsets, [](const IDowntime &r) { return r.origin_is_rule(); }));
-    addColumn(std::make_unique<IntColumn<IDowntime>>(
+        offsets, [](const row_type &row) { return row.origin_is_rule(); }));
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "recurring",
         "For recurring downtimes: 1: hourly, 2: daily, 3: weekly, 4: two-weekly, 5: four-weekly. Otherwise 0",
-        offsets, [](const IDowntime &r) {
-            return static_cast<int32_t>(r.recurring());
+        offsets, [](const row_type &row) {
+            return static_cast<int32_t>(row.recurring());
         }));
-    addColumn(std::make_unique<IntColumn<IDowntime>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "duration", "The duration of the downtime in seconds", offsets,
-        [](const IDowntime &r) {
-            return mk::ticks<std::chrono::seconds>(r.duration());
+        [](const row_type &row) {
+            return mk::ticks<std::chrono::seconds>(row.duration());
         }));
-    addColumn(std::make_unique<IntColumn<IDowntime>>(
+    addColumn(std::make_unique<IntColumn<row_type>>(
         "triggered_by",
         "The ID of the downtime triggering this downtime or 0 if there is none",
-        offsets, [](const IDowntime &r) { return r.triggered_by(); }));
-    addColumn(std::make_unique<BoolColumn<IDowntime>>(
+        offsets, [](const row_type &row) { return row.triggered_by(); }));
+    addColumn(std::make_unique<BoolColumn<row_type>>(
         "is_pending",
         "1 if the downtime is currently pending (not active), 0 if it is active",
-        offsets, [](const IDowntime &r) { return !r.pending(); }));
-    TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
-        return &r.rawData<IDowntime>()->host();
+        offsets, [](const row_type &row) { return !row.pending(); }));
+    TableHosts::addColumns(this, *mc, "host_", offsets.add([](Row r) {
+        return &r.rawData<row_type>()->host();
     }),
                            LockComments::yes, LockDowntimes::no);
     TableServices::addColumns(
-        this, "service_",
-        offsets.add([](Row r) { return r.rawData<IDowntime>()->service(); }),
+        this, *mc, "service_",
+        offsets.add([](Row r) { return r.rawData<row_type>()->service(); }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::no);
 }
 
@@ -93,10 +95,11 @@ std::string TableDowntimes::name() const { return "downtimes"; }
 
 std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
-void TableDowntimes::answerQuery(Query &query, const User &user) {
-    core()->all_of_downtimes([&query, &user](const IDowntime &dt) {
-        return !user.is_authorized_for_object(&dt.host(), dt.service(),
+void TableDowntimes::answerQuery(Query &query, const User &user,
+                                 const ICore &core) {
+    core.all_of_downtimes([&query, &user](const row_type &row) {
+        return !user.is_authorized_for_object(&row.host(), row.service(),
                                               false) ||
-               query.processDataset(Row{&dt});
+               query.processDataset(Row{&row});
     });
 }

@@ -7,9 +7,8 @@ from __future__ import annotations
 
 import os
 import posix
+from collections.abc import Callable
 from dataclasses import dataclass
-
-from cmk.utils.log import console
 
 
 @dataclass(frozen=True)
@@ -54,8 +53,9 @@ class Snapshot:
 
 
 class CPUTracker:
-    def __init__(self) -> None:
+    def __init__(self, log: Callable[[str], None]) -> None:
         super().__init__()
+        self._log = log
         self._start: Snapshot = Snapshot.null()
         self._end: Snapshot = Snapshot.null()
 
@@ -64,12 +64,12 @@ class CPUTracker:
 
     def __enter__(self) -> CPUTracker:
         self._start = Snapshot.take()
-        console.vverbose("[cpu_tracking] Start [%x]\n", id(self))
+        self._log(f"[cpu_tracking] Start [{id(self):x}]")
         return self
 
     def __exit__(self, *exc_info: object) -> None:
         self._end = Snapshot.take()
-        console.vverbose("[cpu_tracking] Stop [%x - %s]\n", id(self), self.duration)
+        self._log(f"[cpu_tracking] Stop [{id(self):x} - {self.duration}]")
 
     @property
     def duration(self) -> Snapshot:

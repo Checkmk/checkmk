@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=redefined-outer-name
 import copy
 import itertools
+import json
 import shutil
 import struct
 import uuid
@@ -39,22 +42,27 @@ def crash():
         return UnitTestCrashReport.from_exception()
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_type(crash: ABCCrashReport) -> None:
     assert crash.type() == "test"
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_ident(crash: ABCCrashReport) -> None:
     assert crash.ident() == (crash.crash_info["id"],)
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_ident_to_text(crash: ABCCrashReport) -> None:
     assert crash.ident_to_text() == crash.crash_info["id"]
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_crash_dir(crash: ABCCrashReport) -> None:
     assert crash.crash_dir() == (cmk.utils.paths.crash_dir / crash.type() / crash.ident_to_text())
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_local_crash_report_url(crash: ABCCrashReport) -> None:
     url = "crash.py?component=test&ident=%s" % crash.ident_to_text()
     assert crash.local_crash_report_url() == url
@@ -145,7 +153,7 @@ def cache_general_version_infos(monkeypatch):
     )
 
 
-@pytest.mark.usefixtures("patch_uuid1", "cache_general_version_infos")
+@pytest.mark.usefixtures("patch_uuid1", "cache_general_version_infos", "patch_omd_site")
 @pytest.mark.parametrize("n_crashes", [15, 45])
 def test_crash_report_store_cleanup(crash_dir: Path, n_crashes: int) -> None:
     store = CrashReportStore()
@@ -166,7 +174,7 @@ def test_crash_report_store_cleanup(crash_dir: Path, n_crashes: int) -> None:
 
 
 @pytest.mark.parametrize(
-    "crash_info, expected",
+    "crash_info, different_result",
     [
         pytest.param(
             {
@@ -179,8 +187,17 @@ def test_crash_report_store_cleanup(crash_dir: Path, n_crashes: int) -> None:
                     },
                 },
             },
-            '{"details": {"section": {"[\\"foo\\", \\"bar\\"]": {"id": "1337", "name": "foobar"}}}}',
-            id="crash_info with tuple as dict key in section details",
+            {
+                "details": {
+                    "section": {
+                        '["foo", "bar"]': {
+                            "id": "1337",
+                            "name": "foobar",
+                        },
+                    },
+                },
+            },
+            id="crash_info with tuple as dict key",
         ),
         pytest.param(
             {
@@ -193,15 +210,18 @@ def test_crash_report_store_cleanup(crash_dir: Path, n_crashes: int) -> None:
                     },
                 },
             },
-            '{"details": {"section": {"[\\"foo\\", \\"bar\\"]": {"id": "1337", "name": "foobar"}}}}',
-            id="crash_info with list as str as dict key in section details",
+            None,
+            id="crash_info with list as str as dict key",
         ),
         pytest.param(
             {"foo": "bar"},
-            '{"foo": "bar"}',
+            None,
             id="default",
         ),
     ],
 )
-def test_crash_report_json_dump(crash_info: CrashInfo, expected: str) -> None:
-    assert CrashReportStore.dump_crash_info(crash_info) == expected
+def test_crash_report_json_dump(crash_info: CrashInfo, different_result: CrashInfo | None) -> None:
+    if different_result:
+        assert json.loads(CrashReportStore.dump_crash_info(crash_info)) == different_result
+        return
+    assert json.loads(CrashReportStore.dump_crash_info(crash_info)) == crash_info

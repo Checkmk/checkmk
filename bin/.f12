@@ -18,8 +18,10 @@ sudo install -m 755 \
     mkevent \
     mkbackup \
     cmk-update-config \
+    cmk-compute-api-spec \
     cmk-update-license-usage \
     cmk-passwd \
+    cmk-trigger-api-spec-job \
     post-rename-site \
     init-redis \
     "$ROOT"/bin/

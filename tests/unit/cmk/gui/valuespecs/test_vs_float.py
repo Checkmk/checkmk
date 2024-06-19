@@ -38,7 +38,7 @@ class TestValueSpecFloat:
         assert vs.Float(default_value=lambda: 77).canonical_value() == 0
         assert vs.Float(default_value=lambda: 77, minvalue=10).canonical_value() == 10
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(integer="123"):
             assert vs.Float().from_html_vars("integer") == 123
 
@@ -47,12 +47,12 @@ class TestValueSpecFloat:
                 vs.Float().from_html_vars("integer")
 
     def test_value_to_html(self) -> None:
-        assert vs.Float().value_to_html(123) == "123.00"
-        assert vs.Float().value_to_html(None) == "0.00"  # type: ignore[arg-type]
-        assert vs.Float(unit="unit").value_to_html(1002003) == "1002003.00 unit"
-        assert vs.Float(unit="unit").value_to_html(0.999) == "1.00 unit"
+        assert vs.Float().value_to_html(123) == "123.0"
+        assert vs.Float().value_to_html(None) == "0.0"  # type: ignore[arg-type]
+        assert vs.Float(unit="unit").value_to_html(1002003) == "1002003.0 unit"
+        assert vs.Float(unit="unit").value_to_html(0.999) == "0.999 unit"
         assert vs.Float().value_to_html(0.99) == "0.99"
-        assert vs.Float().value_to_html(-0.999) == "-1.00"
+        assert vs.Float().value_to_html(-0.999) == "-0.999"
 
     def test_json(self) -> None:
         assert vs.Float().value_from_json(11) == 11

@@ -6,11 +6,16 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.datastructures import denilled
 from cmk.utils.labels import LabelGroups
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.rulesets.conditions import (
+    allow_host_label_conditions,
+    allow_service_label_conditions,
+)
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 from cmk.gui import exceptions, http
@@ -26,7 +31,7 @@ from cmk.gui.openapi.endpoints.rule.fields import (
     RuleSearchOptions,
     UpdateRuleObject,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import (
@@ -36,6 +41,7 @@ from cmk.gui.openapi.utils import (
     serve_json,
 )
 from cmk.gui.utils import gen_id
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -196,7 +202,9 @@ def create_rule(param):
             title=exc.title,
         )
 
-    rule = _create_rule(folder, ruleset, body["conditions"], body["properties"], value, gen_id())
+    rule = _create_rule(
+        folder, ruleset, body.get("conditions", {}), body.get("properties", {}), value, gen_id()
+    )
 
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder()
@@ -372,7 +380,12 @@ def edit_rule(param):
         )
 
     new_rule = _create_rule(
-        folder, ruleset, body["conditions"], body["properties"], value, param["rule_id"]
+        folder,
+        ruleset,
+        body.get("conditions", {}),
+        body.get("properties", {}),
+        value,
+        param["rule_id"],
     )
 
     ruleset.edit_rule(current_rule, new_rule)
@@ -384,7 +397,9 @@ def edit_rule(param):
 
 def _validate_value(ruleset: Ruleset, value: Any) -> None:
     try:
-        ruleset.valuespec().validate_value(value, "")
+        valuespec = ruleset.valuespec()
+        valuespec.validate_datatype(value, "")
+        valuespec.validate_value(value, "")
 
     except exceptions.MKUserError as exc:
         if exc.varname is None:
@@ -457,10 +472,20 @@ def _create_rule(
         RuleConditions(
             host_folder=folder.path(),
             host_tags=conditions.get("host_tags"),
-            host_label_groups=_api_to_internal(conditions.get("host_label_groups")),
+            host_label_groups=(
+                _api_to_internal(conditions.get("host_label_groups"))
+                if allow_host_label_conditions(ruleset.rulespec.name)
+                else None
+            ),
             host_name=conditions.get("host_name"),
-            service_description=conditions.get("service_description"),
-            service_label_groups=_api_to_internal(conditions.get("service_label_groups")),
+            service_description=(
+                conditions.get("service_description") if ruleset.item_type() else None
+            ),
+            service_label_groups=(
+                _api_to_internal(conditions.get("service_label_groups"))
+                if (ruleset.item_type() and allow_service_label_conditions(ruleset.rulespec.name))
+                else None
+            ),
         ),
         RuleOptions.from_config(properties),
         value,

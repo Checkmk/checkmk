@@ -92,7 +92,7 @@ class HostTagGroupId(fields.String):
 
 
 class HostTag(BaseSchema):
-    ident = fields.String(
+    id = fields.String(
         required=False,
         example="tag_id",
         description="An unique id for the tag",
@@ -117,7 +117,7 @@ class HostTag(BaseSchema):
 
 
 class InputHostTagGroup(BaseSchema):
-    ident = HostTagGroupId(
+    id = HostTagGroupId(
         required=True,
         example="group_id",
         description="An id for the host tag group",
@@ -142,7 +142,7 @@ class InputHostTagGroup(BaseSchema):
     tags = Tags(
         fields.Nested(HostTag),
         required=True,
-        example=[{"ident": "pod", "title": "Pod"}],
+        example=[{"id": "pod", "title": "Pod"}],
         description="A list of host tags belonging to the host tag group",
         minLength=1,
     )
@@ -168,7 +168,7 @@ class UpdateHostTagGroup(BaseSchema):
     tags = Tags(
         fields.Nested(HostTag),
         required=False,
-        example=[{"ident": "pod", "title": "Pod"}],
+        example=[{"id": "pod", "title": "Pod"}],
         description="A list of host tags belonging to the host tag group",
         minLength=1,
     )
@@ -186,4 +186,15 @@ class DeleteHostTagGroup(BaseSchema):
         load_default=False,
         example=False,
         description="The host tag group can still be in use. Setting repair to True gives permission to automatically remove the tag from the affected hosts.",
+    )
+    mode = fields.String(
+        enum=["abort", "delete", "remove", None],
+        required=False,
+        load_default=None,
+        example="delete",
+        description=(
+            "The host tag group can still be in use. Set mode to determine what should happen. "
+            "Either 'abort' the deletion, 'delete' affected rules or 'remove' the tag from "
+            "affected rules."
+        ),
     )

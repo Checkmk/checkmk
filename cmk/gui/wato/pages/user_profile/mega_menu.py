@@ -5,8 +5,10 @@
 
 """The user profile mega menu and related AJAX endpoints"""
 
-
 import cmk.utils.version as cmk_version
+
+if cmk_version.edition() is cmk_version.Edition.CSE:
+    from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -27,6 +29,11 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
     page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
 
+    if cmk_version.edition() == cmk_version.Edition.CSE:
+        page_registry.register_page("ajax_saas_onboarding_button_toggle")(
+            ModeAjaxCycleSaasOnboardingButtonToggle
+        )
+
 
 def _get_current_theme_title() -> str:
     return [title for theme_id, title in theme.theme_choices if theme_id == theme.get()][0]
@@ -35,10 +42,23 @@ def _get_current_theme_title() -> str:
 def _get_sidebar_position() -> str:
     assert user.id is not None
     sidebar_position = load_custom_attr(
-        user_id=user.id, key="ui_sidebar_position", parser=lambda x: None if x == "None" else "left"
+        user_id=user.id,
+        key="ui_sidebar_position",
+        parser=lambda x: None if x == "None" else "left",
     )
 
     return sidebar_position or "right"
+
+
+def _get_saas_onboarding_visibility_status() -> str | None:
+    assert user.id is not None
+    saas_onboarding_button_toggle = load_custom_attr(
+        user_id=user.id,
+        key="ui_saas_onboarding_button_toggle",
+        parser=lambda x: None if x == "None" else x,
+    )
+
+    return saas_onboarding_button_toggle
 
 
 def _sidebar_position_title(stored_value: str) -> str:
@@ -70,6 +90,23 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
             button_title=_sidebar_position_title(_get_sidebar_position()),
         ),
     ]
+
+    if cmk_version.edition() == cmk_version.Edition.CSE and user_may_see_saas_onboarding(user.id):
+        quick_items.append(
+            TopicMenuItem(
+                name="saas_onboarding_button_toggle",
+                title=_("Toggle onboarding button"),
+                url='javascript:cmk.sidebar.toggle_user_attribute("ajax_saas_onboarding_button_toggle.py")',
+                target="",
+                sort_index=30,
+                icon="sidebar_position",
+                button_title=(
+                    _("Visible")
+                    if _get_saas_onboarding_visibility_status() is None
+                    else _("Invisible")
+                ),
+            ),
+        )
 
     items = [
         TopicMenuItem(
@@ -185,6 +222,18 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
         return {}
 
 
+class ModeAjaxCycleSaasOnboardingButtonToggle(AjaxPage):
+    """AJAX handler for quick access option 'Toggle onboarding button" in user menu"""
+
+    def page(self) -> PageResult:
+        check_csrf_token()
+        _set_user_attribute(
+            "ui_saas_onboarding_button_toggle",
+            (None if _get_saas_onboarding_visibility_status() == "invisible" else "invisible"),
+        )
+        return {}
+
+
 class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user to a dashboard"""
 
@@ -200,7 +249,7 @@ class ModeAjaxSetStartURL(AjaxPage):
         return {}
 
 
-def _set_user_attribute(key: str, value: str | None):  # type: ignore[no-untyped-def]
+def _set_user_attribute(key: str, value: str | None) -> None:
     assert user.id is not None
     user_id = user.id
 

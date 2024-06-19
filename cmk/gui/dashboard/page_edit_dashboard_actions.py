@@ -64,7 +64,7 @@ def page_delete_dashlet() -> None:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     try:
-        _dashlet_spec = dashboard["dashlets"][ident]  # noqa: F841
+        _dashlet_spec = dashboard["dashlets"][ident]
     except IndexError:
         raise MKUserError("id", _("The element does not exist."))
 

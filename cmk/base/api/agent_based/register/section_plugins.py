@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a section plugin
+"""Background tools required to register a section plug-in
 """
 import functools
 import inspect
@@ -332,13 +332,13 @@ def validate_section_supersedes(all_supersedes: dict[SectionName, set[SectionNam
         implicitly = transitively - explicitly
         if name in implicitly:
             raise ValueError(
-                "Section plugin '%s' implicitly supersedes section(s) %s. "
+                "Section plug-in '%s' implicitly supersedes section(s) %s. "
                 "This leads to a cyclic superseding!"
                 % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
         if implicitly:
             raise ValueError(
-                "Section plugin '%s' implicitly supersedes section(s) %s. "
+                "Section plug-in '%s' implicitly supersedes section(s) %s. "
                 "You must add those to the supersedes keyword argument."
                 % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )

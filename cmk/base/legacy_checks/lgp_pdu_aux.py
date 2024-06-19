@@ -38,9 +38,8 @@ from collections.abc import Callable, Mapping
 
 from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.lgp import DETECT_LGP
 
 lgp_pdu_aux_types = {
@@ -82,7 +81,7 @@ def lgp_pdu_aux_fmt(info):
     new_info = {}
     for oid, value in info:
         type_, id_ = oid.split(".", 1)
-        if not id_ in new_info:
+        if id_ not in new_info:
             new_info[id_] = {"TypeIndex": id_.split(".")[-1]}
 
         try:

@@ -6,11 +6,11 @@ import importlib.util
 import os
 import os.path
 import types
-from importlib._bootstrap_external import SourceFileLoader  # type: ignore[import]
+from importlib._bootstrap_external import SourceFileLoader  # type: ignore[import-not-found]
 
 import flask
 import pytest
-import webtest  # type: ignore[import]
+import webtest  # type: ignore[import-untyped]
 from flask import request
 from werkzeug.test import create_environ
 
@@ -36,7 +36,7 @@ def search_up(search_path: str, start_path: str) -> str:
         current_path = new_path
 
 
-def test_wsgi_app() -> None:
+def test_wsgi_app(request_context: None) -> None:
     app_file = search_up("cmk/gui/wsgi/applications/index.wsgi", os.path.dirname(__file__))
     imported = _import_file(app_file)
     wsgi_app = imported.Application
@@ -110,6 +110,7 @@ def test_webserver_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str
     )
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     username, password = with_user
     wsgi_app.get(f"{base}/version", headers={"Accept": "application/json"}, status=401)
@@ -185,7 +186,7 @@ def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app.options("/", status=404)
 
 
-@pytest.mark.usefixtures("suppress_license_expiry_header")
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme")
 def test_pnp_template(wsgi_app: WebTestAppForCMK) -> None:
     # This got removed some time ago and "Not found" pages are 404 now.
     resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=404)

@@ -7,7 +7,7 @@ description:
  This check simply outputs the connection time when querying the
  Postgres Version. It is always OK.
 
- This check relies on data reported by the agent-side plugin {mk_postgres}
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
 
 item:
  Name of the category

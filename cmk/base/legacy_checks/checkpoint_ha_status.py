@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.checkpoint import DETECT
 
 # .1.3.6.1.4.1.2620.1.5.2.0 1
@@ -21,11 +20,12 @@ from cmk.plugins.lib.checkpoint import DETECT
 # .1.3.6.1.4.1.2620.1.5.103.0
 
 
-def inventory_checkpoint_ha_status(info):
-    installed, _major, _minor, _started, _state, _block_state, _stat_code, _stat_long = info[0]
+def discover_checkpoint_ha_status(section: StringTable) -> DiscoveryResult:
+    if not section:
+        return
+    installed, _major, _minor, _started, _state, _block_state, _stat_code, _stat_long = section[0]
     if installed != "0":
-        return [(None, None)]
-    return []
+        yield Service()
 
 
 def check_checkpoint_ha_status(_no_item, _no_params, info):
@@ -69,6 +69,6 @@ check_info["checkpoint_ha_status"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6", "7", "101", "103"],
     ),
     service_name="HA Status",
-    discovery_function=inventory_checkpoint_ha_status,
+    discovery_function=discover_checkpoint_ha_status,
     check_function=check_checkpoint_ha_status,
 )

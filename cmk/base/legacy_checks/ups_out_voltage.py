@@ -9,9 +9,8 @@ from collections.abc import Iterable
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ups_out_voltage import check_ups_out_voltage
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 

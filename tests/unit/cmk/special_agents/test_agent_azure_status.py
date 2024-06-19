@@ -7,7 +7,7 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
-from feedparser.util import FeedParserDict  # type: ignore[import]
+from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
 
 from cmk.utils.azure_constants import AZURE_REGIONS
 

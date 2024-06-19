@@ -7,13 +7,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    not_equals,
-    OIDEnd,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import all_of, contains, not_equals, OIDEnd, SNMPTree
 
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree
@@ -50,7 +45,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 
 
 def parse_fortigate_node(string_table):
-    parsed = {}
+    parsed: dict = {"nodes": {}}
     if string_table[0]:
         parsed["cluster_info"] = string_table[0][0]
 
@@ -63,7 +58,6 @@ def parse_fortigate_node(string_table):
         else:
             item_name = "Node %s" % oid_end
 
-        parsed.setdefault("nodes", {})
         parsed["nodes"].setdefault(
             item_name,
             {
@@ -127,8 +121,8 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fortigate_node_cpu(parsed):
-    for hostname in parsed["nodes"]:
+def inventory_fortigate_node_cpu(section):
+    for hostname in section["nodes"]:
         yield hostname, {}
 
 

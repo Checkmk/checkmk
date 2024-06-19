@@ -2,12 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels_fixed, Service, startswith
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Service, startswith
 
 from .humidity import check_humidity
 from .temperature import check_temperature, TempParamType
@@ -115,7 +116,7 @@ EnviromuxSection = Mapping[str, EnviromuxSensor]
 
 
 def parse_enviromux(string_table: StringTable) -> EnviromuxSection:
-    enviromux_sensors: MutableMapping[str, EnviromuxSensor] = {}
+    enviromux_sensors: dict[str, EnviromuxSensor] = {}
 
     for line in string_table:
         sensor_name = f"{line[2]} {line[0]}"
@@ -163,7 +164,7 @@ def parse_enviromux_digital(string_table: StringTable) -> EnviromuxDigitalSectio
 def parse_enviromux_micro(
     string_table: StringTable,
 ) -> EnviromuxSection:
-    enviromux_micro_sensors: MutableMapping[str, EnviromuxSensor] = {}
+    enviromux_micro_sensors: dict[str, EnviromuxSensor] = {}
 
     for line in string_table:
         try:
@@ -266,9 +267,9 @@ def check_enviromux_temperature(
     yield from check_temperature(
         reading=sensor.value,
         params=params,
-        dev_levels_lower=(sensor.min_threshold, sensor.min_threshold)
-        if sensor.min_threshold
-        else None,
+        dev_levels_lower=(
+            (sensor.min_threshold, sensor.min_threshold) if sensor.min_threshold else None
+        ),
         dev_levels=(sensor.max_threshold, sensor.max_threshold) if sensor.max_threshold else None,
     )
 
@@ -281,7 +282,7 @@ def check_enviromux_voltage(
     if (sensor := section.get(item)) is None:
         return
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=sensor.value,
         metric_name="voltage",
         levels_lower=(

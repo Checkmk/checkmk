@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-import cmk.utils.tags as tags
+from cmk.utils import tags
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.tags import AuxTag, GroupedTag, TagConfig, TagGroup, TagGroupID, TagID
 

@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
-from typing_extensions import TypedDict
-
-from cmk.agent_based.v2 import check_levels_fixed, check_levels_predictive, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v2 import CheckResult, Result, State
 
 from .cpu import ProcessorType, Section
 
@@ -79,16 +77,18 @@ def _check_cpu_load_type(
             label=label,
             boundaries=(0, num_cpus) if avg == "1" else None,
         ):
-            yield Result(state=e.state, notice=e.details) if notice_only and isinstance(
-                e, Result
-            ) else e
+            yield (
+                Result(state=e.state, notice=e.details)
+                if notice_only and isinstance(e, Result)
+                else e
+            )
     else:
         # warning and critical levels are dependent on cpu count;
         # rule defines levels for one cpu.
         levels_upper = (
             (levels[0] * num_cpus, levels[1] * num_cpus) if isinstance(levels, tuple) else None
         )
-        yield from check_levels_fixed(
+        yield from check_levels(
             value,
             metric_name=f"load{avg}",
             levels_upper=levels_upper,
@@ -98,7 +98,11 @@ def _check_cpu_load_type(
         )
 
     # provide additional info text
-    per_core_txt = f"{avg} min load per core: {(value/num_cpus):.2f} ({num_cpus} {proc_name}cores)"
-    yield Result(state=State.OK, notice=per_core_txt) if notice_only else Result(
-        state=State.OK, summary=per_core_txt
+    per_core_txt = (
+        f"{avg} min load per core: {(value / num_cpus):.2f} ({num_cpus} {proc_name}cores)"
+    )
+    yield (
+        Result(state=State.OK, notice=per_core_txt)
+        if notice_only
+        else Result(state=State.OK, summary=per_core_txt)
     )

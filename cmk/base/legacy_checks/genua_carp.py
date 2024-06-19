@@ -7,9 +7,8 @@ from collections.abc import Sequence
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
 
 # Example Agent Output:
@@ -29,7 +28,7 @@ def inventory_genua_carp(info):
     # remove empty elements due to two alternative enterprise ids in snmp_info
     info = [_f for _f in info if _f]
 
-    if info[0]:
+    if info and info[0]:
         for ifName, _ifLinkState, ifCarpState in info[0]:
             if ifCarpState in ["0", "1", "2"]:
                 inventory.append((ifName, None))

@@ -1,5 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -10,20 +13,20 @@ from tests.testlib.agent import (
     clean_agent_controller,
     download_and_install_agent_package,
     register_controller,
+    wait_for_agent_cache_omd_status,
     wait_until_host_receives_data,
 )
 from tests.testlib.site import Site
-from tests.testlib.utils import get_services_with_status
+from tests.testlib.utils import get_services_with_status, ServiceInfo
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
 def _installed_agent_ctl_in_unknown_state(site: Site, tmp_path: Path) -> Path:
-    if site.version.is_raw_edition():
-        pytest.skip("Downloading the agent in raw edition currently broken")  # TODO: investigate
     return download_and_install_agent_package(site, tmp_path)
 
 
@@ -36,28 +39,42 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         yield installed_agent_ctl_in_unknown_state
 
 
-@pytest.fixture(name="host_services", scope="function")
-def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict]:
-    hostname = HostName("host-0")
+@pytest.fixture(
+    name="host_services", scope="function", params=[False, True], ids=["passive", "active"]
+)
+def _host_services(
+    site: Site, agent_ctl: Path, request: pytest.FixtureRequest
+) -> Iterator[dict[str, ServiceInfo]]:
+    active_mode = request.param
+    rule_id = None
+    hostname = HostName(f"host-{request.node.callspec.id}")
     site.openapi.create_host(hostname, attributes={"ipaddress": site.http_address, "site": site.id})
     site.activate_changes_and_wait_for_core_reload()
 
     try:
         register_controller(agent_ctl, site, hostname, site_address="127.0.0.1")
         wait_until_host_receives_data(site, hostname)
-        site.openapi.bulk_discover_services([str(hostname)], wait_for_completion=True)
+        wait_for_agent_cache_omd_status(site)
+        site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
         site.openapi.activate_changes_and_wait_for_completion()
-        site.reschedule_services(hostname)
-        host_services = site.get_host_services(hostname)
+        if active_mode:
+            site.reschedule_services(hostname)
+        else:
+            # Reduce check interval to 3 seconds
+            rule_id = site.openapi.create_rule(
+                ruleset_name=RuleGroup.ExtraServiceConf("check_interval"),
+                value=0.05,
+                conditions={
+                    "service_description": {
+                        "match_on": ["Check_MK$"],
+                        "operator": "one_of",
+                    },
+                },
+            )
+            site.activate_changes_and_wait_for_core_reload()
+            site.wait_for_services_state_update(hostname, "Check_MK", 0, 5, 10)
 
-        # TODO: the 'Postfix status' service found in CRIT state after discovery in some distros.
-        #   Related: CMK-13774
-        postfix_status_service = "Postfix status"
-        if (
-            os.environ.get("DISTRO") in ["centos-8", "almalinux-9", "sles-12sp5"]
-            and postfix_status_service in host_services
-        ):
-            host_services.pop(postfix_status_service)
+        host_services = site.get_host_services(hostname)
 
         yield host_services
 
@@ -66,14 +83,24 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict]:
         raise
 
     finally:
+        if rule_id:
+            site.openapi.delete_rule(rule_id)
         site.openapi.delete_host(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 
-def test_checks_sanity(host_services: dict) -> None:
-    """Assert sanity of the discovered checks."""
+def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
+    """Assert sanity of the discovered checks. Depending on the parameter the test
+    will be executed in two modes:
+        - active - the Check_MK service is rescheduled to update the state of the services
+        - passive - the check interval is minimized and the state of the services is
+        updated without any additional actions
+    """
     ok_services = get_services_with_status(host_services, 0)
     not_ok_services = [service for service in host_services if service not in ok_services]
-    err_msg = f"The following services are not in state 0: {not_ok_services}"
+    err_msg = (
+        f"The following services are not in state 0: {not_ok_services} "
+        f"(Details: {[host_services[s] for s in not_ok_services]})"
+    )
 
     assert len(host_services) == len(get_services_with_status(host_services, 0)) > 0, err_msg

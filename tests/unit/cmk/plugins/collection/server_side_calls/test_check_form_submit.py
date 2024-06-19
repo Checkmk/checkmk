@@ -6,15 +6,15 @@
 from collections.abc import Sequence
 
 import pytest
-from polyfactory.factories import DataclassFactory
 
 from cmk.plugins.collection.server_side_calls.check_form_submit import active_check_config as config
 from cmk.plugins.collection.server_side_calls.check_form_submit import UrlParams
-from cmk.server_side_calls.v1 import HostConfig
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
-
-class HostConfigFactory(DataclassFactory):
-    __model__ = HostConfig
+_TEST_HOST_CONFIG = HostConfig(
+    name="hostname",
+    ipv4_config=IPv4Config(address="test"),
+)
 
 
 @pytest.mark.parametrize(
@@ -25,7 +25,7 @@ class HostConfigFactory(DataclassFactory):
                 "name": "foo",
                 "url_details": UrlParams(),
             },
-            HostConfigFactory.build(address="test"),
+            _TEST_HOST_CONFIG,
             [
                 "test",
             ],
@@ -36,7 +36,7 @@ class HostConfigFactory(DataclassFactory):
                 "name": "foo",
                 "url_details": UrlParams(port=80),
             },
-            HostConfigFactory.build(address="test"),
+            _TEST_HOST_CONFIG,
             [
                 "test",
                 "--port",
@@ -58,7 +58,7 @@ class HostConfigFactory(DataclassFactory):
                     num_succeeded=(1, 0),
                 ),
             },
-            HostConfigFactory.build(),
+            _TEST_HOST_CONFIG,
             [
                 "12.3.4.51",
                 "some-other-host",
@@ -88,7 +88,7 @@ class HostConfigFactory(DataclassFactory):
                     tls_configuration="no_tls",
                 ),
             },
-            HostConfigFactory.build(),
+            _TEST_HOST_CONFIG,
             [
                 "some-other-host",
                 "--tls_configuration",
@@ -104,7 +104,7 @@ class HostConfigFactory(DataclassFactory):
                     tls_configuration="tls_no_cert_valid",
                 ),
             },
-            HostConfigFactory.build(),
+            _TEST_HOST_CONFIG,
             [
                 "some-other-host",
                 "--tls_configuration",
@@ -120,6 +120,5 @@ def test_check_form_submit_argument_parsing(
     expected_args: Sequence[object],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = config.parameter_parser(params)
-    commands = list(config.commands_function(parsed_params, host_config, {}))
+    commands = list(config(params, host_config))
     assert commands[0].command_arguments == expected_args

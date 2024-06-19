@@ -97,6 +97,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_postgres_stat_database,
-        title=lambda: _("PostgreSQL Database Statistics"),
+        title=lambda: _("PostgreSQL database statistics"),
     )
 )

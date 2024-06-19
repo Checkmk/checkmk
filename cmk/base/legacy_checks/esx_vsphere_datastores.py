@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+from cmk.agent_based.v2 import render
 
 # Example output from agent:
 # [zmucvm99-lds]
@@ -63,7 +64,7 @@ def check_esx_vsphere_datastores(item, params, parsed):
     uncommitted_bytes = data.get("uncommitted")
     if uncommitted_bytes is None:
         return
-    text_uncommitted = "Uncommitted: %s" % get_bytes_human_readable(uncommitted_bytes)
+    text_uncommitted = "Uncommitted: %s" % render.bytes(uncommitted_bytes)
     yield 0, text_uncommitted, [("uncommitted", uncommitted_bytes / mib)]  # fixed: true-division
 
     used_bytes = size_bytes - avail_bytes

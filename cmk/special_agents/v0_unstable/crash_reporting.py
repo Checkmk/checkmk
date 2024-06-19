@@ -6,7 +6,7 @@
 import traceback
 from typing import Literal
 
-import cmk.utils.crash_reporting as crash_reporting
+from cmk.utils import crash_reporting
 
 CrashReportStore = crash_reporting.CrashReportStore
 

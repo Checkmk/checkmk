@@ -18,7 +18,8 @@ public:
     explicit TableComments(ICore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
 };
 
 #endif  // TableComments_h

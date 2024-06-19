@@ -9,34 +9,35 @@ from dataclasses import dataclass
 from cmk.utils.version import Edition
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
-from cmk.rulesets.v1 import (
-    ActiveChecksRuleSpec,
-    AgentConfigRuleSpec,
-    CheckParameterRuleSpecWithItem,
-    CheckParameterRuleSpecWithoutItem,
-    EnforcedServiceRuleSpecWithItem,
-    EnforcedServiceRuleSpecWithoutItem,
-    ExtraHostConfRuleSpec,
-    ExtraServiceConfRuleSpec,
-    HostRuleSpec,
-    InventoryParameterRuleSpec,
-    ServiceRuleSpec,
-    SpecialAgentRuleSpec,
+from cmk.rulesets.v1 import entry_point_prefixes
+from cmk.rulesets.v1.rule_specs import (
+    ActiveCheck,
+    AgentAccess,
+    AgentConfig,
+    CheckParameters,
+    DiscoveryParameters,
+    EnforcedService,
+    Host,
+    InventoryParameters,
+    NotificationParameters,
+    Service,
+    SNMP,
+    SpecialAgent,
 )
 
 RuleSpec = (
-    HostRuleSpec
-    | ServiceRuleSpec
-    | CheckParameterRuleSpecWithItem
-    | CheckParameterRuleSpecWithoutItem
-    | EnforcedServiceRuleSpecWithItem
-    | EnforcedServiceRuleSpecWithoutItem
-    | InventoryParameterRuleSpec
-    | ActiveChecksRuleSpec
-    | AgentConfigRuleSpec
-    | SpecialAgentRuleSpec
-    | ExtraHostConfRuleSpec
-    | ExtraServiceConfRuleSpec
+    ActiveCheck
+    | AgentConfig
+    | AgentAccess
+    | EnforcedService
+    | CheckParameters
+    | Host
+    | InventoryParameters
+    | NotificationParameters
+    | DiscoveryParameters
+    | Service
+    | SNMP
+    | SpecialAgent
 )
 
 
@@ -48,27 +49,10 @@ class LoadedRuleSpec:
 
 def load_api_v1_rule_specs(
     raise_errors: bool,
-) -> tuple[Sequence[str], Sequence[LoadedRuleSpec]]:
+) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
-        PluginGroup.RULESETS,
-        {
-            HostRuleSpec: "rule_spec_",
-            ServiceRuleSpec: "rule_spec_",
-            CheckParameterRuleSpecWithItem: "rule_spec_",
-            CheckParameterRuleSpecWithoutItem: "rule_spec_",
-            EnforcedServiceRuleSpecWithItem: "rule_spec_",
-            EnforcedServiceRuleSpecWithoutItem: "rule_spec_",
-            InventoryParameterRuleSpec: "rule_spec_",
-            ActiveChecksRuleSpec: "rule_spec_",
-            AgentConfigRuleSpec: "rule_spec_",
-            SpecialAgentRuleSpec: "rule_spec_",
-            ExtraHostConfRuleSpec: "rule_spec_",
-            ExtraServiceConfRuleSpec: "rule_spec_",
-        },
-        raise_errors=raise_errors,
+        PluginGroup.RULESETS, entry_point_prefixes(), raise_errors=raise_errors
     )
-
-    errors = [str(e) for e in discovered_plugins.errors]
 
     loaded_plugins = [
         LoadedRuleSpec(rule_spec=plugin, edition_only=_get_edition_only(location.module))
@@ -80,7 +64,7 @@ def load_api_v1_rule_specs(
     ]
     # TODO:
     #  * see if we really need to return the errors. Maybe we can just either ignore or raise them.
-    return errors, loaded
+    return discovered_plugins.errors, loaded
 
 
 def _generate_additional_plugins(
@@ -88,31 +72,15 @@ def _generate_additional_plugins(
 ) -> Sequence[LoadedRuleSpec]:
     loaded: list[LoadedRuleSpec] = []
     for location, plugin in discovered_plugins.plugins.items():
-        if isinstance(plugin, CheckParameterRuleSpecWithItem) and plugin.create_enforced_service:
+        if isinstance(plugin, CheckParameters) and plugin.create_enforced_service:
             loaded.append(
                 LoadedRuleSpec(
-                    rule_spec=EnforcedServiceRuleSpecWithItem(
-                        title=plugin.title,
-                        topic=plugin.topic,
-                        parameter_form=plugin.parameter_form,
-                        item_form=plugin.item_form,
-                        name=plugin.name,
-                        is_deprecated=plugin.is_deprecated,
-                        help_text=plugin.help_text,
-                    ),
-                    edition_only=_get_edition_only(location.module),
-                )
-            )
-        elif (
-            isinstance(plugin, CheckParameterRuleSpecWithoutItem) and plugin.create_enforced_service
-        ):
-            loaded.append(
-                LoadedRuleSpec(
-                    rule_spec=EnforcedServiceRuleSpecWithoutItem(
+                    rule_spec=EnforcedService(
                         title=plugin.title,
                         topic=plugin.topic,
                         parameter_form=plugin.parameter_form,
                         name=plugin.name,
+                        condition=plugin.condition,
                         is_deprecated=plugin.is_deprecated,
                         help_text=plugin.help_text,
                     ),

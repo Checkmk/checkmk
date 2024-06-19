@@ -30,13 +30,11 @@ impl Display for Output {
             Ok(())
         }
 
-        write!(f, "HTTP {}", self.worst_state)?;
-
         let summaries = self.check_results.iter().filter_map(|cr| match cr {
             CheckResult::Summary(check_item) => Some(check_item),
             _ => None,
         });
-        write_joined(f, summaries, " - ", ", ")?;
+        write_joined(f, summaries, "", ", ")?;
 
         let metrics = self.check_results.iter().filter_map(|cr| match cr {
             CheckResult::Metric(metric_item) => Some(metric_item),
@@ -103,7 +101,7 @@ mod test_output_format {
 
     #[test]
     fn test_no_check_results_is_ok() {
-        assert_eq!(format!("{}", Output::from_check_results(vec![])), "HTTP OK");
+        assert_eq!(format!("{}", Output::from_check_results(vec![])), "");
     }
 
     #[test]
@@ -119,7 +117,7 @@ mod test_output_format {
         let cr3 = details(State::Ok, "details 3");
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP OK - summary 1, summary 2\ndetails 3"
+            "summary 1, summary 2\ndetails 3"
         );
     }
 
@@ -130,7 +128,7 @@ mod test_output_format {
         let cr3 = summary(State::Ok, "summary 3");
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP WARNING - summary 1, summary 2 (!), summary 3"
+            "summary 1, summary 2 (!), summary 3"
         );
     }
 
@@ -141,7 +139,7 @@ mod test_output_format {
         let cr3 = details(State::Crit, "details 3");
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP CRITICAL - summary 1, summary 2 (!)\ndetails 3 (!!)"
+            "summary 1, summary 2 (!)\ndetails 3 (!!)"
         );
     }
 
@@ -153,7 +151,7 @@ mod test_output_format {
         let cr4 = summary(State::Unknown, "summary 4");
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3, cr4])),
-            "HTTP UNKNOWN - summary 1, summary 4 (?)\ndetails 2 (!)\ndetails 3 (!!)"
+            "summary 1, summary 4 (?)\ndetails 2 (!)\ndetails 3 (!!)"
         );
     }
 
@@ -162,7 +160,7 @@ mod test_output_format {
         let m1 = metric("my_metric", 123., None, None, None, None);
         assert_eq!(
             format!("{}", Output::from_check_results(vec![m1])),
-            "HTTP OK | my_metric=123;;;;"
+            " | my_metric=123;;;;"
         );
     }
 
@@ -179,7 +177,7 @@ mod test_output_format {
         );
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, m1])),
-            "HTTP WARNING - summary 1 (!) | my_metric=123s;1;2;0;100"
+            "summary 1 (!) | my_metric=123s;1;2;0;100"
         );
     }
 
@@ -195,7 +193,7 @@ mod test_output_format {
         );
         assert_eq!(
             format!("{}", Output::from_check_results(vec![m1])),
-            "HTTP OK | my_metric=123.1s;1.2;2.3;0.1;100.2"
+            " | my_metric=123.1s;1.2;2.3;0.1;100.2"
         );
     }
 
@@ -205,7 +203,7 @@ mod test_output_format {
         let m2 = metric("my_metric_2", 2., None, None, None, None);
         assert_eq!(
             format!("{}", Output::from_check_results(vec![m1, m2])),
-            "HTTP OK | my_metric_1=1;;;; my_metric_2=2;;;;"
+            " | my_metric_1=1;;;; my_metric_2=2;;;;"
         );
     }
 
@@ -219,7 +217,7 @@ mod test_output_format {
         let m2 = metric("my_metric_2", 2., None, None, None, None);
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, m1, cr2, m2, cr3, cr4])),
-            "HTTP CRITICAL - summary 1, summary 4 | my_metric_1=1;;;; my_metric_2=2;;;;\ndetails 2 (!)\ndetails 3 (!!)"
+            "summary 1, summary 4 | my_metric_1=1;;;; my_metric_2=2;;;;\ndetails 2 (!)\ndetails 3 (!!)"
         );
     }
 }

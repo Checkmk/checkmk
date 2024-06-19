@@ -12,17 +12,17 @@ from contextlib import nullcontext
 from datetime import datetime
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
-import cmk.gui.userdb as userdb
 import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
+from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
@@ -205,7 +205,7 @@ class PageAutomation(AjaxPage):
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
 
-        user_id = request.var("user_id")
+        user_id = request.get_validated_type_input(UserId, "user_id")
         if not user_id:
             raise MKGeneralException(_("Missing variable user_id"))
 
@@ -222,7 +222,7 @@ class PageAutomation(AjaxPage):
             raise MKGeneralException(_("Invalid call: The profile is missing."))
 
         users = userdb.load_users(lock=True)
-        users[UserId(user_id)] = watolib_utils.mk_eval(profile)
+        users[user_id] = watolib_utils.mk_eval(profile)
         userdb.save_users(users, datetime.now())
 
         return True

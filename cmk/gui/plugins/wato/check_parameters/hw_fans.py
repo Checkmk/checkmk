@@ -42,7 +42,7 @@ def _parameter_valuespec_hw_fans() -> Dictionary:
                 Checkbox(title=_("Performance data"), label=_("Enable performance data")),
             ),
         ],
-        optional_keys=["upper", "output_metrics"],
+        optional_keys=["lower", "upper", "output_metrics"],
     )
 
 

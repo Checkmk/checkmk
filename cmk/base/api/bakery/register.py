@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.log import console
@@ -28,10 +30,10 @@ def bakery_plugin(
 ) -> None:
     """Register a Bakery Plugin (Bakelet) to Checkmk
 
-    This registration function accepts a plugin name (mandatory) and up to three
+    This registration function accepts a plug-in name (mandatory) and up to three
     generator functions that may yield different types of artifacts.
     The generator functions will be called with keyword-arguments 'conf' and/or 'aghash'
-    while processing the bakery plugin (Callbacks), thus the specific call depends on the
+    while processing the bakery plug-in (Callbacks), thus the specific call depends on the
     argument names of the provided functions.
     For keyword-arg 'conf', the corresponding WATO configuration will be provided.
     For keyword-arg 'aghash', the configuration hash of the resulting agent package
@@ -39,7 +41,7 @@ def bakery_plugin(
     Unused arguments can be omitted in the function's signatures.
 
     Args:
-        name: The name of the agent plugin to be processed. It must be unique, and match
+        name: The name of the agent plug-in to be processed. It must be unique, and match
             the name of the corresponding WATO rule. It may only contain ascii
             letters (A-Z, a-z), digits (0-9), and underscores (_).
         files_function: Generator function that yields file artifacts.
@@ -67,7 +69,7 @@ def bakery_plugin(
 
 def get_bakery_plugins() -> dict[str, BakeryPlugin]:
     for plugin, exception in load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"):
-        console.error("Error in bakery plugin %s: %s\n", plugin, exception)
+        console.error(f"Error in bakery plug-in {plugin}: {exception}", file=sys.stderr)
         if cmk.utils.debug.enabled():
             raise exception
 

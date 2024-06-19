@@ -32,7 +32,7 @@ def service_table_query(
 def _table_query(
     context: VisualContext, table: str, columns: Iterable[ColumnName], infos: list[str]
 ) -> tuple[list[ColumnName], LivestatusResponse]:
-    filter_headers, only_sites = visuals.get_filter_headers(table, infos, context)
+    filter_headers, only_sites = visuals.get_filter_headers(infos, context)
 
     query = (
         f"GET {table}\n"

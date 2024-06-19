@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.oracle import (
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 # <<<oracle_version>>>
 # XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production

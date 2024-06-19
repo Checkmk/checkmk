@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Submodule providing the `run` function of generictests package"""
+import datetime
 from contextlib import contextmanager
 
-import freezegun
-
-from tests.testlib import Check, MissingCheckInfoError
+import time_machine
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.hostaddress import HostName
@@ -21,9 +20,11 @@ from ..checktestlib import (
     assertCheckResultsEqual,
     assertDiscoveryResultsEqual,
     assertEqual,
+    Check,
     CheckResult,
     DiscoveryResult,
     Immutables,
+    MissingCheckInfoError,
     mock_item_state,
     MockHostExtraConf,
 )
@@ -89,7 +90,7 @@ def get_discovery_expected(subcheck, dataset):
 def get_discovery_actual(check: Check, info_arg: object, immu: Immutables) -> DiscoveryResult:
     """Validate and return actual DiscoveryResult"""
 
-    disco_func = check.info.get("discovery_function")
+    disco_func = check.info.discovery_function
     if not disco_func:
         return DiscoveryResult()
 
@@ -115,7 +116,7 @@ def run_test_on_parse(dataset, immu):
     immu.register(dataset.info, "info")
     try:
         main_check = Check(dataset.checkname)
-        parse_function = main_check.info.get("parse_function")
+        parse_function = main_check.info.parse_function
     except MissingCheckInfoError:
         # this could be ok -
         # it just implies we don't have a parse function
@@ -146,7 +147,6 @@ def run_test_on_discovery(check, subcheck, dataset, info_arg, immu):
 def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
     """Run check for test case listed in dataset"""
     test_cases = getattr(dataset, "checks", {}).get(subcheck, [])
-    check_func = check.info.get("check_function")
     check_plugin_name = maincheckify(check.name)
 
     for item, params, results_expected_raw in test_cases:
@@ -155,7 +155,7 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
         with current_service(check_plugin_name, "unit test description"):
             result = CheckResult(check.run_check(item, params, info_arg))
 
-        immu.test(" after check (%s): " % check_func.__name__)
+        immu.test(" after check (%s): " % check.info.check_function.__name__)
 
         result_expected = CheckResult(results_expected_raw)
 
@@ -167,10 +167,10 @@ def optional_freeze_time(dataset):
     """Optionally freeze of the time in generic dataset tests
 
     If present and truish the datasets freeze_time attribute is passed to
-    freezegun.freeze_time.
+    time_machine.travel.
     """
     if getattr(dataset, "freeze_time", None):
-        with freezegun.freeze_time(dataset.freeze_time):
+        with time_machine.travel(datetime.datetime.fromisoformat(dataset.freeze_time)):
             yield
     else:
         yield
@@ -179,7 +179,7 @@ def optional_freeze_time(dataset):
 def run(check_info, dataset):
     """Run all possible tests on 'dataset'"""
     checklist = checkhandler.get_applicables(dataset.checkname, check_info)
-    assert checklist, f"Found no check plugin for {dataset.checkname!r}"
+    assert checklist, f"Found no check plug-in for {dataset.checkname!r}"
 
     immu = Immutables()
 
@@ -197,10 +197,11 @@ def run(check_info, dataset):
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with current_host(HostName("non-existent-testhost")), mock_item_state(
-                mock_is
-            ), MockHostExtraConf(check, mock_hec), MockHostExtraConf(
-                check, mock_hecm, "get_host_merged_dict"
+            with (
+                current_host(HostName("non-existent-testhost")),
+                mock_item_state(mock_is),
+                MockHostExtraConf(check, mock_hec),
+                MockHostExtraConf(check, mock_hecm, "get_host_merged_dict"),
             ):
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 

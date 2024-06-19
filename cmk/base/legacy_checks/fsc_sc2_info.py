@@ -6,15 +6,32 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.check_legacy_includes.fsc_sc2 import check_fsc_sc2_info, inventory_fsc_sc2_info
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
+
+# .1.3.6.1.4.1.231.2.10.2.2.10.2.3.1.5.1 "PRIMERGY RX300 S8"
+# .1.3.6.1.4.1.231.2.10.2.2.10.2.3.1.7.1 "--"
+# .1.3.6.1.4.1.231.2.10.2.2.10.4.1.1.11.1 "V4.6.5.4 R1.6.0 for D2939-B1x"
 
 
 def parse_fsc_sc2_info(string_table: StringTable) -> StringTable:
     return string_table
+
+
+def inventory_fsc_sc2_info(info):
+    if info:
+        return [(None, None)]
+    return []
+
+
+def check_fsc_sc2_info(_no_item, _no_params, info):
+    if info:
+        return (
+            0,
+            f"Model: {info[0][0]}, Serial Number: {info[0][1]}, BIOS Version: {info[0][2]}",
+        )
+    return None
 
 
 check_info["fsc_sc2_info"] = LegacyCheckDefinition(

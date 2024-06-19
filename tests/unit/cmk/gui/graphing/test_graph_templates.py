@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
@@ -14,7 +16,8 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.metrics as metrics
+from cmk.gui import metrics
+from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._expression import (
@@ -41,7 +44,8 @@ from cmk.gui.graphing._perfometer import (
     LogarithmicPerfometerSpec,
 )
 from cmk.gui.graphing._utils import (
-    graph_templates_internal,
+    _graph_templates_internal,
+    graph_info,
     GraphTemplate,
     ScalarDefinition,
     translate_metrics,
@@ -144,12 +148,23 @@ def test_matching_graph_templates(
     )
 
 
-def test_replace_expression() -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
+def test__replace_expressions() -> None:
+    perfdata: Perfdata = [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
     translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
     assert (
         gt._replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
-        == "CPU Load - 25  CPU Cores"
+        == "CPU Load - 25 CPU Cores"
+    )
+
+
+def test__replace_expressions_missing_scalars() -> None:
+    perfdata: Perfdata = [
+        PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["load1"]
+    ]
+    translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
+    assert (
+        gt._replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
+        == "CPU Load"
     )
 
 
@@ -164,9 +179,9 @@ def test_replace_expression() -> None:
         pytest.param(
             "one=5;7;6;; power=5;9;10;; output=5;2;3;;",
             [
-                (7.0, "7.00", "#ffd000", "Warning"),
-                (10.0, "10.0 W", "#ff3232", "Critical power"),
-                (-2.0, "-2 ", "#ffd000", "Warning output"),
+                HorizontalRule(7.0, "7.00", "#ffd000", "Warning"),
+                HorizontalRule(10.0, "10.0 W", "#ff3232", "Critical power"),
+                HorizontalRule(-2.0, "-2 ", "#ffd000", "Warning output"),
             ],
             id="Thresholds present",
         ),
@@ -191,7 +206,7 @@ def test_horizontal_rules_from_thresholds(
                     title="Warning output",
                 ),
             ],
-            metrics.translate_perf_data(perf_string),
+            metrics.translate_perf_data(perf_string, config=active_config),
         )
         == result
     )
@@ -199,12 +214,12 @@ def test_horizontal_rules_from_thresholds(
 
 def test_duplicate_graph_templates() -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
-    for ident, template in graph_templates_internal().items():
+    for ident, template in _graph_templates_internal().items():
         expressions = [m.expression for m in template.metrics] + [
             s.expression for s in template.scalars
         ]
         if template.range:
-            expressions.extend(template.range)
+            expressions.extend((template.range.min, template.range.max))
 
         idents_by_metrics.setdefault(
             tuple(sorted(m.name for e in expressions for m in e.metrics())), []
@@ -227,7 +242,7 @@ def test_graph_template_with_layered_areas() -> None:
         neg: list[Literal["-area", "-stack"]] = field(default_factory=list)
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
-    for ident, template in graph_templates_internal().items():
+    for ident, template in _graph_templates_internal().items():
         for metric in template.metrics:
             if metric.line_type == "area":
                 areas_by_ident.setdefault(ident, _GraphTemplateArea()).pos.append(metric.line_type)
@@ -271,73 +286,7 @@ def test_conditional_perfometer() -> None:
             continue
         conditional_perfometers.extend(_conditional_perfometer(perfometer))
 
-    assert conditional_perfometers == [
-        {
-            "condition": "fs_provisioning(%),100,>",
-            "label": ("fs_used(%)", "%"),
-            "segments": [
-                "fs_used(%)",
-                "100,fs_used(%),-#e3fff9",
-                "fs_provisioning(%),100.0,-#ffc030",
-            ],
-            "total": "fs_provisioning(%)",
-            "type": "linear",
-        },
-        {
-            "condition": "fs_provisioning(%),100,<=",
-            "label": ("fs_used(%)", "%"),
-            "segments": [
-                "fs_used(%)",
-                "fs_provisioning(%),fs_used(%),-#ffc030",
-                "100,fs_provisioning(%),fs_used(%),-,-#e3fff9",
-            ],
-            "total": 100,
-            "type": "linear",
-        },
-        {
-            "condition": "fs_used,uncommitted,+,fs_size,<",
-            "label": ("fs_used(%)", "%"),
-            "segments": [
-                "fs_used",
-                "uncommitted",
-                "fs_size,fs_used,-,uncommitted,-#e3fff9",
-                "0.1#559090",
-            ],
-            "total": "fs_size",
-            "type": "linear",
-        },
-        {
-            "condition": "fs_used,uncommitted,+,fs_size,>=",
-            "label": ("fs_used,fs_used,uncommitted,+,/,100,*", "%"),
-            "segments": [
-                "fs_used",
-                "fs_size,fs_used,-#e3fff9",
-                "0.1#559090",
-                "overprovisioned,fs_size,-#ffa000",
-            ],
-            "total": "overprovisioned",
-            "type": "linear",
-        },
-        {
-            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-            "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
-            "segments": ["delivered_notifications,failed_notifications,+,100,+"],
-            "total": 100.0,
-            "type": "linear",
-        },
-        {
-            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
-            "label": (
-                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
-                "%",
-            ),
-            "segments": [
-                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
-            ],
-            "total": 100.0,
-            "type": "linear",
-        },
-    ]
+    assert not conditional_perfometers
 
 
 def _is_non_trivial(expressions: Sequence[MetricExpression]) -> bool:
@@ -384,139 +333,19 @@ def test_non_trivial_perfometer_declarations() -> None:
         non_trivial_perfometers.extend(_perfometer_with_non_trivial_declarations(perfometer))
 
     assert non_trivial_perfometers == [
-        {
-            "type": "linear",
-            "condition": "fs_provisioning(%),100,>",
-            "segments": [
-                "fs_used(%)",
-                "100,fs_used(%),-#e3fff9",
-                "fs_provisioning(%),100.0,-#ffc030",
-            ],
-            "total": "fs_provisioning(%)",
-            "label": ("fs_used(%)", "%"),
-        },
-        {
-            "type": "linear",
-            "condition": "fs_provisioning(%),100,<=",
-            "segments": [
-                "fs_used(%)",
-                "fs_provisioning(%),fs_used(%),-#ffc030",
-                "100,fs_provisioning(%),fs_used(%),-,-#e3fff9",
-            ],
-            "total": 100,
-            "label": ("fs_used(%)", "%"),
-        },
-        {
-            "type": "linear",
-            "condition": "fs_used,uncommitted,+,fs_size,<",
-            "segments": [
-                "fs_used",
-                "uncommitted",
-                "fs_size,fs_used,-,uncommitted,-#e3fff9",
-                "0.1#559090",
-            ],
-            "total": "fs_size",
-            "label": ("fs_used(%)", "%"),
-        },
-        {
-            "type": "linear",
-            "condition": "fs_used,uncommitted,+,fs_size,>=",
-            "segments": [
-                "fs_used",
-                "fs_size,fs_used,-#e3fff9",
-                "0.1#559090",
-                "overprovisioned,fs_size,-#ffa000",
-            ],
-            "total": "overprovisioned",
-            "label": ("fs_used,fs_used,uncommitted,+,/,100,*", "%"),
-        },
-        {
-            # m(%) -> 100 * m / m:max
-            # => segments: ["fs_used"], "total": "fs_used:max"
-            "type": "linear",
-            "segments": ["fs_used(%)"],
-            "total": 100,
-        },
         {"type": "linear", "segments": ["mem_used(%)"], "total": 100.0},
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "if_out_unicast_octets,if_out_non_unicast_octets,+",
-            "half_value": 5000000,
-            "exponent": 5,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "messages_inbound,messages_outbound,+",
-            "half_value": 100,
-            "exponent": 5,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_ios_f_total_s_rb,oracle_ios_f_total_l_rb,+",
-            "half_value": 50.0,
-            "exponent": 2,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_ios_f_total_s_wb,oracle_ios_f_total_l_wb,+",
-            "half_value": 50.0,
-            "exponent": 2,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_ios_f_total_s_r,oracle_ios_f_total_l_r,+",
-            "half_value": 50.0,
-            "exponent": 2,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_ios_f_total_s_w,oracle_ios_f_total_l_w,+",
-            "half_value": 50.0,
-            "exponent": 2,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_sga_size,oracle_pga_total_pga_allocated,+",
-            "half_value": 16589934592.0,
-            "exponent": 2,
-        },
-        {
-            "type": "linear",
-            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
-            "segments": ["delivered_notifications,failed_notifications,+,100,+"],
-            "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
-            "total": 100.0,
-        },
-        {
-            "type": "linear",
-            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
-            "segments": [
-                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
-            ],
-            "label": (
-                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
-                "%",
-            ),
-            "total": 100.0,
-        },
     ]
 
 
 def test_non_trivial_graph_declarations() -> None:
     non_trivial_graphs = []
-    for ident, template in graph_templates_internal().items():
+    for ident, raw_template in graph_info.items():
+        template = GraphTemplate.from_template(ident, raw_template)
         expressions = [m.expression for m in template.metrics] + [
             s.expression for s in template.scalars
         ]
         if template.range:
-            expressions.extend(template.range)
+            expressions.extend((template.range.min, template.range.max))
         if _is_non_trivial(expressions):
             non_trivial_graphs.append(ident)
 
@@ -524,8 +353,6 @@ def test_non_trivial_graph_declarations() -> None:
         "bandwidth",
         "bandwidth_translated",
         "cmk_cpu_time_by_phase",
-        "cmk_hosts_total",
-        "cmk_services_total",
         "cpu_time",
         "cpu_utilization_3",
         "cpu_utilization_4",
@@ -540,19 +367,15 @@ def test_non_trivial_graph_declarations() -> None:
         "cpu_utilization_8",
         "cpu_utilization_numcpus",
         "cpu_utilization_simple",
-        "disk_throughput",
         "fs_used",
         "fs_used_2",
         "growing",
-        "livestatus_requests_per_connection",
         "mem_growing",
         "mem_shrinking",
-        "oracle_sga_pga_total",
-        "qos_class_traffic",
+        "ram_swap_overview",
         "ram_swap_used",
         "savings",
         "shrinking",
-        "size_per_process",
         "time_offset",
         "used_cpu_time",
         "util_average_1",
@@ -565,7 +388,7 @@ def test_graph_templates_with_consolidation_function() -> None:
     assert sorted(
         [
             ident
-            for ident, template in graph_templates_internal().items()
+            for ident, template in _graph_templates_internal().items()
             if template.consolidation_function
         ]
     ) == sorted(["mem_shrinking", "shrinking"])
@@ -578,7 +401,6 @@ def test_graph_templates_with_consolidation_function() -> None:
             ["metric-name"],
             [1.0],
             MetricOpRRDSource(
-                ident="rrd",
                 site_id=SiteId("Site-ID"),
                 host_name=HostName("HostName"),
                 service_name="Service Description",
@@ -592,11 +414,9 @@ def test_graph_templates_with_consolidation_function() -> None:
             ["metric-name", "old-metric-name"],
             [1.0, 2.0],
             MetricOpOperator(
-                ident="operator",
                 operator_name="MERGE",
                 operands=[
                     MetricOpRRDSource(
-                        ident="rrd",
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
                         service_name="Service Description",
@@ -605,7 +425,6 @@ def test_graph_templates_with_consolidation_function() -> None:
                         scale=1.0,
                     ),
                     MetricOpRRDSource(
-                        ident="rrd",
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
                         service_name="Service Description",

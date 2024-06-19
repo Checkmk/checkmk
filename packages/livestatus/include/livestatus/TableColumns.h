@@ -10,24 +10,20 @@
 #include <string>
 
 #include "livestatus/Table.h"
-class Column;
 class ICore;
 class Query;
 class User;
 
 class TableColumns : public Table {
 public:
-    enum class Type { table, name, description, type };
-
-    explicit TableColumns(ICore *mc);
+    TableColumns();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
 
     void addTable(const Table &table);
-    [[nodiscard]] std::string getValue(const Column &column, Type colcol) const;
-    [[nodiscard]] std::string tableNameOf(const Column &column) const;
 
 private:
     std::map<std::string, const Table *> tables_;

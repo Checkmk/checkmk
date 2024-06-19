@@ -7,8 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.qnap import DETECT_QNAP
 
 
@@ -44,7 +44,6 @@ check_info["qnap_fans"] = LegacyCheckDefinition(
     check_function=check_qnap_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={
-        "upper": (None, None),
         "lower": (2000, 1000),
     },
 )

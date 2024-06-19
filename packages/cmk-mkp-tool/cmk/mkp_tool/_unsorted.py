@@ -11,7 +11,7 @@ Don't add new stuff here!
 
 import logging
 import subprocess
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -36,21 +36,9 @@ _logger = logging.getLogger(__name__)
 
 
 class ComparableVersion(Protocol):
-    def __ge__(self, other: Self) -> bool:
-        ...
+    def __ge__(self, other: Self) -> bool: ...
 
-    def __lt__(self, other: Self) -> bool:
-        ...
-
-
-def _get_permissions(part: PackagePart, rel_path: Path) -> int:
-    """Determine permissions by the first matching beginning of 'path'"""
-
-    # I guess this shows that nagios plugins ought to be their own package part.
-    # For now I prefer to stay compatible.
-    if part is PackagePart.LIB and rel_path.parts[:2] == ("nagios", "plugins"):
-        return 0o755
-    return permissions(part)
+    def __lt__(self, other: Self) -> bool: ...
 
 
 def format_file_name(package_id: PackageID) -> str:
@@ -83,7 +71,7 @@ def _uninstall(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     manifest: Manifest,
 ) -> None:
-    if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
+    if err := remove_files(manifest, keep_files={}, path_config=path_config):
         raise PackageError(", ".join(err))
 
     for part in set(manifest.files) & set(callbacks):
@@ -357,7 +345,7 @@ def _install(
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
-        for err in _remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
+        for err in remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
             _logger.error(err)
 
         for part in set(old_manifest.files) & set(callbacks):
@@ -372,20 +360,21 @@ def _install(
     return manifest
 
 
-def _remove_files(
+def remove_files(
     manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
-) -> Iterator[str]:
+) -> tuple[str, ...]:
+    errors = []
     for part, files in manifest.files.items():
         _logger.debug("  Part '%s':", part.ident)
-        remove_files = set(files) - set(keep_files.get(part, []))
-        for fn in remove_files:
+        for fn in set(files) - set(keep_files.get(part, [])):
             path = path_config.get_path(part) / fn
             try:
                 path.unlink(missing_ok=True)
             except OSError as e:
-                yield f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}"
+                errors.append(f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}")
             else:
-                _logger.info("[%s %s]: Removed %s", manifest.name, manifest.version, path)
+                _logger.info("[%s %s]: Removed file %s", manifest.name, manifest.version, path)
+    return tuple(errors)
 
 
 def _raise_for_installability(
@@ -442,8 +431,10 @@ def _conflicting_files(
 def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
     for part, filenames in manifest.files.items():
         for filename in filenames:
+            if (desired_perm := permissions(part, filename)) is None:
+                continue
+
             path = path_config.get_path(part) / filename
-            desired_perm = _get_permissions(part, filename)
             has_perm = path.stat().st_mode & 0o7777
             if has_perm != desired_perm:
                 _logger.debug(
@@ -742,13 +733,21 @@ def disable_outdated(
 
 def make_post_package_change_actions(
     *callbacks: tuple[tuple[PackagePart, ...], Callable[[], object]],
+    on_any_change: tuple[Callable[[], object], ...],
 ) -> Callable[[Sequence[Manifest]], None]:
     def _execute_post_package_change_actions(
         packages: Sequence[Manifest],
     ) -> None:
+        if not any(package.files for package in packages):
+            # nothing changed at all
+            return
+
         for triggers, callback in callbacks:
             if any(package.files.get(t) for t in triggers for package in packages):
                 callback()
+
+        for callback in on_any_change:
+            callback()
 
     return _execute_post_package_change_actions
 

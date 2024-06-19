@@ -31,4 +31,5 @@ make(
 
     """,
     targets = [""],
+    visibility = ["//visibility:public"],
 )

@@ -28,7 +28,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
         return instance.type_name()
 
     def registration_hook(self, instance: type[SidebarSnapin]) -> None:
-        # Custom snapins have their own permissions "custom_snapin.*"
+        # Custom snap-ins have their own permissions "custom_snapin.*"
         if not instance.is_custom_snapin():
             permission_registry.register(
                 Permission(
@@ -54,7 +54,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
         ]
 
     def register_custom_snapins(self, custom_snapins: list[CustomSnapins]) -> None:
-        """Extends the snapin registry with the ones configured in the site (for the current user)"""
+        """Extends the snap-in registry with the ones configured in the site (for the current user)"""
         self._clear_custom_snapins()
         self._add_custom_snapins(custom_snapins)
 
@@ -65,7 +65,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
 
     def _add_custom_snapins(self, custom_snapins: list[CustomSnapins]) -> None:
         for custom_snapin in custom_snapins:
-            base_snapin_type_id = custom_snapin._["custom_snapin"][0]
+            base_snapin_type_id = custom_snapin.config.custom_snapin[0]
 
             try:
                 base_snapin_type = self[base_snapin_type_id]
@@ -76,7 +76,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
             # typing? Probably not in the current state of affairs where things
             # which should be instances are classes... :-/
             if not issubclass(base_snapin_type, SidebarSnapin):
-                raise ValueError("invalid snapin type %r" % base_snapin_type)
+                raise ValueError("invalid snap-in type %r" % base_snapin_type)
 
             if not issubclass(base_snapin_type, CustomizableSidebarSnapin):
                 continue
@@ -104,7 +104,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
 
                 @classmethod
                 def parameters(cls):
-                    return cls._custom_snapin._["custom_snapin"][1]
+                    return cls._custom_snapin.config.custom_snapin[1]
 
                 @classmethod
                 def permission_name(cls) -> PermissionName:
@@ -114,7 +114,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
                 def may_see(cls) -> bool:
                     return cls._custom_snapin.is_permitted()
 
-            _it_is_really_used = CustomSnapin  # noqa: F841
+            _it_is_really_used = CustomSnapin
 
 
 snapin_registry = SnapinRegistry()

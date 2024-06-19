@@ -9,7 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMPTree
+
+from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree
 
 
 def parse_arris_cmts_mem(string_table):
@@ -35,14 +36,14 @@ def inventory_arris_cmts_mem(parsed):
 def check_arris_cmts_mem(item, params, parsed):
     if not (data := parsed.get(item)):
         return
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
     yield check_memory_element(
         "Usage",
         data["mem_used"],
         data["mem_total"],
-        (mode, (warn, crit)),
-        metric_name="memused",
+        (mode, levels),
+        metric_name="mem_used",
     )
 
 

@@ -44,7 +44,6 @@ check_mk_config_dir = _omd_path_str("etc/check_mk/conf.d")
 modules_dir = _omd_path_str("share/check_mk/modules")
 var_dir = _omd_path_str("var/check_mk")
 log_dir = _omd_path_str("var/log")
-security_log_file = Path(log_dir, "security.log")
 precompiled_checks_dir = _omd_path_str("var/check_mk/precompiled_checks")
 base_autochecks_dir = _omd_path_str("var/check_mk/autochecks")
 core_helper_config_dir = _omd_path("var/check_mk/core/helper_config")
@@ -75,7 +74,6 @@ inventory_archive_dir = _omd_path_str("var/check_mk/inventory_archive")
 inventory_delta_cache_dir = _omd_path_str("var/check_mk/inventory_delta_cache")
 autoinventory_dir = _omd_path_str("var/check_mk/autoinventory")
 status_data_dir = _omd_path_str("tmp/check_mk/status_data")
-robotmk_html_log_dir = _omd_path_str("var/robotmk")
 base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels")
 discovered_host_labels_dir = base_discovered_host_labels_dir
 autodiscovery_dir = _omd_path_str("var/check_mk/autodiscovery")
@@ -86,6 +84,9 @@ crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
 site_config_dir = Path(var_dir, "site_configs")
 visuals_cache_dir = Path(tmp_dir, "visuals_cache")
+predictions_dir = Path(var_dir, "prediction")
+ec_main_config_file = Path(default_config_dir, "mkeventd.mk")
+ec_config_dir = Path(default_config_dir, "mkeventd.d")
 
 # persisted secret files
 # avoid using these paths directly; use wrappers in cmk.util.crypto.secrets instead
@@ -94,6 +95,7 @@ visuals_cache_dir = Path(tmp_dir, "visuals_cache")
 auth_secret_file = omd_root / "etc/auth.secret"
 # the path for password_store.secret is also duplicated in omd cmk_password_store.h!
 password_store_secret_file = omd_root / "etc/password_store.secret"
+site_internal_secret_file = omd_root / "etc/site_internal.secret"
 
 share_dir = _omd_path_str("share/check_mk")
 checks_dir = _omd_path_str("share/check_mk/checks")

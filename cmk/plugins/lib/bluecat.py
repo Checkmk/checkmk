@@ -6,7 +6,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2 import equals, IgnoreResults, Metric, Result, State, type_defs
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import CheckResult, equals, IgnoreResults, Metric, Result, State
 from cmk.agent_based.v2.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]
@@ -30,7 +31,7 @@ _OPER_STATE_MAP = {
 }
 
 
-def parse_bluecat(string_table: type_defs.StringTable) -> Section | None:
+def parse_bluecat(string_table: StringTable) -> Section | None:
     """
     >>> parse_bluecat([['1', '2']])
     {'oper_state': 1, 'leases': 2}
@@ -57,7 +58,7 @@ def _get_service_name(section: Section) -> str:
 def check_bluecat_operational_state(
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     oper_state = section["oper_state"]
     service_name = _get_service_name(section)
 
@@ -96,7 +97,7 @@ class OKNodeResults(NamedTuple):
 def cluster_check_bluecat_operational_state(
     params: Mapping[str, Any],
     section: ClusterSection,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     results: dict[str, Sequence[IgnoreResults | Metric | Result]] = {}
     ok_node_results = None
     overall_state = State.OK

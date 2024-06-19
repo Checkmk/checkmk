@@ -68,7 +68,7 @@ class CrashReport(ABCCrashReport):
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
 except getopt.GetoptError as err:
-    console.error("ERROR: %s\n\n" % err)
+    console.error(f"ERROR: {err}\n", file=sys.stderr)
     if help_function is None:
         raise TypeError()
     help_function()
@@ -101,7 +101,7 @@ try:
         )
         if sys.stderr.isatty():
             for error_msg in errors:
-                console.error(error_msg)
+                console.error(error_msg, file=sys.stderr)
 
     # Read the configuration files (main.mk, autochecks, etc.), but not for
     # certain operation modes that does not need them and should not be harmed

@@ -233,8 +233,7 @@ def _freeze(obj: Any, partial: tuple[str, ...] | None = None):  # type: ignore[n
 
 
 class HasMakeError(Protocol):
-    def make_error(self, key: str, **kwargs: Any) -> ValidationError:
-        ...
+    def make_error(self, key: str, **kwargs: Any) -> ValidationError: ...
 
 
 class UniqueFields:

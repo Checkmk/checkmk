@@ -3,40 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
-from typing import Literal
+from collections.abc import Iterator
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
-    HostConfig,
-    HTTPProxy,
-    Secret,
-    SpecialAgentCommand,
-    SpecialAgentConfig,
-)
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class Params(BaseModel):
     username: str | None = None
-    password: tuple[Literal["store", "password"], str] | None = None
+    password: Secret | None = None
     port: int | None = None
-    no_cert_check: bool = Field(False, alias="no-cert-check")
+    no_cert_check: bool = False
     timeout: int | None = None
-    log_cutoff_weeks: int | None = Field(None, alias="log-cutoff-weeks")
+    log_cutoff_weeks: int | None = None
 
 
 def commands_function(
     params: Params,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = []
     if params.username is not None:
         command_arguments += ["-u", params.username]
     if params.password is not None:
-        command_arguments += ["-p", get_secret_from_params(params.password[0], params.password[1])]
+        command_arguments += ["-p", params.password.unsafe()]
     if params.port is not None:
         command_arguments += ["--port", str(params.port)]
     if params.no_cert_check:
@@ -49,7 +40,7 @@ def commands_function(
     yield SpecialAgentCommand(command_arguments=command_arguments)
 
 
-config = SpecialAgentConfig(
+special_agent_proxmox_ve = SpecialAgentConfig(
     name="proxmox_ve",
     parameter_parser=Params.model_validate,
     commands_function=commands_function,

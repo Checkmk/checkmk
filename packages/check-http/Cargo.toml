@@ -11,23 +11,27 @@ edition = "2021"
 
 [dependencies]
 aes-gcm = { version = "*", features = ["aes", "std"] }
-bytes = { version = "*" }
 anyhow = { version = "*" }
+bytes = { version = "*" }
 clap = { version = "*", features = ["derive"] }
-http = { version = "*" }
+encoding_rs = { version = "*" }
+httpdate = { version = "*" }
+log = { version = "*" }
+mime = { version = "*" }
+regex = { version = "*" }
 # We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections.
 # Only native-tls supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only
 # supported by rustls.
 # Since we only know that at runtime we need to pull in both TLS backends.
 reqwest = { version = "*", features = [
-    "json",
-    "rustls-tls",
-    "native-tls-alpn",
+  "json",
+  "rustls-tls-webpki-roots", # CCADB store (https://www.ccadb.org/) - Updated on (re)compilation
+  "rustls-tls-native-roots", # Additionally listen to SSL_CERT_FILE
+  "native-tls-alpn",
+  "socks",
 ] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
-tokio = { version = "*", features = ["full"] }
-openssl = { version = "*", features = ["vendored"] }
-httpdate = { version = "*" }
-mime = { version = "*" }
-encoding_rs = { version = "*" }
-regex = { version = "*" }
+tokio = { version = "*", features = ["rt", "macros", "rt-multi-thread"] }
+tracing = { version = "*" }
+tracing-subscriber = { version = "*", features = ["env-filter"] }
+x509-parser = { version = "*" }

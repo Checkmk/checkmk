@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree
 
 # Agent / MIB output
 # see 1.3.6.1.4.1.3375.2.1.3.2.1.1.0

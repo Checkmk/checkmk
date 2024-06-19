@@ -4,8 +4,8 @@ catalog: os/files
 license: GPLv2
 distribution: check_mk
 description:
- This check evaluates the data reported by the mk_inotify plugin on the target system.
- This plugin requires the python module pyinotify to be installed.
+ This check evaluates the data reported by the mk_inotify plug-in on the target system.
+ This plug-in requires the python module pyinotify to be installed.
  Inotify allows you to monitor certain file operations on the target system. E.g. you will
  get a message for specific operations like {access}, {open}, {create}, {delete}, {modify}.
  In the agent bakery you can configure the files and folders to be monitored and specify in

@@ -29,6 +29,9 @@ from ._filter_context import get_filter as get_filter
 from ._filter_context import get_link_filter_names as get_link_filter_names
 from ._filter_context import get_merged_context as get_merged_context
 from ._filter_context import get_missing_single_infos as get_missing_single_infos
+from ._filter_context import (
+    get_missing_single_infos_group_aware as get_missing_single_infos_group_aware,
+)
 from ._filter_context import get_single_info_keys as get_single_info_keys
 from ._filter_context import get_singlecontext_vars as get_singlecontext_vars
 from ._filter_context import info_params as info_params
@@ -39,6 +42,7 @@ from ._filter_form import show_filter_form as show_filter_form
 from ._filter_valuespecs import FilterChoices as FilterChoices
 from ._filter_valuespecs import filters_allowed_for_info as filters_allowed_for_info
 from ._filter_valuespecs import filters_allowed_for_infos as filters_allowed_for_infos
+from ._filter_valuespecs import filters_exist_for_infos as filters_exist_for_infos
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
 from ._filter_valuespecs import VisualFilterListWithAddPopup as VisualFilterListWithAddPopup
@@ -60,6 +64,7 @@ from ._page_edit_visual import single_infos_spec as single_infos_spec
 from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
 from ._store import available as available
+from ._store import available_by_owner as available_by_owner
 from ._store import declare_custom_permissions as declare_custom_permissions
 from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
 from ._store import delete_local_file, get_installed_packages
@@ -115,15 +120,15 @@ def _register_pre_21_plugin_api() -> None:
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
     """
-    # Needs to be a local import to not influence the regular plugin loading order
+    # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.plugins.visuals as api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.plugins.visuals.utils as plugin_utils  # pylint: disable=cmk-module-layer-violation
 

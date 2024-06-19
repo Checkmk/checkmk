@@ -10,7 +10,7 @@ from typing import Final
 
 from pytest import MonkeyPatch
 
-from tests.testlib import import_module_hack
+from tests.unit.import_module_hack import import_module_hack
 
 _NON_STD_PREFIX: Mapping[str, str] = {
     "mkbackup_lock_dir": "/%.0s",
@@ -54,7 +54,6 @@ _STR_PATHS: Final = {
     "inventory_archive_dir",
     "inventory_delta_cache_dir",
     "status_data_dir",
-    "robotmk_html_log_dir",
     "share_dir",
     "checks_dir",
     "inventory_dir",

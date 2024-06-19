@@ -10,7 +10,7 @@ checkname = "msexch_isclienttype"
 
 mock_item_state = {
     "": {
-        "RPCRequests_": (0, 1145789)        
+        "RPCRequests_": (0, 1145789)
     }
 }
 

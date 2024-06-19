@@ -11,8 +11,9 @@ from collections.abc import Iterator, Mapping
 
 import pytest
 
-from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
+
+from tests.integration.linux_test_host import create_linux_test_host
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +143,6 @@ def test_usage_counters(site: Site) -> None:
     assert all(isinstance(v, (int, float)) for v in rows[0])
 
 
-@pytest.mark.usefixtures("default_cfg")
 @pytest.fixture(name="configure_service_tags")
 def configure_service_tags_fixture(site: Site) -> Iterator[None]:
     site.openapi.create_host(
@@ -174,7 +174,7 @@ def configure_service_tags_fixture(site: Site) -> Iterator[None]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.usefixtures("configure_service_tags")
+@pytest.mark.usefixtures("default_cfg", "configure_service_tags")
 def test_service_custom_variables(site: Site) -> None:
     rows = site.live.query(
         "GET services\n"

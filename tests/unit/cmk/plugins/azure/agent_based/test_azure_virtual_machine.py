@@ -525,6 +525,30 @@ def test_discover_azure_vm_network_io(
                 Metric("out", 932.6166666666667, boundaries=(0.0, None)),
             ],
         ),
+        pytest.param(
+            interfaces.CHECK_DEFAULT_PARAMETERS,
+            {
+                "name": Resource(
+                    "id",
+                    "name",
+                    "Microsoft.Compute/virtualMachines",
+                    "consulting",
+                    None,
+                    "westeurope",
+                    {},
+                    {},
+                    {"statuses": ["Max recursion depth reached", "Max recursion depth reached"]},
+                    {},
+                    "some_hash",
+                ),
+            },
+            [
+                Result(state=State.OK, summary="[0]"),
+                Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                Result(state=State.OK, summary="Speed: unknown"),
+            ],
+            id="Missing metrics due to max recursion depth reached",
+        ),
     ],
 )
 def test_check_azure_vm_network_io(

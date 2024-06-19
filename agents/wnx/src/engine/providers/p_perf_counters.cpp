@@ -7,6 +7,7 @@
 
 #include "providers/p_perf_counters.h"
 
+#include <numeric>
 #include <ranges>
 #include <string>
 
@@ -15,6 +16,7 @@
 #include "wnx/logger.h"
 
 namespace rs = std::ranges;
+using namespace std::string_view_literals;
 
 namespace cma::provider {
 
@@ -172,6 +174,53 @@ std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE *perf_object,
 
 }  // namespace details
 
+namespace {
+std::optional<wtools::AdapterInfo> FindAdapterInfo(
+    const wtools::AdapterInfoStore &store, const std::wstring &name) {
+    if (const auto search = store.find(name); search != store.end()) {
+        return {search->second};
+    }
+
+    XLOG::t("IF {} not found", wtools::ToUtf8(name));
+    for (auto &&adapter_info : store | rs::views::values) {
+        if (name == adapter_info.friendly_name) {
+            XLOG::t("IF {} found by friendly name", wtools::ToUtf8(name));
+            return {adapter_info};
+        }
+    }
+
+    return {};
+}
+}  // namespace
+
+template <typename T>
+std::string AddRow(const std::vector<std::wstring> &names,
+                   const wtools::AdapterInfoStore &store,
+                   const std::wstring_view counter_name,
+                   std::function<T(const wtools::AdapterInfo &)> get_value,
+                   T default_value) {
+    std::vector<std::wstring> values;
+    values.reserve(names.size() + 2);
+    values.emplace_back(counter_name);
+    for (auto &&name : names) {
+        const auto adapter_info = FindAdapterInfo(store, name);
+        if (adapter_info.has_value()) {
+            values.emplace_back(wtools::ConvertToUtf16(
+                fmt::format("{}", get_value(*adapter_info))));
+        } else {
+            const auto default_value_as_string =
+                wtools::ConvertToUtf16(fmt::format("{}", default_value));
+            values.emplace_back(default_value_as_string);
+        }
+    }
+    values.emplace_back(winperf::if_state_pseudo_counter_type);
+    return wtools::ToUtf8(
+        std::accumulate(std::next(values.begin()), values.end(), values[0],
+                        [](const std::wstring &a, const std::wstring &b) {
+                            return a + L' ' + b;
+                        }));
+}
+
 // builds a section
 // empty string on error
 // Also this is good example how to use our Perf API
@@ -202,6 +251,29 @@ std::string BuildWinPerfSection(std::wstring_view prefix,
     accu += details::MakeWinPerfInstancesLine(object);
     // naked list
     accu += details::MakeWinPerfNakedList(object, key_index);
+
+    if (name == winperf::if_section_name) {
+        const auto store = wtools::GetAdapterInfoStore();
+        if (store.empty()) {
+            XLOG::d("No adapters found");
+        }
+        const auto names = wtools::perf::GenerateInstanceNames(object);
+
+        accu += AddRow<int>(
+                    names, store, winperf::if_state_pseudo_counter,
+                    [](const wtools::AdapterInfo &info) -> int {
+                        return static_cast<int>(info.oper_status);
+                    },
+                    static_cast<int>(IF_OPER_STATUS::IfOperStatusUp)) +
+                '\n';
+        accu += AddRow<std::string>(
+                    names, store, winperf::if_mac_pseudo_counter,
+                    [](const wtools::AdapterInfo &info) -> std::string {
+                        return info.mac_address;
+                    },
+                    "0") +
+                '\n';
+    }
 
     return accu;
 }

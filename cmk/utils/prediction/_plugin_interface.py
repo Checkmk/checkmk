@@ -5,208 +5,122 @@
 """Code for predictive monitoring / anomaly detection"""
 
 import logging
-import time
-from collections.abc import Callable
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping
 from typing import assert_never, Literal
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.servicename import ServiceName
 
-from ._grouping import PREDICTION_PERIODS, Slice, Timegroup
-from ._paths import PREDICTION_DIR
+from cmk.agent_based.prediction_backend import PredictionInfo
+
 from ._prediction import (
     compute_prediction,
     LevelsSpec,
     MetricRecord,
     PredictionData,
-    PredictionInfo,
-    PredictionParameters,
     PredictionStore,
 )
 
-EstimatedLevels = tuple[float | None, float | None, float | None, float | None]
+EstimatedLevels = tuple[tuple[float, float] | None, tuple[float, float] | None]
 
 logger = logging.getLogger("cmk.prediction")
 
 
-def _get_prediction(
+def make_updated_predictions(
     store: PredictionStore,
-    timegroup: Timegroup,
-    params: PredictionParameters,
+    get_recorded_data: Callable[[str, int, int], MetricRecord | None],
+    now: float,
+) -> Mapping[int, tuple[float | None, tuple[float, float] | None]]:
+    store.remove_outdated_predictions(now)
+    return {
+        hash(meta): _make_reference_and_prediction(
+            meta, valid_prediction or _update_prediction(store, meta, get_recorded_data), now
+        )
+        for meta, valid_prediction in store.iter_all_valid_predictions(now)
+    }
+
+
+def _make_reference_and_prediction(
+    meta: PredictionInfo,
+    prediction: PredictionData | None,
+    now: float,
+) -> tuple[float | None, tuple[float, float] | None]:
+    if prediction is None or (reference := prediction.predict(now)) is None:
+        return None, None
+
+    return reference.average, estimate_levels(
+        reference_value=reference.average,
+        stdev=reference.stdev,
+        direction=meta.direction,
+        levels=meta.params.levels,
+        bound=meta.params.bound,
+    )
+
+
+def _update_prediction(
+    store: PredictionStore,
+    meta: PredictionInfo,
+    get_recorded_data: Callable[[str, int, int], MetricRecord | None],
 ) -> PredictionData | None:
-    """Return a valid prediction, if available
-
-    No prediction is available if
-    * no prediction meta data file is found
-    * the prediction is outdated
-    * no prediction for these parameters (time group) has been made yet
-    * no prediction data file is found
-    """
-    if (last_info := store.get_info(timegroup)) is None:
+    logger.log(
+        VERBOSE,
+        "Predicting %s / %s / %s",
+        meta.metric,
+        meta.params.period,
+        meta.valid_interval[0],
+    )
+    if (prediction := compute_prediction(meta, get_recorded_data)) is None:
         return None
-
-    period_info = PREDICTION_PERIODS[params.period]
-    now = time.time()
-    if last_info.time + period_info.valid * period_info.slice < now:
-        logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
-        return None
-
-    if last_info.params != params:
-        logger.log(VERBOSE, "Prediction parameters have changed.")
-        return None
-
-    return store.get_data(timegroup)
-
-
-@dataclass(frozen=True)
-class PredictionUpdater:
-    host_name: HostName
-    service_description: ServiceName
-    params: PredictionParameters
-    partial_get_recorded_data: Callable[[str, str, str, int, int], MetricRecord]
-
-    def _get_recorded_data(self, metric_name: str, start: int, end: int) -> MetricRecord:
-        return self.partial_get_recorded_data(
-            self.host_name, self.service_description, metric_name, start, end
-        )
-
-    def _get_updated_prediction(
-        self,
-        dsname: str,
-        now: int,
-    ) -> PredictionData:
-        period_info = PREDICTION_PERIODS[self.params.period]
-
-        current_slice = Slice.from_timestamp(now, period_info)
-
-        prediction_store = PredictionStore(
-            PREDICTION_DIR,
-            self.host_name,
-            self.service_description,
-            dsname,
-        )
-
-        if (
-            data_for_pred := _get_prediction(
-                store=prediction_store,
-                timegroup=current_slice.group,
-                params=self.params,
-            )
-        ) is None:
-            info = PredictionInfo(
-                name=current_slice.group,
-                time=now,
-                range=current_slice.interval,
-                dsname=dsname,
-                params=self.params,
-            )
-            logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
-            prediction_store.remove_prediction(info.name)
-
-            data_for_pred = compute_prediction(
-                info,
-                now,
-                period_info,
-                self._get_recorded_data,
-            )
-            prediction_store.save_prediction(info, data_for_pred)
-
-        return data_for_pred
-
-    # levels_factor: this multiplies all absolute levels. Usage for example
-    # in the cpu.loads check the multiplies the levels by the number of CPU
-    # cores.
-    def get_predictive_levels(
-        self,
-        metric_name: str,
-        levels_factor: float = 1.0,
-    ) -> tuple[float | None, EstimatedLevels]:
-        now = int(time.time())
-        prediction = self._get_updated_prediction(metric_name, now)
-        if (reference := prediction.predict(now)) is None:
-            return None, (None, None, None, None)
-
-        return reference.average, estimate_levels(
-            reference_value=reference.average,
-            stdev=reference.stdev,
-            levels_lower=self.params.levels_lower,
-            levels_upper=self.params.levels_upper,
-            levels_upper_lower_bound=self.params.levels_upper_min,
-            levels_factor=levels_factor,
-        )
+    store.save_prediction(meta, prediction)
+    return prediction
 
 
 def estimate_levels(
-    *,
     reference_value: float,
     stdev: float | None,
-    levels_lower: LevelsSpec | None,
-    levels_upper: LevelsSpec | None,
-    levels_upper_lower_bound: tuple[float, float] | None,
-    levels_factor: float,
-) -> EstimatedLevels:
-    estimated_upper_warn, estimated_upper_crit = (
-        _get_levels_from_params(
-            levels=levels_upper,
-            sig=1,
-            reference=reference_value,
-            stdev=stdev,
-            levels_factor=levels_factor,
-        )
-        if levels_upper
-        else (None, None)
+    direction: Literal["upper", "lower"],
+    levels: LevelsSpec,
+    bound: tuple[float, float] | None,
+) -> tuple[float, float] | None:
+    estimated = _compute_levels_from_params(
+        levels=levels,
+        sig=1 if direction == "upper" else -1,
+        reference=reference_value,
+        stdev=stdev,
     )
+    if estimated is None or bound is None:
+        return estimated
 
-    estimated_lower_warn, estimated_lower_crit = (
-        _get_levels_from_params(
-            levels=levels_lower,
-            sig=-1,
-            reference=reference_value,
-            stdev=stdev,
-            levels_factor=levels_factor,
-        )
-        if levels_lower
-        else (None, None)
-    )
-
-    if levels_upper_lower_bound:
-        estimated_upper_warn = (
-            None
-            if estimated_upper_warn is None
-            else max(levels_upper_lower_bound[0], estimated_upper_warn)
-        )
-        estimated_upper_crit = (
-            None
-            if estimated_upper_crit is None
-            else max(levels_upper_lower_bound[1], estimated_upper_crit)
-        )
-
-    return (estimated_upper_warn, estimated_upper_crit, estimated_lower_warn, estimated_lower_crit)
+    match direction:
+        case "upper":
+            return (max(estimated[0], bound[0]), max(estimated[1], bound[1]))
+        case "lower":
+            return (min(estimated[0], bound[0]), min(estimated[1], bound[1]))
+        case other:
+            assert_never(other)
 
 
-def _get_levels_from_params(
+def _compute_levels_from_params(
     *,
     levels: LevelsSpec,
     sig: Literal[1, -1],
     reference: float,
     stdev: float | None,
-    levels_factor: float,
-) -> tuple[float, float] | tuple[None, None]:
+) -> tuple[float, float] | None:
     levels_type, (warn, crit) = levels
 
     match levels_type:
         case "absolute":
-            reference_deviation = levels_factor
+            reference_deviation = 1.0
         case "relative" if reference == 0:
-            return (None, None)
+            return None
         case "relative":
             reference_deviation = reference / 100.0
         case "stdev":
             match stdev:
-                case 0 | None:
-                    return (None, None)
+                case 0:
+                    return None
+                case None:
+                    return None
                 case _:
                     reference_deviation = stdev
         case _:

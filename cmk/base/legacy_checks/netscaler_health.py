@@ -8,9 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 #
@@ -80,7 +79,6 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (3500, 3000),
-        "upper": (None, None),
     },
 )
 # .

@@ -12,7 +12,8 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.lparstat_aix import Section
+
+from cmk.plugins.collection.agent_based.lparstat_aix import Section
 
 # +------------------------------------------------------------------+
 # | This file has been contributed and is copyrighted by:            |

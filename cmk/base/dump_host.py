@@ -4,31 +4,50 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+import sys
 import time
+from contextlib import suppress
+from pathlib import Path
+from typing import Literal
 
+import cmk.utils.password_store
+import cmk.utils.paths
 import cmk.utils.render
-import cmk.utils.tty as tty
+from cmk.utils import ip_lookup, tty
+from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.paths import tmp_dir
+from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
 
-from cmk.snmplib import SNMPBackendEnum
+from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 
-from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
+from cmk.fetchers import (
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    SNMPScanConfig,
+    TCPFetcher,
+    TLSConfig,
+)
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import SourceType
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parser import NO_SELECTION
 
-import cmk.base.config as config
 import cmk.base.core
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.obsolete_output as out
-import cmk.base.sources as sources
-from cmk.base.config import ConfigCache
-from cmk.base.ip_lookup import AddressFamily
-from cmk.base.sources import Source
+from cmk.base import sources
+from cmk.base.config import (
+    ConfigCache,
+    ConfiguredIPLookup,
+    handle_ip_lookup_failure,
+    lookup_ip_address,
+    lookup_mgmt_board_ip_address,
+)
+from cmk.base.sources import SNMPFetcherConfig, Source
 
 
 def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
@@ -58,20 +77,20 @@ def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
         if snmp_config.snmp_backend is SNMPBackendEnum.STORED_WALK:
             return "SNMP (use stored walk)"
 
-        if snmp_config.is_snmpv3_host:
+        if snmp_config.snmp_version is SNMPVersion.V3:
             credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
         else:
             credentials_text = "Community: %r" % snmp_config.credentials
 
-        if snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
-            bulk = "yes"
-        else:
-            bulk = "no"
+        bulk = "yes" if snmp_config.use_bulkwalk else "no"
 
-        return "%s (%s, Bulk walk: %s, Port: %d, Backend: %s)" % (
-            "SNMP"
-            if source.source_info().source_type is SourceType.HOST
-            else "Management board - SNMP",
+        return "%s%s (%s, Bulkwalk: %s, Port: %d, Backend: %s)" % (
+            (
+                "SNMP"
+                if source.source_info().source_type is SourceType.HOST
+                else "Management board - SNMP"
+            ),
+            snmp_config.snmp_version.name.lower(),
             credentials_text,
             bulk,
             snmp_config.port,
@@ -85,40 +104,56 @@ def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
     return type(fetcher).__name__
 
 
-def _agent_description(config_cache: ConfigCache, host_name: HostName) -> str:
-    if config_cache.is_all_agents_host(host_name):
+def _agent_description(cds: ComputedDataSources) -> str:
+    if cds.is_all_agents_host:
         return "Normal Checkmk agent, all configured special agents"
 
-    if config_cache.is_all_special_agents_host(host_name):
+    if cds.is_all_special_agents_host:
         return "No Checkmk agent, all configured special agents"
 
-    if config_cache.is_tcp_host(host_name):
+    if cds.is_tcp:
         return "Normal Checkmk agent, or special agent if configured"
 
     return "No agent"
 
 
-def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
+def print_(txt: str) -> None:
+    with suppress(IOError):
+        print(txt, end="", flush=True, file=sys.stdout)
+
+
+def dump_host(
+    config_cache: ConfigCache,
+    hostname: HostName,
+    *,
+    simulation_mode: bool,
+) -> None:
     # pylint: disable=too-many-branches
-    out.output("\n")
+    print_("\n")
     hosts_config = config_cache.hosts_config
     if hostname in hosts_config.clusters:
-        nodes = config_cache.nodes_of(hostname)
-        if nodes is None:
-            raise RuntimeError()
+        assert config_cache.nodes(hostname)
         color = tty.bgmagenta
-        add_txt = " (cluster of " + (", ".join(nodes)) + ")"
+        add_txt = " (cluster of " + (", ".join(config_cache.nodes(hostname))) + ")"
     else:
         color = tty.bgblue
         add_txt = ""
-    out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
+    print_("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
-    ipaddress = _ip_address_for_dump_host(
-        config_cache, hosts_config, hostname, family=config_cache.default_address_family(hostname)
+    ip_stack_config = ConfigCache.ip_stack_config(hostname)
+    ipaddress = (
+        None
+        if ip_stack_config is IPStackConfig.NO_IP
+        else _ip_address_for_dump_host(
+            config_cache,
+            hosts_config,
+            hostname,
+            family=config_cache.default_address_family(hostname),
+        )
     )
 
     addresses: str | None = ""
-    if ConfigCache.address_family(hostname) is not AddressFamily.DUAL_STACK:
+    if ip_stack_config is not IPStackConfig.DUAL_STACK:
         addresses = ipaddress
     else:
         try:
@@ -139,7 +174,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         else:
             addresses += " (Primary: IPv4)"
 
-    out.output(
+    print_(
         tty.yellow
         + "Addresses:              "
         + tty.normal
@@ -149,29 +184,28 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
     tags = [(tag_template % ":".join(t)) for t in sorted(config_cache.tags(hostname).items())]
-    out.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
+    print_(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
     labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
-    out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
+    print_(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     if hostname in hosts_config.clusters:
-        parents_list = config_cache.nodes_of(hostname)
-        if parents_list is None:
-            raise RuntimeError()
+        parents_list = config_cache.nodes(hostname)
     else:
         parents_list = config_cache.parents(hostname)
+
     if parents_list:
-        out.output(
+        print_(
             tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n"
         )
-    out.output(
+    print_(
         tty.yellow
         + "Host groups:            "
         + tty.normal
         + ", ".join(config_cache.hostgroups(hostname))
         + "\n"
     )
-    out.output(
+    print_(
         tty.yellow
         + "Contact groups:         "
         + tty.normal
@@ -179,35 +213,77 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         + "\n"
     )
 
+    oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+    stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+    walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+    file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+    tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
+    tls_config = TLSConfig(
+        cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+        ca_store=Path(cmk.utils.paths.agent_cert_store),
+        site_crt=Path(cmk.utils.paths.site_cert_file),
+    )
+    used_password_store = cmk.utils.password_store.pending_password_store_path()
+    passwords = cmk.utils.password_store.load(used_password_store)
     agenttypes = [
         dump_source(source)
         for source in sources.make_sources(
             hostname,
             ipaddress,
-            ConfigCache.address_family(hostname),
+            ConfigCache.ip_stack_config(hostname),
+            fetcher_factory=config_cache.fetcher_factory(),
+            snmp_fetcher_config=SNMPFetcherConfig(
+                scan_config=SNMPScanConfig(
+                    on_error=OnError.RAISE,
+                    missing_sys_description=config_cache.missing_sys_description(hostname),
+                    oid_cache_dir=oid_cache_dir,
+                ),
+                selected_sections=NO_SELECTION,
+                backend_override=None,
+                stored_walk_path=stored_walk_path,
+                walk_cache_path=walk_cache_path,
+            ),
             is_cluster=hostname in hosts_config.clusters,
             file_cache_options=FileCacheOptions(),
-            config_cache=config_cache,
-            simulation_mode=config.simulation_mode,
+            simulation_mode=simulation_mode,
             file_cache_max_age=MaxAge.zero(),
-            snmp_backend_override=None,
+            snmp_backend=config_cache.get_snmp_backend(hostname),
+            file_cache_path=file_cache_path,
+            tcp_cache_path=tcp_cache_path,
+            tls_config=tls_config,
+            computed_datasources=config_cache.computed_datasources(hostname),
+            datasource_programs=config_cache.datasource_programs(hostname),
+            tag_list=config_cache.tag_list(hostname),
+            management_ip=lookup_mgmt_board_ip_address(config_cache, hostname),
+            management_protocol=config_cache.management_protocol(hostname),
+            special_agent_command_lines=config_cache.special_agent_command_lines(
+                hostname,
+                ipaddress,
+                password_store_file=used_password_store,
+                passwords=passwords,
+                ip_address_of=ConfiguredIPLookup(
+                    config_cache, error_handler=handle_ip_lookup_failure
+                ),
+            ),
+            agent_connection_mode=config_cache.agent_connection_mode(hostname),
+            check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
         )
     ]
 
     if config_cache.is_ping_host(hostname):
         agenttypes.append("PING only")
 
-    out.output(tty.yellow + "Agent mode:             " + tty.normal)
-    out.output(_agent_description(config_cache, hostname) + "\n")
+    print_(tty.yellow + "Agent mode:             " + tty.normal)
+    print_(_agent_description(config_cache.computed_datasources(hostname)) + "\n")
 
-    out.output(tty.yellow + "Type of agent:          " + tty.normal)
+    print_(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:
-        out.output(agenttypes[0] + "\n")
+        print_(agenttypes[0] + "\n")
     else:
-        out.output("\n  ")
-        out.output("\n  ".join(agenttypes) + "\n")
+        print_("\n  ")
+        print_("\n  ".join(agenttypes) + "\n")
 
-    out.output(tty.yellow + "Services:" + tty.normal + "\n")
+    print_(tty.yellow + "Services:" + tty.normal + "\n")
 
     headers = ["checktype", "item", "params", "description", "groups"]
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
@@ -227,15 +303,14 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     tty.print_table(headers, colors, table_data, "  ")
 
 
-def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> str:
-    if not isinstance(params, TimespecificParameters):
-        return repr(params)
-
-    if params.is_constant():
-        return repr(params.evaluate(timeperiod_active))
-    return "Timespecific parameters at {}: {!r}".format(
-        cmk.utils.render.date_and_time(time.time()),
-        params.evaluate(timeperiod_active),
+def _evaluate_params(params: TimespecificParameters) -> str:
+    return (
+        repr(params.evaluate(timeperiod_active))
+        if params.is_constant()
+        else "Timespecific parameters at {}: {!r}".format(
+            cmk.utils.render.date_and_time(time.time()),
+            params.evaluate(timeperiod_active),
+        )
     )
 
 
@@ -244,10 +319,10 @@ def _ip_address_for_dump_host(
     hosts_config: Hosts,
     host_name: HostName,
     *,
-    family: socket.AddressFamily,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress | None:
     try:
-        return config.lookup_ip_address(config_cache, host_name, family=family)
+        return lookup_ip_address(config_cache, host_name, family=family)
     except Exception:
         return (
             HostAddress("")

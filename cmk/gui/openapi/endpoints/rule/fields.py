@@ -5,11 +5,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast, Literal, TYPE_CHECKING
+from typing import Any, cast, Literal, TYPE_CHECKING, TypedDict
 
 import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
-from typing_extensions import TypedDict
 
 from cmk.utils.rulesets.conditions import (
     HostOrServiceConditions,
@@ -494,7 +493,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
     cast_to_dict = True
 
     match_on = fields.List(
-        fields.String(),
+        fields.String(minLength=1),
         required=True,
         description="A list of string matching regular expressions.",
     )
@@ -589,7 +588,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
             raise ValidationError(f"Unknown match type: {data['operator']}")
 
 
-class RuleProperties(base.BaseSchema):
+class Properties(base.BaseSchema):
     cast_to_dict = True
 
     description = fields.String(
@@ -635,16 +634,18 @@ class LabelGroupCondition(base.BaseSchema):
     operator = fields.String(
         enum=["and", "or", "not"],
         description="Boolean operator that connects the label group to other label groups",
+        load_default="and",
     )
     label_group = fields.List(
         fields.Nested(LabelCondition),
+        minLength=1,
         required=True,
         description="A list of label conditions that form a label group",
         example=[{"operator": "and", "label": "os:linux"}],
     )
 
 
-class RuleConditions(base.BaseSchema):
+class Conditions(base.BaseSchema):
     cast_to_dict = True
 
     host_name = fields.Nested(
@@ -686,8 +687,17 @@ class RuleConditions(base.BaseSchema):
     )
     host_label_groups = fields.List(
         fields.Nested(LabelGroupCondition),
-        description="Further restrict this rule by applying host label conditions.",
+        description="Further restrict this rule by applying host label conditions. Although all items in this list"
+        " have a default operator value, the operator value for the the first item in the list does not have any effect.",
         example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    }
+                ],
+            },
             {
                 "operator": "and",
                 "label_group": [
@@ -696,15 +706,22 @@ class RuleConditions(base.BaseSchema):
                         "label": "os:windows",
                     }
                 ],
-            }
+            },
         ],
     )
     service_label_groups = fields.List(
         fields.Nested(LabelGroupCondition),
-        description=(
-            "Restrict the application of the rule, by checking against service label conditions."
-        ),
+        description="Restrict the application of the rule, by checking against service label conditions. Although all items in"
+        " this list have a default operator value, the operator value for the the first item in the list does not have any effect.",
         example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    }
+                ],
+            },
             {
                 "operator": "and",
                 "label_group": [
@@ -713,7 +730,7 @@ class RuleConditions(base.BaseSchema):
                         "label": "os:windows",
                     }
                 ],
-            }
+            },
         ],
     )
     service_description = fields.Nested(
@@ -728,7 +745,7 @@ class RuleConditions(base.BaseSchema):
             " * The pattern is matched from the beginning.\n"
             " * The match is performed case sensitive.\n"
             "BE AWARE: Depending on the service ruleset the service_description of "
-            "the rules is only a check item or a full service description. For "
+            "the rules is only a check item or a full service name. For "
             "example the check parameters rulesets only use the item, and other "
             "service rulesets like disabled services ruleset use full service"
             "descriptions."
@@ -811,7 +828,7 @@ class RuleExtensions(base.BaseSchema):
         description="The position of this rule in the chain in this folder.",
     )
     properties = fields.Nested(
-        RuleProperties,
+        Properties,
         description="Property values of this rule.",
         example={},
     )
@@ -820,7 +837,7 @@ class RuleExtensions(base.BaseSchema):
         example='{"ignore_fs_types": ["tmpfs"]}',
     )
     conditions = fields.Nested(
-        RuleConditions,
+        Conditions,
         description="Conditions.",
     )
 
@@ -901,7 +918,7 @@ class UpdateRuleObject(base.BaseSchema):
     cast_to_dict = True
 
     properties = fields.Nested(
-        RuleProperties,
+        Properties,
         description="Configuration values for rules.",
         example={"disabled": False},
     )
@@ -915,9 +932,27 @@ class UpdateRuleObject(base.BaseSchema):
         required=True,
     )
     conditions = fields.Nested(
-        RuleConditions,
+        Conditions,
         description="Conditions.",
-        example={},
+        example={
+            "host_name": {"match_on": ["host1", "host2"], "operator": "one_of"},
+            "host_tags": [{"key": "criticality", "operator": "is", "value": "prod"}],
+            "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+            "service_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+            "host_label_groups": [
+                {
+                    "operator": "and",
+                    "label_group": [{"operator": "and", "label": "os:windows"}],
+                }
+            ],
+            "service_label_groups": [
+                {
+                    "operator": "and",
+                    "label_group": [{"operator": "and", "label": "os:windows"}],
+                }
+            ],
+            "service_description": {"match_on": ["foo1", "bar2"], "operator": "none_of"},
+        },
     )
 
 

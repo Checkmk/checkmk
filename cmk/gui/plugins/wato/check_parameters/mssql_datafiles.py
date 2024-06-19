@@ -106,6 +106,6 @@ rulespec_registry.register(
         item_spec=mssql_item_spec_instance_database_file,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_datafiles,
-        title=lambda: _("MSSQL Datafile Sizes"),
+        title=lambda: _("MSSQL datafile sizes"),
     )
 )

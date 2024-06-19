@@ -7,9 +7,9 @@
 import time
 from collections.abc import Collection
 
-import cmk.utils.store as store
+from cmk.utils import store
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html

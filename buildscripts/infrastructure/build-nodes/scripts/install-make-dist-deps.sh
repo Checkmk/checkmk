@@ -20,7 +20,6 @@ case "$DISTRO" in
             rpm \
             alien \
             dpkg-sig
-        rm -rf /var/lib/apt/lists/*
 
         # Test the installations
         EXIT_STATUS=0

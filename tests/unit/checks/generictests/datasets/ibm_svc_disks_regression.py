@@ -357,7 +357,7 @@ checks = {
             [
                 (
                     0,
-                    "Total raw capacity: 12.0 TiB",
+                    "Total raw capacity: 13.2 TB",
                     [("total_disk_capacity", 13190703559475.195, None, None, None, None)],
                 ),
                 (0, "Total disks: 22", [("total_disks", 22, None, None, None, None)]),

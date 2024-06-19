@@ -17,14 +17,14 @@ usage() {
     echo "Run the CI pipeline or parts of it."
     echo
     echo "  -c, --clean             remove artifacts first"
-    echo "  -F, --check-format      check for correct formatting (isort, black)"
+    echo "  -F, --check-format      check for correct formatting"
     echo "  -u, --unit-tests        run unit tests"
     echo "  -m, --mypy              run mypy"
     echo "  -p, --pylint            run pylint"
     echo "  -B, --bandit            run bandit"
     echo "  -a, --all               shortcut for -F -u -m -p -B -C"
     echo "  -f, --format            format sources"
-    echo "  -d, --documentation     generate documentation"
+    echo "  -D, --documentation     generate documentation"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
     echo "  -h, --help              show this help"
 }
@@ -40,7 +40,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'cFumpBafdj:h' --long 'clean,check-format,unit-tests,mypy,pylint,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cFumpBafDj:h' --long 'clean,check-format,unit-tests,mypy,pylint,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -93,7 +93,7 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-d' | '--documentation')
+            '-D' | '--documentation')
                 RUN_DOCUMENTATION=yes
                 shift
                 continue
@@ -148,6 +148,7 @@ run_clean() {
 }
 
 run_check_format() {
+    command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
     setup_venv
     isort --check-only --diff cmk tests
     black --check --diff cmk tests
@@ -173,10 +174,11 @@ run_bandit() {
     # We would like to put everything into pyproject.toml, so running just "bandit" would do the
     # right thing. But bandit is totally obscure & complicated regarding configuration, see several
     # issues like https://github.com/PyCQA/bandit/issues/606.  :-/
-    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high cmk tests
+    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=medium cmk tests
 }
 
 run_format() {
+    command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
     setup_venv
     isort cmk tests
     black cmk tests

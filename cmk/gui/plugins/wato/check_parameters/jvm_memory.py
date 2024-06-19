@@ -22,9 +22,7 @@ def _item_spec_jvm_memory() -> TextInput:
     )
 
 
-def _get_memory_level_elements(  # type: ignore[no-untyped-def]
-    mem_type,
-) -> Iterable[tuple[str, Tuple]]:
+def _get_memory_level_elements(mem_type: str) -> Iterable[tuple[str, Tuple]]:
     return [
         (
             "perc_%s" % mem_type,

@@ -166,12 +166,7 @@ where
             .ok_or(Box::from("bad values"))
     }
 
-    pub fn check(
-        &self,
-        value: T,
-        summary: impl Into<String>,
-        args: LevelsCheckerArgs,
-    ) -> CheckResult<T> {
+    pub fn check(&self, value: T, output: OutputType, args: LevelsCheckerArgs) -> CheckResult<T> {
         let evaluate = |value: &T| -> State {
             if self.strategy.cmp(value, &self.levels.crit) {
                 State::Crit
@@ -181,9 +176,16 @@ where
                 State::Ok
             }
         };
-        let r = SimpleCheckResult::new(evaluate(&value), summary);
+        let state = evaluate(&value);
+        let (summary, details) = match (output, state) {
+            (OutputType::Notice(text), State::Ok) => (None, Some(text)),
+            (OutputType::Notice(text), _) => (Some(text), None),
+            (OutputType::Summary(text), _) => (Some(text), None),
+        };
         CheckResult {
-            summary: r.summary,
+            state,
+            summary,
+            details,
             metrics: Some(Metric::<T> {
                 label: args.label,
                 value,
@@ -195,13 +197,20 @@ where
     }
 }
 
+#[derive(Debug)]
+pub enum OutputType {
+    Summary(String),
+    Notice(String),
+}
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum State {
+    // See also: https://docs.checkmk.com/latest/en/devel_check_plugins.html
     #[default]
     Ok,
     Warn,
-    Crit,
     Unknown,
+    Crit,
 }
 
 impl State {
@@ -281,63 +290,58 @@ where
     }
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct Summary {
-    state: State,
-    text: String,
-}
-
-impl Summary {
-    fn new(state: State, text: impl Into<String>) -> Self {
-        Self {
-            state,
-            text: text.into(),
-        }
-    }
-}
-
-impl Display for Summary {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-        write!(
-            f,
-            "{}{}",
-            self.text,
-            match self.state {
-                State::Ok => "",
-                State::Warn => " (!)",
-                State::Crit => " (!!)",
-                State::Unknown => " (?)",
-            }
-        )
-    }
-}
-
 #[derive(Debug, Default)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct SimpleCheckResult {
-    summary: Summary,
+    state: State,
+    summary: Option<String>,
+    details: Option<String>,
+}
+
+fn as_option(s: impl Into<String>) -> Option<String> {
+    let s = s.into();
+    (!s.is_empty()).then_some(s)
 }
 
 impl SimpleCheckResult {
-    fn new(state: State, text: impl Into<String>) -> Self {
+    fn new(state: State, summary: Option<String>, details: Option<String>) -> Self {
         Self {
-            summary: Summary::new(state, text),
+            state,
+            summary,
+            details,
         }
     }
 
+    pub fn notice(details: impl Into<String>) -> Self {
+        Self::new(State::Ok, None, as_option(details))
+    }
+
     pub fn ok(summary: impl Into<String>) -> Self {
-        Self::new(State::Ok, summary)
+        Self::new(State::Ok, as_option(summary), None)
     }
 
     pub fn warn(summary: impl Into<String>) -> Self {
-        Self::new(State::Warn, summary)
+        Self::new(State::Warn, as_option(summary), None)
     }
 
     pub fn crit(summary: impl Into<String>) -> Self {
-        Self::new(State::Crit, summary)
+        Self::new(State::Crit, as_option(summary), None)
     }
 
     pub fn unknown(summary: impl Into<String>) -> Self {
-        Self::new(State::Unknown, summary)
+        Self::new(State::Unknown, as_option(summary), None)
+    }
+
+    pub fn ok_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
+        Self::new(State::Ok, as_option(summary), as_option(details))
+    }
+
+    pub fn warn_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
+        Self::new(State::Warn, as_option(summary), as_option(details))
+    }
+
+    pub fn crit_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
+        Self::new(State::Crit, as_option(summary), as_option(details))
     }
 }
 
@@ -345,7 +349,9 @@ pub struct CheckResult<T>
 where
     T: Clone,
 {
-    summary: Summary,
+    state: State,
+    summary: Option<String>,
+    details: Option<String>,
     metrics: Option<Metric<T>>,
 }
 
@@ -362,27 +368,77 @@ impl<T> CheckResult<T>
 where
     T: Clone,
 {
-    fn new(state: State, text: impl Into<String>, metrics: Option<Metric<T>>) -> Self {
+    fn new(
+        state: State,
+        summary: Option<String>,
+        details: Option<String>,
+        metrics: Option<Metric<T>>,
+    ) -> Self {
         Self {
-            summary: Summary::new(state, text),
+            state,
+            summary,
+            details,
             metrics,
         }
     }
 
+    pub fn notice(details: impl Into<String>, metrics: Metric<T>) -> Self {
+        Self::new(State::Ok, None, as_option(details), Some(metrics))
+    }
+
     pub fn ok(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Ok, summary, Some(metrics))
+        Self::new(State::Ok, as_option(summary), None, Some(metrics))
     }
 
     pub fn warn(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Warn, summary, Some(metrics))
+        Self::new(State::Warn, as_option(summary), None, Some(metrics))
     }
 
     pub fn crit(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Crit, summary, Some(metrics))
+        Self::new(State::Crit, as_option(summary), None, Some(metrics))
     }
 
     pub fn unknown(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Unknown, summary, Some(metrics))
+        Self::new(State::Unknown, as_option(summary), None, Some(metrics))
+    }
+
+    pub fn ok_with_details(
+        summary: impl Into<String>,
+        details: impl Into<String>,
+        metrics: Metric<T>,
+    ) -> Self {
+        Self::new(
+            State::Ok,
+            as_option(summary),
+            as_option(details),
+            Some(metrics),
+        )
+    }
+
+    pub fn warn_with_details(
+        summary: impl Into<String>,
+        details: impl Into<String>,
+        metrics: Metric<T>,
+    ) -> Self {
+        Self::new(
+            State::Warn,
+            as_option(summary),
+            as_option(details),
+            Some(metrics),
+        )
+    }
+
+    pub fn crit_with_details(
+        summary: impl Into<String>,
+        details: impl Into<String>,
+        metrics: Metric<T>,
+    ) -> Self {
+        Self::new(
+            State::Crit,
+            as_option(summary),
+            as_option(details),
+            Some(metrics),
+        )
     }
 }
 
@@ -397,7 +453,9 @@ where
         U: Clone + Default,
     {
         CheckResult {
+            state: self.state,
             summary: self.summary,
+            details: self.details,
             metrics: self.metrics.map(|m| m.map(f)),
         }
     }
@@ -409,24 +467,39 @@ where
 {
     fn from(x: SimpleCheckResult) -> Self {
         Self {
+            state: x.state,
             summary: x.summary,
+            details: x.details,
             metrics: None,
         }
     }
+}
+
+#[derive(Debug)]
+enum Details {
+    Text(String),
+    Metric(Metric<Real>),
+    TextMetric(String, Metric<Real>),
+}
+
+#[derive(Debug)]
+struct Summary {
+    state: State,
+    text: Option<String>,
 }
 
 #[derive(Debug, Default)]
 pub struct Collection {
     state: State,
     summary: Vec<Summary>,
-    metrics: Vec<Metric<Real>>,
+    details: Vec<Details>,
 }
 
 impl Collection {
     pub fn join(&mut self, other: &mut Collection) {
         self.state = std::cmp::max(self.state, other.state);
         self.summary.append(&mut other.summary);
-        self.metrics.append(&mut other.metrics);
+        self.details.append(&mut other.details);
     }
 }
 
@@ -436,21 +509,31 @@ impl Display for Collection {
         let summary = self
             .summary
             .iter()
-            .filter(|s| !s.text.is_empty())
-            .map(ToString::to_string)
+            .flat_map(|s| {
+                s.text.as_ref().map(|text| match s.state {
+                    State::Ok => text.to_string(),
+                    State::Warn => format!("{} (!)", text),
+                    State::Crit => format!("{} (!!)", text),
+                    State::Unknown => format!("{} (?)", text),
+                })
+            })
             .collect::<Vec<_>>()
             .join(", ");
         if !summary.is_empty() {
             out = format!("{} - {}", out, summary);
         }
-        let metrics = self
-            .metrics
+        let details = self
+            .details
             .iter()
-            .map(ToString::to_string)
+            .map(|details| match details {
+                Details::Text(text) => text.to_owned(),
+                Details::Metric(metric) => metric.to_string(),
+                Details::TextMetric(text, metric) => format!("{} | {}", text, metric),
+            })
             .collect::<Vec<_>>()
-            .join(", ");
-        if !metrics.is_empty() {
-            out = format!("{} | {}", out, metrics);
+            .join("\n");
+        if !details.is_empty() {
+            out = format!("{}\n{}", out, details);
         }
         write!(f, "{}", out)?;
         Ok(())
@@ -460,9 +543,16 @@ impl Display for Collection {
 impl From<SimpleCheckResult> for Collection {
     fn from(check_result: SimpleCheckResult) -> Self {
         Self {
-            state: check_result.summary.state,
-            summary: vec![check_result.summary],
-            metrics: Vec::<Metric<Real>>::default(),
+            state: check_result.state,
+            summary: vec![Summary {
+                state: check_result.state,
+                text: check_result.summary,
+            }],
+            details: {
+                let mut v = vec![];
+                v.extend(check_result.details.map(Details::Text));
+                v
+            },
         }
     }
 }
@@ -472,9 +562,17 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
         check_results
             .drain(..)
             .fold(Collection::default(), |mut out, cr| {
-                out.state = std::cmp::max(out.state, cr.summary.state);
-                out.summary.push(cr.summary);
-                out.metrics.extend(cr.metrics);
+                out.state = std::cmp::max(out.state, cr.state);
+                out.summary.push(Summary {
+                    state: cr.state,
+                    text: cr.summary,
+                });
+                out.details.extend(match (cr.details, cr.metrics) {
+                    (None, None) => vec![],
+                    (Some(text), None) => vec![Details::Text(text)],
+                    (None, Some(metric)) => vec![Details::Metric(metric)],
+                    (Some(text), Some(metric)) => vec![Details::TextMetric(text, metric)],
+                });
                 out
             })
     }
@@ -673,7 +771,23 @@ mod test_metrics_display {
 
 #[cfg(test)]
 mod test_writer_format {
-    use super::{CheckResult, Collection, Metric, Real, SimpleCheckResult};
+    use super::{CheckResult, Collection, Metric, Real, SimpleCheckResult, State};
+
+    #[test]
+    fn test_with_empty_str() {
+        assert_eq!(
+            SimpleCheckResult::ok_with_details("", ""),
+            SimpleCheckResult::ok("")
+        );
+        assert_eq!(
+            SimpleCheckResult::ok_with_details("", ""),
+            SimpleCheckResult::notice("")
+        );
+        assert_eq!(
+            SimpleCheckResult::ok_with_details("", ""),
+            SimpleCheckResult::new(State::Ok, None, None)
+        );
+    }
 
     #[test]
     fn test_single_check_result_ok() {
@@ -782,7 +896,7 @@ mod test_writer_format {
                 "{}",
                 Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
             ),
-            "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
     }
 
@@ -794,21 +908,23 @@ mod test_writer_format {
     }
 
     #[test]
-    fn test_merge_check_results_with_metrics() {
+    fn test_collection_with_metrics() {
         let cr1 = CheckResult::ok("summary 1", m("m1", 13));
         let cr2 = CheckResult::warn("summary 2", m("m2", 37));
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
         let mut vec = vec![cr1, cr2, cr3];
         assert_eq!(
             format!("{}", Collection::from(&mut vec)),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
-            | m1=13;;;;, m2=37;;;;, m3=42;;;;"
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)\n\
+            m1=13;;;;\n\
+            m2=37;;;;\n\
+            m3=42;;;;"
         );
         assert!(vec.is_empty());
     }
 
     #[test]
-    fn test_join_writers_with_metrics() {
+    fn test_joined_collection_with_metrics() {
         let mut c = Collection::default();
         c.join(&mut Collection::from(&mut vec![CheckResult::ok(
             "summary 1",
@@ -824,8 +940,73 @@ mod test_writer_format {
         )]));
         assert_eq!(
             format!("{}", c),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
-            | m1=13;;;;, m2=37;;;;, m3=42;;;;"
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)\n\
+            m1=13;;;;\n\
+            m2=37;;;;\n\
+            m3=42;;;;"
+        );
+    }
+
+    #[test]
+    fn test_collection_with_details() {
+        let cr_ok = SimpleCheckResult::ok_with_details("summary ok", "details ok");
+        let cr_notice = SimpleCheckResult::notice("notice");
+        let cr_warn = SimpleCheckResult::warn_with_details("summary warn", "details warn");
+        let cr_crit = SimpleCheckResult::crit_with_details("summary crit", "details crit");
+        assert_eq!(
+            format!(
+                "{}",
+                Collection::from(&mut vec![
+                    cr_ok.into(),
+                    cr_notice.into(),
+                    cr_warn.into(),
+                    cr_crit.into()
+                ])
+            ),
+            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            details ok\n\
+            notice\n\
+            details warn\n\
+            details crit"
+        );
+    }
+
+    #[test]
+    fn test_collection_with_metrics_and_details() {
+        let cr_ok = SimpleCheckResult::ok("summary ok");
+        let cr_notice = SimpleCheckResult::notice("notice");
+        let cr_warn =
+            CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
+        let cr_crit =
+            CheckResult::crit_with_details("summary crit", "details crit", m("mcrit", 37));
+        assert_eq!(
+            format!(
+                "{}",
+                Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit])
+            ),
+            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            notice\n\
+            details warn | mwarn=13;;;;\n\
+            details crit | mcrit=37;;;;"
+        );
+    }
+
+    #[test]
+    fn test_collection_with_heterogeneous_details() {
+        let cr_ok = SimpleCheckResult::ok("summary ok");
+        let cr_notice = SimpleCheckResult::notice("notice");
+        let cr_warn =
+            CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
+        let cr_crit = CheckResult::crit("summary crit", m("mcrit", 37));
+        assert_eq!(
+            format!(
+                "{}",
+                Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit])
+            ),
+            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            notice\n\
+            details warn | mwarn=13;;;;\n\
+            mcrit=37;;;;"
         );
     }
 }

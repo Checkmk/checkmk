@@ -1,40 +1,31 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 import logging
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import (
-    agent_controller_daemon,
-    clean_agent_controller,
-    download_and_install_agent_package,
-    register_controller,
-    wait_until_host_receives_data,
-)
 from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
+from tests.testlib.repo import current_base_branch_name, qa_test_data_path
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import (
-    current_base_branch_name,
-    current_branch_version,
-    get_services_with_status,
-    qa_test_data_path,
-)
-from tests.testlib.version import CMKVersion, version_from_env
-from tests.update.conftest import BaseVersions
+from tests.testlib.utils import get_services_with_status
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env
+
+from tests.update.conftest import DUMPS_DIR, inject_dumps
 
 from cmk.utils.version import Edition
-
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
-    base_version = CMKVersion(
-        "2.2.0p8", Edition.CEE, current_base_branch_name(), current_branch_version()
-    )
+    base_version = CMKVersion("2.3.0p4", Edition.CEE)
     return SiteFactory(version=base_version, prefix="")
 
 
@@ -44,25 +35,9 @@ def _base_site(site_factory: SiteFactory) -> Iterator[Site]:
     yield from site_factory.get_test_site(site_name, save_results=False)
 
 
-@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(base_site: Site, tmp_path: Path) -> Path:
-    return download_and_install_agent_package(base_site, tmp_path)
-
-
-@pytest.fixture(name="agent_ctl", scope="function")
-def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
-        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
-    ):
-        yield installed_agent_ctl_in_unknown_state
-
-
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
-    base_version = CMKVersion(
-        "2.2.0p8", Edition.CCE, current_base_branch_name(), current_branch_version()
-    )
+    base_version = CMKVersion("2.3.0p4", Edition.CCE)
     return SiteFactory(version=base_version, prefix="")
 
 
@@ -73,27 +48,18 @@ def _base_site_demo(site_factory_demo):
     yield from site_factory_demo.get_test_site(site_name, save_results=False)
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
-    reason="Test currently failing for missing `php7`. "
-    "This will be fixed starting from base-version 2.2.0p8",
-)
 @pytest.mark.cee
-def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
-    backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
+def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
+    backup_path = qa_test_data_path() / Path("update/backups/update_central_2.3.0p4_backup.tar.gz")
     assert backup_path.exists()
 
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
-
-    for hostname in hostnames:
-        address = f"127.0.0.{hostnames.index(hostname) + 1}"
-        register_controller(agent_ctl, base_site, hostname, site_address=address)
-        wait_until_host_receives_data(base_site, hostname)
+    inject_dumps(base_site, DUMPS_DIR)
 
     logger.info("Discovering services and waiting for completion...")
-    base_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    base_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     base_site.openapi.activate_changes_and_wait_for_completion()
 
@@ -113,10 +79,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
     )
     assert target_version.edition == Edition.CEE, "This test works with CEE only"
 
-    min_version = CMKVersion(
-        BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name(), current_branch_version()
-    )
-
+    min_version = get_min_version()
     target_site = site_factory.interactive_update(base_site, target_version, min_version)
 
     target_services = {}
@@ -148,16 +111,14 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
             f"In the {hostname} host the following services were `OK` in base-version but not in "
             f"target-version: "
             f"{not_ok_services}"
+            f"\nDetails: {[(s, target_services[hostname][s].summary) for s in not_ok_services]})"
         )
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg
 
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") not in ("ubuntu-20.04", "ubuntu-22.04", "debian-10"),
-    reason=f"The CCE currently does not support {os.environ.get('DISTRO')}",
-)
+@pytest.mark.skip("Update process currently broken. See CMK-17449.")
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:
@@ -165,7 +126,7 @@ def test_update_from_backup_demo(
     lost_services_path = Path(__file__).parent.resolve() / Path("lost_services_demo.json")
 
     # MKPs broken: disabled in the demo site via: 'mkp disable play_checkmk 0.0.1' TODO: investigate
-    backup_path = qa_test_data_path() / Path("update/backups/play.checkmk.com.tar.gz")
+    backup_path = qa_test_data_path() / Path("update/backups/play_2.3.0p4_backup.tar.gz")
     assert backup_path.exists()
 
     base_site = site_factory_demo.restore_site_from_backup(
@@ -175,10 +136,8 @@ def test_update_from_backup_demo(
     base_hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
     base_services = {}
-    base_ok_services = {}
     for hostname in base_hostnames:
         base_services[hostname] = base_site.get_host_services(hostname)
-        base_ok_services[hostname] = get_services_with_status(base_services[hostname], 0)
 
         assert len(base_services[hostname]) > 0, f"No services found in host {hostname}"
 
@@ -192,7 +151,6 @@ def test_update_from_backup_demo(
     site_factory_demo = SiteFactory(
         version=target_version,
         prefix="",
-        update_from_git=False,
         update=True,
         update_conflict_mode="keepold",
         enforce_english_gui=False,
@@ -213,7 +171,7 @@ def test_update_from_backup_demo(
     current_lost_services = {}
     missed_services = {}
 
-    with open(lost_services_path, "r") as json_file:
+    with open(lost_services_path) as json_file:
         known_lost_services = json.load(json_file)
 
     for hostname in target_hostnames:

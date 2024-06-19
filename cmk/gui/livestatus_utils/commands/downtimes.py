@@ -9,7 +9,7 @@ from typing import Literal
 from livestatus import MultiSiteConnection, SiteId
 
 from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
+from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
@@ -35,6 +35,15 @@ RecurMode = Literal[
     "weekday_end",
     "day_of_month",
 ]
+
+
+class DOWNTIME:
+    SCHEDULE_HOST: LivestatusCommand = "SCHEDULE_HOST_DOWNTIME"
+    SCHEDULE_SERVICE: LivestatusCommand = "SCHEDULE_SVC_DOWNTIME"
+    DELETE_HOST: LivestatusCommand = "DEL_HOST_DOWNTIME"
+    DELETE_SERVICE: LivestatusCommand = "DEL_SVC_DOWNTIME"
+    MODIFY_HOST: LivestatusCommand = "MODIFY_HOST_DOWNTIME"
+    MODIFY_SERVICE: LivestatusCommand = "MODIFY_SVC_DOWNTIME"
 
 
 class QueryException(Exception):
@@ -71,7 +80,7 @@ def _del_host_downtime(
 
     """
 
-    return send_command(connection, "DEL_HOST_DOWNTIME", [downtime_id], site_id)
+    return send_command(connection, DOWNTIME.DELETE_HOST, [downtime_id], site_id)
 
 
 def _del_service_downtime(
@@ -104,7 +113,7 @@ def _del_service_downtime(
 
     """
 
-    return send_command(connection, "DEL_SVC_DOWNTIME", [downtime_id], site_id)
+    return send_command(connection, DOWNTIME.DELETE_SERVICE, [downtime_id], site_id)
 
 
 def delete_downtime(
@@ -128,8 +137,40 @@ def delete_downtime(
             _del_host_downtime(connection, downtime["id"], downtime["site"])
 
 
-def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]
-    connection,
+def modify_downtimes(
+    connection: MultiSiteConnection,
+    query: QueryExpression,
+    site_id: SiteId | None,
+    end_time: str | None = None,
+    comment: str | None = None,
+    user_id: UserId = UserId.builtin(),
+) -> None:
+    """Update scheduled downtimes"""
+
+    only_sites = None if site_id is None else [site_id]
+    downtimes = Query(
+        [
+            Downtimes.id,
+            Downtimes.is_service,
+        ],
+        query,
+    ).fetchall(connection, True, only_sites)
+
+    for downtime in downtimes:
+        command = DOWNTIME.MODIFY_SERVICE if downtime["is_service"] else DOWNTIME.MODIFY_HOST
+        _modify_downtime(
+            connection,
+            command,
+            downtime["id"],
+            downtime["site"],
+            end_time="" if end_time is None else end_time,
+            comment=comment if comment is not None else "",
+            user_id=user_id,
+        )
+
+
+def schedule_services_downtimes_with_query(
+    connection: MultiSiteConnection,
     query: QueryExpression,
     start_time: dt.datetime,
     end_time: dt.datetime,
@@ -137,7 +178,7 @@ def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]
     duration: int = 0,
     user_id: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Schedule downtimes for services based upon a query"""
 
     q = Query(
@@ -156,10 +197,11 @@ def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]
         else:
             downtime_comment = comment
 
-        schedule_service_downtime(
-            connection,
+        _schedule_downtime(
+            sites=connection,
+            command=DOWNTIME.SCHEDULE_SERVICE,
             site_id=site_id,
-            host_name=host_name,
+            host_or_group=host_name,
             service_description=service_description,
             start_time=start_time,
             end_time=end_time,
@@ -170,8 +212,8 @@ def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]
         )
 
 
-def schedule_service_downtime(  # type: ignore[no-untyped-def]
-    connection,
+def schedule_service_downtime(
+    connection: MultiSiteConnection,
     site_id: SiteId | None,
     host_name: str,
     service_description: list[str] | str,
@@ -182,7 +224,7 @@ def schedule_service_downtime(  # type: ignore[no-untyped-def]
     duration: int = 0,
     user_id: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Schedule the downtime of a host.
 
     Args:
@@ -193,7 +235,7 @@ def schedule_service_downtime(  # type: ignore[no-untyped-def]
             The host-name for which this downtime is for.
 
         service_description:
-            The service description of the service, whose problems shall be acknowledged.
+            The service name of the service, whose problems shall be acknowledged.
 
         start_time:
             When the downtime shall begin.
@@ -237,9 +279,9 @@ def schedule_service_downtime(  # type: ignore[no-untyped-def]
 
     Examples:
 
-        >>> import pytz
-        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
-        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
+        >>> from zoneinfo import ZoneInfo
+        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
+        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
@@ -248,6 +290,7 @@ def schedule_service_downtime(  # type: ignore[no-untyped-def]
         >>> cmd = "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom"
         >>> with simple_expect() as live, SuperUserContext():
         ...     load_config()
+        ...     _ = live.expect_query("GET services\\nColumns: description\\nFilter: host_name = example.com\\nFilter: description = Memory\\nAnd: 2")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     schedule_service_downtime(live,
         ...             SiteId('NO_SITE'),
@@ -260,30 +303,47 @@ def schedule_service_downtime(  # type: ignore[no-untyped-def]
         ...             comment="Boom")
 
     """
-    if isinstance(service_description, str):
-        service_descriptions = [service_description]
-    else:
-        service_descriptions = service_description
 
-    for _service_description in service_descriptions:
+    with detailed_connection(connection) as conn:
+        service_entries = Query(
+            [Services.description],
+            And(
+                Services.host_name.equals(host_name),
+                Or(
+                    *[
+                        Services.description.equals(desc)
+                        for desc in (
+                            [service_description]
+                            if isinstance(service_description, str)
+                            else service_description
+                        )
+                    ]
+                ),
+            ),
+        ).fetchall(conn)
+
+    if not service_entries:
+        raise MKAuthException(f"Cannot find the requested resource: {service_description}")
+
+    for row in service_entries:
         _schedule_downtime(
-            connection,
-            "SCHEDULE_SVC_DOWNTIME",
-            site_id,
-            host_name,
-            _service_description,
-            start_time,
-            end_time,
-            recur,
-            trigger_id,
-            duration,
-            user_id,
-            comment,
+            sites=connection,
+            command=DOWNTIME.SCHEDULE_SERVICE,
+            site_id=site_id,
+            host_or_group=host_name,
+            service_description=row[Services.description.name],
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            trigger_id=trigger_id,
+            duration=duration,
+            user_id=user_id,
+            comment=comment,
         )
 
 
-def schedule_servicegroup_service_downtime(  # type: ignore[no-untyped-def]
-    connection,
+def schedule_servicegroup_service_downtime(
+    connection: MultiSiteConnection,
     servicegroup_name: str,
     start_time: dt.datetime,
     end_time: dt.datetime,
@@ -293,7 +353,7 @@ def schedule_servicegroup_service_downtime(  # type: ignore[no-untyped-def]
     duration: int = 0,
     user_id: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Schedules downtime for all hosts, which have services in a given service group.
 
     Args:
@@ -352,13 +412,20 @@ def schedule_servicegroup_service_downtime(  # type: ignore[no-untyped-def]
                 tables.Servicegroups.name.equals(servicegroup_name),
             ).iterate(conn)
         )
+
+    if not entries:
+        raise MKAuthException(f"Cannot find services for service group: {servicegroup_name}")
+
+    included_hosts = set()
+
     for entry in entries:
         site = entry["site"]
         for host_name, service_description in entry["members"]:
-            schedule_service_downtime(
-                connection,
-                site,
-                host_name=host_name,
+            _schedule_downtime(
+                sites=connection,
+                command=DOWNTIME.SCHEDULE_SERVICE,
+                site_id=site,
+                host_or_group=host_name,
                 service_description=service_description,
                 start_time=start_time,
                 end_time=end_time,
@@ -369,11 +436,16 @@ def schedule_servicegroup_service_downtime(  # type: ignore[no-untyped-def]
                 comment=comment,
             )
 
-    if include_hosts:
-        host_names = _deduplicate([host for entry in entries for (host, _) in entry["members"]])
-        schedule_host_downtime(
-            connection,
-            host_entry=host_names,
+            if include_hosts:
+                included_hosts.add((site, host_name))
+
+    for site, host_name in included_hosts:
+        _schedule_downtime(
+            sites=connection,
+            command=DOWNTIME.SCHEDULE_HOST,
+            site_id=site,
+            host_or_group=host_name,
+            service_description=None,
             start_time=start_time,
             end_time=end_time,
             recur=recur,
@@ -384,8 +456,8 @@ def schedule_servicegroup_service_downtime(  # type: ignore[no-untyped-def]
         )
 
 
-def schedule_hostgroup_host_downtime(  # type: ignore[no-untyped-def]
-    connection,
+def schedule_hostgroup_host_downtime(
+    connection: MultiSiteConnection,
     hostgroup_name: str,
     start_time: dt.datetime,
     end_time: dt.datetime,
@@ -395,7 +467,7 @@ def schedule_hostgroup_host_downtime(  # type: ignore[no-untyped-def]
     duration: int = 0,
     user_id: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Schedules downtime for all hosts in a given host group.
 
     Args:
@@ -449,63 +521,104 @@ def schedule_hostgroup_host_downtime(  # type: ignore[no-untyped-def]
       * https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=123
 
     """
-    result = Query(
-        [tables.Hostgroups.members], tables.Hostgroups.name.equals(hostgroup_name)
-    ).iterate(connection)
 
-    hosts = [host for entry in result for host in entry["members"]]
-    schedule_host_downtime(
-        connection,
-        host_entry=hosts,
-        start_time=start_time,
-        end_time=end_time,
-        include_all_services=include_all_services,
-        recur=recur,
-        trigger_id=trigger_id,
-        duration=duration,
-        user_id=user_id,
-        comment=comment,
-    )
+    with detailed_connection(connection) as conn:
+        result = list(
+            Query(
+                [tables.Hostgroups.members], tables.Hostgroups.name.equals(hostgroup_name)
+            ).fetchall(conn)
+        )
+
+    if not result:
+        raise MKAuthException(f"Cannot find hosts for host group: {hostgroup_name}")
+
+    for entry in result:
+        site = entry["site"]
+        for host in entry["members"]:
+            _schedule_downtime(
+                sites=connection,
+                command=DOWNTIME.SCHEDULE_HOST,
+                site_id=site,
+                host_or_group=host,
+                service_description=None,
+                start_time=start_time,
+                end_time=end_time,
+                recur=recur,
+                trigger_id=trigger_id,
+                duration=duration,
+                user_id=user_id,
+                comment=comment,
+            )
+
+    if include_all_services:
+        _schedule_service_downtime_for_hosts_services(
+            connection=connection,
+            host_entries=[host for entry in result for host in entry["members"]],
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            trigger_id=trigger_id,
+            duration=duration,
+            user_id=user_id,
+            comment=comment,
+        )
 
 
-def schedule_hosts_downtimes_with_query(  # type: ignore[no-untyped-def]
-    connection,
+def schedule_hosts_downtimes_with_query(
+    connection: MultiSiteConnection,
     query: QueryExpression,
     start_time: dt.datetime,
     end_time: dt.datetime,
-    include_all_services=False,
+    include_all_services: bool = False,
     recur: RecurMode = "fixed",
     duration: int = 0,
     user_id: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Schedule a downtimes for hosts based upon a query"""
 
-    q = Query([Hosts.name]).filter(query)
+    with detailed_connection(connection) as conn:
+        host_entries = [
+            (entry["site"], entry["name"])
+            for entry in Query([Hosts.name]).filter(query).fetchall(conn)
+        ]
 
-    hosts = [row["name"] for row in q.iterate(connection)]
-
-    if not hosts:
+    if not host_entries:
         raise QueryException
 
     if not comment:
-        comment = f"Downtime for hosts {', '.join([entry[1] for entry in hosts])}"
+        comment = f"Downtime for hosts {', '.join([entry[1] for entry in host_entries])}"
 
-    schedule_host_downtime(
-        connection,
-        host_entry=hosts,
-        start_time=start_time,
-        end_time=end_time,
-        include_all_services=include_all_services,
-        recur=recur,
-        duration=duration,
-        user_id=user_id,
-        comment=comment,
-    )
+    for site, host_name in host_entries:
+        _schedule_downtime(
+            sites=connection,
+            command=DOWNTIME.SCHEDULE_HOST,
+            site_id=site,
+            host_or_group=host_name,
+            service_description=None,
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            duration=duration,
+            user_id=user_id,
+            comment=comment,
+        )
+
+    if include_all_services:
+        _schedule_service_downtime_for_hosts_services(
+            connection=connection,
+            host_entries=[entry[1] for entry in host_entries],
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            duration=duration,
+            user_id=user_id,
+            comment=comment,
+        )
 
 
-def schedule_host_downtime(  # type: ignore[no-untyped-def]
-    connection,
+def schedule_host_downtime(
+    connection: MultiSiteConnection,
     host_entry: str | list[str],
     start_time: dt.datetime,
     end_time: dt.datetime,
@@ -515,7 +628,7 @@ def schedule_host_downtime(  # type: ignore[no-untyped-def]
     duration: int = 0,
     user_id: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Schedule the downtime of a host.
 
     Notes:
@@ -573,9 +686,9 @@ def schedule_host_downtime(  # type: ignore[no-untyped-def]
       * https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=122
 
     Examples:
-        >>> import pytz
-        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
-        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
+        >>> from zoneinfo import ZoneInfo
+        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
+        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
@@ -610,76 +723,75 @@ def schedule_host_downtime(  # type: ignore[no-untyped-def]
             ).fetchall(conn)
         ]
 
-    for _site, _host_name in host_entries:
+    if not host_entries:
+        raise MKAuthException(f"Cannot find the requested resource: {host_entry}")
+
+    for site, host_name in host_entries:
         _schedule_downtime(
-            connection,
-            "SCHEDULE_HOST_DOWNTIME",
-            _site,
-            _host_name,
-            None,
-            start_time,
-            end_time,
-            recur,
-            trigger_id,
-            duration,
-            user_id,
-            comment,
+            sites=connection,
+            command=DOWNTIME.SCHEDULE_HOST,
+            site_id=site,
+            host_or_group=host_name,
+            service_description=None,
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            trigger_id=trigger_id,
+            duration=duration,
+            user_id=user_id,
+            comment=comment,
         )
 
     if include_all_services:
-        with detailed_connection(connection) as conn:
-            services = Query(
-                [tables.Services.host_name, tables.Services.description],
-                Or(
-                    *[
-                        tables.Services.host_name.equals(_host_name)
-                        for _, _host_name in host_entries
-                    ]
-                ),
-            ).fetch_values(conn)
-
-        for _site, _host_name, service_description in services:
-            schedule_service_downtime(
-                connection,
-                _site,
-                host_name=_host_name,
-                service_description=service_description,
-                start_time=start_time,
-                end_time=end_time,
-                recur=recur,
-                trigger_id=trigger_id,
-                duration=duration,
-                user_id=user_id,
-                comment=comment,
-            )
+        _schedule_service_downtime_for_hosts_services(
+            connection=connection,
+            host_entries=[_host_name for _site, _host_name in host_entries],
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            trigger_id=trigger_id,
+            duration=duration,
+            user_id=user_id,
+            comment=comment,
+        )
 
 
-def assert_object_is_visible_to_user(
-    live: MultiSiteConnection, host: str, service: str | None, user: UserId
+def _schedule_service_downtime_for_hosts_services(
+    connection: MultiSiteConnection,
+    host_entries: list[str],
+    start_time: dt.datetime,
+    end_time: dt.datetime,
+    recur: RecurMode = "fixed",
+    trigger_id: int = 0,
+    duration: int = 0,
+    user_id: UserId = UserId.builtin(),
+    comment: str = "",
 ) -> None:
-    if service is None:
-        query = Query.from_string(
-            "\n".join(
-                [
-                    "GET hosts",
-                    "Columns: host_name",
-                    f"Filter: host_name = {host}",
-                    f"AuthUser: {user}",
-                ]
-            )
+    with detailed_connection(connection) as conn:
+        services = Query(
+            [tables.Services.host_name, tables.Services.description],
+            Or(*[tables.Services.host_name.equals(_host_name) for _host_name in host_entries]),
+        ).fetch_values(conn)
+
+    for site, host_name, service_description in services:
+        _schedule_downtime(
+            sites=connection,
+            command=DOWNTIME.SCHEDULE_SERVICE,
+            site_id=site,
+            host_or_group=host_name,
+            service_description=service_description,
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            trigger_id=trigger_id,
+            duration=duration,
+            user_id=user_id,
+            comment=comment,
         )
-        fail_msg = f"Host {host}"
-    else:
-        query = Query.from_string(
-            f"GET services\nColumns: service_description\nFilter: service_description = {service}\nFilter: host_name = {host}\nAuthUser: {user}"
-        )
-        fail_msg = f"Service '{service}' of {host}"
-    if not len(query.fetch_values(live)) != 0:
-        raise MKAuthException(f"Cannot find the requested resource: {fail_msg}")
 
 
-def _schedule_downtime(  # type: ignore[no-untyped-def]
-    sites,
+def _schedule_downtime(
+    sites: MultiSiteConnection,
     command: LivestatusCommand,
     site_id: SiteId | None,
     host_or_group: str,
@@ -691,7 +803,7 @@ def _schedule_downtime(  # type: ignore[no-untyped-def]
     duration: int = 0,
     user_id: UserId = UserId.builtin(),
     comment: str = "",
-):
+) -> None:
     """Unified low level function
 
     See:
@@ -700,16 +812,14 @@ def _schedule_downtime(  # type: ignore[no-untyped-def]
     """
     # TODO: provide reference documents for recurring magic numbers
     _user.need_permission("action.downtimes")
-    if _user.id is not None:
-        assert_object_is_visible_to_user(sites, host_or_group, service_description, _user.id)
 
     recur_mode = _recur_mode(recur, duration)
 
-    if command == "SCHEDULE_HOST_DOWNTIME":
+    if command == DOWNTIME.SCHEDULE_HOST:
         params = [host_or_group]
-    elif command == "SCHEDULE_SVC_DOWNTIME":
+    elif command == DOWNTIME.SCHEDULE_SERVICE:
         if not service_description:
-            raise ValueError("Service description necessary.")
+            raise ValueError("Service name necessary.")
         params = [host_or_group, service_description]
     else:
         raise ValueError(f"Unsupported command: {command}")
@@ -825,3 +935,31 @@ def _deduplicate(seq):
         result.append(entry)
 
     return result
+
+
+def _modify_downtime(
+    sites: MultiSiteConnection,
+    command: LivestatusCommand,
+    downtime_id: int,
+    site_id: SiteId | None,
+    end_time: str = "",
+    comment: str = "",
+    user_id: UserId = UserId.builtin(),
+) -> None:
+    _user.need_permission("action.downtimes")
+
+    return send_command(
+        sites,
+        command,
+        [
+            downtime_id,
+            "",  # start_time (not used),
+            end_time,  # end_time,
+            "",  # recur_mode (not used),
+            "",  # trigger_id (not used),
+            "",  # duration (not used),
+            user_id,
+            comment.replace("\n", ""),
+        ],
+        site_id,
+    )

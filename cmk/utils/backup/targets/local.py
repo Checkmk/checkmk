@@ -8,8 +8,7 @@ import os
 import shutil
 from collections.abc import Iterator
 from pathlib import Path
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
 from cmk.utils.backup.utils import (

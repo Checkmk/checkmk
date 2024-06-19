@@ -5,14 +5,9 @@
 
 from pathlib import Path
 
-from cmk.utils.prediction import (
-    DataStat,
-    PredictionData,
-    PredictionInfo,
-    PredictionParameters,
-    Timegroup,
-)
+from cmk.utils.prediction import DataStat, PredictionData
 
+from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.update_config.plugins.actions.prediction_files_cleanup import RemoveUnreadablePredictions
 
 
@@ -22,11 +17,10 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
 
     info_file.write_text(
         PredictionInfo(
-            name=Timegroup("everyhour"),
-            time=123456789,
-            range=(23, 42),
-            dsname="kuchen_count",
-            params=PredictionParameters(horizon=3, period="wday"),
+            valid_interval=(23, 42),
+            metric="kuchen_count",
+            direction="upper",
+            params=PredictionParameters(horizon=3, period="wday", levels=("absolute", (1, 2))),
         ).model_dump_json(),
     )
     data_file.write_text(
@@ -35,7 +29,7 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
                 DataStat(average=1.0, max_=2.0, min_=3.0, stdev=1.0),
                 DataStat(average=1.0, max_=2.0, min_=4.0, stdev=5.0),
             ],
-            data_twindow=[1, 10],
+            start=1,
             step=2,
         ).model_dump_json(),
     )
@@ -57,7 +51,7 @@ def test_corrupt_files_are_removed(tmp_path: Path) -> None:
                 DataStat(average=1.0, max_=2.0, min_=3.0, stdev=1.0),
                 DataStat(average=1.0, max_=2.0, min_=4.0, stdev=5.0),
             ],
-            data_twindow=[1, 10],
+            start=1,
             step=2,
         ).model_dump_json(),
     )

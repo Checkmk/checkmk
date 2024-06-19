@@ -9,7 +9,7 @@ from collections.abc import Collection
 import cmk.utils.paths
 from cmk.utils.crypto.password import Password
 
-import cmk.gui.backup.handler as handler
+from cmk.gui.backup import handler
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

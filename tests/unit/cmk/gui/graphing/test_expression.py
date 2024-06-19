@@ -5,6 +5,7 @@
 
 import pytest
 
+from cmk.gui.config import active_config
 from cmk.gui.graphing._expression import (
     ConditionalMetricExpression,
     Constant,
@@ -70,7 +71,9 @@ def test_evaluate_cpu_utilization(
     # Assemble
     assert metric_info, "Global variable is empty/has not been initialized."
     assert graph_info, "Global variable is empty/has not been initialized."
-    perf_data_parsed, check_command = parse_perf_data(perf_data, check_command)
+    perf_data_parsed, check_command = parse_perf_data(
+        perf_data, check_command, config=active_config
+    )
     translated_metrics = translate_metrics(perf_data_parsed, check_command)
     assert (
         parse_expression(expression, translated_metrics).evaluate(translated_metrics).value
@@ -82,7 +85,7 @@ def test_evaluate_cpu_utilization(
     "perf_data, check_command, raw_expression, expected_metric_expression, value, unit_name, color",
     [
         pytest.param(
-            [PerfDataTuple(n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
+            [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
             "check_mk-openvpn_clients",
             "if_in_octets,8,*@bits/s",
             Product(
@@ -91,11 +94,11 @@ def test_evaluate_cpu_utilization(
             ),
             16.0,
             "bits/s",
-            "#00e060",
-            id="warn, crit, min, max",
+            "#37fa37",
+            id="already_migrated-warn, crit, min, max",
         ),
         pytest.param(
-            [PerfDataTuple(n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
+            [PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
             "check_mk-df",
             "fs_size,fs_used,-#e3fff9",
             Difference(
@@ -108,12 +111,12 @@ def test_evaluate_cpu_utilization(
             "#e3fff9",
             id="None None None None",
         ),
-        # This is a terrible metric from Nagios plugins. Test is for survival instead of
+        # This is a terrible metric from Nagios plug-ins. Test is for survival instead of
         # correctness The unit "percent" is lost on the way. Fixing this would imply also
         # figuring out how to represent graphs for active-icmp check when host has multiple
         # addresses.
         pytest.param(
-            parse_perf_data("127.0.0.1pl=5%;80;100;;")[0],
+            parse_perf_data("127.0.0.1pl=5%;80;100;;", config=active_config)[0],
             "check_mk_active-icmp",
             "127.0.0.1pl",
             Metric(name="127.0.0.1pl"),
@@ -125,7 +128,7 @@ def test_evaluate_cpu_utilization(
         # Here the user has a metrics that represent subnets, but the values look like floats
         # Test that evaluation recognizes the metric from the perf data
         pytest.param(
-            parse_perf_data("10.172=6")[0],
+            parse_perf_data("10.172=6", config=active_config)[0],
             "check_mk-local",
             "10.172",
             Metric(name="10.172"),
@@ -195,7 +198,7 @@ def test_evaluate_cpu_utilization(
             id="constant color",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name(%)",
             Percent(
@@ -208,7 +211,7 @@ def test_evaluate_cpu_utilization(
             id="percentage",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn",
             WarningOf(metric=Metric(name="metric_name")),
@@ -218,7 +221,7 @@ def test_evaluate_cpu_utilization(
             id="warn",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn(%)",
             Percent(
@@ -231,7 +234,7 @@ def test_evaluate_cpu_utilization(
             id="warn percentage",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit",
             CriticalOf(metric=Metric(name="metric_name")),
@@ -241,7 +244,7 @@ def test_evaluate_cpu_utilization(
             id="crit",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit(%)",
             Percent(
@@ -254,7 +257,7 @@ def test_evaluate_cpu_utilization(
             id="crit percentage",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min",
             MinimumOf(metric=Metric(name="metric_name")),
@@ -264,7 +267,7 @@ def test_evaluate_cpu_utilization(
             id="min",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min(%)",
             Percent(
@@ -277,7 +280,7 @@ def test_evaluate_cpu_utilization(
             id="min percentage",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max",
             MaximumOf(metric=Metric(name="metric_name")),
@@ -287,7 +290,7 @@ def test_evaluate_cpu_utilization(
             id="max",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max(%)",
             Percent(
@@ -300,7 +303,7 @@ def test_evaluate_cpu_utilization(
             id="max percentage",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.max",
             Metric(name="metric_name", consolidation_func_name="max"),
@@ -310,7 +313,7 @@ def test_evaluate_cpu_utilization(
             id="consolidation func name max",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.min",
             Metric(name="metric_name", consolidation_func_name="min"),
@@ -320,7 +323,7 @@ def test_evaluate_cpu_utilization(
             id="consolidation func name min",
         ),
         pytest.param(
-            [PerfDataTuple(n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.average",
             Metric(name="metric_name", consolidation_func_name="average"),
@@ -352,7 +355,7 @@ def test_parse_and_evaluate(
     "perf_data, check_command, raw_expression, expected_conditional_metric_declaration, value",
     [
         pytest.param(
-            [PerfDataTuple(n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name,100,>",
             GreaterThan(
@@ -363,7 +366,7 @@ def test_parse_and_evaluate(
             id="conditional greater than",
         ),
         pytest.param(
-            [PerfDataTuple(n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name,100,>=",
             GreaterEqualThan(
@@ -374,7 +377,7 @@ def test_parse_and_evaluate(
             id="conditional greater equal than",
         ),
         pytest.param(
-            [PerfDataTuple(n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name,100,<",
             LessThan(
@@ -385,7 +388,7 @@ def test_parse_and_evaluate(
             id="conditional less than",
         ),
         pytest.param(
-            [PerfDataTuple(n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
+            [PerfDataTuple(n, n, 100, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name,100,<=",
             LessEqualThan(
@@ -397,9 +400,9 @@ def test_parse_and_evaluate(
         ),
         pytest.param(
             [
-                PerfDataTuple("used", 50, "", 20, 30, 0, 50),
-                PerfDataTuple("uncommitted", 50, "", 20, 30, 0, 50),
-                PerfDataTuple("size", 100, "", 20, 30, 0, 100),
+                PerfDataTuple("used", "used", 50, "", 20, 30, 0, 50),
+                PerfDataTuple("uncommitted", "uncommitted", 50, "", 20, 30, 0, 50),
+                PerfDataTuple("size", "size", 100, "", 20, 30, 0, 100),
             ],
             "check_mk-foo",
             "used,uncommitted,+,size,>",
@@ -412,8 +415,10 @@ def test_parse_and_evaluate(
         ),
         pytest.param(
             [
-                PerfDataTuple("delivered_notifications", 0, "", 0, 0, 0, 0),
-                PerfDataTuple("failed_notifications", 0, "", 0, 0, 0, 0),
+                PerfDataTuple(
+                    "delivered_notifications", "delivered_notifications", 0, "", 0, 0, 0, 0
+                ),
+                PerfDataTuple("failed_notifications", "failed_notifications", 0, "", 0, 0, 0, 0),
             ],
             "check_mk-foo",
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
@@ -441,8 +446,10 @@ def test_parse_and_evaluate(
         ),
         pytest.param(
             [
-                PerfDataTuple("delivered_notifications", 1, "", 0, 0, 0, 0),
-                PerfDataTuple("failed_notifications", 0, "", 0, 0, 0, 0),
+                PerfDataTuple(
+                    "delivered_notifications", "delivered_notifications", 1, "", 0, 0, 0, 0
+                ),
+                PerfDataTuple("failed_notifications", "failed_notifications", 0, "", 0, 0, 0, 0),
             ],
             "check_mk-foo",
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
@@ -470,8 +477,10 @@ def test_parse_and_evaluate(
         ),
         pytest.param(
             [
-                PerfDataTuple("delivered_notifications", 0, "", 0, 0, 0, 0),
-                PerfDataTuple("failed_notifications", 1, "", 0, 0, 0, 0),
+                PerfDataTuple(
+                    "delivered_notifications", "delivered_notifications", 0, "", 0, 0, 0, 0
+                ),
+                PerfDataTuple("failed_notifications", "failed_notifications", 1, "", 0, 0, 0, 0),
             ],
             "check_mk-foo",
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",

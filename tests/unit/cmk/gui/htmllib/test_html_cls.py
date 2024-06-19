@@ -7,7 +7,7 @@ import traceback
 
 import pytest
 
-from tests.testlib import compare_html
+from tests.unit.cmk.gui.compare_html import compare_html
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -21,13 +21,13 @@ from cmk.gui.utils.user_errors import user_errors
 @pytest.mark.usefixtures("request_context")
 def test_render_help_empty() -> None:
     assert html.have_help is False
-    assert html.render_help(None) == HTML("")
+    assert html.render_help(None) == HTML.empty()
     assert isinstance(html.render_help(None), HTML)
     assert html.have_help is False
 
-    assert html.render_help("") == HTML("")
+    assert html.render_help("") == HTML.empty()
     assert isinstance(html.render_help(""), HTML)
-    assert html.render_help("    ") == HTML("")
+    assert html.render_help("    ") == HTML.empty()
     assert isinstance(html.render_help("    "), HTML)
 
 
@@ -49,12 +49,12 @@ def test_html_form_context():
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_html() -> None:
     assert html.have_help is False
     assert compare_html(
-        html.render_help(HTML("<abc>")),
-        HTML(
+        html.render_help(HTML.without_escaping("<abc>")),
+        HTML.without_escaping(
             '<div style="display:none;" class="help"><div class="info_icon"><img '
             'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
             'class="help_text"><abc></div></div>'
@@ -63,11 +63,11 @@ def test_render_help_html() -> None:
     assert html.have_help is True
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_text() -> None:
     assert compare_html(
         html.render_help("äbc"),
-        HTML(
+        HTML.without_escaping(
             '<div style="display:none;" class="help"><div class="info_icon"><img '
             'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
             'class="help_text">äbc</div></div>'
@@ -75,13 +75,13 @@ def test_render_help_text() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
     assert compare_html(
         html.render_help("äbc"),
-        HTML(
+        HTML.without_escaping(
             '<div style="display:flex;" class="help"><div class="info_icon"><img '
             'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
             'class="help_text">äbc</div></div>'
@@ -89,12 +89,12 @@ def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link() -> None:
     assert user.language == "en"
     assert compare_html(
         html.render_help("[welcome|Welcome]"),
-        HTML(
+        HTML.without_escaping(
             '<div style="display:none;" class="help"><div class="info_icon"><img '
             'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
             'class="help_text"><a href="https://docs.checkmk.com/master/en/welcome.html" '
@@ -103,13 +103,13 @@ def test_add_manual_link() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "language", lambda: "de")
         assert compare_html(
             html.render_help("[welcome|Welcome]"),
-            HTML(
+            HTML.without_escaping(
                 '<div style="display:none;" class="help"><div class="info_icon"><img '
                 'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
                 'class="help_text"><a href="https://docs.checkmk.com/master/de/welcome.html" '
@@ -118,13 +118,13 @@ def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link_anchor(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "language", lambda: "de")
         assert compare_html(
             html.render_help("[graphing#rrds|RRDs]"),
-            HTML(
+            HTML.without_escaping(
                 '<div style="display:none;" class="help"><div class="info_icon"><img '
                 'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
                 'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
@@ -246,7 +246,7 @@ def test_text_input() -> None:
         )
 
     with output_funnel.plugged():
-        html.text_input("blabla", placeholder="placido", data_world="welt", data_max_labels=42)
+        html.text_input("blabla", placeholder="placido", data_attrs={"data-foo": "42"})
         written_text = "".join(output_funnel.drain())
         assert compare_html(
             written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />'

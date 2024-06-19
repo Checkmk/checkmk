@@ -18,19 +18,19 @@
 #include "livestatus/Table.h"
 
 class ColumnOffsets;
-template <class T>
+template <typename T>
 class DoubleColumn;
 class ICore;
 class Query;
-template <class T>
+template <typename T>
 class StringColumn;
-template <class T>
+template <typename T>
 class TimeColumn;
 class User;
 
 class ECRow {
 public:
-    ECRow(ICore *mc, const std::vector<std::string> &headers,
+    ECRow(const ICore *mc, const std::vector<std::string> &headers,
           const std::vector<std::string> &columns);
 
     static std::unique_ptr<StringColumn<ECRow>> makeStringColumn(
@@ -65,9 +65,8 @@ private:
 
 class TableEventConsole : public Table {
 public:
-    explicit TableEventConsole(ICore *mc);
-
-    void answerQuery(Query &query, const User &user) override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
 };
 
 #endif  // TableEventConsole_h

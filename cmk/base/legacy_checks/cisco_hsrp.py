@@ -52,15 +52,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    exists,
-    OIDEnd,
-    SNMPTree,
-)
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, contains, exists, OIDEnd, SNMPTree, StringTable
 
 hsrp_states = {1: "initial", 2: "learn", 3: "listen", 4: "speak", 5: "standby", 6: "active"}
 

@@ -8,23 +8,22 @@ import json
 import logging
 import os
 import subprocess
-from collections.abc import Generator, Iterator
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+import yaml
 
-from tests.testlib.agent import (
-    agent_controller_daemon,
-    clean_agent_controller,
-    download_and_install_agent_package,
-)
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version
-from tests.testlib.version import CMKVersion, get_min_version, version_gte
+from tests.testlib.utils import edition_from_env, parse_raw_edition, restart_httpd, run
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.utils.version import Edition
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
+DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
+RULES_DIR = repo_path() / "tests" / "update" / "rules"
 
 
 def pytest_addoption(parser):
@@ -46,31 +45,56 @@ def pytest_addoption(parser):
         default=False,
         help="Store list of lost services in a json reference.",
     )
+    parser.addoption(
+        "--disable-rules-injection",
+        action="store_true",
+        default=False,
+        help="Disable rules' injection in the test-site.",
+    )
+    parser.addoption(
+        "--target-edition",
+        action="store",
+        default=None,
+        help="Edition for the target test-site; Options: CRE, CEE, CCE, CSE, CME.",
+    )
 
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "cee: marks tests using an enterprise-edition site")
     config.addinivalue_line("markers", "cce: marks tests using a cloud-edition site")
+    config.addinivalue_line("markers", "cse: marks tests using a saas-edition site")
 
 
 @dataclasses.dataclass
 class BaseVersions:
     """Get all base versions used for the test."""
 
-    MIN_VERSION = get_min_version()
-
-    with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
+    with open(Path(__file__).parent.resolve() / "base_versions.json") as f:
         BASE_VERSIONS_STR = json.load(f)
 
-    BASE_VERSIONS = [
-        CMKVersion(
-            base_version_str,
-            Edition.CEE,
-            current_base_branch_name(),
-            current_branch_version(),
-        )
-        for base_version_str in BASE_VERSIONS_STR
-    ]
+    if version_from_env().is_saas_edition():
+        BASE_VERSIONS = [
+            CMKVersion(CMKVersion.DAILY, edition_from_env(Edition.CSE), "2.3.0", "2.3.0")
+        ]
+    else:
+        BASE_VERSIONS = [
+            CMKVersion(base_version_str, edition_from_env(Edition.CEE))
+            for base_version_str in BASE_VERSIONS_STR
+            if not version_from_env().is_saas_edition()
+        ]
+
+
+@dataclasses.dataclass
+class InteractiveModeDistros:
+    @staticmethod
+    def get_supported_distros():
+        with open(Path(__file__).parent.resolve() / "../../editions.yml") as stream:
+            yaml_file = yaml.safe_load(stream)
+
+        return yaml_file["daily_extended"]
+
+    DISTROS = ["ubuntu-22.04", "almalinux-9"]
+    assert set(DISTROS).issubset(set(get_supported_distros()))
 
 
 @dataclasses.dataclass
@@ -86,11 +110,12 @@ class TestParams:
         for base_version, interactive_mode in itertools.product(
             BaseVersions.BASE_VERSIONS, INTERACTIVE_MODE
         )
-        if interactive_mode == (base_version.version != BaseVersions.MIN_VERSION)
+        # interactive mode enabled for some specific distros
+        if interactive_mode == (os.environ.get("DISTRO") in InteractiveModeDistros.DISTROS)
     ]
 
 
-def get_omd_status(site: Site) -> dict[str, str]:
+def _get_omd_status(site: Site) -> dict[str, str]:
     """Get the omd status for all services of the given site."""
     cmd = ["/usr/bin/omd", "status", "--bare"]
     status = {}
@@ -104,8 +129,8 @@ def get_omd_status(site: Site) -> dict[str, str]:
 
 def get_site_status(site: Site) -> str | None:
     """Get the overall status of the given site."""
-    service_status = get_omd_status(site)
-    logger.debug("Status codes: %s", service_status)
+    service_status = _get_omd_status(site)
+    LOGGER.debug("Status codes: %s", service_status)
     if len(service_status) > 0:
         status = list(service_status.values())[-1]
         if status == "partially running":
@@ -114,73 +139,34 @@ def get_site_status(site: Site) -> str | None:
             value == status for value in service_status.values()
         ):
             return status
-        logger.error("Invalid service status: %s", service_status)
+        LOGGER.error("Invalid service status: %s", service_status)
     return None
 
 
-def update_config(site: Site) -> int:
-    """Run cmk-update-config and check the result.
-
-    If merging the config worked fine, return 0.
-    If merging the config was not possible, use installation defaults and return 1.
-    If any other error occurred, return 2.
-    """
-    for rc, conflict_mode in enumerate(("abort", "install")):
-        cmd = [f"{site.root}/bin/cmk-update-config", "-v", f"--conflict={conflict_mode}"]
-        process = site.execute(cmd, stdout=subprocess.PIPE)
-        stdout, _ = process.communicate()
-        rc = process.returncode
-        if rc == 0:
-            logger.debug(stdout)
-            return rc
-        logger.error(stdout)
-    return 2
-
-
-def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = None) -> Site:
-    """Install or update the test site with the given version.
-
-    An update installation is done automatically when an optional base_site is given.
-    By default, both installing and updating is done directly via spawn_expect_process()."""
-    update = base_site is not None and base_site.exists()
-    update_conflict_mode = "keepold"
-    min_version = CMKVersion(
-        BaseVersions.MIN_VERSION,
-        Edition.CEE,
-        current_base_branch_name(),
-        current_branch_version(),
-    )
-    sf = SiteFactory(
-        version=CMKVersion(
-            version.version,
-            version.edition,
-            current_base_branch_name(),
-            current_branch_version(),
-        ),
+def _get_site_factory(version: CMKVersion) -> SiteFactory:
+    return SiteFactory(
+        version=CMKVersion(version.version, version.edition),
         prefix="update_",
-        update_from_git=False,
-        update=update,
-        update_conflict_mode=update_conflict_mode,
         enforce_english_gui=False,
     )
-    site = sf.get_existing_site("central")
 
-    logger.info("Site exists: %s", site.exists())
-    if site.exists() and not update:
-        logger.info("Dropping existing site ...")
+
+def _create_site(base_version: CMKVersion, interactive: bool) -> Site:
+    site_name = "central"
+    site_factory = _get_site_factory(base_version)
+    site = site_factory.get_existing_site(site_name)
+    LOGGER.info("Site exists: %s", site.exists())
+    if site.exists():
+        LOGGER.info("Dropping existing site ...")
         site.rm()
     elif site.is_running():
-        logger.info("Stopping running site before update ...")
+        LOGGER.info("Stopping running site before update ...")
         site.stop()
         assert get_site_status(site) == "stopped"
-    assert site.exists() == update, (
-        "Trying to update non-existing site!" if update else "Trying to install existing site!"
-    )
-    logger.info("Updating existing site" if update else "Creating new site")
+    assert not site.exists(), "Trying to install existing site!"
+    LOGGER.info("Creating new site")
 
     if interactive:
-        logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
-
         if not os.getenv("CI", "").strip().lower() == "true":
             print(
                 "\033[91m"
@@ -190,77 +176,148 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
                 "#######################################################################"
                 "\033[0m"
             )
-
-        if update:
-            sf.interactive_update(
-                base_site,  # type: ignore
-                target_version=version,
-                min_version=min_version,
-            )
-        else:  # interactive site creation
-            site = sf.interactive_create(site.id, logfile_path)
-
+        try:
+            site = site_factory.interactive_create(site.id, timeout=60)
+            restart_httpd()
+        except Exception as e:
+            if f"Version {base_version.version} could not be installed" in str(e):
+                pytest.skip(
+                    f"Base-version {base_version.version} not available in "
+                    f'{os.environ.get("DISTRO")}'
+                )
+            else:
+                raise
     else:
-        if update:
-            # non-interactive update as site-user
-            sf.update_as_site_user(site, target_version=version, min_version=min_version)
-
-        else:
-            # use SiteFactory for non-interactive site creation
-            site = sf.get_site("central")
+        try:
+            site = site_factory.get_site(site_name, auto_restart_httpd=True)
+        except Exception as e:
+            if f"Version {base_version.version} could not be installed" in str(e):
+                pytest.skip(
+                    f"Base-version {base_version.version} not available in "
+                    f'{os.environ.get("DISTRO")}'
+                )
+            else:
+                raise
 
     return site
 
 
-def version_supported(version: str) -> bool:
-    """Check if the given version is supported for updating."""
-    return version_gte(version, BaseVersions.MIN_VERSION)
+def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) -> Site:
+    site_factory = _get_site_factory(target_version)
+    min_version = get_min_version(base_site.version.edition)
+    if interactive:
+        target_site = site_factory.interactive_update(
+            base_site,
+            target_version=target_version,
+            min_version=min_version,
+            timeout=60,
+        )
+    else:
+        target_site = site_factory.update_as_site_user(
+            base_site, target_version=target_version, min_version=min_version
+        )
+
+    return target_site
 
 
 @pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")
 def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     """Install the test site with the base version."""
     base_version, interactive_mode = request.param
+
+    target_edition_raw = request.config.getoption(name="--target-edition")
+    target_edition = (
+        parse_raw_edition(target_edition_raw)
+        if target_edition_raw
+        else edition_from_env(Edition.CEE)
+    )
+    LOGGER.info("Base edition: %s", base_version.edition.short)
+    LOGGER.info("Target edition: %s", target_edition.short)
+
     if (
         request.config.getoption(name="--latest-base-version")
         and base_version.version != BaseVersions.BASE_VERSIONS[-1].version
     ):
         pytest.skip("Only latest base-version selected")
 
-    if os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5") and not version_gte(
-        base_version.version, "2.2.0p8"
-    ):
-        pytest.skip(
-            "Checkmk installation failing for missing `php7`. This is fixed starting from "
-            "base-version 2.2.0p8"
-        )
-
-    disable_interactive_mode = (
-        request.config.getoption(name="--disable-interactive-mode") or not interactive_mode
+    interactive_mode = interactive_mode and not request.config.getoption(
+        name="--disable-interactive-mode"
     )
-    logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
-    test_site = _get_site(base_version, interactive=not disable_interactive_mode)
-    yield test_site, disable_interactive_mode
-    logger.info("Removing test-site...")
+    LOGGER.info("Setting up test-site (interactive-mode=%s) ...", interactive_mode)
+    test_site = _create_site(base_version, interactive=interactive_mode)
+
+    disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
+    if not version_from_env().is_saas_edition():
+        # 'datasource_programs' rule is not supported in the SaaS edition
+        inject_dumps(test_site, DUMPS_DIR)
+        if not disable_rules_injection:
+            inject_rules(test_site)
+
+    yield test_site, target_edition, interactive_mode
+    LOGGER.info("Removing test-site...")
     test_site.rm()
 
 
-def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) -> Site:
-    """Update the test site to the target version."""
-    logger.info("Updating site (interactive-mode=%s) ...", interactive_mode)
-    return _get_site(target_version, base_site=site, interactive=interactive_mode)
+def inject_dumps(site: Site, dumps_dir: Path) -> None:
+    _dumps_up_to_date(dumps_dir, get_min_version())
+
+    # create dump folder in the test site
+    site_dumps_path = site.path("var/check_mk/dumps")
+    LOGGER.info('Creating folder "%s"...', site_dumps_path)
+    rc = site.execute(["mkdir", "-p", site_dumps_path]).wait()
+    assert rc == 0
+
+    LOGGER.info("Injecting agent-output...")
+
+    for dump_name in list(os.listdir(dumps_dir)):
+        assert (
+            run(
+                [
+                    "sudo",
+                    "cp",
+                    "-f",
+                    f"{dumps_dir}/{dump_name}",
+                    f"{site_dumps_path}/{dump_name}",
+                ]
+            ).returncode
+            == 0
+        )
+
+    ruleset_name = "datasource_programs"
+    LOGGER.info('Creating rule "%s"...', ruleset_name)
+    site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
+    LOGGER.info('Rule "%s" created!', ruleset_name)
 
 
-@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(test_setup: tuple, tmp_path: Path) -> Path:
-    test_site, _ = test_setup
-    return download_and_install_agent_package(test_site, tmp_path)
+def inject_rules(site: Site) -> None:
+    try:
+        with open(RULES_DIR / "ignore.txt", "r", encoding="UTF-8") as ignore_list_file:
+            ignore_list = [_ for _ in ignore_list_file.read().splitlines() if _]
+    except FileNotFoundError:
+        ignore_list = []
+    rules_file_names = [
+        _ for _ in os.listdir(RULES_DIR) if _.endswith(".json") and _ not in ignore_list
+    ]
+    for rules_file_name in rules_file_names:
+        rules_file_path = RULES_DIR / rules_file_name
+        with open(rules_file_path, "r", encoding="UTF-8") as ruleset_file:
+            LOGGER.info('Importing rules file "%s"...', rules_file_path)
+            rules = json.load(ruleset_file)
+            for rule in rules:
+                site.openapi.create_rule(value=rule)
+    site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.fixture(name="agent_ctl", scope="function")
-def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
-        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
-    ):
-        yield installed_agent_ctl_in_unknown_state
+def _dumps_up_to_date(dumps_dir: Path, min_version: CMKVersion) -> None:
+    """Check if the dumps are up-to-date with the minimum-version branch."""
+    dumps = list(dumps_dir.glob("*"))
+    min_version_str = min_version.version
+    min_version_branch = min_version_str[: min_version_str.find("p")]
+    if not dumps:
+        raise FileNotFoundError("No dumps found!")
+    for dump in dumps:
+        if str(min_version_branch) not in dump.name:
+            raise ValueError(
+                f"Dump '{dump.name}' is outdated! "
+                f"Please regenerate it using an agent with version {min_version_branch}."
+            )

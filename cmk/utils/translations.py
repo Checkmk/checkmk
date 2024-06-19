@@ -5,9 +5,7 @@
 
 import ipaddress
 from collections.abc import Iterable
-from typing import cast, Literal, NotRequired
-
-from typing_extensions import TypedDict
+from typing import cast, Literal, NotRequired, TypedDict
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
@@ -34,6 +32,10 @@ class TranslationOptionsSpec(TypedDict):
 
 def translate_hostname(translation: TranslationOptions, hostname: str) -> HostName:
     return HostName(_translate(translation, hostname))
+
+
+def translate_raw_host_name(translation: TranslationOptions, host_name: str) -> str:
+    return _translate(translation, host_name)
 
 
 def translate_service_description(

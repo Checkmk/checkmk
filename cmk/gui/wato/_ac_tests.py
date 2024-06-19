@@ -22,10 +22,11 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
+from cmk.gui import userdb
 from cmk.gui.backup.handler import Config as BackupConfig
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import (
@@ -110,7 +111,10 @@ class ACTestPersistentConnections(ACTest):
         return len(sitenames()) > 1
 
     def execute(self) -> Iterator[ACSingleResult]:
-        yield from (self._check_site(site_id, get_site_config(site_id)) for site_id in sitenames())
+        yield from (
+            self._check_site(site_id, get_site_config(active_config, site_id))
+            for site_id in sitenames()
+        )
 
     def _check_site(self, site_id: SiteId, site_config: SiteConfiguration) -> ACSingleResult:
         persist = site_config.get("persist", False)
@@ -225,7 +229,7 @@ class ACTestLivestatusUsage(ACTest):
 
         usage, threads, active_connections, overflows_rate = site_status
 
-        # Microcore has an averaged usage pre-calculated. The Nagios core does not have this column.
+        # Micro Core has an averaged usage pre-calculated. The Nagios core does not have this column.
         # Calculate a non averaged usage instead
         if usage is None:
             usage = float(active_connections) / float(threads)
@@ -249,7 +253,7 @@ class ACTestLivestatusUsage(ACTest):
             text=_("%d of %d connections used") % (active_connections, threads),
         )
 
-        # Only available with Microcore
+        # Only available with Micro Core
         if overflows_rate is not None:
             yield ACSingleResult(
                 state=state,
@@ -391,7 +395,7 @@ class ACTestNumberOfUsers(ACTest):
     def help(self) -> str:
         return _(
             "<p>Having a large number of users configured in Checkmk may decrease the "
-            "performance of the Web GUI.</p>"
+            "performance of the web GUI.</p>"
             "<p>It may be possible that you are using the LDAP sync to create the users. "
             "Please review the filter configuration of the LDAP sync. Maybe you can "
             "decrease the sync scope to get a smaller number of users.</p>"
@@ -476,9 +480,13 @@ class ACTestOldDefaultCredentials(ACTest):
 
     def execute(self) -> Iterator[ACSingleResult]:
         if (
-            htpasswd.HtpasswdUserConnector({}).check_credentials(
-                UserId("omdadmin"), Password("omd")
-            )
+            htpasswd.HtpasswdUserConnector(
+                {
+                    "type": "htpasswd",
+                    "id": "htpasswd",
+                    "disabled": False,
+                }
+            ).check_credentials(UserId("omdadmin"), Password("omd"))
             == "omdadmin"
         ):
             yield ACSingleResult(
@@ -626,12 +634,12 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "
             "But there are specific reasons to deactivate this security feature. E.g. when "
-            "you want to display the HTML output produced by a specific check plugin."
-            "Disabling the escaping also allows the plugin to execute not only HTML, but "
+            "you want to display the HTML output produced by a specific check plug-in."
+            "Disabling the escaping also allows the plug-in to execute not only HTML, but "
             "also Javascript code in the context of your browser. This makes it possible to "
             "execute arbitrary Javascript, even for injection attacks.<br>"
             "For this reason, you should only disable this for a small, very specific number of "
-            "services, to be sure that not every random check plugin is able to produce code "
+            "services, to be sure that not every random check plug-in is able to produce code "
             "which your browser interprets."
         )
 
@@ -837,7 +845,7 @@ class ACTestCheckMKHelperUsage(ACTest):
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
-            "<p>The Checkmk Microcore uses Checkmk helper processes to execute "
+            "<p>The Checkmk Micro Core uses Checkmk helper processes to execute "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough helper processes to handle "
             "the configured checks.</p>"
@@ -845,7 +853,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
             '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk helpers</a></li>'
             "</ul>"
             "</p>"
@@ -853,7 +861,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "check helpers, because they consume a lot of memory. Your system needs "
             "to be able to handle the memory demand for all of them at once. An additional "
             "problem is that the Checkmk helpers are initialized in parallel during startup "
-            "of the Microcore, which may cause load peaks when having "
+            "of the Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -896,7 +904,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
-            "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
+            "<p>The Checkmk Micro Core uses Checkmk fetcher processes to obtain data about "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough fetcher processes to handle "
             "the configured checks just in time.</p>"
@@ -904,14 +912,14 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
             '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
             "fetcher helpers, because they consume resources. An additional "
             "problem is that the Checkmk fetchers are initialized in parallel during startup "
-            "of the Microcore, which may cause load peaks when having "
+            "of the Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -970,7 +978,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
-            "<p>The Checkmk Microcore uses Checkmk checker processes to execute "
+            "<p>The Checkmk Micro Core uses Checkmk checker processes to execute "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough helper processes to handle "
             "the configured checks.</p>"
@@ -978,7 +986,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
             '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
             "</ul>"
             "</p>"
@@ -986,7 +994,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "checker helpers, because they consume a lot of memory. Your system has "
             "to be able to handle the memory demand for all of them at once. An additional "
             "problem is that the Checkmk helpers are initialized in parallel during startup "
-            "of the Microcore, which may cause load peaks when having "
+            "of the Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -1075,14 +1083,14 @@ class ACTestGenericCheckHelperUsage(ACTest):
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
-            "<p>The Checkmk Microcore uses generic check helper processes to execute "
+            "<p>The Checkmk Micro Core uses generic check helper processes to execute "
             "the active check based services (e.g. check_http, check_...). There should "
             "always be enough helper processes to handle the configured checks.</p>"
             "<p>In case the helper pool is 100% used, checks will not be executed in "
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
             '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_check_helpers">number of check helpers</a></li>'
             "</ul>"
             "</p>"
@@ -1132,7 +1140,7 @@ class ACTestSizeOfExtensions(ACTest):
 
     def help(self) -> str:
         return _(
-            "<p>In distributed Setup setups it is possible to synchronize the "
+            "<p>In distributed setups it is possible to synchronize the "
             "extensions (MKPs and files in <tt>~/local/</tt>) to the slave sites. "
             "These files are synchronized on every replication with a slave site and "
             "can possibly slow down the synchronization in case the files are large. "
@@ -1143,15 +1151,8 @@ class ACTestSizeOfExtensions(ACTest):
     def is_relevant(self) -> bool:
         return has_wato_slave_sites() and self._replicates_mkps()
 
-    def _replicates_mkps(self):
-        replicates_mkps = False
-        for site in wato_slave_sites().values():
-            if site.get("replicate_mkps"):
-                replicates_mkps = True
-                break
-
-        if not replicates_mkps:
-            return
+    def _replicates_mkps(self) -> bool:
+        return any(site.get("replicate_mkps") for site in wato_slave_sites().values())
 
     def execute(self) -> Iterator[ACSingleResult]:
         size = self._size_of_extensions()
@@ -1246,13 +1247,13 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated check plugins")
+        return _("Deprecated check plug-ins")
 
     def help(self) -> str:
         return _(
-            "The check plugin API for plugins in <tt>%s</tt> is deprecated."
+            "The check plug-in API for plug-ins in <tt>%s</tt> is deprecated."
             " Plugin files in this folder are still considered, but the API they are using may change at any time without notice."
-            " Please migrate the plugins to the new API."
+            " Please migrate the plug-ins to the new API."
             " More information can be found in our <a href='%s'>User Guide</a>."
         ) % (
             "/".join(local_checks_dir.parts[-4:]),
@@ -1267,13 +1268,13 @@ class ACTestDeprecatedCheckPlugins(ACTest):
             if plugin_files := list(local_checks_dir.iterdir()):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d check plugins using the deprecated API: %s")
+                    text=_("%d check plug-ins using the deprecated API: %s")
                     % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
                 )
                 return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No check plugins using the deprecated API")
+            state=ACResultState.OK, text=_("No check plug-ins using the deprecated API")
         )
 
 
@@ -1282,13 +1283,13 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated HW/SW inventory plugins")
+        return _("Deprecated HW/SW inventory plug-ins")
 
     def help(self) -> str:
         return _(
-            "The old inventory plugin API has been removed in Checkmk version 2.2."
+            "The old inventory plug-in API has been removed in Checkmk version 2.2."
             " Plugin files in <tt>'%s'</tt> are ignored."
-            " Please migrate the plugins to the new API."
+            " Please migrate the plug-ins to the new API."
         ) % str(local_inventory_dir)
 
     def is_relevant(self) -> bool:
@@ -1299,13 +1300,13 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
             if plugin_files := list(local_inventory_dir.iterdir()):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d ignored HW/SW inventory plugins found: %s")
+                    text=_("%d ignored HW/SW inventory plug-ins found: %s")
                     % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
                 )
                 return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No ignored HW/SW inventory plugins found")
+            state=ACResultState.OK, text=_("No ignored HW/SW inventory plug-ins found")
         )
 
 
@@ -1378,7 +1379,7 @@ class ACTestCheckMKCheckerNumber(ACTest):
 
     def help(self) -> str:
         return _(
-            "The Checkmk Microcore uses Checkmk checker processes to process the results "
+            "The Checkmk Micro Core uses Checkmk checker processes to process the results "
             "from the Checkmk fetchers. Since the checker processes are not IO bound, they are "
             "most effective when each checker gets a dedicated CPU. Configuring more checkers than "
             "the number of available CPUs has a negative effect, because it increases "

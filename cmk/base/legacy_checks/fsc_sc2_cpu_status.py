@@ -6,18 +6,50 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.check_legacy_includes.fsc_sc2 import (
-    check_fsc_sc2_cpu_status,
-    inventory_fsc_sc2_cpu_status,
-)
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
 def parse_fsc_sc2_cpu_status(string_table: StringTable) -> StringTable:
     return string_table
+
+
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.3.1.1 "CPU1"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.3.1.2 "CPU2"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.4.1.1 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.4.1.2 2
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.5.1.1 "Intel(R) Xeon(R) CPU E5-2620 v2 @ 2.10GHz"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.5.1.2 ""
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.8.1.1 2100
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.8.1.2 0
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.13.1.1 6
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.13.1.2 0
+
+
+def inventory_fsc_sc2_cpu_status(info):
+    for line in info:
+        if line[1] != "2":
+            yield line[0], None
+
+
+def check_fsc_sc2_cpu_status(item, _no_params, info):
+    def get_cpu_status(status):
+        return {
+            "1": (3, "unknown"),
+            "2": (3, "not-present"),
+            "3": (0, "ok"),
+            "4": (0, "disabled"),
+            "5": (2, "error"),
+            "6": (2, "failed"),
+            "7": (1, "missing-termination"),
+            "8": (1, "prefailure-warning"),
+        }.get(status, (3, "unknown"))
+
+    for designation, status, model, speed, cores in info:
+        if designation == item:
+            status_state, status_txt = get_cpu_status(status)
+            return status_state, f"Status is {status_txt}, {model}, {cores} cores @ {speed} MHz"
 
 
 check_info["fsc_sc2_cpu_status"] = LegacyCheckDefinition(

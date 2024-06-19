@@ -8,7 +8,7 @@ description:
  It useses same configuration like normal filesystems and supports almost the same
  options (except inodes etc.)
 
- You need to install the agent plugin {lvm}.
+ You need to install the agent plug-in {lvm}.
 
 item:
  Name of the volume group

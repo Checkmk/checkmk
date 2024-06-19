@@ -38,12 +38,14 @@ from cmk.gui.watolib.services import (
 MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     check_table=[
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "cpu.loads",
             "cpu_load",
             None,
-            "cpuload_default_levels",
-            (5.0, 10.0),
+            None,
+            {},
+            {},
+            {"levels": (5.0, 10.0)},
             "CPU load",
             0,
             "15 min load: 1.32 at 8 Cores (0.17 per Core)",
@@ -53,23 +55,28 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
                 ("load15", 1.32, 40.0, 80.0, 0, 8),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
             "active",
             "cmk_inv",
             None,
+            None,
             "Check_MK HW/SW Inventory",
-            "{}",
+            {},
+            {},
             {},
             "Check_MK HW/SW Inventory",
             None,
             "WAITING - Active check, cannot be done offline",
             [],
             {},
+            {},
             [HostName("heute")],
         ),
     ],
+    nodes_check_table={},
     host_labels={"cmk/check_mk_server": {"plugin_name": "labels", "value": "yes"}},
     output="output",
     new_labels={},
@@ -176,11 +183,13 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             output="",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="old",
+                    check_source="unchanged",
                     check_plugin_name="lnx_thermal",
                     ruleset_name="temperature",
+                    discovery_ruleset_name=None,
                     item="Zone 1",
-                    discovered_parameters={},
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
                     effective_parameters={
                         "levels": (70.0, 80.0),
                         "device_levels_handling": "devdefault",
@@ -189,24 +198,29 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     state=0,
                     output="Temperature: 43.0°C\nTemperature: 43.0°C\nConfiguration: prefer device levels over user levels (used device levels)",
                     metrics=[],
-                    labels={},
+                    old_labels={},
+                    new_labels={},
                     found_on_nodes=[sample_host_name],
                 ),
                 CheckPreviewEntry(
                     check_source="active",
                     check_plugin_name="cmk_inv",
                     ruleset_name=None,
+                    discovery_ruleset_name=None,
                     item="Check_MK HW/SW Inventory",
-                    discovered_parameters=None,
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
                     effective_parameters={"status_data_inventory": True},
                     description="Check_MK HW/SW Inventory",
                     state=None,
                     output="WAITING - Active check, cannot be done offline",
                     metrics=[],
-                    labels={},
+                    old_labels={},
+                    new_labels={},
                     found_on_nodes=[sample_host_name],
                 ),
             ],
+            nodes_check_table={},
             host_labels={
                 "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -237,8 +251,10 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 check_source="new",
                 check_plugin_name="lnx_thermal",
                 ruleset_name="temperature",
+                discovery_ruleset_name=None,
                 item="Zone 1",
-                discovered_parameters={},
+                old_discovered_parameters={},
+                new_discovered_parameters={},
                 effective_parameters={
                     "levels": (70.0, 80.0),
                     "device_levels_handling": "devdefault",
@@ -247,24 +263,29 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 state=0,
                 output="Temperature: 42.0°C\nTemperature: 42.0°C\nConfiguration: prefer device levels over user levels (used device levels)",
                 metrics=[],
-                labels={},
+                old_labels={},
+                new_labels={},
                 found_on_nodes=[sample_host_name],
             ),
             CheckPreviewEntry(
                 check_source="active",
                 check_plugin_name="cmk_inv",
                 ruleset_name=None,
+                discovery_ruleset_name=None,
                 item="Check_MK HW/SW Inventory",
-                discovered_parameters=None,
+                old_discovered_parameters={},
+                new_discovered_parameters={},
                 effective_parameters={"status_data_inventory": True},
                 description="Check_MK HW/SW Inventory",
                 state=None,
                 output="WAITING - Active check, cannot be done offline",
                 metrics=[],
-                labels={},
+                old_labels={},
+                new_labels={},
                 found_on_nodes=[sample_host_name],
             ),
         ],
+        nodes_check_table={},
         host_labels={
             "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -303,7 +324,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     )
     mock_discovery_preview.assert_called_once()
     assert [entry.check_source for entry in discovery_result.check_table] == [
-        "old",
+        "unchanged",
         "active",
     ]
     assert discovery_result.new_labels == {}
@@ -327,11 +348,13 @@ def test_perform_discovery_single_update(
             output="",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="old",
+                    check_source="unchanged",
                     check_plugin_name="checkmk_agent",
                     ruleset_name="agent_update",
+                    discovery_ruleset_name=None,
                     item=None,
-                    discovered_parameters={},
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
                     effective_parameters={
                         "agent_version": ("ignore", {}),
                         "agent_version_missmatch": 1,
@@ -342,7 +365,7 @@ def test_perform_discovery_single_update(
                     state=1,
                     output=(
                         "Version: 2022.05.23, OS: linux, TLS is not activated on monitored host"
-                        " (see details)(!), Agent plugins: 0, Local checks: 0\nVersion:"
+                        " (see details)(!), Agent plug-ins: 0, Local checks: 0\nVersion:"
                         " 2022.05.23\nOS: linux\nThe hosts agent supports TLS, but it is not"
                         " being used.\nWe strongly recommend to enable TLS by registering the host"
                         " to the site (using the `cmk-agent-ctl register` command on the monitored"
@@ -352,18 +375,21 @@ def test_perform_discovery_single_update(
                         " site running Checkmk version 2.0 or earlier.\nIf you can not register"
                         ' the host, you can configure missing TLS to be OK in the setting "State'
                         ' in case of available but not enabled TLS" of the ruleset "Checkmk Agent'
-                        ' installation auditing".(!)\nAgent plugins: 0\nLocal checks: 0'
+                        ' installation auditing".(!)\nAgent plug-ins: 0\nLocal checks: 0'
                     ),
                     metrics=[],
-                    labels={},
+                    old_labels={},
+                    new_labels={},
                     found_on_nodes=[HostName("TODAY")],
                 ),
                 CheckPreviewEntry(
-                    check_source="old",
+                    check_source="unchanged",
                     check_plugin_name="mem_linux",
                     ruleset_name="memory_linux",
+                    discovery_ruleset_name=None,
                     item=None,
-                    discovered_parameters={},
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
                     effective_parameters={
                         "levels_virtual": ("perc_used", (80.0, 90.0)),
                         "levels_total": ("perc_used", (120.0, 150.0)),
@@ -390,10 +416,12 @@ def test_perform_discovery_single_update(
                         "Hardware Corrupted: 0% - 0.00 B of 31.08 GB RAM"
                     ),
                     metrics=[],
-                    labels={},
+                    old_labels={},
+                    new_labels={},
                     found_on_nodes=[HostName("TODAY")],
                 ),
             ],
+            nodes_check_table={},
             host_labels={
                 "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -433,11 +461,13 @@ def test_perform_discovery_single_update(
         check_table_created=1654237821,
         check_table=[
             CheckPreviewEntry(
-                check_source="old",
+                check_source="unchanged",
                 check_plugin_name="checkmk_agent",
                 ruleset_name="agent_update",
+                discovery_ruleset_name=None,
                 item=None,
-                discovered_parameters={},
+                old_discovered_parameters={},
+                new_discovered_parameters={},
                 effective_parameters={
                     "agent_version": ("ignore", {}),
                     "agent_version_missmatch": 1,
@@ -448,7 +478,7 @@ def test_perform_discovery_single_update(
                 state=1,
                 output=(
                     "Version: 2022.05.23, OS: linux, TLS is not activated on monitored host"
-                    " (see details)(!), Agent plugins: 0, Local checks: 0\nVersion: 2022.05.23\n"
+                    " (see details)(!), Agent plug-ins: 0, Local checks: 0\nVersion: 2022.05.23\n"
                     "OS: linux\nThe hosts agent supports TLS, but it is not being used.\n"
                     "We strongly recommend to enable TLS by registering the host to the site"
                     " (using the `cmk-agent-ctl register` command on the monitored host).\n"
@@ -458,18 +488,21 @@ def test_perform_discovery_single_update(
                     " running Checkmk version 2.0 or earlier.\nIf you can not register the host,"
                     ' you can configure missing TLS to be OK in the setting "State in case of'
                     ' available but not enabled TLS" of the ruleset "Checkmk Agent installation'
-                    ' auditing".(!)\nAgent plugins: 0\nLocal checks: 0'
+                    ' auditing".(!)\nAgent plug-ins: 0\nLocal checks: 0'
                 ),
                 metrics=[],
-                labels={},
+                old_labels={},
+                new_labels={},
                 found_on_nodes=[HostName("TODAY")],
             ),
             CheckPreviewEntry(
                 check_source="new",
                 check_plugin_name="mem_linux",
                 ruleset_name="memory_linux",
+                discovery_ruleset_name=None,
                 item=None,
-                discovered_parameters={},
+                old_discovered_parameters={},
+                new_discovered_parameters={},
                 effective_parameters={
                     "levels_virtual": ("perc_used", (80.0, 90.0)),
                     "levels_total": ("perc_used", (120.0, 150.0)),
@@ -496,10 +529,12 @@ def test_perform_discovery_single_update(
                     "Hardware Corrupted: 0% - 0.00 B of 31.08 GB RAM"
                 ),
                 metrics=[],
-                labels={},
+                old_labels={},
+                new_labels={},
                 found_on_nodes=[HostName("TODAY")],
             ),
         ],
+        nodes_check_table={},
         host_labels={
             "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -526,7 +561,7 @@ def test_perform_discovery_single_update(
         ),
         selected_services=(("mem_linux", None),),
         update_source="new",
-        update_target="old",
+        update_target="unchanged",
         host=sample_host,
         raise_errors=True,
     )
@@ -545,7 +580,7 @@ def test_perform_discovery_single_update(
         entry.check_source
         for entry in discovery_result.check_table
         if entry.check_plugin_name == "mem_linux"
-    ] == ["old"]
+    ] == ["unchanged"]
 
     store = AuditLogStore()
     assert [
@@ -565,11 +600,16 @@ def test_perform_discovery_action_update_services(
             output="",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="old",
+                    check_source="unchanged",
                     check_plugin_name="df",
                     ruleset_name="filesystem",
+                    discovery_ruleset_name=None,
                     item="/opt/omd/sites/heute/tmp",
-                    discovered_parameters={
+                    old_discovered_parameters={
+                        "mountpoint_for_block_devices": "volume_name",
+                        "item_appearance": "mountpoint",
+                    },
+                    new_discovered_parameters={
                         "mountpoint_for_block_devices": "volume_name",
                         "item_appearance": "mountpoint",
                     },
@@ -590,10 +630,12 @@ def test_perform_discovery_action_update_services(
                     state=0,
                     output="0.04% used (5.59 MB of 15.54 GB), trend: -89.23 kB / 24 hours\n0.04% used (5.59 MB of 15.54 GB)\ntrend: -89.23 kB / 24 hours",
                     metrics=[],
-                    labels={},
+                    old_labels={},
+                    new_labels={},
                     found_on_nodes=[HostName("TODAY")],
                 ),
             ],
+            nodes_check_table={},
             host_labels={
                 "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -636,8 +678,13 @@ def test_perform_discovery_action_update_services(
                 check_source="new",
                 check_plugin_name="df",
                 ruleset_name="filesystem",
+                discovery_ruleset_name=None,
                 item="/opt/omd/sites/heute/tmp",
-                discovered_parameters={
+                old_discovered_parameters={
+                    "mountpoint_for_block_devices": "volume_name",
+                    "item_appearance": "mountpoint",
+                },
+                new_discovered_parameters={
                     "mountpoint_for_block_devices": "volume_name",
                     "item_appearance": "mountpoint",
                 },
@@ -658,15 +705,21 @@ def test_perform_discovery_action_update_services(
                 state=0,
                 output="0.04% used (5.78 MB of 15.54 GB), trend: +10.38 kB / 24 hours\n0.04% used (5.78 MB of 15.54 GB)\ntrend: +10.38 kB / 24 hours",
                 metrics=[],
-                labels={},
+                old_labels={},
+                new_labels={},
                 found_on_nodes=[HostName("TODAY")],
             ),
             CheckPreviewEntry(
                 check_source="vanished",
                 check_plugin_name="lnx_if",
-                ruleset_name="if",
+                ruleset_name="dummy_name",
+                discovery_ruleset_name=None,
                 item="2",
-                discovered_parameters={
+                old_discovered_parameters={
+                    "discovered_oper_status": ["1"],
+                    "discovered_speed": 10000000,
+                },
+                new_discovered_parameters={
                     "discovered_oper_status": ["1"],
                     "discovered_speed": 10000000,
                 },
@@ -679,10 +732,12 @@ def test_perform_discovery_action_update_services(
                 state=2,
                 output="[docker0], (down)(!!), MAC: 02:42:E3:80:F5:EE, Speed: 10 MBit/s (assumed)\n[docker0]\nOperational state: down(!!)\nMAC: 02:42:E3:80:F5:EE\nSpeed: 10 MBit/s (assumed)",
                 metrics=[],
-                labels={},
+                old_labels={},
+                new_labels={},
                 found_on_nodes=[HostName("TODAY")],
             ),
         ],
+        nodes_check_table={},
         host_labels={
             "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -728,7 +783,7 @@ def test_perform_discovery_action_update_services(
     mock_discovery_preview.assert_called_with(
         sample_host_name, prevent_fetching=True, raise_errors=False
     )
-    assert [entry.check_source for entry in discovery_result.check_table] == ["old"]
+    assert [entry.check_source for entry in discovery_result.check_table] == ["unchanged"]
 
     store = AuditLogStore()
     assert [
@@ -750,6 +805,7 @@ def test_perform_discovery_action_update_host_labels(
         return_value=ServiceDiscoveryPreviewResult(
             output="",
             check_table=[],
+            nodes_check_table={},
             host_labels={
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
             },
@@ -786,6 +842,7 @@ def test_perform_discovery_action_update_host_labels(
         },
         check_table_created=1654248127,
         check_table=[],
+        nodes_check_table={},
         host_labels={
             # "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},

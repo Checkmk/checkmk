@@ -15,10 +15,9 @@
 from collections.abc import Sequence
 from typing import Any
 
-from marshmallow import fields
-
 from cmk.utils.macros import MacroMapping
 
+from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
 from cmk.bi.lib import (
     ABCBICompiledNode,
@@ -96,8 +95,16 @@ class BIRule(ABCBIRule, ABCWithSchema):
             "computation_options": self.computation_options.serialize(),
         }
 
-    def clone(self) -> "BIRule":
+    def clone(self, existing_rule_ids: Sequence[str]) -> "BIRule":
+        def get_clone_id(cloned_rule_id: str, existing_rule_ids: Sequence[str]) -> str:
+            for index in range(1, len(existing_rule_ids) + 2):
+                new_id = f"{cloned_rule_id}_clone{index}"
+                if new_id not in existing_rule_ids:
+                    return new_id
+            raise ValueError("Could not find a unique clone id")
+
         rule_config = self.schema()().dump(self)
+        rule_config["id"] = get_clone_id(rule_config["id"], existing_rule_ids)
         return BIRule(rule_config)
 
     def get_nodes(self) -> Sequence[BINodeGenerator]:
@@ -196,12 +203,19 @@ class BIRuleSchema(Schema):
         example_config={
             "arguments": ["foo", "bar"],
         },
+        description="Parameters.",
     )
     node_visualization = create_nested_schema(
-        BINodeVisLayoutStyleSchema, default_schema=BINodeVisBlockStyleSchema
+        BINodeVisLayoutStyleSchema,
+        default_schema=BINodeVisBlockStyleSchema,
+        description="Node visualization.",
     )
-    properties = create_nested_schema_for_class(BIRuleProperties)
+    properties = create_nested_schema_for_class(BIRuleProperties, description="Rule properties.")
     aggregation_function = create_nested_schema(
-        BIAggregationFunctionSchema, default_schema=BIAggregationFunctionBest.schema()
+        BIAggregationFunctionSchema,
+        default_schema=BIAggregationFunctionBest.schema(),
+        description="Aggregation function.",
     )
-    computation_options = create_nested_schema_for_class(BIRuleComputationOptions)
+    computation_options = create_nested_schema_for_class(
+        BIRuleComputationOptions, description="Computation options."
+    )

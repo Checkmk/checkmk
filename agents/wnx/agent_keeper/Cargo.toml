@@ -14,8 +14,8 @@ cmk-agent-ctl = { path = "../../../packages/cmk-agent-ctl" }
 [dependencies.windows-sys]
 version = "0.48"
 features = [
-    "Win32_Foundation",
-    "Win32_Security",
-    "Win32_System_Threading",
-    "Win32_UI_WindowsAndMessaging",
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_System_Threading",
+  "Win32_UI_WindowsAndMessaging",
 ]

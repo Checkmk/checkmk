@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
 
 
 def inventory_db2_mem(info):
@@ -44,7 +43,12 @@ def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
     perc_free = (limit - usage) / limit * 100.0
     yield 0, f"Max {render.bytes(limit)}"
     yield check_levels(
-        usage, "mem", None, human_readable_func=render.bytes, infoname="Used", boundaries=(0, limit)
+        usage,
+        "mem_used",
+        None,
+        human_readable_func=render.bytes,
+        infoname="Used",
+        boundaries=(0, limit),
     )
     yield check_levels(
         perc_free,

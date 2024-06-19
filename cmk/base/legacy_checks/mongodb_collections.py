@@ -11,14 +11,10 @@
 
 import json
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import render
 from cmk.plugins.lib.mongodb import parse_date
 
 
@@ -78,7 +74,7 @@ def check_mongodb_collections(item, params, databases_dict):
 
         perfdata = _mongodb_collections_get_perfdata_key(key)
         yield check_levels(
-            value, perfdata, levels, human_readable_func=get_bytes_human_readable, infoname=label
+            value, perfdata, levels, human_readable_func=render.bytes, infoname=label
         )
 
     # check number of indexes per collection (max is 64 indexes)
@@ -86,7 +82,7 @@ def check_mongodb_collections(item, params, databases_dict):
         yield check_levels(
             int(collection_stats.get("nindexes")),
             None,
-            params.get("levels_nindexes"),
+            (62, 65),
             human_readable_func=lambda v: "%d" % v,
             infoname="Number of indexes",
         )
@@ -166,7 +162,7 @@ def _mongodb_collections_long_output(data):
         "- Number of Indexes: %s" % _mongodb_collections_get_as_int(data, "nindexes")
     )
     for index in _mongodb_collections_get_indexes_as_list(data):
-        timestamp_for_humans = _mongodb_collections_timestamp_human_readable(index[2] / 1000.0)
+        timestamp_for_humans = _mongodb_collections_timestamp_human_readable(index[2])
         long_output.append(
             f"-- Index '{index[0]}' used {index[1]} times since {timestamp_for_humans}"
         )
@@ -200,14 +196,14 @@ def _mongodb_collections_sort_second(tup):
 
 def _mongodb_collections_bytes_human_readable(data, key):
     try:
-        return get_bytes_human_readable(int(data.get(key)))
+        return render.bytes(int(data.get(key)))
     except (TypeError, ValueError):
         return "n/a"
 
 
 def _mongodb_collections_timestamp_human_readable(value):
     try:
-        return get_timestamp_human_readable(int(value))
+        return render.datetime(int(value))
     except (TypeError, ValueError):
         return "n/a"
 
@@ -225,5 +221,5 @@ check_info["mongodb_collections"] = LegacyCheckDefinition(
     discovery_function=inventory_mongodb_collections,
     check_function=check_mongodb_collections,
     check_ruleset_name="mongodb_collections",
-    check_default_parameters={"levels_nindexes": (62, 65)},
+    check_default_parameters={},
 )

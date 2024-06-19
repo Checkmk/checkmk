@@ -11,7 +11,7 @@ def check_fan(rpm, params):
     if isinstance(params, tuple):
         params = {"lower": params}
 
-    levels = params.get("upper", (None, None)) + params["lower"]
+    levels = params.get("upper", (None, None)) + params.get("lower", (None, None))
     return check_levels(
         rpm,
         "fan" if params.get("output_metrics") else None,

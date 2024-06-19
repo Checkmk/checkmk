@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 
 import io
 import os
+import re
 import socket
 import sys
 import urllib.parse
@@ -25,8 +26,8 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from collections.abc import Callable  # noqa: F401 # pylint: disable=unused-import
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from collections.abc import Callable  # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -416,7 +417,6 @@ class JolokiaInstance:
         session.verify = self._config["verify"]
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-        session.timeout = self._config["timeout"]  # type: ignore[attr-defined]
         session.headers["User-Agent"] = user_agent
 
         auth_method = self._config.get("mode")
@@ -445,7 +445,8 @@ class JolokiaInstance:
         return session
 
     def get_post_data(self, path, function, use_target):
-        segments = path.strip("/").split("/")
+        segments = re.split(r"(?<!!)/", path.strip("/"))
+        segments[0] = segments[0].replace("!/", "/")
         # we may have one to three segments:
         data = dict(zip(("mbean", "attribute", "path"), segments))
 
@@ -463,7 +464,10 @@ class JolokiaInstance:
             # Watch out: we must provide the verify keyword to every individual request call!
             # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
             raw_response = self._session.post(
-                self.base_url, data=post_data, verify=self._session.verify
+                self.base_url,
+                data=post_data,
+                verify=self._session.verify,
+                timeout=self._config["timeout"],
             )
         except requests.exceptions.ConnectionError:
             if DEBUG:
@@ -651,6 +655,22 @@ def query_instance(inst):
     write_section("jolokia_generic", generate_values(inst, inst.custom_vars))
 
 
+def _parse_fetched_data(data):
+    # type: (dict[str, Any]) -> tuple[str, str, str]
+    if "details" in data:
+        info = data["details"]
+        # https://github.com/jolokia/jolokia/blob/2.0/src/documentation/manual/modules/ROOT/pages/jolokia_mbeans.adoc
+        product = info.get("server_product", "unknown")
+        version = info.get("server_version", "unknown")
+    else:  # jolokia version 1.7.2 or lower
+        # https://github.com/jolokia/jolokia/blob/v1.7.2/src/docbkx/protocol/version.xml
+        info = data.get("info", {})
+        product = info.get("product", "unknown")
+        version = info.get("version", "unknown")
+    agentversion = data.get("agent", "unknown")
+    return product, version, agentversion
+
+
 def generate_jolokia_info(inst):
     # Determine type of server
     try:
@@ -659,15 +679,13 @@ def generate_jolokia_info(inst):
         yield inst.name, "ERROR", str(exc)
         raise SkipInstance(exc)
 
-    info = data.get("info", {})
-    version = info.get("version", "unknown")
-    product = info.get("product", "unknown")
+    product, version, agentversion = _parse_fetched_data(data)
+
     if inst.product is not None:
         product = inst.product
     else:
         inst.product = product
 
-    agentversion = data.get("agent", "unknown")
     yield inst.name, product, version, agentversion
 
 

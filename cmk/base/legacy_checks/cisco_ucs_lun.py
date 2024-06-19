@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 
 # comNET GmbH, Fabian Binder - 2018-05-07
 
@@ -40,15 +39,15 @@ def check_cisco_ucs_lun(_no_item, _no_params, info):
     state, state_readable = map_operability.get(status, (3, "Unknown, status code %s" % status))
     mode_state, mode_state_readable = map_luntype.get(mode, (3, "Unknown, status code %s" % mode))
     # size is returned in MB
-    # on migration: check whether to use render.size (MB) or render.bytes (MiB)
-    size_readable = get_bytes_human_readable(int(size or "0") * 1024 * 1024)
+    # ^- or MiB? or what?
+    size_readable = render.bytes(int(size or "0") * 1024 * 1024)
     yield state, "Status: %s" % state_readable
     yield 0, "Size: %s" % size_readable
     yield mode_state, "Mode: %s" % mode_state_readable
 
 
-def parse_cisco_ucs_lun(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_ucs_lun(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_ucs_lun"] = LegacyCheckDefinition(

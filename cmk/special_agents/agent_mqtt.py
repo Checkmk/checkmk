@@ -23,7 +23,7 @@ useful or probably only when directly connecting to single nodes - not sure abou
 import logging
 import sys
 import time
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 
@@ -77,7 +77,7 @@ SYS_TOPIC_ALIASES = {
 class ReceivedData:
     connected: bool = False
     subscribed_to_sys: bool = False
-    topics: MutableMapping[str, str] = field(default_factory=dict)
+    topics: dict[str, str] = field(default_factory=dict)
     remaining_topics: set[str] = field(default_factory=lambda: set(EXPECTED_SYS_TOPICS))
 
 

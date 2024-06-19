@@ -8,9 +8,8 @@ import re
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, startswith
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, startswith, StringTable
 
 
 def bintec_brrp_status_compose_item(brrp_id):

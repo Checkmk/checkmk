@@ -28,7 +28,7 @@ def _valuespec_special_agents_appdynamics():
             (
                 "username",
                 TextInput(
-                    title=_("AppDynamics login username"),
+                    title=_("AppDynamics login user name"),
                     allow_empty=False,
                 ),
             ),

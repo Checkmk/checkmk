@@ -142,11 +142,12 @@ $set noVerify
 $define sys$output "''cacheFile'_new"
 $on error then goto WCFdone
 $say "<<<check_mk>>>"
-$say "Version: 2.3.0b1"
+$say "Version: 2.4.0b1"
 $say "AgentOS: openvms"
 $say "Nodename: ",f$getsyi("nodename")
 $say "Architecture: ''HWinfo'"
 $say "SWversion: ''SWinfo'"
+$say "OSName: OpenVMS"
 $say "<<<vms_cpu>>>"
 $say "''numCPU' ''cpu2' ''cpu3' ''wt0' ''wt1'"
 $say "<<<mem>>>"

@@ -16,7 +16,7 @@ BUILDIFIER_VERSION="6.1.0"
 install_package() {
     echo "Installing buildifier@${BUILDIFIER_VERSION}"
     # GO111MODULE=on is the default with Go 1.16
-    GOPATH=/opt \
+    GOPATH="${TARGET_DIR:-/opt}" \
         GO111MODULE=on \
         go get github.com/bazelbuild/buildtools/buildifier@${BUILDIFIER_VERSION}
 }
@@ -27,7 +27,7 @@ case "$DISTRO" in
         test_package "go version" "go$GO_VERSION\."
         ;;
     *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO - buildifier should only be available in IMAGE_TESTING!"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - buildifier should only be available in reference image!"
         exit 1
         ;;
 esac

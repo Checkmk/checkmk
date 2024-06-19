@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, savefloat
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT
 
 
@@ -20,7 +19,7 @@ def inventory_apc_inrow_fanspeed(info):
 
 def check_apc_inrow_fanspeed(_no_item, _no_params, info):
     value = savefloat(info[0][0]) / 10
-    return 0, "Current: %.2f%%" % value, [("fanspeed", value)]
+    return 0, "Current: %.2f%%" % value, [("fan_perc", value)]
 
 
 def parse_apc_inrow_fanspeed(string_table: StringTable) -> StringTable:

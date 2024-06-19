@@ -894,7 +894,9 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
     elif match_type == "strict":
         result = expected == query
     elif match_type == "ellipsis":
-        final_pattern = expected.replace("[", "\\[").replace("...", ".*?")  # non-greedy match
+        final_pattern = (
+            expected.replace("[", "\\[").replace("+", "\\+").replace("...", ".*?")
+        )  # non-greedy match
         result = bool(re.match(f"^{final_pattern}$", query))
     else:
         raise LivestatusTestingError(f"Unsupported match behaviour: {match_type}")
@@ -1229,6 +1231,7 @@ OPERATORS: dict[str, OperatorFunc] = {
     ">=": cast_down(operator.ge),
     "<=": cast_down(operator.le),
     "~": match_regexp,
+    "~~": operator.contains,
 }
 """A dict of all implemented comparison operators."""
 
@@ -1427,9 +1430,12 @@ def _unpack_headers(query: str) -> dict[str, str]:
 @contextmanager
 def mock_livestatus_communication() -> Iterator[MockLiveStatusConnection]:
     live = MockLiveStatusConnection()
-    with mock.patch(
-        "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
-    ), mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket):
+    with (
+        mock.patch(
+            "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
+        ),
+        mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket),
+    ):
         yield live
 
 

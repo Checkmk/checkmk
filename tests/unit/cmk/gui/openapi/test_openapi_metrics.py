@@ -14,6 +14,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 GRAPH_ENDPOINT_GET = "/NO_SITE/check_mk/api/1.0/domain-types/metric/actions/get/invoke"
+COLOR_HEX = "#87cefa"
 
 
 @pytest.mark.usefixtures("with_host")
@@ -65,7 +66,7 @@ def test_openapi_get_graph_graph(
     expected = {
         "metrics": [
             {
-                "color": "#4747ff",
+                "color": COLOR_HEX,
                 "line_type": "stack",
                 "data_points": [None],
                 "title": "CPU load average of last minute",
@@ -124,7 +125,7 @@ def test_openapi_get_graph_metric(
     expected = {
         "metrics": [
             {
-                "color": "#4747ff",
+                "color": COLOR_HEX,
                 "line_type": "area",
                 "data_points": [None],
                 "title": "CPU load average of last minute",
@@ -174,7 +175,7 @@ def test_openapi_get_graph_metric_without_site(
     expected = {
         "metrics": [
             {
-                "color": "#4747ff",
+                "color": COLOR_HEX,
                 "line_type": "area",
                 "data_points": [None],
                 "title": "CPU load average of last minute",

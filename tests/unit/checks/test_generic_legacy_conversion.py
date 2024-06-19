@@ -8,10 +8,10 @@ import pytest
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 from cmk.utils.check_utils import section_name_of
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.sectionname import SectionName
 
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 pytestmark = pytest.mark.checks
 
@@ -38,24 +38,22 @@ def test_create_section_plugin_from_legacy(
         if section is None:
             continue
 
-        original_parse_function = check_info_dict.get("parse_function")
+        original_parse_function = check_info_dict.parse_function
         if original_parse_function is not None:
             assert original_parse_function.__name__ == section.parse_function.__name__
 
 
 def test_snmp_info_snmp_detect_equal(fix_plugin_legacy: FixPluginLegacy) -> None:
     for check_info_element in fix_plugin_legacy.check_info.values():
-        assert (check_info_element.get("detect") is None) is (
-            check_info_element.get("fetch") is None
-        )
+        assert (check_info_element.detect is None) is (check_info_element.fetch is None)
 
 
 def _defines_section(check_info_element: LegacyCheckDefinition) -> bool:
-    if check_info_element.get("parse_function") is not None:
+    if check_info_element.parse_function is not None:
         return True
 
-    assert check_info_element.get("detect") is None
-    assert check_info_element.get("fetch") is None
+    assert check_info_element.detect is None
+    assert check_info_element.fetch is None
     return False
 
 
@@ -86,9 +84,9 @@ def test_sections_definitions_exactly_in_mainchecks(
 def test_subcheck_snmp_info_consistent(fix_plugin_legacy: FixPluginLegacy) -> None:
     ref_info: dict = {section_name_of(name): {} for name in fix_plugin_legacy.check_info}
     for name, check_info_element in fix_plugin_legacy.check_info.items():
-        if info := check_info_element.get("fetch"):
+        if info := check_info_element.fetch:
             assert info == ref_info[section_name_of(name)].setdefault("fetch", info)
-        if detect := check_info_element.get("detect"):
+        if detect := check_info_element.detect:
             assert detect == ref_info[section_name_of(name)].setdefault("detect", detect)
 
 
@@ -98,7 +96,7 @@ def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: F
     true_checks = {
         n.replace(".", "_").replace("-", "_")
         for n, i in fix_plugin_legacy.check_info.items()
-        if i.get("check_function")
+        if i.check_function
     }
     failures = true_checks - migrated
     assert not failures, f"failed to migrate: {failures!r}"
@@ -155,10 +153,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "apc_inrow_temp",
         "apc_mod_pdu_modules",
         "apc_netbotz_drycontact",
-        "apc_netbotz_other_sensors",
-        "apc_netbotz_sensors",
-        "apc_netbotz_sensors.dewpoint",
-        "apc_netbotz_sensors.humidity",
         "apc_rackpdu_power",
         "apc_sts_inputs",
         "apc_sts_source",
@@ -172,17 +166,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "appdynamics_memory",
         "appdynamics_sessions",
         "appdynamics_web_container",
-        "arbor_peakflow_sp",
-        "arbor_peakflow_sp.disk_usage",
-        "arbor_peakflow_sp.flows",
-        "arbor_peakflow_tms",
-        "arbor_peakflow_tms.disk_usage",
-        "arbor_peakflow_tms.host_fault",
-        "arbor_peakflow_tms.updates",
-        "arbor_pravail",
-        "arbor_pravail.disk_usage",
-        "arbor_pravail.host_fault",
-        "arbor_pravail.drop_rate",
         "arc_raid_status",
         "arcserve_backup",
         "arista_temp",
@@ -415,18 +398,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cmciii_lcp_waterflow",
         "cmctc_temp",
         "cmctc_config",
-        "cmctc_lcp",
-        "cmctc_lcp.access",
-        "cmctc_lcp.blower",
-        "cmctc_lcp.blowergrade",
-        "cmctc_lcp.current",
-        "cmctc_lcp.flow",
-        "cmctc_lcp.humidity",
-        "cmctc_lcp.position",
-        "cmctc_lcp.regulator",
-        "cmctc_lcp.status",
-        "cmctc_lcp.user",
-        "cmctc_lcp.temp",
         "cmctc_output",
         "cmctc_ports",
         "cmctc_psm_m",
@@ -652,7 +623,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "f5_bigip_fans",
         "f5_bigip_interfaces",
         "f5_bigip_mem",
-        "f5_bigip_mem.tmm",
         "f5_bigip_pool",
         "f5_bigip_psu",
         "f5_bigip_snat",
@@ -696,7 +666,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "fortigate_node.sessions",
         "fortigate_sessions",
         "fortigate_sessions_base",
-        "fortigate_signatures",
         "fortigate_sslvpn",
         "fortinet_controller_aps",
         "fortisandbox_cpu_util",
@@ -751,8 +720,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "hitachi_hnas_quorumdevice",
         "hitachi_hnas_temp",
         "hitachi_hnas_vnode",
-        "hitachi_hus_dkc",
-        "hitachi_hus_dku",
         "hitachi_hus_status",
         "hivemanager_devices",
         "hivemanager_ng_devices",
@@ -770,16 +737,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "hp_mcs_sensors",
         "hp_mcs_sensors.fan",
         "hp_mcs_system",
-        "hp_msa_controller",
-        "hp_msa_disk",
-        "hp_msa_disk.temp",
-        "hp_msa_fan",
-        "hp_msa_psu",
-        "hp_msa_psu.sensor",
-        "hp_msa_psu.temp",
-        "hp_msa_system",
-        "hp_msa_volume",
-        "hp_msa_volume.df",
         "hp_procurve_cpu",
         "hp_procurve_mem",
         "hp_procurve_sensors",
@@ -795,7 +752,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "hp_sts_drvbox",
         "hp_webmgmt_status",
         "hpux_fchba",
-        "hpux_lvm",
         "hpux_multipath",
         "hpux_serviceguard",
         "hpux_snmp_cs",
@@ -877,7 +833,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "infoblox_dns_stats",
         "infoblox_grid_status",
         "infoblox_replication_status",
-        "infoblox_temp",
         "informix_dbspaces",
         "informix_locks",
         "informix_logusage",
@@ -905,8 +860,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "janitza_umg.freq",
         "janitza_umg.temp",
         "jar_signature",
-        "jenkins_instance",
-        "jenkins_queue",
         "jira_custom_svc",
         "jira_workflow",
         "jolokia_generic.string",
@@ -944,7 +897,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "juniper_screenos_temp",
         "juniper_screenos_vpn",
         "juniper_temp",
-        "juniper_trpz_cpu_util",
         "juniper_trpz_flash",
         "juniper_trpz_info",
         "juniper_trpz_mem",
@@ -973,19 +925,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "libelle_business_shadow.status",
         "libelle_business_shadow.process",
         "libelle_business_shadow.archive_dir",
-        "liebert_bat_temp",
-        "liebert_chilled_water",
-        "liebert_chiller_status",
-        "liebert_compressor",
-        "liebert_cooling",
-        "liebert_cooling_position",
-        "liebert_cooling_status",
-        "liebert_fans",
-        "liebert_fans_condenser",
-        "liebert_maintenance",
-        "liebert_pump",
-        "liebert_reheating",
-        "liebert_temp_general",
         "logins",
         "lparstat_aix",
         "lparstat_aix.cpu_util",
@@ -1007,11 +946,9 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mcafee_emailgateway_entities",
         "mcafee_emailgateway_smtp",
         "mcafee_emailgateway_spam_mcafee",
-        "mcafee_webgateway_info",
         "md",
         "megaraid_bbu",
         "mem.linux",
-        "mem.win",
         "mem.vmalloc",
         "mikrotik_signal",
         "mkbackup",
@@ -1019,7 +956,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mkeventd_status",
         "mknotifyd",
         "mknotifyd.connection",
-        "mongodb_asserts",
         "mongodb_cluster",
         "mongodb_cluster.collections",
         "mongodb_cluster.balancer",
@@ -1063,29 +999,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mysql.galerastatus",
         "mysql_ping",
         "mysql_slave",
-        "netapp_api_aggr",
-        "netapp_api_cluster",
-        "netapp_api_connection",
-        "netapp_api_cpu",
-        "netapp_api_cpu.utilization",
-        "netapp_api_cpu.nvram_bat",
-        "netapp_api_disk.summary",
-        "netapp_api_environment",
-        "netapp_api_environment.fan_faults",
-        "netapp_api_environment.temperature",
-        "netapp_api_environment.fans",
-        "netapp_api_environment.voltage",
-        "netapp_api_environment.current",
-        "netapp_api_fcp",
-        "netapp_api_info",
-        "netapp_api_protocol",
-        "netapp_api_snapshots",
-        "netapp_api_status",
-        "netapp_api_systemtime",
-        "netapp_api_temp",
-        "netapp_api_vf_status",
-        "netapp_api_vs_status",
-        "netapp_api_vs_traffic",
         "netapp_cluster",
         "netapp_cpu",
         "netapp_fcpio",
@@ -1149,7 +1062,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "oracle_recovery_area",
         "oracle_recovery_status",
         "oracle_sessions",
-        "oracle_sql",
         "oracle_undostat",
         "oracle_version",
         "orion_backup",
@@ -1176,7 +1088,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "perle_modules_mgt",
         "perle_psmu",
         "perle_psmu.fan",
-        "pfsense_if",
         "pfsense_status",
         "plesk_backups",
         "plesk_domains",
@@ -1212,8 +1123,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "quanta_fan",
         "quanta_temperature",
         "quanta_voltage",
-        "quantum_libsmall_door",
-        "quantum_libsmall_status",
         "ra32e_power",
         "ra32e_sensors",
         "ra32e_sensors.humidity",
@@ -1226,7 +1135,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "rabbitmq_nodes",
         "rabbitmq_nodes.filedesc",
         "rabbitmq_nodes.sockets",
-        "rabbitmq_nodes.proc",
         "rabbitmq_nodes.mem",
         "rabbitmq_nodes.uptime",
         "rabbitmq_nodes.gc",
@@ -1426,7 +1334,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "varnish.worker_thread_ratio",
         "vbox_guest",
         "veeam_client",
-        "veeam_jobs",
         "veeam_tapejobs",
         "viprinet_firmware",
         "viprinet_mem",
@@ -1457,16 +1364,11 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "watchdog_sensors.temp",
         "watchdog_sensors.humidity",
         "watchdog_sensors.dew",
-        "websphere_mq_channels",
-        "websphere_mq_instance",
-        "websphere_mq_instance.manager",
-        "websphere_mq_queues",
         "win_license",
         "win_netstat",
         "win_printers",
         "windows_broadcom_bonding",
         "windows_multipath",
-        "windows_tasks",
         "winperf",
         "winperf.cpuusage",
         "winperf.diskstat",
@@ -1477,12 +1379,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "wut_webtherm",
         "wut_webtherm.pressure",
         "wut_webtherm.humidity",
-        "zebra_model",
-        "zebra_printer_status",
-        "zerto_vpg_rpo",
-        "zfs_arc_cache",
-        "zfs_arc_cache.l2",
-        "zorp_connections",
     }
     current_legacy_checks = set(fix_plugin_legacy.check_info)
 

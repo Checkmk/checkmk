@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="index"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
+from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.lib import postgres
 
 # <<<postgres_bloat>>>
@@ -89,14 +89,14 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
                     yield 2, "{} wasted {} bytes: {} (too high)".format(
                         line["tablename"],
                         what,
-                        get_bytes_human_readable(wasted),
+                        render.bytes(wasted),
                     )
                     show_levels = True
                 elif wasted >= warn:
                     yield 1, "{} wasted {} bytes: {} (too high)".format(
                         line["tablename"],
                         what,
-                        get_bytes_human_readable(wasted),
+                        render.bytes(wasted),
                     )
                     show_levels = True
 
@@ -112,9 +112,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
                     "%s Abs (%s/%s)"
                     % (
                         (what.title(),)
-                        + tuple(
-                            get_bytes_human_readable(int(x)) for x in params["%s_bloat_abs" % what]
-                        )
+                        + tuple(render.bytes(int(x)) for x in params["%s_bloat_abs" % what])
                     )
                 )
         yield 0, " ".join(levels_info)
@@ -132,9 +130,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
             yield 0, "Maximum wasted {}space at {}: {}".format(
                 what,
                 abs_max["tablename"],
-                get_bytes_human_readable(
-                    int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])
-                ),
+                render.bytes(int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])),
             )
 
     # Summary information
@@ -142,7 +138,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
         yield (
             0,
             "Summary of top %d wasted %sspace: %s"
-            % (len(database), what, get_bytes_human_readable(total_value)),
+            % (len(database), what, render.bytes(total_value)),
             [("%sspace_wasted" % what, total_value)],
         )
 

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
     check_aws_http_errors,
@@ -12,8 +12,8 @@ from cmk.base.check_legacy_includes.aws import (
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
+from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -88,10 +88,14 @@ def check_aws_elb_statistics(item, params, parsed):
     return check_aws_metrics(metric_infos)
 
 
+def discover_aws_elb(p):
+    return inventory_aws_generic_single(p, _aws_elb_statistics_metrics)
+
+
 check_info["aws_elb"] = LegacyCheckDefinition(
     parse_function=parse_aws_elb,
     service_name="AWS/ELB Statistics",
-    discovery_function=lambda p: inventory_aws_generic_single(p, _aws_elb_statistics_metrics),
+    discovery_function=discover_aws_elb,
     check_function=check_aws_elb_statistics,
     check_ruleset_name="aws_elb_statistics",
     check_default_parameters={
@@ -118,16 +122,20 @@ def check_aws_elb_latency(item, params, parsed):
                 "metric_val": parsed.get("Latency"),
                 "metric_name": "aws_load_balancer_latency",
                 "levels": params.get("levels_latency"),
-                "human_readable_func": get_age_human_readable,
+                "human_readable_func": render.timespan,
             }
         ]
     )
 
 
+def discover_aws_elb_latency(p):
+    return inventory_aws_generic_single(p, ["Latency"])
+
+
 check_info["aws_elb.latency"] = LegacyCheckDefinition(
     service_name="AWS/ELB Latency",
     sections=["aws_elb"],
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["Latency"]),
+    discovery_function=discover_aws_elb_latency,
     check_function=check_aws_elb_latency,
     check_ruleset_name="aws_elb_latency",
 )
@@ -152,10 +160,14 @@ def check_aws_elb_http_elb(item, params, parsed):
     )
 
 
+def discover_aws_elb_http_elb(p):
+    return inventory_aws_generic_single(p, ["RequestCount"])
+
+
 check_info["aws_elb.http_elb"] = LegacyCheckDefinition(
     service_name="AWS/ELB HTTP ELB",
     sections=["aws_elb"],
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
+    discovery_function=discover_aws_elb_http_elb,
     check_function=check_aws_elb_http_elb,
     check_ruleset_name="aws_elb_http",
 )
@@ -180,10 +192,14 @@ def check_aws_elb_http_backend(item, params, parsed):
     )
 
 
+def discover_aws_elb_http_backend(p):
+    return inventory_aws_generic_single(p, ["RequestCount"])
+
+
 check_info["aws_elb.http_backend"] = LegacyCheckDefinition(
     service_name="AWS/ELB HTTP Backend",
     sections=["aws_elb"],
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
+    discovery_function=discover_aws_elb_http_backend,
     check_function=check_aws_elb_http_backend,
     check_ruleset_name="aws_elb_http",
 )
@@ -242,12 +258,14 @@ def check_aws_elb_healthy_hosts(item, params, parsed):
             )
 
 
+def discover_aws_elb_healthy_hosts(p):
+    return inventory_aws_generic_single(p, ["HealthyHostCount", "UnHealthyHostCount"])
+
+
 check_info["aws_elb.healthy_hosts"] = LegacyCheckDefinition(
     service_name="AWS/ELB Healthy Hosts",
     sections=["aws_elb"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, ["HealthyHostCount", "UnHealthyHostCount"]
-    ),
+    discovery_function=discover_aws_elb_healthy_hosts,
     check_function=check_aws_elb_healthy_hosts,
     check_ruleset_name="aws_elb_healthy_hosts",
 )
@@ -283,10 +301,14 @@ def check_aws_elb_backend_connection_errors(item, params, parsed):
     )
 
 
+def discover_aws_elb_backend_connection_errors(p):
+    return inventory_aws_generic_single(p, ["BackendConnectionErrors"])
+
+
 check_info["aws_elb.backend_connection_errors"] = LegacyCheckDefinition(
     service_name="AWS/ELB Backend Connection Errors",
     sections=["aws_elb"],
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["BackendConnectionErrors"]),
+    discovery_function=discover_aws_elb_backend_connection_errors,
     check_function=check_aws_elb_backend_connection_errors,
     check_ruleset_name="aws_elb_backend_connection_errors",
 )

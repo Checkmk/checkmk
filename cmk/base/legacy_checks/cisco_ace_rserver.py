@@ -9,9 +9,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDBytes, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import equals, OIDBytes, SNMPTree, StringTable
 
 
 def parse_framework_mib_inet_address(ip_address_type, ip_address):

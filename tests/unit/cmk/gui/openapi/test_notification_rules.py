@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator
-from typing import Any, Generator, get_args, Literal
+from collections.abc import Generator, Iterator
+from typing import Any, get_args, Literal
 
 import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import version
-from cmk.utils.notify_types import PluginOptions
+from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
+from cmk.utils.tags import TagID
 
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
@@ -26,9 +27,9 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
     APIContactSelection,
     APINotificationRule,
+    APIPluginDict,
+    APIPluginList,
     APIRuleProperties,
-    CASE_STATE_TYPE,
-    INCIDENT_STATE_TYPE,
     MatchHostEventsAPIType,
     MatchServiceEventsAPIType,
     MgmtTypeAPI,
@@ -90,7 +91,7 @@ def test_update_rule_with_full_contact_selection_data(clients: ClientRegistry) -
         "members_of_contact_groups": {"state": "enabled", "value": ["cg1", "cg2"]},
         "explicit_email_addresses": {
             "state": "enabled",
-            "value": ["monkey@tribe29.com", "thelionsleepstonight@thetokens.com"],
+            "value": ["monkey@example.com", "thelionsleepstonight@example.com"],
         },
         "restrict_by_custom_macros": {"state": "enabled", "value": []},
         "restrict_by_contact_groups": {"state": "enabled", "value": []},
@@ -221,20 +222,7 @@ def conditions_set_1() -> APIConditions:
         },
         "match_host_tags": {
             "state": "enabled",
-            "value": {
-                "ip_address_family": "ip-v4-only",
-                "ip_v4": "ip-v4",
-                "ip_v6": "!ip-v6",
-                "checkmk_agent_api_integration": "special-agents",
-                "piggyback": "piggyback",
-                "snmp": "snmp-v1",
-                "monitor_via_snmp": "snmp",
-                "monitor_via_checkmkagent_or_specialagent": "tcp",
-                "monitor_via_checkmkagent": "checkmk-agent",
-                "only_ping_this_device": "ping",
-                "criticality": "test",
-                "networking_segment": "wan",
-            },
+            "value": [],
         },
         "match_host_labels": {
             "state": "enabled",
@@ -264,7 +252,7 @@ def conditions_set_1() -> APIConditions:
         "match_contact_groups": {"state": "enabled", "value": ["cg1", "cg2"]},
         "match_service_levels": {
             "state": "enabled",
-            "value": {"from_level": "no_service_level", "to_level": "platinum"},
+            "value": {"from_level": 0, "to_level": 30},
         },
         "match_only_during_time_period": {"state": "enabled", "value": "time_period_1"},
         "match_host_event_type": {
@@ -300,20 +288,19 @@ def conditions_set_2() -> APIConditions:
         },
         "match_host_tags": {
             "state": "enabled",
-            "value": {
-                "ip_address_family": "ignore",
-                "ip_v4": "ignore",
-                "ip_v6": "ignore",
-                "checkmk_agent_api_integration": "ignore",
-                "piggyback": "ignore",
-                "snmp": "ignore",
-                "monitor_via_snmp": "ignore",
-                "monitor_via_checkmkagent_or_specialagent": "ignore",
-                "monitor_via_checkmkagent": "ignore",
-                "only_ping_this_device": "ignore",
-                "criticality": "ignore",
-                "networking_segment": "ignore",
-            },
+            "value": [
+                {
+                    "tag_type": "aux_tag",
+                    "tag_id": TagID("ip-v4"),
+                    "operator": "is_set",
+                },
+                {
+                    "tag_type": "tag_group",
+                    "tag_group_id": "piggyback",
+                    "operator": "is_not",
+                    "tag_id": TagID("auto-piggyback"),
+                },
+            ],
         },
         "match_service_groups_regex": {
             "state": "enabled",
@@ -383,6 +370,7 @@ def conditions_set_3() -> APIConditions:
 
 @managedtest
 @pytest.mark.usefixtures("with_host")
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 @pytest.mark.parametrize("testdata", [conditions_set_1(), conditions_set_2(), conditions_set_3()])
 def test_create_and_update_rule_with_conditions_data_200(
     clients: ClientRegistry,
@@ -410,6 +398,7 @@ def invalid_conditions() -> Iterator:
 
 @managedtest
 @pytest.mark.parametrize("testdata", invalid_conditions())
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_create_and_update_rule_with_conditions_data_400(
     clients: ClientRegistry,
     testdata: APIConditions,
@@ -581,6 +570,24 @@ plugin_test_data: list[PluginType] = [
         "http_proxy": {
             "state": "enabled",
             "value": {"option": "environment"},
+        },
+    },
+    {
+        "plugin_name": "cisco_webex_teams",
+        "webhook_url": {
+            "option": "explicit",
+            "url": "http://abc.com",
+        },
+        "url_prefix_for_links_to_checkmk": {
+            "state": "enabled",
+            "value": {"option": "automatic", "schema": "http"},
+        },
+        "disable_ssl_cert_verification": {
+            "state": "enabled",
+        },
+        "http_proxy": {
+            "state": "enabled",
+            "value": {"option": "global", "global_proxy_id": "some_proxy_id"},
         },
     },
     {
@@ -1309,11 +1316,18 @@ def test_update_notification_method_cancel_previous(
 
 @managedtest
 @pytest.mark.parametrize("plugin_data", plugin_test_data)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_update_notification_method(
     clients: ClientRegistry,
     plugin_data: PluginType,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     setup_site_data(clients)
+
+    monkeypatch.setattr(
+        "cmk.gui.fields.custom_fields._global_proxy_choices",
+        lambda: [("some_proxy_id")],
+    )
 
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(rule_config=config)
@@ -1433,7 +1447,7 @@ service_now_incident: MgmtTypeAPI = {
 
 def incident_states() -> list[MgmtTypeParamsAPI]:
     d: list[MgmtTypeParamsAPI] = []
-    for n, predefined_state in enumerate(list(get_args(INCIDENT_STATE_TYPE))):
+    for n, predefined_state in enumerate(list(get_args(IncidentStateStr))):
         d.append(
             {
                 "state_acknowledgement": {
@@ -1529,7 +1543,7 @@ service_now_case: MgmtTypeAPI = {
 
 def case_states() -> list[MgmtTypeParamsAPI]:
     d: list[MgmtTypeParamsAPI] = []
-    for n, predefined_state in enumerate(list(get_args(CASE_STATE_TYPE))):
+    for n, predefined_state in enumerate(list(get_args(CaseStateStr))):
         d.append(
             {
                 "state_recovery": {
@@ -1600,6 +1614,7 @@ def plugin_with_bulking(
 
 @managedtest
 @pytest.mark.parametrize("config", plugin_with_bulking(bulking="allowed"))
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_bulking_200(
     clients: ClientRegistry,
     config: APINotificationRule,
@@ -1611,6 +1626,7 @@ def test_bulking_200(
 
 @managedtest
 @pytest.mark.parametrize("config", plugin_with_bulking(bulking="not_allowed"))
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_bulking_400(
     clients: ClientRegistry,
     config: APINotificationRule,
@@ -1632,7 +1648,9 @@ def test_create_notification_with_invalid_custom_plugin(
     clients: ClientRegistry,
 ) -> None:
     config = notification_rule_request_example()
-    plugin_params: dict[str, Any] = {"plugin_name": "my_cool_plugin"}
+    plugin_params: APIPluginDict = {
+        "plugin_name": CustomPluginName("my_cool_plugin"),
+    }
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_CUSTOM_PARAMS,
         "plugin_params": plugin_params,
@@ -1680,12 +1698,12 @@ invalid_list_configs = [
 @pytest.mark.parametrize("plugin_params, expected_error", invalid_list_configs)
 def test_create_notification_custom_plugin_invalid_list_config(
     clients: ClientRegistry,
-    plugin_params: dict[str, Any],
+    plugin_params: APIPluginList,
     expected_error: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
         lambda what: [("my_cool_plugin", "info")],
     )
 
@@ -1709,12 +1727,12 @@ def test_create_notification_custom_plugin_valid_list_config(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
         lambda what: [("my_cool_plugin", "info")],
     )
 
-    plugin_params: dict[str, Any] = {
-        "plugin_name": "my_cool_plugin",
+    plugin_params: APIPluginList = {
+        "plugin_name": CustomPluginName("my_cool_plugin"),
         "params": ["param1", "param2", "param3"],
     }
 
@@ -1839,11 +1857,11 @@ valid_dict_configs = [
 @pytest.mark.usefixtures("register_custom_plugin")
 def test_create_notification_custom_plugin_valid_dict_config(
     clients: ClientRegistry,
-    plugin_params: dict[str, Any],
+    plugin_params: APIPluginDict,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
         lambda what: [("my_cool_plugin", "info")],
     )
 
@@ -1900,12 +1918,12 @@ invalid_dict_configs = [
 @pytest.mark.usefixtures("register_custom_plugin")
 def test_create_notification_custom_plugin_invalid_dict_config(
     clients: ClientRegistry,
-    plugin_params: dict[str, Any],
+    plugin_params: APIPluginDict,
     expected_error: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
         lambda what: [("my_cool_plugin", "info")],
     )
     config = notification_rule_request_example()
@@ -1921,3 +1939,84 @@ def test_create_notification_custom_plugin_invalid_dict_config(
         resp.json["fields"]["rule_config"]["notification_method"]["notify_plugin"]["plugin_params"]
         == expected_error
     )
+
+
+def setup_host_tags_on_site(clients: ClientRegistry) -> None:
+    clients.HostTagGroup.create(
+        ident="criticality",
+        title="Criticality",
+        help_text="",
+        tags=[
+            {"id": "prod", "title": "Productive system"},
+            {"id": "critical", "title": "Business critical"},
+            {"id": "test", "title": "Test system"},
+            {"id": "offline", "title": "Do not monitor this host"},
+        ],
+    )
+
+    clients.HostTagGroup.create(
+        ident="networking",
+        title="Networking Segment",
+        help_text="",
+        tags=[
+            {"id": "lan", "title": "Local network (low latency)"},
+            {"id": "wan", "title": "WAN (high latency)"},
+            {"id": "dmz", "title": "DMZ (low latency, secure access)"},
+        ],
+    )
+
+    test_data: dict[str, Any] = {
+        "aux_tag_id": "aux_tag_id_1",
+        "title": "aux_tag_1",
+        "topic": "topic_1",
+        "help": "HELP",
+    }
+    clients.AuxTag.create(tag_data=test_data)
+
+
+def test_match_host_tags(clients: ClientRegistry) -> None:
+    setup_host_tags_on_site(clients)
+    config = notification_rule_request_example()
+    config["conditions"]["match_host_tags"] = {
+        "state": "enabled",
+        "value": [
+            {
+                "tag_type": "aux_tag",
+                "tag_id": TagID("aux_tag_id_1"),
+                "operator": "is_set",
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "criticality",
+                "operator": "is_not",
+                "tag_id": TagID("prod"),
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "networking",
+                "operator": "is_not",
+                "tag_id": TagID("lan"),
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "agent",
+                "operator": "is",
+                "tag_id": TagID("cmk-agent"),
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "snmp_ds",
+                "operator": "one_of",
+                "tag_ids": [TagID("snmp-v1"), TagID("no-snmp"), TagID("snmp-v2")],
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "address_family",
+                "operator": "none_of",
+                "tag_ids": [TagID("ip-v4-only"), TagID("ip-v4v6")],
+            },
+        ],
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config)
+    assert resp.json["extensions"]["rule_config"] == config

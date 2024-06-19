@@ -10,10 +10,8 @@ from typing import DefaultDict
 
 from cmk.utils.cpu_tracking import Snapshot
 
-from cmk.fetchers import FetcherType
-
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.fetcher import FetcherType, SourceInfo
 
 __all__ = ["make_timing_results"]
 

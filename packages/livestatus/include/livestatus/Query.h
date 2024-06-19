@@ -8,38 +8,44 @@
 
 #include <bitset>
 #include <chrono>
-#include <cstddef>
 #include <cstdint>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "livestatus/Aggregator.h"  // IWYU pragma: keep
 #include "livestatus/Filter.h"
 #include "livestatus/ParsedQuery.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/Sorter.h"
+#include "livestatus/User.h"
 
-enum class Encoding;
-class Logger;
+class ICore;
 class OutputBuffer;
 class Row;
 class Table;
+class Logger;
 
 class Query {
 public:
-    Query(ParsedQuery parsed_query, Table &table, Encoding data_encoding,
-          size_t max_response_size, OutputBuffer &output, Logger *logger);
+    Query(ParsedQuery parsed_query, Table &table, ICore &core,
+          OutputBuffer &output);
 
     bool process();
 
-    // NOTE: We cannot make this 'const' right now, it increments _current_line
+    // NOTE: We cannot make this 'const' right now, it increments current_line_
     // and calls the non-const getAggregatorsFor() member function.
     bool processDataset(Row row);
 
     bool timelimitReached() const;
+
+    void badRequest(const std::string &message) const;
+    void payloadTooLarge(const std::string &message) const;
     void invalidRequest(const std::string &message) const;
     void badGateway(const std::string &message) const;
 
@@ -62,25 +68,33 @@ public:
 
 private:
     const ParsedQuery parsed_query_;
-    const Encoding _data_encoding;
-    const size_t _max_response_size;
-    OutputBuffer &_output;
-    QueryRenderer *_renderer_query;
-    Table &_table;
-    unsigned _current_line;
-    Logger *const _logger;
-    std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
-        _stats_groups;
+    Table &table_;
+    ICore &core_;
+    OutputBuffer &output_;
+    std::unique_ptr<const User> user_;
 
+    std::unique_ptr<Renderer> renderer_;
+    QueryRenderer query_renderer_;
+    int current_line_;
+    std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
+        stats_groups_;
+    std::vector<std::pair<Sorter::key_type, RowFragment>> sorted_rows_;
+
+    [[nodiscard]] Logger *logger() const;
     bool doStats() const;
-    void start(QueryRenderer &q);
-    void finish(QueryRenderer &q);
+    bool hasOrderBy() const;
+    [[nodiscard]] const OrderBy &orderBy() const;
+    std::unique_ptr<Renderer> makeRenderer(std::ostream &os);
+    void renderColumnHeaders();
+    void renderSorters();
+    void renderAggregators();
     void doWait();
 
     // NOTE: We cannot make this 'const' right now, it adds entries into
-    // _stats_groups.
-    const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(
-        const RowFragment &groupspec);
+    // stats_groups_.
+    const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(Row row);
+
+    void renderColumns(Row row, QueryRenderer &q) const;
 };
 
 #endif  // Query_h

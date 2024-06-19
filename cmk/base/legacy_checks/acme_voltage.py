@@ -5,12 +5,11 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.acme import acme_environment_states
+from cmk.base.check_legacy_includes.acme import ACME_ENVIRONMENT_STATES
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.acme import DETECT_ACME
 
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.1 MAIN 1.20V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.1
@@ -67,7 +66,7 @@ def check_acme_voltage(item, params, info):
             return check_elphase(
                 descr,
                 params,
-                {descr: {"voltage": (float(value_str) / 1000.0, acme_environment_states[state])}},
+                {descr: {"voltage": (float(value_str) / 1000.0, ACME_ENVIRONMENT_STATES[state])}},
             )
     return None
 

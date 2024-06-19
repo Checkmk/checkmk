@@ -18,15 +18,18 @@ class User;
 class TableHosts : public Table {
 public:
     explicit TableHosts(ICore *mc);
-    static void addColumns(Table *table, const std::string &prefix,
+    static void addColumns(Table *table, const ICore &core,
+                           const std::string &prefix,
                            const ColumnOffsets &offsets,
                            LockComments lock_comments,
                            LockDowntimes lock_downtimes);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user) override;
-    [[nodiscard]] Row get(const std::string &primary_key) const override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
+    [[nodiscard]] Row get(const std::string &primary_key,
+                          const ICore &core) const override;
 };
 
 #endif  // TableHosts_h

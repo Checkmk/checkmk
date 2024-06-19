@@ -3,60 +3,64 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import (
-    CascadingDropdown,
-    CascadingDropdownElement,
-    CheckParameterRuleSpecWithItem,
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
     DictElement,
     Dictionary,
+    InputHint,
     Integer,
-    Localizable,
+    LevelDirection,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
     Percentage,
-    TextInput,
-    Topic,
-    Tuple,
+    SimpleLevels,
+    SimpleLevelsConfigModel,
 )
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
-    fd_perc = CascadingDropdownElement(
-        ident="fd_perc",
-        parameter_form=Tuple(
-            title=Localizable("Percentual levels for used processes"),
-            elements=[
-                Percentage(title=Localizable("Warning at usage of"), prefill_value=80.0),
-                Percentage(title=Localizable("Critical at usage of"), prefill_value=90.0),
-            ],
+    fd_perc = CascadingSingleChoiceElement[SimpleLevelsConfigModel[float]](
+        name="fd_perc",
+        title=Title("Percentual levels for used processes"),
+        parameter_form=SimpleLevels[float](
+            level_direction=LevelDirection.UPPER,
+            form_spec_template=Percentage(),
+            prefill_fixed_levels=DefaultValue(value=(80.0, 90.0)),
+            migrate=migrate_to_float_simple_levels,
         ),
     )
-    fd_abs = CascadingDropdownElement(
-        ident="fd_abs",
-        parameter_form=Tuple(
-            title=Localizable("Absolute levels for total number of used processes"),
-            elements=[
-                Integer(title=Localizable("Warning at"), unit=Localizable("processes")),
-                Integer(title=Localizable("Critical at"), unit=Localizable("processes")),
-            ],
+    fd_abs = CascadingSingleChoiceElement[SimpleLevelsConfigModel[int]](
+        name="fd_abs",
+        title=Title("Absolute levels for total number of used processes"),
+        parameter_form=SimpleLevels[int](
+            level_direction=LevelDirection.UPPER,
+            form_spec_template=Integer(label=Label("number of processes")),
+            prefill_fixed_levels=InputHint(value=(0, 0)),
+            migrate=migrate_to_integer_simple_levels,
         ),
     )
 
     return Dictionary(
         elements={
-            "levels": DictElement(
-                parameter_form=CascadingDropdown(
-                    title=Localizable("Levels for erlang process usage"),
+            "levels": DictElement[tuple[str, object]](
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Levels for erlang process usage"),
                     elements=[fd_perc, fd_abs],
-                    prefill_selection="fd_perc",
+                    prefill=DefaultValue("fd_perc"),
                 )
             )
         },
     )
 
 
-rule_spec_rabbitmq_nodes_proc = CheckParameterRuleSpecWithItem(
+rule_spec_rabbitmq_nodes_proc = CheckParameters(
     name="rabbitmq_nodes_proc",
     topic=Topic.APPLICATIONS,
-    item_form=TextInput(title=Localizable("Node name")),
     parameter_form=_parameter_form_rabbitmq_nodes_proc,
-    title=Localizable("RabbitMQ nodes processes"),
+    title=Title("RabbitMQ nodes processes"),
+    condition=HostAndItemCondition(item_title=Title("Node name")),
 )

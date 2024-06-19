@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-import os
 import re
 import subprocess
 from collections import defaultdict
@@ -12,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-import tests.testlib as testlib
+from tests.testlib.repo import repo_path
 
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
@@ -24,7 +23,7 @@ CVSS_REGEX = re.compile(
 
 @pytest.fixture(scope="function", name="precompiled_werks")
 def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    all_werks = cmk.utils.werks.load_raw_files(testlib.repo_path() / ".werks")
+    all_werks = cmk.utils.werks.load_raw_files(repo_path() / ".werks")
     cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", {w.id: w for w in all_werks})
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
@@ -32,7 +31,7 @@ def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
 def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     tmp_dir = str(tmp_path)
 
-    all_werks = cmk.utils.werks.load_raw_files(testlib.repo_path() / ".werks")
+    all_werks = cmk.utils.werks.load_raw_files(repo_path() / ".werks")
     cre_werks = {w.id: w for w in all_werks if w.edition.value == "cre"}
     cee_werks = {w.id: w for w in all_werks if w.edition.value == "cee"}
     cme_werks = {w.id: w for w in all_werks if w.edition.value == "cme"}
@@ -116,7 +115,7 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
             # print "No tag found in git: %s. Assuming version was not released yet." % tag_name
             continue
 
-        if not _werk_exists_in_git_tag(tag_name, ".werks/%d" % werk_id):
+        if not _werk_exists_in_git_tag(tag_name, werk_id):
             werk_tags = sorted(
                 _tags_containing_werk(werk_id),
                 key=lambda t: cmk_version.Version.from_str(t[1:]),
@@ -142,14 +141,16 @@ def _git_tag_exists(tag: str) -> bool:
             ["git", "rev-list", tag],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
-            cwd=testlib.repo_path(),
+            cwd=repo_path(),
         ).wait()
         == 0
     )
 
 
-def _werk_exists_in_git_tag(tag: str, rel_path: str) -> bool:
-    return rel_path in _werks_in_git_tag(tag)
+def _werk_exists_in_git_tag(tag: str, werk_id: int) -> bool:
+    return f".werks/{werk_id}" in _werks_in_git_tag(
+        tag
+    ) or f".werks/{werk_id}.md" in _werks_in_git_tag(tag)
 
 
 def _tags_containing_werk(werk_id: int) -> list[str]:
@@ -164,7 +165,7 @@ def _werks_in_git_tag(tag: str) -> list[str]:
     werks_in_tag = (
         subprocess.check_output(
             [b"git", b"ls-tree", b"-r", b"--name-only", tag.encode(), b".werks"],
-            cwd=testlib.repo_path(),
+            cwd=repo_path(),
         )
         .decode()
         .split("\n")
@@ -173,7 +174,7 @@ def _werks_in_git_tag(tag: str) -> list[str]:
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:
         try:
-            werk_id = int(os.path.basename(werk_file))
+            werk_id = int(Path(werk_file).stem)
         except ValueError:
             continue
         _werk_to_git_tag[werk_id].append(tag)

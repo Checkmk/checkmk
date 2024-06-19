@@ -240,11 +240,10 @@ class CreateTimePeriod(BaseSchema):
 
 
 class UpdateTimePeriod(BaseSchema):
-    alias = TimePeriodAlias(
+    alias = fields.String(
         example="new_alias",
         description="An alias for the time period",
         required=False,
-        presence="should_not_exist",
     )
     active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),

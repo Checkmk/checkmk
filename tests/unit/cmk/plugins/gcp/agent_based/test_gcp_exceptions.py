@@ -10,8 +10,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from cmk.agent_based.v2 import Result, State
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.gcp.agent_based.gcp_exceptions import _ExceptionSection, check, discover, parse
 
 

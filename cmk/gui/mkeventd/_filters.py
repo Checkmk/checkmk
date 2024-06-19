@@ -90,7 +90,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Hostname of original event (regex)"),
+            title=_l("Host name of original event (regex)"),
             sort_index=201,
             info="event",
             query_filter=query_filters.TextQuery(
@@ -101,7 +101,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         InputTextFilter(
-            title=_l("Hostname of event (exact match)"),
+            title=_l("Host name of event (exact match)"),
             sort_index=201,
             info="event",
             query_filter=query_filters.TextQuery(ident="event_host", op="="),
@@ -246,7 +246,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Service Level at least"),
+            title=_l("Service level at least"),
             sort_index=211,
             info="event",
             autocompleter=AutocompleterConfig(ident="service_levels"),
@@ -256,7 +256,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         AjaxDropdownFilter(
-            title=_l("Service Level at most"),
+            title=_l("Service level at most"),
             sort_index=211,
             info="event",
             autocompleter=AutocompleterConfig(ident="service_levels"),

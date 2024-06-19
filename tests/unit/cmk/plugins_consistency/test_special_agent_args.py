@@ -4,17 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from argparse import Namespace
+from collections.abc import Mapping
 from types import ModuleType
-from typing import Final, Mapping
+from typing import Final
 
 import pytest
 
-from tests.testlib import repo_path
+from cmk.utils import password_store
 
+from cmk.base.server_side_calls import load_special_agents
+
+from cmk.plugins.alertmanager.special_agents import agent_alertmanager
+from cmk.plugins.bazel.lib import agent as agent_bazel
+from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
+from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.special_agents import (
     agent_activemq,
-    agent_alertmanager,
     agent_allnet_ip_sensoric,
     agent_aws,
     agent_aws_status,
@@ -25,28 +31,24 @@ from cmk.special_agents import (
     agent_couchbase,
     agent_datadog,
     agent_elasticsearch,
-    agent_fritzbox,
     agent_graylog,
     agent_hivemanager_ng,
     agent_innovaphone,
-    agent_jenkins,
     agent_jira,
-    agent_kube,
     agent_mobileiron,
     agent_mqtt,
     agent_netapp,
-    agent_prometheus,
+    agent_netapp_ontap,
     agent_proxmox_ve,
     agent_pure_storage_fa,
     agent_rabbitmq,
     agent_smb_share,
     agent_splunk,
     agent_storeonce4x,
-    agent_vsphere,
 )
 
 TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
-    "3par": None,
+    "three_par": None,
     "activemq": agent_activemq,
     "acme_sbc": None,  # not even python.
     "alertmanager": agent_alertmanager,
@@ -56,6 +58,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "aws_status": agent_aws_status,
     "azure": agent_azure,
     "azure_status": agent_azure_status,
+    "bazel_cache": agent_bazel,
     "bi": None,
     "cisco_meraki": agent_cisco_meraki,
     "cisco_prime": agent_cisco_prime,
@@ -77,12 +80,11 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "jenkins": agent_jenkins,
     "jira": agent_jira,
     "jolokia": None,
-    "kube": agent_kube,
     "mobileiron": agent_mobileiron,
     "mqtt": agent_mqtt,
     "netapp": agent_netapp,
+    "netapp_ontap": agent_netapp_ontap,
     "prism": None,
-    "prometheus": agent_prometheus,
     "proxmox_ve": agent_proxmox_ve,
     "pure_storage_fa": agent_pure_storage_fa,
     "rabbitmq": agent_rabbitmq,
@@ -97,9 +99,46 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "tinkerforge": None,
     "ucs_bladecenter": None,
     "vnx_quotas": None,
-    "vsphere": agent_vsphere,
     "zerto": None,
 }
+
+UNMIGRATED = {
+    "acme_sbc",
+    "activemq",
+    "alertmanager",
+    "allnet_ip_sensoric",
+    "appdynamics",
+    "azure",
+    "couchbase",
+    "ddn_s2a",
+    "emcvnx",
+    "gcp_status",
+    "graylog",
+    "hivemanager",
+    "hivemanager_ng",
+    "hp_msa",
+    "ibmsvc",
+    "innovaphone",
+    "ipmi_sensors",
+    "jira",
+    "jolokia",
+    "mqtt",
+    "netapp",
+    "rabbitmq",
+    "random",
+    "ruckus_spot",
+    "salesforce",
+    "siemens_plc",
+    "smb_share",
+    "splunk",
+    "storeonce",
+    "storeonce4x",
+    "tinkerforge",
+    "ucs_bladecenter",
+    "vnx_quotas",
+    "zerto",
+}
+
 
 REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "alertmanager": [],
@@ -179,6 +218,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "Hostname",
     ],
     "netapp": ["address", "user", "password"],
+    "netapp_ontap": ["--hostname", "HOSTNAME", "--username", "USERNAME", "--password", "PASSWORD"],
     "activemq": ["server", "1234"],
     "datadog": [
         "HOSTNAME",
@@ -206,20 +246,22 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "aws_status": [],
     "gcp_status": [],
     "pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
+    "bazel_cache": ["--host", "SERVER"],
 }
 
 
 def test_all_agents_tested() -> None:
-    assert set(TESTED_SA_MODULES) == {
-        agent_file.name.split("agent_")[-1]
-        for agent_file in (repo_path() / "agents" / "special").glob("agent_*")
-    }
+    _errors, agents = load_special_agents()
+    migrated = {agent.name for agent in agents.values()}
+    assert not migrated & UNMIGRATED
+    assert set(TESTED_SA_MODULES) == (migrated | UNMIGRATED)
 
 
 @pytest.mark.parametrize(
     "name, module", [(n, m) for n, m in TESTED_SA_MODULES.items() if m is not None]
 )
-def test_parse_arguments(name: str, module: ModuleType) -> None:
+def test_parse_arguments(monkeypatch: pytest.MonkeyPatch, name: str, module: ModuleType) -> None:
+    monkeypatch.setattr(password_store, "lookup", lambda x: x)
     minimal_args_list = REQUIRED_ARGUMENTS[name]
 
     # Special agents should process their arguments in a function called parse_arguments

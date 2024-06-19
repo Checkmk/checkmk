@@ -10,7 +10,7 @@ description:
 
  You can configure limits for the number of connections.
 
- This check needs the mk_db2 plugin installed in the agent.
+ This check needs the mk_db2 plug-in installed in the agent.
 
 item:
  The DB2 instance name followed by a : and the database name, e.g. db2ilog1:REST1

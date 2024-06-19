@@ -8,10 +8,11 @@ from collections.abc import Callable, Mapping, Sequence
 import numpy as np
 import pytest
 
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.gui.graphing import (
     get_first_matching_perfometer,
     MetricometerRendererLegacyLogarithmic,
-    perfometer_info,
     PerfometerSpec,
     renderer_registry,
 )
@@ -19,17 +20,19 @@ from cmk.gui.graphing._perfometer import (
     _make_projection,
     _perfometer_possible,
     _PERFOMETER_PROJECTION_PARAMETERS,
+    LegacyPerfometer,
     MetricometerRendererLegacyLinear,
     MetricometerRendererPerfometer,
     MetricRendererStack,
+    parse_perfometer,
 )
-from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
+from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric, UnitInfo
 
-from cmk.graphing.v1 import metric, perfometer
+from cmk.graphing.v1 import metrics, perfometers
 
 
 @pytest.mark.parametrize(
-    "perfometer_, translated_metrics",
+    "perfometer, translated_metrics",
     [
         pytest.param(
             {
@@ -105,22 +108,22 @@ from cmk.graphing.v1 import metric, perfometer
     ],
 )
 def test__perfometer_possible(
-    perfometer_: PerfometerSpec,
+    perfometer: PerfometerSpec,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> None:
-    assert _perfometer_possible(perfometer_, translated_metrics)
+    assert _perfometer_possible(perfometer, translated_metrics)
 
 
 @pytest.mark.parametrize(
-    "translated_metrics, perfometer_",
+    "translated_metrics, perfometer",
     [
         pytest.param(
             {"active_connections": {}},
-            perfometer.Perfometer(
+            perfometers.Perfometer(
                 name="active_connections",
-                focus_range=perfometer.FocusRange(
-                    lower=perfometer.Closed(0),
-                    upper=perfometer.Open(565),
+                focus_range=perfometers.FocusRange(
+                    lower=perfometers.Closed(0),
+                    upper=perfometers.Open(90),
                 ),
                 segments=["active_connections"],
             ),
@@ -130,75 +133,36 @@ def test__perfometer_possible(
 )
 def test_get_first_matching_perfometer(
     translated_metrics: Mapping[str, TranslatedMetric],
-    perfometer_: perfometer.Perfometer | perfometer.Bidirectional | perfometer.Stacked,
+    perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
 ) -> None:
-    assert get_first_matching_perfometer(translated_metrics) == perfometer_
+    assert get_first_matching_perfometer(translated_metrics) == perfometer
 
 
-@pytest.mark.parametrize(
-    "translated_metrics, perfometer_index",
-    [
-        pytest.param(
-            {
-                "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
-                "failed_notifications": {"value": 0, "unit": "", "color": "#456789"},
-            },
-            -4,
-            id="fourth from last",
-        ),
-        pytest.param(
-            {
-                "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
-                "failed_notifications": {"value": 1, "unit": "", "color": "#456789"},
-            },
-            -3,
-            id="third from last",
-        ),
-        pytest.param(
-            {"robotmk_suite_runtime": {}},
-            -2,
-            id="second from last",
-        ),
-        pytest.param(
-            {"robotmk_test_runtime": {}},
-            -1,
-            id="very last perfometer",
-        ),
-        pytest.param(
-            {
-                "fs_used": {"value": 10, "scalar": {"max": 30}, "unit": "", "color": "#123456"},
-                "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
-                "fs_size": {"value": 15, "unit": "", "color": "#123456"},
-            },
-            61,
-            id="filesystem check without overcommittment",
-        ),
-        pytest.param(
-            {
-                "fs_used": {"value": 10, "scalar": {"max": 100}, "unit": "", "color": "#123456"},
-                "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
-                "fs_size": {"value": 15, "unit": "", "color": "#123456"},
-                "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
-            },
-            61,
-            id="filesystem check without overcommittment (+overprovisioned)",
-        ),
-        pytest.param(
-            {
-                "fs_used": {"value": 10, "scalar": {"max": 100}, "unit": "", "color": "#123456"},
-                "uncommitted": {"value": 5, "unit": "", "color": "#123456"},
-                "fs_size": {"value": 15, "unit": "", "color": "#123456"},
-                "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
-            },
-            62,
-            id="filesystem check with overcommittment",
-        ),
-    ],
-)
-def test_get_first_matching_legacy_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric], perfometer_index: int
-) -> None:
-    assert get_first_matching_perfometer(translated_metrics) == perfometer_info[perfometer_index]
+def test_get_first_matching_legacy_perfometer() -> None:
+    assert get_first_matching_perfometer(
+        {
+            "dedup_rate": TranslatedMetric(
+                orig_name=["dedup_rate"],
+                value=10,
+                scalar=ScalarBounds(),
+                scale=[1.0],
+                auto_graph=True,
+                title="Dedup rate",
+                unit=UnitInfo(
+                    title="Count",
+                    symbol="",
+                    render=str,
+                    js_render="v => v.toString()",
+                ),
+                color="#ffa000",
+            ),
+        }
+    ) == {
+        "exponent": 1.2,
+        "half_value": 30.0,
+        "metric": "dedup_rate",
+        "type": "logarithmic",
+    }
 
 
 def test_registered_renderers() -> None:
@@ -280,6 +244,8 @@ class TestMetricometerRendererLegacyLinear:
         self,
         unit_info: UnitInfo,
         expected_result: MetricRendererStack,
+        request_context: None,
+        patch_theme: None,
     ) -> None:
         assert self._renderer(unit_info).get_stack() == expected_result
 
@@ -292,7 +258,7 @@ class TestMetricometerRendererLegacyLinear:
                 id="no dedicated perfometer renderer",
             ),
             pytest.param(
-                lambda v: f"{2*v} U",
+                lambda v: f"{2 * v} U",
                 "120.0 U",
                 id="dedicated perfometer renderer",
             ),
@@ -393,7 +359,7 @@ class TestMetricometerRendererLegacyLogarithmic:
                 id="no dedicated perfometer renderer",
             ),
             pytest.param(
-                lambda v: f"{2*v} U",
+                lambda v: f"{2 * v} U",
                 "246.0 U",
                 id="dedicated perfometer renderer",
             ),
@@ -421,24 +387,24 @@ class TestMetricometerRendererLegacyLogarithmic:
     "focus_range",
     [
         pytest.param(
-            perfometer.FocusRange(perfometer.Closed(10), perfometer.Closed(-10)),
+            perfometers.FocusRange(perfometers.Closed(10), perfometers.Closed(-10)),
             id="closed-closed",
         ),
         pytest.param(
-            perfometer.FocusRange(perfometer.Open(10), perfometer.Closed(-10)),
+            perfometers.FocusRange(perfometers.Open(10), perfometers.Closed(-10)),
             id="open-closed",
         ),
         pytest.param(
-            perfometer.FocusRange(perfometer.Closed(10), perfometer.Open(-10)),
+            perfometers.FocusRange(perfometers.Closed(10), perfometers.Open(-10)),
             id="closed-open",
         ),
         pytest.param(
-            perfometer.FocusRange(perfometer.Open(10), perfometer.Open(-10)),
+            perfometers.FocusRange(perfometers.Open(10), perfometers.Open(-10)),
             id="open-open",
         ),
     ],
 )
-def test_perfometer_projection_error(focus_range: perfometer.FocusRange) -> None:
+def test_perfometer_projection_error(focus_range: perfometers.FocusRange) -> None:
     with pytest.raises(ValueError):
         _make_projection(focus_range, _PERFOMETER_PROJECTION_PARAMETERS, {})
 
@@ -453,7 +419,7 @@ def test_perfometer_projection_error(focus_range: perfometer.FocusRange) -> None
 )
 def test_perfometer_projection_closed_closed(value: int | float, result: float) -> None:
     projection = _make_projection(
-        perfometer.FocusRange(perfometer.Closed(-10), perfometer.Closed(20)),
+        perfometers.FocusRange(perfometers.Closed(-10), perfometers.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -469,7 +435,7 @@ def test_perfometer_projection_closed_closed(value: int | float, result: float) 
 )
 def test_perfometer_projection_closed_closed_error(value: int | float) -> None:
     projection = _make_projection(
-        perfometer.FocusRange(perfometer.Closed(-10), perfometer.Closed(20)),
+        perfometers.FocusRange(perfometers.Closed(-10), perfometers.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -488,7 +454,7 @@ def test_perfometer_projection_closed_closed_error(value: int | float) -> None:
 )
 def test_perfometer_projection_open_closed(value: int | float, result: float) -> None:
     projection = _make_projection(
-        perfometer.FocusRange(perfometer.Open(-10), perfometer.Closed(20)),
+        perfometers.FocusRange(perfometers.Open(-10), perfometers.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -503,7 +469,7 @@ def test_perfometer_projection_open_closed(value: int | float, result: float) ->
 )
 def test_perfometer_projection_open_closed_error(value: int | float) -> None:
     projection = _make_projection(
-        perfometer.FocusRange(perfometer.Open(-10), perfometer.Closed(20)),
+        perfometers.FocusRange(perfometers.Open(-10), perfometers.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -522,7 +488,7 @@ def test_perfometer_projection_open_closed_error(value: int | float) -> None:
 )
 def test_perfometer_projection_closed_open(value: int | float, result: float) -> None:
     projection = _make_projection(
-        perfometer.FocusRange(perfometer.Closed(-10), perfometer.Open(20)),
+        perfometers.FocusRange(perfometers.Closed(-10), perfometers.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -537,7 +503,7 @@ def test_perfometer_projection_closed_open(value: int | float, result: float) ->
 )
 def test_perfometer_projection_closed_open_error(value: int | float) -> None:
     projection = _make_projection(
-        perfometer.FocusRange(perfometer.Closed(-10), perfometer.Open(20)),
+        perfometers.FocusRange(perfometers.Closed(-10), perfometers.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -557,7 +523,7 @@ def test_perfometer_projection_closed_open_error(value: int | float) -> None:
 )
 def test_perfometer_projection_open_open(value: int | float, result: float) -> None:
     projection = _make_projection(
-        perfometer.FocusRange(perfometer.Open(-10), perfometer.Open(20)),
+        perfometers.FocusRange(perfometers.Open(-10), perfometers.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
     )
@@ -683,34 +649,36 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
 def test_perfometer_renderer_stack(
     segments: Sequence[
         str
-        | metric.Constant
-        | metric.WarningOf
-        | metric.CriticalOf
-        | metric.MinimumOf
-        | metric.MaximumOf
-        | metric.Sum
-        | metric.Product
-        | metric.Difference
-        | metric.Fraction
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
     value_projections: Sequence[tuple[float, str]],
+    request_context: None,
+    patch_theme: None,
 ) -> None:
     assert MetricometerRendererPerfometer(
-        perfometer.Perfometer(
+        perfometers.Perfometer(
             name="name",
-            focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(2500.0)),
+            focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(2500.0)),
             segments=segments,
         ),
         translated_metrics,
     ).get_stack() == [list(value_projections) + [(14.73, "#bdbdbd")]]
 
 
-def test_perfometer_renderer_stack_same_values() -> None:
+def test_perfometer_renderer_stack_same_values(request_context: None, patch_theme: None) -> None:
     assert MetricometerRendererPerfometer(
-        perfometer.Perfometer(
+        perfometers.Perfometer(
             name="name",
-            focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(2500.0)),
+            focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(2500.0)),
             segments=["metric-name1", "metric-name2"],
         ),
         {
@@ -746,3 +714,126 @@ def test_perfometer_renderer_stack_same_values() -> None:
             },
         },
     ).get_stack() == [[(42.63, "#111111"), (42.63, "#222222"), (14.74, "#bdbdbd")]]
+
+
+@pytest.mark.parametrize(
+    "legacy_perfometer, expected_perfometer",
+    [
+        pytest.param(
+            ("linear", ([], 100, "Label 1")),
+            {"type": "linear", "segments": [], "total": 100, "label": "Label 1"},
+            id="linear",
+        ),
+        pytest.param(
+            ("dual", [("linear", ([], 100, "Label 2")), ("linear", ([], 100, "Label 3"))]),
+            {
+                "type": "dual",
+                "perfometers": [
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 2"},
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 3"},
+                ],
+            },
+            id="dual",
+        ),
+        pytest.param(
+            ("stacked", [("linear", ([], 100, "Label 4")), ("linear", ([], 100, "Label 5"))]),
+            {
+                "type": "stacked",
+                "perfometers": [
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 4"},
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 5"},
+                ],
+            },
+            id="stacked",
+        ),
+    ],
+)
+def test_parse_perfometer(
+    legacy_perfometer: LegacyPerfometer, expected_perfometer: PerfometerSpec
+) -> None:
+    assert parse_perfometer(legacy_perfometer) == expected_perfometer
+
+
+@pytest.mark.parametrize(
+    "legacy_perfometer",
+    [
+        pytest.param(
+            ("dual", [("linear", ([], 100, "Label"))]),
+            id="dual-one-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    ("linear", ([], 100, "Label 1")),
+                    ("linear", ([], 100, "Label 2")),
+                    ("linear", ([], 100, "Label 3")),
+                ],
+            ),
+            id="dual-three-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    (
+                        "dual",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="dual-dual-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    (
+                        "stacked",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="dual-stacked-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "stacked",
+                [
+                    (
+                        "stacked",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="stacked-stacked-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "stacked",
+                [
+                    (
+                        "dual",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="stacked-dual-sub-perfometers",
+        ),
+    ],
+)
+def test_parse_dual_or_stacked_perfometer_errors(legacy_perfometer: LegacyPerfometer) -> None:
+    with pytest.raises(MKGeneralException):
+        parse_perfometer(legacy_perfometer)

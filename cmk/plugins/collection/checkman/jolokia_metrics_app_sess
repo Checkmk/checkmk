@@ -7,11 +7,13 @@ description:
  This check allows to monitor the number of current connections to
  a JVM application (i.e. /host-manager or /my-web-app)
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server.
 
  The check can alert if the {WARN}/{CRIT} thresholds for a configurable total
  is exceeded.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
 
 item:
  The name of the application server instance as configured by the agent

@@ -11,7 +11,8 @@ import time
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     all_of,
     get_average,
     get_rate,
@@ -21,9 +22,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     render,
     SNMPTree,
     startswith,
+    StringTable,
 )
-
-from cmk.agent_based.v2.type_defs import StringTable
 
 # Taken from connUnitPortState
 # user selected state of the port hardware
@@ -89,7 +89,7 @@ fc_port_no_inventory_types = [3]
 fc_port_no_inventory_admstates = [1, 3]
 fc_port_no_inventory_opstates = []
 fc_port_no_inventory_phystates = []
-fc_port_inventory_use_portname = False  # use connUnitPortName as service description
+fc_port_inventory_use_portname = False  # use connUnitPortName as service name
 
 
 # Helper function for computing item from port number

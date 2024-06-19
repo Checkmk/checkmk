@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 from typing import NamedTuple
 
@@ -37,6 +37,18 @@ class CachedPluginType(StrEnum):
     MRPE = "mrpe"
 
 
+def render_plugin_type(plugin_type: CachedPluginType) -> str:
+    match plugin_type:
+        case CachedPluginType.MRPE:
+            return "MRPE plug-in"
+        case CachedPluginType.PLUGIN:
+            return "Agent plug-in"
+        case CachedPluginType.LOCAL:
+            return "Local check"
+        case CachedPluginType.ORACLE:
+            return "mk_oracle plug-in"
+
+
 class CachedPlugin(NamedTuple):
     plugin_type: CachedPluginType | None
     plugin_name: str
@@ -46,6 +58,8 @@ class CachedPlugin(NamedTuple):
 
 class CachedPluginsSection(NamedTuple):
     timeout: list[CachedPlugin] | None
+    # "killfailed" has been removed from the agent in 2.4
+    # Currently it is still used by mk_oracle
     killfailed: list[CachedPlugin] | None
 
 
@@ -133,13 +147,10 @@ class CertInfo(BaseModel):
         except PyAsn1Error:
             dt = datetime.fromisoformat(value)
 
-        # We __might__ get an aware or naive datetime object. That makes it
-        # hard to compare later on, so lets make all aware. We probably only
-        # get aware datetime objects, but who knows for sure? So in the
-        # unlikely event of no timezone information, we use the local timezone.
-
+        # We _should_ only get timezone aware datetimes here. If it's naive anyway, assume UTC.
         if dt.tzinfo is None:
-            return dt.astimezone()
+            dt.replace(tzinfo=timezone.utc)
+
         return dt
 
     @classmethod

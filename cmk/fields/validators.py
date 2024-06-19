@@ -9,9 +9,7 @@ from collections.abc import Iterable
 from marshmallow import ValidationError
 from marshmallow.validate import Validator
 
-import cmk.utils.regex
-
-HOST_NAME_RE = cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME)
+from cmk.utils.hostaddress import HostAddress
 
 
 class ValidateIPv4(Validator):
@@ -150,7 +148,7 @@ class IsValidRegexp(Validator):
 
 # NOTE: This was duplicated from cmk.gui.valuespec:HostAddress._is_valid_host_name to prevent import cycles.
 class HostNameValidator(Validator):
-    """Validate a hostname according to RFC1123
+    """Validate a host name according to RFC1123
 
     Examples:
 
@@ -160,12 +158,12 @@ class HostNameValidator(Validator):
         >>> validator("aol.com..")
         Traceback (most recent call last):
         ...
-        marshmallow.exceptions.ValidationError: Domain part #2: '' is not a valid hostname. [RFC1123]
+        marshmallow.exceptions.ValidationError: Domain part #2: '' is not a valid host name. [RFC1123]
 
         >>> validator("-hyphenfront")
         Traceback (most recent call last):
         ...
-        marshmallow.exceptions.ValidationError: Domain part #0: '-hyphenfront' is not a valid hostname. [RFC1123]
+        marshmallow.exceptions.ValidationError: Domain part #0: '-hyphenfront' is not a valid host name. [RFC1123]
 
         >>> validator("127.0.0.1")
         Traceback (most recent call last):
@@ -177,7 +175,7 @@ class HostNameValidator(Validator):
     def __call__(self, hostname):
         # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
         if len(hostname) > 255:
-            raise ValidationError("Hostname too long")
+            raise ValidationError("Host name too long")
 
         if hostname[-1] == ".":
             hostname = hostname[:-1]  # strip exactly one dot from the right, if present
@@ -192,15 +190,14 @@ class HostNameValidator(Validator):
         for index, part in enumerate(hostname.split(".")):
             if not allowed.match(part):
                 raise ValidationError(
-                    f"Domain part #{index}: {part!r} is not a valid hostname. [RFC1123]"
+                    f"Domain part #{index}: {part!r} is not a valid host name. [RFC1123]"
                 )
 
 
 class ValidateHostName(Validator):
     def __call__(self, value, **kwargs):
-        if HOST_NAME_RE.match(value):
+        try:
+            HostAddress.validate(value)
             return True
-
-        raise ValidationError(
-            f"Hostname {value!r} doesn't match pattern '^{HOST_NAME_RE.pattern}$'"
-        )
+        except ValueError as exception:
+            raise ValidationError(str(exception)) from exception

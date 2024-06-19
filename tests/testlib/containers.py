@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tarfile
@@ -16,16 +17,15 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypedDict
 
 import docker  # type: ignore[import-untyped]
 import dockerpty  # type: ignore[import-untyped]
 import requests
 from docker.models.images import Image  # type: ignore[import-untyped]
-from typing_extensions import TypedDict
 
-import tests.testlib as testlib
-from tests.testlib import get_cmk_download_credentials
+from tests.testlib.repo import git_commit_id, git_essential_directories, repo_path
+from tests.testlib.utils import get_cmk_download_credentials, package_hash_path
 from tests.testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
@@ -36,7 +36,7 @@ _DOCKER_BUILD_ID = 1
 logger = logging.getLogger()
 
 
-class _VolumeInfo(TypedDict):
+class DockerBind(TypedDict):
     bind: str
     mode: Literal["ro"]
 
@@ -53,16 +53,16 @@ def execute_tests_in_container(
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
-    base_image_name = f"{_DOCKER_REGISTRY}/{distro_name}"
-    image_name_with_tag = _create_cmk_image(client, base_image_name, docker_tag, version)
+    image_name_with_tag = _create_cmk_image(client, distro_name, docker_tag, version)
 
     # Start the container
     container: docker.Container
     with _start(
         client,
         image=image_name_with_tag,
+        # TODO: Re-enable using dedicated container names, the following causes name conflicts:
+        # name=f"test-{container_name_suffix(distro_name, docker_tag)}",
         command="/bin/bash",
-        volumes=list(_runtime_volumes().keys()),
         host_config=client.api.create_host_config(
             # Create some init process that manages signals and processes
             init=True,
@@ -74,13 +74,7 @@ def execute_tests_in_container(
             ulimits=[
                 docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
             ],
-            binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
-            # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
-            # docker daemon wide, but set some fixed local network which is not being routed.
-            # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
-            sysctls={
-                "net.ipv6.conf.eth0.disable_ipv6": 1,
-            },
+            binds=_runtime_binds(),
         ),
         stdin_open=True,
         tty=True,
@@ -92,21 +86,18 @@ def execute_tests_in_container(
 
         if interactive:
             logger.info("+-------------------------------------------------")
-            logger.info("| Next steps: Start whatever test you want, for example:")
+            logger.info("| Next steps: Start the test of your choice, for example:")
             logger.info("| ")
-            logger.info("| VERSION=git make -C tests test-integration")
+            logger.info("| make -C tests test-integration")
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info(
-                "| VERSION=git pytest -T integration "
-                "tests/integration/livestatus/test_livestatus.py"
-            )
+            logger.info("| pytest -T integration tests/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info(
-                "| VERSION=git pytest -T integration "
+                "| pytest -T integration "
                 "tests/integration/livestatus/test_livestatus.py "
                 "-k test_service_custom_variables "
             )
@@ -114,11 +105,11 @@ def execute_tests_in_container(
             logger.info("|   Execute a single test")
             logger.info("| ")
             logger.info("| !!!WARNING!!!")
-            logger.info("| The version of Checkmk you test against is set using the")
-            logger.info(
-                "| VERSION variable as seen above. Only 'git' tests against the code in your repo."
-            )
-            logger.info("| VERSION defaults to the current daily build of you branch.")
+            logger.info("| The version of Checkmk you test against is set using the VERSION ")
+            logger.info("| environment variable and defaults to the current daily build of ")
+            logger.info("| your branch.")
+            logger.info("| If you want to test a patched version, you need patch it before ")
+            logger.info("| running tests.")
             logger.info("+-------------------------------------------------")
 
             if command:
@@ -143,7 +134,7 @@ def execute_tests_in_container(
         )
 
         # Collect the test results located in /results of the container. The
-        # jenkins job will make it available as artifact later
+        # CI job will make it available as artifact later
         _copy_directory(container, Path("/results"), result_path)
 
         return exit_code
@@ -215,11 +206,11 @@ def _handle_api_error(e: docker.errors.APIError) -> None:
     raise e
 
 
-def check_for_local_package(version: CMKVersion) -> bool:
+def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
     """Checks package_download folder for a Checkmk package and returns True if
     exactly one package is available and meets some requirements. If there are
     invalid packages, the application terminates."""
-    packages_dir = testlib.repo_path() / "package_download"
+    packages_dir = repo_path() / "package_download"
     if available_packages := [
         p for p in packages_dir.glob("*") if re.match("^.*check-mk.*(rpm|deb)$", p.name)
     ]:
@@ -234,10 +225,25 @@ def check_for_local_package(version: CMKVersion) -> bool:
             raise SystemExit(1)
 
         package_name = available_packages[0].name
-        package_pattern = rf"check-mk-{version.edition.long}-{version.version}.*\.(deb|rpm)"
-        if not re.match(f"^{package_pattern}$", package_name):
+        os_name = {
+            "debian-10": "buster",
+            "debian-11": "bullseye",
+            "debian-12": "bookworm",
+            "ubuntu-20.04": "focal",
+            "ubuntu-22.04": "jammy",
+            "ubuntu-23.10": "mantic",
+            "ubuntu-24.04": "noble",
+            "centos-8": "el8",
+            "almalinux-9": "el9",
+            "sles-15sp3": "sles15sp3",
+            "sles-15sp4": "sles15sp4",
+            "sles-12sp5": "sles12sp5",
+            "sles-15sp5": "sles15sp5",
+        }.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
+        pkg_pattern = rf"check-mk-{version.edition.long}-{version.version}.*{os_name}.*\.(deb|rpm)"
+        if not re.match(f"^{pkg_pattern}$", package_name):
             logger.error("Error: '%s' does not match version=%s", package_name, version)
-            logger.error("Error:  (must be '%s')", package_pattern)
+            logger.error("Error:  (must be '%s')", pkg_pattern)
             raise SystemExit(1)
 
         logger.info("found %s", available_packages[0])
@@ -245,10 +251,23 @@ def check_for_local_package(version: CMKVersion) -> bool:
     return False
 
 
+def container_name_suffix(distro_name: str, docker_tag: str) -> str:
+    """Container names are (currently) not needed at all but help with finding the context.
+    However they need to be informative but unique to avoid conflicts.
+    In order to be able to use the same naming scheme for incremental test-image builds soon,
+    we put everything in that qualifies a container for a certain scenario (distro, docker_tag,
+    Pipfile.lock) but make it 'unique' for now by adding a timestamp"""
+    return (
+        f"{distro_name}-{docker_tag}"
+        f"-{git_commit_id('Pipfile.lock')[:10]}"
+        f"-{time.strftime('%Y%m%d%H%M%S')}"
+    )
+
+
 def _create_cmk_image(
-    client: docker.DockerClient, base_image_name: str, docker_tag: str, version: CMKVersion
+    client: docker.DockerClient, distro_name: str, docker_tag: str, version: CMKVersion
 ) -> str:
-    base_image_name_with_tag = f"{base_image_name}:{docker_tag}"
+    base_image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}:{docker_tag}"
     logger.info("Prepare distro-specific base image [%s]", base_image_name_with_tag)
     if not (base_image := _get_or_load_image(client, base_image_name_with_tag)):
         raise RuntimeError(
@@ -260,10 +279,10 @@ def _create_cmk_image(
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
     image_name_with_tag = (
-        f"{base_image_name}-{version.edition.short}-{version.version}:{docker_tag}"
+        f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version}:{docker_tag}"
     )
 
-    if use_local_package := check_for_local_package(version):
+    if use_local_package := check_for_local_package(version, distro_name):
         logger.info("+====================================================================+")
         logger.info("| Use locally available package (i.e. don't try to fetch test-image) |")
         logger.info("+====================================================================+")
@@ -287,32 +306,35 @@ def _create_cmk_image(
     logger.info("Build test image [%s] from [%s]", image_name_with_tag, base_image_name_with_tag)
     with _start(
         client,
+        # TODO: Re-enable using dedicated container names, the following causes name conflicts:
+        # name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
         image=base_image_name_with_tag,
         labels={
-            "org.tribe29.build_time": f"{int(time.time()):d}",
-            "org.tribe29.build_id": base_image.short_id,
-            "org.tribe29.base_image": base_image_name_with_tag,
-            "org.tribe29.base_image_hash": base_image.short_id,
-            "org.tribe29.cmk_edition_short": version.edition.short,
-            "org.tribe29.cmk_version": version.version,
-            "org.tribe29.cmk_branch": version.branch,
+            "com.checkmk.build_time": f"{int(time.time()):d}",
+            "com.checkmk.build_id": base_image.short_id,
+            "com.checkmk.base_image": base_image_name_with_tag,
+            "com.checkmk.base_image_hash": base_image.short_id,
+            "com.checkmk.cmk_edition_short": version.edition.short,
+            "com.checkmk.cmk_version": version.version,
+            "com.checkmk.cmk_branch": version.branch,
             # override the base image label
-            "com.tribe29.image_type": "cmk-image",
+            "com.checkmk.image_type": "cmk-image",
         },
         command=["tail", "-f", "/dev/null"],  # keep running
-        volumes=list(_image_build_volumes().keys()),
         host_config=client.api.create_host_config(
             # needed to make the overlay mounts work on the /git directory
             # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
             privileged=True,
-            binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _image_build_volumes().items()],
+            binds=_image_build_binds(),
         ),
     ) as container:
         logger.info(
             "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
         )
-
-        _exec_run(container, ["mkdir", "-p", "/results"])
+        _exec_run(container, f"groupadd -g {os.getgid()} testuser")
+        _exec_run(container, f"useradd -m -u {os.getuid()} -g {os.getgid()} -s /bin/bash testuser")
+        _exec_run(container, "mkdir -p /home/testuser/.cache")
+        _exec_run(container, "mkdir -p /results")
 
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
@@ -335,7 +357,7 @@ def _create_cmk_image(
         # image labels.
         logger.info("Get Checkmk package hash")
         _exit_code, output = container.exec_run(
-            ["cat", str(testlib.utils.package_hash_path(version.version, version.edition))],
+            ["cat", str(package_hash_path(version.version, version.edition))],
         )
         hash_entry = output.decode("ascii").strip()
         logger.info("Checkmk package hash entry: %s", hash_entry)
@@ -345,7 +367,7 @@ def _create_cmk_image(
         tmp_image = container.commit()
 
         new_labels = container.labels.copy()
-        new_labels["org.tribe29.cmk_hash"] = hash_entry
+        new_labels["com.checkmk.cmk_hash"] = hash_entry
 
         logger.info("Finalizing image")
         labeled_container = client.containers.run(tmp_image, labels=new_labels, detach=True)
@@ -372,7 +394,7 @@ def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> b
         logger.info("  Base image not available, assuming it's up-to-date")
         return False
 
-    image_base_hash = image.labels.get("org.tribe29.base_image_hash")
+    image_base_hash = image.labels.get("com.checkmk.base_image_hash")
     if base_image.short_id != image_base_hash:
         logger.info(
             "  Is based on an outdated base image (%s), current is (%s)",
@@ -388,9 +410,9 @@ def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> b
 def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
     logger.info("  Check whether or not image is using the current Checkmk package")
 
-    cmk_hash_entry = image.labels.get("org.tribe29.cmk_hash")
+    cmk_hash_entry = image.labels.get("com.checkmk.cmk_hash")
     if not cmk_hash_entry:
-        logger.info("  Checkmk package hash label missing (org.tribe29.cmk_hash). Trigger rebuild.")
+        logger.info("  Checkmk package hash label missing (com.checkmk.cmk_hash). Trigger rebuild.")
         return False
 
     cmk_hash_image, package_name_image = cmk_hash_entry.split()
@@ -430,75 +452,50 @@ def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) ->
     return _hash
 
 
-def _image_build_volumes() -> Mapping[str, _VolumeInfo]:
-    volumes = {
-        # Credentials file for fetching the package from the download server. Used by
-        # testlib/version.py in case the version package needs to be downloaded
-        os.path.join(os.environ["HOME"], ".cmk-credentials"): _VolumeInfo(
-            bind="/root/.cmk-credentials",
-            mode="ro",
-        ),
-    }
+def _image_build_binds() -> Mapping[str, DockerBind]:
+    """This function is left here in case we need different handling for
+    image builds. Currently we don't"""
     if "WORKSPACE" in os.environ:
         logger.info("WORKSPACE set to %s", os.environ["WORKSPACE"])
-        volumes[os.path.join(os.environ["WORKSPACE"], "packages")] = _VolumeInfo(
-            bind="/packages",
-            mode="ro",
-        )
     else:
         logger.info("WORKSPACE not set")
-
-    volumes.update(_git_repos())
-    return volumes
+    return _runtime_binds()
 
 
-def _git_repos() -> Mapping[str, _VolumeInfo]:
-    # This ensures that we can also work with git-worktrees. For this, the original git repository
-    # needs to be mapped into the container as well.
-    repo_path = str(testlib.repo_path())
-    git_entry = os.path.join(repo_path, ".git")
-    repos = {
-        # To get access to the test scripts and for updating the version from
-        # the current git checkout. Will also be used for updating the image with
-        # the current git state
-        repo_path: _VolumeInfo(
-            bind="/git-lowerdir",
-            mode="ro",
-        ),
+def _git_repos() -> Mapping[str, DockerBind]:
+    checkout_dir = repo_path()
+    return {
+        **{
+            # This ensures that we can also work with git-worktrees and reference clones.
+            # For this, the original git repository needs to be mapped into the container as well.
+            path: DockerBind(bind=path, mode="ro")
+            for path in git_essential_directories(checkout_dir)
+        },
+        **{
+            # To get access to the test scripts and for updating the version from
+            # the current git checkout. Will also be used for updating the image with
+            # the current git state
+            checkout_dir.as_posix(): DockerBind(bind="/git-lowerdir", mode="ro"),
+        },
     }
-    if os.path.isfile(git_entry):  # if not, it's a directory
-        with open(git_entry) as f:
-            real_path = f.read()
-            real_path = real_path[8:]  # skip "gitdir: "
-            real_path = real_path.split("/.git")[0]  # cut off .git/...
-
-        repos[real_path] = _VolumeInfo(
-            bind=real_path,
-            mode="ro",
-        )
-
-    return repos
 
 
-def _runtime_volumes() -> Mapping[str, _VolumeInfo]:
-    volumes = {
+def _runtime_binds() -> Mapping[str, DockerBind]:
+    return {
+        **_git_repos(),
+        # Credentials file for fetching the package from the download server. Used by
+        # testlib/version.py in case the version package needs to be downloaded
         # For whatever reason the image can not be started when nothing is mounted
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.
-        os.path.join(os.environ["HOME"], ".cmk-credentials"): _VolumeInfo(
+        (Path(os.environ["HOME"]) / ".cmk-credentials").as_posix(): DockerBind(
             bind="/root/.cmk-credentials",
             mode="ro",
         ),
-        os.path.join(os.environ["HOME"], "git_reference_clones", "check_mk.git"): _VolumeInfo(
-            bind=os.path.join(os.environ["HOME"], "git_reference_clones", "check_mk.git"),
-            mode="ro",
-        ),
     }
-    volumes.update(_git_repos())
-    return volumes
 
 
-def _container_env(version: CMKVersion) -> dict[str, str]:
+def _container_env(version: CMKVersion) -> Mapping[str, str]:
     return {
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
@@ -537,22 +534,22 @@ def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:
         yield c
     finally:
         # Do not leave inactive containers and anonymous volumes behind
-        c.remove(v=True, force=True)
+        if os.getenv("CLEANUP", "1") == "1":
+            c.stop()
+            c.remove(v=True, force=True)
 
 
 # pep-0692 is not yet finished in mypy...
-def _exec_run(c: docker.Container, cmd: list[str], check: bool = True, **kwargs) -> int:  # type: ignore[no-untyped-def]
-    if kwargs:
-        logger.info(
-            "Execute in container %s: %r (kwargs: %r)",
-            c.short_id,
-            subprocess.list2cmdline(cmd),
-            kwargs,
-        )
-    else:
-        logger.info("Execute in container %s: %r", c.short_id, subprocess.list2cmdline(cmd))
+def _exec_run(c: docker.Container, cmd: str | Sequence[str], check: bool = True, **kwargs) -> int:  # type: ignore[no-untyped-def]
+    cmd_list = shlex.split(cmd) if isinstance(cmd, str) else cmd
+    cmd_str = subprocess.list2cmdline(cmd_list)
 
-    result = container_exec(c, cmd, **kwargs)
+    if kwargs:
+        logger.info("Execute in container %s: %r (kwargs: %r)", c.short_id, cmd_str, kwargs)
+    else:
+        logger.info("Execute in container %s: %r", c.short_id, cmd_str)
+
+    result = container_exec(c, cmd_list, **kwargs)
 
     if kwargs.get("stream"):
         return result.communicate(line_prefix=b"%s: " % c.short_id.encode("ascii"))
@@ -566,7 +563,7 @@ def _exec_run(c: docker.Container, cmd: list[str], check: bool = True, **kwargs)
 
     returncode = result.poll()
     if check and returncode != 0:
-        raise RuntimeError(f"Command `{' '.join(cmd)}` returned with nonzero exit code")
+        raise RuntimeError(f"Command `{cmd_str}` returned with nonzero exit code")
     return returncode
 
 
@@ -621,7 +618,7 @@ class ContainerExec:
         self.output = output
 
     def inspect(self) -> Mapping:
-        return self.client.api.exec_inspect(self.id)  # type: ignore[no-any-return]
+        return self.client.api.exec_inspect(self.id)
 
     def poll(self) -> int:
         return int(self.inspect()["ExitCode"])
@@ -661,7 +658,7 @@ def _copy_directory(
     tar_stream.seek(0)
 
     with tarfile.TarFile(fileobj=tar_stream) as tar:
-        tar.extractall(str(dest_path))
+        tar.extractall(str(dest_path), filter="data")
 
 
 def _prepare_git_overlay(container: docker.Container, lower_path: str, target_path: str) -> None:
@@ -699,7 +696,7 @@ def _prepare_git_overlay(container: docker.Container, lower_path: str, target_pa
         ],
     )
 
-    # target_path belongs to root, but its content belong to jenkins. Newer git versions don't like
+    # target_path belongs to root, but its content belong to testuser. Newer git versions don't like
     # that by default, so we explicitly say that this is ok.
     _exec_run(
         container,

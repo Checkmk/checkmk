@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
+from marshmallow import post_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.livestatus_helpers import tables
@@ -15,12 +18,13 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
 )
+from cmk.gui.livestatus_utils.commands.utils import to_timestamp
 from cmk.gui.openapi.utils import param_description
 
 from cmk import fields
 
 MONITORED_HOST = gui_fields.HostField(
-    description="The hostname or IP address itself.",
+    description="The host name or IP address itself.",
     example="example.com",
     should_exist=None,
     should_be_monitored=True,
@@ -52,6 +56,18 @@ INCLUDE_ALL_SERVICES = fields.Boolean(
     load_default=False,
     example=True,
 )
+
+DOWNTIME_ID = fields.String(
+    description="The id of the downtime",
+    example="54",
+    required=True,
+)
+
+
+class NonZeroInteger(fields.Integer):
+    def _validate(self, value: Any) -> None:
+        if value == 0:
+            raise ValidationError("The value cannot be zero.")
 
 
 class CreateDowntimeBase(BaseSchema):
@@ -165,7 +181,11 @@ class CreateHostQueryDowntime(CreateHostDowntimeBase):
 
 
 class CreateServiceQueryDowntime(CreateServiceDowntimeBase):
-    query = gui_fields.query_field(tables.Services, required=True)
+    query = gui_fields.query_field(
+        tables.Services,
+        required=True,
+        example='{"op": "=", "left": "description", "right": "Service description"}',
+    )
     duration = SERVICE_DURATION
 
 
@@ -193,7 +213,7 @@ class DeleteDowntimeBase(BaseSchema):
     delete_type = fields.String(
         required=True,
         description="The option how to delete a downtime.",
-        enum=["params", "query", "by_id"],
+        enum=["params", "query", "by_id", "hostgroup", "servicegroup"],
         example="params",
     )
 
@@ -205,11 +225,7 @@ class DeleteDowntimeById(DeleteDowntimeBase):
         presence="should_exist",
         required=True,
     )
-    downtime_id = fields.String(
-        description="The id of the downtime",
-        example="54",
-        required=True,
-    )
+    downtime_id = DOWNTIME_ID
 
 
 class DeleteDowntimeByName(DeleteDowntimeBase):
@@ -229,7 +245,31 @@ class DeleteDowntimeByName(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByQuery(DeleteDowntimeBase):
-    query = gui_fields.query_field(tables.Downtimes, required=True)
+    query = gui_fields.query_field(
+        tables.Downtimes,
+        required=True,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
+
+
+class DeleteDowntimeByHostGroup(DeleteDowntimeBase):
+    hostgroup_name = gui_fields.GroupField(
+        group_type="host",
+        required=True,
+        should_exist=True,
+        description="Name of a valid hostgroup, all current downtimes for hosts in this group will be deleted.",
+        example="windows",
+    )
+
+
+class DeleteDowntimeByServiceGroup(DeleteDowntimeBase):
+    servicegroup_name = gui_fields.GroupField(
+        group_type="service",
+        required=True,
+        should_exist=True,
+        description="Name of a valid servicegroup, all current downtimes for services in this group will be deleted.",
+        example="windows",
+    )
 
 
 class DeleteDowntime(OneOfSchema):
@@ -239,6 +279,8 @@ class DeleteDowntime(OneOfSchema):
         "by_id": DeleteDowntimeById,
         "params": DeleteDowntimeByName,
         "query": DeleteDowntimeByQuery,
+        "hostgroup": DeleteDowntimeByHostGroup,
+        "servicegroup": DeleteDowntimeByServiceGroup,
     }
 
 
@@ -254,3 +296,135 @@ class BulkDeleteDowntime(BaseSchema):
         example=[1120, 1121],
         description="A list of downtime ids.",
     )
+
+
+class ModifyEndTimeBaseSchema(BaseSchema):
+    modify_type = fields.String(
+        required=False,
+        description="How to modify the end time of a downtime.",
+        enum=["absolute", "relative"],
+        example="absolute",
+    )
+
+
+class ModifyEndTimeByDatetime(ModifyEndTimeBaseSchema):
+    value = fields.DateTime(
+        required=True,
+        example="2017-07-21T17:32:28Z",
+        description="The end datetime of the downtime. The format has to conform to the ISO 8601 profile",
+        format="iso8601",
+    )
+
+    @post_load
+    def prefix_value(self, data, **kwargs):
+        data["value"] = str(to_timestamp(data["value"]))
+        return data
+
+
+class ModifyEndTimeByDelta(ModifyEndTimeBaseSchema):
+    value = NonZeroInteger(
+        required=True,
+        description="A positive or negative number representing the amount of minutes to be added to or substracted from the current end time. The value must be non-zero",
+        example=60,
+    )
+
+    @post_load
+    def prefix_value(self, data, **kwargs):
+        # Livestatus is expectind seconds, so we convert the minutes to seconds and then add + or - sign
+        data["value"] = f"{'+' if data['value'] >= 0 else '-'}{abs(data['value']) * 60}"
+        return data
+
+
+class ModifyEndTimeType(OneOfSchema):
+    type_field = "modify_type"
+    type_field_remove = False
+    type_schemas = {
+        "absolute": ModifyEndTimeByDatetime,
+        "relative": ModifyEndTimeByDelta,
+    }
+
+
+class ModifyDowntimeFieldsSchema(BaseSchema):
+    modify_type = fields.String(
+        required=True,
+        description="The option of how to select the downtimes to be targeted by the modification.",
+        enum=["params", "query", "by_id", "hostgroup", "servicegroup"],
+        example="params",
+    )
+
+    end_time = fields.Nested(
+        ModifyEndTimeType,
+        required=False,
+        description="The option how to modify the end time of a downtime. If modify_type is set to 'absolute', then the end time will be set to the date time specified in the value field. If modify_type is set to 'relative', then the current end time will be modified by the amount of minutes specified in the value field. If this attribute is not present, then the end time will not be modified.",
+        example={"modify_type": "absolute", "value": "2024-03-06T12:00:00Z"},
+    )
+
+    comment = fields.String(
+        required=False, example="Security updates", description="The comment for the downtime."
+    )
+
+
+class ModifyDowntimeById(ModifyDowntimeFieldsSchema):
+    site_id = gui_fields.SiteField(
+        description="The site from which you want to modify a downtime.",
+        example="central",
+        presence="should_exist",
+        required=True,
+    )
+    downtime_id = DOWNTIME_ID
+
+
+class ModifyDowntimeByQuery(ModifyDowntimeFieldsSchema):
+    query = gui_fields.query_field(
+        tables.Downtimes,
+        required=True,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
+
+
+class ModifyDowntimeByName(ModifyDowntimeFieldsSchema):
+    host_name = gui_fields.HostField(
+        required=True,
+        should_exist=None,
+        description="If set alone, then all downtimes of the host will be modified.",
+        example="example.com",
+    )
+    service_descriptions = fields.List(
+        SERVICE_DESCRIPTION_FIELD,
+        description="If set, the downtimes of the listed services of the specified host will be "
+        "modified. If a service has multiple downtimes then all will be modified",
+        required=False,
+        example=["CPU load", "Memory"],
+    )
+
+
+class ModifyDowntimeByHostGroup(ModifyDowntimeFieldsSchema):
+    hostgroup_name = gui_fields.GroupField(
+        group_type="host",
+        required=True,
+        should_exist=True,
+        description="Name of a valid hostgroup, all current downtimes for hosts in this group will be modified.",
+        example="windows",
+    )
+
+
+class ModifyDowntimeByServiceGroup(ModifyDowntimeFieldsSchema):
+    servicegroup_name = gui_fields.GroupField(
+        group_type="service",
+        required=True,
+        should_exist=True,
+        description="Name of a valid servicegroup, all current downtimes for services in this group will be modified.",
+        example="windows",
+    )
+
+
+class ModifyDowntime(OneOfSchema):
+    type_field = "modify_type"
+    type_field_remove = False
+    type_schemas = {
+        "by_id": ModifyDowntimeById,
+        "params": ModifyDowntimeByName,
+        "query": ModifyDowntimeByQuery,
+        "hostgroup": ModifyDowntimeByHostGroup,
+        "servicegroup": ModifyDowntimeByServiceGroup,
+    }

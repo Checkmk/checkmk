@@ -2,6 +2,8 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 import ast
 import json
@@ -20,9 +22,9 @@ from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
-import cmk.utils.version as version
+from cmk.utils import version
 from cmk.utils.exceptions import MKException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
@@ -37,12 +39,13 @@ from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType, tree_to_expr
-from cmk.gui.groups import GroupName, GroupType, load_group_information
+from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import configured_sites
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
+from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
@@ -362,8 +365,8 @@ class _ExprNested(base.Nested):
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
-def query_field(  # type: ignore[no-untyped-def]
-    table: type[Table], required: bool = False, example=None
+def query_field(
+    table: type[Table], required: bool = False, example: str | None = None
 ) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
@@ -413,6 +416,7 @@ def column_field(
     example: list[str],
     required: bool = False,
     mandatory: list[ColumnTypes] | None = None,
+    default: list[Column] | None = None,
 ) -> "_ListOfColumns":
     column_names: list[str] = []
     if mandatory is not None:
@@ -421,13 +425,15 @@ def column_field(
                 column_names.append(col.name)
             else:
                 column_names.append(col)
+    if default is None:
+        default = [getattr(table, col) for col in column_names]
 
     return _ListOfColumns(
         _LiveStatusColumn(table=table, required=required),
         table=table,
         required=required,
         mandatory=column_names,
-        load_default=[getattr(table, col) for col in column_names],
+        load_default=default,
         description=f"The desired columns of the `{table.__tablename__}` table. If left empty, a "
         "default set of columns is used.",
         example=example,
@@ -555,6 +561,7 @@ class HostField(base.String):
         should_exist: bool | None = True,
         should_be_monitored: bool | None = None,
         should_be_cluster: bool | None = None,
+        skip_validation_on_view: bool = False,
         permission_type: Literal["setup_write", "setup_read", "monitor"] = "monitor",
         **kwargs,
     ):
@@ -564,6 +571,7 @@ class HostField(base.String):
         self._should_exist = should_exist
         self._should_be_monitored = should_be_monitored
         self._should_be_cluster = should_be_cluster
+        self._skip_validation_on_view = skip_validation_on_view
         self._permission_type = permission_type
         super().__init__(
             example=example,
@@ -584,10 +592,26 @@ class HostField(base.String):
 
         return
 
+    def _deserialize(
+        self,
+        value: Any,
+        attr: str | None,
+        data: typing.Mapping[str, Any] | None,
+        **kwargs: Any,
+    ) -> HostAddress:
+        value = super()._deserialize(value, attr, data, **kwargs)
+        try:
+            return HostAddress(value)
+        except ValueError as e:
+            raise ValidationError(str(e)) from e
+
     def _validate(self, value):
         super()._validate(value)
         host = Host.host(value)
         self._confirm_user_has_permission(host)
+
+        if self._skip_validation_on_view and self.context.get("object_context") == "view":
+            return
 
         # Regex gets checked through the `pattern` of the String instance
 
@@ -1004,7 +1028,7 @@ class SiteField(base.String):
     def __init__(
         self,
         presence: Literal[
-            "should_exist", "should_not_exist", "might_not_exist", "ignore"
+            "should_exist", "should_not_exist", "might_not_exist_on_view", "ignore"
         ] = "should_exist",
         allow_all_value: bool = False,
         **kwargs: Any,
@@ -1017,10 +1041,10 @@ class SiteField(base.String):
         if self.allow_all_value and value == "all":
             return
 
-        if self.presence == "might_not_exist":
+        if self.presence == "might_not_exist_on_view" and self.context["object_context"] == "view":
             return
 
-        if self.presence == "should_exist":
+        if self.presence in ["should_exist", "might_not_exist_on_view"]:
             if value not in configured_sites().keys():
                 raise self.make_error("should_exist", site=value)
 
@@ -1029,7 +1053,7 @@ class SiteField(base.String):
                 raise self.make_error("should_not_exist", site=value)
 
     def _serialize(self, value, attr, obj, **kwargs):
-        if self.presence == "might_not_exist" and value not in configured_sites().keys():
+        if self.presence == "might_not_exist_on_view" and value not in configured_sites().keys():
             return "Unknown Site: " + value
         return super()._serialize(value, attr, obj, **kwargs)
 

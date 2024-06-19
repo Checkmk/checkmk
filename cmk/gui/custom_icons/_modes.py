@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
 import os
 from collections.abc import Collection
 
-from PIL import Image, PngImagePlugin
-
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
+from cmk.utils.images import CMKImage, ImageType
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -108,20 +106,13 @@ class ModeIcons(WatoMode):
         return redirect(self.mode_url())
 
     def _upload_icon(self, icon_info):
-        # Add the icon category to the PNG comment
-        im = Image.open(io.BytesIO(icon_info["icon"][2]))
-        im.info["Comment"] = icon_info["category"]
-        meta = PngImagePlugin.PngInfo()
-        for k, v in im.info.items():
-            if isinstance(v, (bytes, str)):
-                meta.add_text(k, v, False)
-
-        # and finally save the image
-        dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.utils.paths.omd_root
+        dest_dir = cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"
         store.makedirs(dest_dir)
         try:
+            image = CMKImage(icon_info["icon"][2], ImageType.PNG)
+            image.add_metadata("Comment", icon_info["category"])
             file_name = os.path.basename(icon_info["icon"][0])
-            im.save(dest_dir + "/" + file_name, "PNG", pnginfo=meta)
+            image.save(dest_dir / file_name, ImageType.PNG)
         except OSError as e:
             # Might happen with interlaced PNG files and PIL version < 1.1.7
             raise MKUserError(None, _("Unable to upload icon: %s") % e)
@@ -175,7 +166,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="icons",
-            title=_l("Manage Custom Icons"),
+            title=_l("Manage custom icons"),
             description=_l("Upload or delete custom icons"),
             defaults=["admin"],
         )

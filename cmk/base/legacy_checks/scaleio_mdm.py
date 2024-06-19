@@ -122,11 +122,10 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
 
         if nodes:
             infotext = "{}: {}".format(role, ", ".join(nodes))
+        elif role != "Standby MDMs":
+            state, infotext = 2, "%s not found in agent output" % role
         else:
-            if role != "Standby MDMs":
-                state, infotext = 2, "%s not found in agent output" % role
-            else:
-                infotext = "%s: no" % role
+            infotext = "%s: no" % role
 
         yield state, infotext
 

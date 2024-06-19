@@ -51,7 +51,7 @@ def parse_virtual_volumes(map_label: dict, virtual_volumes: Iterable, quotas: It
     # Besides quotas for virtual volumes the quota table also contains
     # user and group quotas.
 
-    def quota_oid_end(phys_volume_id, virtual_volume_oid_end) -> str:  # type: ignore[no-untyped-def]
+    def quota_oid_end(phys_volume_id: str, virtual_volume_oid_end: str) -> str:
         """A QuotasEntry is indexed by a concatenation of the physical
         volume_id the virtual volume belongs to and the oid_end without
         the first element of the virtual volume."""

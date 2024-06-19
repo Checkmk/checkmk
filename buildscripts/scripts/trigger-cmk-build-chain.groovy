@@ -8,6 +8,8 @@
 /// Other artifacts:    Those of child jobs
 /// Depends on:         Nothing
 
+import java.time.LocalDate
+
 def main() {
 
     /// make sure the listed parameters are set
@@ -26,6 +28,7 @@ def main() {
 
     def edition = JOB_BASE_NAME.split("-")[-1];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
+    def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily"
 
     /// NOTE: this way ALL parameter are being passed through..
     def job_parameters = [
@@ -44,20 +47,26 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'SET_BRANCH_LATEST_TAG', value: params.SET_BRANCH_LATEST_TAG],
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY],
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
+        [$class: 'BooleanParameterValue', name: 'BUILD_CLOUD_IMAGES', value: true],
+        [$class: 'StringParameterValue',  name: 'CUSTOM_GIT_REF', value: params.CUSTOM_GIT_REF],
+        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE],
+        [$class: 'StringParameterValue',  name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE],
+        // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
+        [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],
+        [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
     ];
 
     // TODO we should take this list from a single source of truth
     assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
-        "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
+        "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = edition != "managed";
-    def build_cloud_images = edition == "cloud";
 
     // TODO: saas has all tests disabled for now. Need some way to login in those tests, SAASDEV-664
     def run_int_tests = true;
     def run_comp_tests = !(edition in ["saas", "managed"]);
     def run_image_tests = edition != "managed";
-    def run_update_tests = (edition in ["enterprise", "cloud"]);
+    def run_update_tests = (edition in ["enterprise", "cloud", "saas"]);
 
     print(
         """
@@ -65,11 +74,11 @@ def main() {
         |edition:............... │${edition}│
         |base_folder:........... │${base_folder}│
         |build_image:........... │${build_image}│
-        |build_cloud_images:.... │${build_cloud_images}│
         |run_comp_tests:........ │${run_comp_tests}│
         |run_int_tests:..........│${run_int_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |run_update_tests:...... │${run_update_tests}│
+        |use_case:.............. │${use_case}│
         |===================================================
         """.stripMargin());
 
@@ -82,15 +91,8 @@ def main() {
     success &= smart_stage(
             name: "Build CMK IMAGE",
             condition: build_image,
-            raiseOnError: false) {
+            raiseOnError: false,) {
         build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
-    }
-
-    success &= smart_stage(
-            name: "Build Cloud Images",
-            condition: build_cloud_images,
-            raiseOnError: false) {
-        build(job: "${base_folder}/build-cmk-cloud-images", parameters: job_parameters);
     }
 
     parallel([
@@ -98,36 +100,42 @@ def main() {
             success &= smart_stage(
                     name: "Integration Test for Docker Container",
                     condition: run_image_tests,
-                    raiseOnError: false) {
+                    raiseOnError: false,) {
                 build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
             }
         },
-
         "Composition Test for Packages": {
             success &= smart_stage(
                     name: "Composition Test for Packages",
                     condition: run_comp_tests,
-                    raiseOnError: false) {
+                    raiseOnError: false,) {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }
-        }
-    ])
+        },
+    ]);
 
     success &= smart_stage(
             name: "Integration Test for Packages",
             condition: run_int_tests,
-            raiseOnError: false) {
+            raiseOnError: false,) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
     }
 
     success &= smart_stage(
             name: "Update Test",
             condition: run_update_tests,
-            raiseOnError: false) {
+            raiseOnError: false,) {
         build(job: "${base_folder}/test-update", parameters: job_parameters);
     }
 
-    currentBuild.result = success ? "SUCCESS" : "FAILURE";
+    success &= smart_stage(
+            name: "Trigger Saas Gitlab jobs",
+            condition: success && edition == "saas",
+            raiseOnError: false,) {
+        build(job: "${base_folder}/trigger-saas-gitlab", parameters: job_parameters);
+    }
 
+    currentBuild.result = success ? "SUCCESS" : "FAILURE";
 }
+
 return this;

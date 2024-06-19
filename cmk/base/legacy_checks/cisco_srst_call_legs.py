@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, equals, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
 
 
 def inventory_cisco_srst_call_legs(info):
@@ -22,8 +21,8 @@ def check_cisco_srst_call_legs(_no_item, _no_params, info):
     ]
 
 
-def parse_cisco_srst_call_legs(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_srst_call_legs(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_srst_call_legs"] = LegacyCheckDefinition(

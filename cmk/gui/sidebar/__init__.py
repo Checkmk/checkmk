@@ -11,6 +11,7 @@ import json
 import textwrap
 import traceback
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, cast, Self
 
@@ -20,10 +21,13 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.sites as sites
+from cmk.gui import pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, register_post_config_load_hook
+
+if cmk_version.edition() is cmk_version.Edition.CSE:
+    from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
+
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -75,7 +79,7 @@ from .main_menu import (
     PageAjaxSidebarGetUnackIncompWerks,
 )
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 sidebar_snapins: dict[str, dict] = {}
 
 
@@ -104,26 +108,26 @@ def register(
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     load_web_plugins("sidebar", globals())
     transform_old_dict_based_snapins()
 
 
 def _register_pre_21_plugin_api() -> None:
-    """Register pre 2.1 "plugin API"
+    """Register pre 2.1 "plug-in API"
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    At the moment we define an official plugin API, we can drop this and require all plugins to
+    At the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
     """
-    # Needs to be a local import to not influence the regular plugin loading order
+    # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.plugins.sidebar as api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.plugins.sidebar.utils as plugin_utils  # pylint: disable=cmk-module-layer-violation
 
@@ -542,27 +546,34 @@ class SidebarRenderer:
 
         # The heading. A click on the heading mini/maximizes the snapin
         toggle_actions: dict[str, str] = {}
+        img_id = f"treeangle.snapin.{name}"
+        onclick = "cmk.sidebar.toggle_sidebar_snapin(this, {}, {})".format(
+            json.dumps(toggle_url),
+            json.dumps(img_id),
+        )
         if user.may("general.configure_sidebar"):
             toggle_actions = {
-                "onclick": "cmk.sidebar.toggle_sidebar_snapin(this,'%s')" % toggle_url,
+                "onclick": onclick,
                 "onmouseover": "this.style.cursor='pointer'",
                 "onmouseout": "this.style.cursor='auto'",
             }
+
+        if may_configure:
+            html.img(
+                id_=img_id,
+                title=_("Open/close this element"),
+                class_=[
+                    "treeangle",
+                    "open" if snapin.visible == SnapinVisibility.OPEN else "closed",
+                ],
+                src=theme.url("images/tree_closed.svg"),
+                onclick=onclick,
+            )
         html.b(
             textwrap.shorten(snapin_class.title(), width=27, placeholder="..."),
             class_=["heading"],
             **toggle_actions,
         )
-
-        if may_configure:
-            # Icon for mini/maximizing
-            html.span(
-                "",
-                class_="minisnapin",
-                title=_("Open/close this element"),
-                onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url,
-            )
-
         # End of header
         html.close_div()
 
@@ -600,14 +611,26 @@ class SidebarRenderer:
         html.close_div()
 
     def _show_saas_link(self) -> None:
+        from cmk.gui.cse.userdb.cognito.oauth2 import load_admin_panel_url
+
         html.open_div(
             id_="saas",
             title=_("Go to the Saas Admin Panel"),
-            onclick="window.open('https://admin-panel.saas-prod.cloudsandbox.check-mk.net/', '_blank')",
+            onclick=f"window.open({json.dumps(load_admin_panel_url())}, '_blank')",
         )
         html.icon("saas")
         if not user.get_attribute("nav_hide_icons_title"):
             html.div(_("Admin"))
+        html.close_div()
+
+    def _show_onboarding(self) -> None:
+        html.write_html(
+            HTML.without_escaping('<script type="module" src="onboarding/search.js"></script>')
+        )
+        html.write_html(
+            HTML.without_escaping('<link rel="stylesheet" href="onboarding/search.css">')
+        )
+        html.open_div(id_="searchApp")
         html.close_div()
 
     def _show_sidebar_head(self):
@@ -623,7 +646,10 @@ class SidebarRenderer:
 
         MainMenuRenderer().show()
 
-        if cmk_version.edition() is cmk_version.Edition.CSE:
+        if cmk_version.edition() is cmk_version.Edition.CSE and user_may_see_saas_onboarding(
+            user.id
+        ):
+            self._show_onboarding()
             self._show_saas_link()
 
         html.open_div(
@@ -674,9 +700,7 @@ def ajax_snapin():
             since = request.get_float_input_mandatory("since", 0)
             newest = since
             for site in sites.states().values():
-                prog_start = site.get("program_start", 0)
-                if prog_start > newest:
-                    newest = prog_start
+                newest = max(newest, site.get("program_start", 0))
             if newest <= since:
                 # no restart
                 snapin_code.append("")
@@ -779,18 +803,41 @@ def move_snapin() -> None:
 #   '----------------------------------------------------------------------'
 
 
-class CustomSpaninsSpec(pagetypes.OverridableSpec):
+class CustomSnapinsModel(pagetypes.OverridableModel):
     custom_snapin: tuple[str, dict]
 
 
-class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
+@dataclass(kw_only=True)
+class CustomSnapinsConfig(pagetypes.OverridableConfig):
+    custom_snapin: tuple[str, dict]
+
+
+class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
     @classmethod
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
-        # TODO Remove 'cast' and do real parsing
-        return cls(cast(CustomSpaninsSpec, page_dict))
+        deserialized = CustomSnapinsModel.model_validate(page_dict)
+        return cls(
+            CustomSnapinsConfig(
+                name=deserialized.name,
+                title=deserialized.title,
+                description=deserialized.description,
+                owner=deserialized.owner,
+                public=deserialized.public,
+                hidden=deserialized.hidden,
+                custom_snapin=deserialized.custom_snapin,
+            )
+        )
 
-    def serialize(self) -> CustomSpaninsSpec:
-        return self._
+    def serialize(self) -> dict[str, object]:
+        return CustomSnapinsModel(
+            name=self.config.name,
+            title=self.config.title,
+            description=self.config.description,
+            owner=self.config.owner,
+            public=self.config.public,
+            hidden=self.config.hidden,
+            custom_snapin=self.config.custom_snapin,
+        ).model_dump()
 
     @classmethod
     def type_name(cls) -> str:

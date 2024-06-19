@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 
@@ -22,6 +21,12 @@ def parse_viprinet_temp(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_viprinet_temp(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service(item="CPU")
+        yield Service(item="System")
+
+
 check_info["viprinet_temp"] = LegacyCheckDefinition(
     parse_function=parse_viprinet_temp,
     detect=DETECT_VIPRINET,
@@ -30,7 +35,7 @@ check_info["viprinet_temp"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     service_name="Temperature %s",
-    discovery_function=lambda info: len(info) > 0 and [("CPU", None), ("System", None)] or [],
+    discovery_function=discover_viprinet_temp,
     check_function=check_viprinet_temp,
     check_ruleset_name="temperature",
 )

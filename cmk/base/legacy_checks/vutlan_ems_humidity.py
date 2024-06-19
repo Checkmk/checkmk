@@ -7,8 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
 
 # vutlan is not a typo!

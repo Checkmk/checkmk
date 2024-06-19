@@ -9,10 +9,10 @@
 # c85ae17b-1a6c-4a34-949a-a1b9385ef67a 2040
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, StringTable
 
 
 def inventory_hyperv_checkpoints(info):
@@ -26,32 +26,25 @@ def check_hyperv_checkpoints(item, params, info):
             continue
         snapshots.append((line[0], int(line[1])))
 
-    if snapshots:
-        yield 0, "%s checkpoints" % len(snapshots)
+    yield 0, "%s checkpoints" % len(snapshots)
 
-        # We assume that the last snapshot is the last line
-        # of the agent output
-        for title, key, snapshot in [
-            ("Oldest", "age_oldest", max(snapshots, key=lambda x: x[1])),
-            ("Last", "age", snapshots[-1]),
-        ]:
-            name, age = snapshot
-            infotext = f"{title}: {get_age_human_readable(age)} ({name})"
-            warn, crit = params.get(key, (None, None))
-            if crit is not None and age >= crit:
-                state = 2
-            elif warn is not None and age >= warn:
-                state = 1
-            else:
-                state = 0
-            if state:
-                infotext += " (warn/crit at {}/{})".format(
-                    get_age_human_readable(warn),
-                    get_age_human_readable(crit),
-                )
-            yield state, infotext, [(key, age, warn, crit)]
-    else:
-        yield 0, "No Checkpoints found"
+    if not snapshots:
+        return
+
+    # We assume that the last snapshot is the last line
+    # of the agent output
+    for title, key, snapshot in [
+        ("Oldest", "age_oldest", max(snapshots, key=lambda x: x[1])),
+        ("Last", "age", snapshots[-1]),
+    ]:
+        name, age = snapshot
+        yield check_levels(
+            age,
+            key,
+            params.get(key),
+            human_readable_func=render.timespan,
+            infoname=f"{title} ({name})",
+        )
 
 
 def parse_hyperv_checkpoints(string_table: StringTable) -> StringTable:

@@ -7,7 +7,7 @@ import dataclasses
 from collections.abc import Mapping
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 @dataclasses.dataclass(frozen=True)
@@ -51,6 +51,30 @@ class Instance(BaseModel):
     pup_seconds: int | None = None
     host_name: str | None = None
     old_agent: bool = False
+
+    @field_validator(
+        # all fields with `| None` ...
+        "archiver",
+        "up_seconds",
+        "log_mode",
+        "database_role",
+        "force_logging",
+        "name",
+        "db_creation_time",
+        "con_id",
+        "pname",
+        "popenmode",
+        "prestricted",
+        "ptotal_size",
+        "pup_seconds",
+        "host_name",
+        mode="before",
+    )
+    def empty_string_to_none(cls, v):
+        if v == "":
+            # ... should accept an empty string as None:
+            return None
+        return v
 
     @property
     def pdb(self) -> bool:

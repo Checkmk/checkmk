@@ -13,7 +13,7 @@ from cmk.gui.fields.base import BaseSchema
 
 from cmk.fields import Nested, String
 
-GRAPH_NAME_REGEX = r"^\w[_\-\w\d]*$"
+GRAPH_NAME_REGEX = r"^\w[_\-\w\d\.]*$"
 GRAPH_NAME_ERROR_MESSAGE = "{input} is not a valid value for this field. It must match the pattern {regex} and contain only ASCII characters."
 GRAPH_NAME_VALIDATOR = marshmallow.validate.Regexp(
     regex=GRAPH_NAME_REGEX, error=GRAPH_NAME_ERROR_MESSAGE, flags=re.ASCII

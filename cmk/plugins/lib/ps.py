@@ -18,12 +18,15 @@ from dataclasses import dataclass
 from html import escape
 from typing import Any, Literal
 
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
-    check_levels_fixed,
+    CheckResult,
+    DiscoveryResult,
     get_average,
     get_rate,
     get_value_store,
     HostLabel,
+    HostLabelGenerator,
     IgnoreResultsError,
     Metric,
     render,
@@ -31,7 +34,6 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
 
 from . import cpu, memory
 
@@ -168,14 +170,14 @@ def replace_service_description(service_description, match_groups, pattern):
         description_template = description_template.replace("%s", "{%d}" % number, 1)
 
     # It is allowed (1.1.4) that the pattern contains more subexpressions
-    # then the service description. In that case only the first
+    # then the service name. In that case only the first
     # subexpressions are used as item.
     try:
         # First argument is None, because format is zero indexed
         return description_template.format(None, *(g or "" for g in match_groups))
     except IndexError:
         raise ValueError(
-            "Invalid entry in inventory_processes_rules: service description '%s' contains %d "
+            "Invalid entry in inventory_processes_rules: service name '%s' contains %d "
             "replaceable elements, but regular expression %r contains only %d subexpression(s)."
             % (service_description, total_replacements_count, pattern, len(match_groups))
         )
@@ -351,7 +353,7 @@ class ProcessAggregator:
         self.processes.append(process)
 
     def core_weight(self, is_win):
-        cpu_rescale_max = self.params.get("cpu_rescale_max")
+        cpu_rescale_max = self.params["cpu_rescale_max"]
 
         if any(
             (
@@ -376,14 +378,12 @@ class ProcessAggregator:
         # process.
         if "/" in process_info.cputime:
             elapsed_text = process_info.cputime.split("/")[1]
+        # uptime is a windows only value, introduced in Werk 4029. For future consistency should be
+        # moved to the cputime entry and separated by a /
+        elif process_info.uptime:
+            elapsed_text = process_info.uptime
         else:
-            # uptime is a windows only value, introduced in Werk 4029. For
-            # future consistency should be moved to the cputime entry and
-            # separated by a /
-            if process_info.uptime:
-                elapsed_text = process_info.uptime
-            else:
-                elapsed_text = None
+            elapsed_text = None
 
         if elapsed_text:
             elapsed = parse_ps_time(elapsed_text)
@@ -558,7 +558,7 @@ def unused_value_remover(
 ) -> Generator[dict[str, tuple[float, float]], None, None]:
     """Remove all values that remain unchanged
 
-    This plugin uses the process IDs in the keys to persist values.
+    This plug-in uses the process IDs in the keys to persist values.
     This would lead to a lot of orphaned values if we used the value store directly.
     Thus we use a single dictionary and only store the values that have been used.
     """
@@ -614,7 +614,7 @@ def count_check(
     info_name: str,
 ) -> CheckResult:
     warnmin, okmin, okmax, warnmax = params["levels"]
-    yield from check_levels_fixed(
+    yield from check_levels(
         processes.count,
         metric_name="count",
         levels_lower=(okmin, warnmin),
@@ -723,7 +723,7 @@ def check_averageable_metric(
     else:
         infotext = metric_name
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         metric_value,
         levels_upper=levels,
         render_func=render_fn,
@@ -806,7 +806,7 @@ def individual_process_check(
             if levels is None or metric_value is None:
                 continue
 
-            check_result, *_ = check_levels_fixed(
+            check_result, *_ = check_levels(
                 metric_value,
                 levels_upper=levels,
                 render_func=render_fn,
@@ -827,7 +827,7 @@ def uptime_check(
 ) -> CheckResult:
     """Check how long the process is running"""
     if min_elapsed == max_elapsed:
-        yield from check_levels_fixed(
+        yield from check_levels(
             min_elapsed,
             levels_lower=params.get("min_age"),
             levels_upper=params.get("max_age"),
@@ -844,14 +844,14 @@ def uptime_check(
             levels=params.get("max_age"),
         )
     else:
-        yield from check_levels_fixed(
+        yield from check_levels(
             min_elapsed,
             metric_name="age_youngest",
             levels_lower=params.get("min_age"),
             render_func=render.timespan,
             label="Youngest running for",
         )
-        yield from check_levels_fixed(
+        yield from check_levels(
             max_elapsed,
             metric_name="age_oldest",
             levels_upper=params.get("max_age"),
@@ -864,7 +864,7 @@ def handle_count_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
 ) -> CheckResult:
-    yield from check_levels_fixed(
+    yield from check_levels(
         processes.handle_count,
         metric_name="process_handles",
         levels_upper=params.get("handle_count"),

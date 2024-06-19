@@ -10,8 +10,8 @@ description:
  and the health and status of the underlying cluster service, quorum, and
  network components.
 
- The check requires that the agent plugin {msexch_dag.ps1} is installed
- on the Exchange mailbox server(s) to be monitored.  The plugin uses the
+ The check requires that the agent plug-in {msexch_dag.ps1} is installed
+ on the Exchange mailbox server(s) to be monitored.  The plug-in uses the
  PowerShell {Test-ReplicationHealth} cmdlet.
 
  The check is in the state {OK} when the check result supplied by the

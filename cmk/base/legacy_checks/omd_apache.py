@@ -12,7 +12,8 @@ from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResults, render
+
+from cmk.agent_based.v2 import get_value_store, IgnoreResults, render
 
 # <<<omd_apache:sep(124)>>>
 # [heute]

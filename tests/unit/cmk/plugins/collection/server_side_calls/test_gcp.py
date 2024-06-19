@@ -7,36 +7,34 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
-from cmk.plugins.collection.server_side_calls.gcp import special_agent_gcp
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
+from cmk.plugins.gcp.server_side_calls.gcp import special_agent_gcp
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 pytestmark = pytest.mark.checks
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    address="0.0.0.1",
-    alias="host_alias",
-    ip_family=IPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="0.0.0.1"),
 )
 
 
-@freeze_time("2022-01-12")
+@time_machine.travel("2022-01-12")
 @pytest.mark.parametrize(
     "params, expected_result",
     [
         pytest.param(
             {
                 "project": "test",
-                "credentials": ("password", "a_very_important_secret"),
+                "credentials": Secret(0),
                 "services": ["gcs", "run"],
             },
             [
                 "--project",
                 "test",
                 "--credentials",
-                PlainTextSecret(value="a_very_important_secret", format="%s"),
+                Secret(0).unsafe(),
                 "--date",
                 "2022-01-12",
                 "--services",
@@ -50,7 +48,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "project": "test",
-                "credentials": ("password", "a_very_important_secret"),
+                "credentials": Secret(0),
                 "cost": {"tableid": "checkmk"},
                 "services": [],
             },
@@ -58,7 +56,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                PlainTextSecret(value="a_very_important_secret", format="%s"),
+                Secret(0).unsafe(),
                 "--date",
                 "2022-01-12",
                 "--cost_table",
@@ -71,7 +69,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "project": "test",
-                "credentials": ("store", "password_id_1"),
+                "credentials": Secret(0),
                 "cost": {"tableid": "checkmk"},
                 "services": ["gcs"],
             },
@@ -79,7 +77,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                StoredSecret(value="password_id_1", format="%s"),
+                Secret(0).unsafe(),
                 "--date",
                 "2022-01-12",
                 "--cost_table",
@@ -94,7 +92,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "project": "test",
-                "credentials": ("store", "password_id_2"),
+                "credentials": Secret(2),
                 "services": [],
                 "piggyback": {"prefix": "custom-prefix", "piggyback_services": ["gce"]},
             },
@@ -102,7 +100,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                StoredSecret(value="password_id_2", format="%s"),
+                Secret(2).unsafe(),
                 "--date",
                 "2022-01-12",
                 "--services",
@@ -118,6 +116,5 @@ def test_gcp_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    parsed_params = special_agent_gcp.parameter_parser(params)
-    commands = list(special_agent_gcp.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(special_agent_gcp(params, HOST_CONFIG))
     assert commands[0].command_arguments == expected_result

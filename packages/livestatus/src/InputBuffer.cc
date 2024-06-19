@@ -205,7 +205,7 @@ InputBuffer::Result InputBuffer::readRequest() {
                 if (!mk::is_utf8(s)) {
                     return Result::invalid_utf8;
                 }
-                _request_lines.emplace_back(s);
+                _request_lines.emplace(s);
 
             } else {
                 Informational(_logger)
@@ -249,17 +249,14 @@ InputBuffer::Result InputBuffer::readData() {
 
 std::string InputBuffer::nextLine() {
     std::string s = _request_lines.front();
-    _request_lines.pop_front();
+    _request_lines.pop();
     return s;
 }
 
-std::list<std::string> InputBuffer::getLines() {
-    std::list<std::string> lines;
+std::vector<std::string> InputBuffer::getLines() {
+    std::vector<std::string> lines;
     while (!_request_lines.empty()) {
         lines.push_back(nextLine());
-        if (lines.back().empty()) {
-            break;
-        }
     }
     return lines;
 }

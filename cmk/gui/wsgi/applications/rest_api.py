@@ -4,17 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import functools
 import http.client
 import json
 import logging
-import mimetypes
 import traceback
 import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
+from hashlib import sha256
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import Any, Literal, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory
@@ -22,8 +21,10 @@ from marshmallow import fields as ma_fields
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Rule, Submount
 
+from livestatus import SiteId
+
 import cmk.utils.version as cmk_version
-from cmk.utils import crash_reporting, paths
+from cmk.utils import crash_reporting, paths, store
 from cmk.utils.exceptions import MKException
 from cmk.utils.site import omd_site
 
@@ -31,12 +32,13 @@ from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
-from cmk.gui.openapi import add_once, endpoint_registry, generate_data
+from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
+from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.openapi.utils import (
     EXT,
     GeneralRestAPIException,
@@ -167,26 +169,6 @@ class EndpointAdapter(AbstractWSGIApp):
         return wsgi_app(environ, start_response)
 
 
-@functools.lru_cache
-def serve_file(  # type: ignore[no-untyped-def]
-    file_name: str,
-    content: bytes,
-    default_content_type="text/plain; charset=utf-8",
-) -> Response:
-    """Construct and cache a Response from a static file."""
-    content_type, _ = mimetypes.guess_type(file_name)
-
-    resp = Response()
-    resp.direct_passthrough = True
-    resp.data = content
-    if content_type is not None:
-        resp.headers["Content-Type"] = content_type
-    else:
-        resp.headers["Content-Type"] = default_content_type
-    resp.freeze()
-    return resp
-
-
 def get_url(environ: WSGIEnvironment) -> str:
     """Reconstruct a URL from a WSGI environment
 
@@ -242,56 +224,124 @@ def get_filename_from_url(url: str) -> str:
     return Path(urllib.parse.urlparse(url).path).name
 
 
-@functools.lru_cache(maxsize=512)
-def serve_spec(
-    site: str,
+def _serve_spec(
     target: EndpointTarget,
     url: str,
-    content_type: str,
-    serializer: Callable[[dict[str, Any]], str],
+    extension: Literal["yaml", "json"],
 ) -> Response:
-    data = generate_data(target=target)
-    data.setdefault("servers", [])
-    add_once(
-        data["servers"],
-        {
-            "url": url,
-            "description": f"Site: {site}",
-        },
-    )
+    match extension:
+        case "yaml":
+            content_type = "application/x-yaml; charset=utf-8"
+        case "json":
+            content_type = "application/json"
+
     response = Response(status=200)
-    response.data = serializer(data)
+    response.data = _serialize_spec_cached(target, url, extension)
     response.content_type = content_type
     response.freeze()
     return response
 
 
+def _serialize_spec_cached(
+    target: EndpointTarget,
+    url: str,
+    extension: Literal["yaml", "json"],
+) -> str:
+    spec_mtime = spec_path(target).stat().st_mtime
+    url_hash = sha256(url.encode("utf-8")).hexdigest()
+    cache_file = paths.tmp_dir / "rest_api" / "spec_cache" / f"{target}-{extension}-{url_hash}.spec"
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        if cache_file.stat().st_mtime > spec_mtime:
+            return cache_file.read_text()
+    except FileNotFoundError:
+        pass
+
+    serialized = _serialize_spec(target, url, extension)
+    cache_file.write_text(serialized)
+    return serialized
+
+
+def _serialize_spec(target: EndpointTarget, url: str, extension: Literal["yaml", "json"]) -> str:
+    serialize: Callable[[dict[str, Any]], str]
+    match extension:
+        case "yaml":
+            serialize = dict_to_yaml
+        case "json":
+            serialize = json.dumps
+    return serialize(_add_site_server(_read_spec(target), omd_site(), url))
+
+
+def _read_spec(target: EndpointTarget) -> dict[str, Any]:
+    path = spec_path(target)
+    spec = store.load_object_from_file(path, default={})
+    if not spec:
+        raise ValueError(f"Failed to load spec from {path}")
+    return spec
+
+
+def _add_site_server(spec: dict[str, Any], site: SiteId, url: str) -> dict[str, Any]:
+    """Add the server URL to the spec
+
+    This step needs to happen with the current request context at hand to
+    be able to add the protocol and URL currently being used by the client
+    """
+    spec.setdefault("servers", [])
+    add_once(
+        spec["servers"],
+        {
+            "url": url,
+            "description": f"Site: {site}",
+        },
+    )
+    return spec
+
+
+def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
+    """Add an entry to a collection, only once.
+
+    Examples:
+
+        >>> l = []
+        >>> add_once(l, {'foo': []})
+        >>> l
+        [{'foo': []}]
+
+        >>> add_once(l, {'foo': []})
+        >>> l
+        [{'foo': []}]
+
+    Args:
+        coll:
+        to_add:
+
+    Returns:
+
+    """
+    if to_add in coll:
+        return None
+
+    coll.append(to_add)
+    return None
+
+
 class ServeSpec(AbstractWSGIApp):
-    def __init__(self, target: EndpointTarget, extension: str, debug: bool = False) -> None:
+    def __init__(
+        self, target: EndpointTarget, extension: Literal["yaml", "json"], debug: bool = False
+    ) -> None:
         super().__init__(debug)
         self.target = target
         self.extension = extension
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        serializers = {"yaml": dict_to_yaml, "json": json.dumps}
-        content_types = {
-            "json": "application/json",
-            "yaml": "application/x-yaml; charset=utf-8",
-        }
-
-        def _site(_environ: WSGIEnvironment) -> str:
-            path_info = _environ["PATH_INFO"].split("/")
-            return path_info[1]
-
         def _url(_environ: WSGIEnvironment) -> str:
             return "/".join(get_url(_environ).split("/")[:-1])
 
-        return serve_spec(
-            site=_site(environ),
+        return _serve_spec(
             target=self.target,
             url=_url(environ),
-            content_type=content_types[self.extension],
-            serializer=serializers[self.extension],
+            extension=self.extension,
         )(environ, start_response)
 
 
@@ -361,10 +411,6 @@ class CheckmkRESTAPI(AbstractWSGIApp):
 
         endpoint: Endpoint
         for endpoint in endpoint_registry:
-            if self.debug:
-                # This helps us to make sure we can always generate a valid OpenAPI yaml file.
-                _ = endpoint.to_operation_dict()
-
             self.add_rule(
                 [endpoint.default_path],
                 EndpointAdapter(endpoint),

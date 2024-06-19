@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.detection import DETECT_NEVER
 
 # snmp_scan_function
@@ -51,8 +50,8 @@ def check_carel_uniflair_cooling(item, _no_params, info):
     return (0, output, perfdata)
 
 
-def parse_carel_uniflair_cooling(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_carel_uniflair_cooling(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["carel_uniflair_cooling"] = LegacyCheckDefinition(

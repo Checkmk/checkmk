@@ -8,7 +8,7 @@ import os
 from collections.abc import Callable
 from pathlib import Path
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
 from ..conftest import ChangedFiles
 
@@ -45,10 +45,10 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
     ("notifications/*", is_executable, ["README", "debug"], []),
     ("bin/*", is_executable, ["Makefile", "mkevent.cc", "mkeventd_open514.cc"], []),
     # Enterprise specific
-    ("enterprise/bin/*", is_executable, [], []),
-    ("enterprise/active_checks/*", is_executable, [], []),
+    ("omd/packages/enterprise/bin/*", is_executable, [], []),
+    ("omd/packages/enterprise/active_checks/*", is_executable, [], []),
     (
-        "enterprise/agents/plugins/*",
+        "non-free/cmk-update-agent/*",
         is_executable,
         [
             "chroot_version",
@@ -67,8 +67,8 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
         ],
         [],
     ),
-    ("enterprise/alert_handlers/*", is_executable, [], []),
-    ("enterprise/alert_handlers/*", is_executable, [], []),
+    ("omd/packages/enterprise/alert_handlers/*", is_executable, [], []),
+    ("omd/packages/enterprise/alert_handlers/*", is_executable, [], []),
 ]
 
 

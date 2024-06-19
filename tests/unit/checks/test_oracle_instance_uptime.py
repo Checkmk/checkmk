@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from tests.unit.conftest import FixRegister
 
@@ -18,9 +20,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.oracle_instance_section import parse_oracle_instance
 
 from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData
+from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
 
 
 def test_discover_oracle_instance_uptime(fix_register: FixRegister) -> None:
@@ -39,7 +41,7 @@ def test_discover_oracle_instance_uptime(fix_register: FixRegister) -> None:
 
 
 def test_check_oracle_instance_uptime_normal(fix_register: FixRegister) -> None:
-    with on_time(1643360266, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1643360266, tz=ZoneInfo("UTC"))):
         assert list(
             fix_register.check_plugins[CheckPluginName("oracle_instance_uptime")].check_function(
                 item="IC731",

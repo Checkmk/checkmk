@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
 
 climaveneta_alarms = {
     # 20  : "Global (general)",
@@ -83,8 +82,8 @@ def check_climaveneta_alarm(item, params, info):
         yield 0, "No alarm state"
 
 
-def parse_climaveneta_alarm(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_climaveneta_alarm(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["climaveneta_alarm"] = LegacyCheckDefinition(

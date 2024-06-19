@@ -6,19 +6,14 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    exists,
-    render,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import all_of, contains, exists, render, SNMPTree
 
 
 def parse_fortigate_memory(string_table):
     try:
         return int(string_table[0][0])
-    except ValueError:
+    except (ValueError, IndexError):
         return None
 
 

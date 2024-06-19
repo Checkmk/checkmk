@@ -1216,27 +1216,25 @@ tools::UtfConversionMode PluginEntry::getUtfConversionMode() const {
                                : tools::UtfConversionMode::basic;
 }
 
-void PluginEntry::fillInternalUser(wtools::InternalUsersDb *iu) {
-    // reset all to be safe due to possible future errors in logic
-    iu_.first.clear();
-    iu_.second.clear();
-
-    // group is coming first
-    if (!group_.empty() && (iu != nullptr)) {
-        iu_ = iu->obtainUser(wtools::ConvertToUtf16(group_));
+/// try to build user from fields group and user
+wtools::InternalUser PluginEntry::getInternalUser(
+    wtools::InternalUsersDb *user_database) const {
+    if (!group_.empty() && (user_database != nullptr)) {
+        const auto iu =
+            user_database->obtainUser(wtools::ConvertToUtf16(group_));
         XLOG::t("Entry '{}' uses user '{}' as group config", path(),
                 wtools::ToUtf8(iu_.first));
-        return;
+        return iu;
     }
 
     if (user_.empty()) {
-        return;  // situation when both fields are empty
+        return {};
     }
 
-    // user
-    iu_ = PluginsExecutionUser2Iu(user_);
+    const auto iu = PluginsExecutionUser2Iu(user_);
     XLOG::t("Entry '{}' uses user '{}' as direct config", path(),
             wtools::ToUtf8(iu_.first));
+    return iu;
 }
 
 // if thread finished join old and start new thread again
@@ -1572,20 +1570,20 @@ void PickupAsync0data(int timeout, PluginMap &plugins, std::vector<char> &out,
 
 std::pair<std::vector<char>, int> RunAsyncPlugins(PluginMap &plugins,
                                                   bool start_immediately) {
-    std::vector<char> out;
+    std::vector<char> result;
 
     int count = 0;
     for (auto &plugin : plugins | std::views::values) {
         if (!plugin.async() || !provider::config::IsRunAsync(plugin)) {
             continue;
         }
-        auto ret = plugin.getResultsAsync(start_immediately);
-        if (!ret.empty()) {
+        auto data = plugin.getResultsAsync(start_immediately);
+        if (!data.empty()) {
             ++count;
         }
-        tools::AddVector(out, ret);
+        tools::AddVector(result, data);
     }
-    return {out, count};
+    return {result, count};
 }
 }  // namespace cma
 
@@ -1597,7 +1595,7 @@ std::wstring LocatePs1Proxy() {
         return L"";
     }
 
-    auto path_to_configure_and_exec =
+    const auto path_to_configure_and_exec =
         fs::path{cfg::GetRootInstallDir()} / cfg::files::kConfigureAndExecPs1;
     std::error_code ec;
     return fs::exists(path_to_configure_and_exec, ec)
@@ -1605,16 +1603,15 @@ std::wstring LocatePs1Proxy() {
                : L"";
 }
 
-std::wstring MakePowershellWrapper() noexcept {
+std::wstring MakePowershellWrapper(const fs::path &script) noexcept {
     try {
-        auto powershell_exe = FindPowershellExe();
+        const auto powershell_exe = FindPowershellExe();
         auto proxy = LocatePs1Proxy();
 
         return powershell_exe +
                fmt::format(
-                   L" -NoLogo -NoProfile -ExecutionPolicy Bypass -File{}",
-                   proxy) +
-               L" \"{}\"";
+                   L" -NoLogo -NoProfile -ExecutionPolicy Bypass -File{} \"{}\"",
+                   proxy, script.wstring());
     } catch (const std::exception &e) {
         XLOG::l("Exception when finding powershell e:{}", e);
         return L"";

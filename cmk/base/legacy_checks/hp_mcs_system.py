@@ -6,13 +6,14 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree, startswith
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, OIDBytes, Service, SNMPTree, startswith, StringTable
 
 
-def inventory_hp_mcs_system(info):
-    return [(info[0][0], None)]
+def discover_hp_mcs_system(section: StringTable) -> DiscoveryResult:
+    if not section:
+        return
+    yield Service(item=section[0][0])
 
 
 def check_hp_mcs_system(item, _no_params, info):
@@ -43,6 +44,6 @@ check_info["hp_mcs_system"] = LegacyCheckDefinition(
         oids=["2.2.4.2", OIDBytes("11.2.10.1"), "11.2.10.3"],
     ),
     service_name="%s",
-    discovery_function=inventory_hp_mcs_system,
+    discovery_function=discover_hp_mcs_system,
     check_function=check_hp_mcs_system,
 )

@@ -14,9 +14,9 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
-TableCommands::TableCommands(ICore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{});
-}
+using row_type = Command;
+
+TableCommands::TableCommands() { addColumns(this, "", ColumnOffsets{}); }
 
 std::string TableCommands::name() const { return "commands"; }
 
@@ -25,16 +25,17 @@ std::string TableCommands::namePrefix() const { return "command_"; }
 // static
 void TableCommands::addColumns(Table *table, const std::string &prefix,
                                const ColumnOffsets &offsets) {
-    table->addColumn(std::make_unique<StringColumn<Command>>(
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "name", "The name of the command", offsets,
-        [](const Command &cmd) { return cmd._name; }));
-    table->addColumn(std::make_unique<StringColumn<Command>>(
+        [](const row_type &row) { return row._name; }));
+    table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "line", "The shell command line", offsets,
-        [](const Command &cmd) { return cmd._command_line; }));
+        [](const row_type &row) { return row._command_line; }));
 }
 
-void TableCommands::answerQuery(Query &query, const User & /*user*/) {
-    for (auto &cmd : core()->commands()) {
+void TableCommands::answerQuery(Query &query, const User & /*user*/,
+                                const ICore &core) {
+    for (auto &cmd : core.commands()) {
         if (!query.processDataset(Row{&cmd})) {
             break;
         }

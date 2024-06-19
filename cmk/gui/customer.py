@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -22,40 +23,33 @@ CustomerIdOrGlobal = CustomerId | None
 class ABCCustomerAPI(ABC):
     @classmethod
     @abstractmethod
-    def get_sites_of_customer(cls, customer_id: CustomerId) -> SiteConfigurations:
-        ...
+    def get_sites_of_customer(cls, customer_id: CustomerId) -> SiteConfigurations: ...
 
     @classmethod
     @abstractmethod
-    def get_customer_id(cls, the_object: Mapping[str, Any]) -> CustomerIdOrGlobal:
-        ...
+    def get_customer_id(cls, the_object: Mapping[str, Any]) -> CustomerIdOrGlobal: ...
 
     @classmethod
     @abstractmethod
-    def is_global(cls, customer_id: CustomerIdOrGlobal) -> bool:
-        ...
+    def is_global(cls, customer_id: CustomerIdOrGlobal) -> bool: ...
 
     @classmethod
     @abstractmethod
-    def customer_group_sites(cls, group: GroupSpec) -> Sequence[SiteId] | None:
-        ...
+    def customer_group_sites(cls, group: GroupSpec) -> Sequence[SiteId] | None: ...
 
     @classmethod
     @abstractmethod
-    def get_customer_name_by_id(cls, customer_id: CustomerIdOrGlobal) -> str:
-        ...
+    def get_customer_name_by_id(cls, customer_id: CustomerIdOrGlobal) -> str: ...
 
     @classmethod
     @abstractmethod
-    def get_customer_name(cls, the_object: Mapping[str, Any]) -> str:
-        ...
+    def get_customer_name(cls, the_object: Mapping[str, Any]) -> str: ...
 
     @classmethod
     @abstractmethod
     def vs_customer(
         cls, deflt: CustomerId | None = None, with_global: bool = True
-    ) -> DropdownChoice:
-        ...
+    ) -> DropdownChoice: ...
 
     @classmethod
     @abstractmethod
@@ -66,23 +60,19 @@ class ABCCustomerAPI(ABC):
     @abstractmethod
     def customer_choice_element(
         cls, deflt: CustomerId | None = None, with_global: bool = True
-    ) -> list[tuple[str, ValueSpec]]:
-        ...
+    ) -> list[tuple[str, ValueSpec]]: ...
 
     @classmethod
     @abstractmethod
-    def is_provider(cls, customer_id: CustomerIdOrGlobal) -> bool:
-        ...
+    def is_provider(cls, customer_id: CustomerIdOrGlobal) -> bool: ...
 
     @classmethod
     @abstractmethod
-    def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool:
-        ...
+    def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool: ...
 
     @classmethod
     @abstractmethod
-    def customer_collection(cls) -> list[CustomerIdOrGlobal]:
-        ...
+    def customer_collection(cls) -> list[CustomerIdOrGlobal]: ...
 
 
 class CustomerAPIStub(ABCCustomerAPI):

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 import os
 import signal
@@ -14,16 +14,16 @@ import time
 try:
     import configparser
 except ImportError:  # Python 2
-    import ConfigParser as configparser  # type: ignore[import,no-redef]
+    import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
 
 try:
-    from typing import Any  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
 except ImportError:
     pass
 
 try:
     # TODO: We should probably ship this package.
-    import pyinotify  # type: ignore[import] # pylint: disable=import-error
+    import pyinotify  # type: ignore[import-not-found] # pylint: disable=import-error
 except ImportError:
     sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
     sys.exit(1)
@@ -237,7 +237,7 @@ map_events = {
 }
 
 
-class NotifyEventHandler(pyinotify.ProcessEvent):
+class NotifyEventHandler(pyinotify.ProcessEvent):  # type: ignore[misc]
     def process_IN_MOVED_TO(self, event):
         do_output("movedto", event)
 
@@ -275,11 +275,10 @@ def update_watched_folders():
         if attributes.get("watch_descriptor"):
             if not wm.get_path(attributes["watch_descriptor"].get(folder)):
                 del attributes["watch_descriptor"]
-        else:
-            if os.path.exists(folder):
-                new_wd = wm.add_watch(folder, attributes["mask"], rec=True)
-                if new_wd.get(folder) > 0:
-                    attributes["watch_descriptor"] = new_wd
+        elif os.path.exists(folder):
+            new_wd = wm.add_watch(folder, attributes["mask"], rec=True)
+            if new_wd.get(folder) > 0:
+                attributes["watch_descriptor"] = new_wd
 
 
 def main():  # pylint: disable=too-many-branches

@@ -3,21 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import subprocess
 import time
 from collections.abc import MutableSequence
 from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import Any
 
-from six import ensure_str
-
 import cmk.utils.paths
-import cmk.utils.store as store
-from cmk.utils.notify import ensure_utf8
+from cmk.utils import store
+from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
-import cmk.gui.utils as utils
+from cmk.gui import userdb, utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.default_permissions import PermissionSectionGeneral
@@ -84,7 +82,7 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
 def delete_gui_message(msg_id: str) -> None:
     messages = get_gui_messages()
     for index, msg in enumerate(messages):
-        if msg["id"] == msg_id:
+        if msg["id"] == msg_id and "security" not in msg:
             messages.pop(index)
     save_gui_messages(messages)
 
@@ -339,15 +337,15 @@ def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-
             )
         )
 
-    message += HTMLWriter.render_ul(HTML().join(parts))
+    message += HTMLWriter.render_ul(HTML.empty().join(parts))
     message += HTMLWriter.render_p(_("Recipients: %s") % ", ".join(recipients))
     html.show_message(message)
 
     if errors:
-        error_message = HTML()
+        error_message = HTML.empty()
         for method, method_errors in errors.items():
             error_message += _("Failed to send %s messages to the following users:") % method
-            table_rows = HTML()
+            table_rows = HTML.empty()
             for user_id, exception in method_errors:
                 table_rows += HTMLWriter.render_tr(
                     HTMLWriter.render_td(HTMLWriter.render_tt(user_id))
@@ -388,21 +386,10 @@ def message_mail(user_id: UserId, msg: Message) -> bool:
     if not sender_name:
         sender_name = user_id
 
-    # Code mostly taken from message_via_email() from message.py module
-    subject = _("Checkmk: Message")
-    body = (
-        _(
-            """Greetings %s,
-
-%s sent you a message:
-
----
-%s
----
-
-"""
-        )
-        % (recipient_name, sender_name, msg["text"])
+    body = _("""Greetings %s,\n\n%s sent you a message: \n\n---\n%s\n---""") % (
+        recipient_name,
+        sender_name,
+        msg["text"],
     )
 
     if msg["valid_till"]:
@@ -411,38 +398,22 @@ def message_mail(user_id: UserId, msg: Message) -> bool:
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg["valid_till"])),
         )
 
-    # FIXME: Maybe use the configured mail command for Check_MK-Message one day
-    # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
-    #       addresses. handle this correctly.
-    # ? type of user_spec seems to be Dict[str,Any]
-    command = [
-        "mail",
-        "-s",
-        subject,
-        ensure_str(user_spec["email"]),  # pylint: disable= six-ensure-str-bin-call
-    ]
-
-    ensure_utf8()
-
+    mail = MIMEMultipart(_charset="utf-8")
+    mail.attach(MIMEText(body.replace("\n", "\r\n"), "plain", _charset="utf-8"))
+    reply_to = ""
     try:
-        completed_process = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            close_fds=True,
-            encoding="utf-8",
-            check=False,
-            input=body,
+        send_mail_sendmail(
+            set_mail_headers(
+                MailString(user_spec["email"]),
+                MailString("Checkmk: Message"),
+                MailString(default_from_address()),
+                MailString(reply_to),
+                mail,
+            ),
+            target=MailString(user_spec["email"]),
+            from_address=MailString(default_from_address()),
         )
-    except OSError as e:
-        raise MKInternalError(
-            _('Mail could not be delivered. Failed to execute command "%s": %s')
-            % (" ".join(command), e)
-        )
+    except Exception as exc:
+        raise MKInternalError(_("Mail could not be delivered: '%s'") % exc) from exc
 
-    if completed_process.returncode:
-        raise MKInternalError(
-            _("Mail could not be delivered. Exit code of command is %r. Output is: %s")
-            % (completed_process.returncode, completed_process.stdout)
-        )
     return True

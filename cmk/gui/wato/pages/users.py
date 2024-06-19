@@ -7,26 +7,33 @@
 import base64
 import time
 import traceback
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterable, Iterator
 from typing import cast, Literal, overload
 
-import cmk.utils.render as render
+from cmk.utils import render
 from cmk.utils.crypto.password import Password
+from cmk.utils.timeperiod import load_timeperiods
 from cmk.utils.user import UserId
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
-import cmk.gui.background_job as background_job
-import cmk.gui.forms as forms
-import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.userdb as userdb
-import cmk.gui.weblib as weblib
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui import background_job, forms, gui_background_job, userdb, weblib
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
-from cmk.gui.customer import customer_api
+from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_contact_group_information
+from cmk.gui.form_specs.vue.vue_table import (
+    build_checkbox,
+    build_href,
+    build_html,
+    build_icon_button,
+    build_row,
+    build_table,
+    build_table_cell,
+    build_text,
+    render_vue_table,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u, get_language_alias, get_languages, is_community_translation
 from cmk.gui.log import logger
@@ -54,8 +61,10 @@ from cmk.gui.userdb import (
     load_roles,
     new_user_template,
     UserAttribute,
+    UserConnector,
 )
 from cmk.gui.userdb.htpasswd import hash_password
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
@@ -68,11 +77,19 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
 )
-from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
+from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
+from cmk.gui.valuespec import (
+    Alternative,
+    DualListChoice,
+    EmailAddress,
+    FixedValue,
+    TextInput,
+    UserID,
+)
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import (
     delete_users,
@@ -87,6 +104,20 @@ from cmk.gui.watolib.utils import ldap_connections_are_configurable
 def register(_mode_registry: ModeRegistry) -> None:
     _mode_registry.register(ModeUsers)
     _mode_registry.register(ModeEditUser)
+
+
+def has_customer(
+    user_cxn: UserConnector | None,
+    cust_api: ABCCustomerAPI,
+    user_spec: UserSpec,
+) -> str | None:
+    if edition() is not Edition.CME:
+        return None
+
+    if isinstance(user_cxn, LDAPUserConnector):
+        if user_cxn.customer_id is not None:
+            return cust_api.get_customer_name_by_id(user_cxn.customer_id)
+    return cust_api.get_customer_name(user_spec)
 
 
 class ModeUsers(WatoMode):
@@ -107,9 +138,12 @@ class ModeUsers(WatoMode):
     def title(self) -> str:
         return _("Users")
 
+    def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
+        # Since we are in the users mode, we don't need to add the
+        # "Users" topic to the breadcrumb. Else we get "Users > Users"
+        return ()
+
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
-        del breadcrumb[-1]
         topics = (
             [
                 PageMenuTopic(
@@ -271,7 +305,12 @@ class ModeUsers(WatoMode):
                             enforce_sync=True,
                             load_users_func=userdb.load_users,
                             save_users_func=userdb.save_users,
-                        )
+                        ),
+                        background_job.InitialStatusArgs(
+                            title=job.gui_title(),
+                            stoppable=False,
+                            user=str(user.id) if user.id else None,
+                        ),
                     )
                 except background_job.BackgroundJobAlreadyRunning as e:
                     raise MKUserError(
@@ -319,7 +358,7 @@ class ModeUsers(WatoMode):
         elif self._job_snapshot.is_active:
             # Still running
             html.show_message(
-                HTML(_("User synchronization currently running: ")) + self._job_details_link()
+                _("User synchronization currently running: ") + self._job_details_link()
             )
             url = makeuri(request, [])
             html.immediate_browser_redirect(2, url)
@@ -335,16 +374,23 @@ class ModeUsers(WatoMode):
         elif not self._job_snapshot.acknowledged_by and self._job_snapshot.has_exception:
             # Finished, but not OK - show info message with links to details
             html.show_warning(
-                HTML(_("Last user synchronization ran into an exception: "))
-                + self._job_details_link()
+                _("Last user synchronization ran into an exception: ") + self._job_details_link()
             )
 
         users = userdb.load_users()
 
-        with html.form_context("bulk_delete_form", method="POST"):
-            self._show_user_list(users)
+        match get_render_mode():
+            case ExperimentalRenderMode.FRONTEND:
+                self._show_vue_user_list(users)
+            case ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+                self._show_vue_user_list(users)
+                with html.form_context("bulk_delete_form", method="POST"):
+                    self._show_user_list(users)
+            case ExperimentalRenderMode.BACKEND:
+                with html.form_context("bulk_delete_form", method="POST"):
+                    self._show_user_list(users)
 
-        self._show_user_list_footer(users)
+                self._show_user_list_footer(users)
 
     def _job_details_link(self):
         return HTMLWriter.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
@@ -370,6 +416,220 @@ class ModeUsers(WatoMode):
         job_manager = gui_background_job.GUIBackgroundJobManager()
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
+
+    def _show_vue_user_list(  # pylint: disable=too-many-branches
+        self, users: dict[UserId, UserSpec]
+    ) -> None:
+        # NOTE: This code is non-productive
+        visible_custom_attrs = [
+            (name, attr) for name, attr in get_user_attributes() if attr.show_in_table()
+        ]
+
+        entries = list(users.items())
+
+        html.begin_form("bulk_delete_form", method="POST")
+
+        roles = load_roles()
+        contact_groups = load_contact_group_information()
+
+        html.div("", id_="row_info")
+
+        vue_rows = []
+        headers = {}
+
+        def add_header(name):
+            headers[name] = True
+
+        online_threshold = time.time() - active_config.user_online_maxage
+        odd_even = True
+
+        customer = customer_api()
+        for _index, (uid, user_spec) in enumerate(
+            sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower())
+        ):
+            cells = []
+            add_header("Checkbox")
+            cells.append(build_table_cell(content=[build_checkbox()]))
+
+            user_connection_id = user_spec.get("connector")
+            connection = get_connection(user_connection_id)
+
+            action_buttons = []
+
+            # Buttons
+            if connection:  # only show edit buttons when the connector is available and enabled
+                edit_url = folder_preserving_link([("mode", "edit_user"), ("edit", uid)])
+                action_buttons.append(build_icon_button(edit_url, _("Properties"), "edit"))
+                if self._can_create_and_delete_users:
+                    clone_url = folder_preserving_link([("mode", "edit_user"), ("clone", uid)])
+                    action_buttons.append(
+                        build_icon_button(clone_url, _("Create a copy of this user"), "clone")
+                    )
+
+            user_alias = user_spec.get("alias", "")
+            if self._can_create_and_delete_users:
+                delete_url = make_confirm_delete_link(
+                    url=make_action_link([("mode", "users"), ("_delete", uid)]),
+                    title=_("Delete user"),
+                    suffix=user_alias,
+                    message=_("ID: %s") % uid,
+                )
+                action_buttons.append(build_icon_button(delete_url, _("Delete"), "delete"))
+
+            notifications_url = folder_preserving_link(
+                [("mode", "user_notifications"), ("user", uid)]
+            )
+            action_buttons.append(
+                build_icon_button(
+                    notifications_url,
+                    _("Custom notification table of this user"),
+                    "notifications",
+                )
+            )
+
+            add_header(_("Actions"))
+            cells.append(build_table_cell(content=action_buttons, classes=["buttons"]))
+
+            # ID
+            add_header(_("ID"))
+            cells.append(build_table_cell(content=[build_text(uid)]))
+
+            # Online/Offline
+            if user.may("wato.show_last_user_activity"):
+                last_seen = userdb.get_last_activity(user_spec)
+                if last_seen >= online_threshold:
+                    title = _("Online")
+                    img_txt = "checkmark"
+                elif last_seen != 0:
+                    title = _("Offline")
+                    img_txt = "cross_grey"
+                elif last_seen == 0:
+                    title = _("Never logged in")
+                    img_txt = "hyphen"
+
+                title += f" ({render.date(last_seen)} {render.time_of_day(last_seen)})"
+                add_header(_("Act."))
+                cells.append(build_table_cell(content=[build_icon_button("", title, img_txt)]))
+
+                if last_seen != 0:
+                    shown_text = f"{render.date(last_seen)} {render.time_of_day(last_seen)}"
+                else:
+                    shown_text = _("Never logged in")
+
+                add_header(_("Last seen"))
+                cells.append(build_table_cell(content=[build_text(shown_text)]))
+
+            if cust := has_customer(user_cxn=connection, cust_api=customer, user_spec=user_spec):
+                cells.append(build_table_cell(content=[build_text(cust)]))
+
+            # Connection
+            add_header(_("Connection"))
+            if connection:
+                cells.append(
+                    build_table_cell(
+                        content=[build_text(f"{connection.short_title()} ({user_connection_id})")]
+                    )
+                )
+                locked_attributes = userdb.locked_attributes(user_connection_id)
+            else:
+                cell_text = "{} ({}) ({})".format(_("UNKNOWN"), user_connection_id, _("disabled"))
+                locked_attributes = []
+                cells.append(build_table_cell(content=[build_text(cell_text)], classes=["error"]))
+
+            # Authentication
+            if "automation_secret" in user_spec:
+                auth_method: str | HTML = _("Automation")
+            elif user_spec.get("password") or "password" in locked_attributes:
+                auth_method = _("Password")
+                if connection and connection.type() == ConnectorType.SAML2:
+                    auth_method = connection.short_title()
+                if userdb.is_two_factor_login_enabled(uid):
+                    auth_method += " (+2FA)"
+            else:
+                auth_method = HTMLWriter.render_i(_("none"))
+            add_header(_("Authentication"))
+            cells.append(build_table_cell(content=[build_text(auth_method)]))
+
+            add_header(_("State"))
+            state_content = []
+            if user_spec["locked"]:
+                state_content.append(
+                    build_icon_button("", _("The login is currently locked"), "user_locked")
+                )
+
+            if "disable_notifications" in user_spec and isinstance(
+                user_spec["disable_notifications"], bool
+            ):
+                disable_notifications_opts = {"disable": user_spec["disable_notifications"]}
+            else:
+                disable_notifications_opts = user_spec.get("disable_notifications", {})
+
+            if disable_notifications_opts.get("disable", False):
+                state_content.append(
+                    build_icon_button("", _("Notifications are disabled"), "notif_disabled")
+                )
+            cells.append(build_table_cell(content=state_content))
+
+            # Full name / Alias
+            add_header(_("Alias"))
+            cells.append(build_table_cell(content=[build_text(user_alias)]))
+
+            # Email
+            add_header(_("Email"))
+            cells.append(build_table_cell(content=[build_text(user_spec.get("email", ""))]))
+
+            # Roles
+            add_header(_("Roles"))
+            if user_spec.get("roles", []):
+                role_links = [
+                    (
+                        folder_preserving_link([("mode", "edit_role"), ("edit", role)]),
+                        roles[role].get("alias"),
+                    )
+                    for role in user_spec["roles"]
+                ]
+                cells.append(
+                    build_table_cell(
+                        content=list(build_href(link, str(alias)) for (link, alias) in role_links)
+                    )
+                )
+
+            # contact groups
+            add_header(_("Contact groups"))
+            cgs = user_spec.get("contactgroups", [])
+            if cgs:
+                cg_aliases = [contact_groups[c]["alias"] if c in contact_groups else c for c in cgs]
+                cg_urls = [
+                    folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)])
+                    for c in cgs
+                ]
+                cg_html = HTML.without_escaping(", ").join(
+                    HTMLWriter.render_a(content, href=url)
+                    for (content, url) in zip(cg_aliases, cg_urls)
+                )
+                cells.append(build_table_cell(content=[build_html(cg_html)]))
+            else:
+                cells.append(build_table_cell(content=[build_text(_("none"))]))
+
+            # the visible custom attributes
+            for name, attr in visible_custom_attrs:
+                vs = attr.valuespec()
+                vs_title = vs.title()
+                custom_text = vs.value_to_html(user_spec.get(name, vs.default_value()))
+                add_header(_u(vs_title) if isinstance(vs_title, str) else vs_title)
+                cells.append(build_table_cell(content=[build_text(custom_text)]))
+            vue_rows.append(
+                build_row(key=uid, columns=cells, classes=["data", "even0" if odd_even else "odd0"])
+            )
+            odd_even = not odd_even
+
+        render_vue_table(
+            build_table(headers=list(headers.keys()), rows=vue_rows, classes=["data", "oddeven"])
+        )
+
+        html.hidden_field("selection", weblib.selection_id())
+        html.hidden_fields()
+        html.end_form()
 
     def _show_user_list(  # pylint: disable=too-many-branches
         self, users: dict[UserId, UserSpec]
@@ -470,8 +730,10 @@ class ModeUsers(WatoMode):
                     else:
                         html.write_text(_("Never"))
 
-                if edition() is Edition.CME:
-                    table.cell(_("Customer"), customer.get_customer_name(user_spec))
+                if cust := has_customer(
+                    user_cxn=connection, cust_api=customer, user_spec=user_spec
+                ):
+                    table.cell(_("Customer"), cust)
 
                 # Connection
                 if connection:
@@ -492,16 +754,16 @@ class ModeUsers(WatoMode):
                     auth_method: str | HTML = _("Automation")
                 elif user_spec.get("password") or "password" in locked_attributes:
                     auth_method = _("Password")
-                    if _is_two_factor_enabled(user_spec):
-                        auth_method += " (+2FA)"
-                    elif connection and connection.type() == ConnectorType.SAML2:
+                    if connection and connection.type() == ConnectorType.SAML2:
                         auth_method = connection.short_title()
+                    if userdb.is_two_factor_login_enabled(uid):
+                        auth_method += " (+2FA)"
                 else:
                     auth_method = HTMLWriter.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"), sortable=False)
-                if user_spec.get("locked", False):
+                if user_spec["locked"]:
                     html.icon("user_locked", _("The login is currently locked"))
 
                 if "disable_notifications" in user_spec and isinstance(
@@ -531,7 +793,7 @@ class ModeUsers(WatoMode):
                         for role in user_spec["roles"]
                     ]
                     html.write_html(
-                        HTML(", ").join(
+                        HTML.without_escaping(", ").join(
                             HTMLWriter.render_a(alias, href=link) for (link, alias) in role_links
                         )
                     )
@@ -548,7 +810,7 @@ class ModeUsers(WatoMode):
                         for c in cgs
                     ]
                     html.write_html(
-                        HTML(", ").join(
+                        HTML.without_escaping(", ").join(
                             HTMLWriter.render_a(content, href=url)
                             for (content, url) in zip(cg_aliases, cg_urls)
                         )
@@ -617,8 +879,7 @@ class ModeEditUser(WatoMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -736,7 +997,11 @@ class ModeEditUser(WatoMode):
                         title=_("Remove two-factor authentication of %s") % self._user_id,
                     )
                 ),
-                is_enabled=_is_two_factor_enabled(self._user),
+                is_enabled=(
+                    userdb.is_two_factor_login_enabled(self._user_id)
+                    if self._user_id is not None
+                    else False
+                ),
             )
 
     def action(self) -> ActionResult:  # pylint: disable=too-many-branches
@@ -844,38 +1109,33 @@ class ModeEditUser(WatoMode):
                     ntop_username_attribute
                 )
 
-    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
-        # Locking
-        user_attrs["locked"] = html.get_checkbox("locked")
+    def _increment_auth_serial(self, user_attrs: UserSpec) -> None:
+        user_attrs["serial"] = user_attrs.get("serial", 0) + 1
+
+    def _handle_auth_attributes(self, user_attrs: UserSpec) -> None:
         increase_serial = False
 
-        if (
-            self._user_id in self._users
-            and user_attrs["locked"]
-            and self._users[self._user_id]["locked"] != user_attrs["locked"]
-        ):
-            increase_serial = True  # when user is being locked now, increase the auth serial
-
-        # Authentication: Password or Secret
-        auth_method = request.var("authmethod")
-        if auth_method == "secret":
-            secret = request.get_str_input_mandatory("_auth_secret", "")
-            if secret:
+        if request.var("authmethod") == "secret":  # automation secret
+            if secret := request.get_str_input_mandatory("_auth_secret", ""):
                 user_attrs["automation_secret"] = secret
                 user_attrs["password"] = hash_password(Password(secret))
                 increase_serial = True  # password changed, reflect in auth serial
+
                 # automation users cannot set the passwords themselves.
                 user_attrs["last_pw_change"] = int(time.time())
                 user_attrs.pop("enforce_pw_change", None)
+
             elif "automation_secret" not in user_attrs and "password" in user_attrs:
                 del user_attrs["password"]
 
-        else:
+        else:  # password
+            password_field_name = "_password_" + self._pw_suffix()
+            password2_field_name = "_password2_" + self._pw_suffix()
             password = request.get_validated_type_input(
-                Password, "_password_" + self._pw_suffix(), empty_is_none=True
+                Password, password_field_name, empty_is_none=True
             )
             password2 = request.get_validated_type_input(
-                Password, "_password2_" + self._pw_suffix(), empty_is_none=True
+                Password, password2_field_name, empty_is_none=True
             )
 
             # We compare both passwords only, if the user has supplied
@@ -883,18 +1143,19 @@ class ModeEditUser(WatoMode):
             # Note: this validation is done before the main-validiation later on
             # It doesn't make any sense to put this block into the main validation function
             if password2 and password != password2:
-                raise MKUserError("_password2", _("Passwords don't match"))
+                raise MKUserError(password2_field_name, _("Passwords don't match"))
 
-            # Detect switch back from automation to password
+            # Detect switch from automation to password
             if "automation_secret" in user_attrs:
                 del user_attrs["automation_secret"]
                 if "password" in user_attrs:
-                    del user_attrs["password"]  # which was the encrypted automation password!
+                    del user_attrs["password"]  # which was the hashed automation secret!
 
             if password:
-                verify_password_policy(password)
+                verify_password_policy(password, password_field_name)
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
+                send_security_message(self._user_id, SecurityNotificationEvent.password_change)
                 increase_serial = True  # password changed, reflect in auth serial
 
             # PW change enforcement
@@ -904,7 +1165,22 @@ class ModeEditUser(WatoMode):
 
         # Increase serial (if needed)
         if increase_serial:
-            user_attrs["serial"] = user_attrs.get("serial", 0) + 1
+            self._increment_auth_serial(user_attrs)
+
+    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
+        # Locking
+        user_attrs["locked"] = html.get_checkbox("locked") or False
+        if (  # toggled for an existing user
+            self._user_id in self._users
+            and self._users[self._user_id]["locked"] != user_attrs["locked"]
+        ):
+            if user_attrs["locked"]:  # user is being locked, increase the auth serial
+                self._increment_auth_serial(user_attrs)
+            else:  # user is being unlocked, reset failed login attempts
+                user_attrs["num_failed_logins"] = 0
+
+        # Authentication: Password or Secret
+        self._handle_auth_attributes(user_attrs)
 
         # Roles
         if edition() != Edition.CSE:
@@ -1055,7 +1331,7 @@ class ModeEditUser(WatoMode):
         # ID
         forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
         if self._is_new_user:
-            vs_user_id = UserID(allow_empty=False, size=73)
+            vs_user_id: TextInput | FixedValue = UserID(allow_empty=False, size=73)
         else:
             vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
@@ -1227,7 +1503,7 @@ class ModeEditUser(WatoMode):
                     "data from views for further procession), set the method to "
                     "<u>secret</u>. The secret will be stored in a local file. Processes "
                     "with read access to that file will be able to use Multisite as "
-                    "a webservice without any further configuration."
+                    "a web service without any further configuration."
                 )
             )
 
@@ -1237,14 +1513,14 @@ class ModeEditUser(WatoMode):
             if not self._is_locked("locked"):
                 html.checkbox(
                     "locked",
-                    bool(self._user.get("locked")),
+                    bool(self._user["locked"]),
                     label=_("disable the login to this account"),
                 )
             else:
                 html.write_text(
-                    _("Login disabled") if self._user.get("locked", False) else _("Login possible")
+                    _("Login disabled") if self._user["locked"] else _("Login possible")
                 )
-                html.hidden_field("locked", "1" if self._user.get("locked", False) else "")
+                html.hidden_field("locked", "1" if self._user["locked"] else "")
             html.help(
                 _(
                     "Disabling the password will prevent a user from logging in while "
@@ -1306,7 +1582,7 @@ class ModeEditUser(WatoMode):
         assert self._user_id is not None
         return base64.b64encode(self._user_id.encode("utf-8")).decode("ascii")
 
-    def _is_locked(self, attr) -> bool:  # type: ignore[no-untyped-def]
+    def _is_locked(self, attr: str) -> bool:
         """Returns true if an attribute is locked and should be read only. Is only
         checked when modifying an existing user"""
         return not self._is_new_user and attr in self._locked_attributes
@@ -1373,20 +1649,26 @@ def select_language(user_spec: UserSpec) -> None:
     forms.section(_("Language"))
     html.dropdown("language", languages, deflt=current_language)
     html.help(
-        _(
-            "Configure the language of the user interface. Feel free to contribute to the "
-            "translations on %s."
+        HTMLWriter.render_div(
+            _(
+                "Configure the language of the user interface. Checkmk is officially supported only "
+                "for English and German."
+            )
         )
-        % HTMLWriter.render_a(
-            "Weblate",
-            "https://translate.checkmk.com",
-            target="_blank",
+        + HTMLWriter.render_div(
+            _(
+                "Other language versions are offered for convenience only and anyone using Checkmk "
+                "in a non-supported language does so at their own risk. No guarantee is given for the "
+                "accuracy of the content. Checkmk accepts no liability for incorrect operation due to "
+                "incorrect translations. "
+            )
+            + HTMLWriter.render_a(
+                _("Feel free to contribute here."),
+                "https://translate.checkmk.com",
+                target="_blank",
+            )
         )
     )
-
-
-def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
-    return bool(user_spec.get("two_factor_credentials", {}).get("webauthn_credentials"))
 
 
 def _sync_possible() -> bool:

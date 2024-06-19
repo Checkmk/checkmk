@@ -8,19 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.mobileiron import special_agent_mobileiron
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    PlainTextSecret,
-    Secret,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, URLProxy
 
 HOST_CONFIG = HostConfig(
     name="mobileironhostname",
-    address="11.211.3.32",
-    alias="host_alias",
-    ip_family=IPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="11.211.3.32"),
 )
 
 
@@ -30,22 +22,19 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "username": "mobileironuser",
-                "password": ("password", "mobileironpassword"),
-                "proxy": (
-                    "url",
-                    "abc:8567",
-                ),
+                "password": Secret(23),
+                "proxy": URLProxy(url="abc:8567"),
                 "partition": ["10"],
-                "key-fields": ("somefield",),
-                "android-regex": ["asdf", "foo", "^bar"],
-                "ios-regex": [".*"],
-                "other-regex": [".*"],
+                "key_fields": "deviceModel_serialNumber",
+                "android_regex": ["asdf", "foo", "^bar"],
+                "ios_regex": [".*"],
+                "other_regex": [".*"],
             },
             [
                 "-u",
                 "mobileironuser",
                 "-p",
-                PlainTextSecret(value="mobileironpassword", format="%s"),
+                Secret(23).unsafe(),
                 "--partition",
                 "10",
                 "--hostname",
@@ -58,30 +47,11 @@ HOST_CONFIG = HostConfig(
                 "--ios-regex=.*",
                 "--other-regex=.*",
                 "--key-fields",
-                "somefield",
+                "deviceModel",
+                "--key-fields",
+                "serialNumber",
             ],
             id="explicit_password",
-        ),
-        pytest.param(
-            {
-                "username": "mobileironuser",
-                "password": ("store", "mobileironpassword"),
-                "key-fields": ("somefield",),
-                "partition": ["10", "20"],
-            },
-            [
-                "-u",
-                "mobileironuser",
-                "-p",
-                StoredSecret(value="mobileironpassword", format="%s"),
-                "--partition",
-                "10,20",
-                "--hostname",
-                "mobileironhostname",
-                "--key-fields",
-                "somefield",
-            ],
-            id="password_from_store",
         ),
     ],
 )
@@ -90,8 +60,7 @@ def test_agent_mobileiron_arguments(
     expected_args: Sequence[str | Secret],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = special_agent_mobileiron.parameter_parser(params)
-    commands = list(special_agent_mobileiron.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(special_agent_mobileiron(params, HOST_CONFIG))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args

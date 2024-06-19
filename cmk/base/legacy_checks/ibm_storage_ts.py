@@ -8,9 +8,8 @@ from collections.abc import Sequence
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 
 def inventory_ibm_storage_ts(info):
@@ -22,8 +21,8 @@ def check_ibm_storage_ts(_no_item, _no_params, info):
     return 0, f"{vendor} {product}, Version {version}"
 
 
-def parse_ibm_storage_ts(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
-    return string_table
+def parse_ibm_storage_ts(string_table: Sequence[StringTable]) -> Sequence[StringTable] | None:
+    return string_table if any(string_table) else None
 
 
 check_info["ibm_storage_ts"] = LegacyCheckDefinition(

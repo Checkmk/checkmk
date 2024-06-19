@@ -28,7 +28,7 @@ available at our `official guide <https://checkmk.com/cms.html>`_. Until then, y
 can refer to this Quick Guide for a brief introduction.
 
 Bakery plugins are created in the form of a file that is imported as a Python module.
-Below is a description of how a Bakery plugin is structured.
+Below is a description of how a Bakery plug-in is structured.
 
 Registration
 ------------
@@ -47,17 +47,17 @@ The following arguments are available:
 
 Name
 ----
-The name of a Bakery plugin corresponds in meaning to the name of the plugin that is to be
+The name of a Bakery plug-in corresponds in meaning to the name of the plug-in that is to be
 distributed in the Agent Bakery. It must be identical to the name of the corresponding
 agent ruleset to provide the appropriate config.
 
 Artifacts
 ---------
-The actual components of a plugin are described using appropriate classes. These can be
+The actual components of a plug-in are described using appropriate classes. These can be
 divided into the following categories:
 
 * Files: Each file to be deployed with the checkmk agent is described with an object.
-  The file type (e.g. plugin file, system binary, plugin configuration file) is described
+  The file type (e.g. plug-in file, system binary, plug-in configuration file) is described
   by the class. A separate object must be defined for each operating system on which the
   file is to be deployed. Files are described completely by their properties and contents
   (as init arguments). For example, there is no need to specify a full source or destination
@@ -85,7 +85,7 @@ to construct and determine the returned artifacts/objects. If the respective par
 it is specified accordingly in the argument list. The following names are available:
 
 * :data:`conf`: contains the specific config for this plugin. Available for all three functions.
-* :data:`aghash`: Contains the hash from the current agent configuration and plugin files. Since
+* :data:`aghash`: Contains the hash from the current agent configuration and plug-in files. Since
   this is only formed from the files to be packaged, it is only available
   for :data:`scriptlets_function` and :data:`windows_config_function`
 
@@ -94,22 +94,22 @@ Example bakery plugin
 
 Let's consider the following scenario
 
-* An agent plugin **my_example_plugin** is to be deployed with the agent.
+* An agent plug-in **my_example_plugin** is to be deployed with the agent.
 * It is available in 3 versions for Linux, Solaris and Windows, and is to be packaged in the agent
   packages for these three operating systems as well. (The content of the agent plugins are not
   subject to the Bakery API - we assume ready-made files in the following). The files are available
   as ``my_example_plugin.linux.py``, ``my_example_plugin.solaris.sh`` and
   ``my_example_plugin.vbs``. (Python, shell and VB script are only examples of possible files.
-  An agent plugin can be any file executable on the target system).
-* It should be configurable that the output of the plugin is cached. That is, it will not be
+  An agent plug-in can be any file executable on the target system).
+* It should be configurable that the output of the plug-in is cached. That is, it will not be
   executed again by the agent until the configured time has elapsed.
-* The plugin can be configured with the variables *user* and *content*. The two Unix plugins
+* The plug-in can be configured with the variables *user* and *content*. The two Unix plugins
   read this configuration via a configuration file my_example_plugin.conf, the Windows plugin
   reads the entries *my_example_plugin.user* and *my_example_plugin.content* of the Windows
   Agent Config-yaml. (The access to these resources are to be implemented in the agent plugin
   itself and are not subject of the Bakery API).
 * For Linux and Solaris there is also a program that we want to deliver - E.g., a small
-  shell-script, with which we can also start our plugin via command independently from the Checkmk
+  shell-script, with which we can also start our plug-in via command independently from the Checkmk
   agent: ``my_example``
 * On Linux and Solaris we want to write in the syslog after installing the agent that we have
   installed my_example as well as write in the syslog after uninstalling the agent that my_example
@@ -199,7 +199,7 @@ The following code is a possible implementation of the bakery plugin, using the 
 
 
    def _get_linux_cfg_lines(user: str, content: str) -> list[str]:
-      # Let's assume that our Linux example plugin uses json as a config format
+      # Let's assume that our Linux example plug-in uses json as a config format
       config = json.dumps({'user': user, 'content': content})
       return config.split('\\n')
 

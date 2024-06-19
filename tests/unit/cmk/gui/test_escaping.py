@@ -35,7 +35,7 @@ def test_htmllib_integration() -> None:
         ('">alert(1)', "&quot;&gt;alert(1)"),
         (None, ""),
         (1, "1"),
-        (HTML('">alert(1)'), '">alert(1)'),
+        (HTML.without_escaping('">alert(1)'), '">alert(1)'),
         (1.1, "1.1"),
         ("<", "&lt;"),
         ("'", "&#x27;"),
@@ -121,7 +121,7 @@ def test_escape_text(inp: escaping.EscapableEntity, out: str | None) -> None:
     [
         ("foo bar", "foo bar"),
         ("some <a>link</a> in text", "some link in text"),
-        (HTML("some <a>link</a> in html text"), "some link in html text"),
+        (HTML.without_escaping("some <a>link</a> in html text"), "some link in html text"),
         (LazyString(str, "some <a>link</a> in lazy text"), "some link in lazy text"),
     ],
 )

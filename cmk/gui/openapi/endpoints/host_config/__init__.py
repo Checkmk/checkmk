@@ -39,19 +39,19 @@ A host_config object can have the following relations present in `links`:
 """
 import itertools
 import operator
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Callable
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any
 from urllib.parse import urlparse
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
-from cmk.gui.background_job import BackgroundJobAlreadyRunning
+from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_links
 from cmk.gui.openapi.endpoints.host_config.request_schemas import (
     BulkCreateHost,
     BulkDeleteHost,
@@ -68,18 +68,15 @@ from cmk.gui.openapi.endpoints.host_config.response_schemas import (
     HostConfigSchema,
 )
 from cmk.gui.openapi.endpoints.utils import folder_slug
-from cmk.gui.openapi.restful_objects import (
-    api_error,
-    constructors,
-    Endpoint,
-    permissions,
-    response_schemas,
-)
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
+from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import EXT, problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
@@ -260,7 +257,19 @@ class FailedHosts(BaseSchema):
     )
 
 
-class BulkHostActionWithFailedHosts(api_error.ApiError):
+class BulkHostActionWithFailedHosts(ApiError):
+    title = fields.String(
+        description="A summary of the problem.",
+        example="Some actions failed",
+    )
+    status = fields.Integer(
+        description="The HTTP status code.",
+        example=400,
+    )
+    detail = fields.String(
+        description="Detailed information on what exactly went wrong.",
+        example="Some of the actions were performed but the following were faulty and were skipped: ['host1', 'host2'].",
+    )
     ext = fields.Nested(
         FailedHosts,
         description="Details for which hosts have failed",
@@ -341,12 +350,18 @@ def _bulk_host_action_response(
     method="get",
     response_schema=HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
-    query_params=[EFFECTIVE_ATTRIBUTES],
+    query_params=[
+        EFFECTIVE_ATTRIBUTES,
+        field_include_links(
+            "Flag which toggles whether the links field of the individual hosts should be populated."
+        ),
+    ],
 )
 def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
-    effective_attributes: bool = param.get("effective_attributes", False)
+    effective_attributes: bool = param["effective_attributes"]
+    include_links: bool = param["include_links"]
 
     hosts = (
         host
@@ -356,24 +371,33 @@ def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     return serve_host_collection(
         hosts,
         effective_attributes=effective_attributes,
+        include_links=include_links,
     )
 
 
-def serve_host_collection(hosts: Iterable[Host], effective_attributes: bool = False) -> Response:
+def serve_host_collection(
+    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+) -> Response:
     return serve_json(
         _host_collection(
             hosts,
             effective_attributes=effective_attributes,
+            include_links=include_links,
         )
     )
 
 
-def _host_collection(hosts: Iterable[Host], effective_attributes: bool = False) -> dict[str, Any]:
+def _host_collection(
+    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
         "value": [
-            serialize_host(host, effective_attributes=effective_attributes) for host in hosts
+            serialize_host(
+                host, effective_attributes=effective_attributes, include_links=include_links
+            )
+            for host in hosts
         ],
         "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
     }
@@ -519,7 +543,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     path_params=[
         {
             "host_name": gui_fields.HostField(
-                description="A hostname.",
+                description="A host name.",
                 should_exist=True,
                 permission_type="setup_write",
             ),
@@ -566,7 +590,14 @@ def rename_host(params: Mapping[str, Any]) -> Response:
         background_job.start(
             lambda job_interface: rename_hosts_background_job(
                 [(host.folder(), host_name, new_name)], job_interface
-            )
+            ),
+            InitialStatusArgs(
+                title="Renaming of %s -> %s" % (host_name, new_name),
+                lock_wato=True,
+                stoppable=False,
+                estimated_duration=background_job.get_status().duration,
+                user=str(user.id) if user.id else None,
+            ),
         )
     except BackgroundJobAlreadyRunning:
         return problem(
@@ -725,7 +756,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     path_params=[
         {
             "host_name": gui_fields.HostField(
-                description="A hostname.",
+                description="A host name.",
                 should_exist=True,
                 permission_type="setup_read",
             )
@@ -751,7 +782,9 @@ def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
 agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
 
 
-def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
+def serialize_host(
+    host: Host, effective_attributes: bool, include_links: bool = True
+) -> DomainObject:
     extensions = {
         "folder": "/" + host.folder().path(),
         "attributes": host.attributes,
@@ -761,22 +794,25 @@ def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
         "cluster_nodes": host.cluster_nodes(),
     }
 
-    agent_links = agent_links_hook(host.name())
-
-    return constructors.domain_object(
-        domain_type="host_config",
-        identifier=host.id(),
-        title=host.alias() or host.name(),
-        links=[
+    if include_links:
+        links = [
             constructors.link_rel(
                 rel="cmk/folder_config",
                 href=constructors.object_href("folder_config", folder_slug(host.folder())),
                 method="get",
                 title="The folder config of the host.",
             ),
-        ]
-        + agent_links,
+        ] + agent_links_hook(host.name())
+    else:
+        links = []
+
+    return constructors.domain_object(
+        domain_type="host_config",
+        identifier=host.id(),
+        title=host.alias() or host.name(),
+        links=links,
         extensions=extensions,
+        include_links=include_links,
     )
 
 

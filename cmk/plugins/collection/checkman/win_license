@@ -8,7 +8,7 @@ description:
  windows host. Information about the License status as well as the time to
  expiration are shown.
 
- As a preparation you need to install the agent plugin {win_license.bat}
+ As a preparation you need to install the agent plug-in {win_license.bat}
  into your agent's plugins directory.
 
  The check can be configured via the corresponding WATO rule {Windows License}

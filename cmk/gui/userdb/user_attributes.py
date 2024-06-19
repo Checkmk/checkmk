@@ -40,6 +40,10 @@ def register(user_attribute_registry: UserAttributeRegistry) -> None:
     user_attribute_registry.register(UIBasicAdvancedToggle)
 
 
+def saas_register(saas_user_attribute_registry: UserAttributeRegistry) -> None:
+    saas_user_attribute_registry.register(UISaaSOnboardingButtonToggle)
+
+
 class TemperatureUnitUserAttribute(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -106,9 +110,9 @@ class ForceAuthUserUserAttribute(UserAttribute):
             title=_("Visibility of hosts/services"),
             label=_("Only show hosts and services the user is a contact for"),
             help=_(
-                "When this option is checked, then the status GUI will only "
+                "When this option is checked, the status GUI will only "
                 "display hosts and services that the user is a contact for - "
-                "even if he has the permission for seeing all objects."
+                "even they have the permission for seeing all objects."
             ),
         )
 
@@ -132,7 +136,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
                     "When this option is active you will not get <b>any</b> "
                     "alerts or other notifications via email, SMS or similar. "
                     "This overrides all other notification settings and rules, so make "
-                    "sure that you know what you do. Moreover you can specify a timerange "
+                    "sure that you know what you do. Moreover you can specify a time range "
                     "where no notifications are generated."
                 ),
                 elements=[
@@ -147,7 +151,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
                     (
                         "timerange",
                         Tuple(
-                            title=_("Customize timerange"),
+                            title=_("Customize time range"),
                             elements=[
                                 AbsoluteDate(title=_("From:"), include_time=True),
                                 AbsoluteDate(title=_("To:"), include_time=True),
@@ -259,6 +263,25 @@ class UISidebarPosition(UserAttribute):
             title=_("Sidebar position"),
             # FIXME: Why isn't this simply a bool instead of an Optional[Literal["left"]]?
             choices=[(None, _("Right")), ("left", _("Left"))],
+        )
+
+    def domain(self) -> str:
+        return "multisite"
+
+
+class UISaaSOnboardingButtonToggle(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "ui_saas_onboarding_button_toggle"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Toggle onboarding button"),
+            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["Invisible"]]?
+            choices=[(None, _("Visible")), ("invisible", _("Invisible"))],
         )
 
     def domain(self) -> str:

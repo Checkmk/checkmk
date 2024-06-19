@@ -119,6 +119,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory_arbor,
-        title=lambda: _("Memory and Swap usage on Arbor devices"),
+        title=lambda: _("Memory and swap usage on Arbor devices"),
     )
 )

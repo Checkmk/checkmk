@@ -13,9 +13,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree, startswith
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import any_of, contains, SNMPTree, startswith, StringTable
 
 
 def inventory_cisco_asa_connections(info):
@@ -43,8 +42,8 @@ def check_cisco_asa_connections(_no_item, params, info):
     return state, f"{infotext}, Max. since system startup: {overall_used_conns}", perfdata
 
 
-def parse_cisco_asa_connections(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_asa_connections(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_asa_connections"] = LegacyCheckDefinition(

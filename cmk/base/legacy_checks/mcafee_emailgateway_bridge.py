@@ -7,14 +7,18 @@
 import time
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
-# TODO states, traffic, params?
+
+def parse_mcafee_emailgateway_bridge(string_table: StringTable) -> StringTable | None:
+    return string_table or None
+
+
+def inventory_mcafee_gateway_generic(info):
+    return [(None, {})]
 
 
 def check_mcafee_emailgateway_bridge(item, params, info):
@@ -59,10 +63,6 @@ def check_mcafee_emailgateway_bridge(item, params, info):
             if state:
                 infotext += f" (warn/crit at {warn}/{crit} packets/s)"
         yield state, infotext, [tuple(perfdata)]
-
-
-def parse_mcafee_emailgateway_bridge(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 check_info["mcafee_emailgateway_bridge"] = LegacyCheckDefinition(

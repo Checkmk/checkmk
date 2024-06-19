@@ -58,8 +58,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_arcserve_backup(info):
@@ -128,7 +130,7 @@ def check_arcserve_backup(item, _no_params, section):  # pylint: disable=too-man
         if message != "":
             message += ", "
         size = section[item]["size"]
-        message += "Size: %s" % get_bytes_human_readable(section[item]["size"])
+        message += "Size: %s" % render.bytes(section[item]["size"])
     else:
         size = 0
     perfdata.append(("size", size))

@@ -9,13 +9,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    any_of,
-    equals,
-    render,
-    SNMPTree,
-    startswith,
-)
+
+from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, startswith
 
 
 def parse_brocade_sys(string_table):
@@ -25,7 +20,7 @@ def parse_brocade_sys(string_table):
             "mem_used_percent": int(string_table[0][1]),
         }
     except (IndexError, ValueError):
-        return {}
+        return None
 
 
 #   .--Memory--------------------------------------------------------------.

@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_DATADOMAIN
 
 
@@ -34,7 +33,7 @@ def check_emc_datadomain_nvbat(item, _no_params, info):
             dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
             dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
             infotext = f"Status {dev_state_str} Charge Level {dev_charge}%"
-            perfdata = [("charge", dev_charge + "%")]
+            perfdata = [("battery_capacity", dev_charge + "%")]
             return dev_state_rc, infotext, perfdata
     return None
 

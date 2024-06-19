@@ -3,18 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import time
 from collections.abc import Iterable, Mapping
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 
-from tests.testlib import on_time
-
-from tests.unit.cmk.plugins.lib.diskstat import LEVELS
-
-from cmk.agent_based.v2 import get_rate, IgnoreResultsError, Metric, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import (
+    CheckResult,
+    get_rate,
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.lib import diskstat
 
 
@@ -25,6 +31,10 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
+                    "physical": {},
+                    "lvm": False,
+                    "vxvm": False,
+                    "diskless": False,
                 },
             ],
             [
@@ -35,7 +45,10 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
-                    "physical": True,
+                    "physical": {"service_description": "name"},
+                    "lvm": False,
+                    "vxvm": False,
+                    "diskless": False,
                 },
             ],
             [
@@ -48,7 +61,7 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
-                    "physical": True,
+                    "physical": {"service_description": "wwn"},
                     "lvm": True,
                     "vxvm": True,
                     "diskless": True,
@@ -56,8 +69,8 @@ from cmk.plugins.lib import diskstat
             ],
             [
                 Service(item="SUMMARY"),
-                Service(item="disk1"),
-                Service(item="disk2"),
+                Service(item="wwn1"),
+                Service(item="wwn2"),
                 Service(item="LVM disk"),
                 Service(item="VxVM disk"),
                 Service(item="xsd0 disk"),
@@ -71,8 +84,8 @@ def test_discovery_diskstat_generic(params, exp_res) -> None:  # type: ignore[no
             diskstat.discovery_diskstat_generic(
                 params,
                 {
-                    "disk1": {},
-                    "disk2": {},
+                    "disk1:wwn1": {},
+                    "disk2:wwn2": {},
                     "LVM disk": {},
                     "VxVM disk": {},
                     "xsd0 disk": {},
@@ -137,15 +150,14 @@ def test_compute_rates_multiple_disks() -> None:
     value_store: dict[str, Any] = {}
 
     # first call should result in IgnoreResultsError, second call should yield rates
-    with on_time(0, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(0, tz=ZoneInfo("UTC"))):
         with pytest.raises(IgnoreResultsError):
             diskstat.compute_rates_multiple_disks(
                 disks,
                 value_store,
                 _compute_rates_single_disk,
             )
-
-    with on_time(60, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(60, tz=ZoneInfo("UTC"))):
         disks_w_rates = diskstat.compute_rates_multiple_disks(
             disks,
             value_store,
@@ -316,47 +328,6 @@ def test_summarize_disks(
 
 
 @pytest.mark.parametrize(
-    "levels,factor",
-    [
-        (
-            (
-                1,
-                2,
-            ),
-            3,
-        ),
-        (
-            (
-                10,
-                20,
-            ),
-            1e6,
-        ),
-        (
-            None,
-            1,
-        ),
-    ],
-)
-def test_scale_levels(levels: tuple[float, float] | None, factor: float) -> None:
-    scaled_levels = diskstat._scale_levels(levels, factor)
-    if levels is None:
-        assert scaled_levels is None
-    else:
-        assert scaled_levels == tuple(level * factor for level in levels)
-
-
-def test_scale_levels_predictive() -> None:
-    assert diskstat._scale_levels_predictive(LEVELS, 10) == {
-        "horizon": 90,
-        "levels_lower": ("absolute", (20.0, 40.0)),
-        "levels_upper": ("absolute", (100.0, 200.0)),
-        "levels_upper_min": (100.0, 150.0),
-        "period": "wday",
-    }
-
-
-@pytest.mark.parametrize(
     "params,disk,exp_res",
     [
         (
@@ -396,20 +367,18 @@ def test_scale_levels_predictive() -> None:
             ],
         ),
         (
-            (
-                {
-                    "utilization": (10, 20),
-                    "read": (1e-5, 1e-4),
-                    "write": (1e-5, 1e-4),
-                    "latency": (1e3, 2e3),
-                    "read_latency": (1e3, 2e3),
-                    "write_latency": (1e3, 2e3),
-                    "read_wait": (1e3, 2e3),
-                    "write_wait": (1e3, 2e3),
-                    "read_ios": (1e4, 1e5),
-                    "write_ios": (1e5, 1e6),
-                }
-            ),
+            {
+                "read_throughput": ("fixed", (10, 100)),
+                "write_throughput": ("fixed", (10, 100)),
+                "utilization": ("fixed", (0.1, 0.2)),
+                "latency": ("fixed", (1.0, 2.0)),
+                "read_latency": ("fixed", (1.0, 2.0)),
+                "write_latency": ("fixed", (1.0, 2.0)),
+                "average_read_wait": ("fixed", (1.0, 2.0)),
+                "average_write_wait": ("fixed", (1.0, 2.0)),
+                "read_ios": ("fixed", (10000.0, 100000.0)),
+                "write_ios": ("fixed", (100000.0, 1000000.0)),
+            },
             DISK,
             [
                 Result(state=State.CRIT, notice="Utilization: 53.24% (warn/crit at 10.00%/20.00%)"),
@@ -483,14 +452,17 @@ def test_check_diskstat_dict(
     assert (
         list(
             diskstat.check_diskstat_dict(
-                params=params, disk=disk, value_store=value_store, this_time=0.0
+                params=params,
+                disk=disk,
+                value_store=value_store,
+                this_time=0.0,
             )
         )
         == exp_res
     )
     assert list(
         diskstat.check_diskstat_dict(
-            params=({**params, "average": 300}),
+            params={**params, "average": 300},
             disk=disk,
             value_store=value_store,
             this_time=60.0,

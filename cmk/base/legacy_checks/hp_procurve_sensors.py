@@ -47,9 +47,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
 
 hp_procurve_status_map = {
     "1": "unknown",

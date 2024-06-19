@@ -5,9 +5,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
 
 # The dBm should not get too low. So we check only for lower levels
@@ -75,7 +74,7 @@ check_info["huawei_osn_laser"] = LegacyCheckDefinition(
     check_function=check_huawei_osn_laser,
     check_ruleset_name="huawei_osn_laser",
     check_default_parameters={
-        "levels_low_in": (-160.0, -180.0),
-        "levels_low_out": (-35.0, -40.0),
+        "levels_low_in": (-160, -180),
+        "levels_low_out": (-35, -40),
     },
 )

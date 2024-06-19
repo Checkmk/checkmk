@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
 
 
@@ -16,7 +15,7 @@ def inventory_stormshield_updates(info):
     for subsystem, state, lastrun in info:
         if state == "Failed" and lastrun == "":
             pass
-        elif not state in ["Not Available", "Never started"]:
+        elif state not in ["Not Available", "Never started"]:
             yield subsystem, {}
 
 

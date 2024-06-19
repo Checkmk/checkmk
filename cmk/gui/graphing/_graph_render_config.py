@@ -42,13 +42,11 @@ def graph_grender_options_from_vs(options_vs: GraphRenderOptionsVS) -> GraphRend
     # no assignment expressions due to https://github.com/pylint-dev/pylint/issues/8486
     title_format_vs = options_vs.get("title_format")
     return TypeAdapter(GraphRenderOptions).validate_python(
-        (
-            options_vs
-            | (
-                {"title_format": GraphTitleFormat.from_vs(title_format_vs)}
-                if title_format_vs is not None
-                else {}
-            )
+        options_vs
+        | (
+            {"title_format": GraphTitleFormat.from_vs(title_format_vs)}
+            if title_format_vs is not None
+            else {}
         )
     )
 

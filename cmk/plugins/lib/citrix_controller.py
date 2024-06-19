@@ -6,7 +6,7 @@
 import dataclasses
 from typing import NewType
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v1.type_defs import StringTable
 
 Version = NewType("Version", str)
 

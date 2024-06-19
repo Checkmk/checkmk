@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
-import cryptography.x509 as x509
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from dateutil.relativedelta import relativedelta
 
@@ -23,7 +23,11 @@ from cmk.utils.crypto.certificate import (
     CertificateWithPrivateKey,
     X509Name,
 )
-from cmk.utils.crypto.keys import PrivateKey
+from cmk.utils.crypto.keys import is_supported_private_key_type, PrivateKey
+from cmk.utils.crypto.types import HashAlgorithm
+from cmk.utils.log.security_event import SecurityEvent
+from cmk.utils.site import omd_site
+from cmk.utils.user import UserId
 
 
 class _CNTemplate:
@@ -51,7 +55,8 @@ class RootCA(CertificateWithPrivateKey):
     def load(cls, path: Path) -> RootCA:
         cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())
         key = load_pem_private_key(pem_bytes, None)
-        assert isinstance(key, RSAPrivateKey)  # TODO
+        if not is_supported_private_key_type(key):
+            raise ValueError(f"Unsupported private key type {type(key)}")
         return cls(certificate=Certificate(cert), private_key=PrivateKey(key))
 
     @classmethod
@@ -67,6 +72,7 @@ class RootCA(CertificateWithPrivateKey):
         except FileNotFoundError:
             ca = CertificateWithPrivateKey.generate_self_signed(
                 common_name=name,
+                organization=f"Checkmk Site {omd_site()}",
                 expiry=validity,
                 key_size=key_size,
                 is_ca=True,
@@ -145,3 +151,36 @@ class RemoteSiteCertsStore:
 
     def _make_file_name(self, site_id: SiteId) -> Path:
         return self.path / f"{site_id}.pem"
+
+
+@dataclass
+class CertManagementEvent(SecurityEvent):
+    """Indicates a certificate has been added or removed"""
+
+    ComponentType = Literal["saml", "agent controller", "backup encryption keys", "agent bakery"]
+
+    def __init__(
+        self,
+        *,
+        event: Literal["certificate created", "certificate removed", "certificate uploaded"],
+        component: CertManagementEvent.ComponentType,
+        actor: UserId | str | None,
+        cert: Certificate | None,
+    ) -> None:
+        details = {
+            "component": component,
+            "actor": str(actor or "unknown user"),
+        }
+        if cert is not None:
+            details |= {
+                "issuer": str(cert.issuer.common_name or "none"),
+                "subject": str(cert.subject.common_name or "none"),
+                "not_valid_before": str(cert.not_valid_before.isoformat()),
+                "not_valid_after": str(cert.not_valid_after.isoformat()),
+                "fingerprint": cert.fingerprint(HashAlgorithm.Sha256).hex(sep=":").upper(),
+            }
+        super().__init__(
+            event,
+            details,
+            SecurityEvent.Domain.cert_management,
+        )

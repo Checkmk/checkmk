@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT
 
 
@@ -45,7 +44,7 @@ def check_apc_inrow_airflow(_no_item, params, info):
         state = 1
         message = "too high"
 
-    perf = [("flow", flow, warn, crit)]
+    perf = [("airflow", flow, warn, crit)]
     return state, f"Current: {flow:.0f} l/s {message}", perf
 
 

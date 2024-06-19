@@ -5,20 +5,13 @@
 
 import re
 from collections import defaultdict
-from collections.abc import (
-    Callable,
-    Generator,
-    Iterable,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    Sequence,
-)
+from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, DefaultDict, TypedDict
 
 from cmk.agent_based.v2 import (
-    check_levels_fixed,
-    check_levels_predictive,
+    check_levels,
+    CheckResult,
+    DiscoveryResult,
     get_average,
     get_rate,
     IgnoreResultsError,
@@ -27,19 +20,25 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
-    type_defs,
 )
 
 Disk = Mapping[str, float]
 Section = Mapping[str, Disk]
 
 DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
+DISKSTAT_DEFAULT_PARAMS = {
+    "summary": True,
+    "physical": {},
+    "lvm": False,
+    "vxvm": False,
+    "diskless": False,
+}
 
 
 def discovery_diskstat_generic(
     params: Sequence[Mapping[str, Any]],
     section: Iterable[str],
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     item_candidates = list(section)
     # Skip over on empty data
     if not item_candidates:
@@ -47,20 +46,29 @@ def discovery_diskstat_generic(
 
     modes = params[0]
 
-    if "summary" in modes:
+    if modes["summary"]:
         yield Service(item="SUMMARY")
 
     for name in item_candidates:
-        if "physical" in modes and " " not in name and not DISKSTAT_DISKLESS_PATTERN.match(name):
+        if (
+            (physical := modes["physical"])
+            and " " not in name
+            and not DISKSTAT_DISKLESS_PATTERN.match(name)
+        ):
+            if ":" in name:
+                device, wwn = name.split(":")
+                item = wwn if physical["service_description"] == "wwn" else device
+                yield Service(item=item)
+            else:
+                yield Service(item=name)
+
+        if modes["lvm"] and name.startswith("LVM "):
             yield Service(item=name)
 
-        if "lvm" in modes and name.startswith("LVM "):
+        if modes["vxvm"] and name.startswith("VxVM "):
             yield Service(item=name)
 
-        if "vxvm" in modes and name.startswith("VxVM "):
-            yield Service(item=name)
-
-        if "diskless" in modes and DISKSTAT_DISKLESS_PATTERN.match(name):
+        if modes["diskless"] and DISKSTAT_DISKLESS_PATTERN.match(name):
             # Sort of partitions with disks - typical in XEN virtual setups.
             # Eg. there are xvda1, xvda2, but no xvda...
             yield Service(item=name)
@@ -183,38 +191,6 @@ def summarize_disks(disks: Iterable[tuple[str, Disk]]) -> Disk:
     return combine_disks(disk for device, disk in disks if not device.startswith("LVM "))
 
 
-def _scale_levels_predictive(
-    levels: dict[str, Any],
-    factor: int | float,
-) -> dict[str, Any]:
-    def generator() -> Iterator[tuple[str, Any]]:
-        for key, value in levels.items():
-            if key in ("levels_upper", "levels_lower"):
-                mode, prediction_levels = value
-                if mode == "absolute":
-                    yield key, (
-                        mode,
-                        (prediction_levels[0] * factor, prediction_levels[1] * factor),
-                    )
-                else:
-                    yield key, value
-            elif key == "levels_upper_min":
-                yield key, (value[0] * factor, value[1] * factor)
-            else:
-                yield key, value
-
-    return dict(generator())
-
-
-def _scale_levels(
-    levels: tuple[float, float] | None,
-    factor: int | float,
-) -> tuple[float, float] | None:
-    if levels is None:
-        return None
-    return (levels[0] * factor, levels[1] * factor)
-
-
 class MetricSpecs(TypedDict, total=False):
     value_scale: float
     levels_key: str
@@ -228,15 +204,12 @@ _METRICS: tuple[tuple[str, MetricSpecs], ...] = (
     (
         "utilization",
         {
-            "levels_scale": 0.01,  # value comes as fraction, but levels are specified in percent
             "render_func": lambda x: render.percent(x * 100),
         },
     ),
     (
         "read_throughput",
         {
-            "levels_key": "read",
-            "levels_scale": 1e6,  # levels are specified in MB/s
             "render_func": render.iobandwidth,
             "label": "Read",
             "in_service_output": True,
@@ -245,8 +218,6 @@ _METRICS: tuple[tuple[str, MetricSpecs], ...] = (
     (
         "write_throughput",
         {
-            "levels_key": "write",
-            "levels_scale": 1e6,  # levels are specified in MB/s
             "render_func": render.iobandwidth,
             "label": "Write",
             "in_service_output": True,
@@ -255,23 +226,18 @@ _METRICS: tuple[tuple[str, MetricSpecs], ...] = (
     (
         "average_wait",
         {
-            "levels_scale": 1e-3,  # levels are specified in ms
             "render_func": render.timespan,
         },
     ),
     (
         "average_read_wait",
         {
-            "levels_key": "read_wait",
-            "levels_scale": 1e-3,  # levels are specified in ms
             "render_func": render.timespan,
         },
     ),
     (
         "average_write_wait",
         {
-            "levels_key": "write_wait",
-            "levels_scale": 1e-3,  # levels are specified in ms
             "render_func": render.timespan,
         },
     ),
@@ -313,7 +279,6 @@ _METRICS: tuple[tuple[str, MetricSpecs], ...] = (
     (
         "latency",
         {
-            "levels_scale": 1e-3,  # levels are specified in ms
             "render_func": render.timespan,
             "in_service_output": True,
         },
@@ -321,14 +286,12 @@ _METRICS: tuple[tuple[str, MetricSpecs], ...] = (
     (
         "read_latency",
         {
-            "levels_scale": 1e-3,  # levels are specified in ms
             "render_func": render.timespan,
         },
     ),
     (
         "write_latency",
         {
-            "levels_scale": 1e-3,  # levels are specified in ms
             "render_func": render.timespan,
         },
     ),
@@ -359,7 +322,7 @@ def _get_averaged_disk(
         key: get_average(
             value_store=value_store,
             # We add 'check_diskstat_dict' to the key to avoid possible overlap with keys
-            # used in check plugins. For example, for the SUMMARY-item, the check plugin
+            # used in check plug-ins. For example, for the SUMMARY-item, the check plug-in
             # winperf_phydisk first computes all rates for all items using 'metric.item' as
             # key and then summarizes the disks. Hence, for a disk called 'avg', these keys
             # would be the same as the keys used here.
@@ -444,7 +407,7 @@ def check_diskstat_dict(
     disk: Disk,
     value_store: MutableMapping,
     this_time: float,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if not disk:
         return
 
@@ -455,43 +418,34 @@ def check_diskstat_dict(
     for key, specs in _METRICS:
         metric_val = disk.get(key)
         if metric_val is not None:
-            levels = params.get(specs.get("levels_key") or key)
+            levels = params.get(key)
             metric_name = "disk_" + key
             render_func = specs.get("render_func")
             label = specs.get("label") or key.replace("_", " ").capitalize()
             notice_only = not specs.get("in_service_output")
-            levels_scale = specs.get("levels_scale", 1)
 
-            if isinstance(levels, dict):
-                yield from check_levels_predictive(
-                    metric_val,
-                    levels=_scale_levels_predictive(levels, levels_scale),
-                    metric_name=metric_name,
-                    render_func=render_func,
-                    label=label,
-                )
-            else:
-                yield from check_levels_fixed(
-                    metric_val,
-                    levels_upper=_scale_levels(levels, levels_scale),
-                    metric_name=metric_name,
-                    render_func=render_func,
-                    label=label,
-                    notice_only=notice_only,
-                )
+            yield from check_levels(
+                metric_val,
+                levels_upper=levels,
+                metric_name=metric_name,
+                render_func=render_func,
+                label=label,
+                notice_only=notice_only,
+            )
 
     # make sure we have a latency.
     if "latency" not in disk and "average_write_wait" in disk and "average_read_wait" in disk:
         latency = max(disk["average_write_wait"], disk["average_read_wait"])
         levels = params.get("latency")
-        yield from check_levels_fixed(
+        yield from check_levels(
             latency,
-            levels_upper=_scale_levels(levels, 1e-3),
+            levels_upper=levels,
+            metric_name="disk_latency",
             render_func=render.timespan,
             label="Latency",
         )
 
-    # All the other metrics are currently not output in the plugin output - simply because
+    # All the other metrics are currently not output in the plug-in output - simply because
     # of their amount. They are present as performance data and will shown in graphs.
 
     # Send everything as performance data now. Sort keys alphabetically

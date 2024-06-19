@@ -16,10 +16,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import NamedTuple
 
-from git.exc import (  # type: ignore[attr-defined] # BadName is defined in gitdb, but does not provide type hints
-    BadName,
-    GitCommandError,
-)
+from git.exc import BadName, GitCommandError
 from git.objects.blob import Blob
 from git.objects.commit import Commit
 from git.repo import Repo
@@ -264,7 +261,7 @@ def has_note(repo: Repo, commit: Commit, args: Args) -> bool:
 
 
 def add_note(repo: Repo, commit: Commit, args: Args) -> None:
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     note = f"Mail sent: {now.isoformat()}"
     repo.git.notes(f"--ref={args.ref}", "add", "-m", note, commit.hexsha)
     logger.info("added note to commit %s: %s", commit.hexsha, note)
@@ -274,10 +271,11 @@ def get_werk_commits(repo: Repo, branch_name: str, args: Args) -> Sequence[WerkC
     # first we have to check if there are notes at all, otherwise we might send
     # mails for all existing commits if we forgot to fetch the notes.
 
-    if not repo.git.notes(f"--ref={args.ref}", "list"):
+    if not repo.git.notes(f"--ref={args.ref}", "list") and not args.assume_no_notes_but:
         raise RuntimeError(
             f"Could not find any notes with ref={args.ref}. "
-            f"You may use --do-fetch-git-notes to fetch them from remote."
+            "You may use --do-fetch-git-notes to fetch them from remote. "
+            "Or use the --assume-no-notes-but option"
         )
 
     logger.info("notes sanity check passed")

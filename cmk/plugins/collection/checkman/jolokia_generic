@@ -8,7 +8,7 @@ description:
  This check can go WARN or CRIT when the value is below or above certain
  configurable levels.
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server.
 
  Please note that this check was designed with single values in mind.
@@ -18,6 +18,8 @@ description:
  have undesired side effects (such as ugly formatting or discovery
  of services always in UNKNOWN state), and is therefore strongly
  discouraged.
+
+ Both, version 1.7 and 2.0 of Jolokia are supported.
 
 item:
  The name of the instance and the MBean value

@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
+import math
 import time
-from collections.abc import Generator, MutableMapping
-from typing import Any
+from collections.abc import Generator, Iterator, MutableMapping, Sequence
+from typing import Any, TypedDict
 
-from typing_extensions import TypedDict
-
-from cmk.agent_based.v2 import check_levels_fixed, get_average, get_rate, Result, State
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import CheckResult, get_average, get_rate, Metric, Result, State
 from cmk.agent_based.v2.render import timespan
-from cmk.agent_based.v2.type_defs import CheckResult
 
 StatusType = int
 TempUnitType = str
@@ -138,10 +138,9 @@ def _migrate_params(params: TempParamType) -> TempParamDict:
     # Convert legacy tuple params into new dict
     if isinstance(params, tuple):
         if len(params) == 4:
-            # mypy doesn't handle this tuple slicing very well.
             params = {
                 "levels": params[:2],
-                "levels_lower": params[2:],  # type: ignore[typeddict-item]
+                "levels_lower": params[2:],
             }
         else:
             params = {"levels": params[:2]}
@@ -150,7 +149,7 @@ def _migrate_params(params: TempParamType) -> TempParamDict:
     return params
 
 
-def _validate_levels(
+def parse_levels(
     levels: tuple[float | None, float | None] | None = None,
 ) -> tuple[float, float] | None:
     if levels is None:
@@ -183,7 +182,6 @@ def _check_trend(
         value=temp,
     )
 
-    # average trend, initialized with initial temperature value on first check
     rate_avg = get_average(
         value_store=value_store,
         key="temp.%s.trend" % unique_name,
@@ -193,15 +191,15 @@ def _check_trend(
     )
 
     trend = rate_avg * trend_range_min * 60.0
-    levels_upper_trend = _validate_levels(params.get("trend_levels"))
+    levels_upper_trend = parse_levels(params.get("trend_levels"))
 
-    levels_lower_trend = _validate_levels(params.get("trend_levels_lower"))
+    levels_lower_trend = parse_levels(params.get("trend_levels_lower"))
     if levels_lower_trend is not None:
         # GUI representation of this parameter is labelled 'temperature decrease'; the user may input this
         # as a positive or negative value
         levels_lower_trend = (abs(levels_lower_trend[0]) * -1, abs(levels_lower_trend[1]) * -1)
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=trend,
         levels_upper=levels_upper_trend,
         levels_lower=levels_lower_trend,
@@ -235,43 +233,60 @@ def _check_trend(
         levels_timeleft_sec = (warn_timeleft_min * 60.0, crit_timeleft_min * 60.0)
 
     diff_to_limit = limit - temp
-    seconds_left = float(diff_to_limit / rate_avg)
+    if rate_avg != 0 and not math.isinf(seconds_left := float(diff_to_limit / rate_avg)):
+        yield from check_levels(
+            value=seconds_left,
+            levels_lower=levels_timeleft_sec,
+            render_func=timespan,
+            label="Time until temperature limit reached",
+        )
 
-    yield from check_levels_fixed(
-        value=seconds_left,
-        levels_lower=levels_timeleft_sec,
-        render_func=timespan,
-        label="Time until temperature limit reached",
-    )
+
+class TemperatureResult:
+    def __init__(
+        self, *, metric: Metric, reading: Result, trends: Sequence[Result], config: Result
+    ) -> None:
+        self.metric = metric
+        self.reading = reading
+        self.trends = trends
+        self.config = config
+        self._iter: Iterator[Result | Metric] = iter(
+            (self.metric, self.reading, *self.trends, self.config)
+        )
+
+    def __iter__(self) -> Iterator[Result | Metric]:
+        return self._iter
+
+    def __next__(self) -> Result | Metric:
+        return next(self._iter)
 
 
 def check_temperature(  # pylint: disable=too-many-branches
     reading: float,
     params: TempParamType,
     *,
-    unique_name: str | None = None,
-    value_store: MutableMapping[str, Any] | None = None,
+    value_store_tuple: tuple[str, MutableMapping[str, Any]] | tuple[None, None] = (None, None),
     dev_unit: str | None = "c",
     dev_levels: tuple[float, float] | None = None,
     dev_levels_lower: tuple[float, float] | None = None,
     dev_status: StatusType | None = None,
     dev_status_name: str | None = None,
-) -> CheckResult:
+) -> TemperatureResult:
     """This function checks the temperature value against specified levels and issues a warn/cirt
     message. Levels can be supplied by the user or the device. The user has the possibility to configure
     the preferred levels. Additionally, it is possible to check temperature trends. All internal
     computations are done in Celsius.
 
     Args:
-        reading (Number): The numeric temperature value itself.
-        params (dict): A dictionary giving the user's configuration. See below.
-        unique_name (str): The name under which to track performance data for trend computation.
-        value_store: The Value Store to used for trend computation
-        dev_unit (str): The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
-        dev_levels (Optional[LevelsType]): The upper levels (warn, crit)
-        dev_levels_lower (Optional[LevelsType]): The lower levels (warn, crit)
-        dev_status (Optional[StatusType]): The status according to the device itself.
-        dev_status_name (Optional[str]): The device's own name for the status.
+        reading: The numeric temperature value itself.
+        params: A dictionary giving the user's configuration. See below.
+        value_store_tuple: A tuple containing the name under which to track performance data for
+            trend computation and the Value Store to used for trend computation.
+        dev_unit: The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
+        dev_levels: The upper levels (warn, crit)
+        dev_levels_lower: The lower levels (warn, crit)
+        dev_status: The status according to the device itself.
+        dev_status_name: The device's own name for the status.
 
     Configuration:
         The parameter "params" may contain user configurable settings with the following keys:
@@ -296,11 +311,7 @@ def check_temperature(  # pylint: disable=too-many-branches
          - cmk/gui/plugins/wato/check_parameters/temperature.py
 
     """
-    if (unique_name is None) ^ (value_store is None):
-        raise ValueError(
-            "Cannot compute trend. Either specify both variables 'unique_name' and 'value_store'"
-            " or none."
-        )
+    unique_name, value_store = value_store_tuple
 
     # Convert legacy tuple params into new dict
     params = _migrate_params(params)
@@ -310,14 +321,14 @@ def check_temperature(  # pylint: disable=too-many-branches
     temp = to_celsius(reading, input_unit)
 
     # User levels are already in Celsius
-    usr_levels_upper = _validate_levels(params.get("levels"))
-    usr_levels_lower = _validate_levels(params.get("levels_lower"))
+    usr_levels_upper = parse_levels(params.get("levels"))
+    usr_levels_lower = parse_levels(params.get("levels_lower"))
     dev_levels_upper = to_celsius(dev_levels, dev_unit)
     dev_levels_lower = to_celsius(dev_levels_lower, dev_unit)
 
     device_levels_handling = params.get("device_levels_handling", "usrdefault")
 
-    usr_result, usr_metric = check_levels_fixed(
+    usr_result, usr_metric = check_levels(
         value=temp,
         metric_name="temp",
         levels_upper=usr_levels_upper,
@@ -325,10 +336,10 @@ def check_temperature(  # pylint: disable=too-many-branches
         label="Temperature",
         render_func=lambda temp: _render_temp_with_unit(temp, output_unit),
     )
-
     assert isinstance(usr_result, Result)
+    assert isinstance(usr_metric, Metric)
 
-    dev_result, dev_metric = check_levels_fixed(
+    dev_result, dev_metric = check_levels(
         value=temp,
         metric_name="temp",
         levels_upper=dev_levels_upper,
@@ -336,17 +347,17 @@ def check_temperature(  # pylint: disable=too-many-branches
         label="Temperature",
         render_func=lambda temp: _render_temp_with_unit(temp, output_unit),
     )
-
     assert isinstance(dev_result, Result)
+    assert isinstance(dev_metric, Metric)
 
-    usr_results = [usr_result]
-    dev_results = [dev_result]
+    usr_extended_results: list[Result] = []
+    dev_extended_results: list[Result] = []
     if (
         unique_name is not None
         and value_store is not None
         and params.get("trend_compute") is not None
     ):
-        usr_results.extend(
+        usr_extended_results.extend(
             result
             for result in _check_trend(
                 value_store=value_store,
@@ -359,7 +370,7 @@ def check_temperature(  # pylint: disable=too-many-branches
             )
         )
 
-        dev_results.extend(
+        dev_extended_results.extend(
             result
             for result in _check_trend(
                 value_store=value_store,
@@ -373,7 +384,7 @@ def check_temperature(  # pylint: disable=too-many-branches
         )
 
     if dev_status is not None:
-        dev_results.append(
+        dev_extended_results.append(
             Result(
                 state=State(dev_status),
                 notice="State on device: %s" % dev_status_name,
@@ -381,91 +392,188 @@ def check_temperature(  # pylint: disable=too-many-branches
         )
 
     if device_levels_handling == "usr":
-        yield usr_metric
-        yield from usr_results
-        yield Result(state=State.OK, notice="Configuration: only use user levels")
-        return
+        return TemperatureResult(
+            metric=usr_metric,
+            reading=usr_result,
+            trends=usr_extended_results,
+            config=Result(state=State.OK, notice="Configuration: only use user levels"),
+        )
 
     if device_levels_handling == "dev":
-        yield dev_metric
-        yield from dev_results
-        yield Result(state=State.OK, notice="Configuration: only use device levels")
-        return
+        return TemperatureResult(
+            metric=dev_metric,
+            reading=dev_result,
+            trends=dev_extended_results,
+            config=Result(state=State.OK, notice="Configuration: only use device levels"),
+        )
 
     if device_levels_handling == "usrdefault":
         if usr_levels_upper is not None or usr_levels_lower is not None:
-            yield usr_metric
-            yield from usr_results
-            suffix = "(used user levels)"
+            return TemperatureResult(
+                metric=usr_metric,
+                reading=usr_result,
+                trends=usr_extended_results,
+                config=_make_preferred_result("user", "device", "(used user levels)"),
+            )
 
-        elif dev_levels_upper is not None or dev_levels_lower is not None:
-            yield dev_metric
-            yield from dev_results
-            suffix = "(used device levels)"
+        if dev_levels_upper is not None or dev_levels_lower is not None:
+            return TemperatureResult(
+                metric=dev_metric,
+                reading=dev_result,
+                trends=dev_extended_results,
+                config=_make_preferred_result("user", "device", "(used device levels)"),
+            )
 
-        else:
-            yield usr_metric
-            yield from usr_results
-            suffix = "(no levels found)"
-
-        yield Result(
-            state=State.OK,
-            notice="Configuration: prefer user levels over device levels %s" % suffix,
+        return TemperatureResult(
+            metric=usr_metric,
+            reading=usr_result,
+            trends=usr_extended_results,
+            config=_make_preferred_result("user", "device", "(no levels found)"),
         )
-
-        return
 
     if device_levels_handling == "devdefault":
         if dev_levels_upper is not None or dev_levels_lower is not None:
-            yield dev_metric
-            yield from dev_results
-            suffix = "(used device levels)"
+            return TemperatureResult(
+                metric=dev_metric,
+                reading=dev_result,
+                trends=dev_extended_results,
+                config=_make_preferred_result("device", "user", "(used device levels)"),
+            )
 
-        elif usr_levels_upper is not None or usr_levels_lower is not None:
-            yield usr_metric
-            yield from usr_results
-            suffix = "(used user levels)"
+        if usr_levels_upper is not None or usr_levels_lower is not None:
+            return TemperatureResult(
+                metric=usr_metric,
+                reading=usr_result,
+                trends=usr_extended_results,
+                config=_make_preferred_result("device", "user", "(used user levels)"),
+            )
 
-        else:
-            yield dev_metric
-            yield from dev_results
-            suffix = "(no levels found)"
-
-        yield Result(
-            state=State.OK,
-            notice="Configuration: prefer device levels over user levels %s" % suffix,
+        return TemperatureResult(
+            metric=dev_metric,
+            reading=dev_result,
+            trends=dev_extended_results,
+            config=_make_preferred_result("device", "user", "(no levels found)"),
         )
 
-        return
+    usr_overall_state = State.worst(
+        usr_result.state, *(result.state for result in usr_extended_results)
+    )
+    dev_overall_state = State.worst(
+        dev_result.state, *(result.state for result in dev_extended_results)
+    )
 
     if device_levels_handling == "worst":
-        usr_overall_state = State.worst(*(result.state for result in usr_results))
-        dev_overall_state = State.worst(*(result.state for result in dev_results))
         worst_state = State.worst(usr_overall_state, dev_overall_state)
 
         if usr_overall_state == worst_state:
-            yield usr_metric
-            yield from usr_results
-        else:
-            yield dev_metric
-            yield from dev_results
+            return TemperatureResult(
+                metric=usr_metric,
+                reading=usr_result,
+                trends=usr_extended_results,
+                config=Result(state=State.OK, notice="Configuration: show most critical state"),
+            )
 
-        yield Result(state=State.OK, notice="Configuration: show most critical state")
-
-        return
+        return TemperatureResult(
+            metric=dev_metric,
+            reading=dev_result,
+            trends=dev_extended_results,
+            config=Result(state=State.OK, notice="Configuration: show most critical state"),
+        )
 
     if device_levels_handling == "best":
-        usr_overall_state = State.worst(*(result.state for result in usr_results))
-        dev_overall_state = State.worst(*(result.state for result in dev_results))
         best_state = State.best(usr_overall_state, dev_overall_state)
 
         if usr_overall_state == best_state:
-            yield usr_metric
-            yield from usr_results
-        else:
-            yield dev_metric
-            yield from dev_results
+            return TemperatureResult(
+                metric=usr_metric,
+                reading=usr_result,
+                trends=usr_extended_results,
+                config=Result(state=State.OK, notice="Configuration: show least critical state"),
+            )
 
-        yield Result(state=State.OK, notice="Configuration: show least critical state")
+        return TemperatureResult(
+            metric=dev_metric,
+            reading=dev_result,
+            trends=dev_extended_results,
+            config=Result(state=State.OK, notice="Configuration: show least critical state"),
+        )
 
+    raise ValueError(f"Unknown device_levels_handling: {device_levels_handling}")
+
+
+def _make_preferred_result(
+    winner: str,
+    looser: str,
+    suffix: str,
+) -> Result:
+    return Result(
+        state=State.OK,
+        notice=f"Configuration: prefer {winner} levels over {looser} levels {suffix}",
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class TemperatureSensor:
+    id: str
+    temp: float
+    result: Result
+
+
+def aggregate_temperature_results(
+    sensorlist: Sequence[TemperatureSensor],
+    params: TempParamDict,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    """This function checks a list of temperature values against specified levels and issues a warn/cirt
+    message. Levels can be supplied by the user or the device. The user has the possibility to configure
+    the preferred levels. Additionally, it is possible to check temperature trends. All internal
+    computations are done in Celsius.
+
+    Args:
+        sensorlist: A sequence of sensors containing the sensor ID, the temperature value, and the single sensor's result.
+        params: A dictionary giving the user's configuration.
+        value_store: The Value Store to used for trend computation
+    """
+
+    if not sensorlist:
         return
+
+    sensor_count = len(sensorlist)
+    yield Result(state=State.OK, summary=f"Sensors: {sensor_count}")
+
+    output_unit = params.get("output_unit", "c")
+    unitsym = temp_unitsym[output_unit]
+
+    tempmax = max(s.temp for s in sensorlist)
+    yield Result(state=State.OK, summary=f"Highest: {render_temp(tempmax, output_unit)} {unitsym}")
+    yield Metric("temp", tempmax)
+
+    tempavg = sum(s.temp for s in sensorlist) / float(sensor_count)
+    yield Result(state=State.OK, summary=f"Average: {render_temp(tempavg, output_unit)} {unitsym}")
+
+    tempmin = min(s.temp for s in sensorlist)
+    yield Result(state=State.OK, summary=f"Lowest: {render_temp(tempmin, output_unit)} {unitsym}")
+
+    yield from (
+        Result(state=s.result.state, summary=f"{s.id}: {s.result.summary}")
+        for s in sensorlist
+        if s.result.state != State.OK
+    )
+
+    if "trend_compute" in params and "period" in params["trend_compute"]:
+        usr_crit, usr_crit_lower = None, None
+        if (user_levels := params.get("levels")) is not None:
+            _, usr_crit = user_levels
+
+        if (user_levels_lower := params.get("levels_lower")) is not None:
+            _, usr_crit_lower = user_levels_lower
+
+        yield from _check_trend(
+            value_store=value_store,
+            temp=tempavg,
+            params=params["trend_compute"],
+            output_unit=output_unit,
+            crit_temp=usr_crit,
+            crit_temp_lower=usr_crit_lower,
+            unique_name="overall_trend",
+        )

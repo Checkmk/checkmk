@@ -129,9 +129,8 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 
 _drbd_block_start_match = re.compile("^[0-9]+:")
 
@@ -270,7 +269,7 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
-        if not parsed["cs"] in drbd_cs_map:
+        if parsed["cs"] not in drbd_cs_map:
             return (3, 'Undefined "connection state" in drbd output')
 
         # Weight of connection state is calculated by the drbd_cs_map.
@@ -342,10 +341,14 @@ def parse_drbd(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_drbd(info):
+    return inventory_drbd(info, "drbd")
+
+
 check_info["drbd"] = LegacyCheckDefinition(
     parse_function=parse_drbd,
     service_name="DRBD %s status",
-    discovery_function=lambda info: inventory_drbd(info, "drbd"),
+    discovery_function=discover_drbd,
     check_function=check_drbd_general,
     check_ruleset_name="drbd",
 )
@@ -381,10 +384,14 @@ def check_drbd_net(item, _no_params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_net(info):
+    return inventory_drbd(info, "drbd.net")
+
+
 check_info["drbd.net"] = LegacyCheckDefinition(
     service_name="DRBD %s net",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.net"),
+    discovery_function=discover_drbd_net,
     check_function=check_drbd_net,
 )
 
@@ -406,10 +413,14 @@ def check_drbd_disk(item, _no_params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_disk(info):
+    return inventory_drbd(info, "drbd.disk")
+
+
 check_info["drbd.disk"] = LegacyCheckDefinition(
     service_name="DRBD %s disk",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.disk"),
+    discovery_function=discover_drbd_disk,
     check_function=check_drbd_disk,
 )
 
@@ -443,9 +454,13 @@ def check_drbd_stats(item, _no_params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_stats(info):
+    return inventory_drbd(info, "drbd.stats")
+
+
 check_info["drbd.stats"] = LegacyCheckDefinition(
     service_name="DRBD %s stats",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.stats"),
+    discovery_function=discover_drbd_stats,
     check_function=check_drbd_stats,
 )

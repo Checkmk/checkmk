@@ -50,9 +50,9 @@ def _parameter_valuespec_airflow_deviation():
                 ),
             ],
         ),
-        migrate=lambda p: p
-        if isinstance(p, dict)
-        else {"levels_upper": p[2:], "levels_lower": p[:2]},
+        migrate=lambda p: (
+            p if isinstance(p, dict) else {"levels_upper": p[2:], "levels_lower": p[:2]}
+        ),
     )
 
 

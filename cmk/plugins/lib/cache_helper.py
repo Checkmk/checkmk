@@ -8,16 +8,13 @@ from typing import NamedTuple
 from cmk.agent_based.v2.render import percent, timespan
 
 
-class CacheInfo(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "_CacheInfo",
-        [
-            ("age", float),
-            ("cache_interval", float),
-            ("elapsed_lifetime_percent", float),
-        ],
-    )
-):
+class _CacheInfo(NamedTuple):
+    age: float
+    cache_interval: float
+    elapsed_lifetime_percent: float
+
+
+class CacheInfo(_CacheInfo):
     """
     >>> CacheInfo(age=300,cache_interval=600)
     CacheInfo(age=300, cache_interval=600, elapsed_lifetime_percent=50.0)

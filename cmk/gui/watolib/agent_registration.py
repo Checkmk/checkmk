@@ -8,10 +8,10 @@ from collections.abc import Mapping, Sequence
 
 from livestatus import SiteId
 
-import cmk.utils.regex
 from cmk.utils.agent_registration import get_uuid_link_manager
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config, site_is_local
@@ -24,12 +24,12 @@ def remove_tls_registration(hosts_by_site: Mapping[SiteId, Sequence[HostName]]) 
         if not host_names:
             continue
 
-        if site_is_local(site_id):
+        if site_is_local(active_config, site_id):
             _remove_tls_registration(host_names)
             return
 
         do_remote_automation(
-            get_site_config(site_id),
+            get_site_config(active_config, site_id),
             "remove-tls-registration",
             [("host_names", json.dumps(host_names))],
         )
@@ -43,21 +43,15 @@ class AutomationRemoveTLSRegistration(AutomationCommand):
         return json.loads(request.get_ascii_input_mandatory("host_names", "[]"))
 
     def execute(self, api_request: Sequence[HostName]) -> None:
-        valid_hosts = [hostname for hostname in api_request if self._is_hostname_valid(hostname)]
+        valid_hosts = [hostname for hostname in api_request if HostAddress.is_valid(hostname)]
         if len(valid_hosts) < len(api_request):
             logger.warning(
-                "remove-tls-registration called with the following invalid hostnames: %s",
+                "remove-tls-registration called with the following invalid host names: %s",
                 ", ".join(
-                    hostname for hostname in api_request if not self._is_hostname_valid(hostname)
+                    hostname for hostname in api_request if not HostAddress.is_valid(hostname)
                 ),
             )
         _remove_tls_registration(valid_hosts)
-
-    @staticmethod
-    def _is_hostname_valid(raw_host_name: str) -> bool:
-        return bool(
-            cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME).match(str(raw_host_name))
-        )
 
 
 def _remove_tls_registration(host_names: Sequence[HostName]) -> None:

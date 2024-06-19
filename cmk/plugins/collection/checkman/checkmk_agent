@@ -5,7 +5,7 @@ license: GPLv2
 distribution: check_mk
 description:
 
- This plugin makes sure that the Checkmk agent deploy mechanism (if used) is working properly.
+ This plug-in makes sure that the Checkmk agent deploy mechanism (if used) is working properly.
  It checks the time of the last successful connect to the deployment server and if there are any error messages.
 
  It also displays the number of deployed agent plugins and local checks. Furthermore, levels can be
@@ -17,7 +17,7 @@ description:
  Together with the version requirements, users can also configure the monitoring state in case the
  version of a file is found but can not be parsed.
 
- Finally, the plugin also checks for duplicate agent plugins and local checks and goes to WARN if
+ Finally, the plug-in also checks for duplicate agent plugins and local checks and goes to WARN if
  any duplicates are found.
 
  You can exclude files from the version and duplicate checks using regex patterns in the ruleset.

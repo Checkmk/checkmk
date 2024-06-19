@@ -21,8 +21,8 @@ Related documentation
 
 
 """
-
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Any
 
 from livestatus import SiteId
@@ -48,10 +48,11 @@ from cmk.gui.openapi.endpoints.comment.request_schemas import (
     DeleteComments,
 )
 from cmk.gui.openapi.endpoints.comment.response_schemas import CommentCollection, CommentObject
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
 
@@ -74,6 +75,10 @@ def _serialize_comment(comment: Comment) -> DomainObject:
 
     if "site" in dict_comment:
         dict_comment["site_id"] = dict_comment.pop("site")
+
+    dict_comment["entry_time"] = (
+        datetime.strptime(dict_comment["entry_time"], "%b %d %Y %H:%M:%S").isoformat() + "+00:00"
+    )
 
     return constructors.domain_object(
         domain_type="comment",
@@ -105,7 +110,7 @@ COLLECTION_NAME = {
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
-        description="The service description. No exception is raised when the specified service "
+        description="The service name. No exception is raised when the specified service "
         "description does not exist",
         example="Memory",
         required=False,
@@ -140,7 +145,11 @@ OPTIONAL_SITE_ID = {
 
 
 class GetCommentsByQuery(BaseSchema):
-    query = gui_fields.query_field(Comments, required=False)
+    query = gui_fields.query_field(
+        Comments,
+        required=False,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    )
 
 
 @Endpoint(
@@ -314,7 +323,7 @@ def create_service_comment(params: Mapping[str, Any]) -> Response:
             except CommentQueryException:
                 return problem(
                     status=400,
-                    title="The query did not match any service descriptions",
+                    title="The query did not match any service names",
                     detail="The provided query returned an empty list so no comment was created",
                 )
 
@@ -334,16 +343,17 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
     """Delete comments"""
     user.need_permission("action.addcomment")
     body = params["body"]
-    site_id = body["site_id"]
 
     query_expr: QueryExpression
 
+    site_id: SiteId | None = None
     match body["delete_type"]:
         case "query":
             query_expr = body["query"]
 
         case "by_id":
             query_expr = Comments.id == body["comment_id"]
+            site_id = SiteId(body["site_id"])
 
         case "params":
             host_name = body["host_name"]
@@ -360,7 +370,7 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
             else:
                 query_expr = And(Comments.host_name == host_name)
 
-    comment_cmds.delete_comments(sites.live(), query_expr, SiteId(site_id))
+    comment_cmds.delete_comments(sites.live(), query_expr, site_id)
     return Response(status=204)
 
 

@@ -8,9 +8,9 @@ from typing import Any
 import pytest
 
 from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version, is_ibm_mq_service_vanished
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-from cmk.base.plugins.agent_based.ibm_mq_channels import parse_ibm_mq_channels
 
+from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.plugins.collection.agent_based.ibm_mq_channels import parse_ibm_mq_channels
 from cmk.plugins.lib.ibm_mq import parse_ibm_mq
 
 pytestmark = pytest.mark.checks

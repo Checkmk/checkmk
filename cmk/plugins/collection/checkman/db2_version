@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check displays the DB2 Version. It is always OK.
 
- This check needs the mk_db2 plugin installed in the agent.
+ This check needs the mk_db2 plug-in installed in the agent.
 
 item:
  The DB2 instance name, e.g. db2ilog1

@@ -7,17 +7,16 @@ from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 
-import cmk.plugins.lib.pulse_secure as pulse_secure
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib import pulse_secure
 
 Section = Mapping[str, int]
 
 METRIC_PULSE_SECURE_LOG = "log_file_utilization"
 
 
-def parse_pulse_secure_log_utils(string_table: StringTable) -> Section:
+def parse_pulse_secure_log_utils(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, METRIC_PULSE_SECURE_LOG)
 
 
@@ -26,14 +25,14 @@ def discover_pulse_secure_log_util(section: Section) -> Iterable[tuple[None, dic
         yield None, {}
 
 
-def check_pulse_secure_log_util(item, params, parsed):
+def check_pulse_secure_log_util(_no_item, _no_params, parsed):
     if not parsed:
         return
 
     yield check_levels(
         parsed[METRIC_PULSE_SECURE_LOG],
         METRIC_PULSE_SECURE_LOG,
-        params,
+        None,
         infoname="Percentage of log file used",
         human_readable_func=render.percent,
     )

@@ -5,6 +5,7 @@
 
 #include "livestatus/Store.h"
 
+#include <functional>
 #include <utility>
 
 #include "livestatus/ICore.h"
@@ -14,33 +15,22 @@
 #include "livestatus/Table.h"
 
 Store::Store(ICore *mc)
-    : _mc(mc)
-    , _log_cache(mc)
-    , _table_columns(mc)
-    , _table_commands(mc)
-    , _table_comments(mc)
-    , _table_contactgroups(mc)
-    , _table_contacts(mc)
-    , _table_crash_reports(mc)
-    , _table_downtimes(mc)
-    , _table_eventconsoleevents(mc)
-    , _table_eventconsolehistory(mc)
-    , _table_eventconsolereplication(mc)
-    , _table_eventconsolerules(mc)
-    , _table_eventconsolestatus(mc)
-    , _table_hostgroups(mc)
-    , _table_hosts(mc)
-    , _table_hostsbygroup(mc)
-    , _table_labels(mc)
-    , _table_log(mc, &_log_cache)
-    , _table_servicegroups(mc)
-    , _table_services(mc)
-    , _table_servicesbygroup(mc)
-    , _table_servicesbyhostgroup(mc)
-    , _table_statehistory(mc, &_log_cache)
-    , _table_status(mc)
-    , _table_timeperiods(mc)
-    , _table_dummy(mc) {
+    : _mc{mc}
+    , _log_cache{mc}
+    , _table_comments{mc}
+    , _table_crash_reports{mc}
+    , _table_downtimes{mc}
+    , _table_eventconsoleevents{mc}
+    , _table_eventconsolehistory{mc}
+    , _table_eventconsolereplication{mc}
+    , _table_hosts{mc}
+    , _table_hostsbygroup{mc}
+    , _table_log{mc, &_log_cache}
+    , _table_services{mc}
+    , _table_servicesbygroup{mc}
+    , _table_servicesbyhostgroup{mc}
+    , _table_statehistory{mc, &_log_cache}
+    , _table_status{mc} {
     addTable(_table_columns);
     addTable(_table_commands);
     addTable(_table_comments);
@@ -70,19 +60,21 @@ Store::Store(ICore *mc)
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 
 size_t Store::numCachedLogMessages() {
-    return _log_cache.numCachedLogMessages();
+    return _log_cache.apply(
+        [](const LogFiles & /*log_cache*/, size_t num_cached_log_messages) {
+            return num_cached_log_messages;
+        });
 }
 
-bool Store::answerGetRequest(const std::list<std::string> &lines,
+bool Store::answerGetRequest(const std::vector<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
     auto &table = findTable(output, tablename);
-    return Query{ParsedQuery{lines, table, output},
-                 table,
-                 _mc->dataEncoding(),
-                 _mc->maxResponseSize(),
-                 output,
-                 logger()}
+    return Query{ParsedQuery{lines, [&table]() { return table.allColumns(); },
+                             [&table](const auto &colname) {
+                                 return table.column(colname);
+                             }},
+                 table, *_mc, output}
         .process();
 }
 

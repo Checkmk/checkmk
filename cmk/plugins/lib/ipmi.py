@@ -7,7 +7,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, TypedDict
 
-from cmk.agent_based.v2 import check_levels_fixed, Metric, Result, Service, State, type_defs
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 
@@ -73,7 +74,7 @@ class DiscoveryParams(TypedDict):
 def discover_individual_sensors(
     ignore_params: IgnoreParams,
     section: Section,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     yield from (
         Service(item=sensor_name)
         for sensor_name, sensor in section.items()
@@ -116,7 +117,7 @@ def check_ipmi(
     section: Section,
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if item in ["Summary", "Summary FreeIPMI"]:
         yield from _check_ipmi_summarized(
             params,
@@ -193,7 +194,7 @@ def _check_ipmi_detailed(
     sensor: Sensor,
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield _check_status(sensor, status_txt_mapping, params.get("sensor_states", []), label="Status")
 
     if sensor.value is None:
@@ -216,7 +217,7 @@ def _check_ipmi_detailed(
             levels=(None, sensor.crit_high),
         )
 
-    sensor_result, *_ = check_levels_fixed(
+    sensor_result, *_ = check_levels(
         sensor.value,
         levels_upper=_sensor_levels_to_check_levels_fixed(sensor.warn_high, sensor.crit_high),
         levels_lower=_sensor_levels_to_check_levels_fixed(sensor.warn_low, sensor.crit_low),
@@ -231,7 +232,7 @@ def _check_ipmi_detailed(
 
     user_levels_map = _compile_user_levels_map(params)
     if levels := user_levels_map.get(item):
-        yield from check_levels_fixed(
+        yield from check_levels(
             sensor.value,
             levels_upper=levels.upper,
             levels_lower=levels.lower,
@@ -244,7 +245,7 @@ def _check_ipmi_summarized(
     params: Mapping[str, Any],
     section: Section,
     status_txt_mapping: StatusTxtMapping,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from _average_ambient_temperature(section)
 
     yield Result(state=State.OK, summary=f"{len(section)} sensors in total")
@@ -286,7 +287,7 @@ def _check_individual_sensors(
         )
 
         if sensor.value is not None and (levels := user_levels_map.get(sensor_name)):
-            (sensor_result,) = check_levels_fixed(
+            (sensor_result,) = check_levels(
                 sensor.value,
                 levels_upper=levels.upper,
                 levels_lower=levels.lower,

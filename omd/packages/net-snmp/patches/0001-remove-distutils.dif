@@ -1,0 +1,9 @@
+diff --git a/python/setup.py b/python/setup.py
+index 9b8a2d603e..ce4c86a316 100644
+--- a/python/setup.py
++++ b/python/setup.py
+@@ -1,4 +1,3 @@
+-from distutils.core import setup, Extension
+ from setuptools import setup, Extension, find_packages
+ import os
+ import re

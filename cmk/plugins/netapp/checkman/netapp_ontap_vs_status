@@ -1,0 +1,25 @@
+title: NetApp Filer: SVM Status
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the states of the SVMs in a NetApp environment.
+ Possible states are {running}, {stopped}, {inconsistent} or {defunct}.
+ If SVM state is not {running} the check goes {CRIT}.
+
+ SVM was reffered as vServer in the old NetApp API.
+
+ Check status:
+
+ - {OK} if the SVM status is {running}.
+
+ - {OK} if the SVM status is {stopped} but the SVM subtype is {dp_destination}.
+
+ - {CRIT} if the SVM status is not {running} and has not SVM subtype {dp_destination}.
+
+item:
+ Name of the storage virtual machine
+
+discovery:
+ One service is created for each SVM.

@@ -3,13 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest_mock import MockerFixture
-
-from tests.testlib import on_time
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -37,6 +40,7 @@ def fixture_activate_changes(mocker: MockerFixture) -> MagicMock:
 def test_remove_hosts_no_rules_early_return(
     mocker: MockerFixture,
     activate_changes_mock: MagicMock,
+    request_context: None,
 ) -> None:
     automatic_host_removal._remove_hosts(mocker.MagicMock())
     activate_changes_mock.assert_not_called()
@@ -177,7 +181,10 @@ def test_remove_hosts(
     activate_changes_mock: MagicMock,
     mock_delete_hosts_automation: MagicMock,
 ) -> None:
-    with on_time(1000, "UTC"), mock_livestatus(expect_status_query=False):
+    with (
+        time_machine.travel(datetime.datetime.fromtimestamp(1000, tz=ZoneInfo("UTC"))),
+        mock_livestatus(expect_status_query=False),
+    ):
         mock_livestatus.expect_query(
             [
                 "GET services",

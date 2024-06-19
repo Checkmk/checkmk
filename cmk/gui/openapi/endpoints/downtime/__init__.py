@@ -16,8 +16,7 @@ How to use the query DSL used in the `query` parameters of these endpoints, have
 These endpoints support all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
 which you can look up in the Checkmk documentation.
 
-For a detailed list of columns, please take a look at the [downtimes table](https://github.com/checkmk/checkmk/blob/master/cmk/utils/livestatus_helpers/tables/downtimes.py)
-definition on GitHub.
+For a detailed list of columns, please take a look at the [downtimes table](#section/Table-definitions/Downtimes-Table) definition.
 
 ### Relations
 
@@ -51,11 +50,15 @@ from cmk.gui.openapi.endpoints.downtime.request_schemas import (
     CreateHostRelatedDowntime,
     CreateServiceRelatedDowntime,
     DeleteDowntime,
+    DOWNTIME_ID,
+    ModifyDowntime,
 )
 from cmk.gui.openapi.endpoints.downtime.response_schemas import DowntimeCollection, DowntimeObject
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.spec.utils import LIVESTATUS_GENERIC_EXPLANATION
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
 
@@ -63,9 +66,11 @@ DowntimeType = Literal[
     "host", "service", "hostgroup", "servicegroup", "host_by_query", "service_by_query"
 ]
 
+FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
+
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
-        description="The service description. No exception is raised when the specified service "
+        description="The service name. No exception is raised when the specified service "
         "description does not exist. This parameter can be combined with the host_name parameter "
         "to only filter for service downtimes of on a specific host. Cannot be used "
         "together with the query parameter.",
@@ -143,6 +148,10 @@ class DowntimeParameter(BaseSchema):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
+    status_descriptions={
+        204: "Create host related downtimes commands have been sent to Livestatus. "
+        + LIVESTATUS_GENERIC_EXPLANATION
+    },
 )
 def create_host_related_downtime(params: Mapping[str, Any]) -> Response:
     """Create a host related scheduled downtime"""
@@ -232,6 +241,10 @@ def _with_defaulted_timezone(
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
+    status_descriptions={
+        204: "Create service related downtimes commands have been sent to Livestatus. "
+        + LIVESTATUS_GENERIC_EXPLANATION
+    },
 )
 def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
     """Create a service related scheduled downtime"""
@@ -267,6 +280,7 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
                 f"Downtime for services {', '.join(body['service_descriptions'])!r}@{body['host_name']!r}",
             ),
         )
+
     elif downtime_type == "servicegroup":
         downtime_commands.schedule_servicegroup_service_downtime(
             live,
@@ -392,14 +406,7 @@ def _show_downtimes(param):
     "cmk/show",
     method="get",
     tag_group="Monitoring",
-    path_params=[
-        {
-            "downtime_id": fields.Integer(
-                description="The id of the downtime",
-                example="1",
-            )
-        }
-    ],
+    path_params=[{"downtime_id": DOWNTIME_ID}],
     query_params=[
         {
             "site_id": gui_fields.SiteField(
@@ -453,21 +460,87 @@ def show_downtime(params: Mapping[str, Any]) -> Response:
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
+    status_descriptions={
+        204: "Delete downtimes commands have been sent to Livestatus. "
+        + LIVESTATUS_GENERIC_EXPLANATION
+    },
 )
 def delete_downtime(params: Mapping[str, Any]) -> Response:
     """Delete a scheduled downtime"""
     body = params["body"]
-    delete_type: Literal["query", "by_id", "params"] = body["delete_type"]
-
+    delete_type: FindByType = body["delete_type"]
+    site_id: SiteId | None
     query_expr: QueryExpression
 
+    query_expr, site_id = _generate_target_downtimes_query(delete_type, body)
+
+    downtime_commands.delete_downtime(sites.live(), query_expr, site_id)
+    return Response(status=204)
+
+
+@Endpoint(
+    constructors.domain_type_action_href("downtime", "modify"),
+    ".../update",
+    method="put",
+    tag_group="Monitoring",
+    skip_locking=True,
+    request_schema=ModifyDowntime,
+    output_empty=True,
+    permissions_required=RW_PERMISSIONS,
+    update_config_generation=False,
+    status_descriptions={
+        204: "Update downtimes commands have been sent to Livestatus. "
+        + LIVESTATUS_GENERIC_EXPLANATION
+    },
+)
+def modify_host_downtime(params: Mapping[str, Any]) -> Response:
+    """Modify a scheduled downtime"""
+    body = params["body"]
+    update_type: FindByType = body["modify_type"]
+    site_id: SiteId | None
+    query_expr: QueryExpression
+
+    query_expr, site_id = _generate_target_downtimes_query(update_type, body)
+
+    end_time = body.get("end_time")
+    comment = body.get("comment")
+
+    if end_time is None and comment is None:
+        return problem(
+            status=400,
+            title="No modification specified",
+            detail="You must especify at least one field to modify",
+        )
+
+    end_time_value = None if end_time is None else end_time.get("value")
+
+    downtime_commands.modify_downtimes(
+        sites.live(),
+        query_expr,
+        site_id,
+        user_id=user.ident,
+        end_time=end_time_value,
+        comment=comment,
+    )
+
+    return Response(status=204)
+
+
+def _generate_target_downtimes_query(
+    find_type: FindByType, body: Mapping[str, Any]
+) -> tuple[QueryExpression, SiteId | None]:
     site_id: SiteId | None = None
-    if delete_type == "query":
+
+    if find_type == "query":
         query_expr = body["query"]
 
-    elif delete_type == "by_id":
+    elif find_type == "by_id":
         query_expr = Downtimes.id == body["downtime_id"]
         site_id = SiteId(body["site_id"])
+    elif find_type == "hostgroup":
+        query_expr = Downtimes.host_groups.contains(body["hostgroup_name"])
+    elif find_type == "servicegroup":
+        query_expr = Downtimes.service_groups.contains(body["servicegroup_name"])
     else:
         hostname = body["host_name"]
         if "service_descriptions" not in body:
@@ -482,9 +555,7 @@ def delete_downtime(params: Mapping[str, Any]) -> Response:
                     ]
                 ),
             )
-
-    downtime_commands.delete_downtime(sites.live(), query_expr, site_id)
-    return Response(status=204)
+    return query_expr, site_id
 
 
 def _serialize_downtimes(downtimes):
@@ -535,16 +606,21 @@ def _serialize_single_downtime(downtime):
 
 
 def _downtime_properties(info):
-    return {
+    downtime = {
         "site_id": info["site"],
         "host_name": info["host_name"],
         "author": info["author"],
-        "is_service": "yes" if info["is_service"] else "no",
+        "is_service": bool(info["is_service"]),
         "start_time": info["start_time"],
         "end_time": info["end_time"],
-        "recurring": "yes" if info["recurring"] else "no",
+        "recurring": bool(info["recurring"]),
         "comment": info["comment"],
     }
+
+    if info["is_service"]:
+        downtime["service_description"] = info["service_description"]
+
+    return downtime
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:
@@ -553,3 +629,4 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(show_downtimes)
     endpoint_registry.register(show_downtime)
     endpoint_registry.register(delete_downtime)
+    endpoint_registry.register(modify_host_downtime)

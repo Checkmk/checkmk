@@ -8,9 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ispro import ispro_sensors_alarm_states
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ispro import DETECT_ISPRO_SENSORS
 
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.1.1.2.1 "Temperature-R" --> ISPRO-MIB::isDeviceMonitorTemperatureName

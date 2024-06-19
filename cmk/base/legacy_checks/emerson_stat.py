@@ -32,14 +32,13 @@
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, startswith, StringTable
 
 
-def inventory_emerson_stat(string_table: StringTable) -> DiscoveryResult:
+def discover_emerson_stat(string_table: StringTable) -> DiscoveryResult:
     if string_table:
         yield Service()
 
@@ -84,6 +83,6 @@ check_info["emerson_stat"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="Status",
-    discovery_function=inventory_emerson_stat,
+    discovery_function=discover_emerson_stat,
     check_function=check_emerson_stat,
 )

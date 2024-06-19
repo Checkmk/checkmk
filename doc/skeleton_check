@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from .agent_based_api.v1 import (  # type: ignore[import] # pylint: disable=import-error
+from .agent_based_api.v1 import (  # type: ignore[import-untyped] # pylint: disable=import-error
     HostLabel,
     register,
     Result,
@@ -14,7 +14,7 @@ from .agent_based_api.v1 import (  # type: ignore[import] # pylint: disable=impo
     Service,
     State,
 )
-from .agent_based_api.v1.type_defs import (  # type: ignore[import] # pylint: disable=import-error
+from .agent_based_api.v1.type_defs import (  # type: ignore[import-untyped] # pylint: disable=import-error
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,

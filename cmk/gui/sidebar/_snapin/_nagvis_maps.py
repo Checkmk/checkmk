@@ -136,7 +136,6 @@ class NagVisMaps(SidebarSnapin):
                     title_url=map_cfg["url"],
                     title_target="main",
                     indent=False,
-                    icon="foldable_sidebar",
                 ):
                     self._show_tree_nodes(children[map_name], children)
             else:

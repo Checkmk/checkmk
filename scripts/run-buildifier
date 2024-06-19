@@ -7,12 +7,11 @@ set -e
 
 get_bazel_files() {
     REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
-    OMD_PATH=$REPO_PATH/omd
 
     # shellcheck disable=SC2086
-    find $OMD_PATH \
+    find $REPO_PATH \
         -type f \
-        \! -path "${OMD_PATH}/build/*" -a \
+        \! -path "${REPO_PATH}/*/build/*" -a \
         \( -name '*.bzl' \
         -o -name '*.sky' \
         -o -name BUILD.bazel \

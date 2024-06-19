@@ -5,9 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.aws.lib import (
+    aws_region_to_monitor,
     check_aws_limits,
     CloudwatchInsightsSection,
     extract_aws_metrics_by_labels,
@@ -885,3 +885,15 @@ SECTION_AWS_LAMBDA_CLOUDWATCH_INSIGHTS: CloudwatchInsightsSection = {
         max_init_duration_seconds=1.62853,
     ),
 }
+
+
+def test_display_order_logic() -> None:
+    # Assemble
+    display_regions = [display_region for _region_id, display_region in aws_region_to_monitor()]
+    # Assert
+    # GovCloud entries are generally useful to only very few people. Thus, they should all be
+    # displayed at end of the list. Within the groups, the order should be alphabetical.
+    assert display_regions == [
+        *sorted(region for region in display_regions if "GovCloud" not in region),
+        *sorted(region for region in display_regions if "GovCloud" in region),
+    ]

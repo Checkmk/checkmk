@@ -7,19 +7,26 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection
-from cmk.agent_based.v2 import check_levels_fixed as check_levels
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     IgnoreResultsError,
     Metric,
     render,
     Result,
     Service,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
-from cmk.plugins.lib.azure import create_check_metrics_function, MetricData, parse_resources
+from cmk.plugins.lib.azure import (
+    create_check_metrics_function,
+    get_service_labels_from_resource_tags,
+    MetricData,
+    parse_resources,
+)
 from cmk.plugins.lib.azure_load_balancer import LoadBalancer, Section
 
 
@@ -53,7 +60,10 @@ def discover_load_balancer_by_metrics(
     def discovery_function(section: Section) -> DiscoveryResult:
         for item, load_balancer in section.items():
             if set(desired_metrics) & set(load_balancer.resource.metrics):
-                yield Service(item=item)
+                yield Service(
+                    item=item,
+                    labels=get_service_labels_from_resource_tags(load_balancer.resource.tags),
+                )
 
     return discovery_function
 

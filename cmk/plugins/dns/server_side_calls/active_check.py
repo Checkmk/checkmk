@@ -12,10 +12,16 @@ from collections.abc import Iterator
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    replace_macros,
+)
 
 
 class Params(BaseModel, frozen=True):
+    hostname: str
     name: str | None = None
     server: str | None = None
     expect_all_addresses: bool = True
@@ -28,22 +34,20 @@ class Params(BaseModel, frozen=True):
 def commands_function(
     params: Params,
     host_config: HostConfig,
-    _http_proxies: object,
 ) -> Iterator[ActiveCheckCommand]:
-    command_arguments = ["-H", host_config.name]
+    hostname = replace_macros(params.hostname, host_config.macros)
+    command_arguments = ["-H", hostname]
 
     if params.server is None:
-        if not host_config.address:
-            raise ValueError("No IP address available")
-        command_arguments += ["-s", host_config.address]
+        command_arguments += ["-s", host_config.primary_ip_config.address]
     elif params.server and params.server != "default DNS server":
-        command_arguments += ["-s", params.server]
+        command_arguments += ["-s", replace_macros(params.server, host_config.macros)]
 
     if params.expect_all_addresses:
         command_arguments.append("-L")
 
     for address in params.expected_addresses_list:
-        command_arguments += ["-a", address]
+        command_arguments += ["-a", replace_macros(address, host_config.macros)]
 
     if params.expected_authority:
         command_arguments.append("-A")
@@ -57,7 +61,9 @@ def commands_function(
         command_arguments += ["-t", str(params.timeout)]
 
     yield ActiveCheckCommand(
-        service_description=(params.name if params.name else f"DNS {host_config.name}"),
+        service_description=(
+            replace_macros(params.name, host_config.macros) if params.name else f"DNS {hostname}"
+        ),
         command_arguments=command_arguments,
     )
 

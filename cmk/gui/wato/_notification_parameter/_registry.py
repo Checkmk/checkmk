@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -42,7 +44,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
 notification_parameter_registry = NotificationParameterRegistry()
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def register_notification_parameters(scriptname, valuespec):
     parameter_class = type(
         "NotificationParameter%s" % scriptname.title(),

@@ -1,5 +1,3 @@
-use std::time::{Duration, Instant};
-
 pub use client::{ClientConfig, ForceIP, OnRedirect};
 pub use request::{Body, ProcessedResponse, RequestConfig};
 
@@ -9,10 +7,8 @@ mod request;
 pub async fn perform_request(
     client_cfg: ClientConfig,
     request_cfg: RequestConfig,
-) -> Result<(ProcessedResponse, Duration), reqwest::Error> {
-    let client = client::build(client_cfg)?;
-    let now = Instant::now();
+) -> Result<ProcessedResponse, reqwest::Error> {
+    let client = client::ClientAdapter::new(client_cfg)?;
     let response = request::send(client, request_cfg).await?;
-    let elapsed = now.elapsed();
-    Ok((response, elapsed))
+    Ok(response)
 }

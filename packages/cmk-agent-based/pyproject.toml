@@ -1,7 +1,7 @@
 [project]
 name = "cmk-agent-based"
 version = "1.0.0"
-dependencies = []
+dependencies = ["pydantic"]
 
 [build-system]
 requires = ["setuptools"]
@@ -20,7 +20,7 @@ quiet = true
 profile = "black"
 order_by_type = false
 line_length = 100
-py_version = 311
+py_version = 312
 
 [tool.mypy]
 explicit_package_bases = true
@@ -46,9 +46,14 @@ persistent = "no"
 score = "no"
 
 [tool.pylint.messages_control]
-disable = "missing-docstring,fixme"
+disable = [
+  # We should at least document modules and classes. :-/
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "missing-function-docstring",
+]
 
 [tool.pytest.ini_options]
-pythonpath = [ "." ]
-testpaths = [ "cmk", "tests" ]
+pythonpath = ["."]
+testpaths = ["cmk", "tests"]
 addopts = "--doctest-modules --import-mode=importlib"

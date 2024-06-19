@@ -17,9 +17,9 @@ def tls_verify_options() -> tuple[Literal["ssl"], Alternative]:
             title=_("SSL certificate checking"),
             elements=[
                 FixedValue(value=False, title=_("Deactivated"), totext=""),
-                FixedValue(value=True, title=_("Use hostname"), totext=""),
+                FixedValue(value=True, title=_("Use host name"), totext=""),
                 TextInput(
-                    title=_("Use other hostname"),
+                    title=_("Use other host name"),
                     help=_("Use a custom name for the SSL certificate validation"),
                 ),
             ],

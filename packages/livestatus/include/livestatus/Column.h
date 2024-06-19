@@ -19,6 +19,7 @@
 
 class Aggregation;
 class Aggregator;
+class Sorter;
 enum class RelationalOperator;
 class RowRenderer;
 class User;
@@ -31,7 +32,17 @@ const T *offset_cast(const void *ptr, size_t offset) {
                                        offset);
 }
 
-enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
+enum class ColumnType {
+    int_,
+    double_,
+    string,
+    list,
+    time,
+    dictdouble,
+    dictstr,
+    blob,
+    null
+};
 
 using AggregationFactory = std::function<std::unique_ptr<Aggregation>()>;
 
@@ -52,6 +63,7 @@ public:
 
     [[nodiscard]] std::string name() const { return _name; }
     [[nodiscard]] std::string description() const { return _description; }
+    [[nodiscard]] ColumnOffsets offsets() const { return _offsets; }
 
     template <typename T>
     [[nodiscard]] const T *columnData(Row row) const {
@@ -69,6 +81,8 @@ public:
 
     [[nodiscard]] virtual std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const = 0;
+
+    [[nodiscard]] virtual std::unique_ptr<Sorter> createSorter() const = 0;
 
     [[nodiscard]] Logger *logger() const { return &_logger; }
 

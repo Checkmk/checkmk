@@ -11,7 +11,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
+
+from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree
 
 airlaser_default_levels = {
     "opttxTempValue": (60, 80),
@@ -23,6 +24,9 @@ airlaser_default_levels = {
 
 
 def parse_cbl_airlaser(string_table):
+    if not all(string_table):
+        return None
+
     airlaser_status_names = {
         0: "undefined",
         1: "active",
@@ -86,9 +90,11 @@ def parse_cbl_airlaser(string_table):
     return string_table[0], {
         hwclass: {
             sensor: (
-                airlaser_status_names[int(data[hwclass][offset][0])]
-                if "Status" in sensor
-                else saveint(data[hwclass][offset][0]),
+                (
+                    airlaser_status_names[int(data[hwclass][offset][0])]
+                    if "Status" in sensor
+                    else saveint(data[hwclass][offset][0])
+                ),
                 sub_oid,
                 offset,
             )
@@ -126,15 +132,14 @@ def check_cbl_airlaser_hw(item, params, section):  # pylint: disable=too-many-br
             if sensor in ["psStatus48V", "psStatus230V"] and val == "warning":
                 state = max(state, 0)
 
+            elif val == "failure":
+                state = 2
+            elif val == "warning":
+                state = max(state, 1)
+            # go here if no explicit error occured,
+            # no handling undefined and not_installed
             else:
-                if val == "failure":
-                    state = 2
-                elif val == "warning":
-                    state = max(state, 1)
-                # go here if no explicit error occured,
-                # no handling undefined and not_installed
-                else:
-                    continue
+                continue
             if state > 0:
                 msgtxt = msgtxt + f"Sensor {sensor} {val}" + state * "!" + " "
 

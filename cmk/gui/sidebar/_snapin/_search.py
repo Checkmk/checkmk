@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import abc
 import itertools
 import json
@@ -19,8 +21,8 @@ import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.redis import get_redis_client
 
-import cmk.gui.sites as sites
 import cmk.gui.utils
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -172,9 +174,9 @@ class ABCQuicksearchConductor(abc.ABC):
 
 
 class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
-    """Passes queries through to a non livestatus plugin
+    """Passes queries through to a non livestatus plug-in
 
-    There is no aggregation done by this conductor. It deals with a single search plugin."""
+    There is no aggregation done by this conductor. It deals with a single search plug-in."""
 
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
@@ -212,17 +214,17 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
 
 
 class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
-    """Executes the livestatus search plugins and collects results
+    """Executes the livestatus search plug-ins and collects results
 
     It cares about aggregating the queries of different filters together to a single livestatus
     query (see _generate_livestatus_command) in case they are given with "used_filters".
 
-    Based on all the given plugin selection expressions it decides which one to use. There is only a
-    single table selected and queried! This means that incompatible search plugins in a single
+    Based on all the given plug-in selection expressions it decides which one to use. There is only a
+    single table selected and queried! This means that incompatible search plug-ins in a single
     search query (e.g. service group and host name) are not both executed.
 
     Based on the used_filters it selects a livestatus table to query. Then it constructs the
-    livestatus query with the help of all search plugins that support searching the previously
+    livestatus query with the help of all search plug-ins that support searching the previously
     selected table.
     """
 
@@ -573,7 +575,7 @@ class QuicksearchManager:
                 )
             ]
 
-        # No explicit filters specified by search expression. Execute the quicksearch plugins in
+        # No explicit filters specified by search expression. Execute the quicksearch plug-ins in
         # the order they are configured to let them answer the query.
         return [
             self._make_conductor(
@@ -586,9 +588,9 @@ class QuicksearchManager:
 
     @staticmethod
     def _find_search_object_expressions(query: SearchQuery) -> list[tuple[str, int]]:
-        """Extract a list of search plugin expressions from the search query
+        """Extract a list of search plug-in expressions from the search query
 
-        The returned list contains the name of the search plugin and the character
+        The returned list contains the name of the search plug-in and the character
         at which the search starts
         """
 
@@ -1052,18 +1054,18 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, livestatus_field, name) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, livestatus_field: LivestatusColumn, name: str) -> None:
         super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
     def get_match_topic(self) -> str:
         if self._livestatus_field == "name":
-            return _("Hostname")
+            return _("Host name")
         if self._livestatus_field == "address":
             return _("Hostaddress")
         return _("Hostalias")
 
-    def _get_real_fieldname(self, livestatus_table):
+    def _get_real_fieldname(self, livestatus_table: LivestatusTable) -> LivestatusColumn:
         if livestatus_table != "hosts":
             return "host_%s" % self._livestatus_field
         return self._livestatus_field
@@ -1353,7 +1355,13 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
             )
             for topic_menu_topic in mega_menu_registry["monitoring"].topics()
             for topic_menu_item in topic_menu_topic.items
-            if query.lower() in topic_menu_item.title.lower()
+            if any(
+                query.lower() in match_text.lower()
+                for match_text in [
+                    topic_menu_item.title,
+                    *topic_menu_item.megamenu_search_terms,
+                ]
+            )
         ]
 
 
@@ -1436,9 +1444,11 @@ class MenuSearchResultsRenderer(abc.ABC):
             module = module_class()
             if module.title not in mapping:
                 mapping[module.title] = (
-                    module.topic.icon_name
-                    if module.topic and module.topic.icon_name
-                    else default_icons[0],
+                    (
+                        module.topic.icon_name
+                        if module.topic and module.topic.icon_name
+                        else default_icons[0]
+                    ),
                     module.icon if module.icon else default_icons[1],
                 )
         return mapping
@@ -1523,7 +1533,7 @@ class MenuSearchResultsRenderer(abc.ABC):
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result, hidden=False) -> None:  # type: ignore[no-untyped-def]
+    def _render_result(self, result: SearchResult, hidden: bool = False) -> None:
         html.open_li(
             class_="hidden" if hidden else "",
             **{"data-extended": "false" if hidden else ""},
@@ -1600,6 +1610,14 @@ class PageSearchSetup(AjaxPage):
                 html.open_div(class_="topic")
                 html.open_ul()
                 html.write_text(_("Currently indexing, please try again shortly."))
+                html.close_ul()
+                html.close_div()
+                return output_funnel.drain()
+        except RuntimeError:
+            with output_funnel.plugged():
+                html.open_div(class_="error")
+                html.open_ul()
+                html.write_text(_("Redis server is not reachable."))
                 html.close_ul()
                 html.close_div()
                 return output_funnel.drain()

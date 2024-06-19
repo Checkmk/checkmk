@@ -11,7 +11,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, any_of, equals, exists, SNMPTree
+
+from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree
 
 
 def parse_ibm_xraid_pdisks(info):
@@ -42,7 +43,7 @@ def check_ibm_xraid_pdisks(item, _no_params, section):
             if disk_state == "5":
                 return (2, "Disk is dead" + " [%s]" % slot_desc)
 
-    return (2, "disk is missing")  #  + " [%s]" % data[item][4])
+    return (2, "disk is missing")  # + " [%s]" % data[item][4])
 
 
 check_info["ibm_xraid_pdisks"] = LegacyCheckDefinition(

@@ -16,11 +16,10 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import CheckResult, DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import CheckResult, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.hp import DETECT_HP_BLADE
 
 # GENERAL MAPS:
@@ -37,7 +36,7 @@ hp_blade_status2nagios_map = {
 }
 
 
-def inventory_hp_blade_manager(string_table: StringTable) -> DiscoveryResult:
+def discover_hp_blade_manager(string_table: StringTable) -> DiscoveryResult:
     # FIXME: Check if the implementation of the condition is correct or again a wrong implemented value
     # => if hp_blade_present_map[int(line[1])] == 'present'
     yield from (Service(item=line[0], parameters={"role": line[3]}) for line in string_table)
@@ -81,7 +80,7 @@ check_info["hp_blade_manager"] = LegacyCheckDefinition(
         oids=["3", "10", "12", "9", "8"],
     ),
     service_name="Manager %s",
-    discovery_function=inventory_hp_blade_manager,
+    discovery_function=discover_hp_blade_manager,
     check_function=check_hp_blade_manager,
     check_default_parameters={},
 )

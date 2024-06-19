@@ -6,18 +6,67 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.check_legacy_includes.fsc_sc2 import (
-    check_fsc_sc2_mem_status,
-    inventory_fsc_sc2_mem_status,
-)
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
 def parse_fsc_sc2_mem_status(string_table: StringTable) -> StringTable:
     return string_table
+
+
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.1 "DIMM-1A"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.2 "DIMM-2A"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.3 "DIMM-3A"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.4 "DIMM-1B"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.5 "DIMM-2B"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.6 "DIMM-3B"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.7 "DIMM-1C"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.8 "DIMM-2C"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.3.1.9 "DIMM-3C"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.1 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.2 2
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.3 2
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.4 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.5 2
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.6 2
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.7 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.8 2
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.4.1.9 2
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.1 4096
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.2 -1
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.3 -1
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.4 4096
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.5 -1
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.6 -1
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.7 4096
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.8 -1
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.9 -1
+
+
+def inventory_fsc_sc2_mem_status(info):
+    for line in info:
+        if line[1] != "2":
+            yield line[0], None
+
+
+def check_fsc_sc2_mem_status(item, _no_params, info):
+    def get_mem_status(status):
+        return {
+            "1": (3, "unknown"),
+            "2": (3, "not-present"),
+            "3": (0, "ok"),
+            "4": (0, "disabled"),
+            "5": (2, "error"),
+            "6": (2, "failed"),
+            "7": (1, "prefailure-predicted"),
+            "11": (0, "hidden"),
+        }.get(status, (3, "unknown"))
+
+    for designation, status, capacity in info:
+        if designation == item:
+            status_state, status_txt = get_mem_status(status)
+            return status_state, f"Status is {status_txt}, Size {capacity} MB"
 
 
 check_info["fsc_sc2_mem_status"] = LegacyCheckDefinition(

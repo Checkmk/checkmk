@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.46.0 8
@@ -24,6 +23,10 @@ def parse_fireeye_smtp_conn(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_fireeye_smtp_conn(info):
+    return inventory_fireeye_generic(info, False)
+
+
 check_info["fireeye_smtp_conn"] = LegacyCheckDefinition(
     parse_function=parse_fireeye_smtp_conn,
     detect=DETECT,
@@ -32,6 +35,6 @@ check_info["fireeye_smtp_conn"] = LegacyCheckDefinition(
         oids=["46"],
     ),
     service_name="SMTP Connections",
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    discovery_function=discover_fireeye_smtp_conn,
     check_function=check_fireeye_smtp_conn,
 )

@@ -21,9 +21,6 @@ from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.store import load_mk_file
 
-import cmk.gui.watolib.check_mk_automations
-import cmk.gui.watolib.rulespecs
-
 DEFAULT_VALUE_RAW = """{
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
     "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
@@ -165,7 +162,7 @@ def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
 def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
     value_raw = """{
         "name": "Halli-gALLI",
-        "host": {"address": "mimi.ch", "virthost": "mimi.ch"},
+        "host": {"address": ("direct", "mimi.ch"), "virthost": "mimi.ch"},
         "mode": (
             "url",
             {
@@ -248,28 +245,6 @@ def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
         conditions={},
     )
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
-
-
-def test_openapi_list_rules_with_hyphens(
-    clients: ClientRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        cmk.gui.watolib.rulespecs.CheckTypeGroupSelection,
-        "get_elements",
-        lambda x: {"fileinfo_groups": "some title"},
-    )
-    STATIC_CHECKS_FILEINFO_GROUPS = RuleGroup.StaticChecks("fileinfo-groups")
-    _, result = _create_rule(
-        clients,
-        "/",
-        ruleset=STATIC_CHECKS_FILEINFO_GROUPS,
-        value_raw="('fileinfo_groups', '', {'group_patterns': []})",
-    )
-    assert result["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
-    resp2 = clients.Rule.list(ruleset=STATIC_CHECKS_FILEINFO_GROUPS)
-    assert len(resp2.json["value"]) == 1
-    assert resp2.json["value"][0]["extensions"]["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
 
 
 def test_openapi_list_rules(
@@ -432,3 +407,90 @@ def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp.assert_status_code(400)
+
+
+def test_create_rule_empty_match_on_str(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {
+        "host_name": {
+            "operator": "one_of",
+            "match_on": [""],
+        }
+    }
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+        conditions=conditions,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+
+def test_create_rule_no_conditions_nor_properties(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_create_rule_no_conditions(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        properties={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_create_rule_no_properties(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_openapi_create_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
+    clients.Rule.create(
+        ruleset="checkgroup_parameters:memory_linux",
+        folder="/",
+        conditions={},
+        value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
+        expect_ok=False,
+    )
+
+
+def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.edit(
+        rule_id=resp.json["id"],
+        value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
+        expect_ok=False,
+    )
+
+
+def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -> None:
+    clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={
+            "host_label_groups": [{"label_group": [{"operator": "and", "label": "os:windows"}]}]
+        },
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )

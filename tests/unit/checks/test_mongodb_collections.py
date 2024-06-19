@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from tests.unit.conftest import FixRegister
 
@@ -55,7 +56,7 @@ def test_check_mongodb_collections(
     check_plugin: CheckPlugin,
     section: Mapping[str, Any],
 ) -> None:
-    with on_time(1659514516, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("UTC"))):
         assert list(
             check_plugin.check_function(
                 item="config.system.sessions",
@@ -73,6 +74,6 @@ def test_check_mongodb_collections(
             Result(
                 state=State.OK,
                 summary="10 additional details available",
-                details="Collection\n- Document Count: 66209 (Number of documents in collection)\n- Object Size: 99 B (Average object size)\n- Collection Size: 6.25 MiB (Uncompressed size in memory)\n- Storage Size: 4.21 MiB (Allocated for document storage)\nIndexes:\n- Total Index Size: 11.9 MiB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index 'lsidTTLIndex' used 0 times since 1970-01-20 04:55:16\n-- Index '_id_' used 0 times since 1970-01-20 04:55:16",
+                details="Collection\n- Document Count: 66209 (Number of documents in collection)\n- Object Size: 99 B (Average object size)\n- Collection Size: 6.25 MiB (Uncompressed size in memory)\n- Storage Size: 4.21 MiB (Allocated for document storage)\nIndexes:\n- Total Index Size: 11.9 MiB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index 'lsidTTLIndex' used 0 times since 2022-08-01 01:20:08\n-- Index '_id_' used 0 times since 2022-08-01 01:20:08",
             ),
         ]

@@ -38,6 +38,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextInput(title=_("Name of pool")),
         parameter_valuespec=_parameter_valuespec_f5_pools,
-        title=lambda: _("F5 Loadbalancer Pools"),
+        title=lambda: _("F5 load balancer pools"),
     )
 )

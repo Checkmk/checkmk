@@ -14,7 +14,8 @@ from typing import Final, NamedTuple
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
+
+from cmk.agent_based.v2 import render, SNMPTree
 
 _HOT_SPARE_VALUES: Final = {3, 4}
 
@@ -58,9 +59,13 @@ def check_cisco_ucs_hdd(item: str, _no_params, section: Section):
         return
 
     yield (
-        0,
-        f"Status: {hdd.operability} (hot spare)",
-    ) if hdd.drive_status in _HOT_SPARE_VALUES else (hdd.state, f"Status: {hdd.operability}")
+        (
+            0,
+            f"Status: {hdd.operability} (hot spare)",
+        )
+        if hdd.drive_status in _HOT_SPARE_VALUES
+        else (hdd.state, f"Status: {hdd.operability}")
+    )
     yield 0, f"Size: {render.disksize(hdd.size)}"
     yield 0, f"Model: {hdd.model}"
     yield 0, f"Vendor: {hdd.vendor}"

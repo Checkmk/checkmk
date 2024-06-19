@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
 from ..conftest import ChangedFiles
 

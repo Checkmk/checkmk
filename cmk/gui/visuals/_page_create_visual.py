@@ -7,7 +7,7 @@
 
 from collections.abc import Sequence
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html

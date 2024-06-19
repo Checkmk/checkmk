@@ -1,0 +1,14 @@
+title: NetApp Filer: Ports
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ The check monitors the health state of the Netapp ports. Different port types can be filtered out during discovery
+ The check goes CRIT when a port is in the degraded state
+
+item:
+ Name of the port
+
+discovery:
+ One service is created for each port.

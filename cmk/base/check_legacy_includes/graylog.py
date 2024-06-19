@@ -8,9 +8,10 @@ import calendar
 import json as json_module
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.check_api import check_levels
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_rate, get_value_store
 
+from cmk.agent_based.v2 import render
 from cmk.plugins.lib import graylog
 
 json = json_module
@@ -57,7 +58,7 @@ def handle_graylog_messages(messages, params):
         avg_rate,
         avg_key,
         msgs_avg_levels_upper + msgs_avg_levels_lower,
-        infoname="Average number of messages (%s)" % get_age_human_readable(avg * 60),
+        infoname="Average number of messages (%s)" % render.timespan(avg * 60),
     )
 
     diff_key = "msgs_diff"
@@ -73,7 +74,7 @@ def handle_graylog_messages(messages, params):
         diff_levels_upper + diff_levels_lower,
         human_readable_func=int,
         infoname="Total number of messages since last check (within %s)"
-        % get_age_human_readable(timespan),
+        % render.timespan(timespan),
     )
 
 

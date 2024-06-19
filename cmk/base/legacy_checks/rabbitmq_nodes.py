@@ -7,11 +7,12 @@
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+from cmk.agent_based.v2 import render
 
 # <<<rabbitmq_nodes>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -234,31 +235,6 @@ check_info["rabbitmq_nodes.sockets"] = LegacyCheckDefinition(
 )
 
 
-def check_rabbitmq_nodes_proc(item, params, parsed):
-    proc_data = parsed.get(item, {}).get("proc")
-    if not proc_data:
-        return None
-
-    used = proc_data.get("proc_used")
-    if used is None:
-        return None
-
-    total = proc_data.get("proc_total")
-    if total is None:
-        return None
-
-    return _handle_output(params, used, total, "Erlang processes used", "processes")
-
-
-check_info["rabbitmq_nodes.proc"] = LegacyCheckDefinition(
-    service_name="RabbitMQ Node %s Processes",
-    sections=["rabbitmq_nodes"],
-    discovery_function=discover_key("proc"),
-    check_function=check_rabbitmq_nodes_proc,
-    check_ruleset_name="rabbitmq_nodes_proc",
-)
-
-
 def check_rabbitmq_nodes_mem(item, params, parsed):
     mem_data = parsed.get(item, {}).get("mem")
     if not mem_data:
@@ -272,14 +248,14 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
     if mem_mark is None:
         return
 
-    warn, crit = params.get("levels", (None, None))
-    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    levels = params.get("levels")
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
 
     yield check_memory_element(
         "Memory used",
         mem_used,
         mem_mark,
-        (mode, (warn, crit)),
+        (mode, levels),
         label_total="High watermark",
         metric_name="mem_used",
     )
@@ -291,6 +267,7 @@ check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
     discovery_function=discover_key("mem"),
     check_function=check_rabbitmq_nodes_mem,
     check_ruleset_name="memory_multiitem",
+    check_default_parameters={"levels": None},
 )
 
 _UNITS_NODES_GC = {"gc_num_rate": "1/s"}
@@ -299,17 +276,17 @@ _UNITS_NODES_GC = {"gc_num_rate": "1/s"}
 _METRIC_SPECS: Sequence[tuple[str, str, Callable, str]] = [
     ("gc_num", "GC runs", int, "gc_runs"),
     ("gc_num_rate", "Rate", float, "gc_runs_rate"),
-    ("gc_bytes_reclaimed", "Bytes reclaimed by GC", get_bytes_human_readable, "gc_bytes"),
+    ("gc_bytes_reclaimed", "Bytes reclaimed by GC", render.bytes, "gc_bytes"),
     ("gc_bytes_reclaimed_rate", "Rate", render.iobandwidth, "gc_bytes_rate"),
     ("run_queue", "Runtime run queue", int, "runtime_run_queue"),
 ]
 
 
-def _get_levels(params, key, level_dir):
-    if key not in params or level_dir not in params:
+def _get_levels(params, key):
+    if key not in params:
         return None, None
 
-    level_type, levels = params[key][level_dir]
+    level_type, levels = params[key]
     if level_type == "no_levels":
         return None, None
     return levels
@@ -325,8 +302,8 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
         if value is None:
             continue
 
-        levels_upper = _get_levels(params, key, "levels_upper")
-        levels_lower = _get_levels(params, key, "levels_lower")
+        levels_upper = _get_levels(params, f"{key}_upper")
+        levels_lower = _get_levels(params, f"{key}_lower")
 
         yield check_levels(
             value,

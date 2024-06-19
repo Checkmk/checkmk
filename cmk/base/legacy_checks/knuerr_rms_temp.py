@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.knuerr import DETECT_KNUERR
 
 
@@ -21,8 +20,8 @@ def check_knuerr_rms_temp(_no_item, params, info):
     return check_temperature(float(info[0][0]) / 10, params, "knuerr_rms_temp")
 
 
-def parse_knuerr_rms_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_knuerr_rms_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["knuerr_rms_temp"] = LegacyCheckDefinition(

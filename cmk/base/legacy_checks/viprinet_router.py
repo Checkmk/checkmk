@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 
@@ -43,6 +42,11 @@ def parse_viprinet_router(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_viprinet_router(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service(parameters={"mode_inv": section[0][0][0]})
+
+
 check_info["viprinet_router"] = LegacyCheckDefinition(
     parse_function=parse_viprinet_router,
     detect=DETECT_VIPRINET,
@@ -51,7 +55,7 @@ check_info["viprinet_router"] = LegacyCheckDefinition(
         oids=["5"],
     ),
     service_name="Router Mode",
-    discovery_function=lambda info: len(info) > 0 and [(None, {"mode_inv": info[0][0][0]})] or [],
+    discovery_function=discover_viprinet_router,
     check_function=check_viprinet_router,
     check_ruleset_name="viprinet_router",
 )

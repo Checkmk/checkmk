@@ -35,13 +35,13 @@ def _valuespec_inventory_multipath_rules():
                     help=_(
                         "If a multipath device has an alias then you can use it for specifying "
                         "the device instead of the UUID. The alias will then be part of the service "
-                        "description. The UUID will be displayed in the plugin output."
+                        "description. The UUID will be displayed in the plug-in output."
                     ),
                 ),
             ),
         ],
         help=_(
-            "This rule controls whether the UUID or the alias is used in the service description during "
+            "This rule controls whether the UUID or the alias is used in the service name during "
             "discovery of Multipath devices on Linux."
         ),
     )

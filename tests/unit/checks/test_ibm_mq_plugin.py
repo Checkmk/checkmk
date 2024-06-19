@@ -7,8 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.testlib import Check
-
+from .checktestlib import Check
 from .test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # mypy: disallow_untyped_defs
 import polyfactory.factories.pydantic_factory
 import pytest
@@ -126,7 +128,7 @@ def test_one_incident_per_region() -> None:
         ],
     )
     agent_output = AgentOutputFactory.build(health_info=[incident])
-    section = gcp_status.parse([[agent_output.json(by_alias=True)]])
+    section = gcp_status.parse([[agent_output.model_dump_json(by_alias=True)]])
     assert all(
         constants.RegionMap[l.id_] in section.data for l in incident.currently_affected_locations
     )

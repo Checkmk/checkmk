@@ -23,11 +23,8 @@ from cmk.utils.version import edition, Edition
 
 from cmk.checkengine.checking import CheckPluginName
 
-import cmk.gui.forms as forms
-import cmk.gui.hooks as hooks
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib.rulespecs as _rulespecs
-import cmk.gui.weblib as weblib
+from cmk.gui import forms, hooks, userdb, weblib
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter

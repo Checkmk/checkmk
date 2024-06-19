@@ -16,7 +16,7 @@ from typing import Any, Final, NamedTuple
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 
 class PrinterQueue(NamedTuple):

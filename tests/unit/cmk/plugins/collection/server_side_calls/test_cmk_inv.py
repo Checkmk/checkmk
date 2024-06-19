@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.cmk_inv import CmkInvParams, generate_cmk_inv_commands
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 ARGS = [
     "--inv-fail-status=1",
@@ -36,11 +36,8 @@ def test_check_cmk_inv_argument_parsing(
             CmkInvParams.model_validate(params),
             HostConfig(
                 name="unittest_name",
-                address="unittest_address",
-                alias="unittest_alias",
-                ip_family=IPAddressFamily.IPV4,
+                ipv4_config=IPv4Config(address="unittest_address"),
             ),
-            {},
         )
     )
     assert len(commands) == 1

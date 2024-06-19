@@ -5,7 +5,7 @@
 import pytest
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.pom.login import LoginPage
 
 _header_selector = "div.ui-header.ui-bar-inherit.ui-header-fixed.slidedown"
 _listview_selector = "ul.ui-listview.ui-listview-inset.ui-corner-all.ui-shadow"
@@ -29,7 +29,7 @@ _hrefs_for_selectors = [
 ]
 
 
-def test_login(logged_in_page_mobile: PPage) -> None:
+def test_login(logged_in_page_mobile: LoginPage) -> None:
     """Login into the Chechmk mobile page and assert the presence of the header."""
     expect(
         logged_in_page_mobile.locator(_header_selector + " >> text=Checkmk Mobile")
@@ -37,13 +37,13 @@ def test_login(logged_in_page_mobile: PPage) -> None:
 
 
 @pytest.mark.parametrize("text", _texts_for_selectors)
-def test_homepage_texts(logged_in_page_mobile: PPage, text: str) -> None:
+def test_homepage_texts(logged_in_page_mobile: LoginPage, text: str) -> None:
     """Assert the presence of the main locators via text selectors in the mobile homepage."""
     expect(logged_in_page_mobile.locator(_listview_selector + f" >> text={text}")).to_be_visible()
 
 
 @pytest.mark.parametrize("href", _hrefs_for_selectors)
-def test_homepage_hrefs(logged_in_page_mobile: PPage, href: str) -> None:
+def test_homepage_hrefs(logged_in_page_mobile: LoginPage, href: str) -> None:
     """Assert the presence of the main locators via href selectors in the mobile homepage."""
     expect(
         logged_in_page_mobile.locator(_listview_selector + f" >> a[href='{href}']")
@@ -51,14 +51,14 @@ def test_homepage_hrefs(logged_in_page_mobile: PPage, href: str) -> None:
 
 
 @pytest.mark.parametrize("text", _texts_for_selectors)
-def test_navigate_homepage_texts(logged_in_page_mobile: PPage, text: str) -> None:
+def test_navigate_homepage_texts(logged_in_page_mobile: LoginPage, text: str) -> None:
     """Navigate all main locators via text selectors in the mobile homepage."""
     logged_in_page_mobile.locator(_listview_selector + f" >> text={text}").click()
     logged_in_page_mobile.page.go_back()
 
 
 @pytest.mark.parametrize("href", _hrefs_for_selectors)
-def test_navigate_homepage_hrefs(logged_in_page_mobile: PPage, href: str) -> None:
+def test_navigate_homepage_hrefs(logged_in_page_mobile: LoginPage, href: str) -> None:
     """Navigate all main locators via href selectors in the mobile homepage."""
     logged_in_page_mobile.locator(_listview_selector + f" >> a[href='{href}']").click()
     logged_in_page_mobile.page.go_back()

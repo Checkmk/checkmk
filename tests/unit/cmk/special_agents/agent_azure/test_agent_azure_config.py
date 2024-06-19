@@ -15,6 +15,7 @@ from cmk.special_agents.agent_azure import (
     parse_arguments,
     Selector,
     TagBasedConfig,
+    TagsImportPatternOption,
 )
 
 ARGV = [
@@ -61,6 +62,7 @@ ARGS = Args(
     require_tag_value=[["tag2", "value2"]],
     explicit_config=["group=test-group", "resources=Resource1,Resource2"],
     services=["Microsoft.Compute/virtualMachines", "Microsoft.Storage/storageAccounts"],
+    tag_key_pattern=TagsImportPatternOption.import_all,
 )
 
 
@@ -88,6 +90,7 @@ ARGS = Args(
                 "argparse: explicit_config = ['group=test-group', 'resources=Resource1,Resource2']",
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
                 "argparse: authority = 'global'",
+                "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
             ],
         ),
     ],
@@ -153,7 +156,8 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "location": "westeurope",
                     "tags": {},
                     "group": "my-group",
-                }
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             False,
             id="resource not in config",
@@ -168,7 +172,8 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "location": "westeurope",
                     "tags": {},
                     "group": "my-group",
-                }
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             True,
             id="no explicit config",
@@ -183,7 +188,8 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "location": "westeurope",
                     "tags": {},
                     "group": "test-group",
-                }
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             True,
             id="no resources in explicit config",
@@ -211,7 +217,8 @@ def test_explicit_config_is_configured(
                     "location": "westeurope",
                     "tags": {},
                     "group": "my-group",
-                }
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             False,
             id="no required tag",
@@ -227,7 +234,8 @@ def test_explicit_config_is_configured(
                     "location": "westeurope",
                     "tags": {"tag1": "value56", "tag2": "value57"},
                     "group": "my-group",
-                }
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             False,
             id="tag value doesn't match",
@@ -270,7 +278,8 @@ def test_selector() -> None:
                     "location": "westeurope",
                     "tags": {"tag1": "value1", "tag2": "value2", "mytag": "True"},
                     "group": "test-group",
-                }
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             True,
             id="both explicit config and tag match",
@@ -285,7 +294,8 @@ def test_selector() -> None:
                     "location": "westeurope",
                     "tags": {"tag3": "value3"},
                     "group": "test-group",
-                }
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             False,
             id="tag doesn't match",
@@ -300,7 +310,8 @@ def test_selector() -> None:
                     "location": "westeurope",
                     "tags": {"tag1": "value1", "tag2": "value2"},
                     "group": "test-group",
-                }
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             False,
             id="explicit config doesn't match, unknown resource",
@@ -314,8 +325,9 @@ def test_selector() -> None:
                     "type": "Microsoft.Compute/virtualMachines",
                     "location": "westeurope",
                     "tags": {"tag1": "value1", "tag2": "value2", "mytag": "True"},
-                    "group": "TEST-GROUP",
-                }
+                    "group": "test-group",
+                },
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             True,
             id="group name in different case",

@@ -13,8 +13,9 @@ import livestatus
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
+from cmk.utils.user import UserId
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
@@ -22,7 +23,7 @@ from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._utils import (
-    graph_templates_internal,
+    get_graph_template_choices,
     metric_title,
     MKCombinedGraphLimitExceededError,
 )
@@ -89,18 +90,17 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         return [
             next(
                 (
-                    (
-                        graph_id,
-                        graph_detail.title or graph_id,
-                    )
-                    for graph_id, graph_detail in graph_templates_internal().items()
+                    (graph_id, graph_title)
+                    for graph_id, graph_title in get_graph_template_choices()
                     if graph_id == value
                 ),
                 (
                     value,
-                    _("Deprecated choice, please re-select")
-                    if value == self._MARKER_DEPRECATED_CHOICE
-                    else metric_title(value),
+                    (
+                        _("Deprecated choice, please re-select")
+                        if value == self._MARKER_DEPRECATED_CHOICE
+                        else metric_title(value)
+                    ),
                 ),
             )
         ]
@@ -151,7 +151,7 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         return (
             "timerange",
             Timerange(
-                title=_("Timerange"),
+                title=_("Time range"),
                 default_value="25h",
             ),
         )
@@ -218,18 +218,19 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 """
 
     @abc.abstractmethod
-    def graph_specification(self, context: VisualContext) -> TGraphSpec:
-        ...
+    def graph_specification(self, context: VisualContext) -> TGraphSpec: ...
 
     def __init__(
         self,
         dashboard_name: DashboardName,
+        dashboard_owner: UserId,
         dashboard: DashboardConfig,
         dashlet_id: DashletId,
         dashlet: T,
     ) -> None:
         super().__init__(
             dashboard_name=dashboard_name,
+            dashboard_owner=dashboard_owner,
             dashboard=dashboard,
             dashlet_id=dashlet_id,
             dashlet=dashlet,

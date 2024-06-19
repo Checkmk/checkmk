@@ -5,10 +5,10 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.temperature import check_temperature_list
+from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
 from cmk.base.config import check_info
 
-import cmk.plugins.lib.ucs_bladecenter as ucs_bladecenter
+from cmk.plugins.lib import ucs_bladecenter
 
 # <<ucs_bladecenter_fans:sep(9)>>>
 # equipmentNetworkElementFanStats Dn sys/switch-A/fan-module-1-1/fan-1/stats      SpeedAvg 8542
@@ -107,7 +107,7 @@ def inventory_ucs_bladecenter_fans_temp(parsed):
 
 def check_ucs_bladecenter_fans_temp(item, params, parsed):
     sensor_item = item[8:-4]  # drop "Ambient " and " FAN"
-    sensor_list = []
+    sensor_list: list[tuple[str, int | float, CheckTempKwargs]] = []
     for key, values in parsed.items():
         if key.startswith(sensor_item) and "AmbientTemp" in values:
             loc = key.split()[-1].split(".")
@@ -115,9 +115,10 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
                 (
                     f"Module {loc[0]} Fan {loc[1]}",
                     float(values.get("AmbientTemp")),
+                    {},
                 )
             )
-    return check_temperature_list(sensor_list, params, "ucs_bladecenter_fans_%s" % item)
+    yield from check_temperature_list(sensor_list, params)
 
 
 check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(

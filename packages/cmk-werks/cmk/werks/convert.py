@@ -33,9 +33,7 @@ def werkv1_metadata_to_werkv2_metadata(metadata: dict[str, str]) -> dict[str, st
             )
 
     if (date := metadata.get("date")) is not None:
-        metadata["date"] = datetime.datetime.fromtimestamp(
-            float(date), tz=datetime.timezone.utc
-        ).isoformat()
+        metadata["date"] = datetime.datetime.fromtimestamp(float(date), tz=datetime.UTC).isoformat()
 
     return metadata
 

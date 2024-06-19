@@ -11,19 +11,10 @@
 #include <string>
 
 class Logger;
-class TableCrashReports;
 
-class CrashReport {
-    friend TableCrashReports;
-
-public:
-    CrashReport(std::string id, std::string component);
-    [[nodiscard]] std::string id() const;
-    [[nodiscard]] std::string component() const;
-
-private:
-    std::string _id;
-    std::string _component;
+struct CrashReport {
+    std::string id;
+    std::string component;
 };
 
 namespace mk::crash_report {

@@ -36,6 +36,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_longactivesessions,
-        title=lambda: _("Oracle Long Active Sessions"),
+        title=lambda: _("Oracle long active sessions"),
     )
 )

@@ -12,6 +12,7 @@
 /// different scenario: packages are built for a subset of distros only and
 /// OMD package and Python optimizations are disabled.
 
+/* groovylint-disable MethodSize */
 def main() {
     check_job_parameters([
         "EDITION",
@@ -21,6 +22,7 @@ def main() {
         "DEPLOY_TO_WEBSITE_ONLY",
         "DOCKER_TAG_BUILD",
         "FAKE_WINDOWS_ARTIFACTS",
+        "USE_CASE",
     ]);
 
     check_environment_variables([
@@ -41,9 +43,7 @@ def main() {
 
     shout("configure");
 
-    /// don't add $WORKSPACE based values here, since $docker_args is being
-    /// used on different nodes
-    def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
+    def bazel_log_prefix = "bazel_log_"
 
     def (jenkins_base_folder, use_case, omd_env_vars, upload_path_suffix) = (
         env.JOB_BASE_NAME == "testbuild" ? [
@@ -51,16 +51,17 @@ def main() {
             "testbuild",
             /// Testbuilds: Do not use our build cache to ensure we catch build related
             /// issues. And disable python optimizations to execute the build faster
-            ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS="],
+            ["NEXUS_BUILD_CACHE_URL="],
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
-            VERSION == "daily" ? "daily" : "release",
+            VERSION == "daily" ? params.USE_CASE : "release",
             [],
             "",
         ]);
 
-    def distros = versioning.configured_or_overridden_distros(edition, OVERRIDE_DISTROS, use_case);
+    def all_distros = versioning.get_distros(override: "all");
+    def distros = versioning.get_distros(edition: edition, use_case: use_case, override: OVERRIDE_DISTROS);
 
     def deploy_to_website = !params.SKIP_DEPLOY_TO_WEBSITE && !jenkins_base_folder.startsWith("Testing");
 
@@ -83,6 +84,7 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |distros:.................. │${distros}│
+        |all_distros:.............. │${all_distros}│
         |deploy_to_website:........ │${deploy_to_website}│
         |branch_name:.............. │${branch_name}│
         |cmk_version:.............. │${cmk_version}│
@@ -111,9 +113,9 @@ def main() {
     if (params.DEPLOY_TO_WEBSITE_ONLY) {
         // This stage is used only by bauwelt/bw-release in order to publish an already built release
         stage('Deploying previously build version to website only') {
-            docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
-                artifacts_helper.deploy_to_website(cmk_version_rc_aware)
-                artifacts_helper.cleanup_rc_candidates_of_version(cmk_version_rc_aware)
+            inside_container(ulimit_nofile: 1024) {
+                artifacts_helper.deploy_to_website(cmk_version_rc_aware);
+                artifacts_helper.cleanup_rc_candidates_of_version(cmk_version_rc_aware);
             }
         }
         return;
@@ -123,7 +125,8 @@ def main() {
     stage("Cleanup") {
         cleanup_directory("${WORKSPACE}/versions");
         cleanup_directory("${WORKSPACE}/agents");
-        docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+        sh("rm -rf ${WORKSPACE}/${bazel_log_prefix}*");
+        inside_container(ulimit_nofile: 1024) {
             dir("${checkout_dir}") {
                 sh("make buildclean");
                 versioning.configure_checkout_folder(EDITION, cmk_version);
@@ -138,13 +141,14 @@ def main() {
     ///       https://review.lan.tribe29.com/c/check_mk/+/34634
     ///       Anyway this whole upload/download mayhem hopfully evaporates with
     ///       bazel..
-    shout("pull packages");
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        distros.each { distro ->
-             docker.image("${distro}:${docker_tag}").pull();
+    shout("pull build images");
+    stage("Pull build images") {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            distros.each { distro ->
+                docker.image("${distro}:${docker_tag}").pull();
+            }
         }
     }
-
 
     shout("agents");
 
@@ -162,21 +166,22 @@ def main() {
                             selector: specific(get_valid_build_id(win_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
-                        )
+                        );
                         copyArtifacts(
                             projectName: win_py_project_name,
                             selector: specific(get_valid_build_id(win_py_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
-                        )
+                        );
                     } else {
                         /// must take place in $WORKSPACE since we need to
                         /// access $WORKSPACE/agents
-                        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                            docker_image_from_alias("IMAGE_TESTING").inside(
-                                "${docker_args} --group-add=${docker_group_id} -v /var/run/docker.sock:/var/run/docker.sock") {
-                                build_linux_agent_updater(agent, EDITION, branch_version, docker_registry_no_http);
-                            }
+                        inside_container(
+                            set_docker_group_id: true,
+                            ulimit_nofile: 1024,
+                            priviliged: true,
+                        ) {
+                            build_linux_agent_updater(agent, EDITION, branch_version, docker_registry_no_http);
                         }
                     }
                 }
@@ -194,7 +199,7 @@ def main() {
     }
 
     shout("create_source_package");
-    docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
+    inside_container(ulimit_nofile: 2048) {
         // TODO creates stages
         create_source_package(WORKSPACE, checkout_dir, cmk_version);
 
@@ -214,7 +219,7 @@ def main() {
             cleanup_source_package(checkout_dir, FINAL_SOURCE_PACKAGE_PATH);
         }
         stage("Test source package") {
-            test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, checkout_dir, cmk_version)
+            test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, checkout_dir, cmk_version);
         }
         stage("Upload source package") {
             artifacts_helper.upload_via_rsync(
@@ -229,119 +234,203 @@ def main() {
     }
 
     shout("packages");
-    def package_builds = distros.collectEntries { distro ->
+    def package_builds = all_distros.collectEntries { distro ->
         [("distro ${distro}") : {
-                // The following node call allocates a new workspace for each
-                // DISTRO.
-                //
-                // Note: Do it inside the first node block to ensure all distro
-                // workspaces start with a fresh one. Otherwise one of the node
-                // calls would reuse the workspace of the source package step.
-                //
-                // The DISTRO workspaces will then be initialized with the contents
-                // of the first workspace, which contains the prepared git repo.
+            if (! (distro in distros)) {
+                conditional_stage("${distro} initialize workspace", false) {}
+                conditional_stage("${distro} build package", false) {}
+                conditional_stage("${distro} sign package", false) {}
+                conditional_stage("${distro} test package", false) {}
+                conditional_stage("${distro} copy package", false) {}
+                conditional_stage("${distro} upload package", false) {}
+                return;
+            }
+            // The following node call allocates a new workspace for each
+            // DISTRO.
+            //
+            // Note: Do it inside the first node block to ensure all distro
+            // workspaces start with a fresh one. Otherwise one of the node
+            // calls would reuse the workspace of the source package step.
+            //
+            // The DISTRO workspaces will then be initialized with the contents
+            // of the first workspace, which contains the prepared git repo.
 
-                /// For now make sure, we're on the SAME node (but different WORKDIR)
-                /// To make the builds run across different nodes we have to
-                /// use `stash` to distribute the source
-                node(env.NODE_NAME) {
-                    /// $WORKSPACE is different now - we must not use variables
-                    /// like $checkout_dir which are based on the parent
-                    /// workspace accidentally (and
-                    assert "${WORKSPACE}/checkout" != checkout_dir;
+            /// For now make sure, we're on the SAME node (but different WORKDIR)
+            /// To make the builds run across different nodes we have to
+            /// use `stash` to distribute the source
+            node(env.NODE_NAME) {
+                /// $WORKSPACE is different now - we must not use variables
+                /// like $checkout_dir which are based on the parent
+                /// workspace accidentally (and
+                assert "${WORKSPACE}/checkout" != checkout_dir;
 
-                    def distro_dir = "${WORKSPACE}/checkout";
+                def distro_dir = "${WORKSPACE}/checkout";
 
+                lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                         // For the package build we need a higher ulimit
                         // * Bazel opens many files which can lead to crashes
                         // * See CMK-12159
-                        docker.image("${distro}:${docker_tag}").inside(
-                                "${mount_reference_repo_dir} --ulimit nofile=16384:32768 -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
+                        inside_container(
+                            image: docker.image("${distro}:${docker_tag}"),
+                            args: [
+                                "--ulimit nofile=16384:32768",
+                                "-v ${checkout_dir}:${checkout_dir}:ro",
+                                "--hostname ${distro}",
+                            ],
+                            init: true,
+                        ) {
                             stage("${distro} initialize workspace") {
                                 cleanup_directory("${WORKSPACE}/versions");
-                                sh("rm -rf ${distro_dir}")
-                                sh("rsync -a ${checkout_dir}/ ${distro_dir}/")
+                                sh("rm -rf ${distro_dir}");
+                                sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
+                                sh("rm -rf ${distro_dir}/bazel_execution_log*");
                             }
+
                             stage("${distro} build package") {
-                                withCredentials([usernamePassword(
+                                withCredentials([
+                                    usernamePassword(
                                         credentialsId: 'nexus',
                                         passwordVariable: 'NEXUS_PASSWORD',
-                                        usernameVariable: 'NEXUS_USERNAME')
-                                ]) {
-                                    withCredentials([usernamePassword(
+                                        usernameVariable: 'NEXUS_USERNAME'),
+                                    usernamePassword(
                                         credentialsId: 'bazel-caching-credentials',
                                         /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
                                         passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                                        usernameVariable: 'BAZEL_CACHE_USER')
-                                    ]) {
-                                        versioning.print_image_tag();
-                                        build_package(distro_package_type(distro), distro_dir, omd_env_vars);
-                                    }
+                                        usernameVariable: 'BAZEL_CACHE_USER'),
+                                ]) {
+                                    versioning.print_image_tag();
+                                    build_package(distro_package_type(distro), distro_dir, omd_env_vars);
                                 }
-                            }
-                        }
 
-                        docker_image_from_alias("IMAGE_TESTING").inside(
-                                "${docker_args} -v ${checkout_dir}:${checkout_dir}:ro") {
-                            def package_name = get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
-                            def build_package_path = "${distro_dir}/${package_name}";
-                            def node_version_dir = "${WORKSPACE}/versions";
-                            def final_package_path = "${node_version_dir}/${cmk_version_rc_aware}/${package_name}";
+                                sh("""echo ==== ${distro} =====
+                                ps wauxw
+                                """)
 
-                            stage("${distro} sign package") {
-                                sign_package(distro_dir, build_package_path);
-                            }
-
-                            stage("${distro} test package") {
-                                test_package(build_package_path, distro, WORKSPACE, distro_dir, cmk_version);
-                            }
-
-                            stage("${distro} copy package") {
-                                copy_package(build_package_path, distro, final_package_path);
-                            }
-
-                            stage("${distro} upload package") {
-                                artifacts_helper.upload_via_rsync(
-                                    "${node_version_dir}",
-                                    "${cmk_version_rc_aware}",
-                                    "${package_name}",
-                                    "${upload_path}",
-                                    INTERNAL_DEPLOY_PORT,
-                                );
+                                try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix)
                             }
                         }
                     }
                 }
-            }]
+                inside_container(
+                    args: [
+                        "-v ${checkout_dir}:${checkout_dir}:ro",
+                    ],
+                    ulimit_nofile: 1024,
+                ) {
+                    def package_name = get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
+                    def build_package_path = "${distro_dir}/${package_name}";
+                    def node_version_dir = "${WORKSPACE}/versions";
+                    def final_package_path = "${node_version_dir}/${cmk_version_rc_aware}/${package_name}";
+
+                    stage("${distro} sign package") {
+                        sign_package(distro_dir, build_package_path);
+                    }
+
+                    stage("${distro} test package") {
+                        test_package(build_package_path, distro, WORKSPACE, distro_dir, cmk_version);
+                    }
+
+                    stage("${distro} copy package") {
+                        copy_package(build_package_path, distro, final_package_path);
+                    }
+
+                    stage("${distro} upload package") {
+                        artifacts_helper.upload_via_rsync(
+                            "${node_version_dir}",
+                            "${cmk_version_rc_aware}",
+                            "${package_name}",
+                            "${upload_path}",
+                            INTERNAL_DEPLOY_PORT,
+                        );
+                    }
+                }
+            }
+        }]
     }
     parallel package_builds;
+
+    stage("Plot cache hits") {
+        try_plot_cache_hits(bazel_log_prefix, distros);
+    }
 
     conditional_stage('Upload', !jenkins_base_folder.startsWith("Testing")) {
         currentBuild.description += (
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
-        def exclude_pattern = versioning.get_internal_distros_pattern()
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
-                assert_no_dirty_files(checkout_dir);
-                artifacts_helper.download_version_dir(
-                    upload_path,
-                    INTERNAL_DEPLOY_PORT,
-                    cmk_version_rc_aware,
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}",
-                    "*",
-                    "all packages",
-                    exclude_pattern,
-                )
-                artifacts_helper.upload_version_dir(
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
-                if (deploy_to_website) {
-                    artifacts_helper.deploy_to_website(cmk_version_rc_aware);
-                }
+        def exclude_pattern = versioning.get_internal_artifacts_pattern();
+        inside_container(ulimit_nofile: 1024) {
+            assert_no_dirty_files(checkout_dir);
+            artifacts_helper.download_version_dir(
+                upload_path,
+                INTERNAL_DEPLOY_PORT,
+                cmk_version_rc_aware,
+                "${WORKSPACE}/versions/${cmk_version_rc_aware}",
+                "*",
+                "all packages",
+                exclude_pattern,
+            );
+            artifacts_helper.upload_version_dir(
+                "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
+            if (deploy_to_website) {
+                artifacts_helper.deploy_to_website(cmk_version_rc_aware);
             }
         }
+    }
+}
+
+def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
+    try {
+        dir("${distro_dir}") {
+            def summary_file="${distro_dir}/${bazel_log_prefix}execution_summary_${distro}.json";
+            def cache_hits_file="${distro_dir}/${bazel_log_prefix}cache_hits_${distro}.csv";
+            sh("""python3 \
+            buildscripts/scripts/bazel_execution_log_parser.py \
+            --execution_logs_root "${distro_dir}" \
+            --bazel_log_file_pattern "bazel_execution_log*" \
+            --summary_file "${summary_file}" \
+            --cachehit_csv "${cache_hits_file}" \
+            --distro "${distro}"
+        """);
+            stash(name: "${bazel_log_prefix}${distro}", includes: "${bazel_log_prefix}*")
+        }
+    } catch (Exception e) {
+        print("Failed to parse bazel execution logs: ${e}");
+    }
+}
+
+def try_plot_cache_hits(bazel_log_prefix, distros) {
+    try {
+        distros.each { distro ->
+            try {
+                print("Unstashing for distro ${distro}...")
+                unstash(name: "${bazel_log_prefix}${distro}")
+            }
+            catch (Exception e) {
+                print("No stash for ${distro}")
+            }
+        }
+
+        plot csvFileName: 'bazel_cache_hits.csv',
+            csvSeries:
+                distros.collect {[file: "${bazel_log_prefix}cache_hits_${it}.csv"]},
+            description: 'Bazel Remote Cache Analysis',
+            group: 'Bazel Cache',
+            numBuilds: '30',
+            propertiesSeries: [[file: '', label: '']],
+            style: 'line',
+            title: 'Cache hits',
+            yaxis: 'Cache hits in percent',
+            yaxisMaximum: '100',
+            yaxisMinimum: '0'
+
+        archiveArtifacts(
+           artifacts: "${bazel_log_prefix}*",
+        )
+    }
+    catch (Exception e) {
+        print("Failed to plot cache hits: ${e}");
     }
 }
 
@@ -362,7 +451,7 @@ def build_linux_agent_updater(agent, edition, branch_version, registry) {
             passwordVariable: 'NEXUS_PASSWORD',
             usernameVariable: 'NEXUS_USERNAME')
     ]) {
-        dir("${checkout_dir}/enterprise/agents/plugins") {
+        dir("${checkout_dir}/non-free/cmk-update-agent") {
             def cmd = "BRANCH_VERSION=${branch_version} DOCKER_REGISTRY_NO_HTTP=${registry} ./make-agent-updater${suffix}";
             on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
                 sh(cmd);
@@ -370,7 +459,7 @@ def build_linux_agent_updater(agent, edition, branch_version, registry) {
         }
     }
     dir("${WORKSPACE}/agents") {
-        def cmd = "cp ${checkout_dir}/enterprise/agents/plugins/cmk-update-agent${suffix} .";
+        def cmd = "cp ${checkout_dir}/non-free/cmk-update-agent/cmk-update-agent${suffix} .";
         on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
             sh(cmd);
         }
@@ -398,15 +487,23 @@ def create_and_upload_bom(workspace, branch_version, version) {
                             credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
                             url: 'ssh://jenkins@review.lan.tribe29.com:29418/dependencyscanner'
                         ]
-                    ]
-                ])
+                    ],
+                ]);
                 scanner_image = docker.build("dependencyscanner", "--tag dependencyscanner .");
             }
         }
         stage('Create BOM') {
             on_dry_run_omit(LONG_RUNNING, "Create BOM") {
-                scanner_image.inside("-v ${checkout_dir}:${checkout_dir}") {
-                    sh("python3 -m dependencyscanner  --stage prod --outfile '${bom_path}' '${checkout_dir}'");
+                inside_container(
+                    image: scanner_image,
+                    args: ["-v ${checkout_dir}:${checkout_dir}"], // why?!
+                ) {
+                    sh("""python3 -m dependencyscanner \
+                    --stage prod \
+                    --outfile '${bom_path}' \
+                    --research_file researched_master.yml \
+                    --license_cache license_cache_master.json \
+                    '${checkout_dir}'""");
                 }
             }
         }
@@ -416,7 +513,13 @@ def create_and_upload_bom(workspace, branch_version, version) {
                     variable: 'DTRACK_API_KEY')]) {
                 withEnv(["DTRACK_URL=${DTRACK_URL}"]) {
                     on_dry_run_omit(LONG_RUNNING, "Upload BOM") {
-                        scanner_image.inside("-v ${checkout_dir}:${checkout_dir} --env DTRACK_URL,DTRACK_API_KEY") {
+                        inside_container(
+                            image: scanner_image,
+                            args: [
+                                "-v ${checkout_dir}:${checkout_dir}", // why?!
+                                "--env DTRACK_URL,DTRACK_API_KEY",
+                            ],
+                        ) {
                             sh("""scripts/upload-bom \
                             --bom-path '${bom_path}' \
                             --project-name 'Checkmk ${branch_version}' \
@@ -440,7 +543,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
     }
 
     stage("Vanilla agent sign package") {
-        sign_package(source_dir, "${source_dir}/agents/check-mk-agent-${cmk_version}-1.noarch.rpm")
+        sign_package(source_dir, "${source_dir}/agents/check-mk-agent-${cmk_version}-1.noarch.rpm");
     }
 
     stage("Create source package") {
@@ -449,35 +552,47 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def unsigned_msi = "check_mk_agent_unsigned.msi";
         def target_dir = "agents/windows";
         def scripts_dir = "${checkout_dir}/buildscripts/scripts";
-        def patch_script = "create_unsign_msi_patch.sh"
-        def patch_file = "unsign-msi.patch"
-        def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"
-        def ext_files = "robotmk_ext.exe"
-        def check_sql = "check-sql.exe"
-        def hashes_file = "windows_files_hashes.txt"
-        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,${ohm_files},${ext_files},${check_sql},${hashes_file}"
+        def patch_script = "create_unsign_msi_patch.sh";
+        def patch_file = "unsign-msi.patch";
+        def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe";
+        def ext_files = "robotmk_ext.exe";
+        def mk_sql = "mk-sql.exe";
+        def hashes_file = "windows_files_hashes.txt";
+        def artifacts = [
+            "check_mk_agent-64.exe",
+            "check_mk_agent.exe",
+            "${signed_msi}",
+            "${unsigned_msi}",
+            "check_mk.user.yml",
+            "python-3.cab",
+            "${ohm_files}",
+            "${ext_files}",
+            "${mk_sql}",
+            "${hashes_file}",
+        ].join(",");
+
         if (params.FAKE_WINDOWS_ARTIFACTS) {
-            sh "mkdir -p ${agents_dir}"
+            sh("mkdir -p ${agents_dir}");
             if(EDITION != 'raw') {
-                sh "touch ${agents_dir}/cmk-update-agent"
-                sh "touch ${agents_dir}/cmk-update-agent-32"
+                sh("touch ${agents_dir}/cmk-update-agent");
+                sh("touch ${agents_dir}/cmk-update-agent-32");
             }
-            sh "touch ${agents_dir}/{${artifacts}}"
+            sh("touch ${agents_dir}/{${artifacts}}");
         }
         dir("${checkout_dir}") {
             if(EDITION != 'raw') {
-                sh "cp ${agents_dir}/cmk-update-agent enterprise/agents/plugins/"
-                sh "cp ${agents_dir}/cmk-update-agent-32 enterprise/agents/plugins/"
+                sh("cp ${agents_dir}/cmk-update-agent non-free/cmk-update-agent/");
+                sh("cp ${agents_dir}/cmk-update-agent-32 non-free/cmk-update-agent/");
             }
-            sh "cp ${agents_dir}/{${artifacts}} ${target_dir}"
-            sh "${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}"
+            sh("cp ${agents_dir}/{${artifacts}} ${target_dir}");
+            sh("${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}");
             withCredentials([
                 usernamePassword(
                     credentialsId: 'nexus',
                     passwordVariable: 'NEXUS_PASSWORD',
                     usernameVariable: 'NEXUS_USERNAME')
             ]) {
-                sh 'make dist || cat /root/.npm/_logs/*-debug.log'
+                sh('make dist');
             }
         }
     }
@@ -498,8 +613,8 @@ def cleanup_source_package(source_dir, package_path) {
 
 def copy_source_package(package_path, archive_path) {
     print("FN copy_source_package(package_path=${package_path}, archive_path=${archive_path})");
-    sh "mkdir -p \$(dirname ${archive_path})"
-    sh "cp ${package_path} ${archive_path}"
+    sh("mkdir -p \$(dirname ${archive_path})");
+    sh("cp ${package_path} ${archive_path}");
 }
 
 def build_package(package_type, build_dir, env) {
@@ -507,23 +622,29 @@ def build_package(package_type, build_dir, env) {
     dir(build_dir) {
         // TODO: THIS MUST GO AWAY ASAP
         // Backgroud:
-        // * currently we're building protobuf during source packaging (make dist) in IMAGE_TESTING.
+        // * currently we're building protobuf during source packaging (make dist) in reference container.
         // * then, we're simply rsyncing the whole workspace in the different distro workspaces (including the protoc)
         // * as protobuf exists then in the intermediate_install, it will be used (and not obtained from a correct
         //   cache key, including DISTRO information...)
         // * if we then build under an old distro, we get linker issues
         // * so as long as we don't have the protobuf build bazelized, we need to manually clean it up here.
-        sh("rm -fr omd/build/intermediate_install/protobuf*")
-        sh("rm -fr omd/build/stamps/protobuf*")
+        sh("rm -fr omd/build/intermediate_install/protobuf*");
+        sh("rm -fr omd/build/stamps/protobuf*");
 
 
         // used withEnv(env) before, but sadly Jenkins does not set 0 length environment variables
         // see also: https://issues.jenkins.io/browse/JENKINS-43632
         try {
-            def env_str = env.join(" ")
+            def env_str = env.join(" ");
             sh("${env_str} DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
         } finally {
-            sh("cd '${checkout_dir}/omd'; echo 'Maximum heap size:'; bazel info peak-heap-size; echo 'Server log:'; cat \$(bazel info server_log)");
+            sh("""
+                cd '${checkout_dir}/omd'
+                echo 'Maximum heap size:'
+                bazel info peak-heap-size
+                echo 'Server log:'
+                cat \$(bazel info server_log)
+            """);
         }
     }
 }
@@ -564,19 +685,21 @@ def sign_package(source_dir, package_path) {
 }
 
 def test_package(package_path, name, workspace, source_dir, cmk_version) {
+    /* groovylint-disable LineLength */
     print("FN test_package(package_path=${package_path}, name=${name}, workspace=${workspace}, source_dir=${source_dir}, cmk_version=${cmk_version})");
+    /* groovylint-enable LineLength */
     try {
         withEnv([
-                "PACKAGE_PATH=${package_path}",
-                "PYTEST_ADDOPTS='--junitxml=${workspace}/junit-${name}.xml'",
+            "PACKAGE_PATH=${package_path}",
+            "PYTEST_ADDOPTS='--junitxml=${workspace}/junit-${name}.xml'",
         ]) {
-            sh("make -C '${source_dir}/tests' VERSION=${cmk_version} test-packaging")
+            sh("make -C '${source_dir}/tests' VERSION=${cmk_version} test-packaging");
         }
     } finally {
         step([
             $class: "JUnitResultArchiver",
             testResults: "junit-${name}.xml",
-        ])
+        ]);
     }
 }
 
@@ -603,7 +726,7 @@ def get_valid_build_id(jobName) {
         calendar.setTime(lastBuild.getTime());
         def lastBuildDay = calendar.get(Calendar.DAY_OF_YEAR);
 
-        if (currentBuildVersion in ["daily", "git"] &&
+        if (currentBuildVersion == "daily" &&
             lastBuildParameters.VERSION == currentBuildVersion &&
             lastBuildDay == currentBuildDay &&
             lastBuild.result.toString().equals("SUCCESS")

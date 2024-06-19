@@ -19,8 +19,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 
 
@@ -38,6 +38,15 @@ def parse_pandacom_psu(string_table):
         "9": "48 V DC 1100 W",
         "10": "230 V AC 1100 W",
         "255": "type not available",
+        "65025": "48 V DC 60 W",
+        "65026": "230 V AC 60 W",
+        "65027": "48 V DC 250 W",
+        "65028": "230 V AC 250 W",
+        "65029": "48 V DC 1100 W",
+        "65030": "230 V AC 1100 W",
+        "65031": "48 V DC 1100 W 1 UH",
+        "65032": "230 V AC 1100 W 1 UH",
+        "65033": "230 V AC 1200W 1 UH",
     }
     map_psu_state = {
         "0": (3, "not installed"),
@@ -46,6 +55,10 @@ def parse_pandacom_psu(string_table):
         "3": (0, "pass"),
         "255": (3, "not available"),
     }
+
+    if not string_table:
+        return None
+
     parsed = {}
     for psu_nr, type_index, state_index in [
         ("1", 5, 2),

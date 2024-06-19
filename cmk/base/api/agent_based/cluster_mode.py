@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Compute the cluster check function from the plugin and parameters."""
+"""Compute the cluster check function from the plug-in and parameters."""
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -30,8 +30,7 @@ ClusterMode = Literal["native", "failover", "worst", "best"]
 
 
 class Selector(Protocol):
-    def __call__(self, *a: State) -> State:
-        ...
+    def __call__(self, *a: State) -> State: ...
 
 
 def _unfit_for_clustering(**_kw: object) -> CheckResult:

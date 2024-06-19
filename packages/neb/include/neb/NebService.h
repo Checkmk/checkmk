@@ -41,15 +41,15 @@ public:
     [[nodiscard]] const IHost &host() const override { return host_; }
 
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
-        auto ctc = static_cast<const NebContact &>(contact).handle();
+        const auto &ctc = static_cast<const NebContact &>(contact).handle();
         // Older Nagios headers are not const-correct... :-P
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         auto *s = const_cast<::service *>(&service_);
         // Older Nagios headers are not const-correct... :-P
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         auto *c = const_cast<::contact *>(static_cast<const ::contact *>(&ctc));
-        return is_contact_for_service(s, c) != 0 ||
-               is_escalated_contact_for_service(s, c) != 0;
+        return ::is_contact_for_service(s, c) != 0 ||
+               ::is_escalated_contact_for_service(s, c) != 0;
     }
 
     [[nodiscard]] std::string servicePeriodName() const override {

@@ -8,16 +8,8 @@
 #include <optional>
 #include <regex>
 #include <system_error>
-#include <utility>
 
 #include "livestatus/Logger.h"
-
-CrashReport::CrashReport(std::string id, std::string component)
-    : _id(std::move(id)), _component(std::move(component)) {}
-
-std::string CrashReport::id() const { return _id; }
-
-std::string CrashReport::component() const { return _component; }
 
 // TODO(ml): This would be cleaner with ranges.
 bool mk::crash_report::any(
@@ -41,8 +33,10 @@ bool mk::crash_report::any(
                                     uuid_pattern))) {
                 continue;
             }
-            if (fun(CrashReport(id_dir.path().stem(),
-                                component_dir.path().stem()))) {
+            if (fun(CrashReport{
+                    .id = id_dir.path().stem(),
+                    .component = component_dir.path().stem(),
+                })) {
                 return true;
             }
         }
@@ -54,7 +48,7 @@ bool mk::crash_report::delete_id(const std::filesystem::path &base_path,
                                  const std::string &id, Logger *logger) {
     std::optional<CrashReport> target;
     mk::crash_report::any(base_path, [&target, &id](const CrashReport &cr) {
-        if (cr.id() == id) {
+        if (cr.id == id) {
             target = cr;
             return true;
         }
@@ -64,12 +58,11 @@ bool mk::crash_report::delete_id(const std::filesystem::path &base_path,
         return false;
     }
     std::error_code ec;
-    std::filesystem::remove_all(base_path / target->component() / target->id(),
-                                ec);
+    std::filesystem::remove_all(base_path / target->component / target->id, ec);
     if (ec) {
-        Debug(logger) << "Failed to remove the crash report " << target->id();
+        Debug(logger) << "Failed to remove the crash report " << target->id;
         return false;
     }
-    Debug(logger) << "Successfully removed the crash report " << target->id();
+    Debug(logger) << "Successfully removed the crash report " << target->id;
     return true;
 }

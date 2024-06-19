@@ -10,16 +10,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    any_of,
-    equals,
-    exists,
-    SNMPTree,
-    startswith,
-)
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, startswith, StringTable
 
 
 def inventory_brocade_vdx_status(info):
@@ -45,8 +37,8 @@ def check_brocade_vdx_status(_no_item, _no_params, info):
     return None
 
 
-def parse_brocade_vdx_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_brocade_vdx_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["brocade_vdx_status"] = LegacyCheckDefinition(

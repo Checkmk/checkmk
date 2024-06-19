@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.testlib import compare_html
+from tests.unit.cmk.gui.compare_html import compare_html
 
 from cmk.gui.htmllib.foldable_container import (
     foldable_container,
@@ -24,11 +24,12 @@ def test_foldable_container() -> None:
         code = output_funnel.drain()
         assert compare_html(
             code,
-            """<div class="foldable closed"><div
-onclick="cmk.foldable_container.toggle(&quot;name&quot;, &quot;id&quot;, &quot;&quot;)"
-class="foldable_header"><b class="treeangle title">Title</b><img id="treeimg.name.id"
-src="themes/facelift/images/tree_closed.svg" class="treeangle closed" /></div><ul
-id="tree.name.id" style="padding-left: 15px; " class="treeangle closed"></ul></div>""",
+            """
+            <div class="foldable closed"><div class="foldable_header">
+            <img id="treeimg.name.id" src="themes/facelift/images/tree_closed.svg" class="treeangle closed" />
+            <b class="treeangle title">Title</b></div>
+            <ul id="tree.name.id" style="padding-left: 15px; " class="treeangle closed"></ul></div>
+            """,
         )
 
 

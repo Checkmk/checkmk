@@ -13,7 +13,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 _load_config() {
     # defaults:
@@ -196,7 +196,9 @@ section_lnx_video() {
     vgas="$(lspci | grep VGA | cut -d" " -f 1)"
     [ -n "$vgas" ] || return
     echo "<<<lnx_video:sep(58)>>>"
-    lspci -v -s "$vgas"
+    printf '%s\n' "$vgas" | while IFS= read -r vga; do
+        lspci -v -s "$vga"
+    done
 }
 
 section_lnx_ip_r() {
@@ -215,8 +217,8 @@ section_lnx_sysctl() {
 }
 
 section_lnx_block_devices() {
-    # Block devices
-    (# This subshell is for scoping UEVENT_FILE and DEVICE_DIR
+    # The subshell below is for scoping UEVENT_FILE and DEVICE_DIR.
+    (
         # use sep=0 rather than 124 in order to be more flexible in the parse function
         echo "<<<lnx_block_devices:sep(0)>>>"
         find "/sys/block/" -maxdepth 1 -type f -o -type l | while read -r DEVICE; do

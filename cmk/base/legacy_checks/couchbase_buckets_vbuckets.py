@@ -6,10 +6,10 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
+from cmk.agent_based.v2 import render
 from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
 
 DiscoveryResult = Iterable[tuple[str, dict]]
@@ -41,7 +41,7 @@ def check_couchbase_buckets_vbuckets(item, params, parsed):
             "item_memory",
             params.get("item_memory"),
             infoname="Item memory",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
         )
 
     pending_vbuckets = data.get("vb_pending_num")
@@ -75,7 +75,7 @@ def check_couchbase_buckets_vbuckets_replica(item, params, parsed):
             "item_memory",
             params.get("item_memory"),
             infoname="Item memory",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
         )
 
 

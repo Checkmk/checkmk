@@ -8,9 +8,9 @@ from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
-
 from cmk.utils import password_store
+
+from .checktestlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
@@ -60,7 +60,7 @@ def test_mqtt_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    password_store.save({"mqtt_password": "blablu"})
+    password_store.save({"mqtt_password": "blablu"}, password_store.password_store_path())
     assert (
         SpecialAgent("agent_mqtt").argument_func(
             params,

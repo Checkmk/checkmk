@@ -18,16 +18,16 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
-from dataclasses import asdict, dataclass, fields, replace
+from dataclasses import dataclass, fields, replace
 from functools import partial
-from typing import Any, assert_never, Literal, ParamSpec, TypeVar
+from typing import Any, assert_never, Final, Literal, ParamSpec, TypedDict, TypeVar
 
 import pydantic
-from typing_extensions import TypedDict
 
+from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import (
-    check_levels_fixed,
-    check_levels_predictive,
+    CheckResult,
+    DiscoveryResult,
     get_average,
     get_rate,
     get_value_store,
@@ -38,7 +38,6 @@ from cmk.agent_based.v2 import (
     Service,
     ServiceLabel,
     State,
-    type_defs,
 )
 
 ServiceLabels = dict[str, str]
@@ -149,7 +148,7 @@ class Attributes:
 
     def finalize(self) -> None:
         if not self.oper_status_name:
-            self.oper_status_name = statename(self.oper_status)
+            self.oper_status_name = get_if_state_name(self.oper_status)
 
         # Fix bug in TP Link switches
         if self.speed > 9 * 1000 * 1000 * 1000 * 1000:
@@ -179,12 +178,14 @@ class Counters:
     in_octets: float | None = None
     in_mcast: float | None = None
     in_bcast: float | None = None
+    in_nucast: float | None = None
     in_ucast: float | None = None
     in_disc: float | None = None
     in_err: float | None = None
     out_octets: float | None = None
     out_mcast: float | None = None
     out_bcast: float | None = None
+    out_nucast: float | None = None
     out_ucast: float | None = None
     out_disc: float | None = None
     out_err: float | None = None
@@ -196,18 +197,20 @@ class InterfaceWithCounters:
     counters: Counters
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Rates:
     in_octets: float | None = None
     in_mcast: float | None = None
     in_bcast: float | None = None
     in_ucast: float | None = None
+    in_nucast: float | None = None
     in_disc: float | None = None
     in_err: float | None = None
     out_octets: float | None = None
     out_mcast: float | None = None
     out_bcast: float | None = None
     out_ucast: float | None = None
+    out_nucast: float | None = None
     out_disc: float | None = None
     out_err: float | None = None
 
@@ -224,7 +227,7 @@ class InterfaceWithRates:
         iface_counters: InterfaceWithCounters,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
     ) -> "InterfaceWithRates":
         return cls(
             iface_counters.attributes,
@@ -241,40 +244,137 @@ class InterfaceWithRates:
         iface_counters: InterfaceWithCounters,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
     ) -> tuple[Rates, Sequence[tuple[str, GetRateError]]]:
-        rates: MutableMapping[str, float | None] = {}
-        rate_errors = []
-        for rate_name, counter_value in (
-            ("in_octets", (counters := iface_counters.counters).in_octets),
-            ("in_ucast", counters.in_ucast),
-            ("in_mcast", counters.in_mcast),
-            ("in_bcast", counters.in_bcast),
-            ("in_disc", counters.in_disc),
-            ("in_err", counters.in_err),
-            ("out_octets", counters.out_octets),
-            ("out_ucast", counters.out_ucast),
-            ("out_mcast", counters.out_mcast),
-            ("out_bcast", counters.out_bcast),
-            ("out_disc", counters.out_disc),
-            ("out_err", counters.out_err),
-        ):
-            try:
-                rates[rate_name] = (
-                    get_rate(
-                        value_store=value_store,
-                        key=f"{rate_name}.{iface_counters.attributes.id_for_value_store}",
-                        time=timestamp,
-                        value=counter_value,
-                        raise_overflow=True,
-                    )
-                    if counter_value is not None
-                    else None
-                )
-            except GetRateError as get_rate_error:
-                rates[rate_name] = None
-                rate_errors.append((rate_name, get_rate_error))
-        return Rates(**rates), rate_errors
+        rate_errors = {}
+        in_octets, rate_errors["in_octets"] = cls._compute_rate(
+            counter=iface_counters.counters.in_octets,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_octets.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_ucast, rate_errors["in_ucast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_ucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_ucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_mcast, rate_errors["in_mcast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_mcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_mcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_bcast, rate_errors["in_bcast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_bcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_bcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_nucast, rate_errors["in_nucast"] = cls._compute_rate(
+            counter=iface_counters.counters.in_nucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_nucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_disc, rate_errors["in_disc"] = cls._compute_rate(
+            counter=iface_counters.counters.in_disc,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_disc.{iface_counters.attributes.id_for_value_store}",
+        )
+        in_err, rate_errors["in_err"] = cls._compute_rate(
+            counter=iface_counters.counters.in_err,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"in_err.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_octets, rate_errors["out_octets"] = cls._compute_rate(
+            counter=iface_counters.counters.out_octets,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_octets.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_ucast, rate_errors["out_ucast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_ucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_ucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_mcast, rate_errors["out_mcast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_mcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_mcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_bcast, rate_errors["out_bcast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_bcast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_bcast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_nucast, rate_errors["out_nucast"] = cls._compute_rate(
+            counter=iface_counters.counters.out_nucast,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_nucast.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_disc, rate_errors["out_disc"] = cls._compute_rate(
+            counter=iface_counters.counters.out_disc,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_disc.{iface_counters.attributes.id_for_value_store}",
+        )
+        out_err, rate_errors["out_err"] = cls._compute_rate(
+            counter=iface_counters.counters.out_err,
+            timestamp=timestamp,
+            value_store=value_store,
+            value_store_key=f"out_err.{iface_counters.attributes.id_for_value_store}",
+        )
+        return Rates(
+            in_octets=in_octets,
+            in_mcast=in_mcast,
+            in_bcast=in_bcast,
+            in_nucast=in_nucast,
+            in_ucast=in_ucast,
+            in_disc=in_disc,
+            in_err=in_err,
+            out_octets=out_octets,
+            out_mcast=out_mcast,
+            out_bcast=out_bcast,
+            out_nucast=out_nucast,
+            out_ucast=out_ucast,
+            out_disc=out_disc,
+            out_err=out_err,
+        ), [
+            (rate_name, get_rate_error)
+            for rate_name, get_rate_error in rate_errors.items()
+            if get_rate_error
+        ]
+
+    @staticmethod
+    def _compute_rate(
+        *,
+        counter: float | None,
+        timestamp: float,
+        value_store: MutableMapping[str, object],
+        value_store_key: str,
+    ) -> tuple[float | None, GetRateError | None]:
+        if counter is None:
+            return None, None
+        try:
+            return (
+                get_rate(
+                    value_store=value_store,
+                    key=value_store_key,
+                    time=timestamp,
+                    value=counter,
+                    raise_overflow=True,
+                ),
+                None,
+            )
+        except GetRateError as get_rate_error:
+            return None, get_rate_error
 
 
 @dataclass(frozen=True)
@@ -299,13 +399,15 @@ class RateWithAverage:
     def __add__(self, other: "RateWithAverage") -> "RateWithAverage":
         return RateWithAverage(
             rate=self.rate + other.rate,
-            average=self.average + other.average
-            if (self.average is not None and other.average is not None)
-            else None,
+            average=(
+                self.average + other.average
+                if (self.average is not None and other.average is not None)
+                else None
+            ),
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RatesWithAverages:
     in_octets: RateWithAverage | None = None
     in_mcast: RateWithAverage | None = None
@@ -326,13 +428,23 @@ class RatesWithAverages:
     def __add__(self, other: "RatesWithAverages") -> "RatesWithAverages":
         return RatesWithAverages(
             **{
-                field.name: value + other_value
-                if (value := getattr(self, field.name)) is not None
-                and (other_value := getattr(other, field.name)) is not None
-                else None
+                field.name: (
+                    value + other_value
+                    if (value := getattr(self, field.name)) is not None
+                    and (other_value := getattr(other, field.name)) is not None
+                    else None
+                )
                 for field in fields(self)
             }
         )
+
+
+@dataclass(frozen=True, kw_only=True)
+class _AveragingParams:
+    value_store: MutableMapping[str, object]
+    value_store_key: str
+    timestamp: float
+    backlog_minutes: int
 
 
 @dataclass
@@ -347,7 +459,7 @@ class InterfaceWithRatesAndAverages:
         iface: InterfaceWithCounters | InterfaceWithRates,
         *,
         timestamp: float,
-        value_store: MutableMapping[str, Any],
+        value_store: MutableMapping[str, object],
         params: Mapping[str, Any],
     ) -> "InterfaceWithRatesAndAverages":
         iface_rates = (
@@ -359,104 +471,181 @@ class InterfaceWithRatesAndAverages:
                 value_store=value_store,
             )
         )
-        averages = cls._compute_averages(
-            iface_rates,
-            timestamp=timestamp,
-            value_store=value_store,
-            average_backlog_octets=params.get("average"),
-            average_backlog_bmcast=params.get("average_bm"),
+        in_octets = cls._rate_with_average(
+            rate=iface_rates.rates.in_octets,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_octets.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=backlog_minutes_in_octets,
+                )
+                if (backlog_minutes_in_octets := params.get("average")) is not None
+                else None
+            ),
+        )
+        out_octets = cls._rate_with_average(
+            rate=iface_rates.rates.out_octets,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_octets.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=backlog_minutes_out_octets,
+                )
+                if (backlog_minutes_out_octets := params.get("average")) is not None
+                else None
+            ),
+        )
+        in_ucast = cls._rate_with_average(
+            rate=iface_rates.rates.in_ucast,
+            averaging_params=None,
+        )
+        out_ucast = cls._rate_with_average(
+            rate=iface_rates.rates.out_ucast,
+            averaging_params=None,
+        )
+        in_mcast = cls._rate_with_average(
+            rate=iface_rates.rates.in_mcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_mcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_in_mcast,
+                )
+                if (average_backlog_in_mcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        out_mcast = cls._rate_with_average(
+            rate=iface_rates.rates.out_mcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_mcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_out_mcast,
+                )
+                if (average_backlog_out_mcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        in_bcast = cls._rate_with_average(
+            rate=iface_rates.rates.in_bcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"in_bcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_in_bcast,
+                )
+                if (average_backlog_in_bcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        out_bcast = cls._rate_with_average(
+            rate=iface_rates.rates.out_bcast,
+            averaging_params=(
+                _AveragingParams(
+                    value_store=value_store,
+                    value_store_key=f"out_bcast.{iface_rates.attributes.id_for_value_store}.average",
+                    timestamp=timestamp,
+                    backlog_minutes=average_backlog_out_bcast,
+                )
+                if (average_backlog_out_bcast := params.get("average_bm")) is not None
+                else None
+            ),
+        )
+        in_nucast = cls._rate_with_average(
+            rate=iface_rates.rates.in_nucast,
+            averaging_params=None,
+        ) or cls._add_rates_and_averages(
+            in_mcast,
+            in_bcast,
+        )
+        out_nucast = cls._rate_with_average(
+            rate=iface_rates.rates.out_nucast,
+            averaging_params=None,
+        ) or cls._add_rates_and_averages(
+            out_mcast,
+            out_bcast,
+        )
+        in_disc = cls._rate_with_average(
+            rate=iface_rates.rates.in_disc,
+            averaging_params=None,
+        )
+        out_disc = cls._rate_with_average(
+            rate=iface_rates.rates.out_disc,
+            averaging_params=None,
+        )
+        in_err = cls._rate_with_average(
+            rate=iface_rates.rates.in_err,
+            averaging_params=None,
+        )
+        out_err = cls._rate_with_average(
+            rate=iface_rates.rates.out_err,
+            averaging_params=None,
+        )
+        total_octets = cls._add_rates_and_averages(
+            in_octets,
+            out_octets,
         )
         return cls(
             attributes=iface.attributes,
             rates_with_averages=RatesWithAverages(
-                **{
-                    rate_name: None
-                    if rate is None
-                    else RateWithAverage(
-                        rate=rate,
-                        average=averages.get(rate_name),
-                    )
-                    for rate_name, rate in asdict(iface_rates.rates).items()
-                },
-                in_nucast=cls._add_rates_and_averages(
-                    *(
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
-                        )
-                        for rate_name in ("in_mcast", "in_bcast")
-                    ),
-                ),
-                out_nucast=cls._add_rates_and_averages(
-                    *(
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
-                        )
-                        for rate_name in ("out_mcast", "out_bcast")
-                    ),
-                ),
-                total_octets=cls._add_rates_and_averages(
-                    *(
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
-                        )
-                        for rate_name in ("in_octets", "out_octets")
-                    ),
-                ),
+                in_octets=in_octets,
+                in_mcast=in_mcast,
+                in_bcast=in_bcast,
+                in_nucast=in_nucast,
+                in_ucast=in_ucast,
+                in_disc=in_disc,
+                in_err=in_err,
+                out_octets=out_octets,
+                out_mcast=out_mcast,
+                out_bcast=out_bcast,
+                out_nucast=out_nucast,
+                out_ucast=out_ucast,
+                out_disc=out_disc,
+                out_err=out_err,
+                total_octets=total_octets,
             ),
             get_rate_errors=iface_rates.get_rate_errors,
         )
 
     @staticmethod
-    def _compute_averages(
-        iface_rates: InterfaceWithRates,
+    def _rate_with_average(
         *,
-        timestamp: float,
-        value_store: MutableMapping[str, Any],
-        average_backlog_octets: int | None,
-        average_backlog_bmcast: int | None,
-    ) -> Mapping[str, Average]:
-        return {
-            rate_name: Average(
-                value=get_average(
-                    value_store=value_store,
-                    key=f"{rate_name}.{iface_rates.attributes.id_for_value_store}.average",
-                    time=timestamp,
-                    value=rate,
-                    backlog_minutes=average_backlog,
-                ),
-                backlog=average_backlog,
+        rate: float | None,
+        averaging_params: _AveragingParams | None,
+    ) -> RateWithAverage | None:
+        if rate is None:
+            return None
+        if averaging_params is None:
+            return RateWithAverage(
+                rate=rate,
+                average=None,
             )
-            for average_backlog, rate_names in (
-                (
-                    average_backlog_octets,
-                    (
-                        "in_octets",
-                        "out_octets",
-                    ),
-                ),
-                (
-                    average_backlog_bmcast,
-                    (
-                        "in_mcast",
-                        "in_bcast",
-                        "out_mcast",
-                        "out_bcast",
-                    ),
-                ),
-            )
-            for rate_name in rate_names
-            if average_backlog is not None
-            and (rate := getattr(iface_rates.rates, rate_name)) is not None
-        }
+        return RateWithAverage(
+            rate=rate,
+            average=(
+                Average(
+                    value=average,
+                    backlog=averaging_params.backlog_minutes,
+                )
+                if (
+                    average := get_average(
+                        value_store=averaging_params.value_store,
+                        key=averaging_params.value_store_key,
+                        time=averaging_params.timestamp,
+                        value=rate,
+                        backlog_minutes=averaging_params.backlog_minutes,
+                    )
+                )
+                is not None
+                else None
+            ),
+        )
 
     @staticmethod
     def _add_rates_and_averages(
@@ -521,9 +710,11 @@ def tryint(x: Any) -> Any:
         return x
 
 
-# Name of state (lookup SNMP enum)
-def statename(st: str) -> str:
-    names = {
+def get_if_state_name(state: str) -> str:
+    """return name of the network interface card state.
+    on lookup failure returns state.
+    Reference: windows SDK ifdef.h, for example"""
+    state_to_name: Final[dict[str, str]] = {
         "1": "up",
         "2": "down",
         "3": "testing",
@@ -533,7 +724,7 @@ def statename(st: str) -> str:
         "7": "lower layer down",
         "8": "degraded",
     }
-    return names.get(st, st)
+    return state_to_name.get(state, state)
 
 
 def render_mac_address(phys_address: Iterable[int] | str) -> str:
@@ -907,7 +1098,7 @@ def _groups_from_params(
 def discover_interfaces(  # pylint: disable=too-many-branches
     params: Sequence[Mapping[str, Any]],
     section: Section[TInterfaceType],
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     if len(section) == 0:
         return
 
@@ -1066,7 +1257,7 @@ def _check_ungrouped_ifs(
     section: Section[TInterfaceType],
     timestamp: float,
     value_store: MutableMapping[str, Any],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     """
     Check one or more ungrouped interfaces. In a non-cluster setup, only one interface will match
     the item and the results will simply be the output of check_single_interface. On a cluster,
@@ -1169,7 +1360,7 @@ def _accumulate_attributes(
     else:
         cumulated_attributes.oper_status = "2"  # down
         cumulated_attributes.out_qlen = None
-    cumulated_attributes.oper_status_name = statename(cumulated_attributes.oper_status)
+    cumulated_attributes.oper_status_name = get_if_state_name(cumulated_attributes.oper_status)
 
     alias_info = []
     if len(nodes) > 1:
@@ -1244,9 +1435,11 @@ def _group_members(
                 item[0] == "0",
             ),
             oper_status_name=attributes.oper_status_name,
-            admin_status_name=None
-            if attributes.admin_status is None
-            else statename(attributes.admin_status),
+            admin_status_name=(
+                None
+                if attributes.admin_status is None
+                else get_if_state_name(attributes.admin_status)
+            ),
         )
         groups_node.append(member_info)
     return group_members
@@ -1259,7 +1452,7 @@ def _check_grouped_ifs(
     group_name: str,
     timestamp: float,
     value_store: MutableMapping[str, Any],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     """
     Grouped interfaces are combined into a single interface, which is then passed to
     check_single_interface.
@@ -1310,7 +1503,7 @@ def check_multiple_interfaces(
     group_name: str = "Interface group",
     timestamp: float | None = None,
     value_store: MutableMapping[str, Any] | None = None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if timestamp is None:
         timestamp = time.time()
     if value_store is None:
@@ -1407,24 +1600,26 @@ _METRICS_TO_LEGACY_MAP = {
 # corresponding translation. This issue will hopefully be eliminated in the 2.3. Once this is the
 # case, we can remove _rename_metrics_to_legacy.
 def _rename_metrics_to_legacy(
-    check_interfaces: Callable[_TCheckInterfaceParams, type_defs.CheckResult]
-) -> Callable[_TCheckInterfaceParams, type_defs.CheckResult]:
+    check_interfaces: Callable[_TCheckInterfaceParams, CheckResult]
+) -> Callable[_TCheckInterfaceParams, CheckResult]:
     def rename_metrics_to_legacy(
         *args: _TCheckInterfaceParams.args,
         **kwargs: _TCheckInterfaceParams.kwargs,
-    ) -> type_defs.CheckResult:
+    ) -> CheckResult:
         yield from (
-            Metric(
-                name=_METRICS_TO_LEGACY_MAP.get(
-                    output.name,
-                    output.name,
-                ),
-                value=output.value,
-                levels=output.levels,
-                boundaries=output.boundaries,
+            (
+                Metric(
+                    name=_METRICS_TO_LEGACY_MAP.get(
+                        output.name,
+                        output.name,
+                    ),
+                    value=output.value,
+                    levels=output.levels,
+                    boundaries=output.boundaries,
+                )
+                if isinstance(output, Metric)
+                else output
             )
-            if isinstance(output, Metric)
-            else output
             for output in check_interfaces(*args, **kwargs)
         )
 
@@ -1440,7 +1635,7 @@ def check_single_interface(
     *,
     group_name: str = "Interface group",
     use_discovered_state_and_speed: bool = True,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from _interface_name(
         group_name=group_name if group_members else None,
         item=item,
@@ -1534,12 +1729,13 @@ def check_single_interface(
     )
 
     if interface.get_rate_errors:
-        overflows_human_readable = (
+
+        overflows_human_readable = "\n".join(
             f"{counter}: {get_rate_excpt}" for counter, get_rate_excpt in interface.get_rate_errors
         )
         yield Result(
             state=State.OK,
-            notice=f"Could not compute rates for the following counter(s): {', '.join(overflows_human_readable)}",
+            notice=f"Could not compute rates for the following counter(s):\n{overflows_human_readable}",
         )
 
 
@@ -1572,25 +1768,24 @@ def _interface_name(  # pylint: disable=too-many-branches
             info_interface = "[%s]" % bracket_info
         else:
             info_interface = ""
+    # Display port number or alias in summary_interface if that is not part of the service
+    # description anyway
+    elif (
+        (item == attributes.index or item.lstrip("0") == attributes.index)
+        and attributes.alias in (item, "")
+        and attributes.descr in (item, "")
+    ):  # description trivial
+        info_interface = ""
+    elif (
+        item == f"{attributes.alias} {attributes.index}" and attributes.descr != ""
+    ):  # non-unique Alias
+        info_interface = f"[{attributes.alias}/{attributes.descr}]"
+    elif attributes.alias not in (item, ""):  # alias useful
+        info_interface = "[%s]" % attributes.alias
+    elif attributes.descr not in (item, ""):  # description useful
+        info_interface = "[%s]" % attributes.descr
     else:
-        # Display port number or alias in summary_interface if that is not part
-        # of the service description anyway
-        if (
-            (item == attributes.index or item.lstrip("0") == attributes.index)
-            and attributes.alias in (item, "")
-            and attributes.descr in (item, "")
-        ):  # description trivial
-            info_interface = ""
-        elif (
-            item == f"{attributes.alias} {attributes.index}" and attributes.descr != ""
-        ):  # non-unique Alias
-            info_interface = f"[{attributes.alias}/{attributes.descr}]"
-        elif attributes.alias not in (item, ""):  # alias useful
-            info_interface = "[%s]" % attributes.alias
-        elif attributes.descr not in (item, ""):  # description useful
-            info_interface = "[%s]" % attributes.descr
-        else:
-            info_interface = "[%s]" % attributes.index
+        info_interface = "[%s]" % attributes.index
 
     if attributes.node is not None:
         if info_interface:
@@ -1664,8 +1859,8 @@ def _check_oper_and_admin_state(
         if combined_mon_state is not None and attributes.admin_status is not None:
             yield Result(
                 state=combined_mon_state,
-                summary=f"(op. state: {attributes.oper_status_name}, admin state: {statename(attributes.admin_status)})",
-                details=f"Operational state: {attributes.oper_status_name}, Admin state: {statename(attributes.admin_status)}",
+                summary=f"(op. state: {attributes.oper_status_name}, admin state: {get_if_state_name(attributes.admin_status)})",
+                details=f"Operational state: {attributes.oper_status_name}, Admin state: {get_if_state_name(attributes.admin_status)}",
             )
             return
     yield from _check_oper_and_admin_state_independent(
@@ -1709,7 +1904,7 @@ def _check_oper_and_admin_state_independent(
             target_admin_states,
             _get_map_states(mapping.map_admin_states),
         ),
-        summary=f"Admin state: {statename(attributes.admin_status)}",
+        summary=f"Admin state: {get_if_state_name(attributes.admin_status)}",
     )
 
 
@@ -1757,7 +1952,7 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     assumed_speed_in: int | None,
     assumed_speed_out: int | None,
     monitor_total: bool,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if unit is BandwidthUnit.BIT:
         bandwidth_renderer: Callable[[float], str] = render.nicspeed
     else:
@@ -1801,7 +1996,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     levels: FixedLevels | PredictiveLevels,
     assumed_speed_in: int | None,
     assumed_speed_out: int | None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if traffic.average:
         filtered_traffic = traffic.average.value
         title = "%s average %dmin" % (direction.title(), traffic.average.backlog)
@@ -1834,7 +2029,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     else:
         # The metric already got yielded, so it's only the result that is
         # needed here.
-        (result,) = check_levels_fixed(
+        (result,) = check_levels(
             filtered_traffic,
             levels_upper=levels.upper,
             levels_lower=levels.lower,
@@ -1886,7 +2081,7 @@ def _render_floating_point(value: float, precision: int, unit: str) -> str:
     if round(value) == value:
         return f"{value:.0f}{unit}"
 
-    if abs(value) < float(tol := f"0.{'0'*(precision-1)}1"):
+    if abs(value) < float(tol := f"0.{'0' * (precision - 1)}1"):
         return f"{'<' if value > 0 else '>-'}{tol}{unit}"
 
     return f"{value:.{precision}f}".rstrip("0.") + unit
@@ -1913,7 +2108,7 @@ def _output_packet_rates(
     perc_packet_levels: GeneralPacketLevels,
     nucast_levels: tuple[float, float] | None,
     rates: RatesWithAverages,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     for direction, mrate, brate, urate, nurate, discrate, errorrate in [
         (
             "in",
@@ -2007,7 +2202,7 @@ def _output_packet_rates(
         ]:
             if packets is None:
                 continue
-            yield from check_levels_fixed(
+            yield from check_levels(
                 packets.rate,
                 levels_upper=levels,
                 metric_name=f"if_{direction}_{metric_name}",
@@ -2026,7 +2221,7 @@ def _check_single_packet_rate(
     display_name: str,
     metric_name: str,
     reference_rate: float | None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     # Calculate the metric with actual levels, no matter if they
     # come from perc_- or abs_levels
     if perc_levels is not None:
@@ -2057,7 +2252,7 @@ def _check_single_packet_rate(
         # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
         # but it yields the best information for the "no packets" case in the check output.
         perc_value = 0 if reference_rate == 0 else rate_check * 100 / reference_rate
-        (result,) = check_levels_fixed(
+        (result,) = check_levels(
             perc_value,
             levels_upper=perc_levels,
             render_func=partial(_render_floating_point, precision=3, unit="%"),
@@ -2066,7 +2261,7 @@ def _check_single_packet_rate(
         )
         yield result
     else:
-        (result,) = check_levels_fixed(
+        (result,) = check_levels(
             rate_check,
             levels_upper=abs_levels,
             render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
@@ -2090,7 +2285,7 @@ def cluster_check(
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, Section[TInterfaceType] | None],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from check_multiple_interfaces(
         item,
         params,

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -371,8 +373,8 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
         nodes_of={},
     )
 
-    assert matcher.get_host_merged_dict(HostName("abc"), ruleset=dict_ruleset) == {}
-    assert matcher.get_host_merged_dict(HostName("xyz"), ruleset=dict_ruleset) == {}
+    assert not matcher.get_host_merged_dict(HostName("abc"), ruleset=dict_ruleset)
+    assert not matcher.get_host_merged_dict(HostName("xyz"), ruleset=dict_ruleset)
     assert matcher.get_host_merged_dict(HostName("host1"), ruleset=dict_ruleset) == {
         "hu": "BLA",
         "ho": "BLA",
@@ -700,7 +702,7 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
 @pytest.mark.parametrize(
     "hostname,service_description,expected_result",
     [
-        # Funny service description because the plugin isn't loaded.
+        # Funny service name because the plug-in isn't loaded.
         # We could patch config.service_description, but this is easier:
         (
             HostName("host1"),

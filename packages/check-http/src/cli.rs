@@ -2,18 +2,19 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::pwstore;
+use crate::pwstore::password_from_store;
 use anyhow::{bail, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
 use regex::{Regex, RegexBuilder};
 use reqwest::{
     header::{HeaderName, HeaderValue},
-    Method, StatusCode,
+    Method, StatusCode, Url,
 };
 use std::{str::FromStr, time::Duration};
+use tracing_subscriber::filter::LevelFilter;
 
 #[derive(Parser, Debug)]
-#[command(about = "check_http")]
+/// check_httpv2
 pub struct Cli {
     /// Username for HTTP Basic Auth
     #[arg(long)]
@@ -22,22 +23,30 @@ pub struct Cli {
     #[command(flatten)]
     pub auth_pw: AuthPw,
 
+    /// Header name for token based authentication, e.g. "Authorization"
+    #[arg(long, requires = "TokenKey")]
+    pub token_header: Option<HeaderName>,
+
+    #[command(flatten)]
+    pub token_key: TokenKey,
+
     /// Additional header in the form NAME:VALUE. Use multiple times for additional headers.
     #[arg(short = 'k', long="header", value_parser=split_header::<HeaderName, HeaderValue>)]
-    pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
+    pub headers: Vec<(HeaderName, HeaderValue)>,
 
     /// URL to check
     #[arg(short, long)]
-    pub url: String,
+    pub url: Url,
 
     /// URL version to use for the request.
+    ///
     /// If not set, start with HTTP/1.1 and upgrade to HTTP/2 if supported by the server.
     /// If set to "http11", send the request with HTTP/1.1 without HTTP/2 upgrade.
     /// If set to "http2", send the request with HTTP/2.
     /// Note: While HTTP/2 without TLS (h2c) is theoretically available, it's de facto
     /// unsupported by common server software, so sending a HTTP/2 request
     /// without TLS will most likely fail.
-    #[arg(long)]
+    #[arg(long, verbatim_doc_comment)]
     pub http_version: Option<HttpVersion>,
 
     /// Set timeout in seconds
@@ -52,14 +61,39 @@ pub struct Cli {
     #[arg(long)]
     pub user_agent: Option<String>,
 
-    /// Set HTTP method. If no body text is specified with --body, this defaults to GET,
+    /// Set HTTP method.
+    ///
+    /// If no body text is specified with --body, this defaults to GET,
     /// otherwise to POST.
     #[arg(short = 'j', long)]
     pub method: Option<Method>,
 
-    /// How to handle redirected pages. sticky is like follow but stick to the
-    /// specified IP address. stickyport also ensures port stays the same.
-    #[arg(short = 'f', long, default_value = "follow")]
+    /// Ignore HTTP_PROXY and HTTPS_PROXY environment variables.
+    ///
+    /// By default, these environment variables will be recognized and used as proxy setting.
+    /// Only relevant if no additional proxy options are set.
+    #[arg(long, default_value_t = false, verbatim_doc_comment)]
+    pub ignore_proxy_env: bool,
+
+    /// Proxy server URL.
+    ///
+    /// E.g. <https://my-proxy.com>, <socks5://10.1.1.0:8000>
+    /// This will override both HTTP_PROXY and HTTPS_PROXY
+    #[arg(long, verbatim_doc_comment)]
+    pub proxy_url: Option<String>,
+
+    /// User name for proxy server basic auth.
+    #[arg(long, requires = "ProxyPw")]
+    pub proxy_user: Option<String>,
+
+    #[command(flatten)]
+    pub proxy_pw: ProxyPw,
+
+    /// How to handle redirected pages.
+    ///
+    /// sticky is like follow but stick to the specified IP address.
+    /// stickyport also ensures port stays the same.
+    #[arg(short = 'f', long, default_value = "follow", verbatim_doc_comment)]
     pub onredirect: OnRedirect,
 
     /// Maximal number of redirects
@@ -70,36 +104,48 @@ pub struct Cli {
     #[arg(long)]
     pub force_ip_version: Option<ForceIP>,
 
-    /// Minimum/Maximum expected page size in bytes (Format: MIN[,MAX])
+    /// Minimum/Maximum expected page size in bytes (Format: MIN\[,MAX\])
     #[arg(long, conflicts_with = "without_body", value_parser = parse_optional_pair::<usize>)]
     pub page_size: Option<PageSizeLimits>,
 
-    /// WARN/CRIT levels for response time (Format: WARN>[,CRIT])
+    /// WARN/CRIT levels for response time (Format: WARN>\[,CRIT\])
     #[arg(long, value_parser = parse_optional_pair::<f64>)]
     pub response_time_levels: Option<ResponseTimeLevels>,
 
     /// WARN level for document age
+    ///
     /// If document age is not set, setting this option will also lead to state CRIT
     #[arg(long)]
     pub document_age_levels: Option<u64>,
 
-    /// Text to send in HTTP body. This will set the HTTP method to POST if unset,
+    /// WARN/CRIT levels for server certificate validity
+    ///
+    /// Not relevant for HTTP connections without TLS.
+    #[arg(long, value_parser = parse_optional_pair::<u64>)]
+    pub certificate_levels: Option<(u64, Option<u64>)>,
+
+    /// Text to send in HTTP body.
+    ///
+    /// This will set the HTTP method to POST if unset,
     /// but will not overwrite the method specified with --method.
     /// Also, no encoding (like url-encoding) will be applied.
-    #[arg(long)]
+    #[arg(long, verbatim_doc_comment)]
     pub body: Option<String>,
 
     /// Specify Content-Type header when sending HTTP body.
+    ///
     /// This does not encode the specified body text automatically.
     #[arg(short = 'T', long, requires = "body")]
     pub content_type: Option<HeaderValue>,
 
     /// String(s) to expect in the response body.
+    ///
     /// Specify multiple times for additional search strings.
     #[arg(short = 's', long, conflicts_with = "without_body")]
     pub body_string: Vec<String>,
 
     /// Regular expression(s) to expect in the response body.
+    ///
     /// Specify multiple times for regexes.
     /// Inline flags with "(?...)" are supported.
     /// E.g., "(?im)^myregexpattern" will match case-insensitively,
@@ -112,6 +158,7 @@ pub struct Cli {
         conflicts_with = "body_string",
         conflicts_with = "without_body",
         value_parser = parse_regex_pattern,
+        verbatim_doc_comment,
     )]
     pub body_regex: Vec<Regex>,
 
@@ -119,24 +166,25 @@ pub struct Cli {
     #[arg(long, requires = "body_regex", default_value_t = false)]
     pub body_regex_invert: bool,
 
-    /// Strings to expect in the headers. Format: [KEY]:[VALUE]
+    /// Strings to expect in the headers.
+    ///
+    /// Format: \[KEY\]:\[VALUE\]
     /// Specify multiple times for additional headers.
-    /// It's possible to only specify key or value, but a (first) separating colon is
-    /// mandatory to identify them.
+    /// It's possible to only specify key or value, but a (first) separating colon is mandatory to identify them.
     /// Keys are matched case-insensitive and may only contain ASCII characters.
-    /// Values are matched case-sensitive. If they contain non-ASCII characters,
-    /// they are expected to be latin-1
-    #[arg(short = 'd', long, value_parser=parse_string_header_pair)]
+    /// Values are matched case-sensitive. If they contain non-ASCII characters, they are expected to be latin-1.
+    #[arg(short = 'd', long, value_parser=parse_string_header_pair, verbatim_doc_comment)]
     pub header_strings: Vec<(String, String)>,
 
-    /// Regular expressions to expect in the HTTP headers. Format: [KEY]:[VALUE]
+    /// Regular expressions to expect in the HTTP headers.
+    ///
+    /// Format: \[KEY\]:\[VALUE\]
     /// Again, the first colon will be recognized as the KEY-VALUE separator, so
     /// a colon is not allowed in the KEY part of the regex specification.
-    /// The same rules as for the body regex apply, while key and value are taken as two separate
-    /// regex patterns.
+    /// The same rules as for the body regex apply, while key and value are taken as two separate regex patterns.
     /// Also note that case-insensitive matching is enabled for the the header name part by default,
     /// and flags affecting newlines would have no effect, since newlines are not allowed within headers
-    #[arg(long, conflicts_with = "header_strings", value_parser = parse_regex_pattern_header_pair)]
+    #[arg(long, conflicts_with = "header_strings", value_parser = parse_regex_pattern_header_pair, verbatim_doc_comment,)]
     pub header_regexes: Vec<(Regex, Regex)>,
 
     /// Expect the specified regexes to *not* match on the headers.
@@ -144,19 +192,55 @@ pub struct Cli {
     pub header_regexes_invert: bool,
 
     /// Expected HTTP status code.
+    ///
     /// Note: Avoid setting this to a 3xx code while setting "--onredirect=warning/critical"
     #[arg(short = 'e', long)]
-    pub status_code: Option<StatusCode>,
+    pub status_code: Vec<StatusCode>,
 
     /// Use TLS version for HTTPS requests.
+    ///
     /// Not relevant for HTTP connections without TLS.
     #[arg(short = 'S', long)]
     pub tls_version: Option<TlsVersion>,
 
     /// Set minimum accepted TLS version for HTTPS requests.
+    ///
     /// Not relevant for HTTP connections without TLS.
     #[arg(long, conflicts_with = "tls_version")]
     pub min_tls_version: Option<TlsVersion>,
+
+    /// Print HTTP headers to stderr.
+    #[arg(short, long, default_value_t = false)]
+    pub debug_headers: bool,
+
+    /// Print page content to stderr.
+    ///
+    /// Note: Avoid setting --without-body.
+    #[arg(short, long, default_value_t = false)]
+    pub debug_content: bool,
+
+    /// Enable verbosity output to stderr.
+    ///
+    /// Specify up to three times for INFO/DEBUG/TRACE log output.
+    /// Additionally, since check_httpv2 is written in Rust, you can also control the
+    /// output by passing the environment variable RUST_LOG.
+    /// Since this is a Rust-specific feature, please have a look at the documentation
+    /// of the tracing/tracing_subscriber Rust crate for details.
+    /// Note: RUST_LOG and the verbosity flag work additive.
+    /// I.e., "-vvv" will already print *all* available logging/tracing information to stderr.
+    #[arg(short, long, action = clap::ArgAction::Count, verbatim_doc_comment)]
+    verbose: u8,
+}
+
+impl Cli {
+    pub fn logging_level(&self) -> LevelFilter {
+        match self.verbose {
+            3.. => LevelFilter::TRACE,
+            2.. => LevelFilter::DEBUG,
+            1 => LevelFilter::INFO,
+            _ => LevelFilter::OFF,
+        }
+    }
 }
 
 type PageSizeLimits = (usize, Option<usize>);
@@ -207,8 +291,36 @@ pub struct AuthPw {
     pub auth_pw_plain: Option<String>,
 
     /// Password for HTTP Basic Auth, provided as ID for password store lookup
-    #[arg(long, requires = "auth_user", value_parser=pwstore::password_from_store)]
-    pub auth_pwstore: Option<String>,
+    #[arg(long, requires = "auth_user", value_parser=password_from_store)]
+    pub auth_pw_pwstore: Option<String>,
+}
+
+#[derive(Args, Debug)]
+#[group(multiple = false)]
+pub struct TokenKey {
+    /// Plain key for token based authentication, e.g., "Bearer XYZ123"
+    #[arg(long, requires = "token_header")]
+    pub token_key_plain: Option<HeaderValue>,
+
+    /// Key for token based authentication, provided as ID for password store lookup
+    #[arg(long, requires = "token_header", value_parser=header_value_from_store)]
+    pub token_key_pwstore: Option<HeaderValue>,
+}
+
+#[derive(Args, Debug)]
+#[group(multiple = false)]
+pub struct ProxyPw {
+    /// Plain password for proxy server Basic Auth
+    #[arg(long, requires = "proxy_user")]
+    pub proxy_pw_plain: Option<String>,
+
+    /// Password for proxy server Basic Auth, provided as ID for password store lookup
+    #[arg(long, requires = "proxy_user", value_parser=password_from_store)]
+    pub proxy_pw_pwstore: Option<String>,
+}
+
+fn header_value_from_store(value: &str) -> AnyhowResult<HeaderValue> {
+    Ok(HeaderValue::from_str(&password_from_store(value)?)?)
 }
 
 fn split_header<T, U>(header: &str) -> AnyhowResult<(T, U)>
@@ -248,7 +360,7 @@ fn parse_string_header_pair(header_pair: &str) -> AnyhowResult<(String, String)>
 }
 
 fn parse_seconds(secs: &str) -> AnyhowResult<Duration> {
-    Ok(Duration::from_secs(secs.parse()?))
+    Ok(Duration::from_secs_f64(secs.parse()?))
 }
 
 fn parse_optional_pair<T>(input: &str) -> AnyhowResult<(T, Option<T>)>
@@ -262,23 +374,23 @@ where
     }
 }
 
-fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(String, String)> {
+fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(Regex, Regex)> {
     let (name, value): (String, String) = split_header(pattern_pair)?;
-    RegexBuilder::new(&name).case_insensitive(true).build()?;
-    Regex::new(&value)?;
-    Ok((name, value))
+    Ok((
+        RegexBuilder::new(&name).case_insensitive(true).build()?,
+        Regex::new(&value)?,
+    ))
 }
 
-fn parse_regex_pattern(pattern: &str) -> Result<String, regex::Error> {
-    RegexBuilder::new(pattern).crlf(true).build()?;
-    Ok(pattern.to_string())
+fn parse_regex_pattern(pattern: &str) -> Result<Regex, regex::Error> {
+    RegexBuilder::new(pattern).crlf(true).build()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use clap::CommandFactory;
-    use http::{HeaderName, HeaderValue};
+    use reqwest::header::{HeaderName, HeaderValue};
     use std::str::FromStr;
 
     fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {

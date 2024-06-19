@@ -112,7 +112,7 @@ def agent_section(
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -233,7 +233,7 @@ def snmp_section(
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -256,30 +256,32 @@ def snmp_section(
 
     return register_snmp_section(
         # supressions: we have to live with what the old api gives us. It will be validated.
-        SNMPSection(  # type:ignore[misc]
-            name=name,
-            detect=detect,
-            fetch=fetch,
-            parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
-            parsed_section_name=parsed_section_name,
-            host_label_function=host_label_function,
-            host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
-            host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
-            host_label_ruleset_type=host_label_ruleset_type,
-            supersedes=supersedes,
-        )
-        if isinstance(fetch, list)
-        else SimpleSNMPSection(  # type:ignore[misc]
-            name=name,
-            detect=detect,
-            fetch=fetch,
-            parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
-            parsed_section_name=parsed_section_name,
-            host_label_function=host_label_function,
-            host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
-            host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
-            host_label_ruleset_type=host_label_ruleset_type,
-            supersedes=supersedes,
+        (
+            SNMPSection(  # type: ignore[misc]
+                name=name,
+                detect=detect,
+                fetch=fetch,
+                parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
+                parsed_section_name=parsed_section_name,
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
+                host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
+                host_label_ruleset_type=host_label_ruleset_type,
+                supersedes=supersedes,
+            )
+            if isinstance(fetch, list)
+            else SimpleSNMPSection(  # type: ignore[misc]
+                name=name,
+                detect=detect,
+                fetch=fetch,
+                parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
+                parsed_section_name=parsed_section_name,
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
+                host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
+                host_label_ruleset_type=host_label_ruleset_type,
+                supersedes=supersedes,
+            )
         ),
         get_validated_plugin_location(),
     )
@@ -299,27 +301,27 @@ def check_plugin(
     check_ruleset_name: str | None = None,
     cluster_check_function: Callable | None = None,
 ) -> None:
-    """Register a check plugin to checkmk.
+    """Register a check plug-in to checkmk.
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the check plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
-      sections:                 An optional list of section names that this plugin subscribes to.
+      sections:                 An optional list of section names that this plug-in subscribes to.
                                 They correspond to the 'parsed_section_name' specified in
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the check plugin.
+                                a name equal to the name of the check plug-in.
 
       service_name:             The template for the service name. The check function must accept
                                 'item' as first argument if and only if "%s" is present in the value
                                 of "service_name".
 
       discovery_function:       The discovery_function. Arguments must be 'params' (if discovery
-                                parameters are defined) and 'section' (if the plugin subscribes
+                                parameters are defined) and 'section' (if the plug-in subscribes
                                 to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Service` instances.
@@ -331,13 +333,13 @@ def check_plugin(
 
       discovery_ruleset_type:   The ruleset type is either :class:`RuleSetType.ALL` or
                                 :class:`RuleSetType.MERGED`.
-                                It describes whether this plugin needs the merged result of the
+                                It describes whether this plug-in needs the merged result of the
                                 effective rules, or every individual rule matching for the current
                                 host.
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and
-                                'section' (if the plugin subscribes to a single section), or
+                                'section' (if the plug-in subscribes to a single section), or
                                 'section_<name1>, section_<name2>' ect. corresponding to the
                                 `sections`.
 
@@ -379,23 +381,23 @@ def inventory_plugin(
     inventory_default_parameters: _ParametersTypeAlias | None = None,
     inventory_ruleset_name: str | None = None,
 ) -> None:
-    """Register an inventory plugin to checkmk.
+    """Register an inventory plug-in to checkmk.
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the check plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
-      sections:                 An optional list of section names that this plugin subscribes to.
+      sections:                 An optional list of section names that this plug-in subscribes to.
                                 They correspond to the 'parsed_section_name' specified in
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the inventory plugin.
+                                a name equal to the name of the inventory plug-in.
 
       inventory_function:       The inventory_function. Arguments must be 'params' (if inventory
-                                parameters are defined) and 'section' (if the plugin subscribes
+                                parameters are defined) and 'section' (if the plug-in subscribes
                                 to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Attributes` or

@@ -28,7 +28,7 @@ public:
 
     void notify_all(Kind trigger);
 
-    template <class Rep, class Period, class Predicate>
+    template <typename Rep, typename Period, typename Predicate>
     void wait_for(Kind trigger,
                   const std::chrono::duration<Rep, Period> &rel_time,
                   Predicate pred) {

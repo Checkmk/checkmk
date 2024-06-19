@@ -1,0 +1,12 @@
+title: Bazel: Metrics Go
+agents: active
+catalog: agentless
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the Bazel Cache Go related metrics via the metrics endpoint.
+
+ The service is {OK} as long as data has been received from the endpoint.
+
+discovery:
+ One service is created.

@@ -34,13 +34,13 @@ description:
 
  - The number of idle servers
 
- The agent plugin {apache_status} fetches that data and this check processes it.
+ The agent plug-in {apache_status} fetches that data and this check processes it.
 
  The status is always {OK} but it fetches interesting performance data.
 
- As a preparation you need to install the agent plugin {apache_status}
+ As a preparation you need to install the agent plug-in {apache_status}
  into your agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).
- The plugin tries to autodetect all running apache servers. If that fails
+ The plug-in tries to autodetect all running apache servers. If that fails
  for some reason you need to create the configuration file
  {/etc/check_mk/apache_status.cfg} and list your servers here. Write
  a Python list of dicts for protocol, servername and port.

@@ -8,22 +8,24 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
     parse_wmi_table,
-    wmi_yield_raw_persec,
+    wmi_yield_raw_counter,
 )
 from cmk.base.config import check_info
 
 
 def check_wmi_webservices(item, params, parsed):
-    yield from wmi_yield_raw_persec(
+    yield from wmi_yield_raw_counter(
         parsed[""], item, "CurrentConnections", infoname="Connections", perfvar="connections"
     )
+
+
+def discover_wmi_webservices(p):
+    return inventory_wmi_table_instances(p)
 
 
 check_info["wmi_webservices"] = LegacyCheckDefinition(
     parse_function=parse_wmi_table,
     service_name="Web Service %s",
-    discovery_function=lambda p: inventory_wmi_table_instances(  # pylint: disable=unnecessary-lambda
-        p
-    ),
+    discovery_function=discover_wmi_webservices,
     check_function=check_wmi_webservices,
 )

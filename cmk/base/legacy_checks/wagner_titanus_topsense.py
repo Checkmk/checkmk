@@ -6,16 +6,17 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, StringTable
 
 
-def parse_wagner_titanus_topsense(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
-    return string_table
+def parse_wagner_titanus_topsense(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable] | None:
+    return string_table if string_table[0] else None
 
 
 check_info["wagner_titanus_topsense"] = LegacyCheckDefinition(
@@ -86,13 +87,13 @@ def parse_wagner_titanus_topsens(info):
 
 
 def inventory_wagner_titanus_topsense_info(info):
-    return [(None, None)]
+    yield None, {}
 
 
 def check_wagner_titanus_topsense_info(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
     message = "System: " + parsed[0][0][0]
-    message += ", Uptime: " + get_age_human_readable(int(parsed[0][0][1]) // 100)
+    message += ", Uptime: " + render.timespan(int(parsed[0][0][1]) // 100)
     message += ", System Name: " + parsed[0][0][3]
     message += ", System Contact: " + parsed[0][0][2]
     message += ", System Location: " + parsed[0][0][4]
@@ -131,7 +132,7 @@ check_info["wagner_titanus_topsense.info"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_overall_status(info):
-    return [(None, None)]
+    yield None, {}
 
 
 def check_wagner_titanus_topsense_overall_status(item, _no_params, info):
@@ -166,7 +167,8 @@ check_info["wagner_titanus_topsense.overall_status"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_alarm(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_alarm(item, _no_params, info):
@@ -216,7 +218,8 @@ check_info["wagner_titanus_topsense.alarm"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_smoke(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_smoke(item, _no_params, info):
@@ -258,7 +261,8 @@ check_info["wagner_titanus_topsense.smoke"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_chamber_deviation(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
@@ -294,10 +298,8 @@ check_info["wagner_titanus_topsense.chamber_deviation"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_airflow_deviation(info):
-    return [
-        ("1", {}),
-        ("2", {}),
-    ]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
@@ -342,7 +344,8 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_temp(info):
-    return [("Ambient 1", {}), ("Ambient 2", {})]
+    yield "Ambient 1", {}
+    yield "Ambient 2", {}
 
 
 def check_wagner_titanus_topsense_temp(item, params, info):

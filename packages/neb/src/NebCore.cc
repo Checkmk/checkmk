@@ -511,31 +511,29 @@ bool NebCore::isPnpGraphPresent(const IService &s) const {
                             s.description()) != 0;
 }
 
-std::vector<std::string> NebCore::metrics(const IHost &h,
-                                          Logger *logger) const {
-    std::vector<std::string> metrics;
-    if (!h.name().empty()) {
-        auto names = scan_rrd(paths()->rrd_multiple_directory() / h.name(),
-                              dummy_service_description(), logger);
-        std::transform(std::begin(names), std::end(names),
-                       std::back_inserter(metrics),
-                       [](auto &&m) { return m.string(); });
+namespace {
+std::vector<std::string> toMetrics(const std::string &host_name,
+                                   const std::string &description,
+                                   const IPaths &paths, Logger *logger) {
+    if (host_name.empty() || description.empty()) {
+        return {};
     }
-    return metrics;
-}
-
-std::vector<std::string> NebCore::metrics(const IService &s,
-                                          Logger *logger) const {
     std::vector<std::string> metrics;
-    if (s.host_name().empty() || s.description().empty()) {
-        return metrics;
-    }
-    auto names = scan_rrd(paths()->rrd_multiple_directory() / s.host_name(),
-                          s.description(), logger);
+    auto names = scan_rrd(paths.rrd_multiple_directory() / host_name,
+                          description, logger);
     std::transform(std::begin(names), std::end(names),
                    std::back_inserter(metrics),
                    [](auto &&m) { return m.string(); });
     return metrics;
+}
+}  // namespace
+
+std::vector<std::string> NebCore::metrics(const IHost &h) const {
+    return toMetrics(h.name(), dummy_service_description(), *paths(), _logger);
+}
+
+std::vector<std::string> NebCore::metrics(const IService &s) const {
+    return toMetrics(s.host_name(), s.description(), *paths(), _logger);
 }
 
 namespace {
@@ -620,7 +618,7 @@ bool NebCore::pnp4nagiosEnabled() const {
 }
 
 void NebCore::logRequest(const std::string &line,
-                         const std::list<std::string> &lines) {
+                         const std::vector<std::string> &lines) {
     Informational log(_logger);
     log << "request: " << line;
     if (_logger->isLoggable(LogLevel::debug)) {
@@ -642,7 +640,7 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
             std::ostringstream os;
-            os << "client connection terminated: " << res;
+            os << "terminating client connection: " << res;
             output.setError(OutputBuffer::ResponseCode::incomplete_request,
                             os.str());
         }
@@ -665,9 +663,10 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
         return true;
     }
     logRequest(line, {});
-    Warning(_logger) << "Invalid request '" << line << "'";
+    Warning(_logger) << "terminating client connection: invalid request '"
+                     << line << "'";
     output.setError(OutputBuffer::ResponseCode::invalid_request,
-                    "Invalid request method");
+                    "terminating client connection: invalid request method");
     return false;
 }
 

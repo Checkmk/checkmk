@@ -60,14 +60,10 @@ checks = {
             "mysql",
             {},
             [
-                (
-                    0,
-                    "Slave-IO: running, Relay Log: 89.4 MiB, Slave-SQL: running, Time behind Master: 0 seconds",
-                    [
-                        ("relay_log_space", 93709799, None, None, None, None),
-                        ("sync_latency", 0, None, None, None, None),
-                    ],
-                )
+                (0, "Slave-IO: running", []),
+                (0, "Relay log: 89.4 MiB", [("relay_log_space", 93709799)]),
+                (0, "Slave-SQL: running", []),
+                (0, "Time behind master: 0 seconds", [("sync_latency", 0)]),
             ],
         )
     ]

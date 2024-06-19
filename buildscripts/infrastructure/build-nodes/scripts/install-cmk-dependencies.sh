@@ -8,7 +8,7 @@
 
 set -e -o pipefail
 
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 if [ "$DISTRO" = "cma-3" ] || [ "$DISTRO" = "cma-4" ]; then
     # As there are no system tests for the appliance, an installation of CMK
     # dependencies is not required
@@ -31,7 +31,6 @@ add_gpg_key() {
 
 cleanup() {
     rm -f "$TARGET_DIR"/needed-packages
-    rm -rf /var/lib/apt/lists/*
 }
 
 extract_needed_packages

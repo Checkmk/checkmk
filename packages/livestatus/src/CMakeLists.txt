@@ -57,6 +57,7 @@ set(livestatus_headers
     ${header_location}/overload.h
     ${header_location}/ParsedQuery.h
     ${header_location}/PerfdataAggregator.h
+    ${header_location}/PerformanceData.h
     ${header_location}/PnpUtils.h
     ${header_location}/Poller.h
     ${header_location}/POSIXUtils.h
@@ -149,6 +150,7 @@ set(livestatus_sources
     OutputBuffer.cc
     ParsedQuery.cc
     PerfdataAggregator.cc
+    PerformanceData.cc
     PnpUtils.cc
     POSIXUtils.cc
     Query.cc

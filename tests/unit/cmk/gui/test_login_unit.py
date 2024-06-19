@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 from __future__ import annotations
 
 from base64 import b64encode
@@ -12,9 +14,8 @@ import flask
 import pytest
 from werkzeug.test import create_environ
 
-from tests.testlib.users import create_and_destroy_user
-
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.users import create_and_destroy_user
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.user import UserId
@@ -36,7 +37,9 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
 
 
-def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK) -> None:
+def test_login_two_factor_redirect(
+    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
+) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
         "registered_at": 0,
@@ -56,7 +59,9 @@ def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK) -> None:
         assert resp.location.startswith("user_login_two_factor.py")
 
 
-def test_login_forced_password_change(wsgi_app: WebTestAppForCMK) -> None:
+def test_login_forced_password_change(
+    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
+) -> None:
     custom_attrs: UserSpec = {
         "enforce_pw_change": True,
     }
@@ -66,7 +71,9 @@ def test_login_forced_password_change(wsgi_app: WebTestAppForCMK) -> None:
         assert resp.location.startswith("user_change_pw.py")
 
 
-def test_login_two_factor_has_precedence_over_password_change(wsgi_app: WebTestAppForCMK) -> None:
+def test_login_two_factor_has_precedence_over_password_change(
+    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
+) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
         "registered_at": 0,
@@ -91,6 +98,7 @@ def test_login_with_cookies(
     with_user: tuple[UserId, str],
     flask_app: flask.Flask,
     mock_livestatus: MockLiveStatusConnection,
+    patch_theme: None,
 ) -> None:
     with flask_app.app_context():
         client = flask_app.test_client(use_cookies=True)
@@ -113,11 +121,8 @@ def test_login_with_cookies(
         response = client.get("/NO_SITE/check_mk/index.py")
         assert response.status_code == 200
 
-        if client.cookie_jar is None:
-            assert False, "Cookie Jar is surprisingly empty."
-
-        test_environ = create_environ("/", method="GET")
-        client.cookie_jar.inject_wsgi(test_environ)
+        test_environ = create_environ("/NO_SITE/", method="GET")
+        client._add_cookies_to_wsgi(test_environ)
 
         # request context with cookie yields a user
         with flask_app.request_context(test_environ):
@@ -134,7 +139,7 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Bearer {with_user[0]} {with_user[1]}"}
     ):
-        assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
         assert session.user.id == with_user[0]
 
 
@@ -143,7 +148,7 @@ def test_login_with_basic_auth(with_user: tuple[UserId, str], flask_app: flask.F
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Basic {token}"}
     ):
-        assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
         assert session.user.id == with_user[0]
 
 
@@ -153,7 +158,7 @@ def test_login_with_webserver(with_user: tuple[UserId, str], flask_app: flask.Fl
         method="GET",
         environ_overrides={"REMOTE_USER": with_user[0]},
     ):
-        assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
         assert session.user.id == with_user[0]
 
 
@@ -236,7 +241,7 @@ def fixture_current_cookie(with_user: tuple[UserId, str], session_id: str) -> It
     cookie_name = auth_cookie_name()
     cookie_value = auth_cookie_value(user_id, session_id)
 
-    environ = dict(create_environ(), HTTP_COOKIE=f"{cookie_name}={cookie_value}".encode())
+    environ = {**create_environ(), "HTTP_COOKIE": f"{cookie_name}={cookie_value}"}
 
     with application_and_request_context(environ):
         load_config()

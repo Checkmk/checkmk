@@ -9,7 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import SNMPTree, startswith
 
 
 def parse_bluenet_meter(string_table):
@@ -30,7 +31,7 @@ def discover_bluenet_meter(section):
 
 
 check_info["bluenet_meter"] = LegacyCheckDefinition(
-    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21695.1.10.7.2.1",
         oids=["1", "5", "7", "8", "9"],

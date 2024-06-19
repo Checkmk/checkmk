@@ -14,14 +14,14 @@ from cmk.base.check_legacy_includes.jolokia import (
     jolokia_metrics_parse,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
     GetRateError,
     IgnoreResultsError,
+    StringTable,
 )
-
-from cmk.agent_based.v2.type_defs import StringTable
 
 # Example output from agent:
 # <<<jolokia_metrics>>>
@@ -252,26 +252,37 @@ def check_jolokia_metrics_bea_queue(item, params, info):
     )
 
 
-# FIXME: This check could work with any JVM
-# It has no levels
-# A candidate for 1.2.1 overhaul
-def check_jolokia_metrics_bea_requests(item, _no_params, info):
-    app = jolokia_metrics_app(info, item.split())
-    if not app:
+def check_request_count(item, info, value_store):
+    """
+    "CompletedRequestCount" and "requestCount" are specifically queried by our agent,
+    (see the constant QUERY_SPECS_SPECIFIC_LEGACY).
+
+    CompletedRequestCount -> weblogic of BEA system; it is the total number of requests
+    (https://docs.oracle.com/middleware/1213/wls/WLMBR/core/index.html)
+
+    requestCount -> tomcat servers; it is per second
+    (https://docs.tibco.com/pub/sftm/6.0.0/doc/html/GUID-5738EB01-D159-4D0D-9F3B-22663B2D6756.html)
+    """
+
+    if not (app := jolokia_metrics_app(info, item.split())):
         return
 
-    for nk in ["CompletedRequestCount", "requestCount"]:
-        if nk in app:
-            requests = int(app[nk])
-            rate = get_rate(
-                get_value_store(),
-                "j4p.bea.requests.%s" % item,
-                time.time(),
-                requests,
-                raise_overflow=True,
-            )
-            yield 0, "%.2f requests/sec" % rate, [("rate", rate)]
-            return
+    if (completed_request_count := app.get("CompletedRequestCount")) is not None:
+        rate = get_rate(
+            value_store,
+            "j4p.bea.requests.%s" % item,
+            time.time(),
+            int(completed_request_count),
+            raise_overflow=True,
+        )
+        yield 0, "%.2f requests/sec" % rate, [("rate", rate)]
+
+    elif (request_count := app.get("requestCount")) is not None:
+        yield 0, "%.2f requests/sec" % int(request_count), [("rate", int(request_count))]
+
+
+def check_jolokia_metrics_bea_requests(item, _no_params, info):
+    yield from check_request_count(item, info, get_value_store())
 
 
 def check_jolokia_metrics_bea_threads(item, _no_params, info):
@@ -408,69 +419,111 @@ def check_jolokia_metrics_cache(metrics, totals, item, info):
         pass
 
 
+def discover_jolokia_metrics_cache_hits(info):
+    return inventory_jolokia_metrics_cache(
+        ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info
+    )
+
+
+def check_jolokia_metrics_cache_hits(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
+        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, parsed
+    )
+
+
 check_info["jolokia_metrics.cache_hits"] = LegacyCheckDefinition(
     service_name="JVM %s Cache Usage",
     sections=["jolokia_metrics"],
-    discovery_function=lambda info: inventory_jolokia_metrics_cache(
-        ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info
-    ),
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
-        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, parsed
-    ),
+    discovery_function=discover_jolokia_metrics_cache_hits,
+    check_function=check_jolokia_metrics_cache_hits,
 )
 
-check_info["jolokia_metrics.in_memory"] = LegacyCheckDefinition(
-    service_name="JVM %s In Memory",
-    sections=["jolokia_metrics"],
-    discovery_function=lambda info: inventory_jolokia_metrics_cache(
+
+def discover_jolokia_metrics_in_memory(info):
+    return inventory_jolokia_metrics_cache(
         ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"],
         info,
-    ),
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
+    )
+
+
+def check_jolokia_metrics_in_memory(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
         ["InMemoryHitPercentage", "MemoryStoreObjectCount"],
         ["InMemoryHits", "InMemoryMisses"],
         item,
         parsed,
-    ),
+    )
+
+
+check_info["jolokia_metrics.in_memory"] = LegacyCheckDefinition(
+    service_name="JVM %s In Memory",
+    sections=["jolokia_metrics"],
+    discovery_function=discover_jolokia_metrics_in_memory,
+    check_function=check_jolokia_metrics_in_memory,
 )
 
-check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
-    service_name="JVM %s On Disk",
-    sections=["jolokia_metrics"],
-    discovery_function=lambda info: inventory_jolokia_metrics_cache(
+
+def discover_jolokia_metrics_on_disk(info):
+    return inventory_jolokia_metrics_cache(
         ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
         info,
-    ),
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
+    )
+
+
+def check_jolokia_metrics_on_disk(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
         ["OnDiskHitPercentage", "DiskStoreObjectCount"],
         ["OnDiskHits", "OnDiskMisses"],
         item,
         parsed,
-    ),
+    )
+
+
+check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
+    service_name="JVM %s On Disk",
+    sections=["jolokia_metrics"],
+    discovery_function=discover_jolokia_metrics_on_disk,
+    check_function=check_jolokia_metrics_on_disk,
 )
 
-check_info["jolokia_metrics.off_heap"] = LegacyCheckDefinition(
-    service_name="JVM %s Off Heap",
-    sections=["jolokia_metrics"],
-    discovery_function=lambda info: inventory_jolokia_metrics_cache(
+
+def discover_jolokia_metrics_off_heap(info):
+    return inventory_jolokia_metrics_cache(
         ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"],
         info,
-    ),
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
+    )
+
+
+def check_jolokia_metrics_off_heap(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
         ["OffHeapHitPercentage", "OffHeapStoreObjectCount"],
         ["OffHeapHits", "OffHeapMisses"],
         item,
         parsed,
-    ),
+    )
+
+
+check_info["jolokia_metrics.off_heap"] = LegacyCheckDefinition(
+    service_name="JVM %s Off Heap",
+    sections=["jolokia_metrics"],
+    discovery_function=discover_jolokia_metrics_off_heap,
+    check_function=check_jolokia_metrics_off_heap,
 )
+
+
+def discover_jolokia_metrics_writer(info):
+    return inventory_jolokia_metrics_cache(["WriterQueueLength", "WriterMaxQueueSize"], info)
+
+
+def check_jolokia_metrics_writer(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
+        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, parsed
+    )
+
 
 check_info["jolokia_metrics.writer"] = LegacyCheckDefinition(
     service_name="JVM %s Cache Writer",
     sections=["jolokia_metrics"],
-    discovery_function=lambda info: inventory_jolokia_metrics_cache(
-        ["WriterQueueLength", "WriterMaxQueueSize"], info
-    ),
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
-        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, parsed
-    ),
+    discovery_function=discover_jolokia_metrics_writer,
+    check_function=check_jolokia_metrics_writer,
 )

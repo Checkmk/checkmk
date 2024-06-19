@@ -8,7 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 
 def format_nvidia_name(identifier):
@@ -46,19 +46,28 @@ check_info["nvidia"] = LegacyCheckDefinition(
 )
 
 
+def discover_nvidia_temp(info):
+    return inventory_nvidia_temp(False, info)
+
+
 check_info["nvidia.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     sections=["nvidia"],
-    discovery_function=lambda info: inventory_nvidia_temp(False, info),
+    discovery_function=discover_nvidia_temp,
     check_function=check_nvidia_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (60.0, 65.0)},
 )
 
+
+def discover_nvidia_temp_core(info):
+    return inventory_nvidia_temp(True, info)
+
+
 check_info["nvidia.temp_core"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     sections=["nvidia"],
-    discovery_function=lambda info: inventory_nvidia_temp(True, info),
+    discovery_function=discover_nvidia_temp_core,
     check_function=check_nvidia_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (90.0, 95.0)},

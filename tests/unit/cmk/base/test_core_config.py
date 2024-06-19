@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import shutil
 from collections.abc import Mapping
 from pathlib import Path
@@ -15,25 +17,19 @@ from tests.testlib.base import Scenario
 import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
+from cmk.utils import ip_lookup, password_store
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.labels import Labels
-from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters
 
-import cmk.base.config as config
-import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
+from cmk.base import config, core_config
 from cmk.base.config import ConfigCache, ObjectAttributes
-from cmk.base.core_config import (
-    CollectedHostLabels,
-    get_labels_from_attributes,
-    read_notify_host_file,
-    write_notify_host_file,
-)
+from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
 from cmk.base.core_factory import create_core
 
 
@@ -51,16 +47,65 @@ def fixture_core_scenario(monkeypatch):
     ts = Scenario()
     ts.add_host(HostName("test-host"))
     ts.set_option("ipaddresses", {"test-host": "127.0.0.1"})
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "norris": [
+                {
+                    "value": {
+                        "description": "My active check",
+                        "oh-god-this-is-nested": {"password": ("explicit", "p4ssw0rd!")},
+                    },
+                    "condition": {},
+                    "id": "1",
+                }
+            ]
+        },
+    )
     return ts.apply(monkeypatch)
 
 
-def test_do_create_config_nagios(core_scenario: ConfigCache) -> None:
+def test_do_create_config_nagios(
+    core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
+    ip_address_of = config.ConfiguredIPLookup(
+        core_scenario, error_handler=ip_lookup.CollectFailedHosts()
+    )
     core_config.do_create_config(
-        create_core("nagios"), core_scenario, all_hosts=[HostName("test-host")], duplicates=()
+        create_core("nagios"),
+        core_scenario,
+        ip_address_of,
+        all_hosts=[HostName("test-host")],
+        duplicates=(),
     )
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
+
+
+def test_do_create_config_nagios_collects_passwords(
+    core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
+    ip_address_of = config.ConfiguredIPLookup(
+        core_scenario, error_handler=ip_lookup.CollectFailedHosts()
+    )
+
+    password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())
+
+    core_store = password_store.core_password_store_path(LATEST_CONFIG)
+    assert not password_store.load(core_store)
+
+    core_config.do_create_config(
+        create_core("nagios"),
+        core_scenario,
+        ip_address_of,
+        all_hosts=[HostName("test-host")],
+        duplicates=(),
+    )
+
+    assert password_store.load(core_store) == passwords
 
 
 def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
@@ -103,7 +148,13 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     if cmk_version.edition() is cmk_version.Edition.CME:
         expected_attrs["_CUSTOMER"] = "provider"
 
-    assert config_cache.get_host_attributes(HostName("test-host")) == expected_attrs
+    assert (
+        config_cache.get_host_attributes(
+            HostName("test-host"),
+            config.ConfiguredIPLookup(config_cache, error_handler=config.handle_ip_lookup_failure),
+        )
+        == expected_attrs
+    )
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -227,9 +278,15 @@ def test_template_translation(
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.translate_commandline(
-        hostname, ipaddress, template
-    ) == "<NOTHING>x{}x{}x<host>x<ip>x".format(ipaddress if ipaddress is not None else "", hostname)
+    assert (
+        config_cache.translate_commandline(
+            hostname,
+            ipaddress,
+            template,
+            config.ConfiguredIPLookup(config_cache, error_handler=config.handle_ip_lookup_failure),
+        )
+        == f"<NOTHING>x{ipaddress or ''}x{hostname}x<host>x<ip>x"
+    )
 
 
 @pytest.mark.parametrize(
@@ -261,49 +318,31 @@ def test_get_labels_from_attributes(attributes: dict[str, str], expected: Labels
 
 
 @pytest.mark.parametrize(
-    "versioned_config_path, host_name, host_labels, expected",
+    "attributes, expected",
     [
         pytest.param(
-            VersionedConfigPath(1),
-            "horsthost",
-            CollectedHostLabels(
-                host_labels={"owe": "owe"},
-                service_labels={
-                    "svc": {"lbl": "blub"},
-                    "svc2": {},
-                },
-            ),
-            CollectedHostLabels(
-                host_labels={"owe": "owe"},
-                service_labels={"svc": {"lbl": "blub"}},
-            ),
-        )
+            {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__LABEL_ding": "dong",
+                "__LABEL_cmk/site": "NO_SITE",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABELSOURCE_ding": "explicit",
+                "address": "0.0.0.0",
+                "alias": "test-host",
+            },
+            {
+                "piggyback": "auto-piggyback",
+                "site": "unit",
+                "snmp_ds": "no-snmp",
+            },
+        ),
     ],
 )
-def test_write_and_read_notify_host_file(
-    versioned_config_path: VersionedConfigPath,
-    host_name: HostName,
-    host_labels: CollectedHostLabels,
-    expected: CollectedHostLabels,
-    monkeypatch: MonkeyPatch,
+def test_get_tags_with_groups_from_attributes(
+    attributes: dict[str, str], expected: dict[TagGroupID, TagID]
 ) -> None:
-    notify_labels_path: Path = Path(versioned_config_path) / "notify" / "labels"
-    monkeypatch.setattr(
-        cmk.base.core_config,
-        "_get_host_file_path",
-        lambda config_path: notify_labels_path,
-    )
-
-    write_notify_host_file(
-        versioned_config_path,
-        {host_name: host_labels},
-    )
-
-    assert notify_labels_path.exists()
-
-    monkeypatch.setattr(
-        cmk.base.core_config,
-        "_get_host_file_path",
-        lambda host_name: notify_labels_path / host_name,
-    )
-    assert read_notify_host_file(host_name) == expected
+    assert get_tags_with_groups_from_attributes(list(attributes.items())) == expected

@@ -3,47 +3,15 @@
 /// file: test-python3-typing.groovy
 
 def main() {
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+
     dir("${checkout_dir}") {
-        stage("Execute Test") {
-            // catch any error, set stage + build result to failure,
-            // but continue in order to execute the publishIssues function
-            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                sh("""
-                    MYPY_ADDOPTS='--cobertura-xml-report=$checkout_dir/mypy_reports --html-report=$checkout_dir/mypy_reports/html' \
-                    make -C tests test-mypy-docker
-                   """);
-            }
-        }
+        test_jenkins_helper.execute_test([
+            name: "test-mypy-docker",
+            cmd: "MYPY_ADDOPTS='--no-color-output --junit-xml mypy.xml' make -C tests test-mypy-docker",
+        ]);
 
-        stage("Archive reports") {
-            show_duration("archiveArtifacts") {
-                archiveArtifacts(artifacts: "mypy_reports/**");
-            }
-        }
-
-        stage("Analyse Issues") {
-            publishIssues(
-                issues:[scanForIssues(tool: clang())],
-                trendChartType: 'TOOLS_ONLY',
-                qualityGates: [[
-                    threshold: 1,
-                    type: 'TOTAL',
-                    unstable: false,
-                ]]
-            )
-        }
-
-        stage("Publish coverage") {
-            publishHTML([
-                allowMissing: false,
-                alwaysLinkToLastBuild: false,
-                keepAll: true,
-                reportDir: 'mypy_reports/html',
-                reportFiles: 'index.html',
-                reportName: 'Typing coverage',
-                reportTitles: '',
-            ])
-        }
+        test_jenkins_helper.analyse_issues("MYPY", "mypy.xml");
     }
 }
 

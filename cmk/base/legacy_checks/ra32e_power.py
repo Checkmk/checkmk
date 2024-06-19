@@ -6,16 +6,14 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.ra32e import DETECT_RA32E
 
 
-def inventory_ra32e_power(info):
-    if info[0][0]:
-        return [(None, {})]
-    return None
+def discover_ra32e_power(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0]:
+        yield Service()
 
 
 def check_ra32e_power(item, params, info):
@@ -40,6 +38,6 @@ check_info["ra32e_power"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="Power Supply",
-    discovery_function=inventory_ra32e_power,
+    discovery_function=discover_ra32e_power,
     check_function=check_ra32e_power,
 )

@@ -41,5 +41,5 @@ def main(job_definition_file) {
         }
     }
 }
-return this;
 
+return this;

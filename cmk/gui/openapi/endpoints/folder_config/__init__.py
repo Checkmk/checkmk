@@ -41,10 +41,11 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER_PATTERN
 from cmk.gui.openapi.endpoints.folder_config.request_schemas import (
     BulkUpdateFolder,
     CreateFolder,
-    EXISTING_FOLDER_PATTERN,
+    DeleteModeField,
     MoveFolder,
     UpdateFolder,
 )
@@ -55,9 +56,11 @@ from cmk.gui.openapi.endpoints.host_config.response_schemas import (
     HostConfigCollection,
 )
 from cmk.gui.openapi.endpoints.utils import folder_slug
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
 
 from cmk import fields
@@ -74,6 +77,8 @@ PATH_FOLDER_FIELD = {
         pattern=EXISTING_FOLDER_PATTERN,
     )
 }
+
+FORCE_PARAM = {DeleteModeField.field_name(): DeleteModeField()}
 
 RW_PERMISSIONS = permissions.AllPerm(
     [
@@ -184,7 +189,7 @@ def update(params: Mapping[str, Any]) -> Response:
                 f"not be removed: {', '.join(faulty_attributes)}",
             )
 
-    folder.edit(folder.title() if not "title" in post_body else post_body["title"], attributes)
+    folder.edit(folder.title() if "title" not in post_body else post_body["title"], attributes)
 
     return _serve_folder(folder)
 
@@ -213,7 +218,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     faulty_folders = []
     for update_details in entries:
         folder: Folder = update_details["folder"]
-        title = folder.title() if not "title" in update_details else update_details["title"]
+        title = folder.title() if "title" not in update_details else update_details["title"]
         attributes = folder.attributes.copy()
 
         if replace_attributes := update_details.get("attributes"):
@@ -254,13 +259,15 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="delete",
     path_params=[PATH_FOLDER_FIELD],
+    query_params=[FORCE_PARAM],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[401],
+    additional_status_codes=[401, 409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a folder"""
     user.need_permission("wato.edit")
+
     folder: Folder = params["folder"]
     if (parent := folder.parent()) is None:
         raise ProblemException(
@@ -268,7 +275,16 @@ def delete(params: Mapping[str, Any]) -> Response:
             detail="Deleting the root folder is not permitted.",
             status=401,
         )
+
+    if (params["delete_mode"] != "recursive") and (not folder.is_empty() or folder.is_referenced()):
+        raise ProblemException(
+            title="Problem deleting folder.",
+            detail="Folder is not empty or is referenced by another object. Use the force parameter to delete it.",
+            status=409,
+        )
+
     parent.delete_subfolder(folder.name())
+
     return Response(status=204)
 
 
@@ -355,10 +371,10 @@ def list_folders(params: Mapping[str, Any]) -> Response:
     return serve_json(_folders_collection(folders, params["show_hosts"]))
 
 
-def _folders_collection(  # type: ignore[no-untyped-def]
+def _folders_collection(
     folders: list[Folder],
     show_hosts: bool,
-):
+) -> CollectionObject:
     folders_ = []
     for folder in folders:
         members = {}
@@ -388,6 +404,7 @@ def _folders_collection(  # type: ignore[no-untyped-def]
                 members=members,
             )
         )
+    #
     return constructors.collection_object(
         domain_type="folder_config",
         value=folders_,
@@ -423,10 +440,10 @@ def show_folder(params: Mapping[str, Any]) -> Response:
     return _serve_folder(folder, show_hosts=params["show_hosts"])
 
 
-def _serve_folder(  # type: ignore[no-untyped-def]
-    folder,
-    profile=None,
-    show_hosts=False,
+def _serve_folder(
+    folder: Folder,
+    profile: dict[str, str] | None = None,
+    show_hosts: bool = False,
 ) -> Response:
     folder_json = _serialize_folder(folder, show_hosts)
     response = serve_json(folder_json, profile=profile)
@@ -434,7 +451,7 @@ def _serve_folder(  # type: ignore[no-untyped-def]
     return response
 
 
-def _serialize_folder(folder: Folder, show_hosts):  # type: ignore[no-untyped-def]
+def _serialize_folder(folder: Folder, show_hosts: bool) -> DomainObject:
     links = []
 
     if not folder.is_root():

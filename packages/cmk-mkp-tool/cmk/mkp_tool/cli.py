@@ -37,6 +37,7 @@ from ._unsorted import (
     install,
     PackageStore,
     release,
+    remove_files,
     update_active_packages,
 )
 
@@ -82,6 +83,7 @@ def partial(wrappee: _SiteExclusiveHandlerFunction, site_context: SiteContext) -
     ) -> int:
         return wrappee(site_context, args, path_config, persisting_function)
 
+    wrapped.__doc__ = wrappee.__doc__
     return wrapped
 
 
@@ -106,6 +108,7 @@ def partial_opt(
     ) -> int:
         return wrappee(site_context, args, path_config, persisting_function)
 
+    wrapped.__doc__ = wrappee.__doc__
     return wrapped
 
 
@@ -575,6 +578,7 @@ def _args_template(
 
 
 def _command_template(
+    site_context: SiteContext | None,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -590,6 +594,7 @@ def _command_template(
     package = manifest_template(
         name=args.name,
         version_packaged=_VERSION_STR,
+        version_required=site_context.version if site_context else "",
         files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
     )
 
@@ -661,6 +666,12 @@ def _command_package(
     )
     _logger.info("Successfully wrote package file")
 
+    _logger.info("Removing packaged files before reinstalling...")
+    # remove the files, so that we can "properly" install the package.
+    # Installing calls hooks and fixes permissions, we want that.
+    for err in remove_files(package, {}, path_config):
+        _logger.info(err)
+
     installer = Installer(path_config.installed_packages_dir)
     try:
         installed = install(
@@ -716,7 +727,12 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
 
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
-    _add_command(subparsers, "template", _args_template, _command_template)
+    _add_command(
+        subparsers,
+        "template",
+        _args_template,
+        partial_opt(_command_template, site_context),
+    )
     _add_command(
         subparsers,
         "package",

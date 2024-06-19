@@ -73,10 +73,10 @@ def get_license_state() -> LicenseState:
     return _make_licensing_handler().state
 
 
-def get_remaining_trial_time() -> RemainingTrialTime:
+def get_remaining_trial_time_rounded() -> RemainingTrialTime:
     handler = _make_licensing_handler()
     if handler.state is LicenseState.TRIAL:
-        return handler.remaining_trial_time
+        return handler.remaining_trial_time_rounded
     raise LicenseStateError(
         "Remaining trial time requested for non trial license state: %s" % str(handler.state)
     )

@@ -18,8 +18,6 @@ from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
     cli,
     make_post_package_change_actions,
-    PackageOperationCallbacks,
-    PackagePart,
     PackageStore,
     PathConfig,
     reload_apache,
@@ -56,20 +54,9 @@ _SITE_CONTEXT: Final = cli.SiteContext(
         local_dir=cmk.utils.paths.local_optional_packages_dir,
         shipped_dir=cmk.utils.paths.optional_packages_dir,
     ),
-    callbacks={
-        PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
-            install=ec.install_packaged_rule_packs,
-            uninstall=ec.uninstall_packaged_rule_packs,
-            release=ec.release_packaged_rule_packs,
-        ),
-    },
+    callbacks=ec.mkp_callbacks(),
     post_package_change_actions=make_post_package_change_actions(
-        ((PackagePart.GUI, PackagePart.WEB), reload_apache),
-        ((PackagePart.GUI, PackagePart.WEB), invalidate_visuals_cache),
-        (
-            (PackagePart.GUI, PackagePart.WEB, PackagePart.EC_RULE_PACKS),
-            request_index_rebuild,
-        ),
+        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
     ),
     version=__version__,
     parse_version=parse_check_mk_version,

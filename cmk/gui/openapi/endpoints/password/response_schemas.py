@@ -11,22 +11,14 @@ from cmk import fields
 
 
 class PasswordExtension(BaseSchema):
-    ident = fields.String(
-        example="pass",
-        description="The unique identifier for the password",
-    )
-    title = fields.String(
-        example="Kubernetes login",
-        description="The title for the password",
-    )
     comment = fields.String(
         example="Kommentar",
-        description="A comment for the password",
+        description="An optional comment to explain the purpose of this password.",
     )
     documentation_url = fields.String(
         example="localhost",
         attribute="docu_url",
-        description="The URL pointing to documentation or any other page.",
+        description="A URL pointing to documentation or any other page.",
     )
     owned_by = fields.String(
         example="admin",
@@ -36,11 +28,11 @@ class PasswordExtension(BaseSchema):
     shared = fields.List(
         fields.String(
             example="all",
-            description="The member the password is shared with",
+            description="By default only the members of the owner contact group are permitted to use a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
         ),
         example=["all"],
         attribute="shared_with",
-        description="The list of members the password is shared with",
+        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
     )
     customer = gui_fields.customer_field(
         required=True,

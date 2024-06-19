@@ -11,11 +11,20 @@ import itertools
 import time
 import typing
 
-import feedparser  # type: ignore[import]
+import feedparser  # type: ignore[import-untyped]
 import pydantic
 from pydantic import ConfigDict
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State, type_defs
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.aws import constants as aws_constants
 
 
@@ -113,7 +122,7 @@ class Section:
     aws_rss_feed: AWSRSSFeed
 
 
-def parse_string_table(string_table: type_defs.StringTable) -> Section:
+def parse_string_table(string_table: StringTable) -> Section:
     agent_output = AgentOutput.model_validate_json(string_table[0][0])
     return Section(
         discovery_param=agent_output.discovery_param,
@@ -134,13 +143,13 @@ agent_section_aws_status = AgentSection(
 )
 
 
-def discover_aws_status(section: Section) -> type_defs.DiscoveryResult:
+def discover_aws_status(section: Section) -> DiscoveryResult:
     yield Service(item="Global")
     for region in section.discovery_param.regions:
         yield Service(item=AWS_REGIONS_MAP[region])
 
 
-def check_aws_status(item: str, section: Section) -> type_defs.CheckResult:
+def check_aws_status(item: str, section: Section) -> CheckResult:
     yield from _check_aws_status(datetime.datetime.now(tz=datetime.UTC), item, section.aws_rss_feed)
 
 
@@ -148,7 +157,7 @@ def _check_aws_status(
     current_time: datetime.datetime,
     item: str,
     rss_feed: AWSRSSFeed,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     entries_for_region = _restrict_to_region(rss_feed.entries, item)
     relevant_entries = _obtain_recent_entries(
         current_time,
@@ -200,7 +209,7 @@ def _group_by_service_identifier(entries: SortedEntries) -> list[SortedEntries]:
     ]
 
 
-def _check_aws_status_for_service(entries: SortedEntries) -> type_defs.CheckResult:
+def _check_aws_status_for_service(entries: SortedEntries) -> CheckResult:
     newest_entry = entries[0]
     yield Result(state=_state_from_entry(newest_entry), summary=newest_entry.title)
     for entry in entries:

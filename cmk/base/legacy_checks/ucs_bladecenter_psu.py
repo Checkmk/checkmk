@@ -6,10 +6,10 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.check_legacy_includes.temperature import check_temperature_list
+from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
 from cmk.base.config import check_info
 
-import cmk.plugins.lib.ucs_bladecenter as ucs_bladecenter
+from cmk.plugins.lib import ucs_bladecenter
 
 # <<<ucs_bladecenter_psu:sep(9)>>>
 # equipmentPsuInputStats  Dn sys/switch-A/psu-2/input-stats       Current 0.656250        PowerAvg 153.335938     Voltage 231.500000
@@ -158,17 +158,12 @@ def inventory_ucs_bladecenter_psu_chassis_temp(parsed):
 
 def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
     sensor_item = item[8:]  # drop "Ambient "
-    sensor_list = []
-
-    for key, values in sorted(parsed.items()):
-        if key.startswith(sensor_item) and "AmbientTemp" in values:
-            sensor_list.append(
-                (
-                    "Module %s" % key.split()[-1],
-                    float(values.get("AmbientTemp")),
-                )
-            )
-    return check_temperature_list(sensor_list, params, "ucs_bladecenter_psu_chassis_temp_%s" % item)
+    sensor_list: list[tuple[str, float, CheckTempKwargs]] = [
+        ("Module %s" % key.split()[-1], float(values.get("AmbientTemp")), {})
+        for key, values in sorted(parsed.items())
+        if key.startswith(sensor_item) and "AmbientTemp" in values
+    ]
+    yield from check_temperature_list(sensor_list, params)
 
 
 check_info["ucs_bladecenter_psu.chassis_temp"] = LegacyCheckDefinition(

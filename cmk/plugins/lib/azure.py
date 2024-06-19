@@ -10,8 +10,17 @@ from typing import Any, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from cmk.agent_based.v2 import check_levels_fixed, IgnoreResultsError, render, Service
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    Service,
+    ServiceLabel,
+    StringTable,
+)
+from cmk.plugins.lib.labels import custom_tags_to_valid_labels
 
 AZURE_AGENT_SEPARATOR = "|"
 
@@ -67,8 +76,22 @@ Section = Mapping[str, Resource]
 
 
 def parse_azure_datetime(datetime_string: str) -> datetime:
-    datetime_string = datetime_string.strip("Z").split(".")[0]
-    return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S")
+    """Return the datetime object from the parsed string.
+
+    >>> parse_azure_datetime("2022-02-02T12:00:00.000Z")
+    datetime.datetime(2022, 2, 2, 12, 0)
+
+    >>> parse_azure_datetime("2022-02-02T12:00:00.000")
+    datetime.datetime(2022, 2, 2, 12, 0)
+
+    >>> parse_azure_datetime("2022-02-02T12:00:00.123")
+    datetime.datetime(2022, 2, 2, 12, 0)
+
+    >>> parse_azure_datetime("2022-02-02T12:00:00")
+    datetime.datetime(2022, 2, 2, 12, 0)
+
+    """
+    return datetime.fromisoformat(datetime_string).replace(microsecond=0, tzinfo=None)
 
 
 #   .--Parse---------------------------------------------------------------.
@@ -103,7 +126,9 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
         )
 
 
-def _get_resource(resource: Mapping[str, Any], metrics=None):  # type: ignore[no-untyped-def]
+def _get_resource(
+    resource: Mapping[str, Any], metrics: Mapping[str, AzureMetric] | None = None
+) -> Resource:
     return Resource(
         resource["id"],
         resource["name"],
@@ -170,6 +195,11 @@ def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:
 #   +----------------------------------------------------------------------+
 
 
+def get_service_labels_from_resource_tags(tags: Mapping[str, str]) -> Sequence[ServiceLabel]:
+    labels = custom_tags_to_valid_labels(tags)
+    return [ServiceLabel(f"cmk/azure/tag/{key}", value) for key, value in labels.items()]
+
+
 def create_discover_by_metrics_function(
     *desired_metrics: str,
     resource_type: str | None = None,
@@ -181,7 +211,9 @@ def create_discover_by_metrics_function(
             if (resource_type is None or resource_type == resource.type) and (
                 set(desired_metrics) & set(resource.metrics)
             ):
-                yield Service(item=item)
+                yield Service(
+                    item=item, labels=get_service_labels_from_resource_tags(resource.tags)
+                )
 
     return discovery_function
 
@@ -203,7 +235,7 @@ def create_discover_by_metrics_function_single(
         if (resource_type is None or resource_type == resource.type) and (
             set(desired_metrics) & set(resource.metrics)
         ):
-            yield Service()
+            yield Service(labels=get_service_labels_from_resource_tags(resource.tags))
 
     return discovery_function
 
@@ -247,7 +279,7 @@ def check_resource_metrics(
         if not metric:
             continue
 
-        yield from check_levels_fixed(
+        yield from check_levels(
             metric.value,
             levels_upper=params.get(metric_data.upper_levels_param),
             levels_lower=params.get(metric_data.lower_levels_param),

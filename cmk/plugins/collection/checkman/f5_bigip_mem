@@ -10,7 +10,7 @@ description:
  check {mem.used}. Please refer to the man page of that check for details.
 
 item:
- The fixed statement {{total}}
+ The fixed statement {{total}} or {{TMM}}.
 
 discovery:
  One service is created for the target host.

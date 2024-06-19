@@ -16,6 +16,7 @@ from ._parser import (
     ParserFunction,
     SectionNameCollection,
 )
+from ._sectionstore import SectionStore
 from ._snmp import SNMPParser
 from ._utils import group_by_host
 
@@ -30,5 +31,6 @@ __all__ = [
     "Parser",
     "ParserFunction",
     "SectionNameCollection",
+    "SectionStore",
     "SNMPParser",
 ]

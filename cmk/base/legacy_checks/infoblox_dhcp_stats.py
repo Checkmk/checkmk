@@ -5,14 +5,10 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.infoblox import (
-    check_infoblox_statistics,
-    inventory_infoblox_statistics,
-)
+from cmk.base.check_legacy_includes.infoblox import check_infoblox_statistics
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.1.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfDiscovers.0
@@ -24,6 +20,10 @@ from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.7.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfDeclines.0
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.8.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfInforms.0
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.9.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfOthers.0
+
+
+def inventory_infoblox_statistics(info):
+    return [(None, None)]
 
 
 def check_infoblox_dhcp_stats(_no_item, _no_params, info):
@@ -47,8 +47,8 @@ def check_infoblox_dhcp_stats(_no_item, _no_params, info):
     )
 
 
-def parse_infoblox_dhcp_stats(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_infoblox_dhcp_stats(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["infoblox_dhcp_stats"] = LegacyCheckDefinition(

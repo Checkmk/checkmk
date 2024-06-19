@@ -3,13 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 
 import pytest
 
-import cmk.gui.permissions as permissions
+from tests.testlib.plugin_registry import reset_registries
+
+from cmk.gui import permissions
+from cmk.gui.permissions import permission_registry, permission_section_registry
 
 
+@pytest.fixture(name="reset_permission_registries")
+def fixture_reset_permission_registries() -> Iterator[None]:
+    """Fixture to reset registries to its default entries."""
+    with reset_registries([permission_registry, permission_section_registry]):
+        yield
+
+
+@pytest.mark.usefixtures("reset_permission_registries")
 def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
@@ -24,6 +35,7 @@ def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
     assert section.do_sort is False
 
 
+@pytest.mark.usefixtures("reset_permission_registries")
 def test_declare_permission(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()

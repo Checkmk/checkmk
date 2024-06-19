@@ -11,8 +11,8 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
-    get_secret_from_params,
     HostConfig,
+    replace_macros,
     Secret,
 )
 
@@ -22,17 +22,18 @@ class Params(BaseModel):
     hostname: str | None = None
     protocol: Literal["http", "https"] | None = None
     user: str | None = None
-    password: tuple[Literal["password", "store"], str] | None = None
+    password: Secret | None = None
     port: int | None = None
     index: list[str] | None = None
     pattern: str
     fieldname: list[str] | None = None
     timerange: int
-    count: tuple[int, int] | None = None
+    count: tuple[Literal["fixed"], int, int] | tuple[Literal["no_levels"], None] | None = None
 
 
 def commands_function(
-    params: Params, host_config: HostConfig, _http_proxies: object
+    params: Params,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:
     args: list[str | Secret] = ["-q", params.pattern, "-t", str(params.timerange)]
 
@@ -41,26 +42,25 @@ def commands_function(
     if params.user is not None:
         args += ["-u", params.user]
     if params.password is not None:
-        args += ["-s", get_secret_from_params(params.password[0], params.password[1])]
+        args += ["--password-id", params.password]
     if params.port is not None:
         args += ["-p", str(params.port)]
     if params.index:
         args += ["-i", " ".join(params.index)]
     if params.fieldname is not None:
         args += ["-f", " ".join(params.fieldname)]
-    if params.count is not None:
-        warn, crit = params.count
+    if params.count is not None and params.count[0] == "fixed":
+        _ty, warn, crit = params.count
         args += ["--warn=%d" % warn, "--crit=%d" % crit]
 
     if params.hostname is not None:
-        args += ["-H", params.hostname]
-    elif host_config.address:
-        args += ["-H", host_config.address]
+        args += ["-H", replace_macros(params.hostname, host_config.macros)]
     else:
-        raise ValueError("No IP address available")
+        args += ["-H", host_config.primary_ip_config.address]
 
+    item = replace_macros(params.svc_item, host_config.macros)
     yield ActiveCheckCommand(
-        service_description=f"Elasticsearch Query {params.svc_item}", command_arguments=args
+        service_description=f"Elasticsearch Query {item}", command_arguments=args
     )
 
 

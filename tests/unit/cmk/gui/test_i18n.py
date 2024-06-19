@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # pylint: disable=redefined-outer-name
 
 import gettext
@@ -12,11 +14,11 @@ from pathlib import Path
 import flask
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
 import cmk.utils.paths
 
-import cmk.gui.i18n as i18n
+from cmk.gui import i18n
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 
@@ -90,6 +92,7 @@ def test_underscore_without_localization(flask_app: flask.Flask) -> None:
         assert i18n.get_current_language() == "en"
         assert isinstance(i18n._("bla"), str)
         assert i18n._("bla") == "bla"
+        assert i18n._("") == ""
 
 
 def test_underscore_localization(flask_app: flask.Flask) -> None:
@@ -97,6 +100,7 @@ def test_underscore_localization(flask_app: flask.Flask) -> None:
         i18n.localize("de")
         assert i18n.get_current_language() == "de"
         assert i18n._("Age") == "Alter"
+        assert i18n._("") == ""
 
     with application_and_request_context():
         i18n._unlocalize()
@@ -136,7 +140,7 @@ def test_init_language_not_existing() -> None:
     assert i18n._init_language("xz") is None
 
 
-def test_init_language_only_builtin() -> None:
+def test_init_language_only_builtin(request_context: None) -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -147,7 +151,9 @@ def test_init_language_only_builtin() -> None:
     assert translated == "bla"
 
 
-def test_init_language_with_local_modification(local_translation: None) -> None:
+def test_init_language_with_local_modification(
+    local_translation: None, request_context: None
+) -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -158,7 +164,9 @@ def test_init_language_with_local_modification(local_translation: None) -> None:
     assert translated == "blub"
 
 
-def test_init_language_with_local_modification_fallback(local_translation: None) -> None:
+def test_init_language_with_local_modification_fallback(
+    local_translation: None, request_context: None
+) -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -175,7 +183,9 @@ def test_init_language_with_local_modification_fallback(local_translation: None)
     assert translated == "Alter"
 
 
-def test_init_language_with_package_localization(local_translation: None) -> None:
+def test_init_language_with_package_localization(
+    local_translation: None, request_context: None
+) -> None:
     trans = i18n._init_language("de")
     assert trans is not None
     translated = trans.gettext("pkg1")
@@ -198,28 +208,28 @@ def test_get_language_local_alias(local_translation: None) -> None:
 
 def test_get_languages() -> None:
     assert i18n.get_languages() == [
-        ("nl", "Dutch (community translated)"),
         ("en", "English"),
-        ("fr", "French (community translated)"),
         ("de", "German"),
-        ("it", "Italian (community translated)"),
-        ("ja", "Japanese (community translated)"),
-        ("pt_PT", "Portuguese (Portugal) (community translated)"),
-        ("ro", "Romanian (community translated)"),
-        ("es", "Spanish (community translated)"),
+        ("nl", "Dutch (not supported)"),
+        ("fr", "French (not supported)"),
+        ("it", "Italian (not supported)"),
+        ("ja", "Japanese (not supported)"),
+        ("pt_PT", "Portuguese (Portugal) (not supported)"),
+        ("ro", "Romanian (not supported)"),
+        ("es", "Spanish (not supported)"),
     ]
 
 
 def test_get_languages_new_local_language(local_translation: None) -> None:
     assert i18n.get_languages() == [
-        ("nl", "Dutch (community translated)"),
         ("en", "English"),
-        ("fr", "French (community translated)"),
-        ("it", "Italian (community translated)"),
-        ("ja", "Japanese (community translated)"),
-        ("pt_PT", "Portuguese (Portugal) (community translated)"),
-        ("ro", "Romanian (community translated)"),
-        ("es", "Spanish (community translated)"),
-        ("xz", "Xz"),
         ("de", "Äxtended German"),
+        ("nl", "Dutch (not supported)"),
+        ("fr", "French (not supported)"),
+        ("it", "Italian (not supported)"),
+        ("ja", "Japanese (not supported)"),
+        ("pt_PT", "Portuguese (Portugal) (not supported)"),
+        ("ro", "Romanian (not supported)"),
+        ("es", "Spanish (not supported)"),
+        ("xz", "Xz"),
     ]

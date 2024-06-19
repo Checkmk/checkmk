@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 # It's OK to import centralized config load logic
-from cmk.ec.export import load_rule_packs  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.groups import GroupName
 from cmk.gui.i18n import _
@@ -36,11 +38,14 @@ def find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
 
 
 def find_usages_of_contact_group_in_ec_rules(
-    name: str, _settings: GlobalSettings
+    name: str,
+    _settings: GlobalSettings,
+    rule_packs: Sequence[ec.ECRulePack] | None = None,
 ) -> list[tuple[str, str]]:
     """Is the contactgroup used in an eventconsole rule?"""
     used_in: list[tuple[str, str]] = []
-    rule_packs = load_rule_packs()
+    if rule_packs is None:
+        rule_packs = ec.load_rule_packs()
     for pack in rule_packs:
         for nr, rule in enumerate(pack.get("rules", [])):
             if name in rule.get("contact_groups", {}).get("groups", []):
@@ -61,7 +66,7 @@ def find_usages_of_contact_group_in_ec_rules(
 
 def find_timeperiod_usage_in_ec_rules(time_period_name: str) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
-    rule_packs = load_rule_packs()
+    rule_packs = ec.load_rule_packs()
     for rule_pack in rule_packs:
         for rule_index, rule in enumerate(rule_pack["rules"]):
             if rule.get("match_timeperiod") == time_period_name:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -64,9 +64,8 @@ def find(pattern, path, find_dirs=False) -> list[str]:
                 for patt in pattern:
                     if fnmatch.fnmatch(name, patt):
                         result.append(full_path_str.replace("%s/" % path, ""))
-            else:
-                if fnmatch.fnmatch(name, pattern):
-                    result.append(full_path_str.replace("%s/" % path, ""))
+            elif fnmatch.fnmatch(name, pattern):
+                result.append(full_path_str.replace("%s/" % path, ""))
     return result
 
 
@@ -323,7 +322,7 @@ def update_py3_modules(
             print(f"Adding package: {name}, {version} (License UNKN)")
         rows.append([name, version, "License UNKN", "", "", ""])
 
-    rows = [x for x in rows if not x in drop_rows]
+    rows = [x for x in rows if x not in drop_rows]
     return rows
 
 
@@ -389,7 +388,7 @@ def update_py_packages(
                 print(f"Removing package: {name} ({path})")
             drop_rows.append(row)
 
-    rows = [x for x in rows if not x in drop_rows]
+    rows = [x for x in rows if x not in drop_rows]
 
     license_links = get_license_links()
 
@@ -532,7 +531,7 @@ def update_js_dependencies(rows: list[list[str]], verbose: bool = False) -> list
             print(f"Adding package: {frow[0]}, {frow[1]} ({frow[2]})")
         rows.append(frow)
 
-    return sorted([x for x in rows if not x in drop_rows], key=lambda x: x[0].lower())
+    return sorted([x for x in rows if x not in drop_rows], key=lambda x: x[0].lower())
 
 
 def write_to_csv(data, licenses_csv):
@@ -608,7 +607,7 @@ def main(args):
             os.system("tar xf %s" % path_sources_pkg)
             path_sources_dir = Path(re.sub(".tar.gz", "/", str(path_sources_pkg)))
         licenses_csv = Path(path_omd / "Licenses.csv")
-    except:
+    except BaseException:
         if not args.path and path_sources_pkg.is_file():
             os.unlink(path_sources_pkg)
             if path_sources_dir.is_dir():
@@ -630,6 +629,7 @@ def main(args):
     ]
     data_per_section = []
     section_idx = 0
+    start = 0  # dummy value, needed because of the weird code below
     for idx, line in enumerate(old_data):
         needle = section_needles[section_idx]
         if set(needle) <= set(line):  # if A is a subset of B

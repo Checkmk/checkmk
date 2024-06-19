@@ -21,43 +21,41 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.version import parse_check_mk_version
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
 
-from ._graph_specification import GraphDataRange, GraphRecipe, NeededElementForRRDDataKey
+from ._graph_specification import GraphDataRange, GraphRecipe
+from ._loader import get_unit_info
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
-from ._unit_info import unit_info
-from ._utils import check_metrics, CheckMetricEntry, find_matching_translation, metric_info
+from ._utils import (
+    check_metrics,
+    CheckMetricEntry,
+    find_matching_translation,
+    get_extended_metric_info,
+)
 
 
 def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
 ) -> RRDData:
-    unit_conversion = unit_info[graph_recipe.unit].get(
+    unit_conversion = get_unit_info(graph_recipe.unit).get(
         "conversion",
         lambda v: v,
     )
     by_service = _group_needed_rrd_data_by_service(
-        (
-            element.site_id,
-            element.host_name,
-            element.service_name,
-            element.metric_name,
-            element.consolidation_func_name,
-            element.scale,
-        )
+        key
         for metric in graph_recipe.metrics
-        for element in metric.operation.needed_elements()
-        if isinstance(element, NeededElementForRRDDataKey)
+        for key in metric.operation.keys()
+        if isinstance(key, RRDDataKey)
     )
-    rrd_data: RRDData = {}
+    rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for (perfvar, cf, scale), data in _fetch_rrd_data(
+            for (metric_name, consolidation_func_name, scale), data in _fetch_rrd_data(
                 site,
                 host_name,
                 service_description,
@@ -65,7 +63,16 @@ def fetch_rrd_data_for_graph(
                 graph_recipe.consolidation_function,
                 graph_data_range,
             ):
-                rrd_data[(site, host_name, service_description, perfvar, cf, scale)] = TimeSeries(
+                rrd_data[
+                    RRDDataKey(
+                        site,
+                        host_name,
+                        service_description,
+                        metric_name,
+                        consolidation_func_name,
+                        scale,
+                    )
+                ] = TimeSeries(
                     data,
                     conversion=unit_conversion,
                 )
@@ -75,7 +82,9 @@ def fetch_rrd_data_for_graph(
     return rrd_data
 
 
-def _align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction | None) -> None:
+def _align_and_resample_rrds(
+    rrd_data: RRDData, consolidation_func_name: GraphConsoldiationFunction | None
+) -> None:
     """RRDTool aligns start/end/step to its internal precision.
 
     This is returned as first 3 values in each RRD data row. Using that
@@ -87,18 +96,21 @@ def _align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction |
     end_time = None
     step = None
 
-    for spec, rrddata in rrd_data.items():
-        if not rrddata:
-            spec_title = f"{spec[1]}/{spec[2]}/{spec[3]}"  # host/service/perfvar
+    for key, time_series in rrd_data.items():
+        if not time_series:
+            spec_title = f"{key.host_name}/{key.service_name}/{key.metric_name}"
             raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
 
         if start_time is None:
-            start_time, end_time, step = rrddata.twindow
-        elif (start_time, end_time, step) != rrddata.twindow:
-            rrddata.values = (
-                rrddata.downsample((start_time, end_time, step), spec[4] or cf)
-                if step >= rrddata.twindow[2]
-                else rrddata.forward_fill_resample((start_time, end_time, step))
+            start_time, end_time, step = time_series.twindow
+        elif (start_time, end_time, step) != time_series.twindow:
+            time_series.values = (
+                time_series.downsample(
+                    (start_time, end_time, step),
+                    key.consolidation_func_name or consolidation_func_name,
+                )
+                if step >= time_series.twindow[2]
+                else time_series.forward_fill_resample((start_time, end_time, step))
             )
 
 
@@ -136,14 +148,19 @@ MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]
 
 
 def _group_needed_rrd_data_by_service(
-    needed_rrd_data: Iterable[RRDDataKey],
-) -> dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties],]:
+    rrd_data_keys: Iterable[RRDDataKey],
+) -> dict[
+    tuple[SiteId, HostName, ServiceName],
+    set[MetricProperties],
+]:
     by_service: dict[
         tuple[SiteId, HostName, ServiceName],
         set[MetricProperties],
     ] = collections.defaultdict(set)
-    for site, host_name, service_description, perfvar, cf, scale in needed_rrd_data:
-        by_service[(site, host_name, service_description)].add((perfvar, cf, scale))
+    for key in rrd_data_keys:
+        by_service[(key.site_id, key.host_name, key.service_name)].add(
+            (key.metric_name, key.consolidation_func_name, key.scale)
+        )
     return by_service
 
 
@@ -291,8 +308,5 @@ def translate_and_merge_rrd_columns(
 
 
 def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
-    if not (metric_spec := metric_info.get(metric_name)):
-        return lambda v: v
-    if (unit := metric_spec.get("unit")) is None:
-        return lambda v: v
-    return unit_info[unit].get("conversion", lambda v: v)
+    mie = get_extended_metric_info(metric_name)
+    return mie["unit"].get("conversion", lambda v: v)

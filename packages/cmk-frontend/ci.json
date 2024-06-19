@@ -1,0 +1,4 @@
+{
+    "command_line": "./run --setup-environment --all",
+    "maintainers": ["team-prj-engelbart@checkmk.com", "team-rubicon@checkmk.com"]
+}

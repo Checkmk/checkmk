@@ -6,9 +6,10 @@
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 # <<<oracle_dataguard_stats:sep(124)>>>
 # TESTDB|TESTDBU2|PHYSICAL STANDBY|apply finish time|+00 00:00:00.000|NOT ALLOWED|ENABLED|MAXIMUM PERFORMANCE|DISABLED||||APPLYING_LOG
@@ -135,7 +136,7 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
             seconds,
             pkey,
             levels_upper + levels_lower,
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.time_offset,
             infoname=label,
         )
 
@@ -146,8 +147,8 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
         and dgdata["dgstat"]["apply lag"] == ""
     ):
         # old sql cannot detect a started standby database without running media recovery
-        # => add an information for old plugin with possible wrong result
-        yield 0, "old plugin data found, recovery active?"
+        # => add an information for old plug-in with possible wrong result
+        yield 0, "old plug-in data found, recovery active?"
 
 
 check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(

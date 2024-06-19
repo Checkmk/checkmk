@@ -26,6 +26,7 @@ from . import (
     folders,
     global_settings,
     groups,
+    gui_timings,
     host_diagnose,
     host_rename,
     hosts,
@@ -80,13 +81,14 @@ def register(
     folders.register(page_registry, mode_registry)
     global_settings.register(mode_registry)
     groups.register(mode_registry)
+    gui_timings.register(page_registry)
     host_diagnose.register(page_registry, mode_registry)
     host_rename.register(mode_registry)
     hosts.register(mode_registry)
     not_implemented.register(mode_registry)
     notifications.register(mode_registry)
     object_parameters.register(mode_registry)
-    parentscan.register(mode_registry, job_registry)
+    parentscan.register(mode_registry)
     password_store.register(mode_registry)
     pattern_editor.register(mode_registry)
     predefined_conditions.register(mode_registry)

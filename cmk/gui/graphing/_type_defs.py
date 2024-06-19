@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
-from typing import Literal, NotRequired, Type, TypedDict
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import Literal, NotRequired, TypedDict
 
 from livestatus import SiteId
 
@@ -12,14 +13,25 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.time_series import TimeSeries
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 Operators = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
-RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
-RRDData = dict[RRDDataKey, TimeSeries]
+
+
+@dataclass(frozen=True)
+class RRDDataKey:
+    site_id: SiteId
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: str
+    consolidation_func_name: GraphConsoldiationFunction | None
+    scale: float
+
+
+RRDData = Mapping[RRDDataKey, TimeSeries]
 
 
 class UnitInfo(TypedDict):
@@ -32,9 +44,14 @@ class UnitInfo(TypedDict):
     color: NotRequired[str]
     graph_unit: NotRequired[Callable[[list[float]], tuple[str, list[str]]]]
     description: NotRequired[str]
-    valuespec: NotRequired[Type[ValueSpec]]
+    valuespec: NotRequired[
+        type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
+    ]
     conversion: NotRequired[Callable[[float], float]]
     perfometer_render: NotRequired[Callable[[float], str]]
+    formatter_ident: NotRequired[
+        Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
+    ]
 
 
 class ScalarBounds(TypedDict, total=False):

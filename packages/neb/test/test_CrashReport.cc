@@ -6,15 +6,16 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <list>
 #include <map>
 #include <memory>
 #include <optional>
 #include <random>
 #include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
@@ -80,13 +81,6 @@ TEST_F(CrashReportFixture, DirectoryAndFileExist) {
     EXPECT_TRUE(fs::is_regular_file(fullpath));
 }
 
-TEST_F(CrashReportFixture, AccessorsAreCorrect) {
-    ASSERT_TRUE(fs::exists(fullpath));
-    const CrashReport cr{uuid, component};
-    EXPECT_EQ(uuid, cr.id());
-    EXPECT_EQ(component, cr.component());
-}
-
 TEST_F(CrashReportFixture, ForEachCrashReport) {
     ASSERT_TRUE(fs::exists(basepath));
     std::optional<CrashReport> result;
@@ -95,8 +89,8 @@ TEST_F(CrashReportFixture, ForEachCrashReport) {
         result = cr;
         return true;
     });
-    EXPECT_TRUE(result && uuid == result->id());
-    EXPECT_TRUE(result && component == result->component());
+    EXPECT_TRUE(result && uuid == result->id);
+    EXPECT_TRUE(result && component == result->component);
 }
 
 TEST_F(CrashReportFixture, TestDeleteId) {
@@ -147,14 +141,13 @@ TEST_F(CrashReportTableFixture, TestTable) {
 }
 
 namespace {
-std::string query(Table &table, const std::list<std::string> &q) {
-    OutputBuffer output{-1, [] { return false; }, table.logger()};
-    Query{ParsedQuery{q, table, output},
-          table,
-          Encoding::utf8,
-          5000,
-          output,
-          table.logger()}
+std::string query(Table &table, ICore &core,
+                  const std::vector<std::string> &lines) {
+    OutputBuffer output{-1, [] { return false; }, core.loggerLivestatus()};
+    Query{ParsedQuery{
+              lines, [&table]() { return table.allColumns(); },
+              [&table](const auto &colname) { return table.column(colname); }},
+          table, core, output}
         .process();
     return output.str();
 }
@@ -163,12 +156,13 @@ std::string query(Table &table, const std::list<std::string> &q) {
 TEST_F(CrashReportTableFixture, TestListCrashReports) {
     ASSERT_TRUE(fs::exists(basepath));
     EXPECT_EQ("component;id\n" + component + ";" + uuid + "\n",
-              query(table, {}));
+              query(table, core, {}));
 }
 
 TEST_F(CrashReportTableFixture, TestGetOneCrashReport) {
     ASSERT_TRUE(fs::exists(basepath));
-    EXPECT_EQ(json + "\n", query(table, {"Columns: file:f0:" + component + "/" +
-                                             uuid + "/" + crash_info,
-                                         "Filter: id = " + uuid}));
+    EXPECT_EQ(json + "\n", query(table, core,
+                                 {"Columns: file:f0:" + component + "/" + uuid +
+                                      "/" + crash_info,
+                                  "Filter: id = " + uuid}));
 }

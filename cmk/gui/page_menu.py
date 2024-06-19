@@ -17,7 +17,6 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -25,6 +24,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
@@ -454,7 +454,9 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
                 name="checkbox_selection",
                 title=_("Select all checkboxes"),
                 icon_name="toggle_on" if is_selected else "toggle_off",
-                item=make_javascript_link("cmk.selection.toggle_all_rows(this.form);"),
+                item=make_javascript_link(
+                    "cmk.selection.toggle_all_rows(cmk.utils.querySelectorID('main_page_content'));"
+                ),
                 is_enabled=is_enabled,
             ),
         ],
@@ -656,7 +658,10 @@ class PageMenuRenderer:
         for entry in entries:
             classes = ["suggestion"]
             classes += self._get_entry_css_classes(entry)
-            html.open_div(class_=classes)
+            html.open_div(
+                class_=classes,
+                title=entry.disabled_tooltip if not entry.is_enabled else None,
+            )
             SuggestedEntryRenderer().show(entry)
             html.close_div()
         html.close_td()

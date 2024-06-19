@@ -12,14 +12,14 @@ from cmk.fields import List, String
 
 HOST_NAME = {
     "host_name": HostField(
-        description="A hostname.",
+        description="A host name.",
         should_exist=True,
     )
 }
 
 OPTIONAL_HOST_NAME = {
     "host_name": HostField(
-        description="A hostname.",
+        description="A host name.",
         should_exist=True,
         required=False,
     )
@@ -142,7 +142,7 @@ HEADER_CHECKMK_VERSION = {
 
 SERVICE_DESCRIPTION = {
     "service_description": String(
-        description="The service description.",
+        description="The service name.",
         example="Memory",
     )
 }

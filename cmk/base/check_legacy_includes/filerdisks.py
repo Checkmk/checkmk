@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import get_bytes_human_readable
+from cmk.agent_based.v2 import render
 
 # disks = [
 #     { "state" : "failed",
@@ -33,7 +33,7 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             if disk["state"] == what:
                 state[what].append(disk)
 
-    yield 0, "Total raw capacity: %s" % get_bytes_human_readable(total_capacity), [
+    yield 0, "Total raw capacity: %s" % render.disksize(total_capacity), [
         ("total_disk_capacity", total_capacity)
     ]
     # TODO: Is a prefailed disk unavailable?

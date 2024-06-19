@@ -286,20 +286,13 @@ def asset_and_piggy_back_sections_fixture() -> (
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 
-    def test_labeler(asset: agent_gcp.Asset) -> agent_gcp.HostLabelSection:
-        return agent_gcp.HostLabelSection(
-            labels={
-                f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()
-            }
-        )
-
     piggy_back_section = agent_gcp.PiggyBackService(
         name="testing",
         asset_type="foo",
         asset_label="id",
         metric_label="id",
         name_label="id",
-        labeler=test_labeler,
+        labeler=agent_gcp.default_labeler,
         services=[
             agent_gcp.Service(
                 name="uptime",
@@ -387,9 +380,9 @@ def test_piggy_back_sort_values_to_host(
     # I need two sections I can compare
     assert len(piggy_back_sections) == 2
     host_a = piggy_back_sections[0]
-    assert next(next(host_a.sections).results).ts.points[0].value.double_value == pytest.approx(60)
+    assert next(host_a.sections).results[0].ts.points[0].value.double_value == pytest.approx(60)
     host_b = piggy_back_sections[1]
-    assert next(next(host_b.sections).results).ts.points[0].value.double_value == pytest.approx(42)
+    assert next(host_b.sections).results[0].ts.points[0].value.double_value == pytest.approx(42)
 
 
 def test_piggy_back_host_labels(piggy_back_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:

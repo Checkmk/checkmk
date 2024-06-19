@@ -3,15 +3,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
+from __future__ import annotations
+
+import base64
 import hashlib
 import hmac
 import secrets
 from abc import ABC, abstractmethod
 from hashlib import sha256
 from pathlib import Path
+from typing import AnyStr
 
-import cmk.utils.paths as paths
+from cmk.utils import paths
 from cmk.utils.user import UserId
+
+
+class Secret:
+    def __init__(self, value: bytes) -> None:
+        self._value = value
+
+    def compare(self, other: Secret) -> bool:
+        return secrets.compare_digest(self._value, other._value)
+
+    @property
+    def b64_str(self) -> str:
+        return base64.b64encode(self._value).decode("ascii")
+
+    @classmethod
+    def from_b64(cls, b64_value: AnyStr) -> Secret:
+        return cls(base64.b64decode(b64_value))
+
+    @classmethod
+    def generate(cls, length: int = 32) -> Secret:
+        return cls(secrets.token_bytes(length))
+
+    def hmac(self, msg: bytes) -> bytes:
+        """Calculate the HMAC(SHA256) of `msg` using this secret and return the digest in hex"""
+        return hmac.new(key=self._value, msg=msg, digestmod=sha256).digest()
+
+    def reveal(self) -> bytes:
+        return self._value
 
 
 class _LocalSecret(ABC):
@@ -23,25 +56,28 @@ class _LocalSecret(ABC):
         # TODO: reading and writing could use some locking, once our locking utilities are improved
 
         if self.path.exists():
-            self.secret = self.path.read_bytes()
+            self.secret = Secret(self.path.read_bytes())
             if self.secret:
                 return
 
-        self.secret = secrets.token_bytes(32)
+        self.regenerate()
+
+    def regenerate(self) -> None:
+        """generate new secret and store it
+
+        this does not care if the secret already exists"""
+
+        self.secret = Secret.generate(32)
         # TODO: mkdir is probably not really required here, just some cmc test failing.
         #       Better way would be to fix the test setup.
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.touch(mode=0o600)
-        self.path.write_bytes(self.secret)
+        self.path.write_bytes(self.secret.reveal())
 
     @property
     @abstractmethod
     def path(self) -> Path:
         raise NotImplementedError
-
-    def hmac(self, msg: str) -> str:
-        """Calculate the HMAC(SHA256) of `msg` using this secret and return the digest in hex"""
-        return hmac.new(key=self.secret, msg=msg.encode("utf-8"), digestmod=sha256).hexdigest()
 
     def derive_secret_key(self, salt: bytes) -> bytes:
         """Derive a symmetric key from the local secret"""
@@ -50,7 +86,7 @@ class _LocalSecret(ABC):
         # password but "real" random data.
         # Note that key derivation and encryption/decryption of passwords is duplicated in omd
         # cmk_password_store.h and must be kept compatible!
-        return hashlib.scrypt(self.secret, salt=salt, n=2**14, r=8, p=1, dklen=32)
+        return hashlib.scrypt(self.secret._value, salt=salt, n=2**14, r=8, p=1, dklen=32)
 
 
 class AuthenticationSecret(_LocalSecret):
@@ -74,13 +110,16 @@ class PasswordStoreSecret(_LocalSecret):
         return paths.password_store_secret_file
 
 
-class EncrypterSecret(_LocalSecret):
-    """Secret used to encrypt and authenticate secrets passed _through_ the GUI"""
+class SiteInternalSecret(_LocalSecret):
+    """Used to authenticate between site internal components, e.g. agent-receiver and rest_api"""
 
-    # TODO: Use a different secret for separation of concerns. If possible, rotate often. CMK-11925
     @property
     def path(self) -> Path:
-        return paths.auth_secret_file
+        return paths.site_internal_secret_file
+
+    def check(self, other: Secret) -> bool:
+        """Check if a given secret is the same as this one in a timing attack safe manner"""
+        return self.secret.compare(other)
 
 
 class AutomationUserSecret:
@@ -114,9 +153,11 @@ class AutomationUserSecret:
         return secret
 
     def exists(self) -> bool:
+        """Check if the secret file is present on disk"""
         return self.path.is_file()
 
     def save(self, secret: str) -> None:
+        """Write the secret to the user's "automation.secret" file"""
         self.path.write_text(secret)
 
     def delete(self) -> None:

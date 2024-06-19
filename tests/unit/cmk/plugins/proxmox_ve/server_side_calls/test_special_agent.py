@@ -6,14 +6,11 @@
 from collections.abc import Mapping, Sequence
 
 import pytest
-from polyfactory.factories import DataclassFactory
 
-from cmk.plugins.proxmox_ve.server_side_calls.special_agent import config
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, PlainTextSecret, StoredSecret
-
-
-class HostConfigFactory(DataclassFactory):
-    __model__ = HostConfig
+from cmk.plugins.proxmox_ve.server_side_calls.special_agent import (
+    special_agent_proxmox_ve as config,
+)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 
 @pytest.mark.parametrize(
@@ -22,17 +19,17 @@ class HostConfigFactory(DataclassFactory):
         pytest.param(
             {
                 "username": "user",
-                "password": ("password", "passwd"),
+                "password": Secret(23),
                 "port": "443",
-                "no-cert-check": True,
+                "no_cert_check": True,
                 "timeout": "30",
-                "log-cutoff-weeks": "4",
+                "log_cutoff_weeks": "4",
             },
             [
                 "-u",
                 "user",
                 "-p",
-                PlainTextSecret(value="passwd"),
+                Secret(23).unsafe(),
                 "--port",
                 "443",
                 "--no-cert-check",
@@ -44,34 +41,18 @@ class HostConfigFactory(DataclassFactory):
             ],
             id="explicit_password",
         ),
-        pytest.param(
-            {
-                "username": "user",
-                "password": ("store", "passwd"),
-                "timeout": "40",
-            },
-            [
-                "-u",
-                "user",
-                "-p",
-                StoredSecret(value="passwd"),
-                "--timeout",
-                "40",
-                "testhost",
-            ],
-            id="password_from_store",
-        ),
     ],
 )
 def test_agent_proxmox_ve_arguments(
     params: Mapping[str, object], expected_result: Sequence[str]
 ) -> None:
     # Assemble
-    host_config = HostConfigFactory.build(name="testhost")
-    http_proxies = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
+    host_config = HostConfig(
+        name="testhost",
+        ipv4_config=IPv4Config(address="hurz"),
+    )
     # Act
-    parsed_params = config.parameter_parser(params)
-    commands = list(config.commands_function(parsed_params, host_config, http_proxies))
+    commands = list(config(params, host_config))
     # Assert
     assert len(commands) == 1
     command = commands[0].command_arguments

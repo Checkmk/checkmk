@@ -6,11 +6,9 @@
 import time
 from collections.abc import Container, Iterable
 from dataclasses import dataclass
+from typing import TypedDict
 
-from typing_extensions import TypedDict
-
-from cmk.agent_based.v2 import Attributes, TableRow
-from cmk.agent_based.v2.type_defs import InventoryResult
+from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 
 
 @dataclass
@@ -20,7 +18,7 @@ class Interface:
     alias: str
     type: str
     speed: int
-    oper_status: int
+    oper_status: int | None
     phys_address: str
     admin_status: int | None = None
     last_change: float | None = None
@@ -78,7 +76,7 @@ def inventorize_interfaces(
     unused_duration = params.get("unused_duration", 30 * 86400)
 
     total_ethernet_ports = 0
-    available_ethernet_ports = 0
+    available_ethernet_ports: int | None = None
 
     for interface in interfaces:
         state_age = (
@@ -95,22 +93,29 @@ def inventorize_interfaces(
         if_available = None
         if interface.type in usage_port_types:
             total_ethernet_ports += 1
-            if if_available := (
-                interface.oper_status == 2 and (state_age is None or state_age > unused_duration)
-            ):
-                available_ethernet_ports += 1
+            if interface.oper_status is not None:
+                available_ethernet_ports = available_ethernet_ports or 0
+                if if_available := (
+                    interface.oper_status == 2
+                    and (state_age is None or state_age > unused_duration)
+                ):
+                    available_ethernet_ports += 1
 
         yield TableRow(
             path=["networking", "interfaces"],
             key_columns={
                 "index": if_index_nr,
-                "description": interface.descr,
-                "alias": interface.alias,
             },
             inventory_columns={
+                "description": interface.descr,
+                "alias": interface.alias,
                 "speed": interface.speed,
                 "phys_address": interface.phys_address,
-                "oper_status": interface.oper_status,
+                **(
+                    {"oper_status": interface.oper_status}
+                    if interface.oper_status is not None
+                    else {}
+                ),
                 "port_type": int(interface.type),
                 **({"bond": interface.bond} if interface.bond else {}),
                 **(
@@ -120,17 +125,23 @@ def inventorize_interfaces(
                 ),
                 **({"available": if_available} if if_available is not None else {}),
             },
-            status_columns={
-                "last_change": int(last_change_timestamp),
-            }
-            if last_change_timestamp is not None
-            else {},
+            status_columns=(
+                {
+                    "last_change": int(last_change_timestamp),
+                }
+                if last_change_timestamp is not None
+                else {}
+            ),
         )
 
     yield Attributes(
         path=["networking"],
         inventory_attributes={
-            "available_ethernet_ports": available_ethernet_ports,
+            **(
+                {"available_ethernet_ports": available_ethernet_ports}
+                if available_ethernet_ports is not None
+                else {}
+            ),
             "total_ethernet_ports": total_ethernet_ports,
             "total_interfaces": n_total,
         },

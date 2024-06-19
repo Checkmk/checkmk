@@ -18,6 +18,7 @@ import traceback
 import urllib.parse
 import uuid
 from collections.abc import Iterator, Mapping
+from contextlib import suppress
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -28,10 +29,8 @@ import requests
 import livestatus
 
 import cmk.utils.paths
-import cmk.utils.site as site
-import cmk.utils.store as store
-import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils import site, store, tty
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
@@ -47,6 +46,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
+    OPT_CHECKMK_CRASH_REPORTS,
     OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
@@ -59,7 +59,7 @@ from cmk.utils.i18n import _
 from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import load_tree, SDRawTree
+from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
 
 if cmk_version.edition() in [
@@ -68,7 +68,7 @@ if cmk_version.edition() in [
     cmk_version.Edition.CCE,
     cmk_version.Edition.CSE,
 ]:
-    from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
+    from cmk.base.cee.diagnostics import (  # type: ignore[import,unused-ignore]  # pylint: disable=no-name-in-module,import-error
         cmc_specific_attrs,
     )
 else:
@@ -86,9 +86,9 @@ def create_diagnostics_dump(parameters: DiagnosticsOptionalParameters | None) ->
 
     section.section_step("Creating diagnostics dump", verbose=False)
     if dump.tarfile_created:
-        console.info("%s\n", _format_filepath(dump.tarfile_path))
+        console.info(f"{_format_filepath(dump.tarfile_path)}")
     else:
-        console.info("%s%s\n", _GAP, "No dump")
+        console.info(f"{_GAP}No dump")
 
 
 #   .--format helper-------------------------------------------------------.
@@ -180,6 +180,9 @@ class DiagnosticsDump:
         if parameters.get(OPT_CHECKMK_OVERVIEW):
             optional_elements.append(CheckmkOverviewDiagnosticsElement())
 
+        if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
+            optional_elements.append(CrashDumpsDiagnosticsElement())
+
         rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
         if rel_checkmk_config_files:
             optional_elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
@@ -213,13 +216,14 @@ class DiagnosticsDump:
 
     def _create_dump_folder(self) -> None:
         section.section_step("Create dump folder")
-        console.verbose("%s\n", _format_filepath(self.dump_folder))
+        console.verbose(f"{_format_filepath(self.dump_folder)}")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self) -> None:
-        with tarfile.open(name=self.tarfile_path, mode="w:gz") as tar, tempfile.TemporaryDirectory(
-            dir=self.dump_folder
-        ) as tmp_dump_folder:
+        with (
+            tarfile.open(name=self.tarfile_path, mode="w:gz") as tar,
+            tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder,
+        ):
             for filepath in self._get_filepaths(Path(tmp_dump_folder)):
                 rel_path = str(filepath).replace(str(tmp_dump_folder), "")
                 tar.add(str(filepath), arcname=rel_path)
@@ -230,19 +234,19 @@ class DiagnosticsDump:
 
         filepaths = []
         for element in self.elements:
-            console.info("%s\n", _format_title(element.title))
-            console.info("%s\n", _format_description(element.description))
+            console.info(f"{_format_title(element.title)}")
+            console.info(f"{_format_description(element.description)}")
 
             try:
                 for filepath in element.add_or_get_files(tmp_dump_folder):
                     filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
-                console.info("%s\n", _format_error(str(e)))
+                console.info(f"{_format_error(str(e))}")
                 continue
 
             except Exception:
-                console.info("%s\n", _format_error(traceback.format_exc()))
+                console.info(f"{_format_error(traceback.format_exc())}")
                 continue
 
         return filepaths
@@ -261,7 +265,7 @@ class DiagnosticsDump:
             "Cleanup dump folder", add_info="keep last %d dumps" % self._keep_num_dumps
         )
         for _mtime, filepath in dumps:
-            console.verbose("%s\n", _format_filepath(filepath))
+            console.verbose(f"{_format_filepath(filepath)}")
             self._remove_file(filepath)
 
     def _remove_file(self, filepath: Path) -> None:
@@ -436,11 +440,11 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     @property
     def title(self) -> str:
-        return _("Performance Data")
+        return _("Performance data")
 
     @property
     def description(self) -> str:
-        return _("Performance Data related to sizing, e.g. number of helpers, hosts, services")
+        return _("Performance data related to sizing, e.g. number of helpers, hosts, services")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Get the runtime performance data from livestatus
@@ -742,11 +746,11 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def description(self) -> str:
         return _(
-            "Checkmk Agent, Number, version and edition of sites, Cluster host; "
-            "Number of hosts, services, CMK Helper, Live Helper, "
-            "Helper usage; State of daemons: Apache, Core, Crontag, "
+            "Checkmk Agent, Number, version and edition of sites, cluster host; "
+            "number of hosts, services, CMK Helper, Live Helper, "
+            "Helper usage; state of daemons: Apache, Core, Crontab, "
             "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-            "(Agent plugin mk_inventory needs to be installed)"
+            "(Agent plug-in mk_inventory needs to be installed)"
         )
 
     def _collect_infos(self) -> SDRawTree:
@@ -761,7 +765,11 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                 "No HW/SW inventory tree of '%s' found" % checkmk_server_name
             )
 
-        if not (node := tree.get_tree(("software", "applications", "check_mk"))):
+        if not (
+            node := tree.get_tree(
+                (SDNodeName("software"), SDNodeName("applications"), SDNodeName("check_mk"))
+            )
+        ):
             raise DiagnosticsElementError(
                 "No HW/SW inventory node 'Software > Applications > Checkmk'"
             )
@@ -810,6 +818,14 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
             with Path(filepath).open("rb") as source:
                 json_data = json.dumps(deserialize_dump(source.read()), sort_keys=True, indent=4)
                 store.save_text_to_file(tmp_filepath, json_data)
+        # We 'encrypt' only license thingies at the moment, so there is currently no need to
+        # sanitize encrypted files
+        elif str(rel_filepath) == "multisite.d/sites.mk":
+            sites = store.load_from_mk_file(filepath, "sites", {})
+            for detail in sites.values():
+                with suppress(KeyError):
+                    detail["secret"] = "redacted"
+            store.save_to_mk_file(tmp_filepath, "sites", sites)
         else:
             shutil.copy(str(filepath), str(tmp_filepath))
 
@@ -979,11 +995,44 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
         return requests.post(  # nosec B113 # BNS:773085
             url,
-            data={
-                "_username": "automation",
-                "_secret": automation_secret,
-            },
+            auth=("automation", automation_secret),
         )
+
+
+class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        return "crashdumps"
+
+    @property
+    def title(self) -> str:
+        return _("The latest crash dumps of each type")
+
+    @property
+    def description(self) -> str:
+        return _("Returns the latest crash dumps of each type as found in var/checkmk/crashes")
+
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+        for category in cmk.utils.paths.crash_dir.glob("*"):
+            tmpdir = tmp_dump_folder.joinpath("var/check_mk/crashes/%s" % category.name)
+            tmpdir.mkdir(parents=True, exist_ok=True)
+
+            sorted_dumps = sorted(category.glob("*"), key=lambda path: int(path.stat().st_mtime))
+
+            if sorted_dumps:
+                # Determine the latest file of that category
+                dumpfile_path = sorted_dumps[-1]
+
+                # Pack the dump into a .tar.gz, so it can easily be uploaded
+                # to https://crash.checkmk.com/
+                tarfile_path = tmpdir.joinpath(dumpfile_path.name).with_suffix(".tar.gz")
+
+                with tarfile.open(name=tarfile_path, mode="w:gz") as tar:
+                    for file in dumpfile_path.iterdir():
+                        rel_path = str(file).replace(str(dumpfile_path) + "/", "")
+                        tar.add(str(file), arcname=rel_path)
+
+                yield tarfile_path
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
@@ -998,7 +1047,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
     @property
     def description(self) -> str:
         return _(
-            "Configuration, status, and status history data of the CMC (Checkmk Microcore); "
+            "Configuration, status, and status history data of the CMC (Checkmk Micro Core); "
             "cmcdump output of the status and config."
         )
 
@@ -1020,7 +1069,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 )
 
             except subprocess.CalledProcessError as e:
-                console.info("%s\n", _format_error(str(e)))
+                console.info(f"{_format_error(str(e))}")
                 continue
 
             filepath = tmpdir.joinpath(f"{self.ident}{suffix}")

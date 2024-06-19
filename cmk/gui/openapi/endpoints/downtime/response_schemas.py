@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from marshmallow_oneofschema import OneOfSchema
+
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
@@ -10,7 +12,7 @@ from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, Domai
 from cmk import fields
 
 
-class DowntimeAttributes(BaseSchema):
+class BaseDowntimeSchema(BaseSchema):
     site_id = gui_fields.SiteField(
         description="The site id of the downtime.",
         example="heute",
@@ -27,11 +29,6 @@ class DowntimeAttributes(BaseSchema):
         description="The author of the downtime.",
         example="Mr Bojangles",
     )
-    is_service = fields.String(
-        required=True,
-        description="yes, if this entry is for a service, no if it is for a host.",
-        example="yes",
-    )
     start_time = gui_fields.Timestamp(
         required=True,
         description="The start time of the downtime.",
@@ -42,16 +39,55 @@ class DowntimeAttributes(BaseSchema):
         description="The end time of the downtime.",
         example="2023-08-04T09:18:01+00:00",
     )
-    recurring = fields.String(
+    recurring = fields.Boolean(
         required=True,
-        description="yes if the downtime is recurring, no if it is not.",
-        example="yes",
+        description="Indicates if this downtime is time-repetitive",
+        example=True,
     )
     comment = fields.String(
         required=True,
         description="A comment text.",
         example="Down for update",
     )
+
+
+class HostDowntimeAttributes(BaseDowntimeSchema):
+    is_service = fields.Constant(
+        False, description="Host downtime entry", example=False, required=True
+    )
+
+
+class ServiceDowntimeAttributes(BaseDowntimeSchema):
+    is_service = fields.Constant(
+        True, description="Service downtime entry", example=True, required=False
+    )
+    service_description = fields.String(
+        required=True,
+        description="The service name if the downtime corresponds to a service, otherwise this field is not present.",
+        example="CPU Load",
+    )
+
+
+class DowntimeAttributes(OneOfSchema):
+    type_field = "is_service"
+    type_schemas = {
+        "host": HostDowntimeAttributes,
+        "service": ServiceDowntimeAttributes,
+    }
+    type_field_remove = False
+
+    def get_obj_type(self, obj):
+        is_service = "service" if obj.get("is_service", False) else "host"
+        if is_service in self.type_schemas:
+            return is_service
+
+        raise Exception("Unknown object type: %s" % repr(obj))
+
+    def dump(self, obj, *, many=None, **kwargs):
+        data = super().dump(obj, many=many, **kwargs)
+        if "is_service" in data:
+            data["is_service"] = data["is_service"] == "service"
+        return data
 
 
 class DowntimeObject(DomainObject):

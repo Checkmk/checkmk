@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
-
 import typing
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.hp_proliant import sanitize_item
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 
+from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.hp_proliant import DETECT
 
 
@@ -23,9 +22,9 @@ class HpProRaid(typing.NamedTuple):
 
 
 def parse_hp_proliant_raid(string_table):
-    parsed = {}
+    parsed: dict[str, HpProRaid] = {}
     for number, name, status, size_str, rebuild in string_table:
-        itemname = f"{name} {number}".strip()
+        itemname = sanitize_item(f"{name} {number}".strip())
         parsed.setdefault(
             itemname,
             HpProRaid(
@@ -69,7 +68,7 @@ def check_hp_proliant_raid(item, _no_params, parsed):
 
     state, state_readable = map_states.get(raid_stats.status, (3, "unknown"))
     yield state, f"Status: {state_readable}"
-    yield 0, f"Logical volume size: {get_bytes_human_readable(raid_stats.size_bytes)}"
+    yield 0, f"Logical volume size: {render.bytes(raid_stats.size_bytes)}"
 
     # From CPQIDA-MIB:
     # This value is the percent complete of the rebuild.

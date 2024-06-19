@@ -11,9 +11,7 @@ import re
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, NamedTuple
-
-from typing_extensions import TypedDict
+from typing import Any, NamedTuple, TypedDict
 
 from cmk.utils.user import UserId
 
@@ -66,7 +64,11 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
             if not isinstance(raw, dict):
                 raise ValueError("expected a dictionary")
             # TODO: Parse raw's entries, too, below we have our traditional 'wishful typing'... :-P
-            raw["text"] = HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1]
+            raw["text"] = (
+                HTML.without_escaping(raw["text"][1])
+                if raw["text"][0] == "html"
+                else raw["text"][1]
+            )
             raw["object_ref"] = (
                 ObjectRef.deserialize(raw["object_ref"]) if raw["object_ref"] else None
             )
@@ -171,7 +173,7 @@ def log_audit(
 
     if active_config.wato_use_git:
         if isinstance(message, HTML):
-            message = escaping.strip_tags(message.value)
+            message = escaping.strip_tags(str(message))
         cmk.gui.watolib.git.add_message(message)
 
     _log_entry(action, message, object_ref, user_id, diff_text)

@@ -2,18 +2,20 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 import contextlib
+import datetime
 from collections.abc import Iterator, Sequence
 from typing import Literal
 from unittest.mock import MagicMock
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.conftest import import_plugins
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from livestatus import SiteId
@@ -23,10 +25,13 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.type_defs import CustomAttr
-from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+from cmk.gui.watolib import bakery
+from cmk.gui.watolib.custom_attributes import (
+    CustomAttrSpecs,
+    CustomHostAttrSpec,
+    save_custom_attrs_to_mk_file,
+)
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
@@ -472,42 +477,46 @@ def test_openapi_bulk_with_failed(
 
 
 @pytest.fixture(name="custom_host_attribute")
-def _custom_host_attribute():
-    attr: CustomAttr = {
-        "name": "foo",
-        "title": "bar",
-        "help": "foo",
-        "topic": "topic",
-        "type": "TextAscii",
-        "add_custom_macro": False,
-        "show_in_table": False,
-    }
-    with custom_host_attribute_ctx({"host": [attr]}):
+def _custom_host_attribute() -> Iterator[None]:
+    attr = CustomHostAttrSpec(
+        {
+            "name": "foo",
+            "title": "bar",
+            "help": "foo",
+            "topic": "basic",
+            "type": "TextAscii",
+            "add_custom_macro": False,
+            "show_in_table": False,
+        }
+    )
+    with custom_host_attribute_ctx({"user": [], "host": [attr]}):
         yield
 
 
 @pytest.fixture(name="custom_host_attribute_basic_topic")
-def _custom_host_attribute_with_basic_topic():
-    attr: CustomAttr = {
-        "name": "foo",
-        "title": "bar",
-        "help": "foo",
-        "topic": "basic",
-        "type": "TextAscii",
-        "add_custom_macro": False,
-        "show_in_table": False,
-    }
-    with custom_host_attribute_ctx({"host": [attr]}):
+def _custom_host_attribute_with_basic_topic() -> Iterator[None]:
+    attr = CustomHostAttrSpec(
+        {
+            "name": "foo",
+            "title": "bar",
+            "help": "foo",
+            "topic": "basic",
+            "type": "TextAscii",
+            "add_custom_macro": False,
+            "show_in_table": False,
+        }
+    )
+    with custom_host_attribute_ctx({"user": [], "host": [attr]}):
         yield
 
 
 @contextlib.contextmanager
-def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]) -> Iterator[None]:
+def custom_host_attribute_ctx(attrs: CustomAttrSpecs) -> Iterator[None]:
     try:
         save_custom_attrs_to_mk_file(attrs)
         yield
     finally:
-        save_custom_attrs_to_mk_file({})
+        save_custom_attrs_to_mk_file({"user": [], "host": []})
 
 
 def test_openapi_host_created_timestamp(clients: ClientRegistry) -> None:
@@ -542,7 +551,7 @@ def test_openapi_host_has_deleted_custom_attributes(clients: ClientRegistry) -> 
     clients.HostConfig.edit(host_name="example.com", attributes={"foo": "bar"})
 
     # Try to get it with the attribute already deleted
-    with custom_host_attribute_ctx({}):
+    with custom_host_attribute_ctx({"user": [], "host": []}):
         resp = clients.HostConfig.get(host_name="example.com")
 
         # foo will still show up in the response, even though it is deleted.
@@ -839,6 +848,18 @@ def test_openapi_host_with_invalid_labels(clients: ClientRegistry) -> None:
     ).assert_status_code(400)
 
 
+def test_openapi_host_non_existent_site(clients: ClientRegistry) -> None:
+    non_existing_site_name = "i_am_not_existing"
+    resp = clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"site": non_existing_site_name},
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert "site" in resp.json["fields"]["attributes"]
+
+
 def test_openapi_host_with_labels(clients: ClientRegistry) -> None:
     resp = clients.HostConfig.create(
         folder="/",
@@ -923,6 +944,23 @@ def test_openapi_host_config_effective_attributes_schema_regression(
     )
 
 
+def test_openapi_host_config_ipmi_credentials_empty(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={
+            "management_ipmi_credentials": None,
+            "management_snmp_community": None,
+        },
+    ).assert_status_code(200)
+    resp = clients.HostConfig.get("heute")
+    resp.assert_status_code(200)
+    assert resp.json["extensions"]["attributes"]["management_ipmi_credentials"] is None
+    assert resp.json["extensions"]["attributes"]["management_snmp_community"] is None
+
+
 @managedtest
 @pytest.mark.usefixtures("with_host")
 def test_openapi_host_config_show_host_disregards_contact_groups(clients: ClientRegistry) -> None:
@@ -978,7 +1016,7 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
     assert "should_not_be_invisible" not in host_names
 
 
-@freeze_time("1998-02-09")
+@time_machine.travel(datetime.datetime.fromisoformat("1998-02-09T00:00:00+00:00"), tick=False)
 def test_openapi_effective_attributes_are_transformed_on_their_way_out_regression(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
@@ -1206,7 +1244,7 @@ def test_move_host_to_the_same_folder(clients: ClientRegistry) -> None:
     resp.json["title"] = "Invalid move action"
 
 
-@pytest.mark.usefixtures("custom_host_attribute")
+@pytest.mark.usefixtures("request_context", "custom_host_attribute")
 def test_openapi_host_config_effective_attributes_includes_custom_attributes_regression(
     clients: ClientRegistry,
 ) -> None:
@@ -1219,11 +1257,37 @@ def test_openapi_host_config_effective_attributes_includes_custom_attributes_reg
 def test_openapi_host_config_effective_attributes_includes_tags_regression(
     clients: ClientRegistry,
 ) -> None:
-    clients.HostTagGroup.create(ident="foo", title="foo", tags=[{"ident": "bar", "title": "bar"}])
+    clients.HostTagGroup.create(ident="foo", title="foo", tags=[{"id": "bar", "title": "bar"}])
     clients.HostConfig.create(host_name="test_host", attributes={"tag_foo": "bar"})
 
     resp = clients.HostConfig.get("test_host", effective_attributes=True)
     assert resp.json["extensions"]["effective_attributes"]["tag_foo"] == "bar"
+
+
+def test_openapi_host_config_effective_attributes_labels_from_parent_folder(
+    clients: ClientRegistry,
+) -> None:
+    """Tests inheritance of host labels from parent folder"""
+    clients.Folder.create(
+        folder_name="test_folder",
+        title="Test folder",
+        parent="/",
+        attributes={"labels": {"foo1": "bar1"}},
+    )
+    clients.HostConfig.create(
+        host_name="test_host",
+        attributes={"labels": {"foo2": "bar2"}},
+        folder="/test_folder",
+    )
+
+    resp = clients.HostConfig.get("test_host", effective_attributes=True)
+    assert resp.json["extensions"]["effective_attributes"]["labels"] == {
+        "foo1": "bar1",
+        "foo2": "bar2",
+    }
+    assert resp.json["extensions"]["attributes"]["labels"] == {
+        "foo2": "bar2",
+    }
 
 
 @managedtest
@@ -1247,8 +1311,7 @@ def test_openapi_host_config_correct_contactgroup_default(
 
 
 @managedtest
-@freeze_time("2022-11-05")
-@import_plugins(["cmk.gui.cce.plugins.wato"])
+@time_machine.travel(datetime.datetime.fromisoformat("2022-11-05T00:00:00+00:00"), tick=False)
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
@@ -1439,6 +1502,17 @@ def test_create_host_with_newline_in_the_name(
     )
 
 
+def test_create_host_with_too_long_of_a_name(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostConfig.create(
+        host_name=255 * "a",
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["host_name"][0] == f"HostName too long: {16 * 'a' + '…'!r}"
+
+
 @managedtest
 def test_bulk_delete_no_entries(clients: ClientRegistry) -> None:
     r = clients.HostConfig.bulk_delete(entries=[], expect_ok=False)
@@ -1480,3 +1554,49 @@ def test_move_host_between_nested_folders(clients: ClientRegistry) -> None:
     clients.HostConfig.move(host_name="host1", target_folder="~F1~F11~F111")
     clients.HostConfig.move(host_name="host1", target_folder="~F1~F11")
     clients.HostConfig.move(host_name="host1", target_folder="~F1")
+
+
+@managedtest
+def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="test_host")
+    clients.HostConfig.create(host_name="parent_host", attributes={"parents": ["test_host"]})
+    resp = clients.HostConfig.edit(
+        host_name="test_host", update_attributes={"parents": ["non-existent"]}, expect_ok=False
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: update_attributes"
+    assert (
+        resp.json["fields"]["update_attributes"]["parents"]["0"][0]
+        == "Host not found: 'non-existent'"
+    )
+
+
+@managedtest
+def test_update_host_parent_must_be_list_of_strings(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="test_host")
+    resp = clients.HostConfig.edit(
+        host_name="test_host", update_attributes={"parents": "wrong-type"}, expect_ok=False
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: update_attributes"
+    assert (
+        "Expected data type is list, but your type is str."
+        in resp.json["fields"]["update_attributes"]["parents"]
+    )
+
+
+def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> None:
+    folder_name = "ümlaut"
+    clients.Folder.create(
+        parent="/",
+        folder_name=folder_name,
+        title=folder_name,
+    )
+    response = clients.HostConfig.create(host_name="host1", folder=f"~{folder_name}")
+    assert response.status_code == 200
+
+
+def test_openapi_list_hosts_with_include_links(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="host1")
+    resp = clients.HostConfig.get_all(include_links=True)
+    assert len(resp.json["value"][0]["links"])

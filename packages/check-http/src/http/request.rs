@@ -2,24 +2,31 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use std::time::{Duration, Instant};
+
 use bytes::Bytes;
 use encoding_rs::{Encoding, UTF_8};
 use mime::Mime;
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE},
-    Client, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
+    tls::TlsInfo,
+    Client, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Url, Version,
 };
+use tracing::{event, span, Level};
+
+use super::client::ClientAdapter;
 
 pub struct RequestConfig {
-    pub url: String,
+    pub url: Url,
     pub method: Method,
     pub version: Option<Version>,
-    pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
+    pub headers: Vec<(HeaderName, HeaderValue)>,
     pub body: Option<String>,
     pub content_type: Option<HeaderValue>,
     pub auth_user: Option<String>,
     pub auth_pw: Option<String>,
     pub without_body: bool,
+    pub token_auth: Option<(HeaderName, HeaderValue)>,
 }
 
 pub struct ProcessedResponse {
@@ -27,37 +34,71 @@ pub struct ProcessedResponse {
     pub status: StatusCode,
     pub headers: HeaderMap,
     pub body: Option<ReqwestResult<Body>>,
+    pub final_url: Url,
+    pub redirect_target: Option<Url>,
+    pub tls_info: Option<TlsInfo>,
+    pub time_headers: Duration,
+    pub time_body: Option<Duration>,
 }
-
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct Body {
     pub text: String,
     pub length: usize,
 }
 
-pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<ProcessedResponse> {
+pub async fn send(
+    client_adapter: ClientAdapter,
+    cfg: RequestConfig,
+) -> ReqwestResult<ProcessedResponse> {
+    let span = span!(Level::INFO, "send_request");
+    let _guard = span.enter();
+
     let fetch_body = !cfg.without_body;
 
-    let response = prepare_request(client, cfg).send().await?;
+    let start = Instant::now();
+    let mut response = prepare_request(client_adapter.client, cfg).send().await?;
+    let time_headers = start.elapsed();
 
     let headers = response.headers().to_owned();
     let version = response.version();
     let status = response.status();
-    let body = if fetch_body {
-        Some(process_body(response.bytes().await, &headers))
+    let final_url = response.url().clone();
+    let redirect_target = client_adapter.redirect_recorder.lock().unwrap().to_owned();
+    let tls_info = response.extensions_mut().remove::<TlsInfo>();
+
+    event!(target: "debug_headers", Level::INFO, "HTTP headers: \n{:?}", headers);
+
+    let (body, time_body) = if fetch_body {
+        let start = Instant::now();
+        let raw_body = response.bytes().await;
+        let time_body = start.elapsed();
+        (Some(process_body(raw_body, &headers)), Some(time_body))
     } else {
-        None
+        (None, None)
     };
+
+    if let Some(Ok(body)) = body.as_ref() {
+        event!(target: "debug_content", Level::INFO, "Page content: \n{}", body.text);
+    }
 
     Ok(ProcessedResponse {
         version,
         status,
         headers,
         body,
+        final_url,
+        redirect_target,
+        tls_info,
+        time_headers,
+        time_body,
     })
 }
 
 fn prepare_request(client: Client, request_cfg: RequestConfig) -> RequestBuilder {
-    let mut headers = HeaderMap::new();
+    let mut headers = HeaderMap::from_iter(request_cfg.headers);
+    if let Some((token_header, token_key)) = request_cfg.token_auth {
+        headers.insert(token_header, token_key);
+    }
     if let Some(content_type) = request_cfg.content_type {
         headers.insert(CONTENT_TYPE, content_type);
     }

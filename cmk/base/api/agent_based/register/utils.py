@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 import inspect
 import sys
 from collections.abc import Callable, Mapping, Sequence
@@ -28,7 +30,7 @@ _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
 
 
 def get_validated_plugin_location() -> PluginLocation:
-    """Find out which module registered the plugin and make sure its in the right place"""
+    """Find out which module registered the plug-in and make sure its in the right place"""
     # We used this before, but it was a performance killer. The method below is a lot faster.
     # calling_from = inspect.stack()[2].filename
     full_module_name = str(sys._getframe(2).f_globals["__name__"])
@@ -207,7 +209,7 @@ def validate_check_ruleset_item_consistency(
     check_plugin: CheckPlugin,
     check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]],
 ) -> None:
-    """Validate check plugins sharing a check_ruleset_name have either all or none an item.
+    """Validate check plug-ins sharing a check_ruleset_name have either all or none an item.
 
     Mixed checkgroups lead to strange exceptions when processing the check parameters.
     So it is much better to catch these errors in a central place with a clear error message.
@@ -232,5 +234,5 @@ def validate_check_ruleset_item_consistency(
         raise ValueError(
             f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
             "At least one of the checks in this group needs to be changed "
-            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins})."
+            f"(offending plug-in: {check_plugin.name}, present plug-ins: {present_plugins})."
         )

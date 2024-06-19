@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions to work with persisted values"""
+
+
+# pylint: disable=duplicate-code
+
+
 from collections.abc import MutableMapping
 from typing import Any, cast
 
@@ -23,7 +28,9 @@ def get_rate(  # type: ignore[misc]
     *,
     raise_overflow: bool = False,
 ) -> float:
-    """Return a rate based on current value and time and last value and time
+    """
+    1. Update value store.
+    2. Calculate rate based on current value and time and last value and time
 
     Args:
 
@@ -75,7 +82,7 @@ def get_rate(  # type: ignore[misc]
         The computed rate
 
     """
-    # Cast to avoid lots of mypy suppressions. It better reflects the tuth anyway.
+    # Cast to avoid lots of mypy suppressions. It better reflects the truth anyway.
     value_store = cast(MutableMapping[str, object], value_store)
 
     last_state = value_store.get(key)
@@ -88,10 +95,13 @@ def get_rate(  # type: ignore[misc]
         ):
             pass
         case _other:
-            raise GetRateError(f"Initialized: {key!r}")
+            raise GetRateError(
+                f"Counter {key!r} has been initialized."
+                " Result available on second check execution."
+            )
 
     if time <= last_time:
-        raise GetRateError("No time difference")
+        raise GetRateError("No rate available (time anomaly detected)")
 
     rate = float(value - last_value) / (time - last_time)
     if raise_overflow and rate < 0:
@@ -99,7 +109,7 @@ def get_rate(  # type: ignore[misc]
         # wether they are 32 or 64 bit. It also could happen counter
         # reset (reboot, etc.). Better is to leave this value undefined
         # and wait for the next check interval.
-        raise GetRateError("Value overflow")
+        raise GetRateError(f"Negative rate for {key!r}. Suspecting value overflow.")
 
     return rate
 
@@ -151,7 +161,7 @@ def get_average(  # type: ignore[misc]
         The computed average
 
     """
-    # Cast to avoid lots of mypy suppressions. It better reflects the tuth anyway.
+    # Cast to avoid lots of mypy suppressions. It better reflects the truth anyway.
     value_store = cast(MutableMapping[str, object], value_store)
 
     match value_store.get(key, ()):

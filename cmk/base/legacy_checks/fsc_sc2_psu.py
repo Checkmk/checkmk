@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.1 "PSU1"
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.2 "PSU2"

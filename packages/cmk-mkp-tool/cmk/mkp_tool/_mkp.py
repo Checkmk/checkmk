@@ -92,6 +92,7 @@ class Manifest(BaseModel):
 def manifest_template(
     name: PackageName,
     version_packaged: str,
+    version_required: str,
     *,
     version: PackageVersion | None = None,
     files: Mapping[PackagePart, Sequence[Path]] | None = None,
@@ -104,7 +105,7 @@ def manifest_template(
         description="Please add a description here",
         version=version or PackageVersion("1.0.0"),
         version_packaged=version_packaged,
-        version_min_required=version_packaged,
+        version_min_required=version_required,
         version_usable_until=None,
         author="Add your name here",
         download_url=f"https://example.com/{name}/",
@@ -115,7 +116,7 @@ def manifest_template(
 def read_manifest_optionally(manifest_path: Path) -> Manifest | None:
     try:
         return Manifest.parse_python_string(manifest_path.read_text())
-    except (IOError, SyntaxError, TypeError, ValueError, ValidationError):
+    except (OSError, SyntaxError, TypeError, ValueError, ValidationError):
         _logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
     return None
 

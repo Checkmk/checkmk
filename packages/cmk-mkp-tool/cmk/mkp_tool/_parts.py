@@ -14,6 +14,9 @@ from typing import assert_never, Final, Self
 
 from ._mkp import PackagePart
 
+_PERMISSION_EXECUTABLE = 0o700
+_PERMISSION_NONEXECUTABLE = 0o600
+
 
 @dataclass(frozen=True)
 class PathConfig:
@@ -144,17 +147,17 @@ class PathConfig:
 def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
     match part:
         case PackagePart.CMK_PLUGINS:
-            return _("Shipped Checkmk plugins")
+            return _("Shipped Checkmk plug-ins")
         case PackagePart.CMK_ADDONS_PLUGINS:
-            return _("Additional Checkmk plugins by third parties")
+            return _("Additional Checkmk plug-ins by third parties")
         case PackagePart.EC_RULE_PACKS:
             return _("Event Console rule packs")
         case PackagePart.AGENT_BASED:
-            return _("Agent based plugins (deprecated)")
+            return _("Agent based plug-ins (deprecated)")
         case PackagePart.CHECKS:
-            return _("Legacy check plugins (deprecated)")
+            return _("Legacy check plug-ins (deprecated)")
         case PackagePart.HASI:
-            return _("Legacy inventory plugins (deprecated)")
+            return _("Legacy inventory plug-ins (deprecated)")
         case PackagePart.CHECKMAN:
             return _("Checks' man pages (deprecated)")
         case PackagePart.AGENTS:
@@ -183,44 +186,43 @@ def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
             assert_never(unreachable)
 
 
-def permissions(part: PackagePart) -> int:
+def permissions(part: PackagePart, rel_path: Path) -> int | None:
     match part:
-        case PackagePart.CMK_PLUGINS:
-            return 0o644
-        case PackagePart.CMK_ADDONS_PLUGINS:
-            return 0o644
-        case PackagePart.EC_RULE_PACKS:
-            return 0o644
-        case PackagePart.AGENT_BASED:
-            return 0o644
-        case PackagePart.CHECKS:
-            return 0o644
-        case PackagePart.HASI:
-            return 0o644
-        case PackagePart.CHECKMAN:
-            return 0o644
-        case PackagePart.AGENTS:
-            return 0o755
-        case PackagePart.NOTIFICATIONS:
-            return 0o755
-        case PackagePart.GUI:
-            return 0o644
-        case PackagePart.WEB:
-            return 0o644
-        case PackagePart.PNP_TEMPLATES:
-            return 0o644
-        case PackagePart.DOC:
-            return 0o644
-        case PackagePart.LOCALES:
-            return 0o644
-        case PackagePart.BIN:
-            return 0o755
+        case PackagePart.CMK_PLUGINS | PackagePart.CMK_ADDONS_PLUGINS:
+            return (
+                _PERMISSION_EXECUTABLE
+                if rel_path.parts[-2] == "libexec"
+                else _PERMISSION_NONEXECUTABLE
+            )
+        case (
+            PackagePart.EC_RULE_PACKS
+            | PackagePart.AGENT_BASED
+            | PackagePart.CHECKS
+            | PackagePart.HASI
+            | PackagePart.CHECKMAN
+            | PackagePart.GUI
+            | PackagePart.WEB
+            | PackagePart.PNP_TEMPLATES
+            | PackagePart.DOC
+            | PackagePart.LOCALES
+            | PackagePart.MIBS
+        ):
+            return _PERMISSION_NONEXECUTABLE
         case PackagePart.LIB:
-            return 0o644
-        case PackagePart.MIBS:
-            return 0o644
-        case PackagePart.ALERT_HANDLERS:
-            return 0o755
+            # I guess this shows that nagios plug-ins ought to be their own package part.
+            # For now I prefer to stay compatible.
+            return (
+                _PERMISSION_EXECUTABLE
+                if rel_path.parts[:2] == ("nagios", "plugins")
+                else _PERMISSION_NONEXECUTABLE
+            )
+        case (
+            PackagePart.AGENTS
+            | PackagePart.NOTIFICATIONS
+            | PackagePart.BIN
+            | PackagePart.ALERT_HANDLERS
+        ):
+            return _PERMISSION_EXECUTABLE
         case unreachable:
             assert_never(unreachable)
 

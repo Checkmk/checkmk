@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import cmc_path, cme_path, repo_path
+from tests.testlib.repo import repo_path
 
 from ..conftest import ChangedFiles
 
@@ -38,7 +38,7 @@ exclude_files = ["bin/mkeventd_open514", "bin/mkevent"]
 
 
 def find_debugs(line: str) -> re.Match[str] | None:
-    return re.match(r"(pprint\.)?pp?rint[( ]", line.lstrip())
+    return re.match(r"(?m)^(:?pprint\.)?pp?rint[( ](?!.*\b(:?file=\w+)).*[\)\"']$", line.lstrip())
 
 
 @pytest.mark.parametrize(
@@ -48,20 +48,16 @@ def test_find_debugs(changed_files: ChangedFiles, line: str) -> None:
     assert find_debugs(line)
 
 
-@pytest.mark.parametrize("line", ['sys.stdout.write("message")', "# print(variable)"])
+@pytest.mark.parametrize(
+    "line", ['sys.stdout.write("message")', "# print(variable)", 'print("hello", file=sys.stdout)']
+)
 def test_find_debugs_false(changed_files: ChangedFiles, line: str) -> None:
     assert find_debugs(line) is None
 
 
 @pytest.mark.parametrize(
     "path",
-    [
-        p  #
-        for base_path in [repo_path(), cmc_path(), cme_path()]  #
-        for dir_path in check_paths  #
-        for p in [base_path / dir_path]
-        if p.exists()
-    ],
+    [p for dir_path in check_paths for p in [repo_path() / dir_path] if p.exists()],
 )
 def test_find_debug_code(changed_files: ChangedFiles, path: str) -> None:
     scanned = 0

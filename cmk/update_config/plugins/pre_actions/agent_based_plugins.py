@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
+from logging import Logger
 from pathlib import Path
 
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
@@ -12,9 +13,11 @@ from cmk.gui.exceptions import MKUserError
 
 from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
+    AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     ConflictMode,
     continue_on_incomp_local_file,
     disable_incomp_mkp,
+    error_message_incomp_local_file,
     get_installer_and_package_map,
     get_path_config,
     PACKAGE_STORE,
@@ -25,7 +28,15 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Load all agent based plugins before the real update happens"""
 
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+        while self._disable_failure_and_reload_plugins(logger, conflict_mode):
+            pass
+
+    def _disable_failure_and_reload_plugins(
+        self,
+        logger: Logger,
+        conflict_mode: ConflictMode,
+    ) -> bool:
         path_config = get_path_config()
         package_store = PACKAGE_STORE
         installer, package_map = get_installer_and_package_map(path_config)
@@ -35,11 +46,8 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             package_id = package_map.get(path.resolve())
             # unpackaged files
             if package_id is None:
-                if continue_on_incomp_local_file(
-                    conflict_mode,
-                    module_name,
-                    error,
-                ):
+                logger.error(error_message_incomp_local_file(path, error))
+                if continue_on_incomp_local_file(conflict_mode):
                     continue
                 raise MKUserError(None, "incompatible local file")
 
@@ -47,6 +55,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 continue  # already dealt with
 
             if disable_incomp_mkp(
+                logger,
                 conflict_mode,
                 module_name,
                 error,
@@ -54,17 +63,20 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 installer,
                 package_store,
                 path_config,
+                path,
             ):
                 disabled_packages.add(package_id)
-                continue
+                return True
 
             raise MKUserError(None, "incompatible local file")
+
+        return False
 
 
 pre_update_action_registry.register(
     PreUpdateAgentBasedPlugins(
         name="agent_based_plugins",
         title="Agent based plugins",
-        sort_index=30,
+        sort_index=AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     )
 )

@@ -11,7 +11,7 @@ description:
  The check returns {OK} state if the specified connection/listener is present,
  and {CRIT} if not.
 
- This check needs the agent plugin {netstat_an.bat} to be installed.
+ This check needs the agent plug-in {netstat_an.bat} to be installed.
 
 item:
  The name of the connection

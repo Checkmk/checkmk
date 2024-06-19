@@ -160,9 +160,9 @@ public:
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     stateFileCreatedTime() const = 0;
     [[nodiscard]] virtual std::vector<std::string> metrics(
-        const IHost &, Logger *logger) const = 0;
+        const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::string> metrics(
-        const IService &, Logger *logger) const = 0;
+        const IService &) const = 0;
 
     [[nodiscard]] virtual Encoding dataEncoding() const = 0;
     [[nodiscard]] virtual size_t maxResponseSize() const = 0;

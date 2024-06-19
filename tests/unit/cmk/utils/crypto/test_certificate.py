@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
-import cryptography.x509 as x509
 import pytest
+import time_machine
+from cryptography import x509
 from dateutil.relativedelta import relativedelta
-from freezegun import freeze_time
 
-from tests.testlib.certs import rsa_private_keys_equal
+from tests.unit.cmk.utils.crypto.certs import rsa_private_keys_equal
 
 from cmk.utils.crypto.certificate import (
     Certificate,
@@ -24,7 +26,7 @@ from cmk.utils.crypto.certificate import (
     PersistedCertificateWithPrivateKey,
     X509Name,
 )
-from cmk.utils.crypto.keys import InvalidSignatureError, PrivateKey
+from cmk.utils.crypto.keys import InvalidSignatureError
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.types import InvalidPEMError
 
@@ -41,7 +43,7 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
     assert self_signed_cert.certificate.organization_name is not None
-    assert "Checkmk Site" in self_signed_cert.certificate.organization_name
+    assert "Checkmk Testing" in self_signed_cert.certificate.organization_name
 
 
 @pytest.mark.parametrize(
@@ -73,7 +75,7 @@ def test_verify_expiry(
     #
     # We assume self_signed_cert is valid for 2 hours. Otherwise the test will not work.
     #
-    with freeze_time(self_signed_cert.certificate.not_valid_before + time_offset):
+    with time_machine.travel(self_signed_cert.certificate.not_valid_before + time_offset):
         with expectation:
             self_signed_cert.certificate.verify_expiry(allowed_drift)
 
@@ -93,7 +95,7 @@ def test_days_til_expiry(
     when: relativedelta,
     expected_days_remaining: relativedelta,
 ) -> None:
-    with freeze_time(self_signed_cert.certificate.not_valid_before + when):
+    with time_machine.travel(self_signed_cert.certificate.not_valid_before + when):
         assert self_signed_cert.certificate.days_til_expiry() == expected_days_remaining
 
 
@@ -283,7 +285,7 @@ def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: li
             subject_name=X509Name.create(common_name="sans_test"),
             subject_alt_dns_names=sans,
             expiry=relativedelta(days=1),
-            start_date=datetime.now(),
+            start_date=datetime.now(timezone.utc),
             issuer_signing_key=self_signed_cert.private_key,
             issuer_name=X509Name.create(common_name="sans_test"),
         ).get_subject_alt_names()
@@ -291,27 +293,44 @@ def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: li
     )
 
 
-def test_sign_csr(self_signed_cert: CertificateWithPrivateKey, rsa_key: PrivateKey) -> None:
+@pytest.mark.parametrize(
+    "signing_cert_fixture,subject_key_fixture",
+    [
+        # this tries various kinds of certs/keys both as CA and as CSR subject
+        ("self_signed_cert", "self_signed_ec_cert"),
+        ("self_signed_ec_cert", "self_signed_ed25519_cert"),
+        ("self_signed_ed25519_cert", "self_signed_cert"),
+    ],
+)
+def test_sign_csr(
+    signing_cert_fixture: str,
+    subject_key_fixture: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    signing_certificate = request.getfixturevalue(signing_cert_fixture)
+    # re-use the keys from our self-signed certs for convenience
+    subject_key = request.getfixturevalue(subject_key_fixture).private_key
+
     csr = CertificateSigningRequest.create(
         subject_name=X509Name.create(common_name="csr_test", organization_name="csr_test_org"),
-        subject_private_key=rsa_key,
+        subject_private_key=subject_key,
     )
 
-    with freeze_time(self_signed_cert.certificate.not_valid_before):
-        new_cert = self_signed_cert.sign_csr(csr, expiry=relativedelta(days=1))
+    with time_machine.travel(signing_certificate.certificate.not_valid_before):
+        new_cert = signing_certificate.sign_csr(csr, expiry=relativedelta(days=1))
 
-    assert new_cert.not_valid_before == self_signed_cert.certificate.not_valid_before
+    assert new_cert.not_valid_before == signing_certificate.certificate.not_valid_before
     assert (
         new_cert.not_valid_after
-        == self_signed_cert.certificate.not_valid_before + relativedelta(days=1)
+        == signing_certificate.certificate.not_valid_before + relativedelta(days=1)
     )
 
-    new_cert.verify_is_signed_by(self_signed_cert.certificate)
+    new_cert.verify_is_signed_by(signing_certificate.certificate)
     assert (
-        new_cert.public_key == rsa_key.public_key
+        new_cert.public_key == subject_key.public_key
     ), "The public key in the certificate matches the private key in the CSR"
     assert (
-        new_cert.issuer == self_signed_cert.certificate.subject
+        new_cert.issuer == signing_certificate.certificate.subject
     ), "The issuer of the new certificate is the self_signed_cert"
 
 

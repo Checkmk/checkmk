@@ -7,7 +7,7 @@ from collections.abc import Iterable, Sequence
 from functools import cache
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 
 from cmk.werks.models import Compatibility, Werk
 

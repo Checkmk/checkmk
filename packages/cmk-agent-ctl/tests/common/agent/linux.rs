@@ -54,3 +54,9 @@ pub fn setup_agent_socket_path(home_dir: &std::path::Path) -> String {
 pub fn is_elevation_required() -> bool {
     false
 }
+
+/// On Linux returns true always: this is initial behavior and subject to change in the future
+/// with consequent merge both functions into one
+pub fn is_port_available(_port: u16) -> bool {
+    true
+}

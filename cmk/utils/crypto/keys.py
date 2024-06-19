@@ -5,12 +5,12 @@
 
 from __future__ import annotations
 
-from typing import overload
+from typing import get_args, overload, TypeAlias, TypeGuard
 
 import cryptography.exceptions
 import cryptography.hazmat.primitives.asymmetric as asym
-import cryptography.hazmat.primitives.asymmetric.padding as padding
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.types import (
@@ -42,6 +42,32 @@ class PublicKeyPEM(SerializedPEM):
     """A public key in pem format"""
 
 
+PublicKeyType: TypeAlias = (
+    asym.ed25519.Ed25519PublicKey
+    | asym.ed448.Ed448PublicKey
+    | asym.rsa.RSAPublicKey
+    | asym.ec.EllipticCurvePublicKey
+)
+
+
+def is_supported_public_key_type(key: asym.types.PublicKeyTypes) -> TypeGuard[PublicKeyType]:
+    # get_args is a workaround for mypy bug https://github.com/python/mypy/issues/12155
+    return isinstance(key, get_args(PublicKeyType))
+
+
+PrivateKeyType: TypeAlias = (
+    asym.ed25519.Ed25519PrivateKey
+    | asym.ed448.Ed448PrivateKey
+    | asym.rsa.RSAPrivateKey
+    | asym.ec.EllipticCurvePrivateKey
+)
+
+
+def is_supported_private_key_type(key: asym.types.PrivateKeyTypes) -> TypeGuard[PrivateKeyType]:
+    # get_args is a workaround for mypy bug https://github.com/python/mypy/issues/12155
+    return isinstance(key, get_args(PrivateKeyType))
+
+
 class PrivateKey:
     """
     A private key. Not every kind of private key is supported.
@@ -55,7 +81,7 @@ class PrivateKey:
     the lack of a use-case.
     """
 
-    def __init__(self, key: asym.types.CertificateIssuerPrivateKeyTypes) -> None:
+    def __init__(self, key: PrivateKeyType) -> None:
         self._key = key
 
     @classmethod
@@ -64,13 +90,11 @@ class PrivateKey:
 
     @overload
     @classmethod
-    def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> PrivateKey:
-        ...
+    def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> PrivateKey: ...
 
     @overload
     @classmethod
-    def load_pem(cls, pem_data: EncryptedPrivateKeyPEM, password: Password) -> PrivateKey:
-        ...
+    def load_pem(cls, pem_data: EncryptedPrivateKeyPEM, password: Password) -> PrivateKey: ...
 
     @classmethod
     def load_pem(
@@ -137,25 +161,17 @@ class PrivateKey:
                 raise WrongPasswordError
             raise InvalidPEMError
 
-        # mypy bug: isinstance should be fine with the union, but mypy isn't
-        # https://github.com/python/mypy/issues/12155
-        if not isinstance(
-            key,
-            asym.types.CertificateIssuerPrivateKeyTypes,  # type:ignore [arg-type]
-        ):
+        if not is_supported_private_key_type(key):
             # We support only key types that can be used to for signatures. See class docstring.
             raise ValueError(f"Unsupported private key type {type(key)}")
 
-        # mypy bug: see above; and now mypy doesn't know we checked it
-        return cls(key)  # type:ignore [arg-type]
+        return cls(key)
 
     @overload
-    def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM:
-        ...
+    def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM: ...
 
     @overload
-    def dump_pem(self, password: Password) -> EncryptedPrivateKeyPEM:
-        ...
+    def dump_pem(self, password: Password) -> EncryptedPrivateKeyPEM: ...
 
     def dump_pem(
         self, password: Password | None
@@ -170,21 +186,25 @@ class PrivateKey:
         bytes_ = self._key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.BestAvailableEncryption(password.raw_bytes)
-            if password is not None
-            else serialization.NoEncryption(),
+            encryption_algorithm=(
+                serialization.BestAvailableEncryption(password.raw_bytes)
+                if password is not None
+                else serialization.NoEncryption()
+            ),
         )
         if password is None:
             return PlaintextPrivateKeyPEM(bytes_)
         return EncryptedPrivateKeyPEM(bytes_)
 
-    def dump_legacy_pkcs1(self) -> PlaintextPrivateKeyPEM:
+    def rsa_dump_legacy_pkcs1(self) -> PlaintextPrivateKeyPEM:
         """Deprecated. Use dump_pem() instead.
+
+        This method only works on RSA keys!
 
         Encode the private key without encryption in PKCS#1 / OpenSSL format
         (i.e. '-----BEGIN RSA PRIVATE KEY-----...').
         """
-        bytes_ = self._key.private_bytes(
+        bytes_ = self.get_raw_rsa_key().private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
             encryption_algorithm=serialization.NoEncryption(),
@@ -195,6 +215,18 @@ class PrivateKey:
     def public_key(self) -> PublicKey:
         return PublicKey(self._key.public_key())
 
+    def get_raw_rsa_key(self) -> asym.rsa.RSAPrivateKey:
+        """
+        Get the raw underlying key IF it is an RSA key. Raise a ValueError otherwise.
+
+        This should be avoided, but can be useful in situations where other key types are not
+        supported yet.
+        """
+        if not isinstance(self._key, asym.rsa.RSAPrivateKey):
+            raise ValueError("Not an RSA private key")
+
+        return self._key
+
     def rsa_sign_data(
         self, data: bytes, hash_algorithm: HashAlgorithm = HashAlgorithm.Sha512
     ) -> Signature:
@@ -204,10 +236,9 @@ class PrivateKey:
         PKCS1v15 padding will be used. If the underlying key is not an RSA key, a ValueError is
         raised.
         """
-        if not isinstance(self._key, asym.rsa.RSAPrivateKey):
-            raise ValueError("rsa_sign_data used with non-rsa key")
-
-        return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value))
+        return Signature(
+            self.get_raw_rsa_key().sign(data, padding.PKCS1v15(), hash_algorithm.value)
+        )
 
 
 class PublicKey:
@@ -223,24 +254,18 @@ class PublicKey:
     the lack of a use-case.
     """
 
-    def __init__(self, key: asym.types.CertificateIssuerPublicKeyTypes) -> None:
+    def __init__(self, key: PublicKeyType) -> None:
         self._key = key
 
     @classmethod
     def load_pem(cls, pem_data: PublicKeyPEM) -> PublicKey:
         key = serialization.load_pem_public_key(pem_data.bytes)
 
-        # mypy bug: isinstance should be fine with the union, but mypy isn't
-        # https://github.com/python/mypy/issues/12155
-        if not isinstance(
-            key,
-            asym.types.CertificateIssuerPublicKeyTypes,  # type:ignore [arg-type]
-        ):
+        if not is_supported_public_key_type(key):
             # We support only key types that can be used to for signatures. See class docstring.
             raise ValueError(f"Unsupported public key type {type(key)}")
 
-        # mypy bug: see above; and now mypy doesn't know we checked it
-        return cls(key)  # type:ignore [arg-type]
+        return cls(key)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PublicKey):
@@ -248,12 +273,10 @@ class PublicKey:
         return self._key == other._key
 
     def dump_pem(self) -> PublicKeyPEM:
-        # TODO: Use SubjectPublicKeyInfo format rather than PKCS1. PKCS1 doesn't include an
-        # algorithm identifier.
         return PublicKeyPEM(
             self._key.public_bytes(
                 serialization.Encoding.PEM,
-                serialization.PublicFormat.PKCS1,
+                serialization.PublicFormat.SubjectPublicKeyInfo,
             )
         )
 
@@ -264,6 +287,18 @@ class PublicKey:
             serialization.PublicFormat.OpenSSH,
         ).decode("utf-8")
 
+    def get_raw_rsa_key(self) -> asym.rsa.RSAPublicKey:
+        """
+        Get the raw underlying key IF it is an RSA key. Raise a ValueError otherwise.
+
+        This should be avoided, but can be useful in situations where other key types are not
+        supported yet.
+        """
+        if not isinstance(self._key, asym.rsa.RSAPublicKey):
+            raise ValueError("Not an RSA public key")
+
+        return self._key
+
     def rsa_verify(
         self, signature: Signature, message: bytes, digest_algorithm: HashAlgorithm
     ) -> None:
@@ -273,10 +308,9 @@ class PublicKey:
         PKCS1v15 padding is assumed. If the underlying key is not an RSA key, a ValueError is
         raised.
         """
-        if not isinstance(self._key, asym.rsa.RSAPublicKey):
-            raise ValueError("rsa_verify used with non-rsa key")
-
         try:
-            self._key.verify(signature, message, asym.padding.PKCS1v15(), digest_algorithm.value)
+            self.get_raw_rsa_key().verify(
+                signature, message, asym.padding.PKCS1v15(), digest_algorithm.value
+            )
         except cryptography.exceptions.InvalidSignature as e:
             raise InvalidSignatureError(e) from e

@@ -53,9 +53,10 @@
 import time
 from typing import Any
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 
 def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
@@ -185,9 +186,8 @@ def check_mknotifyd(item, _no_params, parsed):
     status_age = parsed["timestamp"] - stat["Updated"]
     if status_age > 90:
         state = 2
-        infotext = (
-            "Status last updated %s ago, spooler seems crashed or busy"
-            % get_age_human_readable(status_age)
+        infotext = "Status last updated %s ago, spooler seems crashed or busy" % render.timespan(
+            status_age
         )
     else:
         state = 0
@@ -204,7 +204,7 @@ def check_mknotifyd(item, _no_params, parsed):
         perf_data = [("corrupted_files", corrupted["Count"])]
         yield 1, "%d corrupted files: youngest %s ago" % (
             corrupted["Count"],
-            get_age_human_readable(age),
+            render.timespan(age),
         ), perf_data
 
     # Are there deferred files that are too old?
@@ -221,7 +221,7 @@ def check_mknotifyd(item, _no_params, parsed):
             state = 0
         yield state, "%d deferred files: oldest %s ago" % (
             count,
-            get_age_human_readable(age),
+            render.timespan(age),
         ), perf_data
 
     return
@@ -277,7 +277,7 @@ def check_mknotifyd_connection(item, _no_params, parsed):
         # Show uptime
         if connection["State"] == "established":
             age = parsed["timestamp"] - connection["Since"]
-            yield 0, "Uptime: %s" % get_age_human_readable(age)
+            yield 0, "Uptime: %s" % render.timespan(age)
 
             if "Connect Time" in connection:
                 yield 0, "Connect time: %.3f sec" % connection["Connect Time"]

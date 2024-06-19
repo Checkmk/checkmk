@@ -5,15 +5,15 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.check_api import check_levels
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
     get_value_store,
     IgnoreResultsError,
-    render,
 )
 
-import cmk.plugins.lib.cpu_util as cpu_util
+from cmk.agent_based.v2 import render
+from cmk.plugins.lib import cpu_util
 
 # Common file for all (modern) checks that check CPU utilization (not load!)
 
@@ -288,7 +288,7 @@ def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
             high_load_duration,
             "%s_is_under_high_load_for" % core,  # Not used
             (warn_core, crit_core),
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.timespan,
             infoname="%s is under high load for" % core,
         )
         if timestamp == 0:

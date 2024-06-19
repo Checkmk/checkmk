@@ -21,8 +21,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
 
 
@@ -41,7 +41,7 @@ def parse_fortisandbox_queues(string_table):
         "Job Queue Assignment",
     ]
 
-    return {k: int(v) for k, v in zip(queues, string_table[0])}
+    return {k: int(v) for k, v in zip(queues, string_table[0])} if string_table else None
 
 
 def inventory_fortisandbox_queues(parsed):

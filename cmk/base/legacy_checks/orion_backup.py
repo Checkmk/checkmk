@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 
 def inventory_orion_backup(info):
@@ -28,8 +27,8 @@ def check_orion_backup(item, params, info):
     return state, f"Status: {state_readable}, Expected time: {backup_time} minutes"
 
 
-def parse_orion_backup(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_orion_backup(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["orion_backup"] = LegacyCheckDefinition(

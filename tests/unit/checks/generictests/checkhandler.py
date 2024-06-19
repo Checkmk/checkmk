@@ -4,13 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
+
+
 class CheckHandler:
     """Collect the info on all checks"""
 
     def __init__(self) -> None:
-        self.cache: dict = {}
+        self.cache: dict[str, list[str]] = {}
 
-    def get_applicables(self, checkname, check_info):
+    def get_applicables(
+        self, checkname: str, check_info: dict[str, LegacyCheckDefinition]
+    ) -> list[str]:
         """get a list of names of all (sub)checks that apply"""
         if checkname in self.cache:
             return self.cache[checkname]

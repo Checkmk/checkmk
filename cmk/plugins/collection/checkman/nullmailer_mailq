@@ -17,8 +17,5 @@ description:
  in the deferred queue have reached the defined thresholds.
  By default the check will result in {CRITICAL} if there is at least one failed mail.
 
-item:
- Empty string
-
 discovery:
  One service is created on each system which provides the {nullmailer-send} command.

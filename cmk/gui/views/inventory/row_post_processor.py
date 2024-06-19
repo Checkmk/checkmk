@@ -10,13 +10,11 @@ from typing import NamedTuple
 
 from cmk.utils.structured_data import ImmutableTree, SDKey, SDPath, SDValue
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.inventory import (
-    get_short_inventory_filepath,
-    load_filtered_and_merged_tree,
-    LoadStructuredDataError,
-)
+from cmk.gui.inventory import get_short_inventory_filepath, load_filtered_and_merged_tree
 from cmk.gui.painter.v0.base import Cell, JoinCell
 from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
@@ -74,32 +72,30 @@ def _get_view_macros(view_spec: ViewSpec) -> Sequence[tuple[str, str]] | None:
 
 
 def _add_inventory_data(rows: Rows) -> None:
-    corrupted_inventory_files = []
+    corrupted_inventory_files = set()
     for row in rows:
         if "host_name" not in row:
             continue
 
         try:
-            row["host_inventory"] = (
-                ImmutableTree() if (tree := load_filtered_and_merged_tree(row)) is None else tree
-            )
-        except LoadStructuredDataError:
+            row["host_inventory"] = load_filtered_and_merged_tree(row)
+        except Exception as e:
+            if active_config.debug:
+                html.show_warning("%s" % e)
             # The inventory row may be joined with other rows (perf-o-meter, ...).
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.
             row["host_inventory"] = ImmutableTree()
-            corrupted_inventory_files.append(str(get_short_inventory_filepath(row["host_name"])))
+            corrupted_inventory_files.add(str(get_short_inventory_filepath(row["host_name"])))
 
-            if corrupted_inventory_files:
-                user_errors.add(
-                    MKUserError(
-                        "load_structured_data_tree",
-                        _(
-                            "Cannot load HW/SW inventory trees %s. Please remove the corrupted files."
-                        )
-                        % ", ".join(sorted(corrupted_inventory_files)),
-                    )
-                )
+    if corrupted_inventory_files:
+        user_errors.add(
+            MKUserError(
+                "load_structured_data_tree",
+                _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.")
+                % ", ".join(sorted(corrupted_inventory_files)),
+            )
+        )
 
 
 def _join_inventory_rows(
@@ -127,7 +123,7 @@ def _join_inventory_rows(
         }
 
         found_values_by_ident: dict[str, list[str | int | float]] = {}
-        for found_table_row in table_rows_by_master_key[_MasterKey.make(row)]:
+        for found_table_row in table_rows_by_master_key.get(_MasterKey.make(row), []):
             if found_table_row.matches(row_values_by_macro):
                 found_values_by_ident.setdefault(found_table_row.ident, []).append(
                     found_table_row.column_value
@@ -212,6 +208,6 @@ def _find_table_rows(
             macros={
                 macro: macro_table_value
                 for macro_column_name, macro in painter_macros
-                if (macro_table_value := table_row.get(macro_column_name)) is not None
+                if (macro_table_value := table_row.get(SDKey(macro_column_name))) is not None
             },
         )

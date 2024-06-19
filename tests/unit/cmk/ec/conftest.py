@@ -5,7 +5,6 @@
 
 import logging
 import os
-import pathlib
 import threading
 from collections.abc import Iterator
 from unittest import mock
@@ -19,6 +18,7 @@ from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
 from cmk.ec.history_file import FileHistory
 from cmk.ec.history_mongo import MongoDBHistory
+from cmk.ec.history_sqlite import SQLiteHistory, SQLiteSettings
 from cmk.ec.main import (
     create_history,
     default_slave_status_master,
@@ -31,17 +31,12 @@ from cmk.ec.main import (
     StatusTableHistory,
 )
 from cmk.ec.perfcounters import Perfcounters
-from cmk.ec.settings import Settings
+from cmk.ec.settings import create_settings
 
 
 @pytest.fixture(name="settings")
-def fixture_settings() -> Settings:
-    return ec.settings(
-        "1.2.3i45",
-        cmk.utils.paths.omd_root,
-        pathlib.Path(cmk.utils.paths.default_config_dir),
-        ["mkeventd"],
-    )
+def fixture_settings() -> ec.Settings:
+    return create_settings("1.2.3i45", cmk.utils.paths.omd_root, ["mkeventd"])
 
 
 @pytest.fixture(name="lock_configuration")
@@ -60,10 +55,10 @@ def fixture_config() -> Config:
 
 
 @pytest.fixture(name="history")
-def fixture_history(settings: Settings, config: Config) -> FileHistory:
+def fixture_history(settings: ec.Settings, config: Config) -> FileHistory:
     history = create_history(
         settings,
-        config,
+        config | {"archive_mode": "file"},
         logging.getLogger("cmk.mkeventd"),
         StatusTableEvents.columns,
         StatusTableHistory.columns,
@@ -73,7 +68,7 @@ def fixture_history(settings: Settings, config: Config) -> FileHistory:
 
 
 @pytest.fixture(name="history_mongo")
-def fixture_history_mongo(settings: Settings, config: Config) -> Iterator[MongoDBHistory]:
+def fixture_history_mongo(settings: ec.Settings, config: Config) -> Iterator[MongoDBHistory]:
     """history_mongo with connection config file mocked"""
 
     connection_string = os.getenv("MONGODB_CONNECTION_STRING") or ""
@@ -88,7 +83,7 @@ def fixture_history_mongo(settings: Settings, config: Config) -> Iterator[MongoD
     ):
         history = create_history(
             settings,
-            {**config, "archive_mode": "mongodb"},
+            config | {"archive_mode": "mongodb"},
             logging.getLogger("cmk.mkeventd"),
             StatusTableEvents.columns,
             StatusTableHistory.columns,
@@ -98,6 +93,23 @@ def fixture_history_mongo(settings: Settings, config: Config) -> Iterator[MongoD
         history.flush()
 
 
+@pytest.fixture(name="history_sqlite")
+def fixture_history_sqlite(settings: ec.Settings, config: Config) -> Iterator[SQLiteHistory]:
+    """history_sqlite with history file path set to :memory:"""
+
+    history = SQLiteHistory(
+        SQLiteSettings.from_settings(settings, database=":memory:"),
+        config | {"archive_mode": "sqlite"},
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+    )
+
+    yield history
+
+    history.flush()
+
+
 @pytest.fixture(name="perfcounters")
 def fixture_perfcounters() -> Perfcounters:
     return Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
@@ -105,7 +117,7 @@ def fixture_perfcounters() -> Perfcounters:
 
 @pytest.fixture(name="event_status")
 def fixture_event_status(
-    settings: Settings, config: Config, perfcounters: Perfcounters, history: FileHistory
+    settings: ec.Settings, config: Config, perfcounters: Perfcounters, history: FileHistory
 ) -> EventStatus:
     return EventStatus(
         settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus")
@@ -114,7 +126,7 @@ def fixture_event_status(
 
 @pytest.fixture(name="event_server")
 def fixture_event_server(
-    settings: Settings,
+    settings: ec.Settings,
     config: Config,
     slave_status: SlaveStatus,
     perfcounters: Perfcounters,
@@ -138,7 +150,7 @@ def fixture_event_server(
 
 @pytest.fixture(name="status_server")
 def fixture_status_server(
-    settings: Settings,
+    settings: ec.Settings,
     config: Config,
     slave_status: SlaveStatus,
     perfcounters: Perfcounters,

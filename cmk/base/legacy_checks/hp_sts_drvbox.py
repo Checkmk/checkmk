@@ -10,9 +10,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 hp_sts_drvbox_type_map = {
     "1": "other",

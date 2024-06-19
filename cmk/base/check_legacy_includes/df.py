@@ -5,12 +5,9 @@
 
 # pylint: disable=chained-comparison,unused-import
 
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-
-from cmk.agent_based.v1 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, render, Result, State
 from cmk.plugins.lib.df import check_filesystem_levels, check_inodes
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS  # noqa: F401
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS as FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.lib.df import INODES_DEFAULT_PARAMS as INODES_DEFAULT_PARAMS
 from cmk.plugins.lib.df import mountpoints_in_group as mountpoints_in_group
@@ -169,7 +166,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
-        reserved_hr = get_bytes_human_readable(reserved_mb * 1024**2)
+        reserved_hr = render.disksize(reserved_mb * 1024**2)
         infotext.append(
             "additionally reserved for root: %s" % reserved_hr  #
             if subtract_reserved

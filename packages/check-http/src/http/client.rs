@@ -5,11 +5,15 @@
 use reqwest::{
     redirect::{Action, Attempt, Policy},
     tls::Version as TlsVersion,
-    Client, Result as ReqwestResult, Version,
+    Client, Proxy, Result as ReqwestResult, Url, Version,
 };
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
+use std::{
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    sync::{Arc, Mutex},
+};
 
+#[derive(Clone)]
 pub enum OnRedirect {
     Ok,
     Warning,
@@ -34,10 +38,41 @@ pub struct ClientConfig {
     pub force_ip: Option<ForceIP>,
     pub min_tls_version: Option<TlsVersion>,
     pub max_tls_version: Option<TlsVersion>,
+    pub collect_tls_info: bool,
+    pub ignore_proxy_env: bool,
+    pub proxy_url: Option<String>,
+    pub proxy_auth: Option<(String, String)>,
 }
 
-pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
+pub struct ClientAdapter {
+    pub client: Client,
+    pub redirect_recorder: Arc<Mutex<Option<Url>>>,
+}
+
+impl ClientAdapter {
+    pub fn new(cfg: ClientConfig) -> ReqwestResult<Self> {
+        let redirect_recorder = Arc::new(Mutex::<Option<Url>>::new(None));
+        Ok(Self {
+            client: build(cfg, redirect_recorder.clone())?,
+            redirect_recorder,
+        })
+    }
+}
+
+fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder();
+
+    let client = if cfg.ignore_proxy_env {
+        client.no_proxy()
+    } else {
+        client
+    };
+
+    let client = if let Some(proxy) = get_proxy(cfg.proxy_url, cfg.proxy_auth) {
+        client.proxy(proxy?)
+    } else {
+        client
+    };
 
     let client = if let Some(version) = cfg.min_tls_version {
         match version {
@@ -82,20 +117,61 @@ pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
     client
         .timeout(cfg.timeout)
         .user_agent(cfg.user_agent)
-        .redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
+        .redirect(get_policy(
+            cfg.onredirect,
+            cfg.max_redirs,
+            cfg.force_ip,
+            record_redirect,
+        ))
+        .tls_info(cfg.collect_tls_info)
         .build()
 }
 
-fn get_policy(onredirect: OnRedirect, max_redirs: usize, force_ip: Option<ForceIP>) -> Policy {
+fn get_proxy(
+    proxy_url: Option<String>,
+    proxy_auth: Option<(String, String)>,
+) -> Option<ReqwestResult<Proxy>> {
+    let proxy_url = proxy_url?;
+
+    let proxy = Proxy::all(proxy_url);
+
+    if let Some((proxy_user, proxy_pw)) = proxy_auth {
+        Some(proxy.map(|p| p.basic_auth(&proxy_user, &proxy_pw)))
+    } else {
+        Some(proxy)
+    }
+}
+
+fn get_policy(
+    onredirect: OnRedirect,
+    max_redirs: usize,
+    force_ip: Option<ForceIP>,
+    record_redirect: Arc<Mutex<Option<Url>>>,
+) -> Policy {
     match onredirect {
-        OnRedirect::Ok | OnRedirect::Warning | OnRedirect::Critical => Policy::none(),
+        OnRedirect::Ok | OnRedirect::Warning | OnRedirect::Critical => Policy::custom(move |att| {
+            *record_redirect.lock().unwrap() = Some(att.url().to_owned());
+            att.stop()
+        }),
         OnRedirect::Follow => Policy::limited(max_redirs),
-        OnRedirect::Sticky => {
-            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, false))
-        }
-        OnRedirect::Stickyport => {
-            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, true))
-        }
+        OnRedirect::Sticky => Policy::custom(move |att| {
+            policy_sticky(
+                att,
+                force_ip.clone(),
+                max_redirs,
+                false,
+                record_redirect.clone(),
+            )
+        }),
+        OnRedirect::Stickyport => Policy::custom(move |att| {
+            policy_sticky(
+                att,
+                force_ip.clone(),
+                max_redirs,
+                true,
+                record_redirect.clone(),
+            )
+        }),
     }
 }
 
@@ -104,6 +180,7 @@ fn policy_sticky(
     force_ip: Option<ForceIP>,
     max_redirs: usize,
     sticky_port: bool,
+    record_redirect: Arc<Mutex<Option<Url>>>,
 ) -> Action {
     if attempt.previous().len() > max_redirs {
         return attempt.error("too many redirects");
@@ -120,21 +197,17 @@ fn policy_sticky(
     let previous_socket_addr = filter_socket_addrs(previous_socket_addrs, force_ip.clone());
     let socket_addr = filter_socket_addrs(socket_addrs, force_ip);
 
-    match sticky_port {
-        false => {
-            if contains_unchanged_ip(&previous_socket_addr, &socket_addr) {
-                attempt.follow()
-            } else {
-                attempt.error("Detected changed IP")
-            }
-        }
-        true => {
-            if contains_unchanged_addr(&previous_socket_addr, &socket_addr) {
-                attempt.follow()
-            } else {
-                attempt.error("Detected changed IP/port")
-            }
-        }
+    let contains = if sticky_port {
+        contains_unchanged_addr
+    } else {
+        contains_unchanged_ip
+    };
+
+    if contains(&previous_socket_addr, &socket_addr) {
+        attempt.follow()
+    } else {
+        *record_redirect.lock().unwrap() = Some(attempt.url().to_owned());
+        attempt.stop()
     }
 }
 

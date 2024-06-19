@@ -12,7 +12,7 @@ from pathlib import Path
 
 from livestatus import SiteId
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.site import omd_site
 
 from cmk.gui.background_job import (
@@ -21,10 +21,12 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
 )
+from cmk.gui.config import active_config
 from cmk.gui.cron import register_job
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -128,14 +130,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         return _("Sync remote site changes and audit log")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-            ),
-        )
+        super().__init__(self.job_prefix)
         self._last_audit_log_timestamps_path = _get_last_audit_log_timestamps_path()
         self._last_audit_log_timestamps_store = LastAuditLogTimestampsStore(
             self._last_audit_log_timestamps_path
@@ -241,7 +236,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         return SyncRemoteSitesResult.from_json(
             str(
                 do_remote_automation(
-                    get_site_config(site_id),
+                    get_site_config(active_config, site_id),
                     "sync-remote-site",
                     [("last_audit_log_timestamp", str(last_audit_log_timestamp))],
                 )
@@ -275,7 +270,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
 
     def _clear_site_changes_from_remote_sites(self, site_changes_synced_sites: set[SiteId]) -> None:
         for site_id in site_changes_synced_sites:
-            do_remote_automation(get_site_config(site_id), "clear-site-changes", [])
+            do_remote_automation(get_site_config(active_config, site_id), "clear-site-changes", [])
 
     def _get_result_message(
         self,
@@ -310,4 +305,12 @@ def execute_sync_remote_sites() -> None:
         logger.debug("Another 'sync remote sites' job is already running: Skipping this time.")
         return
 
-    job.start(job.do_execute)
+    job.start(
+        job.do_execute,
+        InitialStatusArgs(
+            title=SyncRemoteSitesBackgroundJob.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
+    )

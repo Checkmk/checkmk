@@ -8,8 +8,8 @@ from collections.abc import Iterable, Mapping
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.kentix import DETECT_KENTIX
 
 #
@@ -18,7 +18,9 @@ from cmk.plugins.lib.kentix import DETECT_KENTIX
 Section = Mapping[str, float]
 
 
-def parse_kentix_dewpoint(string_table: list[list[str]]) -> Section:
+def parse_kentix_dewpoint(string_table: list[list[str]]) -> Section | None:
+    if not string_table:
+        return None
     for item, reading in zip(("LAN", "Rack"), string_table[0]):
         try:
             return {item: float(reading) / 10}

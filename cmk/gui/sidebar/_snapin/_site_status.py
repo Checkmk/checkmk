@@ -7,9 +7,7 @@ import json
 
 from livestatus import SiteId
 
-import cmk.gui.site_config as site_config
-import cmk.gui.sites as sites
-import cmk.gui.user_sites as user_sites
+from cmk.gui import site_config, sites, user_sites
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -19,6 +17,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import makeuri_contextless
 
+from ...config import active_config
 from ._base import SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, link, render_link
 
@@ -49,7 +48,7 @@ class SiteStatus(SidebarSnapin):
         sites.update_site_states_from_dead_sites()
 
         for sitename, _sitealias in user_sites.sorted_sites():
-            site = site_config.get_site_config(sitename)
+            site = site_config.get_site_config(active_config, sitename)
 
             state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 
@@ -58,15 +57,12 @@ class SiteStatus(SidebarSnapin):
                 switch = "missing"
                 text = escape_to_html(sitename)
 
+            elif state == "disabled":
+                switch = "on"
+                text = escape_to_html(site["alias"])
             else:
-                if state == "disabled":
-                    switch = "on"
-                    text = escape_to_html(site["alias"])
-                else:
-                    switch = "off"
-                    text = render_link(
-                        site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename
-                    )
+                switch = "off"
+                text = render_link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
 
             html.open_tr()
             html.td(text, class_="left")

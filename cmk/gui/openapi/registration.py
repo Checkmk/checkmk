@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
     activate_changes,
     agent,
     audit_log,
+    autocomplete,
     aux_tags,
     cert,
     comment,
@@ -20,8 +22,10 @@ from cmk.gui.openapi.endpoints import (
     host_group_config,
     host_internal,
     host_tag_group,
+    ldap_connection,
     metric,
     notification_rules,
+    parent_scan,
     password,
     rule,
     ruleset,
@@ -36,18 +40,22 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
+from .spec import spec_generator_job
 
-def register(endpoint_registry: EndpointRegistry) -> None:
+
+def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobRegistry) -> None:
     acknowledgement.register(endpoint_registry)
     activate_changes.register(endpoint_registry)
     agent.register(endpoint_registry)
     audit_log.register(endpoint_registry)
+    autocomplete.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
     cert.register(endpoint_registry)
     comment.register(endpoint_registry)
     contact_group_config.register(endpoint_registry)
     downtime.register(endpoint_registry)
     folder_config.register(endpoint_registry)
+    ldap_connection.register(endpoint_registry)
     host.register(endpoint_registry)
     host_config.register(endpoint_registry)
     host_group_config.register(endpoint_registry)
@@ -56,6 +64,7 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     metric.register(endpoint_registry)
     notification_rules.register(endpoint_registry)
     password.register(endpoint_registry)
+    parent_scan.register(endpoint_registry)
     rule.register(endpoint_registry)
     ruleset.register(endpoint_registry)
     service.register(endpoint_registry)
@@ -66,3 +75,4 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     user_config.register(endpoint_registry)
     user_role.register(endpoint_registry)
     version.register(endpoint_registry)
+    spec_generator_job.register(job_registry)

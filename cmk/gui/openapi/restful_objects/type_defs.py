@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields, Schema
-from typing_extensions import TypedDict
 
 from cmk.gui.http import HTTPMethod
 
@@ -34,13 +33,16 @@ DomainType = Literal[
     "hostgroup",
     "host_group_config",
     "host_tag_group",
+    "ldap_connection",
     "licensing",
     "license_usage",
     "metric",
     "notification_rule",
     "password",
+    "parent_scan",
     "rule",
     "ruleset",
+    "saml_connection",
     "service",
     "service_discovery",
     "service_discovery_run",
@@ -54,9 +56,9 @@ DomainType = Literal[
     "user_config",
     "user_role",
     "aux_tag",
+    "autocomplete",
 ]  # fmt: off
 
-DomainObject = dict[str, Any]
 
 CmkEndpointName = Literal[
     "cmk/run",
@@ -95,14 +97,14 @@ CmkEndpointName = Literal[
     "cmk/delete_bi_pack",
     "cmk/put_bi_rule",
     "cmk/post_bi_rule",
-    "cmk/get_bi_aggregation_state",
+    "cmk/bi_aggregation_state_post",
+    "cmk/bi_aggregation_state_get",
     "cmk/put_bi_aggregation",
     "cmk/post_bi_aggregation",
     "cmk/put_bi_pack",
     "cmk/put_bi_packs",
     "cmk/get_bi_rule",
     "cmk/get_bi_aggregation",
-    "cmk/get_bi_aggregation_state",
     "cmk/get_bi_pack",
     "cmk/get_bi_packs",
     "cmk/pending-activation-changes",
@@ -191,7 +193,43 @@ PropertyFormat = Literal[
 CollectionItem = dict[str, str]
 LocationType = Literal["path", "query", "header", "cookie"]
 ResultType = Literal["object", "list", "scalar", "void"]
-LinkType = dict[str, str]
+
+
+class LinkType(TypedDict):
+    rel: str
+    href: str
+    type: str
+    method: str
+    domainType: str
+    title: NotRequired[str]
+    body_params: NotRequired[dict[str, str | None]]
+
+
+class ActionObject(TypedDict):
+    id: str
+    memberType: str
+    links: list[LinkType]
+    parameters: dict[str, Any]
+
+
+class Result(TypedDict):
+    links: list[LinkType]
+    value: Any | None
+
+
+class ActionResult(TypedDict):
+    links: list[LinkType]
+    resultType: ResultType
+    result: Result
+
+
+class DomainObject(TypedDict):
+    domainType: DomainType
+    id: str
+    title: str
+    links: list[LinkType]
+    members: dict[str, Any]
+    extensions: dict[str, Any]
 
 
 class CollectionObject(TypedDict):
@@ -211,7 +249,7 @@ class ObjectProperty(TypedDict, total=False):
     extensions: dict[str, Any]
 
 
-Serializable = dict[str, Any] | CollectionObject | ObjectProperty
+Serializable = dict[str, Any] | CollectionObject | ObjectProperty | DomainObject | ActionResult
 ETagBehaviour = Literal["input", "output", "both"]
 
 SchemaClass = type[Schema]
@@ -219,7 +257,7 @@ SchemaInstanceOrClass = Schema | SchemaClass
 OpenAPISchemaType = Literal["string", "array", "object", "boolean", "integer", "number"]
 
 # Used to blacklist some endpoints in certain locations
-EndpointTarget = Literal["swagger-ui", "doc", "debug"]
+EndpointTarget = Literal["swagger-ui", "doc"]
 
 
 def translate_to_openapi_keys(
@@ -377,7 +415,7 @@ OperationSpecType = TypedDict(
     total=False,
 )
 
-OperationObject = Mapping[HTTPMethod, OperationSpecType]
+OperationObject = dict[HTTPMethod, OperationSpecType]
 
 OpenAPITag = TypedDict(
     "OpenAPITag",
@@ -393,11 +431,7 @@ OpenAPITag = TypedDict(
 
 ParameterKey = tuple[str, ...]
 
-StatusCodeInt = Literal[
-    200,
-    204,
-    301,
-    302,
+ErrorStatusCodeInt = Literal[
     400,
     401,
     403,
@@ -410,10 +444,25 @@ StatusCodeInt = Literal[
     422,
     423,
     428,
+    500,
     504,
-    409,
 ]
-ErrorStatusCodeInt = Literal[400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428, 500]
+SuccessStatusCodeInt = Literal[
+    200,
+    204,
+]
+
+RedirectStatusCodeInt = Literal[
+    301,
+    302,
+]
+
+StatusCodeInt = Literal[
+    SuccessStatusCodeInt,
+    ErrorStatusCodeInt,
+    RedirectStatusCodeInt,
+]
+
 StatusCode = Literal[
     "200",
     "204",
@@ -431,6 +480,7 @@ StatusCode = Literal[
     "422",
     "423",
     "428",
+    "500",
     "504",
 ]
 

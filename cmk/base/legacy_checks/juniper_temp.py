@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, startswith
+
+from cmk.agent_based.v2 import any_of, SNMPTree, startswith
 
 # .1.3.6.1.4.1.2636.3.1.13.1.5.7.1.0.0 FPC: EX3300 48-Port @ 0/*/* --> SNMPv2-SMI::enterprises.2636.3.1.13.1.5.7.1.0.0
 # .1.3.6.1.4.1.2636.3.1.13.1.5.7.2.0.0 FPC: EX3300 48-Port @ 1/*/* --> SNMPv2-SMI::enterprises.2636.3.1.13.1.5.7.2.0.0

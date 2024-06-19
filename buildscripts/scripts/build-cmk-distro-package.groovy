@@ -5,6 +5,7 @@
 /// Builds a distribution package (.rpm, .dep, etc.) for a given edition/distribution
 /// at a given git hash
 
+/* groovylint-disable MethodSize */
 def main() {
     check_job_parameters([
         ["EDITION", true],
@@ -22,15 +23,12 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
-    def docker_args = "${mount_reference_repo_dir}";
     def omd_env_vars = [
         "DEBFULLNAME='Checkmk Team'",
         "DEBEMAIL='feedback@checkmk.com'",
     ] + (params.DISABLE_CACHE ? [
         "NEXUS_BUILD_CACHE_URL=",
-        "PYTHON_ENABLE_OPTIMIZATIONS=",
         "BAZEL_CACHE_URL=",
         "BAZEL_CACHE_USER=",
         "BAZEL_CACHE_PASSWORD="] : []);
@@ -43,13 +41,21 @@ def main() {
     def branch_name = "master";
     def branch_version = versioning.get_branch_version(checkout_dir);
 
-    //FIXME
+    // FIXME
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
 
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def docker_tag = versioning.select_docker_tag(branch_name, DOCKER_TAG_BUILD, DOCKER_TAG_BUILD);
+    /* groovylint-disable LineLength */
     def container_name = "build-cmk-package-${distro}-${edition}-${cmd_output("git --git-dir=${checkout_dir}/.git log -n 1 --pretty=format:'%h'")}";
+    /* groovylint-enable LineLength */
+
+    def causes = currentBuild.getBuildCauses();
+    def triggerd_by = "";
+    for(cause in causes) {
+        triggerd_by += cause.upstreamProject + "/" + cause.upstreamBuild + "\n";
+    }
 
     print(
         """
@@ -60,106 +66,105 @@ def main() {
         |branch_name:.............. │${branch_name}│
         |omd_env_vars:............. │${omd_env_vars}│
         |docker_tag:............... │${docker_tag}│
-        |docker_args:.............. │${docker_args}│
         |checkout_dir:............. │${checkout_dir}│
         |container_name:........... │${checkout_dir}│
+        |triggerd_by:.............. |${triggerd_by}|
         |===================================================
         """.stripMargin());
 
     stage("Prepare workspace") {
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
+        inside_container() {
+            dir("${checkout_dir}") {
+                sh("make buildclean");
+                sh("find . -name *.pth -delete");
+                versioning.configure_checkout_folder(edition, cmk_version);
+            }
 
-                dir("${checkout_dir}") {
-                    sh("make buildclean");
+            // FIXME: should this be done by another job?
+            dir("${checkout_dir}") {
+                sh("make cmk-frontend frontend-vue");
+            }
 
-                    sh("find . -name *.pth -delete");
+            dir("${checkout_dir}") {
+                sh("make .venv");
+            }
 
-                    versioning.configure_checkout_folder(edition, cmk_version);
+            stage("Fetch agent binaries") {
+                // shout("Fetch agent binaries");
+
+                upstream_build(
+                    relative_job_name: "builders/build-linux-agent-updater",
+                    build_params: [
+                        DISABLE_CACHE: DISABLE_CACHE,
+                        VERSION: VERSION,
+                    ],
+                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
+                    dependency_paths: ["agents", "non-free/cmk-update-agent"],
+                    dest: "artifacts/build-linux-agent-updater",
+                );
+                dir("${checkout_dir}/artifacts/build-linux-agent-updater") {
+                    sh("find .");
+                    sh("cp *.deb *.rpm ${checkout_dir}/agents/");
+                    sh("mkdir -p ${checkout_dir}/agents/linux");
+                    sh("cp cmk-agent-ctl* mk-sql ${checkout_dir}/agents/linux/");
+                    if (edition != "raw") {
+                        sh("cp cmk-update-agent* ${checkout_dir}/non-free/cmk-update-agent/");
+                    }
                 }
 
-                // FIXME: should this be done by another job?
-                dir("${checkout_dir}") {
-                    sh("make .ran-webpack");
+                upstream_build(
+                    relative_job_name: "winagt-build",  // TODO: move to builders
+                    build_params: [
+                        DISABLE_CACHE: DISABLE_CACHE,
+                        VERSION: VERSION,
+                    ],
+                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
+                    dependency_paths: [
+                        "agents/wnx",
+                        "agents/windows",
+                        "packages/cmk-agent-ctl",
+                        "packages/mk-sql"
+                    ],
+                    dest: "artifacts/winagt-build",
+                );
+                dir("${checkout_dir}/artifacts/winagt-build") {
+                    sh("find .");
+                    sh("mkdir -p ${checkout_dir}/agents/windows");
+                    // TODO: SPoT!!
+                    sh("""cp \
+                        check_mk_agent-64.exe \
+                        check_mk_agent.exe \
+                        check_mk_agent.msi \
+                        check_mk_agent_unsigned.msi \
+                        check_mk.user.yml \
+                        OpenHardwareMonitorLib.dll \
+                        OpenHardwareMonitorCLI.exe \
+                        mk-sql.exe \
+                        robotmk_ext.exe \
+                        windows_files_hashes.txt \
+                        ${checkout_dir}/agents/windows/
+                    """);
+                }
+                dir("${checkout_dir}/agents/windows") {
+                    sh("""
+                        ${checkout_dir}/buildscripts/scripts/create_unsign_msi_patch.sh \
+                        check_mk_agent.msi check_mk_agent_unsigned.msi unsign-msi.patch
+                    """);
                 }
 
-                stage("Fetch agent binaries") {
-                    // shout("Fetch agent binaries");
-
-                    fetch_job_artifacts(
-                        relative_job_name: "builders/build-linux-agent-updater",
-                        params: [
-                            DISABLE_CACHE: DISABLE_CACHE,
-                            VERSION: VERSION,
-                        ],
-                        // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                        dependency_paths: ["agents", "enterprise/agents/plugins"],
-                        dest: "artifacts/build-linux-agent-updater",
-                    );
-                    dir("${checkout_dir}/artifacts/build-linux-agent-updater") {
-                        sh("find .");
-                        sh("cp *.deb *.rpm ${checkout_dir}/agents/");
-                        sh("mkdir -p ${checkout_dir}/agents/linux");
-                        sh("cp cmk-agent-ctl* check-sql ${checkout_dir}/agents/linux/");
-                        if (edition != "raw") {
-                            sh("cp cmk-update-agent* ${checkout_dir}/enterprise/agents/plugins/");
-                        }
-                    }
-
-                    fetch_job_artifacts(
-                        relative_job_name: "winagt-build",  // TODO: move to builders
-                        params: [
-                            DISABLE_CACHE: DISABLE_CACHE,
-                            VERSION: VERSION,
-                        ],
-                        // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                        dependency_paths: [
-                            "agents/wnx",
-                            "agents/windows",
-                            "packages/cmk-agent-ctl",
-                            "packages/check-sql"
-                        ],
-                        dest: "artifacts/winagt-build",
-                    );
-                    dir("${checkout_dir}/artifacts/winagt-build") {
-                        sh("find .");
-                        sh("mkdir -p ${checkout_dir}/agents/windows");
-                        // TODO: SPoT!!
-                        sh("""cp \
-                            check_mk_agent-64.exe \
-                            check_mk_agent.exe \
-                            check_mk_agent.msi \
-                            check_mk_agent_unsigned.msi \
-                            check_mk.user.yml \
-                            OpenHardwareMonitorLib.dll \
-                            OpenHardwareMonitorCLI.exe \
-                            check-sql.exe \
-                            robotmk_ext.exe \
-                            windows_files_hashes.txt \
-                            ${checkout_dir}/agents/windows/
-                        """);
-                    }
-                    dir("${checkout_dir}/agents/windows") {
-                        sh("""
-                            ${checkout_dir}/buildscripts/scripts/create_unsign_msi_patch.sh \
-                            check_mk_agent.msi check_mk_agent_unsigned.msi unsign-msi.patch
-                        """);
-                    }
-
-                    fetch_job_artifacts(
-                        relative_job_name: "winagt-build-modules",  // TODO: move to builders
-                        params: [
-                            DISABLE_CACHE: DISABLE_CACHE,
-                            VERSION: VERSION,
-                        ],
-                        // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                        dependency_paths: ["agents/modules/windows"],
-                        dest: "artifacts/winagt-build-modules",
-                    );
-                    dir("${checkout_dir}/agents/windows") {
-                        sh("find ${checkout_dir}/artifacts/winagt-build-modules");
-                        sh("cp ${checkout_dir}/artifacts/winagt-build-modules/*.cab .");
-                    }
+                upstream_build(
+                    relative_job_name: "winagt-build-modules",  // TODO: move to builders
+                    build_params: [
+                        DISABLE_CACHE: DISABLE_CACHE,
+                        VERSION: VERSION,
+                    ],
+                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
+                    dependency_paths: ["agents/modules/windows"],
+                    dest: "artifacts/winagt-build-modules",
+                );
+                dir("${checkout_dir}/agents/windows") {
+                    sh("find ${checkout_dir}/artifacts/winagt-build-modules");
+                    sh("cp ${checkout_dir}/artifacts/winagt-build-modules/*.cab .");
                 }
             }
         }
@@ -174,12 +179,15 @@ def main() {
 
     stage("Prepare environment") {
         shout("Prepare environment");
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image("${distro}:${docker_tag}").inside(
-                    "--name ${container_name}" +
-                    " ${docker_args} " +
-                    "-v ${checkout_dir}:${checkout_dir} " +
-                    "--hostname ${distro}") {
+        lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
+            inside_container(
+                image: docker.image("${distro}:${docker_tag}"),
+                args: [
+                    "--name ${container_name}",
+                    " -v ${checkout_dir}:${checkout_dir}",
+                    " --hostname ${distro}",
+                ],
+            ) {
                 sh("""
                     cd ${checkout_dir}
                     make .venv
@@ -193,7 +201,7 @@ def main() {
                         credentialsId: 'bazel-caching-credentials',
                         /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
                         passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                        usernameVariable: 'BAZEL_CACHE_USER')
+                        usernameVariable: 'BAZEL_CACHE_USER'),
                 ]) {
                     versioning.print_image_tag();
                     // Don't use withEnv, see
@@ -201,17 +209,6 @@ def main() {
                     stage("Build package") {
                         sh("""
                             cd ${checkout_dir}/omd
-
-                            # ps wauxw | grep bazel
-                            # bazel clean
-                            #strace \
-                            #    --trace='fork,vfork,clone,clone3,execve,openat,write' \
-                            #    -ttt \
-                            #    -f --decode-pids='pidns' \
-                            #    --columns=0 --abbrev='none' -s 65536 \
-                            #    -o "make-omd.strace.log" \
-                            ps wauxw | grep bazel
-
                             ${omd_env_vars.join(' ')} \
                             make ${distro_package_type(distro)}
                         """);
@@ -225,7 +222,8 @@ def main() {
         dir("${checkout_dir}") {
             setCustomBuildProperty(
                 key: "path_hashes",
-                value: scm_directory_hashes(scm.extensions));
+                value: scm_directory_hashes(scm.extensions)
+            );
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
                     artifacts: "*.deb,*.rpm,*.cma",
@@ -235,4 +233,5 @@ def main() {
         }
     }
 }
+
 return this;

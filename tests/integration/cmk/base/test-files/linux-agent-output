@@ -7,6 +7,10 @@ DataDirectory: /var/lib/check_mk_agent
 SpoolDirectory: /var/lib/check_mk_agent/spool
 PluginsDirectory: /usr/lib/check_mk_agent/plugins
 LocalDirectory: /usr/lib/check_mk_agent/local
+OSType: linux
+OSPlatform: ubuntu
+OSName: Ubuntu
+OSVersion: 22.04
 <<<df>>>
 udev                              devtmpfs     8131600         0   8131600       0% /dev
 tmpfs                             tmpfs        1630584     18312   1612272       2% /run

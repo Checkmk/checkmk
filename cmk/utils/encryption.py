@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import binascii
 import contextlib
-import os
 import re
 import socket
 from collections.abc import Iterable
@@ -23,8 +22,6 @@ from cryptography.x509.oid import NameOID
 from OpenSSL import crypto, SSL
 
 from cmk.utils.crypto.certificate import Certificate
-from cmk.utils.crypto.secrets import EncrypterSecret
-from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
 
 _PEM_RE = re.compile(
@@ -153,33 +150,3 @@ def _verify_certificate_chain(
         )
 
     return verify_chain_results
-
-
-class Encrypter:
-    """Helper to encrypt site secrets
-
-    The secrets are encrypted using the auth.secret which is only known to the local and remotely
-    configured sites.
-    """
-
-    # TODO: This shares almost all the code with PasswordStore, except for the version bytes that
-    # are prepended by the store.
-
-    SALT_LENGTH: int = 16
-    NONCE_LENGTH: int = 16
-
-    @staticmethod
-    def encrypt(value: str) -> bytes:
-        salt = os.urandom(Encrypter.SALT_LENGTH)
-        nonce = os.urandom(Encrypter.NONCE_LENGTH)
-        key = EncrypterSecret().derive_secret_key(salt)
-        encrypted = aes_gcm_encrypt(key, nonce, value)
-        return salt + nonce + encrypted.tag + encrypted.ciphertext
-
-    @staticmethod
-    def decrypt(raw: bytes) -> str:
-        salt, rest = raw[: Encrypter.SALT_LENGTH], raw[Encrypter.SALT_LENGTH :]
-        nonce, rest = rest[: Encrypter.NONCE_LENGTH], rest[Encrypter.NONCE_LENGTH :]
-        tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
-        key = EncrypterSecret().derive_secret_key(salt)
-        return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))

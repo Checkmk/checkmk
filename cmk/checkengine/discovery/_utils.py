@@ -5,17 +5,25 @@
 
 from __future__ import annotations
 
+import dataclasses
 import enum
+import json
 from collections.abc import Hashable, Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Final, Generic, Literal, Protocol, Self, TypeVar
 
 __all__ = ["DiscoveryMode", "QualifiedDiscovery", "DiscoverySettings"]
 
 DiscoveryVsSetting = dict[
-    Literal["add_new_services", "remove_vanished_services", "update_host_labels"], bool
+    Literal[
+        "add_new_services",
+        "remove_vanished_services",
+        "update_host_labels",
+        "update_changed_service_labels",
+    ],
+    bool,
 ]
-DiscoveryVsSettings = tuple[Literal["update_everything", "custom"], DiscoveryVsSetting]
+DiscoveryVsSettings = tuple[Literal["update_everything", "custom"], DiscoveryVsSetting | None]
 
 
 @dataclass(frozen=True)
@@ -23,8 +31,8 @@ class DiscoverySettings:
     update_host_labels: bool
     add_new_services: bool
     remove_vanished_services: bool
-    # this will be separated into service labels and parameters at some point
-    update_changed_services: bool
+    update_changed_service_labels: bool
+    update_changed_service_parameters: bool
 
     @classmethod
     def from_discovery_mode(cls, mode: DiscoveryMode) -> Self:
@@ -33,7 +41,8 @@ class DiscoverySettings:
             add_new_services=mode
             in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
             remove_vanished_services=mode in (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL),
-            update_changed_services=mode is DiscoveryMode.REFRESH,
+            update_changed_service_labels=mode is DiscoveryMode.REFRESH,
+            update_changed_service_parameters=mode is DiscoveryMode.REFRESH,
         )
 
     @classmethod
@@ -43,7 +52,8 @@ class DiscoverySettings:
                 update_host_labels=False,
                 add_new_services=False,
                 remove_vanished_services=False,
-                update_changed_services=False,
+                update_changed_service_labels=False,
+                update_changed_service_parameters=False,
             )
 
         if "update_everything" in mode:
@@ -51,15 +61,26 @@ class DiscoverySettings:
                 update_host_labels=True,
                 add_new_services=True,
                 remove_vanished_services=True,
-                update_changed_services=True,
+                update_changed_service_labels=True,
+                update_changed_service_parameters=False,
             )
 
+        # "custom" mode
+        assert mode[1] is not None
         return cls(
             update_host_labels=mode[1].get("update_host_labels", False),
             add_new_services=mode[1].get("add_new_services", False),
             remove_vanished_services=mode[1].get("remove_vanished_services", False),
-            update_changed_services=False,
+            update_changed_service_labels=mode[1].get("update_changed_service_labels", False),
+            update_changed_service_parameters=False,
         )
+
+    def to_json(self) -> str:
+        return json.dumps(asdict(self))
+
+    @classmethod
+    def from_json(cls, mode: str) -> DiscoverySettings:
+        return cls(**json.loads(mode))
 
 
 class DiscoveryMode(enum.Enum):
@@ -93,18 +114,22 @@ class _Discoverable(Protocol):
     comparing equal.
     """
 
-    def id(self) -> Hashable:
-        ...
+    def id(self) -> Hashable: ...
 
-    # tbd: def comperator(self) -> object:
-    #    ...
+    def comparator(self) -> object: ...
 
 
 _DiscoveredItem = TypeVar("_DiscoveredItem", bound=_Discoverable)
 
 
+@dataclasses.dataclass
+class DiscoveredItem(Generic[_DiscoveredItem]):
+    previous: _DiscoveredItem | None
+    new: _DiscoveredItem | None
+
+
 class QualifiedDiscovery(Generic[_DiscoveredItem]):
-    """Classify items into "new", "old" and "vanished" ones."""
+    """Classify items into "new", "unchanged", "changed", and "vanished" ones."""
 
     def __init__(
         self,
@@ -115,19 +140,53 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         current_dict = {v.id(): v for v in current}
         preexisting_dict = {v.id(): v for v in preexisting}
 
-        self.vanished: Final = [v for k, v in preexisting_dict.items() if k not in current_dict]
-        self.old: Final = [v for k, v in preexisting_dict.items() if k in current_dict]
-        self.new: Final = [v for k, v in current_dict.items() if k not in preexisting_dict]
-        self.present: Final = self.old + self.new
+        self._vanished: Final = [
+            DiscoveredItem(previous=v, new=None)
+            for k, v in preexisting_dict.items()
+            if k not in current_dict
+        ]
+        self._new: Final = [
+            DiscoveredItem(previous=None, new=v)
+            for k, v in current_dict.items()
+            if k not in preexisting_dict
+        ]
+        self._changed: Final = [
+            DiscoveredItem(previous=v, new=current_dict[k])
+            for k, v in preexisting_dict.items()
+            if k in current_dict and v.comparator() != current_dict[k].comparator()
+        ]
+        self._unchanged: Final = [
+            DiscoveredItem(previous=v, new=v)
+            for k, v in current_dict.items()
+            if k in preexisting_dict and v.comparator() == preexisting_dict[k].comparator()
+        ]
+        self._old: Final = self._changed + self._unchanged
 
     @classmethod
     def empty(cls) -> QualifiedDiscovery:
         """create an empty instance"""
         return cls(preexisting=(), current=())
 
-    def chain_with_qualifier(
+    @property
+    def vanished(self) -> list[_DiscoveredItem]:
+        return [item.previous for item in self._vanished if item.previous is not None]
+
+    @property
+    def old(self) -> list[_DiscoveredItem]:
+        return [item.previous for item in self._old if item.previous is not None]
+
+    @property
+    def new(self) -> list[_DiscoveredItem]:
+        return [item.new for item in self._new if item.new is not None]
+
+    @property
+    def present(self) -> list[_DiscoveredItem]:
+        return self.old + self.new
+
+    def chain_with_transition(
         self,
-    ) -> Iterable[tuple[Literal["vanished", "old", "new"], _DiscoveredItem]]:
-        yield from (("vanished", value) for value in self.vanished)
-        yield from (("old", value) for value in self.old)
-        yield from (("new", value) for value in self.new)
+    ) -> Iterable[tuple[Literal["vanished", "unchanged", "changed", "new"], DiscoveredItem]]:
+        yield from (("vanished", value) for value in self._vanished)
+        yield from (("unchanged", value) for value in self._unchanged)
+        yield from (("changed", value) for value in self._changed)
+        yield from (("new", value) for value in self._new)

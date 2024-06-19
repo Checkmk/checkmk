@@ -7,7 +7,7 @@ description:
  This check parses the information provided by the NGINX stub status module.
  If you have enabled that module, then the URL {/nginx_status} shows interesting
  information about the inner state of the web server when accessed from {localhost}.
- The agent plugin {nginx_status} fetches these information and processes it.
+ The agent plug-in {nginx_status} fetches these information and processes it.
 
  Please note that the information provided do not only affect the single {server} within
  the NGINX process, but the whole NGINX process and all servers hosted by that process.
@@ -40,9 +40,9 @@ description:
  system using e.g. {wget -qO - http://127.0.0.1/nginx_status}. This should give you
  an output of something like {Active connection: ...}.
 
- Once this works, you need to install the agent plugin {nginx_status} into your
+ Once this works, you need to install the agent plug-in {nginx_status} into your
  agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).
- The plugin tries to autodetect all running NGINX servers. If that fails
+ The plug-in tries to autodetect all running NGINX servers. If that fails
  for some reason you need to create the configuration file
  {/etc/check_mk/nginx_status.cfg} and configure your servers in that file.
  You find an example of that file in your agent directory ({share/check_mk/agents}).

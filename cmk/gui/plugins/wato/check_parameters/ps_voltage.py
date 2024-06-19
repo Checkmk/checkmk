@@ -37,9 +37,11 @@ def _parameter_valuespec_ps_voltage() -> Migrate:
             ],
             optional_keys=[],
         ),
-        migrate=lambda p: p
-        if isinstance(p, dict)
-        else {"levels_lower": (p[0], p[1]), "levels_upper": (p[2], p[3])},
+        migrate=lambda p: (
+            p
+            if isinstance(p, dict)
+            else {"levels_lower": (p[0], p[1]), "levels_upper": (p[2], p[3])}
+        ),
     )
 
 

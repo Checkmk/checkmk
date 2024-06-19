@@ -1,0 +1,38 @@
+title: NetApp Filer: Used Space and Traffic of Volumes
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ This check measures the usage of volumes. The usage
+ is checked against a warning and a critical level, which
+ can be specified in numerous ways.
+
+ {Trends:} This checks supports volume {trends}. This means that the {netapp_ontap_volumes} check
+ is able to compute the {change} of the used space over the time and can
+ make a forecast into the future. It can estimate the time when
+ the volume will be full.
+
+ In the default configuration the check will compute the trend based on the
+ data of the last 24 hours using a logarithmic average that gives more recent
+ data a higher weight. Also data beyond the 24 hours will to some small degree be
+ reflected in the computation. The advantage of this algorithm is a more
+ precise prediction and a simpler implementation, which does not need any
+ access to any RRDs or similar storage.
+
+ Please note that when a volume is started to be monitored,
+ the trend of the past is unknown and is assumed to be {zero}.
+ It will take at least one trend range of time until the trend
+ approximately reflects the reality.
+
+ You can also enable performance data for the traffic and latency
+ for specific protocols (global, nfs, cifs, san, fcp, iscsi) via the rule "NetApp Volumes".
+
+ This check also supports the grouping of volumes into one combined volume. This can be
+ configured via the rule "Filesystem grouping patterns".
+
+item:
+ Name of the volume as defined in the system
+
+discovery:
+ One service is created for each {local} volume.

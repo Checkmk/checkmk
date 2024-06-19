@@ -12,6 +12,7 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    entry_point_prefixes,
     InventoryPlugin,
     SimpleSNMPSection,
     SNMPSection,
@@ -41,20 +42,12 @@ _ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | Inve
 def load_all_plugins() -> list[str]:
     errors = []
     for plugin, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
-        errors.append(f"Error in agent based plugin {plugin}: {exception}\n")
+        errors.append(f"Error in agent based plug-in {plugin}: {exception}")
         if cmk.utils.debug.enabled():
             raise exception
 
     discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
-        PluginGroup.AGENT_BASED,
-        {
-            SimpleSNMPSection: "snmp_section_",
-            SNMPSection: "snmp_section_",
-            AgentSection: "agent_section_",
-            CheckPlugin: "check_plugin_",
-            InventoryPlugin: "inventory_plugin_",
-        },
-        raise_errors=cmk.utils.debug.enabled(),
+        PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=cmk.utils.debug.enabled()
     )
     errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
     for loaded_plugin in discovered_plugins.plugins.items():
@@ -150,7 +143,7 @@ def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
             # once we stop storing the plugins in a global variable, this
             # special case can go.
             return
-        raise ValueError(f"duplicate check plugin definition: {plugin.name}")
+        raise ValueError(f"duplicate check plug-in definition: {plugin.name}")
 
     add_check_plugin(plugin)
     if plugin.discovery_ruleset_name is not None:
@@ -178,6 +171,6 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
             # once we stop storing the plugins in a global variable, this
             # special case can go.
             return
-        raise ValueError(f"duplicate inventory plugin definition: {plugin.name}")
+        raise ValueError(f"duplicate inventory plug-in definition: {plugin.name}")
 
     add_inventory_plugin(plugin)

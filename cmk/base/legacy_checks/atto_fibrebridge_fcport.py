@@ -8,15 +8,8 @@ import time
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    OIDEnd,
-    SNMPTree,
-    startswith,
-)
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import get_rate, get_value_store, OIDEnd, SNMPTree, startswith, StringTable
 
 
 def inventory_atto_fibrebridge_fcport(info):

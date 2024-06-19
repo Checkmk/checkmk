@@ -42,7 +42,7 @@ check function(s)). In the following, 'sc-dict' refers to a dictionary with
 Some more advanced ones are
 
   * `freeze_time`    : [str] Mocked time.
-                       If present its value is passed to `freezegun.freeze_time`.
+                       If present its value is passed to `time_machine.travel`.
                        If you specify the empty string it will be replaced by the
                        current time if processed by generictests.regression.
   * `mock_host_conf` : [sc-dict] If present, its values are passed to

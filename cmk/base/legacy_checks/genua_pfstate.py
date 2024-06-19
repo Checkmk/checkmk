@@ -5,17 +5,10 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import (
-    check_levels,
-    DiscoveryResult,
-    LegacyCheckDefinition,
-    saveint,
-    Service,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
 
 # Example Agent Output:
@@ -25,7 +18,7 @@ from cmk.plugins.lib.genua import DETECT_GENUA
 # .1.3.6.1.4.1.3717.2.1.1.6.3 = INTEGER: 1
 
 
-def inventory_genua_pfstate(string_table: StringTable) -> DiscoveryResult:
+def discover_genua_pfstate(string_table: StringTable) -> DiscoveryResult:
     # remove empty elements due to alternative enterprise id in snmp_info
     string_table = [_f for _f in string_table if _f]
 
@@ -90,7 +83,7 @@ check_info["genua_pfstate"] = LegacyCheckDefinition(
         ),
     ],
     service_name="Paketfilter Status",
-    discovery_function=inventory_genua_pfstate,
+    discovery_function=discover_genua_pfstate,
     check_function=check_genua_pfstate,
     check_ruleset_name="pf_used_states",
     check_default_parameters={"used": None},

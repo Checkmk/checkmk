@@ -35,7 +35,7 @@ def render_start_tag(
 ) -> HTML:
     """You have to replace attributes which are also python elements such as
     'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_')."""
-    return HTML(
+    return HTML.without_escaping(
         "<%s%s%s>"
         % (
             tag_name,
@@ -46,7 +46,7 @@ def render_start_tag(
 
 
 def render_end_tag(tag_name: HTMLTagName) -> HTML:
-    return HTML("</%s>" % (tag_name))
+    return HTML.without_escaping("</%s>" % (tag_name))
 
 
 def render_element(
@@ -59,7 +59,7 @@ def render_element(
     elif not isinstance(tag_content, HTML):
         tag_content = escaping.escape_text(tag_content)
 
-    return HTML(f"{open_tag}{tag_content}</{tag_name}>")
+    return HTML.without_escaping(f"{open_tag}{tag_content}</{tag_name}>")
 
 
 def _render_attributes(  # pylint: disable=too-many-branches

@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pprint
 from collections.abc import Sequence
 
 from cmk.utils.user import UserId
 
-import cmk.gui.pagetypes as pagetypes
+from cmk.gui import pagetypes
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.hooks import request_memoize
@@ -17,7 +19,7 @@ from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.node_visualization import ParentChildTopologyPage
+from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.type_defs import ABCMegaMenuSearch, MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
@@ -73,8 +75,9 @@ def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Vis
         for page in page_type.load().pages():
             if page._show_in_sidebar():
                 visual = page.to_visual()
-                visual["hidden"] = False  # Is currently to configurable for pagetypes
-                visual["icon"] = None  # Is currently to configurable for pagetypes
+                visual["hidden"] = False  # Is currently not configurable for pagetypes
+                visual["icon"] = None  # Is currently not configurable for pagetypes
+                visual["megamenu_search_terms"] = []  # Is currently not configurable for pagetypes
 
                 page_type_items.append((page_type.type_name(), (page.name(), visual)))
 
@@ -144,6 +147,10 @@ class MonitoringSearch(ABCMegaMenuSearch):
                 name="reset",
                 type_="button",
                 onclick="cmk.search.on_click_reset('monitoring');",
+                # When the user searched for something, let him jump to the first result with the first
+                # <TAB> key press instead of jumping to the reset button. The reset can be triggered via
+                # the <ESC> key.
+                tabindex="-1",
             )
         html.close_div()
         html.div("", id_="mk_side_clear")

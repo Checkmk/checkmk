@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 
 
@@ -51,7 +50,7 @@ def check_dell_om_mem(item, _no_params, info):
                             yield 1, failure_modes[bitmask]
                     bitmask *= 2
 
-            yield 0, "Size: %s" % get_bytes_human_readable(int(size) * 1024)
+            yield 0, "Size: %s" % render.bytes(int(size) * 1024)
 
 
 def parse_dell_om_mem(string_table: StringTable) -> StringTable:

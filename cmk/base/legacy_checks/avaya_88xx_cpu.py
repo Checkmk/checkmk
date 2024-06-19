@@ -9,9 +9,8 @@ import time
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.avaya import DETECT_AVAYA
 
 
@@ -25,8 +24,8 @@ def check_avaya_88xx_cpu(_no_item, params, info):
     return check_cpu_util(int(info[0][0]), params, time.time())
 
 
-def parse_avaya_88xx_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_avaya_88xx_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["avaya_88xx_cpu"] = LegacyCheckDefinition(

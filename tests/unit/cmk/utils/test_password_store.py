@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import binascii
 from pathlib import Path
 
@@ -11,7 +13,6 @@ from cryptography.exceptions import InvalidTag
 
 import cmk.utils.paths
 from cmk.utils import password_store
-from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.crypto.secrets import PasswordStoreSecret
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.password_store import PasswordId, PasswordStore
@@ -32,34 +33,14 @@ def fixture_fixed_secret(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
     monkeypatch.setattr(PasswordStoreSecret, "path", secret_path)
 
 
-def test_save() -> None:
-    assert not password_store.load()
-    password_store.save({"ding": "blablu"})
-    assert password_store.load()["ding"] == "blablu"
+def test_save(tmp_path: Path) -> None:
+    file = tmp_path / "password_store"
+    assert not password_store.load(file)
+    password_store.save(data := {"ding": "blablu"}, file)
+    assert password_store.load(file) == data
 
 
-def test_save_for_helpers_no_store() -> None:
-    assert not password_store.password_store_path().exists()
-
-    assert not password_store.load_for_helpers()
-    password_store.save_for_helpers(LATEST_CONFIG)
-
-    assert not password_store.password_store_path().exists()
-    assert not password_store._helper_password_store_path(LATEST_CONFIG).exists()
-    assert not password_store.load_for_helpers()
-
-
-def test_save_for_helpers() -> None:
-    assert not password_store.password_store_path().exists()
-    password_store.save({"ding": "blablu"})
-    assert password_store.password_store_path().exists()
-    assert not password_store.load_for_helpers()
-
-    password_store.save_for_helpers(LATEST_CONFIG)
-    assert password_store.load_for_helpers() == {"ding": "blablu"}
-
-
-def load_patch() -> dict[str, str]:
+def load_patch(_file_path: Path) -> dict[str, str]:
     return {PW_STORE_KEY: PW_STORE}
 
 
@@ -76,7 +57,7 @@ def test_extract(
     password_id: PasswordId,
     password_actual: str,
 ) -> None:
-    monkeypatch.setattr(password_store, "load", load_patch)
+    monkeypatch.setattr(password_store._pwstore, "load", load_patch)
     assert password_store.extract(password_id) == password_actual
 
 
@@ -98,11 +79,6 @@ def test_obfuscation() -> None:
         == PasswordStore.VERSION
     )
     assert PasswordStore.decrypt(obfuscated) == secret
-
-
-def test_save_obfuscated() -> None:
-    password_store.save(data := {"ding": "blablu"})
-    assert password_store.load() == data
 
 
 def test_obfuscate_with_own_secret() -> None:

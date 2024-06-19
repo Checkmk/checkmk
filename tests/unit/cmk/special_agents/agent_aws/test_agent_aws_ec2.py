@@ -5,7 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Protocol
 
 import pytest
 
@@ -19,6 +20,8 @@ from cmk.special_agents.agent_aws import (
     NamingConvention,
     OverallTags,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import (
@@ -29,7 +32,6 @@ from .agent_aws_fake_clients import (
     EC2DescribeSecurityGroupsIB,
     EC2DescribeSpotFleetRequestsIB,
     EC2DescribeSpotInstanceRequestsIB,
-    EC2DescribeTagsIB,
     FakeCloudwatchClient,
     FakeServiceQuotasClient,
 )
@@ -40,15 +42,22 @@ class FakeEC2Client:
         self._skip_entities = {} if not skip_entities else skip_entities
 
     def describe_instances(self, InstanceIds=None, Filters=None):
+        instances = EC2DescribeInstancesIB.create_instances(
+            amount=3, skip_entities=self._skip_entities.get("Instances")
+        )
+
+        for instance in instances:
+            if instance["InstanceId"] == "InstanceId-0":
+                continue
+            instance["Tags"] = []
+
         return {
             "Reservations": [
                 {
                     "Groups": [
                         {"GroupName": "string", "GroupId": "string"},
                     ],
-                    "Instances": EC2DescribeInstancesIB.create_instances(
-                        amount=3, skip_entities=self._skip_entities.get("Instances")
-                    ),
+                    "Instances": instances,
                     "OwnerId": "string",
                     "RequesterId": "string",
                     "ReservationId": "string",
@@ -94,37 +103,32 @@ class FakeEC2Client:
             "NextToken": "string",
         }
 
-    def describe_tags(self, Filters=None):
-        tags = []
-        for filter_ in Filters:
-            for value in filter_["Values"]:
-                if value == "InstanceId-0":
-                    tags = EC2DescribeTagsIB.create_instances(amount=1)
-                    break
-        for tag in tags:
-            tag["ResourceId"] = tag["ResourceId"].replace("ResourceId", "InstanceId")
-        return {
-            "Tags": tags,
-            "NextToken": "string",
-        }
+
+EC2SectionsOut = tuple[EC2Limits, EC2Summary, EC2Labels, EC2SecurityGroups, EC2]
 
 
-EC2Sections = Callable[
-    [object | None, OverallTags, list[object], Mapping[str, object] | None],
-    tuple[EC2Limits, EC2Summary, EC2Labels, EC2SecurityGroups, EC2],
-]
+class EC2Sections(Protocol):
+    def __call__(
+        self,
+        names: object | None = None,
+        tags: OverallTags = (None, None),
+        skip_entities: Mapping[str, object] | None = None,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> EC2SectionsOut: ...
 
 
 @pytest.fixture()
 def get_ec2_sections() -> EC2Sections:
     def _create_ec2_sections(
-        names: object | None,
-        tags: OverallTags,
-        *args: object,
+        names: object | None = None,
+        tags: OverallTags = (None, None),
         skip_entities: Mapping[str, object] | None = None,
-    ) -> tuple[EC2Limits, EC2Summary, EC2Labels, EC2SecurityGroups, EC2]:
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> EC2SectionsOut:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities)
@@ -153,12 +157,12 @@ def get_ec2_sections() -> EC2Sections:
 
 ec2_params = [
     (None, (None, None), 3, 1),
-    (None, ([["Key-0"]], [["Value-0"]]), 3, 1),
+    (None, ([["Key-0"]], [["Value-0"]]), 1, 1),
     (None, ([["Key-X"]], [["Value-0"]]), 0, 0),
     (None, ([["Key-0"]], [["Value-X"]]), 0, 0),
     (None, ([["Key-0"]], [["Value-1"]]), 0, 0),
-    (None, ([["Key-1"]], [["Value-0", "Value-1"]]), 3, 1),
-    (None, ([["Key-0"]], [["Value-0", "Value-1"]]), 3, 1),
+    (None, ([["Key-1"]], [["Value-0", "Value-1"]]), 1, 1),
+    (None, ([["Key-0"]], [["Value-0", "Value-1"]]), 1, 1),
     (["InstanceId-0"], (None, None), 1, 1),
     (["InstanceId-0", "Foo", "Bar"], (None, None), 1, 1),
     (["InstanceId-0", "InstanceId-1"], (None, None), 2, 1),
@@ -178,7 +182,7 @@ def test_agent_aws_ec2_limits(
     found_ec2_with_labels: int,
 ) -> None:
     ec2_limits, _ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        names, tags, [], None
+        names, tags
     )
     ec2_limits_results = ec2_limits.run().results
 
@@ -210,9 +214,7 @@ def test_agent_aws_ec2_summary(
     found_ec2: int,
     found_ec2_with_labels: int,
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        names, tags, [], None
-    )
+    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
     ec2_summary_results = ec2_summary.run().results
 
@@ -236,12 +238,10 @@ def test_agent_aws_ec2_labels(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    found_ec2_with_labels: int,
     found_ec2: int,
+    found_ec2_with_labels: int,
 ) -> None:
-    ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        names, tags, [], None
-    )
+    ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
     _ec2_summary_results = ec2_summary.run().results
     ec2_labels_results = ec2_labels.run().results
@@ -261,9 +261,7 @@ def test_agent_aws_ec2_security_groups(
     found_ec2: int,
     found_ec2_with_labels: int,
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections(
-        names, tags, [], None
-    )
+    ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
     _ec2_summary_results = ec2_summary.run().results
     ec2_security_groups_results = ec2_security_groups.run().results
@@ -286,9 +284,7 @@ def test_agent_aws_ec2(
     found_ec2: int,
     found_ec2_with_labels: int,
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
-        names, tags, [], None
-    )
+    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
     _ec2_summary_results = ec2_summary.run().results
     ec2_results = ec2.run().results
@@ -309,9 +305,7 @@ def test_agent_aws_ec2(
 def test_agent_aws_ec2_summary_without_limits(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        None, (None, None), [], None
-    )
+    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections()
     ec2_summary_results = ec2_summary.run().results
 
     assert ec2_summary.cache_interval == 300
@@ -328,9 +322,7 @@ def test_agent_aws_ec2_summary_without_limits(
 def test_agent_aws_ec2_labels_without_limits(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        None, (None, None), [], None
-    )
+    _ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections()
     _ec2_summary_results = ec2_summary.run().results
     ec2_labels_results = ec2_labels.run().results
 
@@ -344,9 +336,7 @@ def test_agent_aws_ec2_labels_without_limits(
 def test_agent_aws_ec2_security_groups_without_limits(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections(
-        None, (None, None), [], None
-    )
+    _ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections()
     _ec2_summary_results = ec2_summary.run().results
     ec2_security_groups_results = ec2_security_groups.run().results
 
@@ -361,9 +351,7 @@ def test_agent_aws_ec2_security_groups_without_limits(
 
 
 def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
-        None, (None, None), [], None
-    )
+    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections()
     _ec2_summary_results = ec2_summary.run().results
     ec2_results = ec2.run().results
 
@@ -397,3 +385,32 @@ def test_agent_aws_ec2_no_crash_when_keys_missing(
     ec2_limits_results = ec2_limits.run().results
     ec2_summary.run()
     assert len(ec2_limits_results) == 1
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (TagsImportPatternOption.import_all, ["Key-0", "Key-1", "Key-2"]),
+        (r".*-1$", ["Key-1"]),
+        (TagsImportPatternOption.ignore_all, []),
+    ],
+)
+def test_agent_aws_ec2_filters_labels(
+    get_ec2_sections: EC2Sections,
+    tag_import: TagsOption,
+    expected_tags: Sequence[str],
+) -> None:
+    _ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
+        None, (None, None), tag_import=tag_import
+    )
+    ec2_summary_results = ec2_summary.run().results
+    ec2_labels_results = ec2_labels.run().results
+
+    if expected_tags:
+        labels_row = ec2_labels_results[0].content
+        assert list(labels_row.keys()) == expected_tags
+    else:
+        assert len(ec2_labels_results) == 0
+
+    for result in ec2_summary_results:
+        assert list(result.content[0]["TagsForCmkLabels"].keys()) == expected_tags

@@ -86,8 +86,8 @@ def load_notification_scripts():
     return load_user_scripts("notifications")
 
 
-# The permissions need to be loaded dynamically instead of only when the plugins are loaded because
-# the user may have placed new notification plugins in the local hierarchy.
+# The permissions need to be loaded dynamically instead of only when the plug-ins are loaded because
+# the user may have placed new notification plug-ins in the local hierarchy.
 def declare_notification_plugin_permissions() -> None:
     for name, attrs in load_notification_scripts().items():
         if name[0] == ".":

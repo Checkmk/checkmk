@@ -6,7 +6,7 @@
 import ast
 import json
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from multiprocessing.pool import ThreadPool
 from typing import Any
 
@@ -24,12 +24,17 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class AggregationData:
-    def __init__(self, bi_rawdata, config, error) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self,
+        bi_rawdata: Mapping[str, Any] | None,
+        config: Mapping[str, Any],
+        error: str | None,
+    ) -> None:
         super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
 
-        self._output: list = []
+        self._output: list[str] = []
         self._options = config.get("options", {})
         self._assignments = config.get("assignments", {})
         self._missing_sites: list = []
@@ -37,7 +42,7 @@ class AggregationData:
         self._aggregation_targets: dict = {}
 
     @property
-    def bi_rawdata(self):
+    def bi_rawdata(self) -> Mapping[str, Any] | None:
         return self._bi_rawdata
 
     @property
@@ -49,14 +54,14 @@ class AggregationData:
         return self._missing_sites
 
     @property
-    def error(self):
+    def error(self) -> str | None:
         return self._error
 
     @property
-    def output(self):
+    def output(self) -> list[str]:
         return self._output
 
-    def evaluate(self):
+    def evaluate(self) -> None:
         if not self._bi_rawdata:
             return
 
@@ -80,7 +85,9 @@ class AggregationData:
             self._output.append(repr(aggregations))
 
     @classmethod
-    def parse_aggregation_response(cls, aggr_response):
+    def parse_aggregation_response(
+        cls, aggr_response: Mapping[str, Any]
+    ) -> dict[str, dict[str, Any]]:
         if "rows" in aggr_response:
             return AggregationData.parse_legacy_response(aggr_response["rows"])
         return aggr_response["aggregations"]
@@ -101,7 +108,7 @@ class AggregationData:
             }
         return result
 
-    def _rewrite_aggregation(self, aggr_data):
+    def _rewrite_aggregation(self, aggr_data: dict[str, Any]) -> None:
         aggr_data["state_computed_by_agent"] = aggr_data["state"]
         if aggr_data["in_downtime"] and "state_scheduled_downtime" in self._options:
             aggr_data["state_computed_by_agent"] = self._options["state_scheduled_downtime"]
@@ -109,7 +116,7 @@ class AggregationData:
         if aggr_data["acknowledged"] and "state_acknowledged" in self._options:
             aggr_data["state_computed_by_agent"] = self._options["state_acknowledged"]
 
-    def _process_assignments(self, aggr_name, aggr_data):
+    def _process_assignments(self, aggr_name: str, aggr_data: dict[str, Any]) -> None:
         if not self._assignments:
             self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr_data
             return
@@ -166,15 +173,15 @@ class AggregationRawdataGenerator:
         except requests.exceptions.RequestException as e:
             return AggregationData(None, self._config, "Request Error %s" % e)
 
-    def _fetch_aggregation_data(self):
+    def _fetch_aggregation_data(self) -> str:
         filter_query = self._config.get("filter") or {}
 
-        response = requests.post(  # nosec B113
+        response = requests.get(  # nosec B113
             f"{self._site_url}"
             + "/check_mk/api/1.0"
             + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
             headers={"Authorization": f"Bearer {self._username} {self._secret.strip()}"},
-            json={
+            params={
                 "filter_names": filter_query.get("names") or [],
                 "filter_groups": filter_query.get("groups") or [],
             },
@@ -182,7 +189,7 @@ class AggregationRawdataGenerator:
         response.raise_for_status()
         return response.text
 
-    def _parse_response_text(self, response_text):
+    def _parse_response_text(self, response_text: str) -> dict[str, Any]:
         try:
             data = json.loads(response_text)
         except ValueError:
@@ -199,9 +206,9 @@ class AggregationRawdataGenerator:
 
 
 class AggregationOutputRenderer:
-    def render(self, aggregation_data_results) -> None:  # type: ignore[no-untyped-def]
+    def render(self, aggregation_data_results: Sequence[AggregationData]) -> None:
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info: dict[str, set[str]] = {field: set() for field in connection_info_fields}  #
+        connection_info: dict[str, set[str]] = {field: set() for field in connection_info_fields}
 
         output = []
         for aggregation_result in aggregation_data_results:
@@ -234,7 +241,7 @@ def query_data(config: Mapping[str, Any]) -> AggregationData:
     return output_generator.generate_data()
 
 
-def main():
+def main() -> int:
     try:
         # Config is a list of site connections
         config = ast.literal_eval(sys.stdin.read())

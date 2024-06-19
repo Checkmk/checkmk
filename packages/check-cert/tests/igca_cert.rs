@@ -4,10 +4,6 @@ use check_cert::checker::certificate::{self, Config as CertConfig};
 static DER: &[u8] = include_bytes!("../assets/IGC_A.der");
 
 static SERIAL: &str = "39:11:45:10:94";
-static SUBJECT: &str =
-    "C=FR, ST=France, L=Paris, O=PM/SGDN, OU=DCSSI, CN=IGC/A, Email=igca@sgdn.pm.gouv.fr";
-static ISSUER: &str = SUBJECT;
-static SIG_ALG: &str = "RSA";
 static PUBKEY_ALG: &str = "RSA";
 static PUBKEY_SZ: usize = 2048;
 
@@ -21,9 +17,15 @@ fn test_cert_ok() {
         DER,
         CertConfig::builder()
             .serial(s(SERIAL))
-            .subject(s(SUBJECT))
-            .issuer(s(ISSUER))
-            .signature_algorithm(s(SIG_ALG))
+            .subject_cn(s("IGC/A"))
+            .subject_o(s("PM/SGDN"))
+            .subject_ou(s("DCSSI"))
+            .issuer_cn(s("IGC/A"))
+            .issuer_o(s("PM/SGDN"))
+            .issuer_ou(s("DCSSI"))
+            .issuer_st(s("France"))
+            .issuer_c(s("FR"))
+            .signature_algorithm(s("1.2.840.113549.1.1.5"))
             .pubkey_algorithm(s(PUBKEY_ALG))
             .pubkey_size(Some(PUBKEY_SZ))
             .build(),
@@ -31,12 +33,18 @@ fn test_cert_ok() {
     assert_eq!(
         out.to_string(),
         format!(
-            "OK - \
-            Serial: {SERIAL}, \
-            Subject: {SUBJECT}, \
-            Issuer: {ISSUER}, \
-            Signature algorithm: {SIG_ALG}, \
-            Public key algorithm: {PUBKEY_ALG}, \
+            "OK - CN=IGC/A\n\
+            Subject CN: IGC/A\n\
+            Subject O: PM/SGDN\n\
+            Subject OU: DCSSI\n\
+            Serial: {SERIAL}\n\
+            Issuer CN: IGC/A\n\
+            Issuer O: PM/SGDN\n\
+            Issuer OU: DCSSI\n\
+            Issuer ST: France\n\
+            Issuer C: FR\n\
+            Signature algorithm: sha1WithRSAEncryption\n\
+            Public key algorithm: {PUBKEY_ALG}\n\
             Public key size: {PUBKEY_SZ}"
         )
     );
@@ -49,17 +57,30 @@ fn test_cert_wrong_serial() {
         DER,
         CertConfig::builder()
             .serial(s(serial))
-            .subject(s(SUBJECT))
-            .issuer(s(ISSUER))
+            .subject_cn(s("IGC/A"))
+            .subject_o(s("PM/SGDN"))
+            .subject_ou(s("DCSSI"))
+            .issuer_cn(s("IGC/A"))
+            .issuer_o(s("PM/SGDN"))
+            .issuer_ou(s("DCSSI"))
+            .issuer_st(s("France"))
+            .issuer_c(s("FR"))
             .build(),
     );
     assert_eq!(
         out.to_string(),
         format!(
             "WARNING - \
-            Serial is {SERIAL} but expected {serial} (!), \
-            Subject: {SUBJECT}, \
-            Issuer: {ISSUER}"
+            CN=IGC/A, \
+            Serial is {SERIAL} but expected {serial} (!)\n\
+            Subject CN: IGC/A\n\
+            Subject O: PM/SGDN\n\
+            Subject OU: DCSSI\n\
+            Issuer CN: IGC/A\n\
+            Issuer O: PM/SGDN\n\
+            Issuer OU: DCSSI\n\
+            Issuer ST: France\n\
+            Issuer C: FR"
         )
     );
 }

@@ -15,6 +15,8 @@
 #include <utility>
 #include <vector>
 
+#include "livestatus/StringUtils.h"
+
 using namespace std::string_view_literals;
 
 namespace {
@@ -223,6 +225,14 @@ LogEntry::LogEntry(size_t lineno, std::string line)
     classifyLogMessage();
 }
 
+std::string LogEntry::long_plugin_output() const {
+    return LogEntry::encode(std::string{long_plugin_output_});
+}
+
+std::string LogEntry::encode(const std::string &str) {
+    return mk::replace_all(str, R"(\n)", "\n");
+}
+
 void LogEntry::assign(LogEntryParam par, std::string_view field) {
     switch (par) {
         case LogEntryParam::HostName:
@@ -354,13 +364,13 @@ bool LogEntry::textContains(const std::string &what) const {
 
 namespace {
 // TODO(sp) copy-n-paste from FetcherHelperChannel!
-template <class T, size_t N>
+template <typename T, size_t N>
 using one_of = std::array<std::pair<std::string_view, T>, N>;
 
 // As complicated and inefficient as it looks, the function below is completely
 // unfolded in code: It basically results in very fast if-then-else cascades,
 // guarded by the lengths, see: https://www.youtube.com/watch?v=INn3xa4pMfg
-template <class T, size_t N>
+template <typename T, size_t N>
 T parseState(std::string_view str, const one_of<T, N> &table, T default_value) {
     // Ugly: Depending on where we're called, the actual state type can be in
     // parentheses at the end, e.g. "ALERTHANDLER (OK)".

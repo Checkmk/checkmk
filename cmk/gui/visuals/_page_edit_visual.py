@@ -8,6 +8,7 @@
 import copy
 from collections.abc import Sequence
 from typing import Any, cast
+from urllib.parse import unquote
 
 from cmk.utils.user import UserId
 
@@ -79,6 +80,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     visual: dict[str, Any] = {
         "link_from": {},
         "context": {},
+        "megamenu_search_terms": [],
     }
 
     mode = request.get_str_input_mandatory("mode", "edit")
@@ -93,7 +95,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             return _get_visual("", "builtins")
         raise MKUserError(mode, _("The %s does not exist.") % visual_type.title)
 
-    back_url = request.get_url_input("back", "edit_%s.py" % what)
+    back_url = unquote(request.get_url_input("back", "edit_%s.py" % what))
 
     if visualname:
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
@@ -203,7 +205,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                 "public",
                 vs_no_permission_to_publish(
                     type_title=what[:-1],
-                    title=_("Make this %s available for other users") % what[:-1],
+                    title=_("Make this %s available for other users") % what[:-1].lower(),
                 ),
             )
         )
@@ -242,7 +244,10 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 
             old_visual = visual
             # TODO: Currently not editable, but keep settings
-            visual = {"link_from": old_visual["link_from"]}
+            visual = {
+                "link_from": old_visual["link_from"],
+                "megamenu_search_terms": old_visual["megamenu_search_terms"],
+            }
 
             # Important for saving
             visual["packaged"] = False
@@ -497,9 +502,11 @@ def render_context_specs(
     for info_key, spec in context_specs:
         forms.section(
             spec.title(),
-            is_show_more=spec.has_show_more()
-            if isinstance(spec, Transform)
-            else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None),
+            is_show_more=(
+                spec.has_show_more()
+                if isinstance(spec, Transform)
+                else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None)
+            ),
         )
         ident = "context_" + info_key
         spec.render_input(ident, context)
@@ -515,7 +522,7 @@ def _vs_general(
     what: VisualTypeName,
 ) -> Dictionary:
     return Dictionary(
-        title=_("General Properties"),
+        title=_("General properties"),
         render="form",
         optional_keys=False,
         show_more_keys=["description", "add_context_to_title", "sort_index", "is_show_more"],
@@ -639,8 +646,10 @@ def single_infos_spec(single_infos: SingleInfos) -> tuple[str, FixedValue]:
         FixedValue(
             value=single_infos,
             title=_("Show information of single"),
-            totext=", ".join(single_infos)
-            if single_infos
-            else _("Not restricted to showing a specific object."),
+            totext=(
+                ", ".join(single_infos)
+                if single_infos
+                else _("Not restricted to showing a specific object.")
+            ),
         ),
     )

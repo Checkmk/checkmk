@@ -6,53 +6,58 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
+
+TITLES = [
+    [
+        "Temperature",
+        "Voltage",
+        "Power Supplies",
+        "Cooling",
+        "Other Modules",
+        "UPS",
+        "Bridge",
+        "RAID",
+    ],
+    [
+        "AV DAT",
+        "AV Engine",
+        "Spam DAT",
+        "Spam Engine",
+        "Config Antirelay",
+        "Encryption",
+        "SMTP",
+        "POP3",
+        "EPO",
+        "TQM-Server",
+        "GTI Message",
+        "GTM Feedback",
+        "GTI File",
+        "RBL",
+        "R-Syslog",
+        "Remote Syslog",
+        "LDAP",
+        "Remove LDAP",
+        "SNMPd",
+        "Remove DNS",
+        "NTP",
+    ],
+    ["WEBMC", "Eventhandler", "SMTP Retryer", "Spam Updater", "Postgres", "RMD Merge"],
+]
 
 
 def parse_mcafee_emailgateway_entities(string_table):
-    parsed = {}
-    for idx, services in enumerate(
-        [
-            [
-                "Temperature",
-                "Voltage",
-                "Power Supplies",
-                "Cooling",
-                "Other Modules",
-                "UPS",
-                "Bridge",
-                "RAID",
-            ],
-            [
-                "AV DAT",
-                "AV Engine",
-                "Spam DAT",
-                "Spam Engine",
-                "Config Antirelay",
-                "Encryption",
-                "SMTP",
-                "POP3",
-                "EPO",
-                "TQM-Server",
-                "GTI Message",
-                "GTM Feedback",
-                "GTI File",
-                "RBL",
-                "R-Syslog",
-                "Remote Syslog",
-                "LDAP",
-                "Remove LDAP",
-                "SNMPd",
-                "Remove DNS",
-                "NTP",
-            ],
-            ["WEBMC", "Eventhandler", "SMTP Retryer", "Spam Updater", "Postgres", "RMD Merge"],
-        ]
-    ):
-        parsed.update(dict(zip(services, string_table[idx][0])))
-    return parsed
+    return (
+        {
+            k: v
+            for subtable, services in zip(string_table, TITLES)
+            for k, v in zip(services, subtable[0])
+        }
+        if all(string_table)
+        else None
+    )
 
 
 def inventory_mcafee_emailgateway_entities(parsed):

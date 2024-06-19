@@ -6,7 +6,7 @@
 
 from collections.abc import Collection
 
-import cmk.gui.forms as forms
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -41,7 +41,7 @@ class ModeSearch(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = folder_from_request()
+        self._folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -98,7 +98,7 @@ class ModeSearch(WatoMode):
     def page(self) -> None:
         html.help(
             _(
-                "For the Hostname field, a partial word search (infix search) is used "
+                "For the host name field, a partial word search (infix search) is used "
                 "— the entered text is searched, at any position, in the host name. "
                 "Furthermore, you can limit the search using other host attributes. Please note "
                 "that you can search for the attributes configured in the hosts and folders and "
@@ -114,11 +114,7 @@ class ModeSearch(WatoMode):
             basic_attributes = [
                 (
                     "host_search_host",
-                    TextInput(
-                        title=_(
-                            "Hostname",
-                        )
-                    ),
+                    TextInput(title=_("Host name")),
                     "",
                 ),
             ]

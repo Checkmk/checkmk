@@ -5,9 +5,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.blade import DETECT_BLADE_BX
 
 blade_bx_status = {
@@ -97,7 +96,7 @@ check_info["blade_bx_powerfan"] = LegacyCheckDefinition(
     check_function=check_blade_bx_powerfan,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
-        "levels_lower": (20, 10),
-        "levels": (80, 90),
+        "levels_lower": (20.0, 10.0),
+        "levels": (80.0, 90.0),
     },
 )

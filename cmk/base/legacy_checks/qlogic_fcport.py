@@ -8,7 +8,8 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     any_of,
     get_rate,
     get_value_store,
@@ -16,9 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     render,
     SNMPTree,
     startswith,
+    StringTable,
 )
-
-from cmk.agent_based.v2.type_defs import StringTable
 
 # settings for inventory: which ports should be inventorized
 qlogic_fcport_inventory_opstates = ["1", "3"]

@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.acme import acme_environment_states
+from cmk.base.check_legacy_includes.acme import ACME_ENVIRONMENT_STATES
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.acme import DETECT_ACME
 
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.1 MAIN FAN1 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.1
@@ -32,7 +31,7 @@ def inventory_acme_fan(info):
 def check_acme_fan(item, params, info):
     for descr, value_str, state in info:
         if item == descr:
-            dev_state, dev_state_readable = acme_environment_states[state]
+            dev_state, dev_state_readable = ACME_ENVIRONMENT_STATES[state]
             return dev_state, f"Status: {dev_state_readable}, Speed: {value_str}%"
     return None
 

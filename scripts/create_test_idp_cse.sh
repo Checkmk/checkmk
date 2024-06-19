@@ -25,5 +25,12 @@ CMK_URL=${2:-http://localhost:5000}
 sudo mkdir -p /etc/cse
 "$(dirname "$0")/create_cognito_config_cse.sh" "${URL}" "${CMK_URL}" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
 
+CSE_UAP_URL=https://admin-panel.saas-prod.cloudsandbox.check-mk.net/
+json_string=$(jq --null-input \
+    --arg uap_url "$CSE_UAP_URL" \
+    '{"uap_url": $uap_url}')
+
+echo "$json_string" | jq "." | sudo tee /etc/cse/admin_panel_url.json >/dev/null
+
 export PYTHONPATH="${REPO_PATH}:${REPO_PATH}/tests/testlib"
 "${REPO_PATH}/scripts/run-pipenv" run uvicorn cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"

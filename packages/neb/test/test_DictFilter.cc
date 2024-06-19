@@ -32,12 +32,13 @@ std::string b16encode(const std::string &str) {
 
 struct DictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string &value) const {
-        DictColumn<IHost> cvdc{
+        DictStrValueColumn<IHost> cvdc{
             "name", "description", ColumnOffsets{},
             [kind](const IHost &r) { return r.attributes(kind); }};
-        const DictFilter filter{Filter::Kind::row, "name",
-                                [&cvdc](Row row) { return cvdc.getValue(row); },
-                                RelationalOperator::equal, value};
+        const DictStrValueFilter filter{
+            Filter::Kind::row, "name",
+            [&cvdc](Row row) { return cvdc.getValue(row); },
+            RelationalOperator::equal, value};
         NebHost h{test_host};
         return filter.accepts(Row{&h}, NoAuthUser{}, {});
     }

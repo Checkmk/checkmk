@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a check plugin
+"""Background tools required to register a check plug-in
 """
 import functools
 from collections.abc import Callable, Generator
@@ -42,7 +42,7 @@ def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> N
         raise ValueError(
             "service name and description inconsistency: Please neither have your plugins "
             "name start with %r, nor the description with %r. In the rare case that you want to "
-            "implement a check plugin explicitly designed for management boards (and nothing else),"
+            "implement a check plug-in explicitly designed for management boards (and nothing else),"
             " you must do both of the above."
             % (CheckPluginName.MANAGEMENT_PREFIX, MANAGEMENT_DESCR_PREFIX)
         )
@@ -60,7 +60,6 @@ def _requires_item(service_name: str) -> bool:
 def _filter_discovery(
     generator: Callable[..., Generator[Any, None, None]],
     requires_item: bool,
-    validate_item: bool,
 ) -> DiscoveryFunction:
     """Only let Services through
 
@@ -72,7 +71,7 @@ def _filter_discovery(
         for element in generator(*args, **kwargs):
             if not isinstance(element, Service):
                 raise TypeError("unexpected type in discovery: %r" % type(element))
-            if validate_item and requires_item is (element.item is None):
+            if requires_item is (element.item is None):
                 raise TypeError("unexpected type of item discovered: %r" % type(element.item))
             yield element
 
@@ -168,7 +167,6 @@ def create_check_plugin(
     check_ruleset_name: str | None = None,
     cluster_check_function: Callable | None = None,
     location: PluginLocation | None = None,
-    validate_item: bool = True,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
@@ -198,7 +196,7 @@ def create_check_plugin(
             cluster_check_function=cluster_check_function,
         )
 
-    disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
+    disco_func = _filter_discovery(discovery_function, requires_item)
     disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
     cluster_check_function = (

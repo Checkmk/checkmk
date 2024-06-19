@@ -7,8 +7,7 @@ import json
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 
-from cmk.agent_based.v2 import AgentSection
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.gcp.lib.gcp import (
     AssetSection,
     AssetType,
@@ -29,19 +28,19 @@ def parse_assets(string_table: StringTable) -> AssetSection:
         sorted_assets[a.asset_type].append(a)
 
     # Known asset types that downstream checks can work with. Ignore others
-    # fmt: off
     extractors: Mapping[AssetType, Callable[[GCPAsset], Item]] = {
-        AssetType("file.googleapis.com/Instance"):                lambda a: a.resource_data["name"].split("/")[-1],
-        AssetType("cloudfunctions.googleapis.com/CloudFunction"): lambda a: a.resource_data["name"].split("/")[-1],
-        AssetType("storage.googleapis.com/Bucket"):               lambda a: a.resource_data["id"],
-        AssetType("redis.googleapis.com/Instance"):               lambda a: a.resource_data["name"],
-        AssetType("run.googleapis.com/Service"):                  lambda a: a.resource_data["metadata"]["name"],
-        AssetType("sqladmin.googleapis.com/Instance"):            lambda a: a.resource_data["name"],
-        AssetType("compute.googleapis.com/Instance"):             lambda a: a.resource_data["name"],
-        AssetType("compute.googleapis.com/Disk"):                 lambda a: a.resource_data["name"],
-        AssetType("compute.googleapis.com/UrlMap"):               lambda a: a.resource_data["name"],
+        AssetType("file.googleapis.com/Instance"): lambda a: a.resource_data["name"].split("/")[-1],
+        AssetType("cloudfunctions.googleapis.com/CloudFunction"): lambda a: a.resource_data[
+            "name"
+        ].split("/")[-1],
+        AssetType("storage.googleapis.com/Bucket"): lambda a: a.resource_data["id"],
+        AssetType("redis.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+        AssetType("run.googleapis.com/Service"): lambda a: a.resource_data["metadata"]["name"],
+        AssetType("sqladmin.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+        AssetType("compute.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+        AssetType("compute.googleapis.com/Disk"): lambda a: a.resource_data["name"],
+        AssetType("compute.googleapis.com/UrlMap"): lambda a: a.resource_data["name"],
     }
-    # fmt: on
     typed_assets: dict[AssetType, AssetTypeSection] = {}
     for asset_type, assets in sorted_assets.items():
         if asset_type not in extractors:

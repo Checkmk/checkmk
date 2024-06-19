@@ -17,3 +17,4 @@ $(STUNNEL_INSTALL): $(STUNNEL_BUILD)
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ && $(LN) -sf ../init.d/$(STUNNEL) 85-$(STUNNEL)
 	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/logrotate.d/$(STUNNEL)
 	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/$(STUNNEL)/server.conf
+	find $(DESTDIR)$(OMD_ROOT)/skel -name ".gitignore" -delete

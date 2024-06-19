@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.version import edition, Edition
 
@@ -22,7 +22,11 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     Filesize,
+    FixedValue,
     Integer,
+    IPNetwork,
+    ListOfStrings,
+    Migrate,
     Optional,
     Tuple,
     ValueSpec,
@@ -41,7 +45,6 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import ReplicationPath
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
-from cmk.gui.watolib.sites import LivestatusViaTCP
 
 
 def register(
@@ -126,6 +129,61 @@ class ConfigVariableSiteCore(ConfigVariable):
         return cores
 
 
+def _livestatus_via_tcp() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "port",
+                Integer(
+                    title=_("TCP port"),
+                    minvalue=1,
+                    maxvalue=65535,
+                    default_value=6557,
+                ),
+            ),
+            (
+                "only_from",
+                ListOfStrings(
+                    title=_("Restrict access to IP addresses"),
+                    help=_(
+                        "The access to Livestatus via TCP will only be allowed from the "
+                        "configured source IP addresses. You can either configure specific "
+                        "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."
+                    ),
+                    valuespec=IPNetwork(),
+                    orientation="horizontal",
+                    allow_empty=False,
+                    default_value=["0.0.0.0", "::/0"],
+                ),
+            ),
+            (
+                "tls",
+                FixedValue(
+                    value=True,
+                    title=_("Encrypt communication"),
+                    totext=_("Encrypt TCP Livestatus connections"),
+                    help=_(
+                        "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus "
+                        "connections using SSL. This is enabled by default for sites that "
+                        "enable Livestatus via TCP with 1.6 or newer. Sites that already "
+                        "have this option enabled keep the communication unencrypted for "
+                        "compatibility reasons. However, it is highly recommended to "
+                        "migrate to an encrypted communication."
+                    ),
+                ),
+            ),
+        ],
+        optional_keys=["tls"],
+    )
+
+
+def _migrate_tcp_only_from(livestatus_tcp: dict[str, object]) -> dict[str, object]:
+    if "only_from" in livestatus_tcp:
+        return livestatus_tcp
+    livestatus_tcp["only_from"] = ["0.0.0.0"]
+    return livestatus_tcp
+
+
 class ConfigVariableSiteLivestatusTCP(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -138,7 +196,10 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Optional(
-            valuespec=LivestatusViaTCP(),
+            valuespec=Migrate(
+                _livestatus_via_tcp(),
+                migrate=_migrate_tcp_only_from,
+            ),
             title=_("Access to Livestatus via TCP"),
             help=_(
                 "Check_MK Livestatus usually listens only on a local UNIX socket - "

@@ -18,8 +18,9 @@ from typing import Any
 import pytest
 import yaml
 
+from tests.testlib.repo import qa_test_data_path
 from tests.testlib.site import Site
-from tests.testlib.utils import qa_test_data_path, run
+from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +32,7 @@ class SkippedDumps:
 
 @dataclass
 class SkippedChecks:
-    SKIPPED_CHECKS = [
-        "snmp-fw-fortigate:Signatures",  # TODO: dynamic data need to be regexed
-        "agent-2_2_0_p12-redis:Redis 127.0.0.1:6379 Server Info",  # TODO: dynamic data need to be regexed
-    ]
+    SKIPPED_CHECKS = []  # type: ignore
 
 
 class CheckModes(IntEnum):
@@ -111,7 +109,7 @@ config = CheckConfig()
 
 def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
     """Apply regular expressions to the canon and result objects."""
-    regexp_filepath = f"{os.path.dirname(__file__)}/regexp.yaml"
+    regexp_filepath = f"{config.data_dir}/regexp.yaml"
     if not os.path.exists(regexp_filepath):
         return
     with open(regexp_filepath, encoding="utf-8") as regexp_file:
@@ -184,14 +182,24 @@ def get_host_names(site: Site | None = None) -> list[str]:
         if not (config.dump_dir and os.path.exists(config.dump_dir)):
             # need to skip here to abort the collection and return RC=5: "no tests collected"
             pytest.skip(f'Folder "{config.dump_dir}" not found; exiting!', allow_module_level=True)
-        for dump_file_name in [_ for _ in os.listdir(config.dump_dir) if not _.startswith(".")]:
+        for dump_file_name in [
+            _
+            for _ in os.listdir(config.dump_dir)
+            if (not _.startswith(".") and _ not in SkippedDumps.SKIPPED_DUMPS)
+        ]:
             try:
                 dump_file_path = f"{config.dump_dir}/{dump_file_name}"
                 with open(dump_file_path, encoding="utf-8") as dump_file:
-                    if dump_file.read(1) == ".":
+                    if re.match(r"^snmp-", dump_file_name) and dump_file.read(1) == ".":
                         snmp_host_names.append(dump_file_name)
-                    else:
+                    elif re.match(r"^agent-\d+\.\d+\.\d+\w*\d*-", dump_file_name):
                         agent_host_names.append(dump_file_name)
+                    else:
+                        raise Exception(
+                            f"A dump file name should start either with 'agent-X.X.XpX-' or with "
+                            f"'snmp-', where X.X.XpX defines the agent version used."
+                            f"This is not the case for {dump_file_name}"
+                        )
             except OSError:
                 logger.error('Could not access dump file "%s"!', dump_file_name)
             except UnicodeDecodeError:
@@ -243,6 +251,8 @@ def _verify_check_result(
     Optionally update the stored canon if it does not match."""
     if mode == CheckModes.DEFAULT and not canon_data:
         logger.error("[%s] Canon not found!", check_id)
+        return False, ""
+
     safe_name = check_id.replace("$", "_").replace(" ", "_").replace("/", "#")
     with open(
         json_result_file_path := str(output_dir / f"{safe_name}.result.json"),
@@ -259,6 +269,7 @@ def _verify_check_result(
         _apply_regexps(check_id, canon_data, result_data)
 
     if result_data and canon_data == result_data:
+        # if the canon was just added or matches the result, there is nothing else to do
         return True, ""
 
     with open(
@@ -281,7 +292,7 @@ def _verify_check_result(
         check=False,
     ).stdout
 
-    if mode == CheckModes.DEFAULT:
+    if mode != CheckModes.UPDATE:
         if len(canon_data) != len(result_data):
             logger.error("[%s] Invalid field count! Data mismatch:\n%s", check_id, diff)
         else:
@@ -301,7 +312,7 @@ def process_check_output(
     site: Site,
     host_name: str,
     output_dir: Path,
-) -> bool:
+) -> dict[str, str]:
     """Process the check output and either dump or compare it."""
     if host_name in SkippedDumps.SKIPPED_DUMPS:
         pytest.skip(reason=f"{host_name} dumps currently skipped.")
@@ -371,7 +382,7 @@ def process_check_output(
         ) as json_file:
             json.dump(check_canons, json_file, indent=4, sort_keys=True)
 
-    return passed is True
+    return diffs
 
 
 def setup_site(site: Site, dump_path: str) -> None:
@@ -391,9 +402,11 @@ def setup_site(site: Site, dump_path: str) -> None:
                     "cp",
                     "-f",
                     f"{config.dump_dir}/{dump_name}",
-                    f"{walk_path}/{dump_name}"
-                    if re.search(r"\bsnmp\b", dump_name)
-                    else f"{dump_path}/{dump_name}",
+                    (
+                        f"{walk_path}/{dump_name}"
+                        if re.search(r"\bsnmp\b", dump_name)
+                        else f"{dump_path}/{dump_name}"
+                    ),
                 ]
             ).returncode
             == 0
@@ -437,7 +450,6 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
 
     logger.info("Running service discovery...")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    site.openapi.bulk_discover_services([host_name], bulk_size=10, wait_for_completion=True)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
@@ -452,7 +464,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
         site.schedule_check(host_name, "Check_MK", 0, 60)
         pending_checks = site.openapi.get_host_services(host_name, pending=True)
         if idx > 0 and len(pending_checks) == 0:
-            continue
+            break
 
     if pending_checks:
         logger.info(
@@ -508,7 +520,7 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Running service discovery...")
-    site.openapi.bulk_discover_services(host_names, bulk_size=10, wait_for_completion=True)
+    site.openapi.bulk_discover_services_and_wait_for_completion(host_names, bulk_size=10)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()

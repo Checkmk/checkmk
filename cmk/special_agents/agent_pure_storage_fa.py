@@ -98,7 +98,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
             " (pureadmin create --api-token)"
         ),
     )
-    parser.add_argument("server", type=str, help="Hostname or IP address")
+    parser.add_argument("server", type=str, help="Host name or IP address")
     return parser.parse_args(argv)
 
 
@@ -263,7 +263,7 @@ def agent_pure_storage_fa(args: Args) -> int:
     pure_storage_fa = PureStorageFlashArray(
         args.server,
         args.cert_server_name or not args.no_cert_check,
-        args.timeout,
+        int(args.timeout),
     )
 
     try:

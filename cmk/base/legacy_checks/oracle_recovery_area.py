@@ -10,11 +10,10 @@
 # ORACLE_SID used_pct size used reclaimable
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
 
 
 def inventory_oracle_recovery_area(info):
@@ -23,6 +22,8 @@ def inventory_oracle_recovery_area(info):
 
 def check_oracle_recovery_area(item, params, info):
     for line in info:
+        if len(line) < 5:
+            continue
         if line[0] == item:
             size_mb, used_mb, reclaimable_mb = map(int, line[2:5])
             if size_mb == 0:
@@ -46,12 +47,12 @@ def check_oracle_recovery_area(item, params, info):
                 state,
                 "%s out of %s used (%.1f%%, warn/crit at %s%%/%s%%), %s reclaimable"
                 % (
-                    get_bytes_human_readable(used_mb * mb),
-                    get_bytes_human_readable(size_mb * mb),
+                    render.bytes(used_mb * mb),
+                    render.bytes(size_mb * mb),
                     perc_used,
                     warn,
                     crit,
-                    get_bytes_human_readable(reclaimable_mb * mb),
+                    render.bytes(reclaimable_mb * mb),
                 ),
                 [("used", used_mb, warn_mb, crit_mb, 0, size_mb), ("reclaimable", reclaimable_mb)],
             )

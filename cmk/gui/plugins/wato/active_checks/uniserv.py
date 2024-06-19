@@ -23,7 +23,7 @@ def _valuespec_active_checks_uniserv():
                 TextInput(
                     title=_("Service Name"),
                     help=_(
-                        "Enter the uniserve service name here (has nothing to do with service description)."
+                        "Enter the uniserve service name here (has nothing to do with service name)."
                     ),
                 ),
             ),

@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.knuerr import DETECT_KNUERR
 
 
@@ -22,8 +21,8 @@ def check_knuerr_rms_humidity(_no_item, params, info):
     return check_humidity(float(reading) / 10, params)
 
 
-def parse_knuerr_rms_humidity(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_knuerr_rms_humidity(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(

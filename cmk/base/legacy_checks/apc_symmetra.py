@@ -8,12 +8,12 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.apc import DETECT
 
 # .1.3.6.1.4.1.318.1.1.1.2.1.1.0 2
@@ -235,13 +235,12 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             if battery_capacity < alt_crit_capacity:
                 state = 2
                 levelstxt = " (crit below %d%% in delay after calibration)" % alt_crit_capacity
-        else:
-            if battery_capacity < crit_cap:
-                state = 2
-                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
-            elif battery_capacity < warn_cap:
-                state = 1
-                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
+        elif battery_capacity < crit_cap:
+            state = 2
+            levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
+        elif battery_capacity < warn_cap:
+            state = 1
+            levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
 
         yield state, "Capacity: %d%%%s" % (battery_capacity, levelstxt), [
             ("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)
@@ -249,7 +248,7 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
 
     if battery_time_remain:
         battery_time_remain = float(battery_time_remain) / 100.0
-        battery_time_remain_readable = get_age_human_readable(battery_time_remain)
+        battery_time_remain_readable = render.timespan(battery_time_remain)
         state = 0
         levelstxt = ""
         battery_time_warn, battery_time_crit = None, None
@@ -272,8 +271,8 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
 
         if state:
             levelstxt = " (warn/crit below {}/{})".format(
-                get_age_human_readable(battery_time_warn),
-                get_age_human_readable(battery_time_crit),
+                render.timespan(battery_time_warn),
+                render.timespan(battery_time_crit),
             )
 
         yield state, f"Time remaining: {battery_time_remain_readable}{levelstxt}", perfdata
@@ -309,7 +308,7 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
     check_function=check_apc_symmetra,
     check_ruleset_name="apc_symentra",
     check_default_parameters={
-        "capacity": (95, 80),
+        "capacity": (95.0, 80.0),
         "calibration_state": 0,
         "battery_replace_state": 1,
     },
@@ -354,6 +353,8 @@ check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
     check_function=check_apc_symmetra_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
+        # This is very unorthodox, and requires special handling in the
+        # wato ruleset. A dedicated service would have been the better choice.
         "levels_battery": (50, 60),
         "levels_sensors": (25, 30),
     },

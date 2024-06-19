@@ -4,15 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.hitachi_hnas import DETECT
 
 
-def inventory_hitachi_hnas_fpga(string_table: StringTable) -> DiscoveryResult:
+def discover_hitachi_hnas_fpga(string_table: StringTable) -> DiscoveryResult:
     for clusternode, id_, name, _util in string_table:
         yield Service(item=clusternode + "." + id_ + " " + name)
 
@@ -50,7 +49,7 @@ check_info["hitachi_hnas_fpga"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     service_name="FPGA %s",
-    discovery_function=inventory_hitachi_hnas_fpga,
+    discovery_function=discover_hitachi_hnas_fpga,
     check_function=check_hitachi_hnas_fpga,
     check_ruleset_name="fpga_utilization",
     check_default_parameters={"levels": (80.0, 90.0)},

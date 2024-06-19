@@ -12,7 +12,7 @@ description:
  bloat size. The limits can be configured for the table bloat as well as the
  index bloat.
 
- This check relies on data reported by the agent-side plugin {mk_postgres}
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
 
 item:
  Name of the category and the name of the database

@@ -24,14 +24,14 @@ AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
 AGENT_CTL_GZ := $(AGENT_CTL).gz
 AGENT_CTL_DIR := $(REPO_PATH)/packages/cmk-agent-ctl
 
-CHECK_SQL := $(AGENTS_DIR)/linux/check-sql
-CHECK_SQL_DIR := $(REPO_PATH)/packages/check-sql
+MK_SQL := $(AGENTS_DIR)/linux/mk-sql
+MK_SQL_DIR := $(REPO_PATH)/packages/mk-sql
 
 BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \
 	check_mk_agent.linux \
 	check_mk_caching_agent.linux \
-	$(CHECK_SQL) \
+	$(MK_SQL) \
 	$(AGENT_CTL_GZ) \
 	mk-job \
 	waitmax \
@@ -89,9 +89,9 @@ setversion:
 	sed -i 's/define ProductName = "Checkmk Agent [^"]*"/define ProductName = "Checkmk Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi
 	sed -i 's/define ServiceDescription = "Checkmk monitoring agent service - [^"]*"/define ServiceDescription = "Checkmk monitoring agent service - $(NEW_VERSION_MAJOR)"/' wnx/install/Product.wxs
 	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
-	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(CHECK_SQL_DIR)/src/constants.rs
+	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(MK_SQL_DIR)/src/constants.rs
 
-build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(CHECK_SQL)
+build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 
 $(AGENT_CTL):
 	$(AGENT_CTL_DIR)/run --setup-environment --build
@@ -102,11 +102,11 @@ $(AGENT_CTL):
 $(AGENT_CTL_GZ): $(AGENT_CTL)
 	gzip --best --keep --force $(AGENT_CTL)
 
-$(CHECK_SQL):
-	$(CHECK_SQL_DIR)/run --setup-environment --build
+$(MK_SQL):
+	$(MK_SQL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(CHECK_SQL_DIR)/target/x86_64-unknown-linux-musl/release/check-sql $(CHECK_SQL)
-	strip $(CHECK_SQL)
+	install -m 755 $(MK_SQL_DIR)/target/x86_64-unknown-linux-musl/release/mk-sql $(MK_SQL)
+	strip $(MK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 deb: $(DEB_PACKAGE)

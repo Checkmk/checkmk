@@ -13,11 +13,11 @@ from cmk.agent_based.v1 import get_average, get_rate, GetRateError
 @pytest.mark.parametrize(
     "pre_state,time,value,raise_of,errmsg",
     [
-        ((0, 42), 0, 42, False, "No time difference"),
-        ((0, 42), 0, 42, True, "No time difference"),
-        ((0, 42), 1, 23, True, "Value overflow"),
-        (None, 0, 42, False, "Initialized: 'foo'"),
-        (None, 0, 42, True, "Initialized: 'foo'"),
+        ((0, 42), 0, 42, False, ".*time.*"),
+        ((0, 42), 0, 42, True, ".*time.*"),
+        ((0, 42), 1, 23, True, "'foo'.*overflow.*"),
+        (None, 0, 42, False, ".*'foo'.*initialized.*"),
+        (None, 0, 42, True, ".*'foo'.*initialized.*"),
     ],
 )
 def test_get_rate_raises(

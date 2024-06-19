@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from collections.abc import Container, Iterable, Iterator, Mapping, MutableMapping, Sequence
+import sys
+from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
 import cmk.utils.debug
+from cmk.utils import tty
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
@@ -27,17 +29,17 @@ def find_plugins(
     providers: Mapping[HostKey, Provider],
     preliminary_candidates: Sequence[tuple[CheckPluginName, Sequence[ParsedSectionName]]],
 ) -> set[CheckPluginName]:
-    """Return names of check plugins that this multi_host_section may
+    """Return names of check plug-ins that this multi_host_section may
     contain data for.
 
     Given this mutli_host_section, there is no point in trying to discover
-    any check plugins not returned by this function.  This does not
-    address the question whether or not the returned check plugins will
+    any check plug-ins not returned by this function.  This does not
+    address the question whether or not the returned check plug-ins will
     discover something.
 
     We have to consider both the host, and the management board as source
-    type. Note that the determination of the plugin names is not quite
-    symmetric: For the host, we filter out all management plugins,
+    type. Note that the determination of the plug-in names is not quite
+    symmetric: For the host, we filter out all management plug-ins,
     for the management board we create management variants from all
     plugins that are not already designed for management boards.
 
@@ -92,7 +94,7 @@ def _find_host_plugins(
     return {
         name
         for (name, sections) in preliminary_candidates
-        # *filter out* all names of management only check plugins
+        # *filter out* all names of management only check plug-ins
         if not name.is_management_name()
         and any(section in available_parsed_sections for section in sections)
     }
@@ -118,7 +120,7 @@ def discover_services(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
 ) -> Iterable[AutocheckEntry]:
-    service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
+    service_table: dict[ServiceID, AutocheckEntry] = {}
     for check_plugin_name in plugin_names:
         try:
             service_table.update(
@@ -146,7 +148,7 @@ def discover_services(
             if on_error is OnError.RAISE:
                 raise
             if on_error is OnError.WARN:
-                console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
+                console.error(f"Discovery of '{check_plugin_name}' failed: {e}", file=sys.stderr)
 
     # TODO: Building a dict to discard its keys isn't efficient.
     return service_table.values()
@@ -163,7 +165,7 @@ def _discover_plugins_services(
     try:
         plugin = plugins[check_plugin_name]
     except KeyError:
-        console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
+        console.warning(tty.format_warning(f"  Missing check plug-in: '{check_plugin_name}'\n"))
         return
 
     try:
@@ -172,7 +174,7 @@ def _discover_plugins_services(
         if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
-            console.warning("  Exception while parsing agent section: %s\n" % exc)
+            console.warning(tty.format_warning(f"  Exception while parsing agent section: {exc}\n"))
         return
 
     if not kwargs:
@@ -189,7 +191,9 @@ def _discover_plugins_services(
             raise
         if on_error is OnError.WARN:
             console.warning(
-                f"  Exception in discovery function of check plugin '{check_plugin_name}': {e}"
+                tty.format_warning(
+                    f"  Exception in discovery function of check plug-in '{check_plugin_name}': {e}"
+                )
             )
 
 

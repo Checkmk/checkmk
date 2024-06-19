@@ -9,14 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    any_of,
-    exists,
-    not_exists,
-    SNMPTree,
-    startswith,
-)
+
+from cmk.agent_based.v2 import all_of, any_of, exists, not_exists, SNMPTree, startswith
 
 
 def parse_fsc_fans(string_table):

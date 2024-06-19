@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, equals, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
 
 # .1.3.6.1.4.1.31560.3.1.1.1.48 33 --> ARTEC-MIB::hddTemperature
 
@@ -24,8 +23,8 @@ def check_artec_temp(item, params, info):
     return check_temperature(int(info[0][0]), params, "artec_%s" % item)
 
 
-def parse_artec_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_artec_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["artec_temp"] = LegacyCheckDefinition(

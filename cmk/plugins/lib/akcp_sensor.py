@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import get_value_store, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, get_value_store, Result, Service, State
 
 from .humidity import check_humidity, CheckParams
 from .temperature import check_temperature, TempParamDict
@@ -154,8 +154,7 @@ def check_akcp_sensor_temp(item: str, params: TempParamDict, section: Section) -
             yield from check_temperature(
                 reading=temperature,
                 params=params,
-                unique_name=f"akcp_sensor_temp_{item}",
-                value_store=get_value_store(),
+                value_store_tuple=(f"akcp_sensor_temp_{item}", get_value_store()),
                 dev_unit=unit_normalised,
                 dev_levels=(high_w, high_c),
                 dev_levels_lower=(low_w, low_c),

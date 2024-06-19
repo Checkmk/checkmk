@@ -10,7 +10,7 @@ from livestatus import livestatus_lql, SiteId
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -23,7 +23,7 @@ from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, 
 
 def ajax_popup_action_menu() -> None:
     site = SiteId(request.get_ascii_input_mandatory("site"))
-    host = HostName(request.get_ascii_input_mandatory("host"))
+    host = request.get_validated_type_input_mandatory(HostName, "host")
     svcdesc = request.get_str_input("service")
     what: IconObjectType = "service" if svcdesc else "host"
 

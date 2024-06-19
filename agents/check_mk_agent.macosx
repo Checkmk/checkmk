@@ -36,7 +36,7 @@ fi
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.3.0b1"
+    echo "Version: 2.4.0b1"
     echo "AgentOS: macosx"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -46,6 +46,7 @@ section_checkmk() {
     echo "LocalDirectory: $LOCALDIR"
     echo "OSName: $(sw_vers -productName)"
     echo "OSVersion: $(sw_vers -productVersion)"
+    echo "OSType: macos"
 }
 
 section_lnx_if() {

@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 
 
@@ -19,10 +18,7 @@ def inventory_fortigate_ipsecvpn(info):
 
 
 def check_fortigate_ipsecvpn(item, params, info):
-    if isinstance(params, tuple):
-        params = {"levels": params}
-
-    tunnels_ignore_levels = params.get("tunnels_ignore_levels", [])
+    tunnels_ignore_levels = params["tunnels_ignore_levels"]
 
     tunnels_down = set()
     tunnels_ignored = set()
@@ -86,6 +82,7 @@ check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
     check_function=check_fortigate_ipsecvpn,
     check_ruleset_name="ipsecvpn",
     check_default_parameters={
+        "tunnels_ignore_levels": [],
         "levels": (1, 2),
     },
 )

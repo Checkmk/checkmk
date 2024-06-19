@@ -6,8 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from re import Match
-from typing import ClassVar, Literal
+from typing import assert_never, ClassVar, Literal
 
 from livestatus import SiteId
 
@@ -35,22 +34,24 @@ from ._expression import (
     Sum,
 )
 from ._graph_specification import (
+    FixedVerticalRange,
     GraphMetric,
     GraphRecipe,
-    GraphRecipeBase,
     GraphSpecification,
     HorizontalRule,
     MetricOpConstant,
     MetricOpOperator,
     MetricOpRRDSource,
+    MinimalVerticalRange,
 )
 from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
 from ._utils import (
+    FixedGraphTemplateRange,
     get_graph_data_from_livestatus,
     get_graph_templates,
     GraphTemplate,
     MetricDefinition,
-    MetricUnitColor,
+    MinimalGraphTemplateRange,
     ScalarDefinition,
     translated_metrics_from_row,
 )
@@ -62,7 +63,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
     ] = lambda graph_template, _spec: graph_template
 
-    graph_type: Literal["template"] = "template"
     site: SiteId | None
     host_name: HostName
     service_description: ServiceName
@@ -71,8 +71,8 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     destination: str | None = None
 
     @staticmethod
-    def name() -> str:
-        return "template_graph_specification"
+    def graph_type_name() -> Literal["template"]:
+        return "template"
 
     def recipes(self) -> list[GraphRecipe]:
         row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)
@@ -110,20 +110,10 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         ):
             return None
 
-        graph_recipe = create_graph_recipe_from_template(
+        return create_graph_recipe_from_template(
             graph_template_tuned,
             translated_metrics,
             row,
-        )
-
-        return GraphRecipe(
-            title=graph_recipe.title,
-            metrics=graph_recipe.metrics,
-            unit=graph_recipe.unit,
-            explicit_vertical_range=graph_recipe.explicit_vertical_range,
-            horizontal_rules=graph_recipe.horizontal_rules,
-            omit_zero_metrics=graph_recipe.omit_zero_metrics,
-            consolidation_function=graph_recipe.consolidation_function,
             specification=TemplateGraphSpecification(
                 site=self.site,
                 host_name=self.host_name,
@@ -168,29 +158,31 @@ def matching_graph_templates(
 
 def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
-
-    def eval_to_string(match: Match[str]) -> str:
+    # Note: The 'CPU load' graph is the only example with such a replacement. We do not want to
+    # offer such replacements in a generic way.
+    reg = regex.regex(r"%\([^)]*\)")
+    if m := reg.search(text):
         try:
-            result = parse_expression(match.group()[2:-1], translated_metrics).evaluate(
+            result = parse_expression(m.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
-        except ValueError:
-            return _("n/a")
-        return result.unit_info["render"](result.value)
+        except (ValueError, KeyError):
+            return text.split("-")[0].strip()
+        return reg.sub(result.unit_info["render"](result.value).strip(), text)
 
-    return regex.regex(r"%\([^)]*\)").sub(eval_to_string, text)
+    return text
 
 
 def _horizontal_rules_from_thresholds(
     thresholds: Iterable[ScalarDefinition],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> list[HorizontalRule]:
+) -> Sequence[HorizontalRule]:
     horizontal_rules = []
     for entry in thresholds:
         try:
             if (result := entry.expression.evaluate(translated_metrics)).value:
                 horizontal_rules.append(
-                    (
+                    HorizontalRule(
                         result.value,
                         result.unit_info["render"](result.value),
                         result.color,
@@ -206,16 +198,18 @@ def _horizontal_rules_from_thresholds(
 
 
 def create_graph_recipe_from_template(
-    graph_template: GraphTemplate, translated_metrics: Mapping[str, TranslatedMetric], row: Row
-) -> GraphRecipeBase:
+    graph_template: GraphTemplate,
+    translated_metrics: Mapping[str, TranslatedMetric],
+    row: Row,
+    specification: GraphSpecification,
+) -> GraphRecipe:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
-        unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
+        unit_color = metric_definition.compute_unit_color(
+            translated_metrics,
+            graph_template.optional_metrics,
+        )
         return GraphMetric(
-            title=metric_line_title(
-                metric_definition,
-                metric_definition.expression,
-                translated_metrics,
-            ),
+            title=metric_definition.compute_title(translated_metrics),
             line_type=metric_definition.line_type,
             operation=metric_expression_to_graph_recipe_expression(
                 metric_definition.expression,
@@ -243,17 +237,51 @@ def create_graph_recipe_from_template(
     if painter_options.get("show_internal_graph_and_metric_ids"):
         title = title + f" (Graph ID: {graph_template.id})"
 
-    return GraphRecipeBase(
+    return GraphRecipe(
         title=title,
         metrics=metrics,
         unit=units.pop(),
-        explicit_vertical_range=graph_template.compute_range(translated_metrics),
+        explicit_vertical_range=evaluate_graph_template_range(
+            graph_template.range,
+            translated_metrics,
+        ),
         horizontal_rules=_horizontal_rules_from_thresholds(
             graph_template.scalars, translated_metrics
         ),  # e.g. lines for WARN and CRIT
         omit_zero_metrics=graph_template.omit_zero_metrics,
         consolidation_function=graph_template.consolidation_function or "max",
+        specification=specification,
     )
+
+
+def evaluate_graph_template_range(
+    graph_template_range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> FixedVerticalRange | MinimalVerticalRange | None:
+    match graph_template_range:
+        case FixedGraphTemplateRange(min=min_, max=max_):
+            return FixedVerticalRange(
+                min=_evaluate_graph_template_range_boundary(min_, translated_metrics),
+                max=_evaluate_graph_template_range_boundary(max_, translated_metrics),
+            )
+        case MinimalGraphTemplateRange(min=min_, max=max_):
+            return MinimalVerticalRange(
+                min=_evaluate_graph_template_range_boundary(min_, translated_metrics),
+                max=_evaluate_graph_template_range_boundary(max_, translated_metrics),
+            )
+        case None:
+            return None
+        case _:
+            assert_never(graph_template_range)
+
+
+def _evaluate_graph_template_range_boundary(
+    boundary: MetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
+) -> float | None:
+    try:
+        return boundary.evaluate(translated_metrics).value
+    except Exception:
+        return None
 
 
 def _to_metric_operation(
@@ -265,7 +293,7 @@ def _to_metric_operation(
     if isinstance(expression, Constant):
         return MetricOpConstant(value=float(expression.value))
     if isinstance(expression, Metric):
-        sources = [
+        metrics = [
             MetricOpRRDSource(
                 site_id=lq_row["site"],
                 host_name=lq_row["host_name"],
@@ -281,12 +309,9 @@ def _to_metric_operation(
                 translated_metrics[expression.name]["scale"],
             )
         ]
-        if len(sources) > 1:
-            return MetricOpOperator(
-                operator_name="MERGE",
-                operands=sources,
-            )
-        return sources[0]
+        if len(metrics) > 1:
+            return MetricOpOperator(operator_name="MERGE", operands=metrics)
+        return metrics[0]
     if isinstance(expression, Sum):
         return MetricOpOperator(
             operator_name="+",
@@ -416,35 +441,3 @@ def metric_expression_to_graph_recipe_expression(
         lq_row,
         enforced_consolidation_function,
     )
-
-
-def metric_line_title(
-    metric_definition: MetricDefinition,
-    metric_expression: MetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> str:
-    if metric_definition.title:
-        return metric_definition.title
-    return translated_metrics[next(metric_expression.metrics()).name]["title"]
-
-
-def metric_unit_color(
-    metric_expression: MetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    optional_metrics: Sequence[str] | None = None,
-) -> MetricUnitColor | None:
-    try:
-        result = metric_expression.evaluate(translated_metrics)
-    except KeyError as err:  # because metric_name is not in translated_metrics
-        metric_name = err.args[0]
-        if optional_metrics and metric_name in optional_metrics:
-            return None
-        raise MKGeneralException(
-            _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
-            % (
-                metric_expression,
-                metric_name,
-                ", ".join(sorted(translated_metrics.keys())) or "None",
-            )
-        )
-    return MetricUnitColor(unit=result.unit_info["id"], color=result.color)

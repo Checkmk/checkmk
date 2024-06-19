@@ -13,6 +13,7 @@ def main() {
         "EDITION",
         "VERSION",
         "OVERRIDE_DISTROS",
+        "USE_CASE"
     ]);
 
     check_environment_variables([
@@ -22,7 +23,7 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
+    def distros = versioning.get_distros(edition: EDITION, use_case: "daily_tests", override: OVERRIDE_DISTROS);
 
     def branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -44,19 +45,21 @@ def main() {
 
     // TODO: don't run make test-composition-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
-        testing_helper.run_make_targets(
-            DOCKER_GROUP_ID: get_docker_group_id(),
-            DISTRO_LIST: distros,
-            EDITION: EDITION,
-            VERSION: VERSION,
-            DOCKER_TAG: versioning.select_docker_tag(
-                branch_name,
-                DOCKER_TAG,
-                DOCKER_TAG),   // FIXME was DOCKER_TAG_DEFAULT before
-            MAKE_TARGET: "test-composition-docker",
-            BRANCH: branch_name,  // FIXME was BRANCH before
-            cmk_version: versioning.get_cmk_version(branch_name, branch_version, VERSION),
-        )
+        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+            testing_helper.run_make_targets(
+                DOCKER_GROUP_ID: get_docker_group_id(),
+                DISTRO_LIST: distros,
+                EDITION: EDITION,
+                VERSION: VERSION,
+                DOCKER_TAG: versioning.select_docker_tag(
+                    branch_name,
+                    DOCKER_TAG,
+                    DOCKER_TAG),   // FIXME was DOCKER_TAG_DEFAULT before
+                MAKE_TARGET: "test-composition-docker",
+                BRANCH: branch_name,  // FIXME was BRANCH before
+                cmk_version: versioning.get_cmk_version(branch_name, branch_version, VERSION),
+            );
+        }
     }
 }
 

@@ -7,8 +7,16 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store, render, Service
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    render,
+    Service,
+    StringTable,
+)
 from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.lib import interfaces, uptime
 
@@ -138,7 +146,7 @@ check_plugin_gcp_gce_network = CheckPlugin(
     name="gcp_gce_network",
     service_name="GCP/GCE Network IO %s",
     discovery_function=discover_network,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_network,
 )

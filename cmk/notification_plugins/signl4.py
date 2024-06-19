@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # SIGNL4 Alerting
 
 # (c) 2023 Derdack GmbH - License: GNU Public License v2
@@ -9,15 +8,15 @@
 import base64
 from os import environ
 
-from cmk.notification_plugins.utils import post_request, process_by_result_map
+from cmk.notification_plugins.utils import post_request, process_by_matchers
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
 from cmk.notification_plugins.utils import StateInfo
 
-RESULT_MAP = {
-    (200, 299): StateInfo(0, "json", "eventId"),
-    (300, 499): StateInfo(2, "str", "Error"),
-    (500, 599): StateInfo(1, "str", "Server-Error"),
-}
+RESULT_MATCHER = [
+    ((200, 299), StateInfo(0, "json", "eventId")),
+    ((300, 499), StateInfo(2, "str", "Error")),
+    ((500, 599), StateInfo(1, "str", "Server-Error")),
+]
 
 
 def _signl4_url() -> str:
@@ -40,12 +39,11 @@ def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
             description += " (" + service_desc + ")"
         else:
             description += " (" + service_desc + ")"
+    elif notification_type in ["PROBLEM", "RECOVERY"]:
+        host_state = context.get("HOSTSTATE", "") or ""
+        description += " (" + host_state + ")"
     else:
-        if notification_type in ["PROBLEM", "RECOVERY"]:
-            host_state = context.get("HOSTSTATE", "") or ""
-            description += " (" + host_state + ")"
-        else:
-            description += " (" + host_state + ")"
+        description += " (" + host_state + ")"
     # Remove placeholder "$SERVICEPROBLEMID$" if exists
     if service_problem_id.find("$") != -1:
         service_problem_id = ""
@@ -88,10 +86,10 @@ def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
 
 
 def main() -> int:
-    return process_by_result_map(
+    return process_by_matchers(
         response=post_request(
             message_constructor=_signl4_msg,
             url=_signl4_url(),
         ),
-        result_map=RESULT_MAP,
+        matchers=RESULT_MATCHER,
     )

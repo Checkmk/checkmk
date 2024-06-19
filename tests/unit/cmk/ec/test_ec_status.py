@@ -7,14 +7,11 @@ import time
 
 import pytest
 
-from tests.testlib import CMKEventConsole
-
-from tests.unit.cmk.ec.helpers import FakeStatusSocket
+from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.config import ConfigFromWATO
-from cmk.ec.event import Event
+import cmk.ec.export as ec
 from cmk.ec.main import EventStatus, StatusServer
 
 
@@ -29,11 +26,11 @@ def test_handle_client(status_server: StatusServer) -> None:
 
 
 def test_mkevent_check_query_perf(
-    config: ConfigFromWATO, event_status: EventStatus, status_server: StatusServer
+    config: ec.ConfigFromWATO, event_status: EventStatus, status_server: StatusServer
 ) -> None:
     for num in range(10000):
         event_status.new_event(
-            CMKEventConsole.new_event(
+            new_event(
                 {
                     "host": HostName(f"heute-{num}"),
                     "text": f"{time.time()} {num} BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R"
@@ -124,11 +121,11 @@ def test_mkevent_check_query_perf(
 def test_mkevent_query_filters(
     event_status: EventStatus,
     status_server: StatusServer,
-    event: Event,
+    event: ec.Event,
     status_socket: FakeStatusSocket,
     is_match: bool,
 ) -> None:
-    event_status.new_event(CMKEventConsole.new_event(event))
+    event_status.new_event(new_event(event))
     status_server.handle_client(status_socket, True, "127.0.0.1")
     response = status_socket.get_response()
     assert (len(response) == 2) is is_match

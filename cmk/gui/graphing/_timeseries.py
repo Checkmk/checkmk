@@ -11,9 +11,9 @@ from typing import Literal, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
+from cmk.gui.utils import escaping
 
 from ._type_defs import LineType, Operators, RRDData
 
@@ -127,15 +127,13 @@ def _time_series_operator_average(tsp: TimeSeries | TimeSeriesValues) -> float:
     return sum(tsp_clean) / len(tsp_clean)
 
 
-def time_series_operators() -> (
-    dict[
-        Operators,
-        tuple[
-            str,
-            Callable[[TimeSeries | TimeSeriesValues], float | None],
-        ],
-    ]
-):
+def time_series_operators() -> dict[
+    Operators,
+    tuple[
+        str,
+        Callable[[TimeSeries | TimeSeriesValues], float | None],
+    ],
+]:
     return {
         "+": (_("Sum"), _time_series_operator_sum),
         "*": (_("Product"), _time_series_operator_product),

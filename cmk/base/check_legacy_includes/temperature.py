@@ -6,21 +6,18 @@
 # pylint: disable=unused-import
 
 import time
-from typing import AnyStr
+from collections.abc import Generator, Mapping, Sequence
+from typing import AnyStr, NotRequired, TypedDict
 
 from cmk.base.check_api import check_levels, state_markers
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_average,
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-)
 
+from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError, State
 from cmk.plugins.lib.temperature import _migrate_params
 from cmk.plugins.lib.temperature import fahrenheit_to_celsius as fahrenheit_to_celsius
 from cmk.plugins.lib.temperature import render_temp as render_temp
 from cmk.plugins.lib.temperature import StatusType as StatusType
 from cmk.plugins.lib.temperature import temp_unitsym as temp_unitsym
+from cmk.plugins.lib.temperature import TempParamDict
 from cmk.plugins.lib.temperature import TempParamType as TempParamType
 from cmk.plugins.lib.temperature import to_celsius as to_celsius
 from cmk.plugins.lib.temperature import TwoLevelsType as TwoLevelsType
@@ -34,14 +31,22 @@ PerfDataType = list[PerfDataEntryType]
 # Generic Check Type. Can be used elsewhere too.
 CheckType = tuple[StatusType, AnyStr, PerfDataType]
 
+
+class CheckTempKwargs(TypedDict):
+    dev_unit: NotRequired[str]
+    dev_levels: NotRequired[TwoLevelsType | None]
+    dev_levels_lower: NotRequired[TwoLevelsType | None]
+    dev_status: NotRequired[StatusType | None]
+    dev_status_name: NotRequired[str]
+
+
 #################################################################################################
 #
 #                                 NOTE
 #                           !! PLEASE READ !!
 #
-#       check_temperature_list has NOT been migrated to the new check API yet.
-#
-#       check_temperature_trend and check_temperature have been migrated to the new check API.
+#       check_temperature_trend, check_temperature  and check_temperature_list have been
+#       migrated to the new check API.
 #       The functions below must be decomissioned (i.e. deleted) once all checks using
 #       the check_temperature function have been migrated.
 #
@@ -460,59 +465,30 @@ def check_temperature(  # pylint: disable=too-many-branches
 # and kwargs a dict of keyword arguments for check_temperature
 
 
-def check_temperature_list(sensorlist, params, unique_name):
-    params = _migrate_params(params)
-
+def check_temperature_list(
+    sensorlist: Sequence[tuple[str, Number, CheckTempKwargs]],
+    params: TempParamDict,
+) -> Generator[tuple[int, str, list[tuple[str, Number]]], None, None]:
     output_unit = params.get("output_unit", "c")
 
-    def worststate(a, b):
-        if a != 3 and b != 3:
-            return max(a, b)
-        if a != 2 and b != 2:
-            return 3
-        return 2
-
-    if sensorlist == []:
-        return None
+    if not sensorlist:
+        return
 
     sensor_count = len(sensorlist)
-    tempsum = 0
-    tempmax = sensorlist[0][1]
-    tempmin = sensorlist[0][1]
-    status = 0
-    detailtext = ""
-    for entry in sensorlist:
-        if len(entry) == 2:
-            sub_item, temp = entry
-            kwargs = {}
-        else:
-            sub_item, temp, kwargs = entry
-        if not isinstance(temp, (float, int)):
-            temp = float(temp)
-
-        tempsum += temp
-        tempmax = max(tempmax, temp)
-        tempmin = min(tempmin, temp)
-        sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params, None, **kwargs)
-        status = worststate(status, sub_status)
-        if status != 0:
-            detailtext += sub_item + ": " + sub_infotext + state_markers[sub_status] + ", "
-    if detailtext:
-        detailtext = " " + detailtext[:-2]  # Drop trailing ", ", add space to join with summary
+    yield 0, f"Sensors: {sensor_count}", []
 
     unitsym = temp_unitsym[output_unit]
-    tempavg = tempsum / float(sensor_count)
-    summarytext = "%d Sensors; Highest: %s %s, Average: %s %s, Lowest: %s %s" % (
-        sensor_count,
-        render_temp(tempmax, output_unit),
-        unitsym,
-        render_temp(tempavg, output_unit),
-        unitsym,
-        render_temp(tempmin, output_unit),
-        unitsym,
-    )
-    infotext = summarytext + detailtext
-    perfdata = [("temp", tempmax)]
+    tempmax = max(temp for _item, temp, _kwargs in sensorlist)
+    yield 0, f"Highest: {render_temp(tempmax, output_unit)} {unitsym}", [("temp", tempmax)]
+    tempavg = sum(temp for _item, temp, _kwargs in sensorlist) / float(sensor_count)
+    yield 0, f"Average: {render_temp(tempavg, output_unit)} {unitsym}", []
+    tempmin = min(temp for _item, temp, _kwargs in sensorlist)
+    yield 0, f"Lowest: {render_temp(tempmin, output_unit)} {unitsym}", []
+
+    for sub_item, temp, kwargs in sensorlist:
+        sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params, None, **kwargs)
+        if sub_status != 0:
+            yield sub_status, f"{sub_item}: {sub_infotext}", []
 
     if "trend_compute" in params and "period" in params["trend_compute"]:
         usr_warn, usr_crit = params.get("levels") or (None, None)
@@ -525,10 +501,7 @@ def check_temperature_list(sensorlist, params, unique_name):
         )
 
         trend_status, trend_infotext = check_temperature_trend(
-            tempavg, params["trend_compute"], output_unit, crit, crit_lower, unique_name
+            tempavg, params["trend_compute"], output_unit, crit, crit_lower, ""
         )
-        status = max(status, trend_status)
         if trend_infotext:
-            infotext += ", " + trend_infotext
-
-    return status, infotext, perfdata
+            yield trend_status, trend_infotext, []

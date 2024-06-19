@@ -7,8 +7,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.eltek import DETECT_ELTEK
 
 # .1.3.6.1.4.1.12148.9.3.1.0 --> ELTEK-DISTRIBUTED-MIB::batteryName.0
@@ -30,6 +30,8 @@ from cmk.plugins.lib.eltek import DETECT_ELTEK
 
 
 def parse_eltek_battery(string_table):
+    if not string_table:
+        return None
     voltage, current, temp, breaker_status = string_table[0]
     return {
         "supply": {
@@ -124,11 +126,15 @@ def discover_eltek_battery_supply(section):
     yield from ((item, {}) for item in section["supply"])
 
 
+def check_eltek_battery_supply(item, params, parsed):
+    return check_elphase(item, params, parsed["supply"])
+
+
 check_info["eltek_battery.supply"] = LegacyCheckDefinition(
     service_name="Battery %s",
     sections=["eltek_battery"],
     discovery_function=discover_eltek_battery_supply,
-    check_function=lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
+    check_function=check_eltek_battery_supply,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         # suggested by customer

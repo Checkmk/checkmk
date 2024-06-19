@@ -13,17 +13,18 @@ from functools import cache
 from types import TracebackType
 from typing import Any, assert_never, Protocol
 
+import google.protobuf.duration_pb2 as duration  # to satisfy pylint with `duration.Duration`
 from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
-from google.cloud.monitoring_v3 import Aggregation as gAggregation
+from google.cloud.monitoring_v3.types import Aggregation as GoogleAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
-from google.oauth2 import service_account  # type: ignore[import]
-from googleapiclient.discovery import build, Resource  # type: ignore[import]
-from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import]
+from google.oauth2 import service_account
+from googleapiclient.discovery import build, Resource  # type: ignore[import-untyped]
+from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
-Aligner = gAggregation.Aligner
-Reducer = gAggregation.Reducer
+Aligner = GoogleAggregation.Aligner
+Reducer = GoogleAggregation.Reducer
 
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
@@ -41,6 +42,7 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default
 class Asset:
     asset: asset_v1.Asset
 
+    # TODO(rs): replace static with normal: def serialize(self) -> str:
     @staticmethod
     def serialize(obj: "Asset") -> str:
         return json.dumps(asset_v1.Asset.to_dict(obj.asset))
@@ -60,17 +62,13 @@ class ClientProtocol(Protocol):
     date: datetime.date  # date when client is executed
 
     @property
-    def project(self) -> str:
-        ...
+    def project(self) -> str: ...
 
-    def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
-        ...
+    def list_time_series(self, request: Any) -> Iterable[TimeSeries]: ...
 
-    def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
-        ...
+    def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]: ...
 
-    def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
-        ...
+    def list_costs(self, tableid: str) -> tuple[Schema, Pages]: ...
 
 
 @dataclass(unsafe_hash=True)
@@ -138,12 +136,13 @@ class Aggregation:
     alignment_period: int = 60
     group_by_fields: Sequence[str] = field(default_factory=list)
 
-    def to_obj(self, default_groupby: str) -> monitoring_v3.Aggregation:
+    def to_obj(self, default_groupby: str) -> GoogleAggregation:
         groupbyfields = [default_groupby]
         groupbyfields.extend(self.group_by_fields)
-        return monitoring_v3.Aggregation(
+        # TODO(rs): code below is breaking typing, fixit, please
+        return GoogleAggregation(
             {
-                "alignment_period": {"seconds": self.alignment_period},
+                "alignment_period": duration.Duration(seconds=self.alignment_period),
                 "group_by_fields": groupbyfields,
                 "per_series_aligner": self.per_series_aligner,
                 "cross_series_reducer": self.cross_series_reducer,
@@ -224,12 +223,13 @@ class PiggyBackService:
 @dataclass(frozen=True)
 class Result:
     ts: TimeSeries
-    aggregation: gAggregation
+    aggregation: GoogleAggregation
 
+    # TODO(rs): replace static with normal: def serialize(self) -> str:
     @staticmethod
     def serialize(obj: "Result") -> str:
         aggregation = {
-            "alignment_period": {"seconds": int(obj.aggregation.alignment_period.total_seconds())},
+            "alignment_period": {"seconds": int(obj.aggregation.alignment_period.seconds)},
             "group_by_fields": list(obj.aggregation.group_by_fields),
             "per_series_aligner": obj.aggregation.per_series_aligner.value,
             "cross_series_reducer": obj.aggregation.cross_series_reducer.value,
@@ -240,7 +240,14 @@ class Result:
     def deserialize(cls, data: str) -> "Result":
         deserialized = json.loads(data)
         ts = TimeSeries.from_json(json.dumps(deserialized["ts"]))
-        aggregation = monitoring_v3.Aggregation(deserialized["aggregation"])
+        raw_aggregation = deserialized["aggregation"]
+
+        aggregation = GoogleAggregation(
+            alignment_period=duration.Duration(seconds=60),
+            group_by_fields=raw_aggregation["group_by_fields"],
+            per_series_aligner=raw_aggregation["per_series_aligner"],
+            cross_series_reducer=raw_aggregation["cross_series_reducer"],
+        )
         return cls(ts=ts, aggregation=aggregation)
 
 
@@ -254,7 +261,7 @@ class AssetSection:
 @dataclass(frozen=True)
 class ResultSection:
     name: str
-    results: Iterator[Result]
+    results: Sequence[Result]
 
 
 @dataclass(frozen=True)
@@ -389,9 +396,27 @@ class ResourceFilter:
     value: str
 
 
-def time_series(
-    client: ClientProtocol, service: Service, filter_by: ResourceFilter | None
-) -> Iterator[Result]:
+def _filter_result_sections(
+    sections: Iterable[ResultSection],
+    filter_by: ResourceFilter,
+) -> Iterator[ResultSection]:
+    yield from (
+        ResultSection(
+            name=result.name,
+            results=filtered_results,
+        )
+        for result in sections
+        if (
+            filtered_results := [
+                ts_result
+                for ts_result in result.results
+                if ts_result.ts.resource.labels[filter_by.label] == filter_by.value
+            ]
+        )
+    )
+
+
+def time_series(client: ClientProtocol, service: Service) -> Sequence[Result]:
     now = time.time()
     seconds = int(now)
     nanos = int((now - seconds) * 10**9)
@@ -407,6 +432,7 @@ def time_series(
             "start_time": {"seconds": (seconds - 280), "nanos": nanos},
         }
     )
+    ts_results: list[Result] = []
     for metric in service.metrics:
         request = metric.request(interval, groupby=service.default_groupby, project=client.project)
         try:
@@ -414,23 +440,33 @@ def time_series(
         except PermissionDenied:
             raise
         except Exception as e:
+            # 429 is a rate limit error (429 Query aborted. Please reduce the query rate.).
+            # We want to catch this and continue with the next metric
+            if "429" in str(e):
+                exc_type, exception, traceback = sys.exc_info()
+                gcp_serializer(
+                    [
+                        ExceptionSection(
+                            exc_type, exception, traceback, source=f"Metric: {metric.name}"
+                        )
+                    ]
+                )
+                continue
             raise RuntimeError(metric.name) from e
+
         for ts in results:
             result = Result(
                 ts=ts,
                 aggregation=metric.aggregation.to_obj(service.default_groupby),
             )
-            if filter_by is None:
-                yield result
-            elif ts.resource.labels[filter_by.label] == filter_by.value:
-                yield result
+            ts_results.append(result)
+
+    return ts_results
 
 
-def run_metrics(
-    client: ClientProtocol, services: Iterable[Service], filter_by: ResourceFilter | None = None
-) -> Iterator[ResultSection]:
+def run_metrics(client: ClientProtocol, services: Iterable[Service]) -> Iterator[ResultSection]:
     for s in services:
-        yield ResultSection(s.name, time_series(client, s, filter_by))
+        yield ResultSection(s.name, time_series(client, s))
 
 
 ################################
@@ -456,20 +492,27 @@ def run_assets(client: ClientProtocol, config: Sequence[str]) -> AssetSection:
 
 
 def piggy_back(
-    client: ClientProtocol, service: PiggyBackService, assets: Sequence[Asset], prefix: str
+    client: ClientProtocol,
+    service: PiggyBackService,
+    assets: Sequence[Asset],
+    prefix: str,
 ) -> Iterable[PiggyBackSection]:
+    sections = list(run_metrics(client, services=service.services))
+
     for host in [a for a in assets if a.asset.asset_type == service.asset_type]:
         label = host.asset.resource.data[service.asset_label]
         name = f"{prefix}_{host.asset.resource.data[service.name_label]}"
+        assert isinstance(label, str)  # hint for mypy
+
         filter_by = ResourceFilter(label=service.metric_label, value=label)
-        sections = run_metrics(client, services=service.services, filter_by=filter_by)
+        filtered_sections = _filter_result_sections(sections, filter_by)
         yield PiggyBackSection(
             name=name,
             service_name=service.name,
             labels=HostLabelSection(
                 labels=dict(service.labeler(host).labels) | {"cmk/gcp/projectId": client.project}
             ),
-            sections=sections,
+            sections=filtered_sections,
         )
 
 
@@ -1045,15 +1088,17 @@ HTTP_LOADBALANCER = Service(
 
 def default_labeler(asset: Asset) -> HostLabelSection:
     if "labels" in asset.asset.resource.data:
-        return HostLabelSection(
-            labels={
-                f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()
-            }
-        )
+        labels = asset.asset.resource.data["labels"]
+        if isinstance(labels, Mapping):
+            return HostLabelSection(labels={f"cmk/gcp/labels/{k}": v for k, v in labels.items()})
+        # data are malformed, we have to break
+        raise RuntimeError(f"Invalid data type asset.asset.resource.data: '{type(labels)}'")
+
     return HostLabelSection(labels={})
 
 
 def gce_labeler(asset: Asset) -> HostLabelSection:
+    # TODO(rs): replace creative code below with something we could understand and statically test
     return HostLabelSection(labels={**default_labeler(asset).labels, "cmk/gcp/gce": "instance"})
 
 

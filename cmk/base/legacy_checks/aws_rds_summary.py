@@ -95,9 +95,13 @@ def check_aws_rds_summary_db(item, params, parsed):
         yield 0, f"Availability zone: {AWSRegions[region]} ({zone_info})"
 
 
+def discover_aws_rds_summary_db_status(p):
+    return inventory_aws_generic(p, ["DBInstanceStatus"])
+
+
 check_info["aws_rds_summary.db_status"] = LegacyCheckDefinition(
     service_name="AWS/RDS %s Info",
     sections=["aws_rds_summary"],
-    discovery_function=lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
+    discovery_function=discover_aws_rds_summary_db_status,
     check_function=check_aws_rds_summary_db,
 )

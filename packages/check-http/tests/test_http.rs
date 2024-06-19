@@ -4,11 +4,11 @@
 
 use anyhow::Result as AnyhowResult;
 use check_http::checking_types::State;
-use check_http::checks::CheckParameters;
+use check_http::checks::{CheckParameters, RequestInformation};
 use check_http::http::{ClientConfig, OnRedirect, RequestConfig};
 use check_http::output::Output;
 use check_http::runner::collect_checks;
-use reqwest::Method;
+use reqwest::{Method, Url};
 
 use std::io::{Read, Write};
 use std::net::TcpListener;
@@ -27,7 +27,7 @@ async fn test_basic_get() -> AnyhowResult<()> {
         "HTTP/1.1 200 OK\nConnection: close\n\n",
         "GET / HTTP/1.1",
         State::Ok,
-        "HTTP OK - HTTP/1.1 200 OK",
+        "Version: HTTP/1.1, Status: 200 OK",
     )
     .await
 }
@@ -38,7 +38,7 @@ async fn test_status_4xx() -> AnyhowResult<()> {
         "HTTP/1.1 401 nope\nConnection: close\n\n",
         "GET / HTTP/1.1",
         State::Warn,
-        "HTTP WARNING - HTTP/1.1 401 Unauthorized",
+        "Version: HTTP/1.1, Status: 401 Unauthorized",
     )
     .await
 }
@@ -50,9 +50,14 @@ async fn check_http_output(
     expected_summary_start: &str,
 ) -> AnyhowResult<()> {
     let (port, listener) = tcp_listener("0.0.0.0");
-    let (client_cfg, request_cfg, check_params) = make_standard_configs(port);
+    let (client_cfg, request_cfg, request_information, check_params) = make_standard_configs(port);
 
-    let check_http_thread = tokio::spawn(collect_checks(client_cfg, request_cfg, check_params));
+    let check_http_thread = tokio::spawn(collect_checks(
+        client_cfg,
+        request_cfg,
+        request_information,
+        check_params,
+    ));
 
     let check_http_payload = process_http(listener, http_response)?;
 
@@ -65,7 +70,15 @@ async fn check_http_output(
     Ok(())
 }
 
-fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParameters) {
+fn make_standard_configs(
+    port: u16,
+) -> (
+    ClientConfig,
+    RequestConfig,
+    RequestInformation,
+    CheckParameters,
+) {
+    let url = Url::parse(&format!("http://{}:{}", LOCALHOST_DNS, port)).unwrap();
     (
         ClientConfig {
             version: None,
@@ -76,27 +89,38 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             force_ip: None,
             min_tls_version: None,
             max_tls_version: None,
+            collect_tls_info: false,
+            ignore_proxy_env: false,
+            proxy_url: None,
+            proxy_auth: None,
         },
         RequestConfig {
-            url: format!("http://{}:{}", LOCALHOST_DNS, port),
+            url: url.clone(),
             method: Method::GET,
             version: None,
-            headers: None,
+            headers: vec![],
             body: None,
             content_type: None,
             auth_user: None,
             auth_pw: None,
             without_body: false,
+            token_auth: None,
+        },
+        RequestInformation {
+            request_url: url,
+            method: Method::GET,
+            user_agent: "test_http".to_string(),
+            onredirect: OnRedirect::Follow,
+            timeout: Duration::from_secs(1),
         },
         CheckParameters {
-            onredirect: OnRedirect::Follow,
-            status_code: None,
+            status_code: vec![],
             page_size: None,
             response_time_levels: None,
             document_age_levels: None,
-            timeout: Duration::from_secs(1),
             body_matchers: vec![],
             header_matchers: vec![],
+            certificate_levels: None,
         },
     )
 }

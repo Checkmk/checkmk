@@ -5,7 +5,7 @@ license: GPLv2
 distribution: check_mk
 description:
  This check outputs the list of currently active services on a
- Citrix XenApp 7.x controller. The citrix_farm.ps1 plugin must be
+ Citrix XenApp 7.x controller. The citrix_farm.ps1 plug-in must be
  installed on the controller, and the Checkmk agent must be executed
  with Citrix Admin permissions for this to work. This check is purely
  informative and always OK.

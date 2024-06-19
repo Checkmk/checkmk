@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
 def inventory_bdtms_tape_info(info):
@@ -35,8 +34,8 @@ def check_bdtms_tape_info(_no_item, _no_params, info):
     return status, health
 
 
-def parse_bdtms_tape_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_bdtms_tape_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["bdtms_tape_status"] = LegacyCheckDefinition(

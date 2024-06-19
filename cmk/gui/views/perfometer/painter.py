@@ -5,16 +5,16 @@
 
 from collections.abc import Sequence
 
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.type_defs import ColumnName, Row
-from cmk.gui.utils.html import HTML
+from cmk.gui.utils import escaping
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.graph import cmk_graph_url
 
@@ -49,7 +49,7 @@ class PainterPerfometer(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         classes = ["perfometer"]
-        if is_stale(row):
+        if is_stale(row, config=self.config):
             classes.append("stale")
 
         try:
@@ -58,28 +58,29 @@ class PainterPerfometer(Painter):
                 return "", ""
         except Exception as e:
             logger.exception("error rendering performeter")
-            if active_config.debug:
+            if self.config.debug:
                 raise
             return " ".join(classes), _("Exception: %s") % e
 
         assert h is not None
         content = (
-            HTMLWriter.render_div(HTML(h), class_=["content"])
+            HTMLWriter.render_div(h, class_=["content"])
             + HTMLWriter.render_div(title, class_=["title"])
             + HTMLWriter.render_div("", class_=["glass"])
         )
 
         # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
         if display_options.enabled(display_options.X) and row["service_pnpgraph_present"] != 0:
-            url = cmk_graph_url(row, "service")
+            url = cmk_graph_url(row, "service", request=self.request)
             disabled = False
         else:
             url = "javascript:void(0)"
             disabled = True
 
-        return " ".join(classes), HTMLWriter.render_a(
-            content=content,
-            href=url,
+        renderer = RenderLink(self.request, response, display_options)
+        return " ".join(classes), renderer.link_direct(
+            url,
+            html_text=content,
             title=escaping.strip_tags(title),
             class_=["disabled"] if disabled else [],
         )

@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, Float, Percentage, TextInput, Tuple, V
 
 def _parameter_valuespec_psu_wattage() -> Dictionary:
     return Dictionary(
-        title=_("Levels for Power Supply Wattage"),
+        title=_("Levels for power supply wattage"),
         elements=[
             (
                 "levels_abs_upper",
@@ -44,12 +44,10 @@ def _parameter_valuespec_psu_wattage() -> Dictionary:
                         Percentage(
                             label=_("Warning at"),
                             default_value=80.0,
-                            display_format="%.3f",
                         ),
                         Percentage(
                             label=_("Critical at"),
                             default_value=90.0,
-                            display_format="%.3f",
                         ),
                     ],
                 ),
@@ -62,12 +60,10 @@ def _parameter_valuespec_psu_wattage() -> Dictionary:
                         Percentage(
                             label=_("Warning below"),
                             default_value=1.0,
-                            display_format="%.3f",
                         ),
                         Percentage(
                             label=_("Critical below"),
                             default_value=0.1,
-                            display_format="%.3f",
                         ),
                     ],
                 ),
@@ -86,7 +82,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_psu_wattage,
-        title=lambda: _("Power Supply Wattage"),
+        title=lambda: _("Power supply wattage"),
         item_spec=_item_spec,
     )
 )

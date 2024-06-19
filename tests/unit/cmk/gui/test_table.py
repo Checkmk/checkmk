@@ -10,7 +10,7 @@ import pytest
 from bs4 import BeautifulSoup as bs
 from pytest import MonkeyPatch
 
-from tests.testlib import compare_html
+from tests.unit.cmk.gui.compare_html import compare_html
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -70,7 +70,7 @@ def test_cell_content_escaping() -> None:
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "<script>alert('A')</script>")
-            table.cell("B", HTML("<script>alert('B')</script>"))
+            table.cell("B", HTML.without_escaping("<script>alert('B')</script>"))
             table.cell("C", "<b>C</b>")
 
         written_text = output_funnel.drain()
@@ -86,7 +86,7 @@ def test_cell_title_escaping() -> None:
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
             table.cell("<script>alert('A')</script>")
-            table.cell(HTML("<script>alert('B')</script>"))
+            table.cell(HTML.without_escaping("<script>alert('B')</script>"))
             table.cell("<b>C</b>")
 
         written_text = output_funnel.drain()
@@ -211,7 +211,7 @@ def test_nesting_context() -> None:
     ), written_text
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 @pytest.mark.parametrize("sortable", [True, False])
 @pytest.mark.parametrize("searchable", [True, False])
 @pytest.mark.parametrize("limit", [None, 2])

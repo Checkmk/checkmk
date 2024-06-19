@@ -29,8 +29,6 @@ from .builtin import (
     PerfgraphIcon,
     PredictionIcon,
     RescheduleIcon,
-    RobotmkErrorIcon,
-    RobotmkIcon,
     RuleEditorIcon,
     ServicePeriodIcon,
     StalenessIcon,
@@ -78,9 +76,6 @@ def register(
     icon_registry.register(StarsIcon)
     icon_registry.register(CrashdumpsIcon)
     icon_registry.register(CheckPeriodIcon)
-    # Better move these implementations & registrations to the feature related modules
-    icon_registry.register(RobotmkIcon)
-    icon_registry.register(RobotmkErrorIcon)
 
 
 __all__ = [

@@ -4,16 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, render, Service, SNMPTree, StringTable
 from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 
 def parse_viprinet_mem(string_table: StringTable) -> StringTable:
     return string_table
+
+
+def discover_viprinet_mem(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
+def check_viprinet_mem(_no_item, _no_params, info):
+    return (
+        0,
+        "Memory used: %s" % render.bytes(saveint(info[0][0])),
+    )
 
 
 check_info["viprinet_mem"] = LegacyCheckDefinition(
@@ -24,9 +35,6 @@ check_info["viprinet_mem"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     service_name="Memory",
-    discovery_function=lambda info: len(info) > 0 and [(None, None)] or [],
-    check_function=lambda _no_item, _no_params, info: (
-        0,
-        "Memory used: %s" % get_bytes_human_readable(saveint(info[0][0])),
-    ),
+    discovery_function=discover_viprinet_mem,
+    check_function=check_viprinet_mem,
 )

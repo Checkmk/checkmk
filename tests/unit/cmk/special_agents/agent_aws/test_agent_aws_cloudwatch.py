@@ -90,7 +90,7 @@ def test_agent_aws_cloudwatch_alarms(
     amount_alarms: int,
 ) -> None:
     cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
-    _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results  # noqa: F841
+    _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 
     assert cloudwatch_alarms.cache_interval == 300

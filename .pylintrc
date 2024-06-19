@@ -1,19 +1,16 @@
 [MASTER]
 # Setup the Python paths needed for our tests.
-#
-# Please note:
-# - repo path is added to be able to import tests.conftest
-# - tests.conftest is again extending the sys.path to add the required paths
 init-hook=
     import sys;
     sys.path.insert(0, __file__[:__file__.rfind("/.venv")]);  # __file__ is somewhere deep inside the .venv
-    import tests.conftest;
+    from tests.testlib.repo import add_python_paths;
+    add_python_paths();
 load-plugins=
-    tests.testlib.pylint_cmk,
-    tests.testlib.pylint_checker_localization,
-    tests.testlib.pylint_checker_forbidden_objects,
-    tests.testlib.pylint_checker_cmk_module_layers,
-    tests.testlib.pylint_checker_layering_violation,
+    tests.pylint.cmk_edition_ignores,
+    tests.pylint.checker_localization,
+    tests.pylint.checker_forbidden_objects,
+    tests.pylint.checker_cmk_module_layers,
+    tests.pylint.checker_layering_violation,
     pylint.extensions.bad_builtin,
     pylint_pydantic
 jobs=0
@@ -47,11 +44,6 @@ disable=
     # Enabling these warnings would be nice, they are mostly a sign of sloppy
     # programming practice. In some cases, they can even hide bugs.
     broad-except,
-    #---------------------------------------------------------------------------
-    # Enabling this would be nice, but not crucial. Nevertheless, this would
-    # improve readability and involve some cleanups in our class hierarchy, so
-    # we should do this some day.
-    protected-access,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we
@@ -99,9 +91,15 @@ disable=
     # Black doesn't split long strings, we'll have to this by ourselves, see
     # https://github.com/psf/black/issues/1331
     line-too-long,
+    # Since Black 24 black and pylint started to disagree on `def foo(): ...`
+    # https://github.com/psf/black/issues/4173
+    # black is our formatter so the black way is the proper way...
+    multiple-statements,
     #---------------------------------------------------------------------------
-    # We are light years away from enabling this...
-    missing-docstring,
+    # We are light years away from enabling these...
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.
@@ -149,7 +147,12 @@ disable=
     broad-exception-raised,
     #---------------------------------------------------------------------------
     # Import order is checked by isort
-    wrong-import-order
+    wrong-import-order,
+    #---------------------------------------------------------------------------
+    # New in version 3.2.0 which causes new findings
+    # TODO: fix these new findings - https://jira.lan.tribe29.com/browse/CMK-17473
+    possibly-used-before-assignment,
+    contextmanager-generator-missing-cleanup
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

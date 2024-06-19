@@ -20,7 +20,7 @@ def ibm_mq_version():
             Tuple(
                 title=_("Check for correct version"),
                 help=_(
-                    "You can make sure that the plugin is running"
+                    "You can make sure that the plug-in is running"
                     " with a specific or a minimal version."
                 ),
                 elements=[
@@ -61,6 +61,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_plugin,
-        title=lambda: _("IBM MQ Plugin"),
+        title=lambda: _("IBM MQ plug-in"),
     )
 )

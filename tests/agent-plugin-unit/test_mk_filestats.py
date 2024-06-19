@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import ast
 import collections
 import configparser
@@ -16,7 +18,7 @@ import pytest
 if sys.version_info[0] == 2:
     import agents.plugins.mk_filestats_2 as mk_filestats  # pylint: disable=syntax-error
 else:
-    import agents.plugins.mk_filestats as mk_filestats
+    from agents.plugins import mk_filestats
 
 
 MYLAZYFILE = mk_filestats.FileStat.from_path(__file__)
@@ -195,9 +197,11 @@ class TestConfigParsing:
         mocker,
     ):
         mocker.patch(
-            "ConfigParser.ConfigParser"
-            if sys.version_info[0] == 2
-            else "configparser.ConfigParser",
+            (
+                "ConfigParser.ConfigParser"
+                if sys.version_info[0] == 2
+                else "configparser.ConfigParser"
+            ),
             return_value=mocked_configparser,
         )
         actual_results = list(mk_filestats.iter_config_section_dicts(config_file_name))

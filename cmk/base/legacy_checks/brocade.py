@@ -8,9 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree, startswith
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import any_of, equals, SNMPTree, startswith, StringTable
 
 # Example output from agent:
 # [['1', '24', 'SLOT #0: TEMP #1'],

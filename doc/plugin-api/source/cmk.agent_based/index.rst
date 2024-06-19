@@ -1,6 +1,6 @@
-=============================
-Agent based API ("Check API")
-=============================
+=========================
+Agent based ("Check API")
+=========================
 
 Version 1
 =========
@@ -24,4 +24,3 @@ Version 2
    v2
    v2.clusterize
    v2.render
-   v2.type_defs

@@ -58,7 +58,7 @@ def vs_interface_traffic():
                 ),
                 (
                     "predictive",
-                    _("Predictive Levels (only on CMC)"),
+                    _("Predictive levels (only on CMC)"),
                     PredictiveLevels(),
                 ),
             ],

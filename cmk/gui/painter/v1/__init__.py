@@ -12,6 +12,6 @@
 #    This folder is part of a namespace package, that can be shadowed/extended
 #    using the local/ hierarchy.
 #
-#    Do not change the following line, is is picked up by the build process:
+#    Do not change the following line, it is picked up by the build process:
 #    check_mk.make: do-not-deploy
 #

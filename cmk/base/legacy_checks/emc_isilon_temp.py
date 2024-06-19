@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
 
 
@@ -61,6 +60,10 @@ def parse_emc_isilon_temp(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_emc_isilon_temp(info):
+    return inventory_isilon_temp(info, is_cpu=False)
+
+
 check_info["emc_isilon_temp"] = LegacyCheckDefinition(
     parse_function=parse_emc_isilon_temp,
     detect=DETECT_ISILON,
@@ -69,13 +72,18 @@ check_info["emc_isilon_temp"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     service_name="Temperature %s",
-    discovery_function=lambda info: inventory_isilon_temp(info, is_cpu=False),
+    discovery_function=discover_emc_isilon_temp,
     check_function=check_isilon_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (28.0, 33.0),  # assumed useful levels for ambient / air temperature
     },
 )
+
+
+def discover_emc_isilon_temp_cpu(info):
+    return inventory_isilon_temp(info, is_cpu=True)
+
 
 # .
 #   .--CPU Temperature-----------------------------------------------------.
@@ -96,7 +104,7 @@ check_info["emc_isilon_temp"] = LegacyCheckDefinition(
 check_info["emc_isilon_temp.cpu"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     sections=["emc_isilon_temp"],
-    discovery_function=lambda info: inventory_isilon_temp(info, is_cpu=True),
+    discovery_function=discover_emc_isilon_temp_cpu,
     check_function=check_isilon_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

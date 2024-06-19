@@ -68,7 +68,7 @@ class SectionManager:
         self._data.clear()
         sys.stdout.flush()
 
-    def writeline(self, line: Any):  # type: ignore[no-untyped-def]
+    def writeline(self, line: Any) -> None:
         sys.stdout.write(str(line))
         sys.stdout.write("\n")
 
@@ -160,6 +160,8 @@ def special_agent_main(
     parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
     main_fn: Callable[[argparse.Namespace], int],
     argv: Sequence[str] | None = None,
+    *,
+    apply_password_store_hack: bool = True,
 ) -> int:
     """
     Because it modifies sys.argv and part of the functionality is terminating the process with
@@ -167,5 +169,6 @@ def special_agent_main(
     Therefore _active_check_main_core and _output_check_result should be used for unit tests since
     they are not meant to modify the system environment or terminate the process.
     """
-    cmk.utils.password_store.replace_passwords()
+    if apply_password_store_hack:
+        cmk.utils.password_store.replace_passwords()
     return _special_agent_main_core(parse_arguments, main_fn, argv or sys.argv[1:])

@@ -18,6 +18,8 @@ from typing import Any, Literal, TypeVar
 from six import ensure_str
 
 import cmk.utils.paths
+from cmk.utils.config_validation_layer.users.contacts import validate_contacts
+from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.crypto.secrets import AutomationUserSecret
@@ -35,9 +37,8 @@ from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
-import cmk.gui.hooks as hooks
 import cmk.gui.pages
-import cmk.gui.utils as utils
+from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
@@ -72,15 +73,15 @@ def load_custom_attr(
         return None
 
     if lock:
-        result = load_text_from_file(Path(attr_path, lock=lock))
+        result = load_text_from_file(Path(attr_path), lock=lock)
     else:
         # Simpler operation if no lock is required. Does NOT check file permissions
         # These are only considered critical in case of pickled data
         # Files in the ~/var/check_mk/web/{username} do and WILL never contain pickled data
         try:
-            with open(str(attr_path), mode="r") as file_object:
+            with open(str(attr_path)) as file_object:
                 result = file_object.read()
-        except (FileNotFoundError, IOError):
+        except (FileNotFoundError, OSError):
             return None
     return None if result == "" else parser(result.strip())
 
@@ -119,16 +120,18 @@ def get_authserials_lines() -> list[str]:
         return f.readlines()
 
 
-def load_users_uncached(lock: bool = False) -> Users:
-    return _load_users(lock)
+def load_users_uncached(lock: bool = False, skip_validation: bool = False) -> Users:
+    return _load_users(lock, skip_validation)
 
 
 @request_memoize()
-def load_users(lock: bool = False) -> Users:
-    return _load_users(lock)
+def load_users(lock: bool = False, skip_validation: bool = False) -> Users:
+    return _load_users(lock, skip_validation)
 
 
-def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
+def _load_users(
+    lock: bool = False, skip_validation: bool = False
+) -> Users:  # pylint: disable=too-many-branches
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
@@ -138,28 +141,15 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
     # ? exact type of keys and items returned from load_mk_file seems to be unclear
-    contacts = load_contacts()
+    contacts = load_contacts(skip_validation)
 
     # Now load information about users from the GUI config world
     # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
-    users = load_multisite_users()
+    users = load_multisite_users(skip_validation)
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
-    result = {}
-    for uid, user in users.items():
-        # Transform user IDs which were stored with a wrong type
-        uid = ensure_str(uid)  # pylint: disable= six-ensure-str-bin-call
-
-        profile = contacts.get(uid, {})
-        profile.update(user)
-        result[UserId(uid)] = profile
-
-        # Convert non unicode mail addresses
-        if "email" in profile:
-            profile["email"] = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                profile["email"]
-            )
+    result: Users = _merge_users_and_contacts(users, contacts)
 
     # This loop is only necessary if someone has edited
     # contacts.mk manually. But we want to support that as
@@ -178,42 +168,11 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
     # they are getting according to the multisite old-style
     # configuration variables.
 
-    htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
-    for uid, password in htpwd_entries.items():
-        if password.startswith("!"):
-            locked = True
-            password = PasswordHash(password[1:])
-        else:
-            locked = False
-
-        if uid in result:
-            result[uid]["password"] = password
-            result[uid]["locked"] = locked
-        else:
-            # Create entry if this is an admin user
-            new_user = UserSpec(
-                roles=roles_of_user(uid),
-                password=password,
-                locked=False,
-                connector="htpasswd",
-            )
-
-            add_internal_attributes(new_user)
-
-            result[uid] = new_user
-        # Make sure that the user has an alias
-        result[uid].setdefault("alias", uid)
+    result = _add_passwords(result)
 
     # Now read the serials, only process for existing users
-    serials_file = Path(cmk.utils.paths.htpasswd_file).with_name("auth.serials")
-    try:
-        for line in serials_file.read_text(encoding="utf-8").splitlines():
-            if ":" in line:
-                user_id, serial = line.split(":")[:2]
-                if (user_id := UserId(user_id)) in result:
-                    result[user_id]["serial"] = utils.saveint(serial)
-    except OSError:  # file not found
-        pass
+
+    result = _add_serials(result)
 
     attributes: list[
         tuple[
@@ -228,6 +187,7 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
                 "ui_theme",
                 "two_factor_credentials",
                 "ui_sidebar_position",
+                "ui_saas_onboarding_button_toggle",
                 "last_login",
             ],
             Callable,
@@ -242,6 +202,7 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
         ("ui_theme", lambda x: x),
         ("two_factor_credentials", ast.literal_eval),
         ("ui_sidebar_position", lambda x: None if x == "None" else x),
+        ("ui_saas_onboarding_button_toggle", lambda x: None if x == "None" else x),
         ("last_login", ast.literal_eval),
     ]
 
@@ -274,6 +235,68 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
         # checking if a user is an automation user via existence of the file will go wrong.
 
     return result
+
+
+def _merge_users_and_contacts(users: dict[str, Any], contacts: dict[str, Any]) -> Users:
+    result: Users = {}
+    for uid, user in users.items():
+        # Transform user IDs which were stored with a wrong type
+        uid = ensure_str(uid)  # pylint: disable= six-ensure-str-bin-call
+
+        profile = contacts.get(uid, {})
+        profile.update(user)
+        result[UserId(uid)] = profile
+
+        # Convert non unicode mail addresses
+        if "email" in profile:
+            profile["email"] = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                profile["email"]
+            )
+
+    return result
+
+
+def _add_passwords(users: Users) -> Users:
+    htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
+    for uid, password in htpwd_entries.items():
+        if password.startswith("!"):
+            locked = True
+            password = PasswordHash(password[1:])
+        else:
+            locked = False
+
+        if uid in users:
+            users[uid]["password"] = password
+            users[uid]["locked"] = locked
+        else:
+            # Create entry if this is an admin user
+            new_user = UserSpec(
+                roles=roles_of_user(uid),
+                password=password,
+                locked=False,
+                connector="htpasswd",
+            )
+
+            add_internal_attributes(new_user)
+
+            users[uid] = new_user
+        # Make sure that the user has an alias
+        users[uid].setdefault("alias", uid)
+    return users
+
+
+def _add_serials(users: Users) -> Users:
+    serials_file = Path(cmk.utils.paths.htpasswd_file).with_name("auth.serials")
+    try:
+        for line in serials_file.read_text(encoding="utf-8").splitlines():
+            if ":" in line:
+                user_id, serial = line.split(":")[:2]
+                if (user_id := UserId(user_id)) in users:
+                    users[user_id]["serial"] = utils.saveint(serial)
+    except OSError:  # file not found
+        pass
+
+    return users
 
 
 def remove_custom_attr(userid: UserId, key: str) -> None:
@@ -328,8 +351,8 @@ def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
-def save_users(profiles: Users, now: datetime) -> None:
-    write_contacts_and_users_file(profiles)
+def save_users(profiles: Users, now: datetime, skip_validation: bool = False) -> None:
+    write_contacts_and_users_file(profiles, skip_validation=skip_validation)
 
     # Execute user connector save hooks
     hook_save(profiles)
@@ -428,6 +451,15 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
         else:
             remove_custom_attr(user_id, "ui_sidebar_position")
 
+        if "ui_saas_onboarding_button_toggle" in user:
+            save_custom_attr(
+                user_id,
+                "ui_saas_onboarding_button_toggle",
+                user["ui_saas_onboarding_button_toggle"],
+            )
+        else:
+            remove_custom_attr(user_id, "ui_saas_onboarding_button_toggle")
+
         _save_cached_profile(user_id, user, multisite_keys, non_contact_keys)
 
 
@@ -458,7 +490,7 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
 
 
 def write_contacts_and_users_file(
-    profiles: Users, custom_default_config_dir: str | None = None
+    profiles: Users, custom_default_config_dir: str | None = None, skip_validation: bool = False
 ) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
@@ -482,7 +514,7 @@ def write_contacts_and_users_file(
 
     # Remove multisite keys in contacts.
     # TODO: Clean this up. Just improved the performance, but still have no idea what its actually doing...
-    contacts = dict(
+    contacts: dict[str, Any] = dict(
         e
         for e in [
             (
@@ -503,13 +535,17 @@ def write_contacts_and_users_file(
     )
 
     # Only allow explicitely defined attributes to be written to multisite config
-    users = {}
+    users: dict[str, Any] = {}
     for uid, profile in updated_profiles.items():
         users[uid] = {
             p: val
             for p, val in profile.items()
             if p in multisite_keys or p in multisite_attributes_cache[profile.get("connector")]
         }
+
+    if not skip_validation:
+        validate_users(users)
+        validate_contacts(contacts)
 
     # Checkmk's monitoring contacts
     save_to_mk_file(
@@ -569,7 +605,8 @@ def _multisite_keys() -> list[str]:
     multisite_variables = [
         var
         for var in _get_multisite_custom_variable_names()
-        if var not in ("start_url", "ui_theme", "ui_sidebar_position")
+        if var
+        not in ("start_url", "ui_theme", "ui_sidebar_position", "ui_saas_onboarding_button_toggle")
     ]
     return [
         "roles",
@@ -643,16 +680,22 @@ def convert_idle_timeout(value: str) -> int | bool | None:
         return None  # Invalid value -> use global setting
 
 
-def load_contacts() -> dict[str, Any]:
-    return load_from_mk_file(_contacts_filepath(), "contacts", {})
+def load_contacts(skip_contact_validation: bool = False) -> dict[str, Any]:
+    contacts = load_from_mk_file(_contacts_filepath(), "contacts", {})
+    if not skip_contact_validation:
+        validate_contacts(contacts)
+    return contacts
 
 
 def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
 
 
-def load_multisite_users() -> dict[str, Any]:
-    return load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
+def load_multisite_users(skip_user_validation: bool = False) -> dict[str, Any]:
+    users = load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
+    if not skip_user_validation:
+        validate_users(users)
+    return users
 
 
 def _convert_start_url(value: str) -> str:

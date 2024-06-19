@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from cmk.utils.licensing.registry import get_licensing_user_effect
 
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -40,10 +39,8 @@ def top_heading(
     writer.open_div(class_="titlebar")
     writer.open_div()
 
-    # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
-    # here and self.a() escapes the content (with permissive escaping) again. We don't want
-    # to handle "title" permissive.
-    html_title = HTML(escaping.escape_attribute(title))
+    # We don't want to handle "title" permissive.
+    html_title = HTML.with_escaping(title)
     writer.a(
         html_title,
         class_="title",

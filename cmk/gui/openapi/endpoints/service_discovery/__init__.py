@@ -17,9 +17,11 @@ from urllib.parse import urlparse
 
 from cmk.utils.everythingtype import EVERYTHING
 
-from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 
 from cmk.gui import fields as gui_fields
+from cmk.gui.background_job import BackgroundStatusSnapshot
+from cmk.gui.config import active_config
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
@@ -27,7 +29,7 @@ from cmk.gui.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_
 from cmk.gui.openapi.endpoints.service_discovery.response_schemas import (
     DiscoveryBackgroundJobStatusObject,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import (
     collection_href,
     domain_object,
@@ -38,6 +40,12 @@ from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.site_config import site_is_local
+from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.automations import (
+    fetch_service_discovery_background_job_status,
+    MKAutomationException,
+)
 from cmk.gui.watolib.bulk_discovery import (
     bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
@@ -68,6 +76,10 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
         permissions.Optional(permissions.Perm("wato.service_discovery_to_ignored")),
         permissions.Optional(permissions.Perm("wato.service_discovery_to_removed")),
         permissions.Optional(permissions.Perm("wato.services")),
+        permissions.Undocumented(permissions.Perm("background_jobs.stop_jobs")),
+        permissions.Undocumented(permissions.Perm("background_jobs.stop_foreign_jobs")),
+        permissions.Undocumented(permissions.Perm("background_jobs.delete_jobs")),
+        permissions.Undocumented(permissions.Perm("background_jobs.delete_foreign_jobs")),
         permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
     ]
 )
@@ -75,7 +87,8 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
 SERVICE_DISCOVERY_PHASES = {
     "undecided": "new",
     "vanished": "vanished",
-    "monitored": "old",
+    "monitored": "unchanged",
+    "changed": "changed",
     "ignored": "ignored",
     "removed": "removed",
     "manual": "manual",
@@ -98,21 +111,23 @@ class APIDiscoveryAction(enum.Enum):
     fix_all = "fix_all"
     refresh = "refresh"
     only_host_labels = "only_host_labels"
+    only_service_labels = "only_service_labels"
     tabula_rasa = "tabula_rasa"
 
 
 def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
+    # TODO: documentation should be separated for bulk discovery
     return fields.String(
         description="""The mode of the discovery action. The 'refresh' mode starts a new service
         discovery which will contact the host and identify undecided and vanished services and host
         labels. Those services and host labels can be added or removed accordingly with the
-        'fix_all' mode. The 'tabula_rasa' mode combines these two procedures. The 'new', 'remove'
-        and 'only_host_labels' modes give you more granular control. Both the 'tabula_rasa' and
-        'refresh' modes will start a background job and the endpoint will return a redirect to
-        the 'wait-for-completion' endpoint. All other modes will return an immediate result instead.
-        Keep in mind that the non background job modes only work with scanned data, so you may need
-        to run "refresh" first. The corresponding user interface option for each discovery mode is
-        shown below.
+        'fix_all' mode. The 'tabula_rasa' mode combines these two procedures. The 'new', 'remove',
+        'only_host_labels' and 'only_service_labels' modes give you more granular control. Both the
+        'tabula_rasa' and 'refresh' modes will start a background job and the endpoint will return
+        a redirect to the 'wait-for-completion' endpoint. All other modes will return an immediate
+        result instead. Keep in mind that the non background job modes only work with scanned data,
+        so you may need to run "refresh" first. The corresponding user interface option for each
+        discovery mode is shown below.
 
  * `new` - Monitor undecided services
  * `remove` - Remove vanished services
@@ -120,6 +135,7 @@ def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
  * `tabula_rasa` - Remove all and find new
  * `refresh` - Rescan
  * `only_host_labels` - Update host labels
+ * `only_service_labels` - Update service labels
     """,
         enum=[a.value for a in APIDiscoveryAction],
         example="refresh",
@@ -133,6 +149,7 @@ DISCOVERY_ACTION = {
     "fix_all": DiscoveryAction.FIX_ALL,
     "refresh": DiscoveryAction.REFRESH,
     "only_host_labels": DiscoveryAction.UPDATE_HOST_LABELS,
+    "only_service_labels": DiscoveryAction.UPDATE_SERVICE_LABELS,
     "tabula_rasa": DiscoveryAction.TABULA_RASA,
 }
 
@@ -152,11 +169,21 @@ DISCOVERY_ACTION = {
             )
         }
     ],
+    additional_status_codes=[400],
 )
 def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
     """Show the current service discovery result"""
     host = Host.load_host(params["host_name"])
-    discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
+
+    try:
+        discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
+    except MKAutomationException:
+        return problem(
+            status=400,
+            title="Error running automation",
+            detail="Please run `Show the last service discovery background job on a host` in order to get details about the error",
+        )
+
     return serve_json(serialize_discovery_result(host, discovery_result))
 
 
@@ -291,9 +318,9 @@ def _update_single_service_phase(
 def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     """Show the last service discovery background job on a host"""
     host = Host.load_host(params["host_name"])
-    job = ServiceDiscoveryBackgroundJob(host.name())
-    job_id = job.get_job_id()
-    job_status = job.get_status()
+    snapshot = _job_snapshot(host)
+    job_id = snapshot.job_id
+    job_status = snapshot.status
     return serve_json(
         constructors.domain_object(
             domain_type="service_discovery_run",
@@ -333,15 +360,14 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
     host = Host.load_host(params["host_name"])
-    job = ServiceDiscoveryBackgroundJob(host.name())
-    if not job.exists():
+    snapshot = _job_snapshot(host)
+    if not snapshot.exists:
         raise ProblemException(
             status=404,
             title="The requested service discovery job was not found",
             detail=f"Could not find a service discovery for host {host.name()}",
         )
-
-    if job.is_active():
+    if snapshot.is_active:
         response = Response(status=302)
         response.location = urlparse(request.url).path
         return response
@@ -414,8 +440,8 @@ def execute(params: Mapping[str, Any]) -> Response:
 
 
 def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: Host) -> Response:
-    service_discovery_job = ServiceDiscoveryBackgroundJob(host.name())
-    if service_discovery_job.is_active():
+    job_snapshot = _job_snapshot(host)
+    if job_snapshot.is_active:
         return Response(status=409)
 
     discovery_action = DISCOVERY_ACTION[api_discovery_action.value]
@@ -432,7 +458,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 action=discovery_action,
                 discovery_result=discovery_result,
                 update_source="new",
-                update_target="old",
+                update_target="unchanged",
                 host=host,
                 selected_services=EVERYTHING,
                 raise_errors=False,
@@ -465,6 +491,17 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 host=host,
                 raise_errors=False,
             )
+        case APIDiscoveryAction.only_service_labels:
+            discovery_result = perform_service_discovery(
+                action=discovery_action,
+                discovery_result=discovery_result,
+                update_source="changed",
+                update_target="unchanged",
+                host=host,
+                selected_services=EVERYTHING,
+                raise_errors=False,
+            )
+
         case _:
             assert_never(api_discovery_action)
 
@@ -578,6 +615,33 @@ JOB_ID = {
 }
 
 
+class BulkDiscoveryOptions(BaseSchema):
+    monitor_undecided_services = fields.Boolean(
+        required=False,
+        description="The option whether to monitor undecided services or not.",
+        example=True,
+        load_default=False,
+    )
+    remove_vanished_services = fields.Boolean(
+        required=False,
+        description="The option whether to remove vanished services or not.",
+        example=True,
+        load_default=False,
+    )
+    update_service_labels = fields.Boolean(
+        required=False,
+        description="The option whether to update service labels or not.",
+        example=True,
+        load_default=False,
+    )
+    update_host_labels = fields.Boolean(
+        required=False,
+        description="The option whether to update host labels or not.",
+        example=True,
+        load_default=False,
+    )
+
+
 class BulkDiscovery(BaseSchema):
     hostnames = fields.List(
         EXISTING_HOST_NAME,
@@ -585,7 +649,12 @@ class BulkDiscovery(BaseSchema):
         example=["example", "sample"],
         description="A list of host names",
     )
-    mode = _discovery_mode(default_mode="new")
+    options = fields.Nested(
+        BulkDiscoveryOptions,
+        description="The discovery options for the bulk discovery",
+        required=True,
+        example={"monitor_undecided": True, "remove_vanished": True, "update_service_labels": True},
+    )
     do_full_scan = fields.Boolean(
         required=False,
         description="The option whether to perform a full scan or not.",
@@ -600,7 +669,7 @@ class BulkDiscovery(BaseSchema):
     )
     ignore_errors = fields.Boolean(
         required=False,
-        description="The option whether to ignore errors in single check plugins.",
+        description="The option whether to ignore errors in single check plug-ins.",
         example=True,
         load_default=True,
     )
@@ -619,16 +688,25 @@ class BulkDiscovery(BaseSchema):
 )
 def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     """Start a bulk discovery job"""
+    # TODO: documentation should be adjusted; initial fix for resolving tests
     body = params["body"]
     job = BulkDiscoveryBackgroundJob()
     if job.is_active():
         return Response(status=409)
 
+    options = body["options"]
+    discovery_settings = DiscoverySettings(
+        update_host_labels=options["update_host_labels"],
+        add_new_services=options["monitor_undecided_services"],
+        remove_vanished_services=options["remove_vanished_services"],
+        update_changed_service_labels=options["update_service_labels"],
+        update_changed_service_parameters=False,
+    )
     hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
     start_bulk_discovery(
         job,
         hosts_to_discover,
-        body["mode"],
+        discovery_settings,
         body["do_full_scan"],
         body["ignore_errors"],
         body["bulk_size"],
@@ -659,6 +737,14 @@ def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
             detail=f"Could not find a background job with id {job_id}.",
         )
     return _serve_background_job(job)
+
+
+def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
+    if site_is_local(active_config, host.site_id()):
+        job = ServiceDiscoveryBackgroundJob(host.name())
+        return job.get_status_snapshot()
+
+    return fetch_service_discovery_background_job_status(host.site_id(), host.name())
 
 
 def _discovery_options(action_mode: DiscoveryAction) -> DiscoveryOptions:

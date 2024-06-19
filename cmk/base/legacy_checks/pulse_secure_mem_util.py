@@ -7,10 +7,9 @@ from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 
-import cmk.plugins.lib.pulse_secure as pulse_secure
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.plugins.lib import pulse_secure
 
 Section = Mapping[str, int]
 
@@ -20,7 +19,7 @@ METRICS_INFO_NAMES_PULSE_SECURE_MEM = (
 )
 
 
-def parse_pulse_secure_mem(string_table: StringTable) -> Section:
+def parse_pulse_secure_mem(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, *METRICS_INFO_NAMES_PULSE_SECURE_MEM[0])
 
 
@@ -57,6 +56,6 @@ check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
     check_ruleset_name="pulse_secure_mem_util",
     check_default_parameters={
         "mem_used_percent": (90, 95),
-        "swap_used_percent": (5, None),
+        "swap_used_percent": (5, 101),
     },
 )

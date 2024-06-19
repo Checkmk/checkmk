@@ -16,10 +16,9 @@ from pydantic import ValidationError as PydanticValidationError
 
 import livestatus
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.pdf as pdf
+from cmk.gui import pdf
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
@@ -27,6 +26,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.pages import Page, PageResult
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import SizePT
 
@@ -43,25 +43,34 @@ from ._html_render import GraphDestinations
 from ._utils import get_graph_data_from_livestatus
 
 
+# NOTE
+# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
+# while these functions do not have that. In order to preserve the functionality of the JS side
+# of things, we keep it.
+# TODO: Migrate this to a real AjaxPage
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
 # of a host or service.
-#    # Needed by mail notification plugin (-> no authentication from localhost)
-def ajax_graph_images_for_notifications() -> None:
-    """Registered as `noauth:ajax_graph_images`."""
-    if request.remote_ip not in ["127.0.0.1", "::1"]:
-        raise MKUnauthenticatedException(
-            _("You are not allowed to access this page (%s).") % request.remote_ip
-        )
+#    # Needed by mail notification plug-in (-> no authentication from localhost)
+class AjaxGraphImagesForNotifications(Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "noauth:ajax_graph_images"
 
-    with SuperUserContext():
-        _answer_graph_image_request()
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        """Registered as `noauth:ajax_graph_images`."""
+        if request.remote_ip not in ["127.0.0.1", "::1"]:
+            raise MKUnauthenticatedException(
+                _("You are not allowed to access this page (%s).") % request.remote_ip
+            )
+
+        with SuperUserContext():
+            _answer_graph_image_request()
+        return None
 
 
 def _answer_graph_image_request() -> None:
     try:
-        host_name = HostName(request.get_ascii_input_mandatory("host"))
-        if not host_name:
-            raise MKGeneralException(_('Missing mandatory "host" parameter'))
+        host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
         service_description = request.get_str_input_mandatory("service", "_HOST_")
 

@@ -19,9 +19,7 @@ False
 True
 """
 
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from cmk.agent_based.v2 import all_of, contains, matches, not_matches
 

@@ -4,12 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Literal
+from typing import Literal, TypedDict
 
-from typing_extensions import TypedDict
-
-from cmk.agent_based.v2 import Metric, render, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
 
 _LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
 MemoryLevels = tuple[_LevelsMode, tuple[float | None, float | None]]

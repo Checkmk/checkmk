@@ -24,7 +24,7 @@
 # z4065084                        Running 1.10:28:39          Operating normally
 # z4133235                        Running 1.03:38:23          Operating normally
 
-# A Version with a plugin that uses tab as seperator and quotes the strings:
+# A Version with a plug-in that uses tab as seperator and quotes the strings:
 # <<<hyperv_vms:sep(9)>>>
 # "Name"  "State" "Uptime"        "Status"
 # "z4058013"      "Running"       "06:05:16"      "Operating normally"
@@ -93,8 +93,8 @@ def check_hyperv_vms(item, params, parsed):
     if not (vm := parsed.get(item)):
         return
 
-    compare_mode, target_states = params["vm_target_state"]
-    # compare against discovered VM state
+    compare_mode = params["vm_target_state"][0]
+
     if compare_mode == "discovery":
         discovered_state = params.get("discovered_state")
 
@@ -118,6 +118,7 @@ def check_hyperv_vms(item, params, parsed):
         return
 
     # service state defined in rule
+    target_states = DEFAULT_STATE_MAPPING | params["vm_target_state"][1]
     service_state = target_states.get(vm["state"])
 
     # as a precaution, if in the future there are new VM states we do not know about
@@ -127,36 +128,38 @@ def check_hyperv_vms(item, params, parsed):
         yield service_state, "State is {} ({})".format(vm["state"], vm["state_msg"])
 
 
+DEFAULT_STATE_MAPPING = {
+    "FastSaved": 0,
+    "FastSavedCritical": 2,
+    "FastSaving": 0,
+    "FastSavingCritical": 2,
+    "Off": 1,
+    "OffCritical": 2,
+    "Other": 3,
+    "Paused": 0,
+    "PausedCritical": 2,
+    "Pausing": 0,
+    "PausingCritical": 2,
+    "Reset": 1,
+    "ResetCritical": 2,
+    "Resuming": 0,
+    "ResumingCritical": 2,
+    "Running": 0,
+    "RunningCritical": 2,
+    "Saved": 0,
+    "SavedCritical": 2,
+    "Saving": 0,
+    "SavingCritical": 2,
+    "Starting": 0,
+    "StartingCritical": 2,
+    "Stopping": 1,
+    "StoppingCritical": 2,
+}
+
 DEFAULT_PARAMETERS = {
     "vm_target_state": (
         "map",
-        {
-            "FastSaved": 0,
-            "FastSavedCritical": 2,
-            "FastSaving": 0,
-            "FastSavingCritical": 2,
-            "Off": 1,
-            "OffCritical": 2,
-            "Other": 3,
-            "Paused": 0,
-            "PausedCritical": 2,
-            "Pausing": 0,
-            "PausingCritical": 2,
-            "Reset": 1,
-            "ResetCritical": 2,
-            "Resuming": 0,
-            "ResumingCritical": 2,
-            "Running": 0,
-            "RunningCritical": 2,
-            "Saved": 0,
-            "SavedCritical": 2,
-            "Saving": 0,
-            "SavingCritical": 2,
-            "Starting": 0,
-            "StartingCritical": 2,
-            "Stopping": 1,
-            "StoppingCritical": 2,
-        },
+        DEFAULT_STATE_MAPPING,
     ),
 }
 

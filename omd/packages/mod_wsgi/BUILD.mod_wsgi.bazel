@@ -1,5 +1,5 @@
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
     name = "all_srcs",
@@ -23,7 +23,7 @@ configure_make(
     env = {
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "CFLAGS": "-I$${EXT_BUILD_DEPS}/python/include/python%s/" % PYTHON_MAJOR_DOT_MINOR,
-        "LDFLAGS": "-L$${EXT_BUILD_DEPS}/python/lib -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib",
+        "LDFLAGS": "-L$${EXT_BUILD_DEPS}/python/lib -Wl,--strip-debug",
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
     },
     lib_source = ":all_srcs",
@@ -34,5 +34,6 @@ configure_make(
         cp src/server/.libs/mod_wsgi.so $INSTALLDIR/lib
     """,
     targets = [""],
+    visibility = ["//visibility:public"],
     deps = ["@python"],
 )

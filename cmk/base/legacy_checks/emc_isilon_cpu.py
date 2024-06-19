@@ -6,9 +6,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
 
 
@@ -50,8 +49,8 @@ def check_emc_isilon_cpu_utilization(item, params, info):
         )
 
 
-def parse_emc_isilon_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_emc_isilon_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["emc_isilon_cpu"] = LegacyCheckDefinition(

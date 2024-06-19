@@ -349,9 +349,9 @@ class Status(Table):
     last_command_check = Column(
         'last_command_check',
         col_type='time',
-        description='The time of the last check for a command as UNIX timestamp',
+        description='Time of the last check for a command as UNIX timestamp',
     )
-    """The time of the last check for a command as UNIX timestamp"""
+    """Time of the last check for a command as UNIX timestamp"""
 
     last_log_rotation = Column(
         'last_log_rotation',
@@ -443,6 +443,13 @@ class Status(Table):
         description='The averaged number of new log messages per second',
     )
     """The averaged number of new log messages per second"""
+
+    max_long_output_size = Column(
+        'max_long_output_size',
+        col_type='int',
+        description='Maximum length of long output',
+    )
+    """Maximum length of long output"""
 
     metrics_count = Column(
         'metrics_count',
@@ -552,9 +559,9 @@ class Status(Table):
     program_start = Column(
         'program_start',
         col_type='time',
-        description='The time of the last program start or configuration reload as UNIX timestamp',
+        description='Time of the last program start or configuration reload as UNIX timestamp',
     )
-    """The time of the last program start or configuration reload as UNIX timestamp"""
+    """Time of the last program start or configuration reload as UNIX timestamp"""
 
     program_version = Column(
         'program_version',

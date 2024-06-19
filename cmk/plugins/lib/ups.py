@@ -5,22 +5,20 @@
 
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import Final
+from typing import Final, TypedDict
 
-from typing_extensions import TypedDict
-
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     any_of,
-    check_levels_fixed,
+    CheckResult,
+    DiscoveryResult,
     equals,
     render,
     Result,
     Service,
     startswith,
     State,
-    type_defs,
 )
-from cmk.agent_based.v2.type_defs import CheckResult
 
 DETECT_UPS_GENERIC = any_of(
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.165.3"),
@@ -36,6 +34,7 @@ DETECT_UPS_GENERIC = any_of(
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1"),
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.818.1.100.1"),
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.935"),
+    startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.10"),
 )
 
 
@@ -96,7 +95,7 @@ def discover_ups_capacity(
     section_ups_battery_capacity: Battery | None,
     section_ups_on_battery: Battery | None,
     section_ups_seconds_on_battery: Battery | None,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     yield Service()
 
 
@@ -105,7 +104,7 @@ def check_ups_capacity(
     section_ups_battery_capacity: Battery | None,
     section_ups_on_battery: Battery | None,
     section_ups_seconds_on_battery: Battery | None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     """Check battery capacity in percent and minutes remaining.
     Apply WARN/CRIT levels and minutes-remaining metric only if on battery.
     """
@@ -146,11 +145,11 @@ def _output_time_remaining(
     seconds_left: int | None,
     on_battery: bool,
     levels: tuple[int, int],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     # Metric for time left on battery always - check remaining time only when on battery
     ignore_levels = seconds_left == 0 and not on_battery
     if seconds_left is not None:
-        yield from check_levels_fixed(
+        yield from check_levels(
             seconds_left,
             metric_name="battery_seconds_remaining",
             levels_lower=None if ignore_levels else (levels[0] * 60, levels[1] * 60),
@@ -168,11 +167,11 @@ def _output_percent_charged(
     percent_charged: int | None,
     on_battery: bool,
     levels: tuple[int, int],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if percent_charged is None:
         return
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         percent_charged,
         metric_name="battery_capacity",
         levels_lower=levels if on_battery else None,
@@ -180,7 +179,7 @@ def _output_percent_charged(
     )
 
 
-def _output_seconds_on_battery(seconds_on_bat: int | None) -> type_defs.CheckResult:
+def _output_seconds_on_battery(seconds_on_bat: int | None) -> CheckResult:
     # Output time on battery
     if seconds_on_bat is not None and seconds_on_bat > 0:
         yield Result(
@@ -193,7 +192,7 @@ def discover_ups_battery_state(
     section_ups_battery_warnings: Battery | None,
     section_ups_on_battery: Battery | None,
     section_ups_seconds_on_battery: Battery | None,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     yield Service()
 
 

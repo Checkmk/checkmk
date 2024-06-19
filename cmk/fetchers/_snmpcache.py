@@ -5,10 +5,10 @@
 """SNMP caching"""
 
 import os
+from pathlib import Path
 
 import cmk.utils.cleanup
-import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import OID, SNMPDecodedString
@@ -20,7 +20,7 @@ _g_single_oid_cache: dict[OID, SNMPDecodedString | None] | None = None
 
 
 def initialize_single_oid_cache(
-    host_name: HostName, ipaddress: HostAddress | None, from_disk: bool = False
+    host_name: HostName, ipaddress: HostAddress | None, from_disk: bool = False, *, cache_dir: Path
 ) -> None:
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
 
@@ -32,16 +32,17 @@ def initialize_single_oid_cache(
         _g_single_oid_hostname = host_name
         _g_single_oid_ipaddress = ipaddress
         if from_disk:
-            _g_single_oid_cache = _load_single_oid_cache(host_name, ipaddress)
+            _g_single_oid_cache = _load_single_oid_cache(host_name, ipaddress, cache_dir=cache_dir)
         else:
             _g_single_oid_cache = {}
 
 
-def write_single_oid_cache(host_name: HostName, ipaddress: HostAddress | None) -> None:
+def write_single_oid_cache(
+    host_name: HostName, ipaddress: HostAddress | None, *, cache_dir: Path
+) -> None:
     if not _g_single_oid_cache:
         return
 
-    cache_dir = cmk.utils.paths.snmp_scan_cache_dir
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
     cache_path = f"{cache_dir}/{host_name}.{ipaddress}"
@@ -49,9 +50,9 @@ def write_single_oid_cache(host_name: HostName, ipaddress: HostAddress | None) -
 
 
 def _load_single_oid_cache(
-    host_name: HostName, ipaddress: HostAddress | None
+    host_name: HostName, ipaddress: HostAddress | None, cache_dir: Path
 ) -> dict[OID, SNMPDecodedString | None]:
-    cache_path = f"{cmk.utils.paths.snmp_scan_cache_dir}/{host_name}.{ipaddress}"
+    cache_path = cache_dir / f"{host_name}.{ipaddress}"
     return store.load_object_from_file(cache_path, default={})
 
 

@@ -10,7 +10,7 @@ import enum
 import json
 import os
 import tarfile
-from collections.abc import Collection, Iterator, Sequence
+from collections.abc import Collection, Iterator
 from dataclasses import asdict
 from typing import NamedTuple
 
@@ -18,16 +18,15 @@ from six import ensure_str
 
 from livestatus import SiteConfiguration, SiteId
 
-import cmk.utils.render as render
+from cmk.utils import render
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import edition, Edition, edition_has_enforced_licensing
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
-import cmk.gui.weblib as weblib
+from cmk.gui import forms, weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -92,9 +91,7 @@ class ActivationState(enum.Enum):
     ERROR = 2
 
 
-def _show_activation_state_messages(
-    title: str, messages: Sequence[str], state: ActivationState
-) -> None:
+def _show_activation_state_messages(title: str, message: str, state: ActivationState) -> None:
     html.open_div(id="activation_state_message_container")
 
     html.open_div(class_="state_bar state%s" % state.value)
@@ -110,8 +107,7 @@ def _show_activation_state_messages(
     html.open_div(class_="message_container")
     html.h2(title)
     html.open_div()
-    for msg in messages:
-        html.span(msg)
+    html.span(message)
     html.close_div()
     html.close_div()  # activation_state_message
 
@@ -309,7 +305,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         _change_table(self._all_changes, _("Revert changes"))
 
 
-def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
+def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
     with table_element(
         "changes",
         title=title,
@@ -351,13 +347,13 @@ def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
                     ),
                 )
                 if prevent_discard_changes(change)
-                else ""
+                else HTML.empty()
             )
 
             # Text is already escaped (see ActivateChangesWriter._add_change_to_site). We have
             # to handle this in a special way because of the SiteChanges file format. Would be
             # cleaner to transport the text type (like AuditLogStore is doing it).
-            table.cell(_("Change"), HTML(icon_code + change["text"]))
+            table.cell(_("Change"), icon_code + HTML.without_escaping(change["text"]))
 
             table.cell(_("Affected sites"), css=["affected_sites"])
             if affects_all_sites(change):
@@ -455,6 +451,11 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 disabled_tooltip = _(
                     "Blocked due to non-revertible change. Activate those changes to unblock reverting."
                 )
+            elif any(
+                (change["user_id"] != user.id for _, change in self._pending_changes)
+            ) and not user.may("wato.discardforeign"):
+                enabled = False
+                disabled_tooltip = _("This user doesn't have permission to revert these changes")
             else:
                 enabled = True
 
@@ -607,15 +608,17 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         init_rowselect(self.name())
 
     def _show_license_validity(self) -> None:
-        errors = []
-        warnings = []
-
         if block_effect := get_licensing_user_effect(
             licensing_settings_link=makeuri_contextless(
                 request, [("mode", "licensing")], filename="wato.py"
             ),
         ).block:
-            errors.append(block_effect.message_html)
+            _show_activation_state_messages(
+                _("Activation not possible because of the following licensing issues:"),
+                block_effect.message_html,
+                ActivationState.ERROR,
+            )
+            return
 
         if edition_has_enforced_licensing():
             # TODO move to CCE handler to avoid is_cloud_edition check
@@ -623,27 +626,28 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 self._license_usage_report_validity
                 == LicenseUsageReportValidity.older_than_five_days
             ):
-                errors.append(_("The license usage history is older than five days."))
+                _show_activation_state_messages(
+                    "",
+                    _(
+                        "The license usage history is older than five days. In order to have a"
+                        " reliable average of the number of services the license usage report must"
+                        " contain a significant number of license usage samples. Please execute"
+                        " the following command as site user 'cmk-update-license-usage --force' in"
+                        " order to solve this situation."
+                    ),
+                    ActivationState.WARNING,
+                )
             elif (
                 self._license_usage_report_validity
                 == LicenseUsageReportValidity.older_than_three_days
             ):
-                warnings.append(
-                    _(
-                        "The license usage history was updated at least three days ago."
-                        "<br>Note: If it cannot be updated within five days activate changes"
-                        " will be blocked."
-                    )
+                _show_activation_state_messages(
+                    "",
+                    _("The license usage history was updated at least three days ago."),
+                    ActivationState.WARNING,
                 )
-        if errors:
-            error_title = _("Activation not possible because of the following licensing issues:")
-            _show_activation_state_messages(error_title, errors, ActivationState.ERROR)
 
-            return
-        if warnings:
-            _show_activation_state_messages("", warnings, ActivationState.WARNING)
-
-    def _activation_status(self):
+    def _activation_status(self) -> None:
         with table_element(
             "site-status",
             title=_("Activation status"),

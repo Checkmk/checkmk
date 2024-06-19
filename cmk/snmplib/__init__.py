@@ -23,12 +23,14 @@ from ._typedefs import RangeLimit as RangeLimit
 from ._typedefs import SNMPBackend as SNMPBackend
 from ._typedefs import SNMPBackendEnum as SNMPBackendEnum
 from ._typedefs import SNMPContext as SNMPContext
+from ._typedefs import SNMPContextConfig as SNMPContextConfig
 from ._typedefs import SNMPContextTimeout as SNMPContextTimeout
 from ._typedefs import SNMPCredentials as SNMPCredentials
 from ._typedefs import SNMPHostConfig as SNMPHostConfig
 from ._typedefs import SNMPRawValue as SNMPRawValue
 from ._typedefs import SNMPRowInfo as SNMPRowInfo
 from ._typedefs import SNMPTiming as SNMPTiming
+from ._typedefs import SNMPVersion as SNMPVersion
 from ._typedefs import SpecialColumn as SpecialColumn
 from ._walk import oids_to_walk as oids_to_walk
 from ._walk import SNMPRowInfoForStoredWalk as SNMPRowInfoForStoredWalk

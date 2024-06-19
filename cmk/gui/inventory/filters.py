@@ -6,15 +6,15 @@
 import re
 from collections.abc import Callable
 from functools import partial
-from typing import get_args, Literal
 
-import cmk.gui.query_filters as query_filters
+from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.num_split import cmp_version
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
     display_filter_radiobuttons,
@@ -25,129 +25,7 @@ from cmk.gui.visuals.filter import (
     InputTextFilter,
 )
 
-from ._inventory_path import InventoryPath
-
-RangedTableFilterName = Literal[
-    "invswpac_install_date",
-    "invswpac_size",
-    "invinterface_speed",
-    "invdockerimages_size",
-    "invdockerimages_labels",
-    "invdockerimages_repotags",
-    "invdockerimages_repodigests",
-    "invdockercontainers_labels",
-    "invcmksites_autostart",
-    "invcmksites_apache",
-    "invcmksites_cmc",
-    "invcmksites_crontab",
-    "invcmksites_dcd",
-    "invcmksites_liveproxyd",
-    "invcmksites_mkeventd",
-    "invcmksites_mknotifyd",
-    "invcmksites_nagios",
-    "invcmksites_npcd",
-    "invcmksites_rrdcached",
-    "invcmksites_stunnel",
-    "invcmksites_xinetd",
-    "invcmkversions_demo",
-    "invinterface_index",
-    "invorainstance_db_creation_time",
-    "invorainstance_db_uptime",
-    "invoratablespace_current_size",
-    "invoratablespace_max_size",
-    "invoratablespace_used_size",
-    "invoratablespace_increment_size",
-    "invoratablespace_free_space",
-    "invorasga_fixed_size",
-    "invorasga_redo_buffer",
-    "invorasga_buf_cache_size",
-    "invorasga_in_mem_area_size",
-    "invorasga_shared_pool_size",
-    "invorasga_large_pool_size",
-    "invorasga_java_pool_size",
-    "invorasga_streams_pool_size",
-    "invorasga_shared_io_pool_size",
-    "invorasga_data_trans_cache_size",
-    "invorasga_granule_size",
-    "invorasga_max_size",
-    "invorasga_start_oh_shared_pool",
-    "invorasga_free_mem_avail",
-    "invorapga_aggregate_pga_auto_target",
-    "invorapga_aggregate_pga_target_parameter",
-    "invorapga_bytes_processed",
-    "invorapga_extra_bytes_read_written",
-    "invorapga_global_memory_bound",
-    "invorapga_maximum_pga_allocated",
-    "invorapga_maximum_pga_used_for_auto_workareas",
-    "invorapga_maximum_pga_used_for_manual_workareas",
-    "invorapga_total_pga_allocated",
-    "invorapga_total_pga_inuse",
-    "invorapga_total_pga_used_for_auto_workareas",
-    "invorapga_total_pga_used_for_manual_workareas",
-    "invorapga_total_freeable_pga_memory",
-    "invswpac_install_date",
-    "invswpac_size",
-    "invinterface_speed",
-    "invdockerimages_size",
-    "invdockerimages_labels",
-    "invdockerimages_repotags",
-    "invdockerimages_repodigests",
-    "invdockercontainers_labels",
-    "invcmksites_autostart",
-    "invcmksites_apache",
-    "invcmksites_cmc",
-    "invcmksites_crontab",
-    "invcmksites_dcd",
-    "invcmksites_liveproxyd",
-    "invcmksites_mkeventd",
-    "invcmksites_mknotifyd",
-    "invcmksites_nagios",
-    "invcmksites_npcd",
-    "invcmksites_rrdcached",
-    "invcmksites_stunnel",
-    "invcmksites_xinetd",
-    "invcmkversions_demo",
-    "invorainstance_db_uptime",
-    "invoratablespace_current_size",
-    "invoratablespace_max_size",
-    "invoratablespace_used_size",
-    "invoratablespace_increment_size",
-    "invoratablespace_free_space",
-    "invorasga_fixed_size",
-    "invorasga_redo_buffer",
-    "invorasga_buf_cache_size",
-    "invorasga_in_mem_area_size",
-    "invorasga_shared_pool_size",
-    "invorasga_large_pool_size",
-    "invorasga_java_pool_size",
-    "invorasga_streams_pool_size",
-    "invorasga_shared_io_pool_size",
-    "invorasga_data_trans_cache_size",
-    "invorasga_granule_size",
-    "invorasga_max_size",
-    "invorasga_start_oh_shared_pool",
-    "invorasga_free_mem_avail",
-    "invorapga_aggregate_pga_auto_target",
-    "invorapga_aggregate_pga_target_parameter",
-    "invorapga_bytes_processed",
-    "invorapga_extra_bytes_read_written",
-    "invorapga_global_memory_bound",
-    "invorapga_maximum_pga_allocated",
-    "invorapga_maximum_pga_used_for_auto_workareas",
-    "invorapga_maximum_pga_used_for_manual_workareas",
-    "invorapga_total_pga_allocated",
-    "invorapga_total_pga_inuse",
-    "invorapga_total_pga_used_for_auto_workareas",
-    "invorapga_total_pga_used_for_manual_workareas",
-    "invorapga_total_freeable_pga_memory",
-]
-
-
-def get_ranged_table_filter_name(s: str) -> RangedTableFilterName | None:
-    for lit in get_args(RangedTableFilterName):
-        if s == lit:
-            return lit
-    return None
+from ._tree import InventoryPath
 
 
 class FilterInvtableText(InputTextFilter):
@@ -193,13 +71,11 @@ def _filter_by_host_inventory(
     def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
         regex = query_filters.re_ignorecase(filtertext, column)
 
-        def filt(row: Row):  # type: ignore[no-untyped-def]
+        def filt(row: Row) -> bool:
             return bool(
                 regex.search(
                     str(
-                        row["host_inventory"].get_attribute(
-                            inventory_path.path, inventory_path.key or ""
-                        )
+                        row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key)
                     )
                 )
             )
@@ -210,7 +86,7 @@ def _filter_by_host_inventory(
 
 
 class FilterInvtableTimestampAsAge(FilterNumberRange):
-    def __init__(self, *, inv_info: RangedTableFilterName, ident: str, title: str) -> None:
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(
             title=title,
             sort_index=800,
@@ -227,10 +103,10 @@ class FilterInvtableTimestampAsAge(FilterNumberRange):
         )
 
 
-class FilterInvtableIDRange(FilterNumberRange):
+class FilterInvtableIntegerRange(FilterNumberRange):
     """Filter for choosing a range in which a certain integer lies"""
 
-    def __init__(self, *, inv_info: str, ident: RangedTableFilterName, title: str) -> None:
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(
             title=title,
             sort_index=800,
@@ -250,7 +126,7 @@ class FilterInvFloat(FilterNumberRange):
         ident: str,
         title: str,
         inventory_path: InventoryPath,
-        unit: str | None,
+        unit: str | LazyString,
         scale: float | None,
         is_show_more: bool = True,
     ) -> None:
@@ -265,6 +141,7 @@ class FilterInvFloat(FilterNumberRange):
                 request_var_suffix="",
                 bound_rescaling=scale if scale is not None else 1.0,
             ),
+            unit=unit,
             is_show_more=is_show_more,
         )
 
@@ -277,9 +154,7 @@ def _filter_in_host_inventory_range(
 ) -> Callable[[Row, str, query_filters.MaybeBounds], bool]:
     def row_filter(row: Row, column: str, bounds: query_filters.MaybeBounds) -> bool:
         if not isinstance(
-            invdata := row["host_inventory"].get_attribute(
-                inventory_path.path, inventory_path.key or ""
-            ),
+            invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
             (int, float),
         ):
             return False
@@ -376,7 +251,7 @@ class FilterInvtableAvailable(FilterOption):
         )
 
 
-def port_types(info: str):  # type: ignore[no-untyped-def]
+def port_types(info: str) -> list[tuple[str, str]]:
     return [(str(k), str(v)) for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])]
 
 
@@ -430,9 +305,7 @@ class FilterInvBool(FilterOption):
 # Filter tables
 def inside_inventory(inventory_path: InventoryPath) -> Callable[[bool, Row], bool]:
     def keep_row(on: bool, row: Row) -> bool:
-        return (
-            row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key or "") is on
-        )
+        return row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key) is on
 
     return keep_row
 
@@ -548,9 +421,8 @@ class FilterInvHasSoftwarePackage(Filter):
             if isinstance(name, str):
                 if package["name"] != name:
                     continue
-            else:
-                if not name.search(package["name"]):
-                    continue
+            elif not name.search(package["name"]):
+                continue
             if not from_version and not to_version:
                 return True  # version not relevant
             version = package["version"]

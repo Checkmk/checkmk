@@ -6,13 +6,13 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
-    aws_get_parsed_item_data,
     check_aws_error_rate,
     check_aws_request_rate,
+    get_data_or_go_stale,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
+from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -27,8 +27,8 @@ def discover_aws_elbv2_target_groups_lambda(section):
     yield from ((item, {}) for item, data in section.items() if "RequestCount" in data)
 
 
-@aws_get_parsed_item_data
-def check_aws_application_elb_target_groups_lambda(item, params, data):
+def check_aws_application_elb_target_groups_lambda(item, params, section):
+    data = get_data_or_go_stale(item, section)
     request_rate = data.get("RequestCount")
     if request_rate is None:
         raise IgnoreResultsError("Currently no data from AWS")

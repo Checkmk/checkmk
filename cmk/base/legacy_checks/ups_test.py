@@ -6,12 +6,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import parse_snmp_uptime
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 # Description of OIDs used from RFC 1628
@@ -110,6 +109,10 @@ def check_ups_test(_no_item, params, info):
     details = f" ({ups_test_results_detail})" if ups_test_results_detail else ""
     yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP.get(results_summary, 'unknown')}{details}"
 
+    if (elapsed_time := uptime - start_time) < 0:
+        yield 3, "Could not determine time since start of last test"
+        return
+
     if start_time:
         label = "Time since start of last test"
     else:
@@ -118,10 +121,10 @@ def check_ups_test(_no_item, params, info):
 
     # Elapsed time since last start of test
     yield check_levels(
-        uptime - start_time,
+        elapsed_time,
         None,
         params.get("levels_elapsed_time"),
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.timespan,
         infoname=label,
     )
 

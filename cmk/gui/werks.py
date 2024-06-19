@@ -10,9 +10,7 @@ import itertools
 import time
 from collections.abc import Callable, Container, Iterable, Iterator
 from functools import partial
-from typing import Any, cast, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Literal, TypedDict
 
 import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.man_pages import make_man_page_path_map
@@ -80,10 +78,6 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("info")(AboutCheckmkPage)
     page_registry.register_page("change_log")(ChangeLogPage)
     page_registry.register_page_handler("werk", page_werk)
-
-
-def render_description(description: str) -> HTML:
-    return HTML(description)
 
 
 def get_werk_by_id(werk_id: int) -> Werk:
@@ -273,9 +267,7 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     )
 
 
-def _extend_display_dropdown(  # type: ignore[no-untyped-def]
-    menu, werk_table_options: WerkTableOptions
-) -> None:
+def _extend_display_dropdown(menu: PageMenu, werk_table_options: WerkTableOptions) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
         0,
@@ -315,7 +307,7 @@ def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
             html.close_div()
             html.hidden_fields()
 
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def _show_werk_options_controls() -> None:
@@ -378,7 +370,7 @@ def page_werk() -> None:
         css="werkcomp werkcomp%s" % _to_ternary_compatibility(werk),
     )
     werk_table_row(
-        _("Description"), render_description(werk.description), css="nowiki"
+        _("Description"), HTML.without_escaping(werk.description), css="nowiki"
     )  # TODO: remove nowiki
 
     html.close_table()
@@ -738,7 +730,7 @@ def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bo
 
     if werk_table_options["werk_content"]:
         search_text = werk_table_options["werk_content"].lower()
-        text = werk.title + strip_tags(render_description(werk.description))
+        text = werk.title + strip_tags(werk.description)
         if search_text not in text.lower():
             return False
 
@@ -788,7 +780,7 @@ def render_werk_link(werk: Werk) -> HTML:
 
 def render_werk_title(werk: Werk) -> HTML:
     title = werk.title
-    # if the title begins with the name or names of check plugins, then
+    # if the title begins with the name or names of check plug-ins, then
     # we link to the man pages of those checks
     if ":" in title:
         parts = title.split(":", 1)
@@ -843,7 +835,7 @@ def render_nowiki_werk_description(  # pylint: disable=too-many-branches
             html.close_ul()
 
         html.close_p()
-        return HTML(output_funnel.drain())
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def insert_manpage_links(text: str) -> HTML:
@@ -863,7 +855,7 @@ def insert_manpage_links(text: str) -> HTML:
             new_parts.append(HTMLWriter.render_a(content=part, href=url))
         else:
             new_parts.append(escape_to_html(part))
-    return HTML(" ").join(new_parts)
+    return HTML.without_escaping(" ").join(new_parts)
 
 
 @request_memoize()

@@ -24,8 +24,7 @@ class EditionsIncompatible:
         return self._reason
 
 
-class LicensingCompatible:
-    ...
+class LicensingCompatible: ...
 
 
 LicensingCompatibility = EditionsIncompatible | LicenseStateIncompatible | LicensingCompatible
@@ -38,7 +37,7 @@ def make_incompatible_info(
     remote_version: str,
     remote_edition_short: str | None,
     remote_license_state: LicenseState | None,
-    compatibility: (cmk_version.VersionsIncompatible | LicensingCompatibility),
+    compatibility: cmk_version.VersionsIncompatible | LicensingCompatibility,
 ) -> str:
     return _("The central (%s) and remote site (%s) are not compatible. Reason: %s") % (
         make_site_version_info(central_version, central_edition_short, central_license_state),
@@ -72,7 +71,7 @@ def is_distributed_setup_compatible_for_licensing(
     remote_edition: cmk_version.Edition,
     remote_license_state: LicenseState | None,
 ) -> LicensingCompatibility:
-    if central_edition is cmk_version.Edition.CSE:
+    if central_edition is cmk_version.Edition.CSE or remote_edition is cmk_version.Edition.CSE:
         return EditionsIncompatible(_("CSE is not allowed in distributed monitoring."))
 
     if remote_license_state is LicenseState.FREE:

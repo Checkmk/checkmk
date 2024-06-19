@@ -132,9 +132,11 @@ def _migrate_hyperv_vmstate(p: dict) -> dict:
     if set(p) == {"state"}:  # properly migrate autochecks:
         return {"discovered_state": p["state"]}
     new = {
-        "vm_target_state": ("discovery", True)
-        if "compare_discovery" in p
-        else ("map", {k: v for k, v in p.items() if k != "state"})
+        "vm_target_state": (
+            ("discovery", True)
+            if "compare_discovery" in p
+            else ("map", {k: v for k, v in p.items() if k != "state"})
+        )
     }
     if "state" in p:
         new["discovered_state"] = p["state"]

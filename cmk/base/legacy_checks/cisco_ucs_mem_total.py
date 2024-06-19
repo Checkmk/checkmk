@@ -7,9 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 # comNET GmbH, Fabian Binder - 2018-05-30
 
@@ -25,8 +24,8 @@ def check_cisco_ucs_mem_total(_no_item, _no_params, info):
     return 0, "Total Memory: %s MB" % total_memory
 
 
-def parse_cisco_ucs_mem_total(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_ucs_mem_total(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_ucs_mem_total"] = LegacyCheckDefinition(

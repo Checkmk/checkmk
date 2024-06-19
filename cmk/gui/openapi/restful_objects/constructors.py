@@ -17,6 +17,8 @@ from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request, Response
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.restful_objects.type_defs import (
+    ActionObject,
+    ActionResult,
     CollectionItem,
     CollectionObject,
     DomainObject,
@@ -32,7 +34,7 @@ from cmk.gui.openapi.utils import EXT, ProblemException
 ETagHash = NewType("ETagHash", str)
 
 
-def absolute_url(href):
+def absolute_url(href: str) -> str:
     if href.startswith("/"):
         href = href.lstrip("/")
 
@@ -78,14 +80,14 @@ def link_rel(
             will result in a rel-value of 'foo;baz="bar"'
 
     Returns:
-        A dict representing the link
+        A LinkType
 
     """
     content_type_params = {}
     if profile is not None:
         content_type_params["profile"] = expand_rel(profile)
 
-    link_obj = {
+    link_obj: LinkType = {
         "rel": expand_rel(rel, parameters),
         "href": absolute_url(href),
         "method": method.upper(),
@@ -176,7 +178,7 @@ def require_etag(
     )
 
 
-def object_action(name: str, parameters: dict, base: str) -> dict[str, Any]:
+def object_action(name: str, parameters: dict, base: str) -> ActionObject:
     """An action description to be used as an object member"""
 
     return {
@@ -238,7 +240,7 @@ def action_result(
     result_type: ResultType,
     result_value: Any | None = None,
     result_links: list[LinkType] | None = None,
-) -> dict:
+) -> ActionResult:
     """Construct an Action Result resource
 
     Described in Restful Objects, chapter 19.1-4"""
@@ -259,15 +261,15 @@ class DomainObjectMembers:
         self.base = base
         self.members: dict[str, dict[str, Any]] = {}
 
-    def object_property(  # type: ignore[no-untyped-def]
+    def object_property(
         self,
         name: str,
         value: Any,
         prop_format: PropertyFormat,
         title: str | None = None,
-        linkable=True,
+        linkable: bool = True,
         links: list[LinkType] | None = None,
-    ):
+    ) -> dict[str, Any]:
         self.members[name] = object_property(
             name, value, prop_format, self.base, title, linkable, links
         )
@@ -277,11 +279,11 @@ class DomainObjectMembers:
         return self.members
 
 
-def object_property_href(  # type: ignore[no-untyped-def]
+def object_property_href(
     domain_type: DomainType,
     identifier: str,
     property_name: str,
-):
+) -> str:
     return f"/objects/{domain_type}/{identifier}/properties/{property_name}"
 
 
@@ -314,11 +316,11 @@ def object_sub_property(
     return ret
 
 
-def collection_property(  # type: ignore[no-untyped-def]
+def collection_property(
     name: str,
     value: list[Any],
     base: str,
-):
+) -> dict[str, str | list | list[LinkType]]:
     """Represent a collection property.
 
     This is a property on an object which hols a collection. This has to be stored in the "member"
@@ -600,6 +602,7 @@ def domain_object(
     deletable: bool = True,
     links: list[LinkType] | None = None,
     self_link: LinkType | None = None,
+    include_links: bool = True,
 ) -> DomainObject:
     """Renders a domain-object dict structure.
 
@@ -636,6 +639,10 @@ def domain_object(
             (optional) The manually provided self link. If not provided, the self link is
             automatically generated
 
+        include_links:
+            (optional) A flag which governs if the links should be included in the output. Defaults
+            to True.
+
     """
     uri = object_href(domain_type, identifier)
     if extensions is None:
@@ -643,14 +650,16 @@ def domain_object(
     if members is None:
         members = {}
 
-    _links = [self_link if self_link is not None else link_rel("self", uri, method="get")]
+    _links = []
+    if include_links:
+        _links.append(self_link if self_link is not None else link_rel("self", uri, method="get"))
+        if editable:
+            _links.append(link_rel(".../update", uri, method="put"))
+        if deletable:
+            _links.append(link_rel(".../delete", uri, method="delete"))
+        if links:
+            _links.extend(links)
 
-    if editable:
-        _links.append(link_rel(".../update", uri, method="put"))
-    if deletable:
-        _links.append(link_rel(".../delete", uri, method="delete"))
-    if links:
-        _links.extend(links)
     return {
         "domainType": domain_type,
         "id": identifier,
@@ -663,7 +672,7 @@ def domain_object(
 
 def collection_object(
     domain_type: DomainType,
-    value: list[CollectionItem | LinkType],
+    value: list[CollectionItem] | list[LinkType] | list[DomainObject],
     links: list[LinkType] | None = None,
     extensions: dict[str, Any] | None = None,
 ) -> CollectionObject:
@@ -734,7 +743,7 @@ def collection_item(
     identifier: str,
     title: str,
     collection_name: str = "all",
-) -> CollectionItem:
+) -> LinkType:
     """A link for use in a collection object.
 
     Args:
@@ -752,7 +761,7 @@ def collection_item(
             us to link to the correct one properly.
 
     Returns:
-        A dict representation of the collection link-entry.
+        A LinkType
 
     """
     return link_rel(
@@ -799,18 +808,17 @@ def hash_of_dict(dict_: dict[str, Any]) -> ETagHash:
         if isinstance(_d, (list, tuple)):
             for value in _d:
                 _update(_hash_obj, value)
+        elif isinstance(_d, dict):
+            for key, value in sorted(_d.items()):
+                _hash_obj.update(key.encode("utf-8"))
+                if isinstance(value, (dict, list, tuple)):
+                    _update(_hash_obj, value)
+                elif isinstance(value, bool):
+                    _hash_obj.update(str(value).lower().encode("utf-8"))
+                else:
+                    _hash_obj.update(str(value).encode("utf-8"))
         else:
-            if isinstance(_d, dict):
-                for key, value in sorted(_d.items()):
-                    _hash_obj.update(key.encode("utf-8"))
-                    if isinstance(value, (dict, list, tuple)):
-                        _update(_hash_obj, value)
-                    elif isinstance(value, bool):
-                        _hash_obj.update(str(value).lower().encode("utf-8"))
-                    else:
-                        _hash_obj.update(str(value).encode("utf-8"))
-            else:
-                _hash_obj.update(str(_d).encode("utf-8"))
+            _hash_obj.update(str(_d).encode("utf-8"))
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)

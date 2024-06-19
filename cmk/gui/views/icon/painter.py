@@ -55,7 +55,7 @@ class PainterServiceIcons(Painter):
     def ident(self) -> str:
         return "service_icons"
 
-    def title(self, cell) -> str:  # type: ignore[no-untyped-def]
+    def title(self, cell: Cell) -> str:
         return _("Service icons")
 
     def short_title(self, cell: Cell) -> str:
@@ -119,9 +119,9 @@ def _paint_icons(
 ) -> CellSpec:
     """Paint column with various icons
 
-    The icons use a plugin based mechanism so it is possible to register own icon "handlers".
+    The icons use a plug-in based mechanism so it is possible to register own icon "handlers".
     """
-    output = HTML()
+    output = HTML.empty()
     for icon in toplevel_icons:
         if isinstance(icon, IconEntry):
             if icon.url_spec:
@@ -247,7 +247,8 @@ def _process_icon(  # pylint: disable=too-many-branches
     if result is None:
         return
 
-    title, url = None, None
+    title: str | None = None
+    url: None | tuple[str, str] | str = None
     icon_name: IconSpec = ""
     if isinstance(result, (str, HTML)):
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there
@@ -277,15 +278,12 @@ def _process_icon(  # pylint: disable=too-many-branches
 
         assert isinstance(result, str)
         icon_name = result
+    elif len(result) == 2:
+        icon_name, title = result  # type: ignore[misc]
+    elif len(result) == 3:
+        icon_name, title, url = result  # type: ignore[misc]
     else:
-        # Mypy does not understand the length checking here. Can not easily be fixed, because we
-        # would have to change all the icon plugins.
-        if len(result) == 2:
-            icon_name, title = result  # type: ignore[misc]
-        elif len(result) == 3:
-            icon_name, title, url = result  # type: ignore[misc]
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     yield IconEntry(
         sort_index=icon.sort_index(),

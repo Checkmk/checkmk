@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 
 from cmk.utils.crash_reporting import CrashReportStore
 from cmk.utils.hostaddress import HostName
@@ -32,6 +33,7 @@ def _check_generic_crash_info(crash):
         )
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_check_crash_report_from_exception() -> None:
     hostname = HostName("testhost")
     crash = None
@@ -57,6 +59,7 @@ def test_check_crash_report_from_exception() -> None:
     assert crash.crash_info["exc_value"] == "DING"
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_check_crash_report_save() -> None:
     hostname = HostName("testhost")
     store = CrashReportStore()

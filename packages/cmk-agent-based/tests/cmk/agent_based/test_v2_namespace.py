@@ -26,11 +26,18 @@ def _names(space: ModuleType) -> set[str]:
 
 def test_v2() -> None:
     expected = {
+        "entry_point_prefixes",
         "AgentSection",
         "SimpleSNMPSection",
         "SNMPSection",
         "CheckPlugin",
         "InventoryPlugin",
+        "CheckResult",
+        "DiscoveryResult",
+        "HostLabelGenerator",
+        "InventoryResult",
+        "StringByteTable",
+        "StringTable",
         "RuleSetType",
         "Attributes",
         "GetRateError",
@@ -50,8 +57,11 @@ def test_v2() -> None:
         "TableRow",
         "all_of",
         "any_of",
-        "check_levels_fixed",
-        "check_levels_predictive",
+        "check_levels",
+        "NoLevelsT",
+        "FixedLevelsT",
+        "PredictiveLevelsT",
+        "LevelsT",
         "clusterize",
         "contains",
         "endswith",
@@ -69,7 +79,6 @@ def test_v2() -> None:
         "not_startswith",
         "render",
         "startswith",
-        "type_defs",
     }
     assert _names(v2) == expected
 
@@ -87,20 +96,9 @@ def test_v2_render() -> None:
         "nicspeed",
         "percent",
         "timespan",
+        "time_offset",
     }
     assert _names(v2.render) == expected
-
-
-def test_v1_type_defs() -> None:
-    expected = {
-        "CheckResult",
-        "DiscoveryResult",
-        "HostLabelGenerator",
-        "InventoryResult",
-        "StringByteTable",
-        "StringTable",
-    }
-    assert _names(v2.type_defs) == expected
 
 
 def test_v1_clusterize() -> None:

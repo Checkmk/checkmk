@@ -2,24 +2,25 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# pylint: disable=protected-access
 """Editor for global settings in main.mk and modes for these global
 settings"""
 
 import abc
-from collections.abc import Collection, Iterable, Iterator
-from typing import Any, Callable, Final
+from collections.abc import Callable, Collection, Iterable, Iterator
+from typing import Any, Final
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.forms as forms
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html, use_vue_rendering
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -37,13 +38,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
+from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
-from cmk.gui.validation.visitors.vue_repr import parse_and_validate_vue, render_vue
-from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
@@ -134,6 +135,31 @@ class ABCGlobalSettingsMode(WatoMode):
 
         return True
 
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Details"),
+                entries=list(self._page_menu_entries_details()),
+            ),
+        )
+
+    def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Show only modified settings"),
+            icon_name="toggle_on" if self._show_only_modified else "toggle_off",
+            item=make_simple_link(
+                makeactionuri(
+                    request,
+                    transactions,
+                    [
+                        ("_show_only_modified", "0" if self._show_only_modified else "1"),
+                    ],
+                )
+            ),
+        )
+
     def iter_all_configuration_variables(
         self,
     ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
@@ -186,6 +212,8 @@ class ABCGlobalSettingsMode(WatoMode):
                 if not header_is_painted:
                     # always open headers when searching
                     forms.header(group.title(), isopen=bool(search) or self._show_only_modified)
+                    if warning := group.warning():
+                        forms.warning_message(warning)
                     header_is_painted = True
 
                 default_value = self._default_values[varname]
@@ -328,12 +356,10 @@ class ABCEditGlobalSettingMode(WatoMode):
             )
         else:
             new_value = self._valuespec.from_html_vars("ve")
-            if use_vue_rendering():
-                new_value = parse_and_validate_vue(self._valuespec, self._vue_field_id())
-
             self._valuespec.validate_value(new_value, "ve")
+
             self._current_settings[self._varname] = new_value
-            msg = HTML(
+            msg = HTML.without_escaping(
                 _("Changed global configuration variable %s to %s.")
                 % (
                     escaping.escape_attribute(self._varname),
@@ -394,12 +420,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                 forms.section(_("Configuration variable:"))
                 html.tt(self._varname)
 
-            if use_vue_rendering():
-                forms.section(_("Current setting as VUE"))
-                render_vue(self._valuespec, self._vue_field_id(), value)
-                forms.section(_("Legacy valuespec (input data is ignored)"))
-            else:
-                forms.section(_("Current setting"))
+            forms.section(_("Current setting"))
             self._valuespec.render_input("ve", value)
             self._valuespec.set_focus("ve")
             html.help(self._valuespec.help())
@@ -489,31 +510,6 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             item=make_simple_link("wato.py?mode=sites"),
         )
 
-    def _extend_display_dropdown(self, menu: PageMenu) -> None:
-        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Details"),
-                entries=list(self._page_menu_entries_details()),
-            ),
-        )
-
-    def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("Show only modified settings"),
-            icon_name="toggle_on" if self._show_only_modified else "toggle_off",
-            item=make_simple_link(
-                makeactionuri(
-                    request,
-                    transactions,
-                    [
-                        ("_show_only_modified", "0" if self._show_only_modified else "1"),
-                    ],
-                )
-            ),
-        )
-
     def action(self) -> ActionResult:
         varname = request.var("_varname")
         if not varname:
@@ -575,7 +571,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditGlobals.mode_url()
 
 
-def is_a_checkbox(vs) -> bool:  # type: ignore[no-untyped-def]
+def is_a_checkbox(vs: ValueSpec) -> bool:
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True

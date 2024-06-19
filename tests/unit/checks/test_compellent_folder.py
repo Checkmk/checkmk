@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import Check
+from .checktestlib import Check
 
 
 @pytest.mark.parametrize(

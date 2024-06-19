@@ -8,10 +8,10 @@ import abc
 import re
 from collections.abc import Collection, Iterable
 from datetime import datetime
-from typing import Any
+from typing import Generic, TypeVar
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -31,6 +31,9 @@ from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 from cmk.gui.watolib.custom_attributes import (
+    CustomAttrSpec,
+    CustomHostAttrSpec,
+    CustomUserAttrSpec,
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
     update_host_custom_attrs,
@@ -55,12 +58,11 @@ def custom_attr_types() -> Choices:
     ]
 
 
-# TODO: Refactor to be valuespec based
-class ModeEditCustomAttr(WatoMode, abc.ABC):
-    @property
-    def _attrs(self):
-        return self._all_attrs[self._type]
+_T_CustomAttrSpec = TypeVar("_T_CustomAttrSpec", bound=CustomAttrSpec)
 
+
+# TODO: Refactor to be valuespec based
+class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
     def _from_vars(self):
         self._name = request.get_ascii_input("edit")  # missing -> new custom attr
         self._new = self._name is None
@@ -74,9 +76,9 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             matching_attrs = [a for a in self._attrs if a["name"] == self._name]
             if not matching_attrs:
                 raise MKUserError(None, _("The attribute does not exist."))
-            self._attr: dict[str, Any] = matching_attrs[0]
+            self._attr: _T_CustomAttrSpec = matching_attrs[0]
         else:
-            self._attr = {}
+            self._attr = self._default_value
 
     @property
     @abc.abstractmethod
@@ -85,13 +87,16 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def _attrs(self) -> list[_T_CustomAttrSpec]: ...
+
+    @property
+    @abc.abstractmethod
     def _topics(self) -> Choices:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
-    def _default_topic(self) -> str:
-        raise NotImplementedError()
+    def _default_value(self) -> _T_CustomAttrSpec: ...
 
     @property
     @abc.abstractmethod
@@ -112,13 +117,11 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
         """Option to show the custom attribute in overview tables of the setup menu."""
         raise NotImplementedError()
 
-    def _render_table_option(  # type: ignore[no-untyped-def]
-        self, section_title, label, help_text
-    ) -> None:
+    def _render_table_option(self, section_title: str, label: str, help_text: str) -> None:
         """Helper method to implement _show_in_table_option."""
         forms.section(section_title)
         html.help(help_text)
-        html.checkbox("show_in_table", self._attr.get("show_in_table", False), label=label)
+        html.checkbox("show_in_table", self._attr["show_in_table"] or False, label=label)
 
     @abc.abstractmethod
     def title(self) -> str:
@@ -129,14 +132,13 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             _("Attribute"), breadcrumb, form_name="attr", button_name="_save"
         )
 
-    def _add_extra_attrs_from_html_vars(self):
+    def _add_extra_attrs_from_html_vars(self) -> None:
         pass
 
-    def _add_extra_form_sections(self):
+    def _add_extra_form_sections(self) -> None:
         pass
 
     def action(self) -> ActionResult:
-        # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         if not transactions.check_transaction():
             return None
 
@@ -176,10 +178,14 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             if ty not in [t[0] for t in custom_attr_types()]:
                 raise MKUserError("type", _("The choosen attribute type is invalid."))
 
-            self._attr = {
-                "name": self._name,
-                "type": ty,
-            }
+            self._attr["name"] = self._name
+            self._attr["type"] = "TextAscii"
+            self._attr["title"] = title
+            self._attr["topic"] = topic
+            self._attr["help"] = help_txt
+            self._attr["show_in_table"] = show_in_table
+            self._attr["add_custom_macro"] = add_custom_macro
+
             self._attrs.append(self._attr)
 
             _changes.add_change(
@@ -190,15 +196,11 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             _changes.add_change(
                 "edit-%sattr" % self._type, _("Modified %s attribute %s") % (self._type, self._name)
             )
-        self._attr.update(
-            {
-                "title": title,
-                "topic": topic,
-                "help": help_txt,
-                "show_in_table": show_in_table,
-                "add_custom_macro": add_custom_macro,
-            }
-        )
+            self._attr["title"] = title
+            self._attr["topic"] = topic
+            self._attr["help"] = help_txt
+            self._attr["show_in_table"] = show_in_table
+            self._attr["add_custom_macro"] = add_custom_macro
 
         self._add_extra_attrs_from_html_vars()
 
@@ -219,7 +221,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
                 )
             )
             if self._new:
-                html.text_input("name", self._attr.get("name", ""), size=61)
+                html.text_input("name", self._attr["name"], size=61)
                 html.set_focus("name")
             else:
                 html.write_text(self._name)
@@ -227,22 +229,22 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
             forms.section(_("Title") + "<sup>*</sup>", is_required=True)
             html.help(_("The title is used to label this attribute."))
-            html.text_input("title", self._attr.get("title", ""), size=61)
+            html.text_input("title", self._attr["title"], size=61)
 
             forms.section(_("Topic"))
             html.help(_("The attribute is added to this section in the edit dialog."))
-            html.dropdown("topic", self._topics, deflt=self._attr.get("topic", self._default_topic))
+            html.dropdown("topic", self._topics, deflt=self._attr["topic"])
 
-            forms.section(_("Help Text") + "<sup>*</sup>")
+            forms.section(_("Help text") + "<sup>*</sup>")
             html.help(_("You might want to add some helpful description for the attribute."))
-            html.text_area("help", self._attr.get("help", ""))
+            html.text_area("help", self._attr["help"])
 
             forms.section(_("Data type"))
             html.help(_("The type of information to be stored in this attribute."))
             if self._new:
-                html.dropdown("type", custom_attr_types(), deflt=self._attr.get("type", ""))
+                html.dropdown("type", custom_attr_types(), deflt=self._attr["type"])
             else:
-                html.write_text(dict(custom_attr_types())[self._attr.get("type")])
+                html.write_text(dict(custom_attr_types())[self._attr["type"]])
 
             self._add_extra_form_sections()
             self._show_in_table_option()
@@ -251,7 +253,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             html.help(self._macro_help)
             html.checkbox(
                 "add_custom_macro",
-                self._attr.get("add_custom_macro", False),
+                self._attr["add_custom_macro"] or False,
                 label=self._macro_label,
             )
 
@@ -260,7 +262,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             html.hidden_fields()
 
 
-class ModeEditCustomUserAttr(ModeEditCustomAttr):
+class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
     @classmethod
     def name(cls) -> str:
         return "edit_user_attr"
@@ -274,11 +276,15 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return ModeCustomUserAttrs
 
     @property
-    def _type(self):
+    def _type(self) -> str:
         return "user"
 
     @property
-    def _topics(self):
+    def _attrs(self) -> list[CustomUserAttrSpec]:
+        return self._all_attrs["user"]
+
+    @property
+    def _topics(self) -> Choices:
         return [
             ("ident", _("Identity")),
             ("security", _("Security")),
@@ -287,8 +293,19 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         ]
 
     @property
-    def _default_topic(self) -> str:
-        return "personal"
+    def _default_value(self) -> CustomUserAttrSpec:
+        return CustomUserAttrSpec(
+            {
+                "type": "TextAscii",
+                "name": "",
+                "title": "",
+                "topic": "personal",
+                "help": "",
+                "show_in_table": False,
+                "add_custom_macro": False,
+                "user_editable": True,
+            }
+        )
 
     @property
     def _macro_help(self) -> str:
@@ -297,13 +314,13 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         )
 
     @property
-    def _macro_label(self):
+    def _macro_label(self) -> str:
         return _("Make this variable available in notifications")
 
-    def _update_config(self):
+    def _update_config(self) -> None:
         update_user_custom_attrs(datetime.now())
 
-    def _show_in_table_option(self):
+    def _show_in_table_option(self) -> None:
         self._render_table_option(
             _("Show in user table"),
             _("Show this attribute in the user table of the setup menu"),
@@ -314,15 +331,15 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
             ),
         )
 
-    def _add_extra_attrs_from_html_vars(self):
+    def _add_extra_attrs_from_html_vars(self) -> None:
         self._attr["user_editable"] = html.get_checkbox("user_editable")
 
-    def _add_extra_form_sections(self):
+    def _add_extra_form_sections(self) -> None:
         forms.section(_("Editable by Users"))
         html.help(_("It is possible to let users edit their custom attributes."))
         html.checkbox(
             "user_editable",
-            self._attr.get("user_editable", True),
+            self._attr.get("user_editable", True) or False,
             label=_("Users can change this attribute in their personal settings"),
         )
 
@@ -332,7 +349,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return _("Edit user attribute")
 
 
-class ModeEditCustomHostAttr(ModeEditCustomAttr):
+class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
     @classmethod
     def name(cls) -> str:
         return "edit_host_attr"
@@ -346,19 +363,33 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         return ModeCustomHostAttrs
 
     @property
-    def _type(self):
+    def _type(self) -> str:
         return "host"
 
     @property
-    def _topics(self):
+    def _attrs(self) -> list[CustomHostAttrSpec]:
+        return self._all_attrs["host"]
+
+    @property
+    def _topics(self) -> Choices:
         return host_attribute_topic_registry.get_choices()
 
     @property
-    def _default_topic(self):
-        return "custom_attributes"
+    def _default_value(self) -> CustomHostAttrSpec:
+        return CustomHostAttrSpec(
+            {
+                "type": "TextAscii",
+                "name": "",
+                "title": "",
+                "topic": "custom_attributes",
+                "help": "",
+                "show_in_table": False,
+                "add_custom_macro": False,
+            }
+        )
 
     @property
-    def _macro_help(self):
+    def _macro_help(self) -> str:
         return _(
             "The attribute can be added to the host definition in order to use it as custom host attribute "
             "(sometimes called monitoring macro) in different places, for example as in check commands or "
@@ -367,15 +398,15 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         )
 
     @property
-    def _macro_label(self):
+    def _macro_label(self) -> str:
         return _(
             "Make this custom attribute available to check commands, notifications and the status GUI"
         )
 
-    def _update_config(self):
+    def _update_config(self) -> None:
         update_host_custom_attrs()
 
-    def _show_in_table_option(self):
+    def _show_in_table_option(self) -> None:
         self._render_table_option(
             _("Show in host tables"),
             _("Show this attribute in host tables of the setup menu"),
@@ -392,7 +423,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         return _("Edit host attribute")
 
 
-class ModeCustomAttrs(WatoMode, abc.ABC):
+class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
     def __init__(self) -> None:
         super().__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
@@ -401,13 +432,13 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
         self._all_attrs = load_custom_attrs_from_mk_file(lock=transactions.is_transaction())
 
     @property
-    def _attrs(self):
-        return self._all_attrs[self._type]
+    @abc.abstractmethod
+    def _type(self) -> str:
+        raise NotImplementedError()
 
     @property
     @abc.abstractmethod
-    def _type(self):
-        raise NotImplementedError()
+    def _attrs(self) -> list[_T_CustomAttrSpec]: ...
 
     @abc.abstractmethod
     def title(self) -> str:
@@ -507,7 +538,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                 table.cell(_("Type"), dict(custom_attr_types())[custom_attr["type"]])
 
 
-class ModeCustomUserAttrs(ModeCustomAttrs):
+class ModeCustomUserAttrs(ModeCustomAttrs[CustomUserAttrSpec]):
     @classmethod
     def name(cls) -> str:
         return "user_attrs"
@@ -517,10 +548,14 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         return ["users", "custom_attributes"]
 
     @property
-    def _type(self):
+    def _type(self) -> str:
         return "user"
 
-    def _update_config(self):
+    @property
+    def _attrs(self) -> list[CustomUserAttrSpec]:
+        return self._all_attrs["user"]
+
+    def _update_config(self) -> None:
         update_user_custom_attrs(datetime.now())
 
     def title(self) -> str:
@@ -540,7 +575,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         )
 
 
-class ModeCustomHostAttrs(ModeCustomAttrs):
+class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
     @classmethod
     def name(cls) -> str:
         return "host_attrs"
@@ -550,10 +585,14 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @property
-    def _type(self):
+    def _type(self) -> str:
         return "host"
 
-    def _update_config(self):
+    @property
+    def _attrs(self) -> list[CustomHostAttrSpec]:
+        return self._all_attrs["host"]
+
+    def _update_config(self) -> None:
         update_host_custom_attrs()
 
     def title(self) -> str:

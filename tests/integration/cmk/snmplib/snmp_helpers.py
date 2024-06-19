@@ -18,6 +18,7 @@ from cmk.snmplib import (
     SNMPDecodedString,
     SNMPHostConfig,
     SNMPTable,
+    SNMPVersion,
 )
 
 
@@ -29,13 +30,12 @@ def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
         credentials="public",
         port=1337,
         # TODO: Use SNMPv2 over v1 for the moment
-        is_bulkwalk_host=False,
-        is_snmpv2or3_without_bulkwalk_host=True,
+        bulkwalk_enabled=False,
+        snmp_version=SNMPVersion.V2C,
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits={},
         snmpv3_contexts=[],
-        snmpv3_contexts_skip_on_timeout=False,
         character_encoding=None,
         snmp_backend=backend_type,
     )
@@ -43,7 +43,7 @@ def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
 
 def get_snmp_table(
     site: Site, tree: BackendSNMPTree, backend_type: SNMPBackendEnum, config: SNMPHostConfig
-) -> tuple[Sequence[SNMPTable], MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]]]:
+) -> tuple[Sequence[SNMPTable], MutableMapping[tuple[str, str, bool], list[tuple[str, bytes]]]]:
     return ast.literal_eval(
         site.python_helper("helper_get_snmp_table.py").check_output(
             input=repr(

@@ -16,13 +16,10 @@
 import collections
 import time
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_bytes_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 SplunkLicenseState = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "SplunkLicenseState",
@@ -49,8 +46,8 @@ def parse_splunk_license_state(string_table):
                 SplunkLicenseState(
                     max_violations,
                     window_period,
-                    get_bytes_human_readable(int(quota)),
-                    get_timestamp_human_readable(int(expiration_time)),
+                    render.bytes(int(quota)),
+                    render.datetime(int(expiration_time)),
                     time_to_expiration,
                     status,
                 )
@@ -86,9 +83,9 @@ def check_splunk_license_state(item, params, parsed):
 
         if state != 0:
             infotext += " (expires in {} - Warn/Crit at {}/{})".format(
-                get_age_human_readable(data.time_to_expiration),
-                get_age_human_readable(warn),
-                get_age_human_readable(crit),
+                render.timespan(data.time_to_expiration),
+                render.timespan(warn),
+                render.timespan(crit),
             )
 
         yield state, infotext

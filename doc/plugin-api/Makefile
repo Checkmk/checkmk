@@ -24,6 +24,12 @@ TEMPDIR       = $(BASEDIR)/templates
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+clean:
+	@rm "$(BUILDDIR)" -rf
+
+url:
+	@echo file://$(BUILDDIR)/html/index.html
+
 # TODO: Don't understand why we need this. Something calls the % target below
 # with the "$(REPO_PATH)/defines.make" target once we include this file above.
 # This target prevents the % from handling the call.

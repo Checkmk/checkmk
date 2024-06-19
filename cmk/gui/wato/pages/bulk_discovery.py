@@ -11,8 +11,9 @@ from typing import cast
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.forms as forms
-import cmk.gui.sites as sites
+from cmk.checkengine.discovery import DiscoverySettings
+
+from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -29,7 +30,6 @@ from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
     BulkSize,
     DiscoveryHost,
-    DiscoveryMode,
     DoFullScan,
     IgnoreErrors,
     start_bulk_discovery,
@@ -68,7 +68,9 @@ class ModeBulkDiscovery(WatoMode):
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()
-        self._folder = disk_or_search_folder_from_request()
+        self._folder = disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
 
     def _get_bulk_discovery_params(self) -> None:
         self._bulk_discovery_params = copy.deepcopy(active_config.bulk_discovery_default_settings)
@@ -85,7 +87,7 @@ class ModeBulkDiscovery(WatoMode):
         )
 
         self._do_full_scan, self._bulk_size = self._get_performance_params()
-        self._mode = DiscoveryMode(self._bulk_discovery_params["mode"])
+        self._mode = DiscoverySettings.from_vs(self._bulk_discovery_params.get("mode"))
         self._ignore_errors = IgnoreErrors(self._bulk_discovery_params["error_handling"])
 
     def _get_performance_params(self) -> tuple[DoFullScan, BulkSize]:

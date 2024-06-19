@@ -7,9 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from .checktestlib import Check
 
 
 @pytest.mark.parametrize(

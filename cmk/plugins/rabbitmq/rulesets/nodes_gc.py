@@ -4,59 +4,39 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import (
-    CheckParameterRuleSpecWithItem,
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import (
     DataSize,
     DictElement,
     Dictionary,
-    FixedLevels,
     Float,
+    IECMagnitude,
+    InputHint,
     Integer,
-    Levels,
-    Localizable,
-    Migrate,
-    TextInput,
-    Topic,
+    LevelDirection,
+    SimpleLevels,
 )
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
-
-def _migrate_lower_upper(
-    value: dict, lower_key: str, upper_key: str
-) -> Mapping[str, tuple[str, tuple[int, int] | tuple[float, float] | None]]:
-    migrated = {"levels_lower": ("no_levels", None), "levels_upper": ("no_levels", None)}
-    if (lower_value := value.get(lower_key)) is not None:
-        migrated["levels_lower"] = lower_value
-    if (upper_Value := value.get(upper_key)) is not None:
-        migrated["levels_upper"] = upper_Value
-    return migrated
+MAGNITUDES = tuple(IECMagnitude)[:5]
 
 
 def _migrate_levels(
     value: object,
-) -> Mapping[str, Mapping[str, tuple[str, tuple[int, int] | tuple[float, float] | None]]]:
+) -> Mapping[str, tuple[str, tuple[int, int] | tuple[float, float] | None]]:
     if not isinstance(value, dict):
         raise TypeError(value)
-    migrated = value.copy()
-    if "gc_num_upper" in value:
-        migrated["gc_num"] = {
-            "levels_lower": ("no_levels", None),
-            "levels_upper": ("fixed", migrated.pop("gc_num_upper")),
-        }
-    if "gc_num_rate_lower" in value or "gc_num_rate_upper" in value:
-        migrated["gc_num_rate"] = _migrate_lower_upper(
-            value, "gc_num_rate_lower", "gc_num_rate_upper"
-        )
-    if "gc_bytes_reclaimed_upper" in value:
-        migrated["gc_bytes_reclaimed"] = {
-            "levels_lower": ("no_levels", None),
-            "levels_upper": ("fixed", migrated.pop("gc_bytes_reclaimed_upper")),
-        }
-    if "gc_bytes_reclaimed_rate_lower" in value or "gc_bytes_reclaimed_rate_upper" in value:
-        migrated["gc_bytes_reclaimed_rate"] = _migrate_lower_upper(
-            value, "gc_bytes_reclaimed_rate_lower", "gc_bytes_reclaimed_rate_upper"
-        )
-    if "runqueue_lower" in value or "runqueue_upper" in value:
-        migrated["runqueue"] = _migrate_lower_upper(value, "runqueue_lower", "runqueue_upper")
+
+    migrated = {}
+
+    for key, levels in value.items():
+        if not isinstance(levels, tuple):
+            raise TypeError(value)
+
+        if levels[0] not in ("no_levels", "fixed"):
+            migrated[key] = ("fixed", levels)
+        else:
+            migrated[key] = levels
 
     return migrated
 
@@ -64,57 +44,79 @@ def _migrate_levels(
 def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
     return Dictionary(
         elements={
-            "gc_num": DictElement(
-                parameter_form=Levels(
-                    form_spec=Integer,
-                    lower=None,
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Levels for total number of GC runs"),
-                    unit=Localizable("runs"),
+            "gc_num_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    form_spec_template=Integer(label=Label("Number of runs:")),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    title=Title("Upper level for GC runs"),
                 )
             ),
-            "gc_num_rate": DictElement(
-                parameter_form=Levels(
-                    form_spec=Float,
-                    lower=(FixedLevels(), None),
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Levels for GC run rate"),
-                    unit=Localizable("1/s"),
+            "gc_num_rate_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    form_spec_template=Float(unit_symbol="1/s"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0.0, 0.0)),
+                    title=Title("Upper level for GC run rate"),
                 )
             ),
-            "gc_bytes_reclaimed": DictElement(
-                parameter_form=Levels(
-                    form_spec=DataSize,
-                    lower=None,
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Absolute levels for memory reclaimed by GC"),
+            "gc_num_rate_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    form_spec_template=Float(unit_symbol="1/s"),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0.0, 0.0)),
+                    title=Title("Lower level for GC run rate"),
                 )
             ),
-            "gc_bytes_reclaimed_rate": DictElement(
-                parameter_form=Levels(
-                    form_spec=DataSize,
-                    lower=(FixedLevels(), None),
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Levels for rate of memory per second reclaimed by GC"),
+            "gc_bytes_reclaimed_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    title=Title("Absolute levels for memory reclaimed by GC"),
                 )
             ),
-            "runqueue": DictElement(
-                parameter_form=Levels(
-                    form_spec=Integer,
-                    lower=(FixedLevels(), None),
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Levels for runtime run queue"),
+            "gc_bytes_reclaimed_rate_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    title=Title("Upper level for rate of memory reclaimed by GC"),
+                )
+            ),
+            "gc_bytes_reclaimed_rate_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    title=Title("Lower level for rate of memory reclaimed by GC"),
+                )
+            ),
+            "runqueue_upper": DictElement(
+                parameter_form=SimpleLevels(
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    title=Title("Upper level for runtime run queue"),
+                )
+            ),
+            "runqueue_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0, 0)),
+                    title=Title("Lower level for runtime run queue"),
                 )
             ),
         },
-        transform=Migrate(raw_to_form=_migrate_levels),
+        migrate=_migrate_levels,
     )
 
 
-rule_spec_rabbitmq_nodes_gc = CheckParameterRuleSpecWithItem(
+rule_spec_rabbitmq_nodes_gc = CheckParameters(
     name="rabbitmq_nodes_gc",
     topic=Topic.APPLICATIONS,
-    item_form=TextInput(title=Localizable("Node name")),
     parameter_form=_parameter_form_rabbitmq_nodes_gc,
-    title=Localizable("RabbitMQ nodes GC"),
+    title=Title("RabbitMQ nodes GC"),
+    condition=HostAndItemCondition(item_title=Title("Node name")),
 )

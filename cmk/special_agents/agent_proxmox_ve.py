@@ -29,8 +29,8 @@ from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from datetime import datetime, timedelta
 from json import JSONDecodeError
 from typing import Any
+from zoneinfo import ZoneInfo
 
-import pytz
 import requests
 
 from cmk.utils.paths import tmp_dir
@@ -146,7 +146,7 @@ class BackupTask:
             for elem in lines_with_numbers
             for line in (elem["t"],)
             if isinstance(line, str) and line.strip()
-        )  #  #  #  #
+        )
 
     def __str__(self) -> str:
         return "BackupTask({!r}, t={!r}, vms={!r})".format(
@@ -515,9 +515,9 @@ def agent_proxmox_ve_main(args: Args) -> int:
         Adds timezone information to a date string.
         Returns a timezone-aware string
         """
-        local_tz = pytz.timezone(tz)
+        local_tz = ZoneInfo(tz)
         timezone_unaware = datetime.strptime(naive_string, "%Y-%m-%d %H:%M:%S")
-        timezone_aware = local_tz.localize(timezone_unaware)
+        timezone_aware = timezone_unaware.replace(tzinfo=local_tz)
         return timezone_aware.strftime("%Y-%m-%d %H:%M:%S%z")
 
     #  overwrite all the start time strings with timezone aware start strings
@@ -699,9 +699,11 @@ class ProxmoxVeSession:
             method="GET",
             url=self._base_url + sub_url,
             # todo: generic
-            params={"limit": "5000"}
-            if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
-            else {},
+            params=(
+                {"limit": "5000"}
+                if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
+                else {}
+            ),
             verify=self._verify_ssl,
             timeout=self._timeout,
         )
@@ -780,10 +782,8 @@ class ProxmoxVeAPI:
                 return (
                     request_tree
                     if isinstance(request_tree, Mapping)
-                    else next(iter(request_tree))
-                    if len(request_tree) > 0
-                    else {}
-                )  #  #
+                    else next(iter(request_tree)) if len(request_tree) > 0 else {}
+                )
 
             def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:
                 """Check if there is exactly one root element with a variable name,

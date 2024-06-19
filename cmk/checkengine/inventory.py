@@ -15,7 +15,7 @@ from typing import Any, assert_never, TypeVar
 
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
 from cmk.utils.rulesets import RuleSetName
@@ -26,6 +26,7 @@ from cmk.utils.structured_data import (
     parse_visible_raw_path,
     RawIntervalFromConfig,
     SDKey,
+    SDNodeName,
     SDPath,
     SDRetentionFilterChoices,
     SDValue,
@@ -59,6 +60,24 @@ __all__ = [
 ]
 
 
+_SDPATH_HARDWARE = (SDNodeName("hardware"),)
+_SDPATH_SOFTWARE = (SDNodeName("software"),)
+_SDPATH_SOFTWARE_PACKAGES = (SDNodeName("software"), SDNodeName("packages"))
+_SDPATH_CLUSTER = (
+    SDNodeName("software"),
+    SDNodeName("applications"),
+    SDNodeName("check_mk"),
+    SDNodeName("cluster"),
+)
+_SDPATH_CLUSTER_NODES = (
+    SDNodeName("software"),
+    SDNodeName("applications"),
+    SDNodeName("check_mk"),
+    SDNodeName("cluster"),
+    SDNodeName("nodes"),
+)
+
+
 class InventoryPluginName(ValidatedString):
     pass
 
@@ -68,6 +87,7 @@ class InventoryPlugin:
     sections: Sequence[ParsedSectionName]
     function: Callable[..., Iterable[Attributes | TableRow]]
     ruleset_name: RuleSetName | None
+    defaults: Mapping[str, object]
 
 
 @dataclass(frozen=True)
@@ -120,7 +140,8 @@ def inventorize_host(
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_by_host = group_by_host(
-        (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+        ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
+        console.debug,
     )
     store_piggybacked_sections(host_sections_by_host)
 
@@ -205,13 +226,13 @@ def inventorize_cluster(
 def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
     tree = MutableTree()
     tree.add(
-        path=("software", "applications", "check_mk", "cluster"),
-        pairs=[{"is_cluster": True}],
+        path=_SDPATH_CLUSTER,
+        pairs=[{SDKey("is_cluster"): True}],
     )
     tree.add(
-        path=("software", "applications", "check_mk", "cluster", "nodes"),
-        key_columns=["name"],
-        rows=[{"name": name} for name in nodes],
+        path=_SDPATH_CLUSTER_NODES,
+        key_columns=[SDKey("name")],
+        rows=[{SDKey("name"): name} for name in nodes],
     )
     return tree
 
@@ -257,8 +278,8 @@ def _inventorize_real_host(
 
     if trees.inventory:
         trees.inventory.add(
-            path=("software", "applications", "check_mk", "cluster"),
-            pairs=[{"is_cluster": False}],
+            path=_SDPATH_CLUSTER,
+            pairs=[{SDKey("is_cluster"): False}],
         )
 
     return trees, update_result
@@ -310,8 +331,8 @@ def _collect_inventory_plugin_items(
                     providers, HostKey(host_name, source_type), inventory_plugin.sections
                 )
             ):
-                console.vverbose(
-                    f" {tty.yellow}{tty.bold}{plugin_name}{tty.normal}: skipped (no data)\n"
+                console.debug(
+                    f" {tty.yellow}{tty.bold}{plugin_name}{tty.normal}: skipped (no data)"
                 )
                 continue
 
@@ -337,7 +358,9 @@ def _collect_inventory_plugin_items(
                     raise
 
                 console.warning(
-                    f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}\n"
+                    tty.format_warning(
+                        f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}"
+                    )
                 )
                 continue
 
@@ -362,7 +385,7 @@ def _collect_inventory_plugin_items(
                 ),
             )
 
-            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok\n")
+            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok")
 
 
 _TV = TypeVar("_TV", bound=Attributes | TableRow)
@@ -400,7 +423,10 @@ def _create_trees_from_inventory_plugin_items(
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
             _collect_item(
-                item, collection_by_path.setdefault(tuple(item.path), ItemDataCollection())
+                item,
+                collection_by_path.setdefault(
+                    tuple(SDNodeName(p) for p in item.path), ItemDataCollection()
+                ),
             )
 
     inventory_tree = MutableTree()
@@ -427,18 +453,33 @@ def _collect_item(item: Attributes | TableRow, collection: ItemDataCollection) -
     match item:
         case Attributes():
             if item.inventory_attributes:
-                collection.inventory_pairs.append(item.inventory_attributes)
+                collection.inventory_pairs.append(
+                    {SDKey(k): v for k, v in item.inventory_attributes.items()}
+                )
             if item.status_attributes:
-                collection.status_data_pairs.append(item.status_attributes)
+                collection.status_data_pairs.append(
+                    {SDKey(k): v for k, v in item.status_attributes.items()}
+                )
 
         case TableRow():
             # TableRow provides:
             #   - key_columns: {"kc": "kc-val", ...}
             #   - rows: [{"c": "c-val", ...}, ...]
-            collection.key_columns.extend(item.key_columns)
-            collection.inventory_rows.append({**item.key_columns, **item.inventory_columns})
+            key_columns = {SDKey(k): v for k, v in item.key_columns.items()}
+            collection.key_columns.extend(key_columns)
+            collection.inventory_rows.append(
+                {
+                    **key_columns,
+                    **{SDKey(k): v for k, v in item.inventory_columns.items()},
+                }
+            )
             if item.status_columns:
-                collection.status_data_rows.append({**item.key_columns, **item.status_columns})
+                collection.status_data_rows.append(
+                    {
+                        **key_columns,
+                        **{SDKey(k): v for k, v in item.status_columns.items()},
+                    }
+                )
 
         case other_type:
             assert_never(other_type)
@@ -495,18 +536,22 @@ def _may_update(
         choices = choices_by_path.setdefault(
             path, SDRetentionFilterChoices(path=path, interval=entry["interval"])
         )
-        if choices_for_attributes := entry.get("attributes"):
+        if attributes := entry.get("attributes"):
             choices.add_pairs_choice(
-                choice=a[-1] if isinstance(a := choices_for_attributes, tuple) else a,
+                choice=(
+                    [SDKey(a) for a in attributes[-1]]
+                    if isinstance(attributes, tuple)
+                    else attributes
+                ),
                 cache_info=(
                     (now, 0)
                     if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
                     else ci
                 ),
             )
-        elif choices_for_columns := entry.get("columns"):
+        elif columns := entry.get("columns"):
             choices.add_columns_choice(
-                choice=c[-1] if isinstance(c := choices_for_columns, tuple) else c,
+                choice=[SDKey(c) for c in columns[-1]] if isinstance(columns, tuple) else columns,
                 cache_info=(
                     (now, 0)
                     if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None
@@ -544,7 +589,8 @@ def _check_fetched_data_or_trees(
         # In order to avoid a lot of "useless" warnings we check the following:
         if len(inventory_tree) == 1 and isinstance(
             inventory_tree.get_attribute(
-                ("software", "applications", "check_mk", "cluster"), "is_cluster"
+                _SDPATH_CLUSTER,
+                SDKey("is_cluster"),
             ),
             bool,
         ):
@@ -576,13 +622,13 @@ def _check_trees(
 
     yield ActiveCheckResult(0, f"Found {len(inventory_tree)} inventory entries")
 
-    if parameters.sw_missing and inventory_tree.has_table(("software", "packages")):
+    if parameters.sw_missing and not inventory_tree.has_table(_SDPATH_SOFTWARE_PACKAGES):
         yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
 
-    if previous_tree.get_tree(("software",)) != inventory_tree.get_tree(("software",)):
+    if previous_tree.get_tree(_SDPATH_SOFTWARE) != inventory_tree.get_tree(_SDPATH_SOFTWARE):
         yield ActiveCheckResult(parameters.sw_changes, "software changes")
 
-    if previous_tree.get_tree(("hardware",)) != inventory_tree.get_tree(("hardware",)):
+    if previous_tree.get_tree(_SDPATH_HARDWARE) != inventory_tree.get_tree(_SDPATH_HARDWARE):
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
     if status_data_tree:

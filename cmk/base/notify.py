@@ -38,6 +38,7 @@ from cmk.utils import log, store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
+from cmk.utils.i18n import _
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
@@ -77,7 +78,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.regex import regex
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
-from cmk.utils.timeperiod import is_timeperiod_active, load_timeperiods, timeperiod_active
+from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active
 
 from cmk.base import events
 
@@ -162,6 +163,27 @@ $LONGSERVICEOUTPUT$
 def _initialize_logging(logging_level: int) -> None:
     log.logger.setLevel(logging_level)
     log.setup_watched_file_logging_handler(notification_log)
+
+
+def _load_timeperiods() -> dict:
+    # TODO: Remove once the timeperiods are passed as args
+    path = Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
+    timeperiods = store.load_from_mk_file(path, "timeperiods", {})
+    timeperiods.update(
+        {
+            "24X7": {
+                "alias": _("Always"),
+                "monday": [("00:00", "24:00")],
+                "tuesday": [("00:00", "24:00")],
+                "wednesday": [("00:00", "24:00")],
+                "thursday": [("00:00", "24:00")],
+                "friday": [("00:00", "24:00")],
+                "saturday": [("00:00", "24:00")],
+                "sunday": [("00:00", "24:00")],
+            }
+        }
+    )
+    return timeperiods
 
 
 # .
@@ -1185,7 +1207,7 @@ def rbn_match_timeperiod(rule: EventRule, context: EventContext, analyse: bool) 
     if timeperiod_name == "24X7":
         return None
 
-    all_timeperiods = load_timeperiods()
+    all_timeperiods = _load_timeperiods()
     if "MICROTIME" in context:
         timestamp = float(context["MICROTIME"]) / 1000000.0
     else:

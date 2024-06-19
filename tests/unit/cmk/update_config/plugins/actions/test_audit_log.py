@@ -4,16 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import time
 
 import pytest
-from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
+from cmk.utils.user import UserId
+
+from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.paths import wato_var_dir
 
-from cmk.update_config.plugins.actions.audit_log import UpdateAuditLog
+from cmk.update_config.plugins.actions.audit_log import SanitizeAuditLog, UpdateAuditLog
 
 
 @pytest.fixture(name="plugin", scope="module")
@@ -27,7 +30,7 @@ def fixture_plugin() -> UpdateAuditLog:
     return test
 
 
-def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture) -> None:
+def test_audit_log(plugin: UpdateAuditLog) -> None:
     """
     Create new audit log, execute update action and check for result
     """
@@ -62,3 +65,53 @@ def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture) -> None:
             content += f.read() + b"\0"
 
     assert expected_content == content[:-1]  # remove duplicated b"\0"
+
+
+@pytest.fixture(name="sanitize_plugin", scope="module")
+def fixture_sanitize_plugin() -> SanitizeAuditLog:
+    test = SanitizeAuditLog(
+        name="sanitize_audit_log",
+        title="Sanitize audit logs",
+        sort_index=131,
+    )
+    return test
+
+
+@pytest.mark.parametrize(
+    ["entry", "expected_diff_text"],
+    [
+        pytest.param(
+            AuditLogStore.Entry(
+                time=int(time.time()),
+                object_ref=None,
+                user_id=UserId("automation"),
+                action="edit-user",
+                text="'Modified users: automation'",
+                diff_text='Value of "automation_secret" changed from "IQGTEQLILOTMYGJIXUMV" to "BYHENVFFWF@RMKUBCGBG".',
+            ),
+            "",
+            id="Simple entry without \n",
+        ),
+        pytest.param(
+            AuditLogStore.Entry(
+                time=int(time.time()),
+                object_ref=None,
+                user_id=UserId("automation"),
+                action="edit-user",
+                text="'Modified users: automation'",
+                diff_text='Value of "automation_secret" changed from "BYHENVFFWF@RMKUBCGBG" to "PJPKBDG@BGBOXPVSMGXS".\nAttribute "enforce_pw_change" with value False removed.\nValue of "last_pw_change" changed from 1718791477 to 1718794918.\nValue of "serial" changed from 11 to 12.',
+            ),
+            'Attribute "enforce_pw_change" with value False removed.\nValue of "last_pw_change" changed from 1718791477 to 1718794918.\nValue of "serial" changed from 11 to 12.',
+            id="Multiple entries with \n",
+        ),
+    ],
+)
+def test_sanitize_audit_log(
+    sanitize_plugin: UpdateAuditLog, entry: AuditLogStore.Entry, expected_diff_text: str
+) -> None:
+    AuditLogStore().append(entry)
+    update_flag = wato_var_dir() / "log" / ".werk-13330"
+    if update_flag.exists():
+        update_flag.unlink()
+    sanitize_plugin(logging.getLogger(), {})
+    assert AuditLogStore().read()[-1].diff_text == expected_diff_text

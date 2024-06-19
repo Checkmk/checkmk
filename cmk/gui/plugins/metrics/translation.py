@@ -487,6 +487,12 @@ check_metrics["check_mk-nimble_volumes"] = df_translation
 check_metrics["check_mk-ceph_df"] = df_translation
 check_metrics["check_mk-lvm_vgs"] = df_translation
 check_metrics["check_mk-df_netscaler"] = df_translation
+check_metrics["check_mk-msexch_database"] = {
+    "db_read_latency": {"name": "db_read_latency_s", "scale": m},
+    "db_read_recovery_latency": {"name": "db_read_recovery_latency_s", "scale": m},
+    "db_write_latency": {"name": "db_write_latency_s", "scale": m},
+    "db_log_latency": {"name": "db_log_latency_s", "scale": m},
+}
 
 check_metrics["check_mk-nfsiostat"] = {
     "read_avg_rtt_ms": {"name": "read_avg_rtt_s", "scale": m},

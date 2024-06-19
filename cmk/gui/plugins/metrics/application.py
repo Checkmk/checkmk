@@ -235,25 +235,25 @@ metric_info["time_in_GC"] = {
     "color": "16/a",
 }
 
-metric_info["db_read_latency"] = {
+metric_info["db_read_latency_s"] = {
     "title": _l("Read latency"),
     "unit": "s",
     "color": "35/a",
 }
 
-metric_info["db_read_recovery_latency"] = {
+metric_info["db_read_recovery_latency_s"] = {
     "title": _l("Read recovery latency"),
     "unit": "s",
     "color": "31/a",
 }
 
-metric_info["db_write_latency"] = {
+metric_info["db_write_latency_s"] = {
     "title": _l("Write latency"),
     "unit": "s",
     "color": "45/a",
 }
 
-metric_info["db_log_latency"] = {
+metric_info["db_log_latency_s"] = {
     "title": _l("Log latency"),
     "unit": "s",
     "color": "25/a",

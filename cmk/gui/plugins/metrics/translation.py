@@ -496,6 +496,12 @@ check_metrics["check_mk-sansymphony_pool"] = {
     **df_translation,
     "percent_allocated": {"name": "fs_used_percent"},
 }
+check_metrics["check_mk-msexch_database"] = {
+    "db_read_latency": {"name": "db_read_latency_s", "scale": m},
+    "db_read_recovery_latency": {"name": "db_read_recovery_latency_s", "scale": m},
+    "db_write_latency": {"name": "db_write_latency_s", "scale": m},
+    "db_log_latency": {"name": "db_log_latency_s", "scale": m},
+}
 
 
 do_not_display_fs_size_translation: dict[str, CheckMetricEntry] = {

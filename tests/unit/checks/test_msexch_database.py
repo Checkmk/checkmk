@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import pytest
 
-# fmt: off
-# type: ignore
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.msexch_database import (
+    check_msexch_database,
+    inventory_msexch_database,
+    Params,
+    parse_msexch_database,
+)
 
-checkname = "msexch_database"
-
-info = [
+_DE_AGENT_OUTPUT = [
     ["locale", " de-DE"],
     ["Get-Counter : Die Daten in einer der Leistungsindikator-Stichproben sind"],
     ["ung\x81ltig. \x9aberpr\x81fen Sie f\x81r jedes PerformanceCounterSample-Objekt, ob die"],
@@ -303,69 +312,80 @@ info = [
     ],
 ]
 
-discovery = {
-    "": [("edgetransport/transport-e-mail-datenbank", None), ("information store/_total", None)]
-}
 
-checks = {
-    "": [
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
         (
+            _DE_AGENT_OUTPUT,
+            [
+                Service(item="edgetransport/transport-e-mail-datenbank"),
+                Service(item="information store/_total"),
+            ],
+        ),
+    ],
+)
+def test_parse_msexch_database(string_table: StringTable, expected_result: DiscoveryResult) -> None:
+    section = parse_msexch_database(string_table)
+    assert sorted(inventory_msexch_database(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "string_table, item, params, expected_result",
+    [
+        (
+            _DE_AGENT_OUTPUT,
             "edgetransport/transport-e-mail-datenbank",
-            {
-                "read_recovery_latency": (150.0, 200.0),
-                "write_latency": (40.0, 50.0),
-                "read_attached_latency": (200.0, 250.0),
-                "log_latency": (5.0, 10.0),
-            },
+            Params(
+                read_attached_latency_s=(0.2, 0.25),
+                read_recovery_latency_s=(0.15, 0.2),
+                write_latency_s=(0.04, 0.05),
+                log_latency_s=(0.005, 0.01),
+            ),
             [
-                (
-                    0,
-                    "0.0ms db read (attached) latency",
-                    [("db_read_latency", 0.0, 200, 250, None, None)],
-                ),
-                (
-                    0,
-                    "0.0ms db read (recovery) latency",
-                    [("db_read_recovery_latency", 0.0, 150, 200, None, None)],
-                ),
-                (
-                    0,
-                    "0.5ms db write (attached) latency",
-                    [("db_write_latency", 0.5, 40, 50, None, None)],
-                ),
-                (0, "0.0ms Log latency", [("db_log_latency", 0.0, 5, 10, None, None)]),
+                Result(state=State.OK, summary="DB read (attached) latency: 0 seconds"),
+                Metric("db_read_latency_s", 0.0, levels=(0.2, 0.25)),
+                Result(state=State.OK, summary="DB read (recovery) latency: 0 seconds"),
+                Metric("db_read_recovery_latency_s", 0.0, levels=(0.15, 0.2)),
+                Result(state=State.OK, summary="DB write (attached) latency: 500 microseconds"),
+                Metric("db_write_latency_s", 0.0005, levels=(0.04, 0.05)),
+                Result(state=State.OK, summary="Log latency: 0 seconds"),
+                Metric("db_log_latency_s", 0.0, levels=(0.005, 0.01)),
             ],
         ),
         (
+            _DE_AGENT_OUTPUT,
             "information store/_total",
-            {
-                "read_recovery_latency": (150.0, 200.0),
-                "write_latency": (40.0, 50.0),
-                "read_attached_latency": (200.0, 250.0),
-                "log_latency": (5.0, 10.0),
-            },
+            Params(
+                read_attached_latency_s=(0.005, 0.01),
+                read_recovery_latency_s=(0.0001, 0.0002),
+                write_latency_s=(0.04, 0.05),
+                log_latency_s=(0.005, 0.01),
+            ),
             [
-                (
-                    0,
-                    "9.0ms db read (attached) latency",
-                    [("db_read_latency", 9.0, 200, 250, None, None)],
+                Result(
+                    state=State.WARN,
+                    summary="DB read (attached) latency: 9 milliseconds (warn/crit at 5 milliseconds/10 milliseconds)",
                 ),
-                (
-                    0,
-                    "0.8ms db read (recovery) latency",
-                    [("db_read_recovery_latency", 0.8, 150, 200, None, None)],
+                Metric("db_read_latency_s", 0.009, levels=(0.005, 0.01)),
+                Result(
+                    state=State.CRIT,
+                    summary="DB read (recovery) latency: 800 microseconds (warn/crit at 100 microseconds/200 microseconds)",
                 ),
-                (
-                    0,
-                    "0.0ms db write (attached) latency",
-                    [("db_write_latency", 0.0, 40, 50, None, None)],
-                ),
-                (
-                    0,
-                    "0.5ms Log latency",
-                    [("db_log_latency", 0.545454545454545, 5, 10, None, None)],
-                ),
+                Metric("db_read_recovery_latency_s", 0.0008, levels=(0.0001, 0.0002)),
+                Result(state=State.OK, summary="DB write (attached) latency: 0 seconds"),
+                Metric("db_write_latency_s", 0.0, levels=(0.04, 0.05)),
+                Result(state=State.OK, summary="Log latency: 545 microseconds"),
+                Metric("db_log_latency_s", 0.0005454545454545449, levels=(0.005, 0.01)),
             ],
         ),
-    ]
-}
+    ],
+)
+def test_check_msexch_database(
+    string_table: StringTable,
+    item: str,
+    params: Params,
+    expected_result: CheckResult,
+) -> None:
+    section = parse_msexch_database(string_table)
+    assert list(check_msexch_database(item, params, section)) == expected_result

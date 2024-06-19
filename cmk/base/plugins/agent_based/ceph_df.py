@@ -24,8 +24,8 @@ def parse_ceph_df_json(string_table: StringTable) -> FSBlocks:
                 str_to_mebibyte(summary["total_avail_bytes"]), 0))
     mps.extend([
         (pool["name"],
-         str_to_mebibyte(pool["stats"]["max_avail"]) + str_to_mebibyte(pool["stats"]["bytes_used"]),
-         str_to_mebibyte(pool["stats"]["max_avail"]), 0) for pool in ceph_df["pools"]
+         str_to_mebibyte(pool["stats"]["avail_raw"]) + str_to_mebibyte(pool["stats"]["bytes_used"]),
+         str_to_mebibyte(pool["stats"]["avail_raw"]), 0) for pool in ceph_df["pools"]
     ])
     return mps
 

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-14 05:00+0000\n"
+"PO-Revision-Date: 2024-06-18 18:41+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -184,9 +184,6 @@ msgstr " oder "
 
 msgid " or int"
 msgstr " oder int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
 
 msgid " to:"
 msgstr " An:"
@@ -616,9 +613,9 @@ msgstr "%s in Ihrem Checkmk-Testzeitraum übrig"
 msgid "%s left in your free trial"
 msgstr "%s im kostenlosen Testzeitraum verbleibend"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s matching labels: "
-msgstr "%s übereinstimmende Labels: %s"
+msgstr "%s übereinstimmende Labels: "
 
 #, python-format
 msgid "%s may be missing, if must not be empty if it is set."
@@ -4121,9 +4118,6 @@ msgstr "Benutzer hinzufügen"
 msgid "Add user attribute"
 msgstr "Benutzerattribut hinzufügen"
 
-msgid "Add warning"
-msgstr "Warnung hinzufügen"
-
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "InfluxDB-Verbindungen hinzufügen, bearbeiten und löschen."
 
@@ -6967,9 +6961,8 @@ msgstr "Autor"
 msgid "Author comment (regex)"
 msgstr "Kommentar des Autors (regex)"
 
-#, fuzzy
 msgid "Author: "
-msgstr "Autor: %s"
+msgstr "Autor: "
 
 msgid "Authority"
 msgstr "Behörde"
@@ -10855,9 +10848,6 @@ msgstr ""
 "Status der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk Cloud (SaaS) Beta"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
 
@@ -10890,6 +10880,10 @@ msgstr "Checkmk Überblick"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Übersicht des Checkmk Server"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "Checkmk Cloud (SaaS) Beta"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmk-Seitenleiste"
@@ -18967,8 +18961,8 @@ msgstr ""
 "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt, aber "
 "nach der Aktivierung Ihrer Änderungen hätten Sie %s Services."
 
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
+#, fuzzy, python-format
+msgid "During the beta phase, the number of services is limited to %s."
 msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt. "
 
 msgid "During this time period no monitoring data is available"
@@ -22707,9 +22701,8 @@ msgstr ""
 "Ordner gruppieren Hosts, können Attribute vererben und können Berechtigungen "
 "haben."
 
-#, fuzzy
 msgid "Folders: "
-msgstr "Ordner: %s"
+msgstr "Ordner: "
 
 msgid "Folio"
 msgstr "Folio"
@@ -25383,14 +25376,6 @@ msgstr ""
 msgid "Here you can set the number of remaining open slots"
 msgstr "Hier können Sie die Anzahl der übrigen freien Slots einstellen"
 
-#, fuzzy
-msgid ""
-"Here you can set upper levels for the time difference between agent and "
-"system time."
-msgstr ""
-"Hier können Sie Obergrenzen für die Zeitdifferenz zwischen Agenten- und "
-"Systemzeit festlegen."
-
 msgid "Here you can set upper levels of busy workers"
 msgstr "Hier können Sie Obergrenzen für Busy-Workers setzen"
 
@@ -27705,9 +27690,8 @@ msgstr ""
 "Hosts, Services, Gruppen, Zeitperioden, Business Intelligence und Monitoring-"
 "Einstellungen"
 
-#, fuzzy
 msgid "Hosts: "
-msgstr "Hosts"
+msgstr "Hosts: "
 
 #, python-format
 msgid "Hosts: %d created, %d modified, %d deleted"
@@ -38597,9 +38581,6 @@ msgstr "Name der Monitoring-Instanz"
 msgid "Name of the mount point"
 msgstr "Name des Mount-Points"
 
-msgid "Name of the node"
-msgstr "Name des Knotens"
-
 msgid "Name of the peer"
 msgstr "Name des Peers"
 
@@ -38822,18 +38803,11 @@ msgstr "Netapp FC Port Durchsatz"
 msgid "Netapp fan discovery"
 msgstr "Netapp Lüftererkennung"
 
-#, fuzzy
-msgid "Netapp instance state"
-msgstr "NetApp Instanzstatus"
-
 msgid "Netapp port discovery"
 msgstr "Netapp Port-Erkennung"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Erkennung des Netapp-Netzteils"
-
-msgid "Netapp systemtime"
-msgstr "NetApp-Systemzeit"
 
 msgid "Netmask"
 msgstr "Netzmaske"
@@ -39472,10 +39446,6 @@ msgid ""
 msgstr ""
 "Kein solcher Inventarbaum von Host %s. Möglicherweise haben Sie auch keinen "
 "Zugriff auf diesen Host."
-
-#, python-format
-msgid "No such tree below %r"
-msgstr "Kein solcher Baum unterhalb von %r"
 
 msgid "No tags defined"
 msgstr "Keine Tags definiert"
@@ -48150,9 +48120,6 @@ msgstr "Bericht"
 msgid "Report Properties"
 msgstr "Berichteigenschaften"
 
-msgid "Report an issue here."
-msgstr "Melden Sie hier ein Problem."
-
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -51948,9 +51915,6 @@ msgstr "Auf ' %s' setzen"
 msgid "Set upper Levels"
 msgstr "Obergrenzen setzen"
 
-msgid "Set upper levels for the time difference"
-msgstr "Obergrenzen für die Zeitdifferenz setzen"
-
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -52803,9 +52767,6 @@ msgid ""
 msgstr ""
 "Angepasste Pakete von Monitoring-Agenten für Linux, Windows und andere "
 "Betriebssysteme signieren"
-
-msgid "Sign up here"
-msgstr ""
 
 msgid "Signal quality of Wireless device"
 msgstr "Signalqualität eines Wireless-Geräts"
@@ -64717,9 +64678,6 @@ msgstr ""
 "Mit dieser Regel können Sie die Anzahl der maximalen Verbindungen für eine "
 "bestimmte VSID konfigurieren."
 
-msgid "This rule allows you to override netapp warnings"
-msgstr "Diese Regel erlaubt das Überschreiben von NetApp Warnungen"
-
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
@@ -73721,9 +73679,6 @@ msgstr "Warnung bei "
 msgid "Warning of %s"
 msgstr "Warnung ab %s"
 
-msgid "Warning starts with"
-msgstr "Warnung beginnt mit"
-
 msgid "Warning threshold"
 msgstr "Warnungs-Schwellwert"
 
@@ -79992,6 +79947,43 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Add warning"
+#~ msgstr "Warnung hinzufügen"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can set upper levels for the time difference between agent and "
+#~ "system time."
+#~ msgstr ""
+#~ "Hier können Sie Obergrenzen für die Zeitdifferenz zwischen Agenten- und "
+#~ "Systemzeit festlegen."
+
+#~ msgid "Name of the node"
+#~ msgstr "Name des Knotens"
+
+#, fuzzy
+#~ msgid "Netapp instance state"
+#~ msgstr "NetApp Instanzstatus"
+
+#~ msgid "Netapp systemtime"
+#~ msgstr "NetApp-Systemzeit"
+
+#, python-format
+#~ msgid "No such tree below %r"
+#~ msgstr "Kein solcher Baum unterhalb von %r"
+
+#~ msgid "Report an issue here."
+#~ msgstr "Melden Sie hier ein Problem."
+
+#~ msgid "Set upper levels for the time difference"
+#~ msgstr "Obergrenzen für die Zeitdifferenz setzen"
+
+#~ msgid "This rule allows you to override netapp warnings"
+#~ msgstr "Diese Regel erlaubt das Überschreiben von NetApp Warnungen"
+
+#~ msgid "Warning starts with"
+#~ msgstr "Warnung beginnt mit"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

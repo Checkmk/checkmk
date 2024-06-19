@@ -184,9 +184,6 @@ msgstr " sau "
 msgid " or int"
 msgstr " sau int"
 
-msgid " to get notified once the commercial release is available. "
-msgstr ""
-
 msgid " to:"
 msgstr " către:"
 
@@ -4174,9 +4171,6 @@ msgstr "Adăugați un utilizator"
 
 msgid "Add user attribute"
 msgstr "Adăugați atributul de utilizator"
-
-msgid "Add warning"
-msgstr "Adăugați un avertisment"
 
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
@@ -11090,10 +11084,6 @@ msgstr ""
 "starea demonilor: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (trebuie instalat pluginul agentului mk_inventory)"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Agent Checkmk"
-
 msgid "Checkmk Configuration Files"
 msgstr "Fișiere de configurare Checkmk"
 
@@ -11126,6 +11116,10 @@ msgstr "Checkmk Prezentare generală"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Prezentare generală a serverului Checkmk"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "Agent Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Bara laterală Checkmk"
@@ -19480,7 +19474,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
+msgid "During the beta phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -25940,14 +25934,6 @@ msgstr ""
 
 msgid "Here you can set the number of remaining open slots"
 msgstr "Aici puteți seta numărul de sloturi rămase deschise"
-
-#, fuzzy
-msgid ""
-"Here you can set upper levels for the time difference between agent and "
-"system time."
-msgstr ""
-"Aici puteți seta nivelurile superioare pentru diferența de timp dintre ora "
-"agentului și ora sistemului."
 
 msgid "Here you can set upper levels of busy workers"
 msgstr "Aici puteți seta nivelurile superioare ale lucrătorilor ocupați"
@@ -39334,9 +39320,6 @@ msgstr "Denumirea sitului de monitorizare"
 msgid "Name of the mount point"
 msgstr "Numele punctului de montare"
 
-msgid "Name of the node"
-msgstr "Denumirea nodului"
-
 msgid "Name of the peer"
 msgstr "Numele omologului"
 
@@ -39565,18 +39548,11 @@ msgstr "Netapp FC Port throughput"
 msgid "Netapp fan discovery"
 msgstr "Descoperirea ventilatorului Netapp"
 
-#, fuzzy
-msgid "Netapp instance state"
-msgstr "Starea instanței Netapp"
-
 msgid "Netapp port discovery"
 msgstr "Descoperirea portului Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoperirea unității de alimentare Netapp"
-
-msgid "Netapp systemtime"
-msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Masca de rețea"
@@ -40222,10 +40198,6 @@ msgid ""
 msgstr ""
 "Nu există un astfel de arbore de inventar al gazdei %s. De asemenea, este "
 "posibil să nu aveți acces la această gazdă."
-
-#, python-format
-msgid "No such tree below %r"
-msgstr "Nu există un astfel de copac mai jos %r"
 
 #, fuzzy
 msgid "No tags defined"
@@ -48976,10 +48948,6 @@ msgstr "Raport"
 msgid "Report Properties"
 msgstr "Proprietăți de raport"
 
-#, fuzzy
-msgid "Report an issue here."
-msgstr "Raport la program"
-
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -52869,9 +52837,6 @@ msgstr "Setați la '%s'"
 msgid "Set upper Levels"
 msgstr "Setați nivelurile superioare"
 
-msgid "Set upper levels for the time difference"
-msgstr "Setați nivelurile superioare pentru diferența de fus orar"
-
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -53733,9 +53698,6 @@ msgid ""
 msgstr ""
 "Semnați pachete de agenți copți pentru Linux, Windows și alte sisteme de "
 "operare"
-
-msgid "Sign up here"
-msgstr ""
 
 msgid "Signal quality of Wireless device"
 msgstr "Calitatea semnalului dispozitivului fără fir"
@@ -65729,9 +65691,6 @@ msgstr ""
 "Această regulă vă permite să configurați numărul maxim de conexiuni pentru "
 "un anumit VSID."
 
-msgid "This rule allows you to override netapp warnings"
-msgstr "Această regulă vă permite să anulați avertismentele netapp"
-
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
@@ -75271,9 +75230,6 @@ msgstr "Avertisment de "
 msgid "Warning of %s"
 msgstr "Avertisment dacă %s"
 
-msgid "Warning starts with"
-msgstr "Avertismentul începe cu"
-
 msgid "Warning threshold"
 msgstr "Prag de avertizare"
 
@@ -81531,6 +81487,44 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Add warning"
+#~ msgstr "Adăugați un avertisment"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can set upper levels for the time difference between agent and "
+#~ "system time."
+#~ msgstr ""
+#~ "Aici puteți seta nivelurile superioare pentru diferența de timp dintre "
+#~ "ora agentului și ora sistemului."
+
+#~ msgid "Name of the node"
+#~ msgstr "Denumirea nodului"
+
+#, fuzzy
+#~ msgid "Netapp instance state"
+#~ msgstr "Starea instanței Netapp"
+
+#~ msgid "Netapp systemtime"
+#~ msgstr "Netapp systemtime"
+
+#, python-format
+#~ msgid "No such tree below %r"
+#~ msgstr "Nu există un astfel de copac mai jos %r"
+
+#, fuzzy
+#~ msgid "Report an issue here."
+#~ msgstr "Raport la program"
+
+#~ msgid "Set upper levels for the time difference"
+#~ msgstr "Setați nivelurile superioare pentru diferența de fus orar"
+
+#~ msgid "This rule allows you to override netapp warnings"
+#~ msgstr "Această regulă vă permite să anulați avertismentele netapp"
+
+#~ msgid "Warning starts with"
+#~ msgstr "Avertismentul începe cu"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

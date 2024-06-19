@@ -187,9 +187,6 @@ msgstr " ou "
 msgid " or int"
 msgstr " ou inteiro"
 
-msgid " to get notified once the commercial release is available. "
-msgstr ""
-
 msgid " to:"
 msgstr " para:"
 
@@ -4166,9 +4163,6 @@ msgstr "Adicionar usuário"
 
 msgid "Add user attribute"
 msgstr "Adicionar atributo de usuário"
-
-msgid "Add warning"
-msgstr "Adicionar aviso"
 
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "Adicionar, editar e eliminar ligações InfluxDB."
@@ -11074,10 +11068,6 @@ msgstr ""
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached (o "
 "plugin Agent mk_inventory precisa ser instalado)"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "agente Checkmk"
-
 msgid "Checkmk Configuration Files"
 msgstr "Arquivos de configuração Checkmk"
 
@@ -11110,6 +11100,10 @@ msgstr "Visão geral da Checkmk"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Visão geral do Checkmk Server"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "agente Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmk Sidebar"
@@ -19446,7 +19440,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
+msgid "During the beta phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -25922,14 +25916,6 @@ msgstr ""
 
 msgid "Here you can set the number of remaining open slots"
 msgstr "Aqui você pode definir o número de vagas restantes em aberto"
-
-#, fuzzy
-msgid ""
-"Here you can set upper levels for the time difference between agent and "
-"system time."
-msgstr ""
-"Aqui você pode Definir níveis superiores para a diferença de tempo entre o "
-"tempo do agente e o tempo do sistema."
 
 msgid "Here you can set upper levels of busy workers"
 msgstr "Aqui você pode definir níveis superiores de trabalhadores ocupados"
@@ -39282,9 +39268,6 @@ msgstr "Nome do local de monitoramento"
 msgid "Name of the mount point"
 msgstr "Nome do ponto de montagem"
 
-msgid "Name of the node"
-msgstr "Nome do nó"
-
 msgid "Name of the peer"
 msgstr "Nome do par"
 
@@ -39498,18 +39481,11 @@ msgstr "Netapp FC Porto"
 msgid "Netapp fan discovery"
 msgstr "Netapp descoberta dos fãs"
 
-#, fuzzy
-msgid "Netapp instance state"
-msgstr "Estado de Netapp Instance"
-
 msgid "Netapp port discovery"
 msgstr "Netapp descoberta da porta"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoberta da unidade de fornecimento de energia Netapp"
-
-msgid "Netapp systemtime"
-msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Máscara de rede"
@@ -40160,10 +40136,6 @@ msgid ""
 msgstr ""
 "Não existe essa árvore de inventário de anfitriões %s. Você também pode não "
 "ter acesso a esse hospedeiro."
-
-#, fuzzy, python-format
-msgid "No such tree below %r"
-msgstr "Não existe nenhuma árvore abaixo %r"
 
 #, fuzzy
 msgid "No tags defined"
@@ -48916,10 +48888,6 @@ msgid "Report Properties"
 msgstr "Propriedades do relatório"
 
 #, fuzzy
-msgid "Report an issue here."
-msgstr "Relatório a programar"
-
-#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -52763,9 +52731,6 @@ msgstr "Mudar \"%s\" para \"%s\""
 msgid "Set upper Levels"
 msgstr "Definir níveis superiores"
 
-msgid "Set upper levels for the time difference"
-msgstr "Definir níveis superiores para a diferença horária"
-
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -53624,9 +53589,6 @@ msgid ""
 msgstr ""
 "Assinar pacotes de agentes cozidos para Linux, Windows e outros sistemas "
 "operativos"
-
-msgid "Sign up here"
-msgstr ""
 
 msgid "Signal quality of Wireless device"
 msgstr "Qualidade do sinal do dispositivo sem fio"
@@ -65496,9 +65458,6 @@ msgstr ""
 "Esta regra permite configurar o número máximo de conexões para um "
 "determinado VSID."
 
-msgid "This rule allows you to override netapp warnings"
-msgstr "Esta regra permite que você substitua os avisos de netapp"
-
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -75072,9 +75031,6 @@ msgstr "Aviso se %s"
 msgid "Warning of %s"
 msgstr "Aviso se %s"
 
-msgid "Warning starts with"
-msgstr "O aviso começa com"
-
 msgid "Warning threshold"
 msgstr "Limiar de advertência"
 
@@ -81293,6 +81249,44 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Add warning"
+#~ msgstr "Adicionar aviso"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can set upper levels for the time difference between agent and "
+#~ "system time."
+#~ msgstr ""
+#~ "Aqui você pode Definir níveis superiores para a diferença de tempo entre "
+#~ "o tempo do agente e o tempo do sistema."
+
+#~ msgid "Name of the node"
+#~ msgstr "Nome do nó"
+
+#, fuzzy
+#~ msgid "Netapp instance state"
+#~ msgstr "Estado de Netapp Instance"
+
+#~ msgid "Netapp systemtime"
+#~ msgstr "Netapp systemtime"
+
+#, fuzzy, python-format
+#~ msgid "No such tree below %r"
+#~ msgstr "Não existe nenhuma árvore abaixo %r"
+
+#, fuzzy
+#~ msgid "Report an issue here."
+#~ msgstr "Relatório a programar"
+
+#~ msgid "Set upper levels for the time difference"
+#~ msgstr "Definir níveis superiores para a diferença horária"
+
+#~ msgid "This rule allows you to override netapp warnings"
+#~ msgstr "Esta regra permite que você substitua os avisos de netapp"
+
+#~ msgid "Warning starts with"
+#~ msgstr "O aviso começa com"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

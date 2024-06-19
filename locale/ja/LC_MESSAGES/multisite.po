@@ -181,9 +181,6 @@ msgstr " または "
 msgid " or int"
 msgstr " またはint"
 
-msgid " to get notified once the commercial release is available. "
-msgstr ""
-
 msgid " to:"
 msgstr " まで:"
 
@@ -4064,9 +4061,6 @@ msgstr "ユーザーを追加する"
 
 msgid "Add user attribute"
 msgstr "ユーザー属性を追加する"
-
-msgid "Add warning"
-msgstr "警告を追加"
 
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "InfluxDB接続の追加、編集、削除。"
@@ -10828,10 +10822,6 @@ msgstr ""
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached (エー"
 "ジェントプラグインmk_inventoryをインストールする必要があります)"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmkエージェント"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
 
@@ -10864,6 +10854,10 @@ msgstr "Checkmkの概要"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "CheckmkサーバーのCheckmk概要"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "Checkmkエージェント"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmkサイドバー"
@@ -19052,7 +19046,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
+msgid "During the beta phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -25415,13 +25409,6 @@ msgstr ""
 
 msgid "Here you can set the number of remaining open slots"
 msgstr "ここで、残りの空きスロットの数を設定できます"
-
-#, fuzzy
-msgid ""
-"Here you can set upper levels for the time difference between agent and "
-"system time."
-msgstr ""
-"ここでは、エージェント時間とシステム時間の時間差の上位レベルを設定できます。"
 
 msgid "Here you can set upper levels of busy workers"
 msgstr "ここでは、忙しいワーカーの上位レベルを設定できます"
@@ -38521,9 +38508,6 @@ msgstr "監視サイトの名前"
 msgid "Name of the mount point"
 msgstr "マウントポイントの名前"
 
-msgid "Name of the node"
-msgstr "ノードの名前"
-
 msgid "Name of the peer"
 msgstr "ピアの名前"
 
@@ -38735,18 +38719,11 @@ msgstr "Netapp FCポートのスループット"
 msgid "Netapp fan discovery"
 msgstr "Netappファンの発見"
 
-#, fuzzy
-msgid "Netapp instance state"
-msgstr "Netappインスタンスの状態"
-
 msgid "Netapp port discovery"
 msgstr "Netappポートの検出"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp電源ユニットの発見"
-
-msgid "Netapp systemtime"
-msgstr "Netappシステムタイム"
 
 msgid "Netmask"
 msgstr "ネットマスク"
@@ -39392,10 +39369,6 @@ msgid ""
 msgstr ""
 "ホスト %s のそのようなインベントリ・ツリーはありません。このホストへのアクセ"
 "ス権がない可能性もあります。"
-
-#, python-format
-msgid "No such tree below %r"
-msgstr "%r下にそのようなツリーはありません"
 
 #, fuzzy
 msgid "No tags defined"
@@ -48007,10 +47980,6 @@ msgid "Report Properties"
 msgstr "レポートのプロパティ"
 
 #, fuzzy
-msgid "Report an issue here."
-msgstr "スケジュールに報告する"
-
-#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -51788,9 +51757,6 @@ msgstr "'%s'に設定する"
 msgid "Set upper Levels"
 msgstr "上位レベルを設定する"
 
-msgid "Set upper levels for the time difference"
-msgstr "時差の上位レベルを設定する"
-
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -52629,9 +52595,6 @@ msgid ""
 msgstr ""
 "Linux、Windows、およびその他のオペレーティング・システム用のベイクエージェン"
 "ト・パッケージに署名します"
-
-msgid "Sign up here"
-msgstr ""
 
 msgid "Signal quality of Wireless device"
 msgstr "ワイヤレスデバイスの信号品質"
@@ -64038,9 +64001,6 @@ msgid ""
 "given VSID."
 msgstr "このルールを使用すると、特定のVSIDの最大接続数を構成できます。"
 
-msgid "This rule allows you to override netapp warnings"
-msgstr "このルールを使用すると、netappの警告を上書きできます"
-
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -73423,9 +73383,6 @@ msgstr "警告 "
 msgid "Warning of %s"
 msgstr "%s の場合警告"
 
-msgid "Warning starts with"
-msgstr "警告の開始"
-
 msgid "Warning threshold"
 msgstr "警告しきい値"
 
@@ -79450,6 +79407,44 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Add warning"
+#~ msgstr "警告を追加"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can set upper levels for the time difference between agent and "
+#~ "system time."
+#~ msgstr ""
+#~ "ここでは、エージェント時間とシステム時間の時間差の上位レベルを設定できま"
+#~ "す。"
+
+#~ msgid "Name of the node"
+#~ msgstr "ノードの名前"
+
+#, fuzzy
+#~ msgid "Netapp instance state"
+#~ msgstr "Netappインスタンスの状態"
+
+#~ msgid "Netapp systemtime"
+#~ msgstr "Netappシステムタイム"
+
+#, python-format
+#~ msgid "No such tree below %r"
+#~ msgstr "%r下にそのようなツリーはありません"
+
+#, fuzzy
+#~ msgid "Report an issue here."
+#~ msgstr "スケジュールに報告する"
+
+#~ msgid "Set upper levels for the time difference"
+#~ msgstr "時差の上位レベルを設定する"
+
+#~ msgid "This rule allows you to override netapp warnings"
+#~ msgstr "このルールを使用すると、netappの警告を上書きできます"
+
+#~ msgid "Warning starts with"
+#~ msgstr "警告の開始"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

@@ -186,9 +186,6 @@ msgstr " of "
 msgid " or int"
 msgstr " of int"
 
-msgid " to get notified once the commercial release is available. "
-msgstr ""
-
 msgid " to:"
 msgstr " naar:"
 
@@ -4171,9 +4168,6 @@ msgstr "Gebruiker toevoegen"
 
 msgid "Add user attribute"
 msgstr "Gebruikersattribuut toevoegen"
-
-msgid "Add warning"
-msgstr "Waarschuwing toevoegen"
 
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "InfluxDB verbindingen toevoegen, bewerken en verwijderen."
@@ -11077,10 +11071,6 @@ msgstr ""
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
 "(Agent plugin mk_inventory moet geïnstalleerd zijn)"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk agent"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk Configuratie Bestanden"
 
@@ -11113,6 +11103,10 @@ msgstr "Checkmk Overzicht"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Overzicht van Checkmk Server"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "Checkmk agent"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmk Zijbalk"
@@ -19459,7 +19453,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
+msgid "During the beta phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -25926,14 +25920,6 @@ msgstr ""
 
 msgid "Here you can set the number of remaining open slots"
 msgstr "Hier kunt u het aantal resterende open slots instellen"
-
-#, fuzzy
-msgid ""
-"Here you can set upper levels for the time difference between agent and "
-"system time."
-msgstr ""
-"Hier kunt u de hoogste niveaus instellen voor het tijdsverschil tussen de "
-"tijd van de agent en de systeemtijd."
 
 msgid "Here you can set upper levels of busy workers"
 msgstr "Hier kunt u de hoogste niveaus van drukke werknemers instellen"
@@ -39294,9 +39280,6 @@ msgstr "Naam van de bewakingslocatie"
 msgid "Name of the mount point"
 msgstr "Naam van het koppelpunt"
 
-msgid "Name of the node"
-msgstr "Naam van het knooppunt"
-
 msgid "Name of the peer"
 msgstr "Naam van de peer"
 
@@ -39513,18 +39496,11 @@ msgstr "Netapp FC Poort doorvoer"
 msgid "Netapp fan discovery"
 msgstr "Netapp ventilator ontdekking"
 
-#, fuzzy
-msgid "Netapp instance state"
-msgstr "Netapp Instance State"
-
 msgid "Netapp port discovery"
 msgstr "Netapp poort ontdekking"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp voedingseenheid ontdekking"
-
-msgid "Netapp systemtime"
-msgstr "Netapp systeemtijd"
 
 msgid "Netmask"
 msgstr "Netmask"
@@ -40179,10 +40155,6 @@ msgid ""
 msgstr ""
 "Geen dergelijke inventarisboom van host %s. Het kan ook zijn dat je geen "
 "toegang hebt tot deze host."
-
-#, fuzzy, python-format
-msgid "No such tree below %r"
-msgstr "Licentiegebruik"
 
 #, fuzzy
 msgid "No tags defined"
@@ -48944,10 +48916,6 @@ msgid "Report Properties"
 msgstr "Verslag Eigenschappen"
 
 #, fuzzy
-msgid "Report an issue here."
-msgstr "Rapport aan schema"
-
-#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -52783,9 +52751,6 @@ msgstr "Verander '%s' naar '%s'"
 msgid "Set upper Levels"
 msgstr "Bovenste niveaus instellen"
 
-msgid "Set upper levels for the time difference"
-msgstr "Stel de hoogste niveaus in voor het tijdsverschil"
-
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -53639,9 +53604,6 @@ msgid ""
 "Sign baked agent packages for Linux, Windows and other operating systems"
 msgstr ""
 "Getekende agent-pakketten voor Linux, Windows en andere besturingssystemen"
-
-msgid "Sign up here"
-msgstr ""
 
 msgid "Signal quality of Wireless device"
 msgstr "Signaalkwaliteit van draadloze apparatuur"
@@ -65553,9 +65515,6 @@ msgstr ""
 "Met deze regel kunt u het aantal maximale verbindingen voor een gegeven VSID "
 "configureren."
 
-msgid "This rule allows you to override netapp warnings"
-msgstr "Deze regel staat je toe om netapp waarschuwingen op te heffen"
-
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -75141,9 +75100,6 @@ msgstr "Waarschuwing als %s"
 msgid "Warning of %s"
 msgstr "Waarschuwing als %s"
 
-msgid "Warning starts with"
-msgstr "Waarschuwing begint met"
-
 msgid "Warning threshold"
 msgstr "Waarschuwingsdrempel"
 
@@ -81406,6 +81362,44 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Add warning"
+#~ msgstr "Waarschuwing toevoegen"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can set upper levels for the time difference between agent and "
+#~ "system time."
+#~ msgstr ""
+#~ "Hier kunt u de hoogste niveaus instellen voor het tijdsverschil tussen de "
+#~ "tijd van de agent en de systeemtijd."
+
+#~ msgid "Name of the node"
+#~ msgstr "Naam van het knooppunt"
+
+#, fuzzy
+#~ msgid "Netapp instance state"
+#~ msgstr "Netapp Instance State"
+
+#~ msgid "Netapp systemtime"
+#~ msgstr "Netapp systeemtijd"
+
+#, fuzzy, python-format
+#~ msgid "No such tree below %r"
+#~ msgstr "Licentiegebruik"
+
+#, fuzzy
+#~ msgid "Report an issue here."
+#~ msgstr "Rapport aan schema"
+
+#~ msgid "Set upper levels for the time difference"
+#~ msgstr "Stel de hoogste niveaus in voor het tijdsverschil"
+
+#~ msgid "This rule allows you to override netapp warnings"
+#~ msgstr "Deze regel staat je toe om netapp waarschuwingen op te heffen"
+
+#~ msgid "Warning starts with"
+#~ msgstr "Waarschuwing begint met"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

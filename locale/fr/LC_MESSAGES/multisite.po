@@ -184,9 +184,6 @@ msgstr " ou "
 msgid " or int"
 msgstr " ou nombre"
 
-msgid " to get notified once the commercial release is available. "
-msgstr ""
-
 msgid " to:"
 msgstr " à :"
 
@@ -4211,9 +4208,6 @@ msgstr "Ajouter un utilisateur"
 
 msgid "Add user attribute"
 msgstr "Ajouter un attribut utilisateur"
-
-msgid "Add warning"
-msgstr "Ajouter un avertissement"
 
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
@@ -11162,10 +11156,6 @@ msgstr ""
 "état des démons : Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (le plugin d'agent mk_inventory doit être installé)"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Agent de contrôle"
-
 msgid "Checkmk Configuration Files"
 msgstr "Fichiers de configuration de Checkmk"
 
@@ -11198,6 +11188,10 @@ msgstr "Aperçu de Checkmk"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Aperçu du serveur Checkmk"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "Agent de contrôle"
 
 msgid "Checkmk Sidebar"
 msgstr "Barre latérale Checkmk"
@@ -19633,7 +19627,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
+msgid "During the beta phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -26174,14 +26168,6 @@ msgstr ""
 
 msgid "Here you can set the number of remaining open slots"
 msgstr "Ici, vous pouvez définir le nombre de créneaux restants ouverts"
-
-#, fuzzy
-msgid ""
-"Here you can set upper levels for the time difference between agent and "
-"system time."
-msgstr ""
-"Vous pouvez ici définir des niveaux supérieurs pour le décalage horaire "
-"entre l'heure de l'agent et l'heure du système."
 
 msgid "Here you can set upper levels of busy workers"
 msgstr ""
@@ -39650,9 +39636,6 @@ msgstr "Nom du site de surveillance"
 msgid "Name of the mount point"
 msgstr "Nom du point de montage"
 
-msgid "Name of the node"
-msgstr "Nom du nœud"
-
 msgid "Name of the peer"
 msgstr "Nom de l'homologue"
 
@@ -39871,18 +39854,11 @@ msgstr "Débit du port FC de Netapp"
 msgid "Netapp fan discovery"
 msgstr "Découverte des ventilateurs Netapp"
 
-#, fuzzy
-msgid "Netapp instance state"
-msgstr "État de l'instance Netapp"
-
 msgid "Netapp port discovery"
 msgstr "Découverte des ports Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Découverte du bloc d'alimentation de Netapp"
-
-msgid "Netapp systemtime"
-msgstr "Système Netapp"
 
 msgid "Netmask"
 msgstr "Masque de réseau"
@@ -40540,10 +40516,6 @@ msgid ""
 msgstr ""
 "L'arbre d'inventaire de l'hôte %s n'existe pas. Il se peut également que "
 "vous n'ayez pas accès à cet hôte."
-
-#, python-format
-msgid "No such tree below %r"
-msgstr ""
 
 #, fuzzy
 msgid "No tags defined"
@@ -49390,10 +49362,6 @@ msgid "Report Properties"
 msgstr "Propriétés du rapport"
 
 #, fuzzy
-msgid "Report an issue here."
-msgstr "Rapport sur le calendrier"
-
-#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -53297,9 +53265,6 @@ msgstr "Définir à '%s'"
 msgid "Set upper Levels"
 msgstr "Définir les niveaux supérieurs"
 
-msgid "Set upper levels for the time difference"
-msgstr "Définir des niveaux supérieurs pour le décalage horaire"
-
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
@@ -54166,9 +54131,6 @@ msgid ""
 msgstr ""
 "Signer des paquets d'agents de cuisson pour Linux, Windows et d'autres "
 "systèmes d'exploitation"
-
-msgid "Sign up here"
-msgstr ""
 
 msgid "Signal quality of Wireless device"
 msgstr "Qualité du signal du dispositif sans fil"
@@ -66212,9 +66174,6 @@ msgstr ""
 "Cette règle vous permet de configurer le nombre de connexions maximales pour "
 "un VSID donné."
 
-msgid "This rule allows you to override netapp warnings"
-msgstr "Cette règle vous permet d'ignorer les avertissements de Netapp"
-
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -75909,9 +75868,6 @@ msgstr "Avertissement à "
 msgid "Warning of %s"
 msgstr "Avertissement si %s"
 
-msgid "Warning starts with"
-msgstr "L'avertissement commence par"
-
 msgid "Warning threshold"
 msgstr "Seuil d'alerte"
 
@@ -82253,6 +82209,40 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Add warning"
+#~ msgstr "Ajouter un avertissement"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can set upper levels for the time difference between agent and "
+#~ "system time."
+#~ msgstr ""
+#~ "Vous pouvez ici définir des niveaux supérieurs pour le décalage horaire "
+#~ "entre l'heure de l'agent et l'heure du système."
+
+#~ msgid "Name of the node"
+#~ msgstr "Nom du nœud"
+
+#, fuzzy
+#~ msgid "Netapp instance state"
+#~ msgstr "État de l'instance Netapp"
+
+#~ msgid "Netapp systemtime"
+#~ msgstr "Système Netapp"
+
+#, fuzzy
+#~ msgid "Report an issue here."
+#~ msgstr "Rapport sur le calendrier"
+
+#~ msgid "Set upper levels for the time difference"
+#~ msgstr "Définir des niveaux supérieurs pour le décalage horaire"
+
+#~ msgid "This rule allows you to override netapp warnings"
+#~ msgstr "Cette règle vous permet d'ignorer les avertissements de Netapp"
+
+#~ msgid "Warning starts with"
+#~ msgstr "L'avertissement commence par"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

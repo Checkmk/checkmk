@@ -53,7 +53,7 @@ def test_create_and_delete_a_host(logged_in_page: LoginPage) -> None:
     host.delete_host()
 
 
-def test_reschedule(host: HostProperties, is_chromium: bool) -> None:
+def test_reschedule(host: HostProperties) -> None:
     """reschedules a check"""
     host.main_menu.monitor_all_hosts.click()
     host.select_host(host.details.name)

@@ -6,6 +6,7 @@
 #ifndef LogCache_h
 #define LogCache_h
 
+#include <bitset>
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
@@ -35,7 +36,7 @@ private:
 class LogFilter {
 public:
     size_t max_lines_per_log_file;
-    unsigned classmask;
+    std::bitset<32> log_entry_classes;
     std::chrono::system_clock::time_point since;
     std::chrono::system_clock::time_point until;
 };

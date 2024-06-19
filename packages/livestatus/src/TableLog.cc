@@ -153,10 +153,10 @@ bool rowWithoutHost(const LogRow &lr) {
 }
 
 LogFilter constructFilter(Query &query, size_t max_lines_per_logfile) {
-    // Optimize time interval for the query. In log queries there should
-    // always be a time range in form of one or two filter expressions over
-    // time. We use that to limit the number of logfiles we need to scan and
-    // to find the optimal entry point into the logfile
+    // Figure out the time interval for the query: In log queries there should
+    // always be a time range in the form of one or two filter expressions for
+    // "time"". We use that to limit the number of log files we need to scan and
+    // to find the optimal entry point into the log file.
     auto since = std::chrono::system_clock::from_time_t(
         query.greatestLowerBoundFor("time").value_or(0));
     auto now =
@@ -164,15 +164,14 @@ LogFilter constructFilter(Query &query, size_t max_lines_per_logfile) {
     auto until = std::chrono::system_clock::from_time_t(
         query.leastUpperBoundFor("time").value_or(now) + 1);
 
-    // The second optimization is for log message types. We want to load
-    // only those log type that are queried.
-    auto classmask =
-        static_cast<unsigned>(query.valueSetLeastUpperBoundFor("class")
-                                  .value_or(~std::bitset<32>())
-                                  .to_ulong());
+    // The second optimization is for log entry classes: We want to load only
+    // those entries with a class that is actually required.
+    auto log_entry_classes =
+        query.valueSetLeastUpperBoundFor("class").value_or(~std::bitset<32>{});
+
     return {
         .max_lines_per_log_file = max_lines_per_logfile,
-        .classmask = classmask,
+        .log_entry_classes = log_entry_classes,
         .since = since,
         .until = until,
     };
@@ -205,7 +204,8 @@ void for_each_log_entry(
 
             while (true) {
                 const auto *entries = it->second->getEntriesFor(
-                    log_filter.max_lines_per_log_file, log_filter.classmask);
+                    log_filter.max_lines_per_log_file,
+                    log_filter.log_entry_classes.to_ulong());  // TODO(sp)
                 if (!Logfile::processLogEntries(process_log_entry, entries,
                                                 log_filter)) {
                     break;  // end of time range found
@@ -222,7 +222,7 @@ void for_each_log_entry(
 
 void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
     auto log_filter = constructFilter(query, core.maxLinesPerLogFile());
-    if (log_filter.classmask == 0) {
+    if (log_filter.log_entry_classes == 0) {  // optimization only
         return;
     }
 

@@ -25,6 +25,7 @@ class Keyword(BodyItem):
     elapsed_time: timedelta
     status: Literal["PASS", "FAIL", "SKIP", "NOT RUN", "NOT SET"]
     message: str
+    args: Sequence[str]
 
 class Result:
     def visit(self, visitor: "ResultVisitor") -> None: ...

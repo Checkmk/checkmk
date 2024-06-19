@@ -45,7 +45,7 @@ def _site_factory_demo():
 def _base_site_demo(site_factory_demo):
     # Note: to access the UI of the "play" site go to http://localhost/play/check_mk/login.py?_admin
     site_name = "play"
-    yield from site_factory_demo.get_test_site(site_name, save_results=False)
+    yield from site_factory_demo.get_test_site(site_name, save_results=False, report_crashes=False)
 
 
 @pytest.mark.cee
@@ -118,7 +118,6 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
-@pytest.mark.skip("Update process currently broken. See CMK-17449.")
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

@@ -13,8 +13,8 @@ from cmk.gui.plugins.wato.utils import (
     Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    simple_levels,
 )
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer
 
 
@@ -23,7 +23,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
         elements=[
             (
                 "clients",
-                simple_levels.SimpleLevels(
+                SimpleLevels(
                     Integer,
                     title=_("Upper levels for clients"),
                     default_levels=(0, 0),
@@ -32,7 +32,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "network_sockets",
-                simple_levels.SimpleLevels(
+                SimpleLevels(
                     Integer,
                     title=_("Upper levels for open network sockets"),
                     default_levels=(0, 0),
@@ -41,7 +41,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "time_to_resolve_dns",
-                simple_levels.SimpleLevels(
+                SimpleLevels(
                     Integer,
                     title=_("Upper levels for time to resolve DNS"),
                     default_levels=(1500, 2000),
@@ -51,7 +51,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "time_consumed_by_rule_engine",
-                simple_levels.SimpleLevels(
+                SimpleLevels(
                     Integer,
                     title=_("Upper levels for time consumed by rule engine"),
                     default_levels=(1500, 2000),

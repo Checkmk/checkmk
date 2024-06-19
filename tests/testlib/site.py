@@ -1680,6 +1680,7 @@ class SiteFactory:
         auto_restart_httpd: bool = False,
         init_livestatus: bool = True,
         save_results: bool = True,
+        report_crashes: bool = True,
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -1719,10 +1720,10 @@ class SiteFactory:
             try:
                 yield site
             finally:
-                # teardown: saving results and removing site
                 if save_results:
                     site.save_results()
-                site.report_crashes()
+                if report_crashes:
+                    site.report_crashes()
                 if auto_cleanup and cleanup_site:
                     logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
                     site.rm()

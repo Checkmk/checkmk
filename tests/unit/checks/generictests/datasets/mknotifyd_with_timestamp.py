@@ -34,6 +34,7 @@ info = [
     ["Queue:           None"],
     ["Waiting:         0"],
     ["Processing:      0"],
+    ["Site:                     remote_site (127.0.0.1)"],
     ["Connection:               127.0.0.1:49850"],
     ["Type:                     incoming"],
     ["State:                    established"],
@@ -51,7 +52,8 @@ info = [
 
 discovery = {
     "": [("heute", {})],
-    "connection": [("heute-127.0.0.1", {})],
+    "connection": [],
+    "connection_v2": [("heute Notification Spooler connection to remote_site", {})],
 }
 
 checks = {
@@ -75,6 +77,18 @@ checks = {
     "connection": [
         (
             "heute-127.0.0.1",
+            {},
+            [
+                (0, "Alive", []),
+                (0, "Uptime: 19 hours 6 minutes", []),
+                (0, "47 Notifications sent", []),
+                (0, "47 Notifications received", []),
+            ],
+        )
+    ],
+    "connection_v2": [
+        (
+            "heute Notification Spooler connection to remote_site",
             {},
             [
                 (0, "Alive", []),

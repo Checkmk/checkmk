@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import OrderedDict
 
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDNodeName, SDPath
+from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -147,8 +146,8 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Inventory Tree",
                 short_title="Inventory Tree",
                 long_title="Inventory Tree",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -161,8 +160,8 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Hardware",
                 short_title="Hardware",
                 long_title="Hardware",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -176,63 +175,63 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Processor",
                 long_title="Hardware ➤ Processor",
                 # The single attribute hints are not checked here
-                attributes=OrderedDict(
-                    arch=AttributeDisplayHint(
+                attributes={
+                    SDKey("arch"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    max_speed=AttributeDisplayHint(
+                    SDKey("max_speed"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    model=AttributeDisplayHint(
+                    SDKey("model"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    type=AttributeDisplayHint(
+                    SDKey("type"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    threads=AttributeDisplayHint(
+                    SDKey("threads"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    smt_threads=AttributeDisplayHint(
+                    SDKey("smt_threads"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cpu_max_capa=AttributeDisplayHint(
+                    SDKey("cpu_max_capa"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cpus=AttributeDisplayHint(
+                    SDKey("cpus"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    logical_cpus=AttributeDisplayHint(
+                    SDKey("logical_cpus"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cores=AttributeDisplayHint(
+                    SDKey("cores"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cores_per_cpu=AttributeDisplayHint(
+                    SDKey("cores_per_cpu"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    threads_per_cpu=AttributeDisplayHint(
+                    SDKey("threads_per_cpu"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    cache_size=AttributeDisplayHint(
+                    SDKey("cache_size"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    bus_speed=AttributeDisplayHint(
+                    SDKey("bus_speed"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    voltage=AttributeDisplayHint(
+                    SDKey("voltage"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    sharing_mode=AttributeDisplayHint(
+                    SDKey("sharing_mode"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    implementation_mode=AttributeDisplayHint(
+                    SDKey("implementation_mode"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                    entitlement=AttributeDisplayHint(
+                    SDKey("entitlement"): AttributeDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, "", False
                     ),
-                ),
-                columns=OrderedDict(),
+                },
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -250,31 +249,31 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Docker images",
                 short_title="Docker images",
                 long_title="Docker ➤ Docker images",
-                attributes=OrderedDict(),
+                attributes={},
                 # The single column hints are not checked here
-                columns=OrderedDict(
-                    id=ColumnDisplayHint(
+                columns={
+                    SDKey("id"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    creation=ColumnDisplayHint(
+                    SDKey("creation"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    size=ColumnDisplayHint(
+                    SDKey("size"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    labels=ColumnDisplayHint(
+                    SDKey("labels"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    amount_containers=ColumnDisplayHint(
+                    SDKey("amount_containers"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    repotags=ColumnDisplayHint(
+                    SDKey("repotags"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    repodigests=ColumnDisplayHint(
+                    SDKey("repodigests"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                ),
+                },
                 table_view_name="invdockerimages",
                 table_is_show_more=False,
             ),
@@ -287,8 +286,8 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Node",
                 short_title="Node",
                 long_title="To ➤ Node",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -322,8 +321,8 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_is_show_more=True,
                 table_view_name="",
             ),
@@ -336,8 +335,8 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_is_show_more=True,
                 table_view_name="",
             ),
@@ -350,8 +349,8 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 title="Software",
                 short_title="Software",
                 long_title="Software",
-                attributes=OrderedDict(),
-                columns=OrderedDict(),
+                attributes={},
+                columns={},
                 table_view_name="",
                 table_is_show_more=True,
             ),
@@ -369,28 +368,28 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 title="Docker containers",
                 short_title="Docker containers",
                 long_title="Docker ➤ Docker containers",
-                attributes=OrderedDict(),
+                attributes={},
                 # The single column hints are not checked here
-                columns=OrderedDict(
-                    id=ColumnDisplayHint(
+                columns={
+                    SDKey("id"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    creation=ColumnDisplayHint(
+                    SDKey("creation"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    name=ColumnDisplayHint(
+                    SDKey("name"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    labels=ColumnDisplayHint(
+                    SDKey("labels"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    status=ColumnDisplayHint(
+                    SDKey("status"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                    image=ColumnDisplayHint(
+                    SDKey("image"): ColumnDisplayHint(
                         "", "", "", lambda v: ("", ""), lambda r, l: 0, FilterInvtableText
                     ),
-                ),
+                },
                 table_view_name="invdockercontainers",
                 table_is_show_more=False,
             ),

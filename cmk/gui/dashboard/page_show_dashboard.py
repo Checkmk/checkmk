@@ -330,7 +330,7 @@ def _render_dashlet(
 
 def _render_dashlet_content(
     board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int
-) -> str:
+) -> HTML:
     with output_funnel.plugged():
         if is_update:
             dashlet.update()
@@ -347,7 +347,7 @@ def _render_dashlet_content(
                 "}" % board["mtime"]
             )
 
-        return output_funnel.drain()
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | str:

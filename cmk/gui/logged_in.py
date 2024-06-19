@@ -19,7 +19,7 @@ from cmk.utils import store
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
-from cmk.utils.version import __version__, Version
+from cmk.utils.version import __version__, edition, Edition, Version
 
 from cmk.gui import hooks, permissions, site_config
 from cmk.gui.config import active_config
@@ -423,11 +423,13 @@ class LoggedInUser:
             return 0
 
     def get_docs_base_url(self) -> str:
-        version = Version.from_str(__version__).version_base
-        version = version if version != "" else "master"
-        return "https://docs.checkmk.com/{}/{}".format(
-            version, "de" if self.language == "de" else "en"
+        version = (
+            "saas"
+            if edition() == Edition.CSE
+            else Version.from_str(__version__).version_base or "master"
         )
+        language = "de" if self.language == "de" else "en"
+        return f"https://docs.checkmk.com/{version}/{language}"
 
 
 # Login a user that has all permissions. This is needed for making

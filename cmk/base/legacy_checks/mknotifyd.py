@@ -83,17 +83,22 @@ def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
             parsed["sites"][site] = site_entry
         elif ":" in line[0]:
             varname, value = line[0].split(":", 1)
-            if varname in ("Site", "Encryption"):
-                # We do not use this data yet...
+
+            if varname == "Encryption":
                 continue
             value = value.strip()
 
-            if varname == "Spool":
+            if varname == "Site":
+                connected_site = value.split(" (")[0]
+            elif varname == "Spool":
                 sub_entry = {}
                 site_entry["spools"][value] = sub_entry
 
             elif varname == "Connection":
                 sub_entry = {}
+                # for "mknotifyd.connection_v2"
+                site_entry["connections"][connected_site] = sub_entry
+                # keep the "mknotifyd.connection" services working
                 site_entry["connections"][value] = sub_entry
 
             elif varname == "Queue":
@@ -135,8 +140,8 @@ def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
         remote_addresses: dict = {}
         for connection_name, connection in list(stats["connections"].items()):
             if connection["Type"] == "incoming":
-                remote_address = connection_name.split(":")[0]
-                remote_addresses.setdefault(remote_address, []).append(connection)
+                remote_address_site = connection_name.split(":")[0]
+                remote_addresses.setdefault(remote_address_site, []).append(connection)
                 del stats["connections"][connection_name]
 
         for address, connections in remote_addresses.items():
@@ -245,13 +250,19 @@ check_info["mknotifyd"] = LegacyCheckDefinition(
 
 
 def inventory_mknotifyd_connection(parsed):
-    for site_name, stats in parsed["sites"].items():
-        for connection_name in stats["connections"]:
-            yield site_name + "-" + connection_name, {}
+    # deprecated, do not discover anything
+    return
+    yield
 
 
 def check_mknotifyd_connection(item, _no_params, parsed):
-    site_name, connection_name = item.split("-", 1)
+
+    # "mknotifyd.connection_v2"
+    if "Notification Spooler connection to" in item:
+        site_name, connection_name = item.split(" Notification Spooler connection to ", 1)
+    # "mknotifyd.connection"
+    else:
+        site_name, connection_name = item.split("-", 1)
 
     if site_name not in parsed["sites"]:
         raise IgnoreResultsError("No status information about spooler available")
@@ -289,9 +300,27 @@ def check_mknotifyd_connection(item, _no_params, parsed):
                 yield 0, "%d Notifications %s" % (num, what.lower())
 
 
+# deprecated
 check_info["mknotifyd.connection"] = LegacyCheckDefinition(
     service_name="OMD %s Notify Connection",
     sections=["mknotifyd"],
     discovery_function=inventory_mknotifyd_connection,
+    check_function=check_mknotifyd_connection,
+)
+
+
+def inventory_mknotifyd_connection_v2(parsed):
+    for site_name, stats in parsed["sites"].items():
+        for connection_name in stats["connections"]:
+            if "." in connection_name:
+                # item of old discovered "mknotifyd.connection"
+                continue
+            yield f"{site_name} Notification Spooler connection to {connection_name}", {}
+
+
+check_info["mknotifyd.connection_v2"] = LegacyCheckDefinition(
+    service_name="OMD %s",
+    sections=["mknotifyd"],
+    discovery_function=inventory_mknotifyd_connection_v2,
     check_function=check_mknotifyd_connection,
 )

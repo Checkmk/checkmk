@@ -14,7 +14,7 @@ from typing import Any, cast, Literal, NamedTuple, overload
 
 from livestatus import LivestatusResponse, SiteId
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo

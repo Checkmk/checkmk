@@ -1,6 +1,7 @@
 #!groovy
 
 /// file: trigger-packages.groovy
+
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def build_stages(packages_file, force_build) {

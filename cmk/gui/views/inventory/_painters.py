@@ -40,7 +40,7 @@ from ._display_hints import (
     inv_display_hints,
     NodeDisplayHint,
 )
-from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
+from ._tree_renderer import SDItem, TreeRenderer
 from .registry import PaintFunction
 
 
@@ -319,19 +319,18 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDVal
 
 
 def _paint_host_inventory_attribute(
-    row: Row, path: SDPath, key: SDKey, paint_function: PaintFunction
+    row: Row, path: SDPath, key: SDKey, title: str, paint_function: PaintFunction
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
-    return compute_cell_spec(
-        SDItem(
-            key,
-            attributes.pairs.get(key),
-            attributes.retentions.get(key),
-        ),
-        paint_function,
-        theme.detect_icon_path("svc_problems", "icon_"),
-    )
+    return SDItem(
+        key=key,
+        title=title,
+        value=attributes.pairs.get(key),
+        retention_interval=attributes.retentions.get(key),
+        paint_function=paint_function,
+        icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
+    ).compute_cell_spec()
 
 
 def attribute_painter_from_hint(
@@ -364,7 +363,9 @@ def attribute_painter_from_hint(
         printable=True,
         load_inv=True,
         sorter=ident,
-        paint=lambda row: _paint_host_inventory_attribute(row, path, key, hint.paint_function),
+        paint=lambda row: _paint_host_inventory_attribute(
+            row, path, key, hint.title, hint.paint_function
+        ),
         export_for_python=lambda row, cell: _compute_attribute_painter_data(row, path, key),
         export_for_csv=lambda row, cell: (
             "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
@@ -386,18 +387,19 @@ class ColumnPainterFromHint(TypedDict):
     export_for_json: Callable[[Row, Cell], SDValue]
 
 
-def _paint_host_inventory_column(row: Row, ident: str, paint_function: PaintFunction) -> CellSpec:
+def _paint_host_inventory_column(
+    row: Row, ident: str, title: str, paint_function: PaintFunction
+) -> CellSpec:
     if ident not in row:
         return "", ""
-    return compute_cell_spec(
-        SDItem(
-            SDKey(ident),
-            row[ident],
-            row.get("_".join([ident, "retention_interval"])),
-        ),
-        paint_function,
-        theme.detect_icon_path("svc_problems", "icon_"),
-    )
+    return SDItem(
+        key=SDKey(ident),
+        title=title,
+        value=row[ident],
+        retention_interval=row.get("_".join([ident, "retention_interval"])),
+        paint_function=paint_function,
+        icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
+    ).compute_cell_spec()
 
 
 def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPainterFromHint:
@@ -416,7 +418,7 @@ def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPaint
         # the "real" parameters, ie. _painter_params, are used.
         params=FixedValue(PainterParameters(), totext=""),
         sorter=ident,
-        paint=lambda row: _paint_host_inventory_column(row, ident, hint.paint_function),
+        paint=lambda row: _paint_host_inventory_column(row, ident, hint.title, hint.paint_function),
         export_for_python=lambda row, cell: row.get(ident),
         export_for_csv=lambda row, cell: "" if (data := row.get(ident)) is None else str(data),
         export_for_json=lambda row, cell: row.get(ident),

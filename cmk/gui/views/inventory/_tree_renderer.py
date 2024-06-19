@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Iterable, NamedTuple
+from typing import Iterable
 
 from livestatus import SiteId
 
@@ -50,8 +49,9 @@ def make_table_view_name_of_host(view_name: str) -> str:
     return f"{view_name}_of_host"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Column:
+    key: SDKey
     title: str
     paint_function: PaintFunction
     key_info: str
@@ -59,14 +59,17 @@ class Column:
 
 def _make_columns(
     keys: Iterable[SDKey], key_columns: Sequence[SDKey], hint: NodeDisplayHint
-) -> OrderedDict[SDKey, Column]:
-    return OrderedDict(
-        {
-            c: Column(h.title, h.paint_function, f"{c}*" if c in key_columns else c)
-            for c in list(hint.columns) + sorted(set(keys) - set(hint.columns))
-            for h in (hint.get_column_hint(c),)
-        }
-    )
+) -> Sequence[Column]:
+    return [
+        Column(
+            key=c,
+            title=h.title,
+            paint_function=h.paint_function,
+            key_info=f"{c}*" if c in key_columns else c,
+        )
+        for c in list(hint.columns) + sorted(set(keys) - set(hint.columns))
+        for h in (hint.get_column_hint(c),)
+    ]
 
 
 @total_ordering
@@ -78,24 +81,89 @@ class _MinType:
         return self is other
 
 
-class SDItem(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class SDItem:
     key: SDKey
+    title: str
     value: SDValue
     retention_interval: RetentionInterval | None
+    paint_function: PaintFunction
+    icon_path_svc_problems: str
+
+    def compute_cell_spec(self) -> tuple[str, HTML]:
+        tdclass, code = self.paint_function(self.value)
+        html_value = HTML.with_escaping(code)
+        if (
+            not html_value
+            or self.retention_interval is None
+            or self.retention_interval.source == "current"
+        ):
+            return tdclass, html_value
+
+        now = int(time.time())
+        valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
+        keep_until = valid_until + self.retention_interval.retention_interval
+        if now > keep_until:
+            return (
+                tdclass,
+                HTMLWriter.render_span(
+                    html_value
+                    + HTMLWriter.render_nbsp()
+                    + HTMLWriter.render_img(self.icon_path_svc_problems, class_=["icon"]),
+                    title=_("Data is outdated and will be removed with the next check execution"),
+                    css=["muted_text"],
+                ),
+            )
+        if now > valid_until:
+            return (
+                tdclass,
+                HTMLWriter.render_span(
+                    html_value,
+                    title=_("Data was provided at %s and is considered valid until %s")
+                    % (
+                        cmk.utils.render.date_and_time(self.retention_interval.cached_at),
+                        cmk.utils.render.date_and_time(keep_until),
+                    ),
+                    css=["muted_text"],
+                ),
+            )
+        return tdclass, html_value
 
 
-def _sort_pairs(attributes: ImmutableAttributes, key_order: Sequence[SDKey]) -> Sequence[SDItem]:
-    sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
+def _sort_pairs(
+    attributes: ImmutableAttributes, hint: NodeDisplayHint, icon_path_svc_problems: str
+) -> Sequence[SDItem]:
+    sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
     return [
-        SDItem(k, attributes.pairs[k], attributes.retentions.get(k))
+        SDItem(
+            key=k,
+            title=h.title,
+            value=attributes.pairs[k],
+            retention_interval=attributes.retentions.get(k),
+            paint_function=h.paint_function,
+            icon_path_svc_problems=icon_path_svc_problems,
+        )
         for k in sorted_keys
         if k in attributes.pairs
+        for h in (hint.get_attribute_hint(k),)
     ]
 
 
-def _sort_rows(table: ImmutableTable, columns: Iterable[SDKey]) -> Sequence[Sequence[SDItem]]:
+def _sort_rows(
+    table: ImmutableTable, columns: Sequence[Column], icon_path_svc_problems: str
+) -> Sequence[Sequence[SDItem]]:
     def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
-        return [SDItem(c, row.get(c), table.retentions.get(ident, {}).get(c)) for c in columns]
+        return [
+            SDItem(
+                key=c.key,
+                title=c.title,
+                value=row.get(c.key),
+                retention_interval=table.retentions.get(ident, {}).get(c.key),
+                paint_function=c.paint_function,
+                icon_path_svc_problems=icon_path_svc_problems,
+            )
+            for c in columns
+        ]
 
     min_type = _MinType()
 
@@ -103,37 +171,74 @@ def _sort_rows(table: ImmutableTable, columns: Iterable[SDKey]) -> Sequence[Sequ
         _sort_row(ident, row)
         for ident, row in sorted(
             table.rows_by_ident.items(),
-            key=lambda t: tuple(t[1].get(c) or min_type for c in columns),
+            key=lambda t: tuple(t[1].get(c.key) or min_type for c in columns),
         )
         if not all(v is None for v in row.values())
     ]
 
 
-class _SDDeltaItem(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class _SDDeltaItem:
     key: SDKey
+    title: str
     old: SDValue
     new: SDValue
+    paint_function: PaintFunction
+
+    def compute_cell_spec(self) -> tuple[str, HTML]:
+        if self.old is None and self.new is not None:
+            tdclass, rendered_value = self.paint_function(self.new)
+            return tdclass, HTMLWriter.render_span(rendered_value, css="invnew")
+        if self.old is not None and self.new is None:
+            tdclass, rendered_value = self.paint_function(self.old)
+            return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
+        if self.old == self.new:
+            tdclass, rendered_value = self.paint_function(self.old)
+            return tdclass, HTML.with_escaping(rendered_value)
+        if self.old is not None and self.new is not None:
+            tdclass, rendered_old_value = self.paint_function(self.old)
+            tdclass, rendered_new_value = self.paint_function(self.new)
+            return (
+                tdclass,
+                HTMLWriter.render_span(rendered_old_value, css="invold")
+                + " → "
+                + HTMLWriter.render_span(rendered_new_value, css="invnew"),
+            )
+        raise NotImplementedError()
 
 
 def _sort_delta_pairs(
-    attributes: ImmutableDeltaAttributes, key_order: Sequence[SDKey]
+    attributes: ImmutableDeltaAttributes, hint: NodeDisplayHint
 ) -> Sequence[_SDDeltaItem]:
-    sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
+    sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
     return [
-        _SDDeltaItem(k, attributes.pairs[k].old, attributes.pairs[k].new)
+        _SDDeltaItem(
+            key=k,
+            title=h.title,
+            old=attributes.pairs[k].old,
+            new=attributes.pairs[k].new,
+            paint_function=h.paint_function,
+        )
         for k in sorted_keys
         if k in attributes.pairs
+        for h in (hint.get_attribute_hint(k),)
     ]
 
 
 def _sort_delta_rows(
-    table: ImmutableDeltaTable, columns: Iterable[SDKey]
+    table: ImmutableDeltaTable, columns: Sequence[Column]
 ) -> Sequence[Sequence[_SDDeltaItem]]:
     def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
         return [
-            _SDDeltaItem(c, v.old, v.new)
+            _SDDeltaItem(
+                key=c.key,
+                title=c.title,
+                old=v.old,
+                new=v.new,
+                paint_function=c.paint_function,
+            )
             for c in columns
-            for v in (row.get(c) or SDDeltaValue(None, None),)
+            for v in (row.get(c.key) or SDDeltaValue(None, None),)
         ]
 
     min_type = _MinType()
@@ -145,75 +250,12 @@ def _sort_delta_rows(
         _sort_row(row)
         for row in sorted(
             table.rows,
-            key=lambda r: tuple(_sanitize(r.get(c) or SDDeltaValue(None, None)) for c in columns),
+            key=lambda r: tuple(
+                _sanitize(r.get(c.key) or SDDeltaValue(None, None)) for c in columns
+            ),
         )
         if not all(left == right for left, right in row.values())
     ]
-
-
-def compute_cell_spec(
-    item: SDItem, paint_function: PaintFunction, icon_path_svc_problems: str
-) -> tuple[str, HTML]:
-    # TODO separate tdclass from rendered value
-    tdclass, code = paint_function(item.value)
-    html_value = HTML.with_escaping(code)
-    if (
-        not html_value
-        or item.retention_interval is None
-        or item.retention_interval.source == "current"
-    ):
-        return tdclass, html_value
-
-    now = int(time.time())
-    valid_until = item.retention_interval.cached_at + item.retention_interval.cache_interval
-    keep_until = valid_until + item.retention_interval.retention_interval
-    if now > keep_until:
-        return (
-            tdclass,
-            HTMLWriter.render_span(
-                html_value
-                + HTMLWriter.render_nbsp()
-                + HTMLWriter.render_img(icon_path_svc_problems, class_=["icon"]),
-                title=_("Data is outdated and will be removed with the next check execution"),
-                css=["muted_text"],
-            ),
-        )
-    if now > valid_until:
-        return (
-            tdclass,
-            HTMLWriter.render_span(
-                html_value,
-                title=_("Data was provided at %s and is considered valid until %s")
-                % (
-                    cmk.utils.render.date_and_time(item.retention_interval.cached_at),
-                    cmk.utils.render.date_and_time(keep_until),
-                ),
-                css=["muted_text"],
-            ),
-        )
-    return tdclass, html_value
-
-
-def _compute_delta_cell_spec(item: _SDDeltaItem, paint_function: PaintFunction) -> tuple[str, HTML]:
-    if item.old is None and item.new is not None:
-        tdclass, rendered_value = paint_function(item.new)
-        return tdclass, HTMLWriter.render_span(rendered_value, css="invnew")
-    if item.old is not None and item.new is None:
-        tdclass, rendered_value = paint_function(item.old)
-        return tdclass, HTMLWriter.render_span(rendered_value, css="invold")
-    if item.old == item.new:
-        tdclass, rendered_value = paint_function(item.old)
-        return tdclass, HTML.with_escaping(rendered_value)
-    if item.old is not None and item.new is not None:
-        tdclass, rendered_old_value = paint_function(item.old)
-        tdclass, rendered_new_value = paint_function(item.new)
-        return (
-            tdclass,
-            HTMLWriter.render_span(rendered_old_value, css="invold")
-            + " → "
-            + HTMLWriter.render_span(rendered_new_value, css="invnew"),
-        )
-    raise NotImplementedError()
 
 
 # Ajax call for fetching parts of the tree
@@ -298,31 +340,14 @@ class TreeRenderer:
             header += " " + HTMLWriter.render_span(f"({key_info})", css="muted_text")
         return header
 
-    def _show_attributes(
-        self,
-        attributes: ImmutableAttributes | ImmutableDeltaAttributes,
-        hint: NodeDisplayHint,
-    ) -> None:
-        sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem] = (
-            _sort_pairs(attributes, list(hint.attributes))
-            if isinstance(attributes, ImmutableAttributes)
-            else _sort_delta_pairs(attributes, list(hint.attributes))
-        )
-
+    def _show_attributes(self, sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]) -> None:
         html.open_table()
         for item in sorted_pairs:
-            attr_hint = hint.get_attribute_hint(item.key)
             html.open_tr()
-            html.th(self._get_header(attr_hint.title, item.key))
+            html.th(self._get_header(item.title, item.key))
+            # TODO separate tdclass from rendered value
+            _tdclass, rendered_value = item.compute_cell_spec()
             html.open_td()
-            if isinstance(item, SDItem):
-                _tdclass, rendered_value = compute_cell_spec(
-                    item,
-                    attr_hint.paint_function,
-                    self._theme.detect_icon_path("svc_problems", "icon_"),
-                )
-            else:
-                _tdclass, rendered_value = _compute_delta_cell_spec(item, attr_hint.paint_function)
             html.write_html(rendered_value)
             html.close_td()
             html.close_tr()
@@ -330,10 +355,11 @@ class TreeRenderer:
 
     def _show_table(
         self,
-        table: ImmutableTable | ImmutableDeltaTable,
-        hint: NodeDisplayHint,
+        table_view_name: str,
+        columns: Sequence[Column],
+        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]],
     ) -> None:
-        if hint.table_view_name:
+        if table_view_name:
             # Link to Multisite view with exactly this table
             html.div(
                 HTMLWriter.render_a(
@@ -343,7 +369,7 @@ class TreeRenderer:
                         [
                             (
                                 "view_name",
-                                make_table_view_name_of_host(hint.table_view_name),
+                                make_table_view_name_of_host(table_view_name),
                             ),
                             ("host", self._host_name),
                         ],
@@ -353,17 +379,10 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns = _make_columns({k for r in table.rows for k in r}, table.key_columns, hint)
-        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]] = (
-            _sort_rows(table, columns)
-            if isinstance(table, ImmutableTable)
-            else _sort_delta_rows(table, columns)
-        )
-
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
-        for column in columns.values():
+        for column in columns:
             html.th(self._get_header(column.title, column.key_info))
         html.close_tr()
 
@@ -371,17 +390,7 @@ class TreeRenderer:
             html.open_tr(class_="even0")
             for item in row:
                 # TODO separate tdclass from rendered value
-                if isinstance(item, SDItem):
-                    tdclass, rendered_value = compute_cell_spec(
-                        item,
-                        columns[item.key].paint_function,
-                        self._theme.detect_icon_path("svc_problems", "icon_"),
-                    )
-                else:
-                    tdclass, rendered_value = _compute_delta_cell_spec(
-                        item,
-                        columns[item.key].paint_function,
-                    )
+                tdclass, rendered_value = item.compute_cell_spec()
                 html.open_td(class_=tdclass)
                 html.write_html(rendered_value)
                 html.close_td()
@@ -422,11 +431,27 @@ class TreeRenderer:
 
     def show(self, tree: ImmutableTree | ImmutableDeltaTree, tree_id: str = "") -> None:
         hint = self._hints.get_node_hint(tree.path)
-        if tree.attributes:
-            self._show_attributes(tree.attributes, hint)
-        if tree.table:
-            self._show_table(tree.table, hint)
-        for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
-            if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
-                # sorted tries to find the common base class, which is object :(
-                self._show_node(node, tree_id)
+
+        columns = _make_columns(
+            {k for r in tree.table.rows for k in r}, tree.table.key_columns, hint
+        )
+        sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
+        sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
+        match tree:
+            case ImmutableTree():
+                sorted_pairs = _sort_pairs(
+                    tree.attributes, hint, self._theme.detect_icon_path("svc_problems", "icon_")
+                )
+                sorted_rows = _sort_rows(
+                    tree.table, columns, self._theme.detect_icon_path("svc_problems", "icon_")
+                )
+            case ImmutableDeltaTree():
+                sorted_pairs = _sort_delta_pairs(tree.attributes, hint)
+                sorted_rows = _sort_delta_rows(tree.table, columns)
+
+        if sorted_pairs:
+            self._show_attributes(sorted_pairs)
+        if sorted_rows:
+            self._show_table(hint.table_view_name, columns, sorted_rows)
+        for name in sorted(tree.nodes_by_name):
+            self._show_node(tree.nodes_by_name[name], tree_id)

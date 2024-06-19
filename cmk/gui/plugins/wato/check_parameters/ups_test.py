@@ -9,8 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    simple_levels,
 )
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Age, Dictionary, Migrate
 
 
@@ -29,7 +29,7 @@ def _parameter_valuespec_ups_test():
             elements=[
                 (
                     "levels_elapsed_time",
-                    simple_levels.SimpleLevels(
+                    SimpleLevels(
                         spec=Age,
                         title=_("Time since last UPS selftest"),
                     ),

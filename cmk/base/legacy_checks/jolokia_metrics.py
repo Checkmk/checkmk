@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     get_inventory_jolokia_metrics_apps,
     jolokia_metrics_parse,
@@ -35,6 +35,19 @@ from cmk.agent_based.v2 import (
 # 8080 TotalStartedThreadCount 941
 # 8080 Uptime 572011375
 # 8080,java.lang:name=PS_MarkSweep,type=GarbageCollector CollectionCount 0
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def parse_jolokia_metrics(string_table: StringTable) -> StringTable:

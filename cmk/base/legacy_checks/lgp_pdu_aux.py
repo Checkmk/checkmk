@@ -36,7 +36,7 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
@@ -55,6 +55,33 @@ lgp_pdu_aux_states = [
     "open",
     "closed",
 ]
+
+
+def savefloat(f: str) -> float:
+    """Tries to cast a string to an float and return it. In case this fails,
+    it returns 0.0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0.0 back from this function,
+    you can not know whether it is really 0.0 or something went wrong."""
+    try:
+        return float(f)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
+
 
 _lgp_pdu_aux_fields: Mapping[str, tuple[Callable[[str], str | float | int], str]] = {
     # Index, Type, Factor, ID

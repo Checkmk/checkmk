@@ -7,12 +7,25 @@
 import time
 from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition, saveint
+from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render, StringTable
 
 Section = Mapping[str, Sequence[str]]
+
+
+def saveint(i: str) -> int:
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
+    try:
+        return int(i)
+    except (TypeError, ValueError):
+        return 0
 
 
 def parse_plesk_backups(string_table: StringTable) -> Section:

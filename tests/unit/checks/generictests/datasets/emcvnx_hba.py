@@ -33,7 +33,7 @@ checks = {
             [
                 (
                     0,
-                    "Read: 0 Blocks/s, Write: 0 Blocks/s",
+                    "Read: 0.00 Blocks/s, Write: 0.00 Blocks/s",
                     [
                         ("read_blocks", 0, None, None, None, None),
                         ("write_blocks", 0, None, None, None, None),

@@ -16,7 +16,7 @@
 # Default values for parameters that can be overriden.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import contains, IgnoreResultsError, render, SNMPTree, StringTable
@@ -40,15 +40,14 @@ def check_dell_powerconnect_cpu(item, params, info):
     if enabled != 1:
         return
 
-    cpu_util = saveint(onesecondperc)
-    if cpu_util < 0 or cpu_util > 100:
+    if onesecondperc < 0 or onesecondperc > 100:
         return
 
     # Darn. It again happend. Someone mixed up load and utilization.
     # We do *not* rename the performance variables here, in order not
     # to mix up existing RRDs...
     yield check_levels(
-        cpu_util,
+        onesecondperc,
         "util",
         params["levels"],
         human_readable_func=render.percent,
@@ -56,8 +55,8 @@ def check_dell_powerconnect_cpu(item, params, info):
         boundaries=(0, 100),
     )
     yield 0, "", [
-        ("util1", "%d%%" % saveint(oneminuteperc), params[0], params[1], 0, 100),
-        ("util5", "%d%%" % saveint(fiveminutesperc), params[0], params[1], 0, 100),
+        ("util1", oneminuteperc, None, None, 0, 100),
+        ("util5", fiveminutesperc, None, None, 0, 100),
     ]
 
 

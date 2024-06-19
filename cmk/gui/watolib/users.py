@@ -161,6 +161,7 @@ def make_user_audit_log_object(attributes: UserSpec) -> UserSpec:
 
     # Password hashes should not be logged
     obj.pop("password", None)
+    obj.pop("automation_secret", None)
 
     # Skip internal attributes
     obj.pop("user_scheme_serial", None)

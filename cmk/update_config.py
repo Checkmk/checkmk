@@ -386,7 +386,7 @@ class UpdateConfig:
             ),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
-            (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
+            (self._sanitize_audit_log, "Sanitize audit log (Werk #13330 & #17056)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
             (self._transform_groups, "Rewriting host, service or contact groups"),
             (
@@ -1756,25 +1756,26 @@ The following users in your current installation will become incompatible with C
                     )
 
     def _sanitize_audit_log(self) -> None:
+        log_dir = AuditLogStore.make_path().parent
+        self._sanitize_audit_log_passwords(log_dir)
+        self._sanitize_audit_log_secrets(log_dir)
+
+    def _sanitize_audit_log_passwords(self, log_dir: Path) -> None:
         # Use a file to determine if the sanitization was successfull. Otherwise it would be
         # run on every update and we want to tamper with the audit log as little as possible.
-        log_dir = AuditLogStore.make_path().parent
-
         update_flag = log_dir / ".werk-13330"
         if update_flag.is_file():
-            self._logger.log(VERBOSE, "Skipping (already done)")
+            self._logger.log(VERBOSE, "Skipping (Werk #13330 already done)")
             return
 
         logs = list(log_dir.glob("wato_audit.*"))
         if not logs:
-            self._logger.log(VERBOSE, "Skipping (nothing to do)")
+            self._logger.log(VERBOSE, "Skipping (Werk #13330 nothing to do)")
             update_flag.touch(mode=0o660)
             return
 
         backup_dir = Path.home() / "audit_log_backup"
-        backup_dir.mkdir(mode=0o750, exist_ok=True)
-        for l in logs:
-            shutil.copy(src=l, dst=backup_dir / l.name)
+        self._backup_source_logs(logs, backup_dir)
         self._logger.info(
             f"{tty.yellow}Wrote audit log backup to {backup_dir}. Please check if the audit log "
             f"in the GUI works as expected. In case of problems you can copy the backup files back to "
@@ -1803,6 +1804,68 @@ The following users in your current installation will become incompatible with C
         if not host_name:
             return ObjectRef(ObjectRefType.Folder, folder_path)
         return ObjectRef(ObjectRefType.Host, host_name)
+
+    def _sanitize_audit_log_secrets(self, audit_log_path: Path) -> None:
+        # Use a file to determine if the sanitization was successfull. Otherwise it would be
+        # run on every update and we want to tamper with the audit log as little as possible.
+        update_flag = audit_log_path / ".werk-17056"
+        if update_flag.is_file():
+            self._logger.log(VERBOSE, "Skipping (Werk #17056 already done)")
+            return
+
+        if not (audit_log_files := list(audit_log_path.glob("wato_audit.*"))):
+            self._logger.log(VERBOSE, "Skipping (Werk #17056 nothing to do)")
+            update_flag.touch(mode=0o660)
+            return
+
+        backup_dir = Path.home() / "audit_log_backup"
+        self._backup_source_logs(audit_log_files, backup_dir)
+        self._logger.info(
+            f"{tty.yellow}Wrote audit log backup to {backup_dir}. Please check "
+            f"if the audit log in the GUI works as expected. In case of problems "
+            f"you can copy the backup files back to {audit_log_path}. "
+            f"Please check the corresponding files in {audit_log_path} for "
+            f"any leftover automation secrets and remove them if necessary. If "
+            f"everything works as expected you can remove the backup. For further "
+            f"details please have a look at Werk #17056.{tty.normal}"
+        )
+
+        for file in audit_log_files:
+            file_path = audit_log_path / file.name
+            if not file.name.startswith("wato_audit"):
+                self._logger.log(VERBOSE, f"Skipping none audit log file {file_path}")
+                continue
+
+            with open(file_path, "rb") as log_file:
+                content = log_file.read().decode("utf-8")
+
+            if "automation_secret" not in content:
+                self._logger.log(VERBOSE, f"Nothing to sanitize in {file_path}")
+                continue
+
+            self._sanitize_log_secret(content, file.name, file_path)
+
+        update_flag.touch(mode=0o660)
+        self._logger.log(VERBOSE, f"Wrote sanitization flag file {update_flag}")
+
+    def _backup_source_logs(
+        self,
+        audit_log_files: list[Path],
+        backup_dir: Path,
+    ) -> None:
+        backup_dir.mkdir(mode=0o750, exist_ok=True)
+        for l in audit_log_files:
+            shutil.copy(src=l, dst=backup_dir / l.name)
+
+    def _sanitize_log_secret(self, content: str, filename: str, file_path: Path) -> None:
+        self._logger.log(VERBOSE, f"Start sanitize of {file_path}")
+
+        pattern = r'Value of "automation_secret" changed from "[^"]*" to "[^"]*"\.?(\\n)?'
+        modified_content = re.sub(pattern, "", content)
+        with open(file_path, "wb") as file:
+            file.write(modified_content.encode("utf-8"))
+
+        self._logger.log(VERBOSE, f"Finished sanitize of {file_path}")
 
     def _rename_discovered_host_label_files(self) -> None:
         config_cache = cmk.base.config.get_config_cache()

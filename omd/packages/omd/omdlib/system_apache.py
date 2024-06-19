@@ -134,7 +134,7 @@ def create_apache_hook(
 </IfModule>
 
 <Location /{site_name}>
-  ErrorDocument 503 "<meta http-equiv='refresh' content='60'><h1>Checkmk: Site Not Started</h1>You need to start this site in order to access the web interface.<!-- IE shows its own short useless error message otherwise: placeholder -->"
+  ErrorDocument 503 "<!DOCTYPE html><html lang='en'><head><title>Checkmk: Site Not Started</title><meta http-equiv='refresh' content='60'></head><body><h1>Checkmk: Site Not Started</h1>You need to start this site in order to access the web interface.</body></html>"
 </Location>
 """
         )

@@ -26,6 +26,9 @@ import cmk.fetchers._snmpscan as snmp_scan
 
 import cmk.base.api.agent_based.register as agent_based_register
 
+from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
+from cmk.plugins.collection.agent_based import aironet_clients
+
 
 @pytest.mark.parametrize(
     "name, oids_data, expected_result",
@@ -52,16 +55,6 @@ import cmk.base.api.agent_based.register as agent_based_register
         (
             "hwg_ste2",
             {".1.3.6.1.2.1.1.1.0": "contains STE2"},
-            True,
-        ),
-        (
-            "aironet_clients",
-            {".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.5251"},
-            False,
-        ),
-        (
-            "aironet_clients",
-            {".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.525"},
             True,
         ),
         # for one example do all 6 permutations:
@@ -109,7 +102,7 @@ import cmk.base.api.agent_based.register as agent_based_register
         ),
     ],
 )
-def test_evaluate_snmp_detection(
+def test_evaluate_snmp_detection_legacy(
     fix_plugin_legacy: FixPluginLegacy,
     name: str,
     oids_data: dict[str, str | None],
@@ -118,6 +111,34 @@ def test_evaluate_snmp_detection(
     assert (detect_spec := fix_plugin_legacy.check_info[name].detect) is not None
     assert (
         snmp_scan._evaluate_snmp_detection(detect_spec=detect_spec, oid_value_getter=oids_data.get)
+        is expected_result
+    )
+
+
+@pytest.mark.parametrize(
+    "plugin, oids_data, expected_result",
+    [
+        (
+            aironet_clients.snmp_section_aironet_clients,
+            {".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.5251"},
+            False,
+        ),
+        (
+            aironet_clients.snmp_section_aironet_clients,
+            {".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.525"},
+            True,
+        ),
+    ],
+)
+def test_evaluate_snmp_detection(
+    plugin: SNMPSection | SimpleSNMPSection,
+    oids_data: dict[str, str | None],
+    expected_result: bool,
+) -> None:
+    assert (
+        snmp_scan._evaluate_snmp_detection(
+            detect_spec=plugin.detect, oid_value_getter=oids_data.get
+        )
         is expected_result
     )
 

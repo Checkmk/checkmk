@@ -29,13 +29,13 @@ from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
-from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
+from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
 
 ContactList = list  # TODO Improve this
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
-Matcher = Callable[[EventRule, EventContext, bool], str | None]
+Matcher = Callable[[EventRule, EventContext, bool, TimeperiodSpecs], str | None]
 
 logger = logging.getLogger("cmk.base.events")
 
@@ -475,9 +475,10 @@ def apply_matchers(
     rule: EventRule,
     context: EnrichedEventContext | EventContext,
     analyse: bool,
+    all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     for matcher in matchers:
-        result = matcher(rule, context, analyse)
+        result = matcher(rule, context, analyse, all_timeperiods)
         if result is not None:
             return result
     return None
@@ -487,6 +488,7 @@ def event_match_rule(
     rule: EventRule,
     context: EventContext,
     define_servicegroups: Mapping[str, str],
+    all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
 ) -> str | None:
     return apply_matchers(
@@ -495,28 +497,32 @@ def event_match_rule(
             event_match_folder,
             event_match_hosttags,
             event_match_hostgroups,
-            lambda rule, context, analyse: event_match_servicegroups_fixed(
+            lambda rule, context, analyse, all_timeperiods: event_match_servicegroups_fixed(
                 rule,
                 context,
                 define_servicegroups=define_servicegroups,
+                _all_timeperiods=all_timeperiods,
                 _analyse=analyse,
             ),
-            lambda rule, context, analyse: event_match_exclude_servicegroups_fixed(
+            lambda rule, context, analyse, all_timeperiods: event_match_exclude_servicegroups_fixed(
                 rule,
                 context,
                 define_servicegroups=define_servicegroups,
+                _all_timeperiods=all_timeperiods,
                 _analyse=analyse,
             ),
-            lambda rule, context, analyse: event_match_servicegroups_regex(
+            lambda rule, context, analyse, all_timeperiods: event_match_servicegroups_regex(
                 rule,
                 context,
                 define_servicegroups=define_servicegroups,
+                _all_timeperiods=all_timeperiods,
                 _analyse=analyse,
             ),
-            lambda rule, context, analyse: event_match_exclude_servicegroups_regex(
+            lambda rule, context, analyse, all_timeperiods: event_match_exclude_servicegroups_regex(
                 rule,
                 context,
                 define_servicegroups=define_servicegroups,
+                _all_timeperiods=all_timeperiods,
                 _analyse=analyse,
             ),
             event_match_contacts,
@@ -533,6 +539,7 @@ def event_match_rule(
         rule,
         context,
         analyse,
+        all_timeperiods,
     )
 
 
@@ -540,6 +547,7 @@ def event_match_site(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_site" not in rule:
         return None
@@ -561,6 +569,7 @@ def event_match_folder(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_folder" in rule:
         mustfolder = rule["match_folder"]
@@ -592,6 +601,7 @@ def event_match_hosttags(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     required_tags = rule.get("match_hosttags")
     if required_tags:
@@ -606,6 +616,7 @@ def event_match_servicegroups_fixed(
     rule: EventRule,
     context: EventContext,
     define_servicegroups: Mapping[str, str],
+    _all_timeperiods: TimeperiodSpecs,
     _analyse: bool,
 ) -> str | None:
     return _event_match_servicegroups(
@@ -617,6 +628,7 @@ def event_match_servicegroups_regex(
     rule: EventRule,
     context: EventContext,
     define_servicegroups: Mapping[str, str],
+    _all_timeperiods: TimeperiodSpecs,
     _analyse: bool,
 ) -> str | None:
     return _event_match_servicegroups(
@@ -698,6 +710,7 @@ def event_match_exclude_servicegroups_fixed(
     rule: EventRule,
     context: EventContext,
     define_servicegroups: Mapping[str, str],
+    _all_timeperiods: TimeperiodSpecs,
     _analyse: bool,
 ) -> str | None:
     return _event_match_exclude_servicegroups(
@@ -709,6 +722,7 @@ def event_match_exclude_servicegroups_regex(
     rule: EventRule,
     context: EventContext,
     define_servicegroups: Mapping[str, str],
+    _all_timeperiods: TimeperiodSpecs,
     _analyse: bool,
 ) -> str | None:
     return _event_match_exclude_servicegroups(
@@ -760,6 +774,7 @@ def event_match_contacts(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_contacts" not in rule:
         return None
@@ -784,6 +799,7 @@ def event_match_contactgroups(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     required_groups = rule.get("match_contactgroups")
     if required_groups is None:
@@ -811,7 +827,12 @@ def event_match_contactgroups(
     )
 
 
-def event_match_hostgroups(rule: EventRule, context: EventContext, _analyse: bool) -> str | None:
+def event_match_hostgroups(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
+) -> str | None:
     required_groups = rule.get("match_hostgroups")
     if required_groups is not None:
         hgn = context.get("HOSTGROUPNAMES")
@@ -840,6 +861,7 @@ def event_match_hosts(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_hosts" in rule:
         hostlist = rule["match_hosts"]
@@ -855,6 +877,7 @@ def event_match_exclude_hosts(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if context["HOSTNAME"] in rule.get("match_exclude_hosts", []):
         return "The host's name '%s' is on the list of excluded hosts" % context["HOSTNAME"]
@@ -865,6 +888,7 @@ def event_match_services(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_services" in rule:
         if context["WHAT"] != "SERVICE":
@@ -883,6 +907,7 @@ def event_match_exclude_services(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if context["WHAT"] != "SERVICE":
         return None
@@ -900,6 +925,7 @@ def event_match_plugin_output(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_plugin_output" in rule:
         r = regex(rule["match_plugin_output"])
@@ -920,6 +946,7 @@ def event_match_checktype(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_checktype" in rule:
         if context["WHAT"] != "SERVICE":
@@ -941,6 +968,7 @@ def event_match_timeperiod(
     rule: EventRule,
     _context: EventContext,
     analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     # don't test on notification tests, in that case this is done within
     # notify.rbn_match_timeperiod
@@ -958,6 +986,7 @@ def event_match_servicelevel(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_sl" in rule:
         from_sl, to_sl = rule["match_sl"]

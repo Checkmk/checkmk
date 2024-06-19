@@ -68,7 +68,7 @@ from cmk.utils.paths import (
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
-from cmk.utils.timeperiod import timeperiod_active
+from cmk.utils.timeperiod import load_timeperiods, timeperiod_active
 from cmk.utils.version import edition_supports_nagvis
 
 from cmk.automations.results import (
@@ -2731,6 +2731,7 @@ class AutomationNotificationReplay(Automation):
             spooling=ConfigCache.notification_spooling(),
             backlog_size=config.notification_backlog,
             logging_level=ConfigCache.notification_logging_level(),
+            all_timeperiods=load_timeperiods(),
         )
         return NotificationReplayResult()
 
@@ -2766,6 +2767,7 @@ class AutomationNotificationAnalyse(Automation):
                 spooling=ConfigCache.notification_spooling(),
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
+                all_timeperiods=load_timeperiods(),
             )
         )
 
@@ -2802,6 +2804,7 @@ class AutomationNotificationTest(Automation):
                 spooling=ConfigCache.notification_spooling(),
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
+                all_timeperiods=load_timeperiods(),
                 dispatch=dispatch == "True",
             )
         )

@@ -38,7 +38,6 @@ from cmk.utils import log, store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
-from cmk.utils.i18n import _
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
@@ -78,7 +77,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.regex import regex
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
-from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active
+from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
 
 from cmk.base import events
 
@@ -165,27 +164,6 @@ def _initialize_logging(logging_level: int) -> None:
     log.setup_watched_file_logging_handler(notification_log)
 
 
-def _load_timeperiods() -> dict:
-    # TODO: Remove once the timeperiods are passed as args
-    path = Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
-    timeperiods = store.load_from_mk_file(path, "timeperiods", {})
-    timeperiods.update(
-        {
-            "24X7": {
-                "alias": _("Always"),
-                "monday": [("00:00", "24:00")],
-                "tuesday": [("00:00", "24:00")],
-                "wednesday": [("00:00", "24:00")],
-                "thursday": [("00:00", "24:00")],
-                "friday": [("00:00", "24:00")],
-                "saturday": [("00:00", "24:00")],
-                "sunday": [("00:00", "24:00")],
-            }
-        }
-    )
-    return timeperiods
-
-
 # .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -241,6 +219,7 @@ def do_notify(
     backlog_size: int,
     logging_level: int,
     keepalive: bool,
+    all_timeperiods: TimeperiodSpecs,
 ) -> int | None:
     # pylint: disable=too-many-branches
     global _log_to_stdout, notify_mode
@@ -282,6 +261,7 @@ def do_notify(
                 fallback_email=fallback_email,
                 fallback_format=fallback_format,
                 plugin_timeout=plugin_timeout,
+                all_timeperiods=all_timeperiods,
                 spooling=spooling,
                 backlog_size=backlog_size,
             )
@@ -321,6 +301,7 @@ def do_notify(
                 spooling=spooling,
                 backlog_size=backlog_size,
                 logging_level=logging_level,
+                all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "test":
             assert isinstance(args[0], dict)
@@ -338,6 +319,7 @@ def do_notify(
                 spooling=spooling,
                 backlog_size=backlog_size,
                 logging_level=logging_level,
+                all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "stdin":
             notify_notify(
@@ -354,6 +336,7 @@ def do_notify(
                 spooling=spooling,
                 backlog_size=backlog_size,
                 logging_level=logging_level,
+                all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "send-bulks":
             send_ripe_bulks(
@@ -374,6 +357,7 @@ def do_notify(
                 spooling=spooling,
                 backlog_size=backlog_size,
                 logging_level=logging_level,
+                all_timeperiods=all_timeperiods,
             )
 
     except Exception:
@@ -402,6 +386,7 @@ def notify_notify(
     plugin_timeout: int,
     backlog_size: int,
     logging_level: int,
+    all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
@@ -465,6 +450,7 @@ def notify_notify(
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             plugin_timeout=plugin_timeout,
+            all_timeperiods=all_timeperiods,
             analyse=analyse,
             dispatch=dispatch,
         )
@@ -483,6 +469,7 @@ def locally_deliver_raw_context(
     fallback_email: str,
     fallback_format: _FallbackFormat,
     plugin_timeout: int,
+    all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
@@ -499,6 +486,7 @@ def locally_deliver_raw_context(
             fallback_format=fallback_format,
             plugin_timeout=plugin_timeout,
             rules=rules,
+            all_timeperiods=all_timeperiods,
             analyse=analyse,
             dispatch=dispatch,
         )
@@ -526,6 +514,7 @@ def notification_replay_backlog(
     spooling: Literal["local", "remote", "both", "off"],
     backlog_size: int,
     logging_level: int,
+    all_timeperiods: TimeperiodSpecs,
 ) -> None:
     global notify_mode
     notify_mode = "replay"
@@ -545,6 +534,7 @@ def notification_replay_backlog(
         spooling=spooling,
         backlog_size=backlog_size,
         logging_level=logging_level,
+        all_timeperiods=all_timeperiods,
     )
 
 
@@ -563,6 +553,7 @@ def notification_analyse_backlog(
     spooling: Literal["local", "remote", "both", "off"],
     backlog_size: int,
     logging_level: int,
+    all_timeperiods: TimeperiodSpecs,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
@@ -582,6 +573,7 @@ def notification_analyse_backlog(
         spooling=spooling,
         backlog_size=backlog_size,
         logging_level=logging_level,
+        all_timeperiods=all_timeperiods,
         analyse=True,
     )
 
@@ -601,6 +593,7 @@ def notification_test(
     spooling: Literal["local", "remote", "both", "off"],
     backlog_size: int,
     logging_level: int,
+    all_timeperiods: TimeperiodSpecs,
     dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
@@ -626,6 +619,7 @@ def notification_test(
         spooling=spooling,
         backlog_size=backlog_size,
         logging_level=logging_level,
+        all_timeperiods=all_timeperiods,
         analyse=True,
         dispatch=dispatch,
     )
@@ -713,6 +707,7 @@ def notify_rulebased(
     fallback_email: str,
     fallback_format: _FallbackFormat,
     plugin_timeout: int,
+    all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo:
@@ -735,7 +730,11 @@ def notify_rulebased(
         contact_info = _get_contact_info_text(rule)
 
         why_not = rbn_match_rule(
-            rule, enriched_context, define_servicegroups=define_servicegroups, analyse=analyse
+            rule,
+            enriched_context,
+            define_servicegroups=define_servicegroups,
+            analyse=analyse,
+            all_timeperiods=all_timeperiods,
         )
         if why_not:
             logger.log(log.VERBOSE, contact_info)
@@ -1166,6 +1165,7 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
 def rbn_match_rule(
     rule: EventRule,
     enriched_context: EnrichedEventContext,
+    all_timeperiods: TimeperiodSpecs,
     *,
     define_servicegroups: Mapping[str, str],
     analyse: bool = False,
@@ -1173,10 +1173,11 @@ def rbn_match_rule(
     return events.apply_matchers(
         [
             rbn_match_rule_disabled,
-            lambda rule, context, analyse: events.event_match_rule(
+            lambda rule, context, analyse, all_timeperiods: events.event_match_rule(
                 rule,
                 context,
                 define_servicegroups=define_servicegroups,
+                all_timeperiods=all_timeperiods,
                 analyse=analyse,
             ),
             rbn_match_escalation,
@@ -1192,10 +1193,16 @@ def rbn_match_rule(
         rule,
         enriched_context,
         analyse,
+        all_timeperiods,
     )
 
 
-def rbn_match_timeperiod(rule: EventRule, context: EventContext, analyse: bool) -> str | None:
+def rbn_match_timeperiod(
+    rule: EventRule,
+    context: EventContext,
+    analyse: bool,
+    all_timeperiods: TimeperiodSpecs,
+) -> str | None:
     # This test is only done on notification tests, otherwise
     # events.event_match_timeperiod() is used
     if not analyse:
@@ -1207,7 +1214,6 @@ def rbn_match_timeperiod(rule: EventRule, context: EventContext, analyse: bool) 
     if timeperiod_name == "24X7":
         return None
 
-    all_timeperiods = _load_timeperiods()
     if "MICROTIME" in context:
         timestamp = float(context["MICROTIME"]) / 1000000.0
     else:
@@ -1229,6 +1235,7 @@ def rbn_match_rule_disabled(
     rule: EventRule,
     _context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     return "This rule is disabled" if rule.get("disabled") else None
 
@@ -1237,6 +1244,7 @@ def rbn_match_escalation(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_escalation" in rule:
         from_number, to_number = rule["match_escalation"]
@@ -1257,6 +1265,7 @@ def rbn_match_escalation_throtte(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_escalation_throttle" in rule:
         # We do not want to suppress recovery notifications.
@@ -1283,6 +1292,7 @@ def rbn_match_host_event(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_host_event" in rule:
         if context["WHAT"] != "HOST":
@@ -1302,6 +1312,7 @@ def rbn_match_service_event(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_service_event" in rule:
         if context["WHAT"] != "SERVICE":
@@ -1481,6 +1492,7 @@ def rbn_match_notification_comment(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_notification_comment" in rule:
         r = regex(rule["match_notification_comment"])
@@ -1496,6 +1508,7 @@ def rbn_match_hostlabels(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_hostlabels" in rule:
         return _rbn_handle_labels(rule, context, "host")
@@ -1507,6 +1520,7 @@ def rbn_match_servicelabels(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_servicelabels" in rule:
         return _rbn_handle_labels(rule, context, "service")
@@ -1538,6 +1552,7 @@ def rbn_match_event_console(
     rule: EventRule,
     context: EventContext,
     _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     if "match_ec" in rule:
         match_ec = rule["match_ec"]
@@ -1861,6 +1876,7 @@ def handle_spoolfile(
     fallback_email: str,
     fallback_format: _FallbackFormat,
     plugin_timeout: int,
+    all_timeperiods: TimeperiodSpecs,
     spooling: Literal["local", "remote", "both", "off"],
     backlog_size: int,
 ) -> int:
@@ -1911,6 +1927,7 @@ def handle_spoolfile(
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             spooling=spooling,
+            all_timeperiods=all_timeperiods,
         )
         # TODO: It is a bug that we don't transport result information and monitoring history
         # entries back to the origin site. The intermediate or final results should be sent back to

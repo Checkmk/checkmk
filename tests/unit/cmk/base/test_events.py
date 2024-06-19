@@ -428,6 +428,7 @@ def test_match_host_tags(
             rule=event_rule,
             context=enriched_context,
             _analyse=False,
+            _all_timeperiods={},
         )
         == expected
     )

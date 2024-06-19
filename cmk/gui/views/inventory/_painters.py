@@ -324,12 +324,12 @@ def _paint_host_inventory_attribute(
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
     return SDItem(
-        key,
-        title,
-        attributes.pairs.get(key),
-        attributes.retentions.get(key),
-        paint_function,
-        theme.detect_icon_path("svc_problems", "icon_"),
+        key=key,
+        title=title,
+        value=attributes.pairs.get(key),
+        retention_interval=attributes.retentions.get(key),
+        paint_function=paint_function,
+        icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
     ).compute_cell_spec()
 
 
@@ -393,12 +393,12 @@ def _paint_host_inventory_column(
     if ident not in row:
         return "", ""
     return SDItem(
-        SDKey(ident),
-        title,
-        row[ident],
-        row.get("_".join([ident, "retention_interval"])),
-        paint_function,
-        theme.detect_icon_path("svc_problems", "icon_"),
+        key=SDKey(ident),
+        title=title,
+        value=row[ident],
+        retention_interval=row.get("_".join([ident, "retention_interval"])),
+        paint_function=paint_function,
+        icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
     ).compute_cell_spec()
 
 

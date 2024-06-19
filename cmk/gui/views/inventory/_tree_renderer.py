@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Iterable, NamedTuple
+from typing import Iterable
 
 from livestatus import SiteId
 
@@ -49,7 +49,7 @@ def make_table_view_name_of_host(view_name: str) -> str:
     return f"{view_name}_of_host"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Column:
     key: SDKey
     title: str
@@ -61,7 +61,12 @@ def _make_columns(
     keys: Iterable[SDKey], key_columns: Sequence[SDKey], hint: NodeDisplayHint
 ) -> Sequence[Column]:
     return [
-        Column(c, h.title, h.paint_function, f"{c}*" if c in key_columns else c)
+        Column(
+            key=c,
+            title=h.title,
+            paint_function=h.paint_function,
+            key_info=f"{c}*" if c in key_columns else c,
+        )
         for c in list(hint.columns) + sorted(set(keys) - set(hint.columns))
         for h in (hint.get_column_hint(c),)
     ]
@@ -76,7 +81,8 @@ class _MinType:
         return self is other
 
 
-class SDItem(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class SDItem:
     key: SDKey
     title: str
     value: SDValue
@@ -130,12 +136,12 @@ def _sort_pairs(
     sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
     return [
         SDItem(
-            k,
-            h.title,
-            attributes.pairs[k],
-            attributes.retentions.get(k),
-            h.paint_function,
-            icon_path_svc_problems,
+            key=k,
+            title=h.title,
+            value=attributes.pairs[k],
+            retention_interval=attributes.retentions.get(k),
+            paint_function=h.paint_function,
+            icon_path_svc_problems=icon_path_svc_problems,
         )
         for k in sorted_keys
         if k in attributes.pairs
@@ -149,12 +155,12 @@ def _sort_rows(
     def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
         return [
             SDItem(
-                c.key,
-                c.title,
-                row.get(c.key),
-                table.retentions.get(ident, {}).get(c.key),
-                c.paint_function,
-                icon_path_svc_problems,
+                key=c.key,
+                title=c.title,
+                value=row.get(c.key),
+                retention_interval=table.retentions.get(ident, {}).get(c.key),
+                paint_function=c.paint_function,
+                icon_path_svc_problems=icon_path_svc_problems,
             )
             for c in columns
         ]
@@ -171,7 +177,8 @@ def _sort_rows(
     ]
 
 
-class _SDDeltaItem(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class _SDDeltaItem:
     key: SDKey
     title: str
     old: SDValue
@@ -206,11 +213,11 @@ def _sort_delta_pairs(
     sorted_keys = list(hint.attributes) + sorted(set(attributes.pairs) - set(hint.attributes))
     return [
         _SDDeltaItem(
-            k,
-            h.title,
-            attributes.pairs[k].old,
-            attributes.pairs[k].new,
-            h.paint_function,
+            key=k,
+            title=h.title,
+            old=attributes.pairs[k].old,
+            new=attributes.pairs[k].new,
+            paint_function=h.paint_function,
         )
         for k in sorted_keys
         if k in attributes.pairs
@@ -223,7 +230,13 @@ def _sort_delta_rows(
 ) -> Sequence[Sequence[_SDDeltaItem]]:
     def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
         return [
-            _SDDeltaItem(c.key, c.title, v.old, v.new, c.paint_function)
+            _SDDeltaItem(
+                key=c.key,
+                title=c.title,
+                old=v.old,
+                new=v.new,
+                paint_function=c.paint_function,
+            )
             for c in columns
             for v in (row.get(c.key) or SDDeltaValue(None, None),)
         ]

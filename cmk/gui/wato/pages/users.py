@@ -12,7 +12,6 @@ from typing import cast, Literal, overload
 
 from cmk.utils import render
 from cmk.utils.crypto.password import Password
-from cmk.utils.timeperiod import load_timeperiods
 from cmk.utils.user import UserId
 from cmk.utils.version import Edition, edition
 
@@ -90,6 +89,7 @@ from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import (
     delete_users,

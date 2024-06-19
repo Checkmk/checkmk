@@ -18,7 +18,6 @@ from icalendar.prop import vDDDTypes  # type: ignore[import-untyped]
 from cmk.utils import dateutils
 from cmk.utils.timeperiod import (
     builtin_timeperiods,
-    load_timeperiods,
     timeperiod_spec_alias,
     TimeperiodName,
     TimeperiodSpec,
@@ -62,6 +61,7 @@ from cmk.gui.watolib import groups
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
+from cmk.gui.watolib.timeperiods import load_timeperiods
 
 logger = logging.getLogger(__name__)
 

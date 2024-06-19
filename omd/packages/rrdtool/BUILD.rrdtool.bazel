@@ -50,6 +50,14 @@ configure_make(
     },
     install_prefix = "$INSTALLDIR",
     lib_source = ":all_srcs",
+    linkopts = [
+        "-lcairo",
+        "-lglib-2.0",
+        "-lgobject-2.0",
+        "-lpango-1.0",
+        "-lpangocairo-1.0",
+        "-lpng",
+    ],
     out_binaries = [
         "rrdcached",
         "rrdcreate",

@@ -77,7 +77,10 @@ void LogCache::addToIndex(const std::filesystem::path &path, bool watch) {
 //
 // The parameters to this method reflect the current query, not the messages
 // that have just been loaded.
-void LogCache::logLineHasBeenAdded(Logfile *log_file, unsigned log_classes) {
+void LogCache::logLineHasBeenAdded(Logfile *log_file,
+                                   std::bitset<32> log_entry_classes_to_keep) {
+    const unsigned log_classes =
+        log_entry_classes_to_keep.to_ulong();  // TODO(sp)
     if (++num_cached_log_messages_ <= core_->maxCachedMessages()) {
         return;  // current message count still allowed, everything ok
     }

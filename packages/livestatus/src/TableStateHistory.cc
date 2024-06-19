@@ -5,6 +5,7 @@
 
 #include "livestatus/TableStateHistory.h"
 
+#include <bitset>
 #include <compare>
 #include <cstddef>
 #include <optional>
@@ -197,11 +198,16 @@ std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 namespace {
 const Logfile::map_type *getEntries(Logfile *logfile,
                                     size_t max_lines_per_log_file) {
-    constexpr unsigned classmask =
-        (1U << static_cast<int>(LogEntry::Class::alert)) |
-        (1U << static_cast<int>(LogEntry::Class::program)) |
-        (1U << static_cast<int>(LogEntry::Class::state));
-    return logfile->getEntriesFor(max_lines_per_log_file, classmask);
+    return logfile->getEntriesFor({
+        .max_lines_per_log_file = max_lines_per_log_file,
+        .log_entry_classes =
+            std::bitset<32>{}
+                .set(static_cast<int>(LogEntry::Class::alert))
+                .set(static_cast<int>(LogEntry::Class::program))
+                .set(static_cast<int>(LogEntry::Class::state)),
+        .since = {},  // TODO(sp)
+        .until = {},  // TODO(sp)
+    });
 }
 
 void getPreviousLogentry(const LogFiles &log_files,

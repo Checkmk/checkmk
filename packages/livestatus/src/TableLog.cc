@@ -203,9 +203,7 @@ void for_each_log_entry(
             }
 
             while (true) {
-                const auto *entries = it->second->getEntriesFor(
-                    log_filter.max_lines_per_log_file,
-                    log_filter.log_entry_classes.to_ulong());  // TODO(sp)
+                const auto *entries = it->second->getEntriesFor(log_filter);
                 if (!Logfile::processLogEntries(process_log_entry, entries,
                                                 log_filter)) {
                     break;  // end of time range found

@@ -62,7 +62,8 @@ public:
     // Used for a confusing fragile protocol between LogCache and Logfile to
     // keep the number of cached log entries under control. Used by
     // Logfile::loadRange()
-    void logLineHasBeenAdded(Logfile *log_file, unsigned log_classes);
+    void logLineHasBeenAdded(Logfile *log_file,
+                             std::bitset<32> log_entry_classes_to_keep);
 
     // Call the given function with a locked and updated LogCache, keeping the
     // lock and the update function local.

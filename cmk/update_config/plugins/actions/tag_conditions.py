@@ -19,7 +19,7 @@ class UpdateNotificationTagConditions(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         tag_groups, aux_tag_list = get_tag_config()
         for rule in (notification_rules := NotificationRuleConfigFile().load_for_modification()):
-            if not "match_hosttags" in rule:
+            if "match_hosttags" not in rule:
                 continue
 
             if isinstance(host_tags := rule["match_hosttags"], dict):

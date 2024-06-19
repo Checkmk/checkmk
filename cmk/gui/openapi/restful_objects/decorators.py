@@ -277,7 +277,7 @@ class Endpoint:
         output_empty: bool = False,
         error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]] | None = None,
         response_schema: RawParameter | None = None,
-        request_schema: RawParameter | None = None,
+        request_schema: type[Schema] | None = None,
         convert_response: bool = True,
         skip_locking: bool = False,
         path_params: Sequence[RawParameter] | None = None,
@@ -917,14 +917,11 @@ class Endpoint:
             )
         return path
 
-    def make_url(self, parameter_values: dict[str, Any]):  # type: ignore[no-untyped-def]
+    def make_url(self, parameter_values: dict[str, Any]) -> str:
         return self.path.format(**parameter_values)
 
 
-def _verify_parameters(  # type: ignore[no-untyped-def]
-    path: str,
-    path_schema: type[Schema] | None,
-):
+def _verify_parameters(path: str, path_schema: type[Schema] | None) -> None:
     """Verifies matching of parameters to the placeholders used in an URL-Template
 
     This works both ways, ensuring that no parameter is supplied which is then not used and that

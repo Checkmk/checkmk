@@ -11,6 +11,7 @@ be referenced in the result of _build_code_templates.
 import functools
 import json
 import re
+from collections.abc import Sequence
 from typing import Any, cast, NamedTuple, TypeAlias
 
 import jinja2
@@ -22,8 +23,9 @@ from cmk.utils.site import omd_site
 
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
+from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
-from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
+from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter, RawParameter
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
@@ -285,7 +287,7 @@ TEMPLATES = {
 }
 
 
-def _to_env(value) -> str:  # type: ignore[no-untyped-def]
+def _to_env(value: list | dict | str) -> str:
     if isinstance(value, (list, dict)):
         return json.dumps(value)
 
@@ -439,12 +441,12 @@ def httpie_request_body(examples: JsonObject) -> str:
     return "\\\n".join(_httpie_request_body_lines("", examples, []))
 
 
-def code_samples(  # type: ignore[no-untyped-def]
-    spec,
-    endpoint,
-    header_params,
-    path_params,
-    query_params,
+def code_samples(
+    spec: APISpec,
+    endpoint: Endpoint,
+    header_params: Sequence[RawParameter],
+    path_params: Sequence[RawParameter],
+    query_params: Sequence[RawParameter],
 ) -> list[CodeSample]:
     """Create a list of rendered code sample Objects
 
@@ -491,7 +493,7 @@ def code_samples(  # type: ignore[no-untyped-def]
                     request_schema=schema,
                     request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
                     formatted_if_statement=formatted_if_statement_for_responses(
-                        endpoint.expected_status_codes,
+                        list(endpoint.expected_status_codes),
                         endpoint.content_type == "application/octet-stream",
                         example.label,
                     ),
@@ -708,7 +710,7 @@ def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]
 
 
 @jinja2.pass_context
-def fill_out_parameters(ctx: dict[str, Any], val) -> str:  # type: ignore[no-untyped-def]
+def fill_out_parameters(ctx: dict[str, Any], val: str) -> str:
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

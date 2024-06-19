@@ -238,9 +238,7 @@ def _serve_time_period(time_period: DomainObject) -> Response:
     return constructors.response_with_etag_created_from_dict(response, timeperiod_dict)
 
 
-def _to_api_format(  # type: ignore[no-untyped-def]
-    time_period: TimeperiodSpec, builtin_period: bool = False
-):
+def _to_api_format(time_period: TimeperiodSpec, builtin_period: bool = False) -> dict[str, Any]:
     """Convert time_period to API format as specified in request schema
 
     Args:

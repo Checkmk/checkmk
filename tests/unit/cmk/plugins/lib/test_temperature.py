@@ -335,7 +335,8 @@ def test_check_temperature_simple() -> None:
         temperature.check_temperature(
             23.0,
             None,
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -355,7 +356,8 @@ def test_check_temperature_user_levels_ok() -> None:
             {
                 "levels": (26.0, 30.0),
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -375,7 +377,8 @@ def test_check_temperature_user_levels_warn_upper() -> None:
             {
                 "levels": (23.0, 30.0),
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -395,7 +398,8 @@ def test_check_temperature_user_levels_crit_upper() -> None:
             {
                 "levels": (23.0, 30.0),
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -415,7 +419,8 @@ def test_check_temperature_user_levels_warn_lower() -> None:
             {
                 "levels_lower": (0.0, -15.0),
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -435,7 +440,8 @@ def test_check_temperature_user_levels_crit_lower() -> None:
             {
                 "levels_lower": (0.0, -15.0),
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -455,7 +461,8 @@ def test_check_temperature_output_unit() -> None:
             {
                 "output_unit": "f",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -475,7 +482,8 @@ def test_check_temperature_input_unit() -> None:
             {
                 "input_unit": "f",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -493,7 +501,8 @@ def test_check_temperature_device_levels_ok() -> None:
         temperature.check_temperature(
             10.0,
             None,
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(54.0, 70.0),
         )
     )
@@ -512,7 +521,8 @@ def test_check_temperature_device_levels_warn_upper() -> None:
         temperature.check_temperature(
             10.0,
             None,
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
         )
     )
@@ -531,7 +541,8 @@ def test_check_temperature_device_levels_crit_upper() -> None:
         temperature.check_temperature(
             18.0,
             None,
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
         )
     )
@@ -550,7 +561,8 @@ def test_check_temperature_device_levels_warn_lower() -> None:
         temperature.check_temperature(
             0.0,
             None,
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         )
@@ -570,7 +582,8 @@ def test_check_temperature_device_levels_crit_lower() -> None:
         temperature.check_temperature(
             -20.0,
             None,
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         )
@@ -594,7 +607,8 @@ def test_check_temperature_use_user_levels() -> None:
                 "levels_lower": (-25.0, -30.0),
                 "device_levels_handling": "usr",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         )
@@ -615,7 +629,8 @@ def test_check_temperature_use_device_levels() -> None:
                 "levels_lower": (-25.0, -30.0),
                 "device_levels_handling": "dev",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         )
@@ -636,7 +651,8 @@ def test_check_temperature_default_device_levels() -> None:
                 "levels_lower": (-25.0, -30.0),
                 "device_levels_handling": "devdefault",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         )
@@ -659,7 +675,8 @@ def test_check_temperature_default_user_levels() -> None:
                 "levels_lower": (-25.0, -30.0),
                 "device_levels_handling": "usrdefault",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -679,7 +696,8 @@ def test_check_temperature_use_device_default_no_levels() -> None:
             {
                 "device_levels_handling": "devdefault",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -699,7 +717,8 @@ def test_check_temperature_use_user_default_device_levels() -> None:
             {
                 "device_levels_handling": "usrdefault",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels_lower=(1.0, -15.0),
         )
     )
@@ -721,7 +740,8 @@ def test_check_temperature_use_user_default_user_levels() -> None:
                 "levels_lower": (-25.0, -30.0),
                 "device_levels_handling": "usrdefault",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         )
@@ -743,7 +763,8 @@ def test_check_temperature_use_user_default_no_levels() -> None:
             {
                 "device_levels_handling": "usrdefault",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         )
     )
     assert results == [
@@ -765,7 +786,8 @@ def test_check_temperature_show_worst() -> None:
                 "levels_lower": (-25.0, -30.0),
                 "device_levels_handling": "worst",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         )
@@ -786,7 +808,8 @@ def test_check_temperature_show_best() -> None:
                 "levels_lower": (-25.0, -30.0),
                 "device_levels_handling": "best",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         )
@@ -807,7 +830,8 @@ def test_check_temperature_device_status_override_best() -> None:
                 "levels_lower": (0.0, -10.0),
                 "device_levels_handling": "best",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(-25.0, -30.0),
             dev_status=1,
@@ -831,7 +855,8 @@ def test_check_temperature_device_status_override_worst() -> None:
                 "levels_lower": (0.0, -10.0),
                 "device_levels_handling": "worst",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
             dev_status=2,
@@ -855,7 +880,8 @@ def test_check_temperature_device_status_override_ok() -> None:
                 "levels_lower": (0.0, -10.0),
                 "device_levels_handling": "best",
             },
-            value_store_tuple=(UNIQUE_NAME, mock_value_store()),
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(20.0, 25.0),
             dev_levels_lower=(1.0, -15.0),
             dev_status=0,
@@ -883,7 +909,8 @@ def test_check_temperature_ignores_trend_computation() -> None:
             temperature.check_temperature(
                 0.0,
                 trend_params,
-                value_store_tuple=(UNIQUE_NAME, value_store),
+                unique_name=UNIQUE_NAME,
+                value_store=value_store,
             )
         )
     with contextlib.suppress(GetRateError), freezegun.freeze_time("1970-01-01 00:15:00"):
@@ -891,7 +918,8 @@ def test_check_temperature_ignores_trend_computation() -> None:
             temperature.check_temperature(
                 10.0,
                 trend_params,
-                value_store_tuple=(UNIQUE_NAME, value_store),
+                unique_name=UNIQUE_NAME,
+                value_store=value_store,
             )
         )
     with freezegun.freeze_time("1970-01-01 00:30:00"):
@@ -899,7 +927,8 @@ def test_check_temperature_ignores_trend_computation() -> None:
             temperature.check_temperature(
                 20.0,
                 trend_params,
-                value_store_tuple=(UNIQUE_NAME, value_store),
+                unique_name=UNIQUE_NAME,
+                value_store=value_store,
             )
         )
 
@@ -912,3 +941,24 @@ def test_check_temperature_ignores_trend_computation() -> None:
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    "unique_name, value_store",
+    [
+        (None, mock_value_store()),
+        ("unique_name", None),
+    ],
+)
+def test_check_temperature_either_unique_name_or_value_store(
+    unique_name: str | None, value_store: MutableMapping[str, Any] | None
+) -> None:
+    with pytest.raises(ValueError):
+        list(
+            temperature.check_temperature(
+                20.0,
+                {},
+                unique_name=unique_name,
+                value_store=value_store,
+            )
+        )

@@ -30,7 +30,8 @@ def check_cmciii_temp_in_out(
     yield from check_temperature(
         entry["Value"],
         params,
-        value_store_tuple=("cmciii.temp_in_out.%s" % item, get_value_store()),
+        unique_name="cmciii.temp_in_out.%s" % item,
+        value_store=get_value_store(),
     )
 
 

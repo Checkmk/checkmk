@@ -101,7 +101,8 @@ def check_entity_sensors_temp(
     yield from check_temperature(
         sensor_reading.reading,
         params,
-        value_store_tuple=("temp", get_value_store()),
+        unique_name="temp",
+        value_store=get_value_store(),
         dev_unit=sensor_reading.unit,
         dev_status=int(sensor_reading.state),
         dev_status_name=sensor_reading.status_descr,

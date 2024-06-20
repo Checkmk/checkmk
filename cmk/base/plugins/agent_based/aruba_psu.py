@@ -186,7 +186,8 @@ def check_aruba_psu_temp(
     yield from check_temperature(
         reading=psu.temperature,
         params=params,
-        value_store_tuple=(item, get_value_store()),
+        unique_name=item,
+        value_store=get_value_store(),
     )
 
 

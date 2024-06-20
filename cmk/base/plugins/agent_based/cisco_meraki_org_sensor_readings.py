@@ -117,7 +117,8 @@ def check_sensor_temperature(
         yield from check_temperature(
             reading=section.temperature.temperature,
             params=params,
-            value_store_tuple=(item, get_value_store()),
+            unique_name=item,
+            value_store=get_value_store(),
         )
 
     if section.temperature.timestamp is not None:

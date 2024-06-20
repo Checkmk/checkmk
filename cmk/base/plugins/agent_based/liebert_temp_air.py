@@ -90,7 +90,8 @@ def _check_liebert_temp_air(
     yield from check_temperature(
         temperature_to_celsius(value_float, unit),
         params,
-        value_store_tuple=("check_liebert_temp_air.%s" % item, value_store),
+        unique_name="check_liebert_temp_air.%s" % item,
+        value_store=value_store,
     )
 
 

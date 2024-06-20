@@ -31,7 +31,7 @@ import livestatus
 import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty
+from cmk.utils import config_warnings, ip_lookup, log, man_pages, store, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
@@ -41,6 +41,7 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
+from cmk.utils.i18n import _
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -68,7 +69,7 @@ from cmk.utils.paths import (
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
-from cmk.utils.timeperiod import load_timeperiods, timeperiod_active
+from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.version import edition_supports_nagvis
 
 from cmk.automations.results import (
@@ -185,6 +186,26 @@ from cmk.discover_plugins import discover_families, PluginGroup
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
+
+
+def load_timeperiods() -> dict:
+    path = Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
+    timeperiods = store.load_from_mk_file(path, "timeperiods", {})
+    timeperiods.update(
+        {
+            "24X7": {
+                "alias": _("Always"),
+                "monday": [("00:00", "24:00")],
+                "tuesday": [("00:00", "24:00")],
+                "wednesday": [("00:00", "24:00")],
+                "thursday": [("00:00", "24:00")],
+                "friday": [("00:00", "24:00")],
+                "saturday": [("00:00", "24:00")],
+                "sunday": [("00:00", "24:00")],
+            }
+        }
+    )
+    return timeperiods
 
 
 def _schedule_discovery_check(host_name: HostName) -> None:

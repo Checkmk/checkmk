@@ -41,6 +41,7 @@ from cmk.utils.diagnostics import (
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
+from cmk.utils.i18n import _
 from cmk.utils.log import console, section
 from cmk.utils.resulttype import Result
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
@@ -56,7 +57,6 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
-from cmk.utils.timeperiod import load_timeperiods
 
 from cmk.snmplib import (
     get_single_oid,
@@ -152,6 +152,26 @@ from ._localize import do_localize
 #   '----------------------------------------------------------------------'
 
 _verbosity = 0
+
+
+def load_timeperiods() -> dict:
+    path = Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
+    timeperiods = store.load_from_mk_file(path, "timeperiods", {})
+    timeperiods.update(
+        {
+            "24X7": {
+                "alias": _("Always"),
+                "monday": [("00:00", "24:00")],
+                "tuesday": [("00:00", "24:00")],
+                "wednesday": [("00:00", "24:00")],
+                "thursday": [("00:00", "24:00")],
+                "friday": [("00:00", "24:00")],
+                "saturday": [("00:00", "24:00")],
+                "sunday": [("00:00", "24:00")],
+            }
+        }
+    )
+    return timeperiods
 
 
 def print_(txt: str) -> None:

@@ -81,7 +81,7 @@ def check_jolokia_jvm_garbagecollectors(item, params, parsed):
     )
 
     yield check_levels(
-        ctime_rate * 10.0,  # ms/s -> %
+        ctime_rate * 0.1,  # ms/s -> %
         "jvm_garbage_collection_time",
         params.get("collection_time"),
         unit="%",

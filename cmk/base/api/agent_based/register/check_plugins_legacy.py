@@ -106,7 +106,7 @@ def _create_check_function(
 
     # 2) unwrap parameters and ensure it is a generator of valid instances
     @functools.wraps(sig_function)
-    def check_result_generator(*args, **kwargs) -> CheckResult:  # type: ignore[no-untyped-def]
+    def check_result_generator(*args: Any, **kwargs: Any) -> CheckResult:
         assert not args, "pass arguments as keywords to check function"
         assert "params" in kwargs, f"'params' is missing in kwargs: {kwargs!r}"
         parameters = kwargs["params"]

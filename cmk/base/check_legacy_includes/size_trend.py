@@ -56,15 +56,15 @@ def _check_shrinking(
     return state, problem
 
 
-def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
-    check,
-    item,
-    resource,
-    levels,
-    used_mb,
+def size_trend(  # pylint: disable=too-many-branches
+    check: str,
+    item: str,
+    resource: str,
+    levels: dict,
+    used_mb: float,
     size_mb: float,
-    timestamp=None,
-):  # pylint: disable=function-redefined
+    timestamp: float | None = None,
+) -> tuple[int, str, list]:  # pylint: disable=function-redefined
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.

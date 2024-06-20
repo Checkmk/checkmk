@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, ServiceCheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
     get_value_store,
@@ -128,9 +130,12 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
 
 
 # ALREADY MIGRATED
-def check_cpu_util_unix(  # type: ignore[no-untyped-def]
-    values: CPUInfo, params, cores=None, values_counter=True
-):
+def check_cpu_util_unix(
+    values: CPUInfo,
+    params: Mapping[str, Any],
+    cores: Sequence[CPUInfo] | None = None,
+    values_counter: bool = True,
+) -> Iterable[ServiceCheckResult]:
     this_time = time.time()
     value_store = get_value_store()
 

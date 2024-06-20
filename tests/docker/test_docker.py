@@ -193,7 +193,7 @@ def test_start_enable_mail(client: docker.DockerClient) -> None:
 
 
 @pytest.mark.skipif(
-    version_from_env().is_saas_edition(), reason="Saas edition requires cognito config"
+    version_from_env().is_saas_edition(), reason="SaaS edition requires cognito config"
 )
 def test_http_access_base_redirects_work(checkmk: docker.models.containers.Container) -> None:
     ip = get_container_ip(checkmk)
@@ -300,7 +300,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
 
 
 @pytest.mark.skipif(
-    version_from_env().is_saas_edition(), reason="Saas edition replaced the login screen"
+    version_from_env().is_saas_edition(), reason="SaaS edition replaced the login screen"
 )
 def test_http_access_login_screen(checkmk: docker.models.containers.Container) -> None:
     ip = get_container_ip(checkmk)
@@ -315,8 +315,8 @@ def test_http_access_login_screen(checkmk: docker.models.containers.Container) -
     assert 'name="_login"' in response.text, "Login field not found!"
 
 
-@pytest.mark.skip(reason="Saas edition requires cognito config")
-# @pytest.mark.skipif(not version_from_env().is_saas_edition(), reason="Saas check saas login")
+@pytest.mark.skip(reason="SaaS edition requires cognito config")
+# @pytest.mark.skipif(not version_from_env().is_saas_edition(), reason="SaaS check saas login")
 def test_http_access_login_screen_saas(checkmk: docker.models.containers.Container) -> None:
     ip = get_container_ip(checkmk)
 

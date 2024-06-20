@@ -36,7 +36,7 @@ class Edition(_EditionValue, enum.Enum):
     CRE = _EditionValue("cre", "raw", "Checkmk Raw Edition")
     CEE = _EditionValue("cee", "enterprise", "Checkmk Enterprise Edition")
     CCE = _EditionValue("cce", "cloud", "Checkmk Cloud Edition")
-    CSE = _EditionValue("cse", "saas", "Checkmk Saas Edition")
+    CSE = _EditionValue("cse", "saas", "Checkmk SaaS Edition")
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
 
     @classmethod

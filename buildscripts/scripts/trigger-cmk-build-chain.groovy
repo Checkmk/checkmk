@@ -129,7 +129,7 @@ def main() {
     }
 
     success &= smart_stage(
-            name: "Trigger Saas Gitlab jobs",
+            name: "Trigger SaaS Gitlab jobs",
             condition: success && edition == "saas",
             raiseOnError: false,) {
         build(job: "${base_folder}/trigger-saas-gitlab", parameters: job_parameters);

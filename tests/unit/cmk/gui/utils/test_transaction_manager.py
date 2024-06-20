@@ -28,7 +28,7 @@ def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager, None
     def save_transids(transids: list[str]) -> None:
         pass
 
-    yield TransactionManager(transids, save_transids)
+    yield TransactionManager(None, transids, save_transids)
 
 
 @pytest.mark.usefixtures("request_context")

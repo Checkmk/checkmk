@@ -8,7 +8,11 @@ from __future__ import annotations
 import secrets
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Literal, Protocol
+
+from cmk.utils.log.security_event import log_security_event, SecurityEvent
+from cmk.utils.user import UserId
 
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.http import request
@@ -16,6 +20,21 @@ from cmk.gui.http import request
 
 class _TransactionIdInvalid(ValueError):
     """Exception for transaction id validation"""
+
+
+@dataclass
+class TransactionIDValidationFailureEvent(SecurityEvent):
+    """Indicates failed transaction id validation"""
+
+    def __init__(self, *, username: UserId | None, remote_ip: str | None) -> None:
+        super().__init__(
+            "Transaction ID validation failed",
+            {
+                "user": str(username or "Unknown user"),
+                "remote_ip": remote_ip,
+            },
+            SecurityEvent.Domain.application_errors,
+        )
 
 
 class ReaderProtocol(Protocol):
@@ -28,9 +47,12 @@ class TransactionManager:
 
     def __init__(
         self,
+        user: UserId | None,
         reader: ReaderProtocol,
         writer: Callable[[list[str]], None],
     ) -> None:
+        self._user = user
+
         self._reader = reader
         self._writer = writer
 
@@ -125,6 +147,12 @@ class TransactionManager:
         try:
             return self._validate_transaction_id(transid)
         except _TransactionIdInvalid:
+            log_security_event(
+                TransactionIDValidationFailureEvent(
+                    username=self._user,
+                    remote_ip=request.remote_ip,
+                )
+            )
             return False
 
     def is_transaction(self) -> bool:

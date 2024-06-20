@@ -270,7 +270,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
         },
     ):
         # Use explicit port
-        response = requests.get("http://%s" % address_txt, allow_redirects=False)
+        response = requests.get("http://%s" % address_txt, allow_redirects=False, timeout=10)
         assert response.status_code == 302
         assert response.headers["Location"] == "http://%s/cmk/" % address_txt
 
@@ -281,6 +281,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
             headers={
                 "Host": address_txt,
             },
+            timeout=10,
         )
         assert response.status_code == 302
         assert response.headers["Location"] == "http://%s/cmk/" % address_txt
@@ -292,6 +293,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
             headers={
                 "Host": address[0],
             },
+            timeout=10,
         )
         assert response.status_code == 302
         assert response.headers["Location"] == "http://%s/cmk/" % address[0]

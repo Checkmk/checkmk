@@ -24,6 +24,7 @@ sudo install -m 755 \
     cmk-trigger-api-spec-job \
     post-rename-site \
     init-redis \
+    piggyback_hub \
     "$ROOT"/bin/
 sudo ln -sf check_mk "$ROOT"/bin/cmk
 sudo chown root:omd "$ROOT"/bin/mkeventd_open514

@@ -630,6 +630,7 @@ _COMPONENTS = (
     (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
+    (Component("cmk.piggyback_hub"), _is_default_allowed_import),
     (
         Component("cmk.plugins.robotmk.agent_based.cee"),
         _is_allowed_for_robotmk_agent_based_cee_plugins,
@@ -669,6 +670,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
+    ModulePath("bin/piggyback_hub"): Component("cmk.piggyback_hub"),
     ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("omd/packages/enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("omd/packages/enterprise/bin/dcd"): Component("cmk.cee.dcd"),

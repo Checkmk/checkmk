@@ -7,7 +7,6 @@ use super::client::OdbcClient;
 use super::client::{self, UniClient};
 use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
-use crate::config::defines::defaults::MAX_CONNECTIONS;
 use crate::config::ms_sql::{is_local_host, is_use_tcp, Discovery};
 use crate::config::section;
 use crate::config::{
@@ -31,7 +30,6 @@ use crate::types::{
 };
 use crate::utils::{self, prepare_error};
 use core::fmt;
-use std::thread;
 
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
@@ -505,9 +503,12 @@ impl SqlInstance {
                 names::TRANSACTION_LOG
                 | names::TABLE_SPACES
                 | names::DATAFILES
-                | names::CLUSTERS => self.generate_database_indexed_section_threading(
-                    databases, endpoint, section, &query, sep,
-                ),
+                | names::CLUSTERS => {
+                    self.generate_database_indexed_section(
+                        databases, endpoint, section, &query, sep,
+                    )
+                    .await
+                }
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
                     self.generate_unified_section(endpoint, section, None).await
                 }
@@ -651,25 +652,6 @@ impl SqlInstance {
         query: &str,
         sep: char,
     ) -> String {
-        let tasks = databases.iter().map(move |database| {
-            self.generate_table_spaces_section_database(endpoint, database, query, sep)
-        });
-
-        let results = stream::iter(tasks)
-            .buffer_unordered(MAX_CONNECTIONS as usize)
-            .collect::<Vec<_>>()
-            .await;
-
-        results.join("")
-    }
-
-    pub async fn generate_table_spaces_section_database(
-        &self,
-        endpoint: &Endpoint,
-        database: &str,
-        query: &str,
-        sep: char,
-    ) -> String {
         let format_error = |d: &str, e: &anyhow::Error| {
             format!(
                 "{} {} - - - - - - - - - - - - {}\n",
@@ -679,23 +661,28 @@ impl SqlInstance {
             )
             .to_string()
         };
-        match self
-            .create_client(endpoint, Some(database.to_owned()))
-            .await
-        {
-            Ok(mut c) => match run_custom_query(&mut c, query).await {
-                Ok(rows) => to_table_spaces_entry(&self.mssql_name(), database, &rows, sep),
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => match run_custom_query(&mut c, query).await {
+                    Ok(rows) => {
+                        result += &to_table_spaces_entry(&self.mssql_name(), d, &rows, sep);
+                    }
+                    Err(err) => {
+                        // fallback on simple query sp_spaceused for very old SQL Servers
+                        log::info!("Failed to get table spaces: {}", err);
+                        result += &run_custom_query(&mut c, sqls::query::SPACE_USED_SIMPLE)
+                            .await
+                            .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
+                            .unwrap_or_else(|e| format_error(d, &e));
+                    }
+                },
                 Err(err) => {
-                    // fallback on simple query sp_spaceused for very old SQL Servers
-                    log::info!("Failed to get table spaces: {}", err);
-                    run_custom_query(&mut c, sqls::query::SPACE_USED_SIMPLE)
-                        .await
-                        .map(|rows| to_table_spaces_entry(&self.mssql_name(), database, &rows, sep))
-                        .unwrap_or_else(|e| format_error(database, &e))
+                    result += &format_error(d, &err);
                 }
-            },
-            Err(err) => format_error(database, &err),
+            }
         }
+        result
     }
 
     pub async fn generate_backup_section(
@@ -729,57 +716,7 @@ impl SqlInstance {
         }
     }
 
-    pub fn generate_database_indexed_section_threading(
-        &self,
-        databases: &[String],
-        endpoint: &Endpoint,
-        section: &Section,
-        query: &str,
-        sep: char,
-    ) -> String {
-        let chunks = if databases.len() >= 64 {
-            let max_chunk = (databases.len() + 3usize) / 4usize;
-            let min_chunk = 16usize;
-            databases.chunks(std::cmp::max(min_chunk, max_chunk))
-        } else if databases.len() >= 8 {
-            let max_chunk = (databases.len() + 1usize) / 2usize;
-            let min_chunk = 4usize;
-            databases.chunks(std::cmp::max(min_chunk, max_chunk))
-        } else {
-            databases.chunks(databases.len())
-        };
-        thread::scope(|s| {
-            let s: Vec<_> = chunks
-                .into_iter()
-                .map(|chunk| {
-                    s.spawn(|| {
-                        let rt = tokio::runtime::Runtime::new().unwrap();
-                        match section.name() {
-                            names::TRANSACTION_LOG => rt.block_on(
-                                self.generate_transaction_logs_section(endpoint, chunk, query, sep),
-                            ),
-                            names::TABLE_SPACES => rt.block_on(
-                                self.generate_table_spaces_section(endpoint, chunk, query, sep),
-                            ),
-                            names::DATAFILES => rt.block_on(
-                                self.generate_datafiles_section(endpoint, chunk, query, sep),
-                            ),
-                            names::CLUSTERS => rt.block_on(
-                                self.generate_transaction_logs_section(endpoint, chunk, query, sep),
-                            ),
-                            _ => format!("{} not implemented\n", section.name()).to_string(),
-                        }
-                    })
-                })
-                .collect();
-            s.into_iter()
-                .map(|h| h.join().unwrap_or("ERROR: failed to join".to_string()))
-                .collect::<Vec<String>>()
-                .join("")
-        })
-    }
-
-    pub async fn generate_database_indexed_section_async(
+    pub async fn generate_database_indexed_section(
         &self,
         databases: &[String],
         endpoint: &Endpoint,
@@ -815,34 +752,21 @@ impl SqlInstance {
         query: &str,
         sep: char,
     ) -> String {
-        let tasks = databases.iter().map(move |database| {
-            self.generate_transaction_logs_section_database(endpoint, database, query, sep)
-        });
-
-        let results = stream::iter(tasks)
-            .buffer_unordered(MAX_CONNECTIONS as usize)
-            .collect::<Vec<_>>()
-            .await;
-
-        results.join("")
-    }
-    pub async fn generate_transaction_logs_section_database(
-        &self,
-        endpoint: &Endpoint,
-        database: &str,
-        query: &str,
-        sep: char,
-    ) -> String {
-        match self
-            .create_client(endpoint, Some(database.to_owned()))
-            .await
-        {
-            Ok(mut c) => run_custom_query(&mut c, query)
-                .await
-                .map(|rows| to_transaction_logs_entries(&self.name, database, &rows, sep))
-                .unwrap_or_else(|e| self.format_some_file_error(database, &e, sep)),
-            Err(err) => self.format_some_file_error(database, &err, sep),
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => {
+                    result += &run_custom_query(&mut c, query)
+                        .await
+                        .map(|rows| to_transaction_logs_entries(&self.name, d, &rows, sep))
+                        .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
+                }
+                Err(err) => {
+                    result += &self.format_some_file_error(d, &err, sep);
+                }
+            }
         }
+        result
     }
 
     fn format_some_file_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
@@ -862,35 +786,21 @@ impl SqlInstance {
         query: &str,
         sep: char,
     ) -> String {
-        let tasks = databases.iter().map(move |database| {
-            self.generate_datafiles_section_database(endpoint, database, query, sep)
-        });
-
-        let results = stream::iter(tasks)
-            .buffer_unordered(MAX_CONNECTIONS as usize)
-            .collect::<Vec<_>>()
-            .await;
-
-        results.join("")
-    }
-
-    pub async fn generate_datafiles_section_database(
-        &self,
-        endpoint: &Endpoint,
-        database: &str,
-        query: &str,
-        sep: char,
-    ) -> String {
-        match self
-            .create_client(endpoint, Some(database.to_owned()))
-            .await
-        {
-            Ok(mut c) => run_custom_query(&mut c, query)
-                .await
-                .map(|rows| to_datafiles_entries(&self.name, database, &rows, sep))
-                .unwrap_or_else(|e| self.format_some_file_error(database, &e, sep)),
-            Err(err) => self.format_some_file_error(database, &err, sep),
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => {
+                    result += &run_custom_query(&mut c, query)
+                        .await
+                        .map(|rows| to_datafiles_entries(&self.name, d, &rows, sep))
+                        .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
+                }
+                Err(err) => {
+                    result += &self.format_some_file_error(d, &err, sep);
+                }
+            }
         }
+        result
     }
 
     pub async fn generate_databases_section(
@@ -937,30 +847,11 @@ impl SqlInstance {
         }
     }
 
+    /// Todo(sk): write a test
     pub async fn generate_clusters_section(
         &self,
         endpoint: &Endpoint,
         databases: &[String],
-        query: &str,
-        sep: char,
-    ) -> String {
-        let tasks = databases.iter().map(move |database| {
-            self.generate_clusters_section_database(endpoint, database, query, sep)
-        });
-
-        let results = stream::iter(tasks)
-            .buffer_unordered(MAX_CONNECTIONS as usize)
-            .collect::<Vec<_>>()
-            .await;
-
-        results.join("")
-    }
-
-    /// Todo(sk): write a test
-    pub async fn generate_clusters_section_database(
-        &self,
-        endpoint: &Endpoint,
-        database: &str,
         query: &str,
         sep: char,
     ) -> String {
@@ -972,20 +863,23 @@ impl SqlInstance {
                 e
             )
         };
-        match self
-            .create_client(endpoint, Some(database.to_owned()))
-            .await
-        {
-            Ok(mut c) => match self
-                .generate_clusters_entry(&mut c, database, query, sep)
-                .await
-            {
-                Ok(None) => String::default(),
-                Ok(Some(entry)) => entry,
-                Err(err) => format_error(database, &err),
-            },
-            Err(err) => format_error(database, &err),
+        let mut result = String::new();
+        for database in databases {
+            match self.create_client(endpoint, Some(database.clone())).await {
+                Ok(mut c) => match self
+                    .generate_clusters_entry(&mut c, database, query, sep)
+                    .await
+                {
+                    Ok(None) => {}
+                    Ok(Some(entry)) => result += &entry,
+                    Err(err) => result += &format_error(database, &err),
+                },
+                Err(err) => {
+                    result += &format_error(database, &err);
+                }
+            }
         }
+        result
     }
 
     async fn generate_clusters_entry(

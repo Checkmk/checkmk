@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
-from cmk.utils.version import RType, Version
+from cmk.utils.version import ReleaseType, Version
 
 from cmk.werks.models import Class, Compatibility, Edition, Werk
 
@@ -84,15 +84,15 @@ def main(args: argparse.Namespace) -> None:
     version = Version.from_str(args.version)
     feedback_mail = None
 
-    if version.release.r_type == RType.b:
+    if version.release.r_type == ReleaseType.b:
         release_type = "beta"
         assert (
             version.base is not None
         ), f"Expected version.base to be not None for release type beta: {version}"
         feedback_mail = f"feedback-{version.base.major}.{version.base.minor}-beta@checkmk.com"
-    elif version.release.r_type == RType.p or version.release.is_unspecified():
+    elif version.release.r_type == ReleaseType.p or version.release.is_unspecified():
         release_type = "stable"
-    elif version.release.r_type == RType.daily:
+    elif version.release.r_type == ReleaseType.daily:
         release_type = "daily"
     else:
         raise NotImplementedError(f"Can not create announcement for {version.release.r_type}")

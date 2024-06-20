@@ -111,7 +111,21 @@ def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> 
 # _StableDailyVersion:      <base>-<date>       e.g. 1.2.3-2021.12.24
 
 
-class RType(enum.IntEnum):
+class ReleaseType(enum.IntEnum):
+    """
+    Type of a release.
+
+    We differentiate between:
+    - innovation (`i`)
+    - beta (`b`)
+    - patch (`p`)
+    - daily (`daily`)
+
+    Without such a specification we fall back to `na`.
+
+    If you want to know more head to https://docs.checkmk.com/latest/en/cmk_versions.html
+    """
+
     i = 0
     b = 1
     na = 2
@@ -134,22 +148,22 @@ class _BuildDate:
 
 @dataclass(order=True)
 class _Release:
-    r_type: RType
+    r_type: ReleaseType
     value: int | _BuildDate
 
     def suffix(self) -> str:
-        if self.r_type is RType.na:
+        if self.r_type is ReleaseType.na:
             return ""
-        if self.r_type is RType.daily:
+        if self.r_type is ReleaseType.daily:
             return f"-{self.value}"
         return f"{self.r_type.name}{self.value}"
 
     def is_unspecified(self) -> bool:
-        return self.r_type is RType.na
+        return self.r_type is ReleaseType.na
 
     @classmethod
     def unspecified(cls) -> Self:
-        return cls(RType.na, 0)
+        return cls(ReleaseType.na, 0)
 
 
 @dataclass(order=True, frozen=True)
@@ -195,7 +209,7 @@ class Version:
             case major, minor, sub, r_type, patch:
                 return cls(
                     _BaseVersion(int(major), int(minor), int(sub)),
-                    _Release(RType[r_type], int(patch)),
+                    _Release(ReleaseType[r_type], int(patch)),
                 )
 
         raise ValueError(f'Cannot parse version string "{vstring}".')
@@ -213,7 +227,7 @@ class Version:
                 if all(x is None for x in (major, minor, sub))
                 else _BaseVersion(int(major), int(minor), int(sub))
             ),
-            _Release(RType.daily, _BuildDate(int(year), int(month), int(day))),
+            _Release(ReleaseType.daily, _BuildDate(int(year), int(month), int(day))),
         )
 
     def __init__(self, base: _BaseVersion | None, release: _Release) -> None:

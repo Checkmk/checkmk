@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +22,7 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.agent_based.v1 import GetRateError, IgnoreResults, Metric, Result, Service, State
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.collection.agent_based import brocade_fcport as bf
 from cmk.plugins.lib.brocade import DISCOVERY_DEFAULT_PARAMETERS
 
@@ -117,7 +118,7 @@ STRING_TABLE_INDEX_1_MISSING = [
 ]
 
 
-_STRING_TABLE_WITH_IF64 = [
+_STRING_TABLE_WITH_IF64: Sequence[StringTable] = [
     [
         [
             "1",
@@ -144,7 +145,8 @@ _STRING_TABLE_WITH_IF64 = [
     [
         [
             "16.0.0.39.248.67.123.0.0.0.0.0.0.0.0.0.1",
-            [
+            # OIDBytes result is not handled correctly by typing
+            [  # type: ignore[list-item]
                 48,
                 48,
                 32,
@@ -169,7 +171,8 @@ _STRING_TABLE_WITH_IF64 = [
                 70,
                 66,
             ],
-            [
+            # OIDBytes result is not handled correctly by typing
+            [  # type: ignore[list-item]
                 48,
                 48,
                 32,
@@ -194,7 +197,8 @@ _STRING_TABLE_WITH_IF64 = [
                 55,
                 67,
             ],
-            [
+            # OIDBytes result is not handled correctly by typing
+            [  # type: ignore[list-item]
                 48,
                 48,
                 32,
@@ -219,7 +223,8 @@ _STRING_TABLE_WITH_IF64 = [
                 50,
                 56,
             ],
-            [
+            # OIDBytes result is not handled correctly by typing
+            [  # type: ignore[list-item]
                 48,
                 48,
                 32,
@@ -244,7 +249,8 @@ _STRING_TABLE_WITH_IF64 = [
                 56,
                 48,
             ],
-            [
+            # OIDBytes result is not handled correctly by typing
+            [  # type: ignore[list-item]
                 48,
                 48,
                 32,

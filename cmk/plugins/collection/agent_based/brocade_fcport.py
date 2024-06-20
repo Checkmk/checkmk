@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any
+from typing import Any, cast
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -153,11 +153,17 @@ def _get_relevant_part_of_speed_info(speed_info: StringTable, offset: int) -> St
     return speed_info
 
 
-def parse_brocade_fcport(string_table) -> Section | None:  # type: ignore[no-untyped-def]
+def parse_brocade_fcport(string_table: Sequence[StringTable]) -> Section | None:
     if_info: StringTable = string_table[0]
     link_info: StringTable = string_table[1]
     speed_info: StringTable = string_table[2]
-    if64_info = string_table[3]
+    # The typing of string_table is wrong here. OIDBytes tells the data not as a string.
+    # Unfortunately we can not change the type of string_table in the signature without
+    # touching a lot of other code.
+    if64_info = cast(
+        list[tuple[str, Sequence[int], Sequence[int], Sequence[int], Sequence[int], Sequence[int]]],
+        string_table[3],
+    )
 
     try:
         offset = int(if_info[0][0])

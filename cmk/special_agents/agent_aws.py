@@ -448,7 +448,7 @@ def _describe_dynamodb_tables(
     client: BaseClient,
     get_response_content: Callable,
     fetched_table_names: Sequence[str] | None = None,
-) -> Sequence[Mapping[str, object]]:
+) -> Sequence[dict[str, object]]:
     table_names = (
         fetched_table_names
         if fetched_table_names is not None
@@ -1446,7 +1446,7 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
 
-    def _add_security_group_limits(self, security_groups) -> None:  # type: ignore[no-untyped-def]
+    def _add_security_group_limits(self, security_groups: Sequence[Mapping]) -> None:
         self._add_limit(
             "",
             AWSLimit(
@@ -1471,7 +1471,7 @@ class EC2Limits(AWSSectionLimits):
                 ),
             )
 
-    def _add_interface_limits(self, interfaces) -> None:  # type: ignore[no-untyped-def]
+    def _add_interface_limits(self, interfaces: Sequence[Mapping]) -> None:
         # since there can also be interfaces which are not attached to an instance, we add these
         # limits to the host running the agent instead of to individual instances
         for iface in interfaces:
@@ -1501,7 +1501,7 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
 
-    def _add_spot_fleet_limits(self, spot_fleet_requests) -> None:  # type: ignore[no-untyped-def]
+    def _add_spot_fleet_limits(self, spot_fleet_requests: Sequence[Mapping]) -> None:
         active_spot_fleet_requests = 0
         total_target_cap = 0
         for spot_fleet_req in spot_fleet_requests:
@@ -1570,8 +1570,8 @@ class EC2Summary(AWSSection):
 
         return self._fetch_instances_without_filter()
 
-    def _fetch_instances_filtered_by_names(  # type: ignore[no-untyped-def]
-        self, col_reservations
+    def _fetch_instances_filtered_by_names(
+        self, col_reservations: Sequence[dict]
     ) -> Sequence[Mapping[str, object]]:
         if col_reservations:
             instances = [
@@ -4050,8 +4050,8 @@ class CloudFront(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
-    def _get_piggyback_host_by_distribution(  # type: ignore[no-untyped-def]
-        self, cloudfront_summary
+    def _get_piggyback_host_by_distribution(
+        self, cloudfront_summary: Sequence[Mapping]
     ) -> Mapping[str, str]:
         if not cloudfront_summary:
             return {}
@@ -4344,6 +4344,7 @@ class DynamoDBSummary(AWSSection):
         found_tables = []
 
         for table in self._describe_tables(colleague_contents):
+            assert isinstance(table["TableArn"], str)
             tags = self._get_table_tags(table["TableArn"])
 
             if self._matches_tag_conditions(tags):
@@ -4361,9 +4362,9 @@ class DynamoDBSummary(AWSSection):
             tags.extend(self._get_response_content(page, "Tags"))
         return tags
 
-    def _describe_tables(  # type: ignore[no-untyped-def]
+    def _describe_tables(
         self, colleague_contents: AWSColleagueContents
-    ):
+    ) -> Sequence[dict[str, object]]:
         if self._names is None:
             if colleague_contents.content:
                 return colleague_contents.content

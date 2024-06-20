@@ -7,7 +7,7 @@ import dataclasses
 import math
 import time
 from collections.abc import Generator, Iterator, MutableMapping, Sequence
-from typing import Any, TypedDict
+from typing import Any, overload, TypedDict
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import CheckResult, get_average, get_rate, Metric, Result, State
@@ -259,6 +259,36 @@ class TemperatureResult:
 
     def __next__(self) -> Result | Metric:
         return next(self._iter)
+
+
+@overload
+def check_temperature(
+    reading: float,
+    params: TempParamType,
+    *,
+    unique_name: str,
+    value_store: MutableMapping[str, Any],
+    dev_unit: str | None = "c",
+    dev_levels: tuple[float, float] | None = None,
+    dev_levels_lower: tuple[float, float] | None = None,
+    dev_status: StatusType | None = None,
+    dev_status_name: str | None = None,
+) -> TemperatureResult: ...
+
+
+@overload
+def check_temperature(
+    reading: float,
+    params: TempParamType,
+    *,
+    unique_name: None = None,
+    value_store: None = None,
+    dev_unit: str | None = "c",
+    dev_levels: tuple[float, float] | None = None,
+    dev_levels_lower: tuple[float, float] | None = None,
+    dev_status: StatusType | None = None,
+    dev_status_name: str | None = None,
+) -> TemperatureResult: ...
 
 
 def check_temperature(  # pylint: disable=too-many-branches

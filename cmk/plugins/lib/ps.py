@@ -327,7 +327,7 @@ def cpu_rate(value_store, counter, now, lifetime):
 class ProcessAggregator:
     """Collects information about all instances of monitored processes"""
 
-    def __init__(self, cpu_cores, params) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, cpu_cores: int, params: Mapping[str, Any]) -> None:
         self.cpu_cores = cpu_cores
         self.params = params
         self.virtual_size = 0
@@ -370,13 +370,11 @@ class ProcessAggregator:
         # Use default of division
         return 1.0 / self.cpu_cores
 
-    def lifetimes(  # type: ignore[no-untyped-def]
-        self, process_info, process: _Process, ps_time: int
-    ):
+    def lifetimes(self, process_info: PsInfo, process: _Process, ps_time: int) -> None:
         # process_info.cputime contains the used CPU time and possibly,
         # separated by /, also the total elapsed time since the birth of the
         # process.
-        if "/" in process_info.cputime:
+        if process_info.cputime is not None and "/" in process_info.cputime:
             elapsed_text = process_info.cputime.split("/")[1]
         # uptime is a windows only value, introduced in Werk 4029. For future consistency should be
         # moved to the cputime entry and separated by a /
@@ -399,9 +397,15 @@ class ProcessAggregator:
                     )
                 )
 
-    def cpu_usage(  # type: ignore[no-untyped-def]
-        self, value_store, process_info, process: _Process, ps_time: int
-    ):
+    def cpu_usage(
+        self,
+        value_store: MutableMapping[str, Any],
+        process_info: PsInfo,
+        process: _Process,
+        ps_time: int,
+    ) -> None:
+        if process_info.cputime is None:
+            raise ValueError("cputime is None")
         pcpu_text = process_info.cputime.split("/")[0]
 
         if ":" in pcpu_text:  # In linux is a time
@@ -410,7 +414,8 @@ class ProcessAggregator:
             cputime = cpu_rate(value_store, "stat.pcpu.%s" % pid, ps_time, total_seconds)
 
             pcpu = cputime * 100 * self.core_weight(is_win=False)
-            process.append(("pid", (pid, "")))
+            if pid is not None:
+                process.append(("pid", (pid, "")))
 
         # windows cpu times
         elif process_info.usermode_time and process_info.kernelmode_time:
@@ -433,11 +438,12 @@ class ProcessAggregator:
             pcpu = user_perc + kernel_perc
             process.append(("cpu usage (user space)", (user_perc, "%")))
             process.append(("cpu usage (kernel space)", (kernel_perc, "%")))
-            process.append(("pid", (pid, "")))
+            if pid is not None:
+                process.append(("pid", (pid, "")))
 
         else:  # Solaris, BSD, aix cpu times
             if pcpu_text == "-":  # Solaris defunct
-                pcpu_text = 0.0
+                pcpu_text = "0.0"
             pcpu = float(pcpu_text) * self.core_weight(is_win=False)
             if (pid := process_info.process_id) is not None:
                 process.append(("pid", (pid, "")))

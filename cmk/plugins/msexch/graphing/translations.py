@@ -29,3 +29,45 @@ translation_msexch_database = translations.Translation(
         ),
     },
 )
+
+# Added in 2.3 patch set => can be safely removed in 2.5.0
+translation_msexch_isclienttype = translations.Translation(
+    name="msexch_isclienttype",
+    check_commands=[
+        translations.PassiveCheck("msexch_isclienttype"),
+    ],
+    translations={
+        "average_latency": translations.RenameToAndScaleBy(
+            "average_latency_s",
+            0.001,
+        ),
+    },
+)
+
+# Added in 2.3 patch set => can be safely removed in 2.5.0
+translation_msexch_isstore = translations.Translation(
+    name="msexch_isstore",
+    check_commands=[
+        translations.PassiveCheck("msexch_isstore"),
+    ],
+    translations={
+        "average_latency": translations.RenameToAndScaleBy(
+            "average_latency_s",
+            0.001,
+        ),
+    },
+)
+
+# Added in 2.3 patch set => can be safely removed in 2.5.0
+translation_msexch_rpcclientaccess = translations.Translation(
+    name="msexch_rpcclientaccess",
+    check_commands=[
+        translations.PassiveCheck("msexch_rpcclientaccess"),
+    ],
+    translations={
+        "average_latency": translations.RenameToAndScaleBy(
+            "average_latency_s",
+            0.001,
+        ),
+    },
+)

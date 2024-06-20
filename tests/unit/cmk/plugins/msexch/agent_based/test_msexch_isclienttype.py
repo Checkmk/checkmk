@@ -1,20 +1,104 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import pytest
 
-# fmt: off
-# mypy: disable-error-code=var-annotated
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.wmi import parse_wmi_table
+from cmk.plugins.msexch.agent_based.msexch_isclienttype import (
+    check_msexch_isclienttype,
+    inventory_msexch_isclienttype,
+    Params,
+)
 
-checkname = "msexch_isclienttype"
+_AGENT_OUTPUT = [
+    [
+        "AdministrativeRPCrequestsPersec",
+        "AdminRPCRequests",
+        "Caption",
+        "Description",
+        "DirectoryAccessLDAPSearchesPersec",
+        "Frequency_Object",
+        "Frequency_PerfTime",
+        "Frequency_Sys100NS",
+        "JetLogRecordBytesPersec",
+        "JetLogRecordsPersec",
+        "JetPagesModifiedPersec",
+        "JetPagesPrereadPersec",
+        "JetPagesReadPersec",
+        "JetPagesReferencedPersec",
+        "JetPagesRemodifiedPersec",
+        "LazyindexescreatedPersec",
+        "LazyindexesdeletedPersec",
+        "LazyindexfullrefreshPersec",
+        "LazyindexincrementalrefreshPersec",
+        "MessagescreatedPersec",
+        "MessagesdeletedPersec",
+        "MessagesopenedPersec",
+        "MessagesupdatedPersec",
+        "Name",
+        "PropertypromotionsPersec",
+        "RPCAverageLatency",
+        "RPCAverageLatency_Base",
+        "RPCBytesReceivedPersec",
+        "RPCBytesSentPersec",
+        "RPCOperationsPersec",
+        "RPCPacketsPersec",
+        "RPCRequests",
+        "Timestamp_Object",
+        "Timestamp_PerfTime",
+        "Timestamp_Sys100NS",
+    ],
+    [
+        "13203303",
+        "0",
+        "",
+        "",
+        "61388",
+        "0",
+        "1953125",
+        "10000000",
+        "614653228",
+        "12092743",
+        "49049",
+        "826",
+        "312",
+        "53440863",
+        "8506178",
+        "3",
+        "24",
+        "3",
+        "838",
+        "80486",
+        "23006",
+        "101226",
+        "23140",
+        "_total",
+        "0",
+        "1903888",
+        "3908424",
+        "1040",
+        "400087174",
+        "6138327",
+        "3908424",
+        "1145789",
+        "0",
+        "6743176285319",
+        "130951777565340000",
+    ],
+]
 
-mock_item_state = {
-    "": {
-        "RPCRequests_": (0, 1145789)
-    }
-}
-
-info = [
+_AGENT_OUTPUT_REGRESSION_01 = [
     [
         "AdministrativeRPCrequestsPersec",
         "AdminRPCRequests",
@@ -1756,74 +1840,136 @@ info = [
     ],
 ]
 
-discovery = {
-    "": [
-        ("_total", {}),
-        ("addriver", {}),
-        ("administrator", {}),
-        ("airsync", {}),
-        ("anchorservice", {}),
-        ("approvalapi", {}),
-        ("availabilityservice", {}),
-        ("contentindexing", {}),
-        ("contentindexingmovedestination", {}),
-        ("ediscoverysearch", {}),
-        ("elc", {}),
-        ("eventbasedassistants", {}),
-        ("ha", {}),
-        ("hrc", {}),
-        ("imap", {}),
-        ("inference", {}),
-        ("liveidbasicauth", {}),
-        ("loadgen", {}),
-        ("mailboxloadbalance", {}),
-        ("maintenance", {}),
-        ("management", {}),
-        ("migration", {}),
-        ("momt", {}),
-        ("monitoring", {}),
-        ("notificationbroker", {}),
-        ("officegraph", {}),
-        ("outlookservice", {}),
-        ("owa", {}),
-        ("pop", {}),
-        ("publicfolderhierarchyreplication", {}),
-        ("publicfoldersystem", {}),
-        ("rpchttp", {}),
-        ("simplemigration", {}),
-        ("sms", {}),
-        ("snackyservice", {}),
-        ("storeactivemonitoring", {}),
-        ("system", {}),
-        ("teammailbox", {}),
-        ("timebasedassistants", {}),
-        ("transport", {}),
-        ("transportsync", {}),
-        ("unifiedauditing", {}),
-        ("unifiedmessaging", {}),
-        ("unifiedpolicy", {}),
-        ("user", {}),
-        ("webservices", {}),
-    ]
-}
 
-checks = {
-    "": [
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
         (
-            "_total",
-            {
-                "store_latency": {"upper": (40.0, 50.0)},
-                "clienttype_requests": {"upper": (60, 70)},
-                "clienttype_latency": {"upper": (40.0, 50.0)},
-            },
+            _AGENT_OUTPUT,
             [
-                (
-                    0,
-                    "Average latency: 0.49 ms",
-                    [("average_latency", 0.48712422193702626, 40.0, 50.0, None, None)],
-                ),
-                (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60, 70, None, None)]),
+                Service(item="_total", parameters={}),
             ],
         ),
-    ]
-}
+        (
+            _AGENT_OUTPUT_REGRESSION_01,
+            [
+                Service(item="_total", parameters={}),
+                Service(item="addriver", parameters={}),
+                Service(item="administrator", parameters={}),
+                Service(item="airsync", parameters={}),
+                Service(item="anchorservice", parameters={}),
+                Service(item="approvalapi", parameters={}),
+                Service(item="availabilityservice", parameters={}),
+                Service(item="contentindexing", parameters={}),
+                Service(item="contentindexingmovedestination", parameters={}),
+                Service(item="ediscoverysearch", parameters={}),
+                Service(item="elc", parameters={}),
+                Service(item="eventbasedassistants", parameters={}),
+                Service(item="ha", parameters={}),
+                Service(item="hrc", parameters={}),
+                Service(item="imap", parameters={}),
+                Service(item="inference", parameters={}),
+                Service(item="liveidbasicauth", parameters={}),
+                Service(item="loadgen", parameters={}),
+                Service(item="mailboxloadbalance", parameters={}),
+                Service(item="maintenance", parameters={}),
+                Service(item="management", parameters={}),
+                Service(item="migration", parameters={}),
+                Service(item="momt", parameters={}),
+                Service(item="monitoring", parameters={}),
+                Service(item="notificationbroker", parameters={}),
+                Service(item="officegraph", parameters={}),
+                Service(item="outlookservice", parameters={}),
+                Service(item="owa", parameters={}),
+                Service(item="pop", parameters={}),
+                Service(item="publicfolderhierarchyreplication", parameters={}),
+                Service(item="publicfoldersystem", parameters={}),
+                Service(item="rpchttp", parameters={}),
+                Service(item="simplemigration", parameters={}),
+                Service(item="sms", parameters={}),
+                Service(item="snackyservice", parameters={}),
+                Service(item="storeactivemonitoring", parameters={}),
+                Service(item="system", parameters={}),
+                Service(item="teammailbox", parameters={}),
+                Service(item="timebasedassistants", parameters={}),
+                Service(item="transport", parameters={}),
+                Service(item="transportsync", parameters={}),
+                Service(item="unifiedauditing", parameters={}),
+                Service(item="unifiedmessaging", parameters={}),
+                Service(item="unifiedpolicy", parameters={}),
+                Service(item="user", parameters={}),
+                Service(item="webservices", parameters={}),
+            ],
+        ),
+    ],
+)
+def test_parse_msexch_isclienttype(
+    string_table: StringTable, expected_result: DiscoveryResult
+) -> None:
+    section = parse_wmi_table(string_table)
+    assert sorted(inventory_msexch_isclienttype(section)) == expected_result
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.parametrize(
+    "string_table, item, params, expected_result",
+    [
+        (
+            _AGENT_OUTPUT,
+            "_total",
+            Params(
+                store_latency_s=("no_levels", None),
+                clienttype_latency_s=("no_levels", None),
+                clienttype_requests=("no_levels", None),
+            ),
+            [
+                Result(state=State.OK, summary="Average latency: 487 microseconds"),
+                Metric("average_latency_s", 0.00048712422193702634),
+                Result(state=State.OK, summary="RPC Requests/sec: 0.00"),
+                Metric("requests_per_sec", 0.0),
+            ],
+        ),
+        (
+            _AGENT_OUTPUT_REGRESSION_01,
+            "_total",
+            Params(
+                store_latency_s=("no_levels", None),
+                clienttype_latency_s=("no_levels", None),
+                clienttype_requests=("no_levels", None),
+            ),
+            [
+                Result(state=State.OK, summary="Average latency: 487 microseconds"),
+                Metric("average_latency_s", 0.00048712422193702634),
+                Result(state=State.OK, summary="RPC Requests/sec: 0.00"),
+                Metric("requests_per_sec", 0.0),
+            ],
+        ),
+        (
+            _AGENT_OUTPUT_REGRESSION_01,
+            "_total",
+            Params(
+                store_latency_s=("no_levels", None),
+                clienttype_latency_s=("fixed", (0.0002, 0.0004)),
+                clienttype_requests=("no_levels", None),
+            ),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Average latency: 487 microseconds (warn/crit at 200 microseconds/400 microseconds)",
+                ),
+                Metric("average_latency_s", 0.00048712422193702634, levels=(0.0002, 0.0004)),
+                Result(state=State.OK, summary="RPC Requests/sec: 0.00"),
+                Metric("requests_per_sec", 0.0),
+            ],
+        ),
+    ],
+)
+def test_check_msexch_isclienttype(
+    string_table: StringTable,
+    item: str,
+    params: Params,
+    expected_result: CheckResult,
+) -> None:
+    get_value_store().update({"RPCRequests_": (0.0, 1145789)})
+    section = parse_wmi_table(string_table)
+    assert list(check_msexch_isclienttype(item, params, section)) == expected_result

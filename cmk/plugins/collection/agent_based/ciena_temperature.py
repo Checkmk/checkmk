@@ -95,7 +95,8 @@ def check_ciena_temperature(item: str, params: TempParamType, section: Section) 
     yield from check_temperature(
         section[item].temperature,
         params,
-        value_store_tuple=("", get_value_store()),
+        unique_name="",
+        value_store=get_value_store(),
         dev_status=section[item].device_status,
         dev_status_name=section[item].device_status_name,
     )

@@ -59,7 +59,8 @@ def check_cmciii_temp(item: str, params: TempParamDict, section: Section) -> Che
     yield from check_temperature(
         entry["Value"],
         params,
-        value_store_tuple=("cmciii.temp.%s" % item, get_value_store()),
+        unique_name="cmciii.temp.%s" % item,
+        value_store=get_value_store(),
         dev_levels=_device_levels(entry, "SetPtHighWarning", "SetPtHighAlarm"),
         dev_levels_lower=_device_levels(entry, "SetPtLowWarning", "SetPtLowAlarm"),
         dev_status_name=entry.get("Status"),

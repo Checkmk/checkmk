@@ -55,7 +55,8 @@ def _check_cisco_ucs_temp_cpu(
     yield from check_temperature(
         reading=temperature,
         params=params,
-        value_store_tuple=(item, value_store),
+        unique_name=item,
+        value_store=value_store,
     )
 
 

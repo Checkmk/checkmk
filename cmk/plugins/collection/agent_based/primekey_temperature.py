@@ -59,7 +59,8 @@ def check(
     yield from check_temperature(
         params=params,
         reading=temperature,
-        value_store_tuple=(f"PrimeKey {item} Temperature", get_value_store()),
+        unique_name=f"PrimeKey {item} Temperature",
+        value_store=get_value_store(),
     )
 
 

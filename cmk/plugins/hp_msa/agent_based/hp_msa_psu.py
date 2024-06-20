@@ -163,7 +163,9 @@ def check_hp_msa_psu_temp_testable(
 ) -> CheckResult:
     if not (data := section.get(item)):
         return
-    yield from check_temperature(float(data["dctemp"]), params, value_store_tuple=("", value_store))
+    yield from check_temperature(
+        float(data["dctemp"]), params, value_store=value_store, unique_name=""
+    )
 
 
 check_plugin_hp_msa_psu_temp = CheckPlugin(

@@ -68,7 +68,8 @@ def check_vsp_switches_temperature(
     yield from check_temperature(
         reading=vsp_switch.temperature,
         params=params,
-        value_store_tuple=(f"vsp_switch_{item}", get_value_store()),
+        unique_name=f"vsp_switch_{item}",
+        value_store=get_value_store(),
     )
 
 

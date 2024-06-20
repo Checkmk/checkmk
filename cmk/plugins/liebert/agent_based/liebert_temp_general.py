@@ -60,7 +60,8 @@ def check_liebert_temp_general_testable(
     yield from check_temperature(
         temperature_to_celsius(value, unit),
         params,
-        value_store_tuple=("check_liebert_fluid_temp.%s" % item, value_store),
+        unique_name="check_liebert_fluid_temp.%s" % item,
+        value_store=value_store,
     )
 
 

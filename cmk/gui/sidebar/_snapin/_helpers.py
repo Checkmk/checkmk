@@ -60,7 +60,7 @@ def bulletlink(text: str, url: str, target: str = "main", onclick: str | None = 
 def iconlink(text: str, url: str, icon: Icon) -> None:
     html.open_a(class_=["iconlink", "link"], target="main", href=url)
     html.icon(icon, cssclass="inline")
-    html.write_text(text)
+    html.write_text_permissive(text)
     html.close_a()
     html.br()
 

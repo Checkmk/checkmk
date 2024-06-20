@@ -164,7 +164,7 @@ def test_HTMLWriter() -> None:
         with output_funnel.plugged():
             # html.open_div().write("test").close_div()
             html.open_div()
-            html.write_text("test")
+            html.write_text_permissive("test")
             html.close_div()
             assert compare_html(output_funnel.drain(), "<div>test</div>")
 

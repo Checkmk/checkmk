@@ -252,7 +252,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
             if tree[2].get("icon"):
                 html.write_html(html.render_icon(tree[2]["icon"]))
-                html.write_text("&nbsp;")
+                html.write_text_permissive("&nbsp;")
 
             if tree[2].get("docu_url"):
                 html.icon_button(
@@ -261,9 +261,9 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                     "url",
                     target="_blank",
                 )
-                html.write_text("&nbsp;")
+                html.write_text_permissive("&nbsp;")
 
-            html.write_text(tree[2]["title"])
+            html.write_text_permissive(tree[2]["title"])
 
         if not is_empty:
             html.open_ul(
@@ -341,7 +341,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             "state%d" % (effective_state["state"] if effective_state["state"] is not None else -1),
         ] + addclass
         html.open_span(class_=class_)
-        html.write_text(self._render_bi_state(effective_state["state"]))
+        html.write_text_permissive(self._render_bi_state(effective_state["state"]))
         html.close_span()
 
         if mousecode:
@@ -382,7 +382,9 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             if mousecode:
                 if str(effective_state["state"]) in tree[2].get("state_messages", {}):
                     html.b(HTML.without_escaping("&diams;"), class_="bullet")
-                    html.write_text(tree[2]["state_messages"][str(effective_state["state"])])
+                    html.write_text_permissive(
+                        tree[2]["state_messages"][str(effective_state["state"])]
+                    )
 
                 html.close_span()
 
@@ -451,7 +453,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             if is_leaf(tree):
                 self._show_leaf(tree, show_host)
             else:
-                html.write_text(tree[2]["title"].replace(" ", "&nbsp;"))
+                html.write_text_permissive(tree[2]["title"].replace(" ", "&nbsp;"))
 
             html.close_span()
 
@@ -535,7 +537,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         with output_funnel.plugged():
             html.open_div(class_="aggr_tree")
             with self._show_node(tree, show_host):
-                html.write_text(tree[2]["title"])
+                html.write_text_permissive(tree[2]["title"])
             html.close_div()
             content = HTML.without_escaping(output_funnel.drain())
 

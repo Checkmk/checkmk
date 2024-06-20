@@ -105,14 +105,14 @@ def test_plug() -> None:
         with table_element("%d" % table_id, title, searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "1")
-            html.write_text("a")
+            html.write_text_permissive("a")
             table.cell("B", "2")
-            html.write_text("b")
+            html.write_text_permissive("b")
             table.row()
             table.cell("A", "1")
-            html.write_text("a")
+            html.write_text_permissive("a")
             table.cell("C", "4")
-            html.write_text("c")
+            html.write_text_permissive("c")
 
         written_text = "".join(output_funnel.drain())
     assert read_out_simple_table(written_text) == [["A", "B"], ["1a", "2b"], ["1a", "4c"]]

@@ -484,7 +484,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
         html.open_tr()
         html.open_td(style=font_size_style)
         html.write_html(render_color_icon(curve["color"]))
-        html.write_text(curve["title"])
+        html.write_text_permissive(curve["title"])
         html.close_td()
 
         for scalar, title, inactive in scalars:
@@ -506,7 +506,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
             html.open_tr(class_=["scalar"] + (["first"] if first else []))
             html.open_td(style=font_size_style)
             html.write_html(render_color_icon(horizontal_rule.color))
-            html.write_text(str(horizontal_rule.title))
+            html.write_text_permissive(str(horizontal_rule.title))
             html.close_td()
 
             # A colspan of 5 has to be used here, since the pin that is added by a click into

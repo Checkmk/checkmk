@@ -1770,7 +1770,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        return html.write_text(
+        return html.write_text_permissive(
             _(
                 "Used in the host and service problems graphs of the main dashboard. Not intended "
                 "for any other purposes."

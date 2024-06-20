@@ -213,7 +213,9 @@ class ModeParentScan(WatoMode):
         if not self._complete_folder:
             num_selected = len(get_hosts_from_checkboxes(self._folder))
             html.icon("toggle_details")
-            html.write_text(_("You have selected <b>%d</b> hosts for parent scan. ") % num_selected)
+            html.write_text_permissive(
+                _("You have selected <b>%d</b> hosts for parent scan. ") % num_selected
+            )
         html.help(
             _(
                 "The parent scan will try to detect the last gateway "
@@ -273,17 +275,17 @@ class ModeParentScan(WatoMode):
         html.open_table()
         html.open_tr()
         html.open_td()
-        html.write_text(_("Timeout for responses") + ":")
+        html.write_text_permissive(_("Timeout for responses") + ":")
         html.close_td()
         html.open_td()
         html.text_input("timeout", str(self._settings.timeout), size=2, cssclass="number")
-        html.write_text(_("sec"))
+        html.write_text_permissive(_("sec"))
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Number of probes per hop") + ":")
+        html.write_text_permissive(_("Number of probes per hop") + ":")
         html.close_td()
         html.open_td()
         html.text_input("probes", str(self._settings.probes), size=2, cssclass="number")
@@ -292,7 +294,7 @@ class ModeParentScan(WatoMode):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Maximum distance (TTL) to gateway") + ":")
+        html.write_text_permissive(_("Maximum distance (TTL) to gateway") + ":")
         html.close_td()
         html.open_td()
         html.text_input("max_ttl", str(self._settings.max_ttl), size=2, cssclass="number")
@@ -301,7 +303,7 @@ class ModeParentScan(WatoMode):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Number of PING probes") + ":")
+        html.write_text_permissive(_("Number of PING probes") + ":")
         html.help(
             _(
                 "After a gateway has been found, Checkmk checks if it is reachable "
@@ -329,7 +331,7 @@ class ModeParentScan(WatoMode):
 
         # Gateway creation
         forms.section(_("Creation of gateway hosts"))
-        html.write_text(_("Create gateway hosts in"))
+        html.write_text_permissive(_("Create gateway hosts in"))
         html.open_ul()
 
         disk_folder = disk_or_search_base_folder_from_request(
@@ -358,7 +360,7 @@ class ModeParentScan(WatoMode):
             "where", "nowhere", self._settings.where == "nowhere", _("do not create gateway hosts")
         )
         html.close_ul()
-        html.write_text(_("Alias for created gateway hosts") + ": ")
+        html.write_text_permissive(_("Alias for created gateway hosts") + ": ")
         html.text_input("alias", default_value=self._settings.alias)
 
         forms.end()

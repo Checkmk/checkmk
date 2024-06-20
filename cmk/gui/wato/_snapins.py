@@ -57,9 +57,9 @@ def register(
 
 def render_wato(mini: bool) -> None:
     if not active_config.wato_enabled:
-        html.write_text(_("Setup is disabled."))
+        html.write_text_permissive(_("Setup is disabled."))
     if not user.may("wato.use"):
-        html.write_text(_("You are not allowed to use the setup."))
+        html.write_text_permissive(_("You are not allowed to use the setup."))
 
     menu = get_wato_menu_items()
 
@@ -370,7 +370,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
     def show(self) -> None:
         if not site_config.is_wato_slave_site():
             if not active_config.wato_enabled:
-                html.write_text(_("Setup is disabled."))
+                html.write_text_permissive(_("Setup is disabled."))
 
         user_folders = compute_foldertree()
 

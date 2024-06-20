@@ -537,7 +537,7 @@ class PageBackup:
             for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 state = job.state()
                 job_state = state.state
@@ -613,11 +613,15 @@ class PageBackup:
 
                 table.cell(_("Runtime"))
                 if state.started:
-                    html.write_text(_("Started at %s") % render.date_and_time(state.started))
+                    html.write_text_permissive(
+                        _("Started at %s") % render.date_and_time(state.started)
+                    )
                     duration = time.time() - state.started
                     if job_state == "finished":
                         assert state.finished is not None
-                        html.write_text(", Finished at %s" % render.date_and_time(state.finished))
+                        html.write_text_permissive(
+                            ", Finished at %s" % render.date_and_time(state.finished)
+                        )
                         duration = state.finished - state.started
 
                     if state.size is not None:
@@ -626,7 +630,7 @@ class PageBackup:
                         size_txt = ""
 
                     assert state.bytes_per_second is not None
-                    html.write_text(
+                    html.write_text_permissive(
                         _(" (Duration: %s, %sIO: %s/s)")
                         % (
                             render.timespan(duration),
@@ -638,10 +642,10 @@ class PageBackup:
                 table.cell(_("Next run"))
                 schedule = job.schedule()
                 if not schedule:
-                    html.write_text(_("Only execute manually"))
+                    html.write_text_permissive(_("Only execute manually"))
 
                 elif schedule["disabled"]:
-                    html.write_text(_("Disabled"))
+                    html.write_text_permissive(_("Disabled"))
 
                 elif schedule["timeofday"]:
                     # find the next time of all configured times
@@ -649,7 +653,9 @@ class PageBackup:
                     for timespec in schedule["timeofday"]:
                         times.append(next_scheduled_time(schedule["period"], timespec))
 
-                    html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
+                    html.write_text_permissive(
+                        time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times)))
+                    )
 
 
 class PageEditBackupJob:
@@ -958,14 +964,14 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
         html.td(_("Runtime"), class_="left")
         html.open_td()
         if state.started:
-            html.write_text(_("Started at %s") % render.date_and_time(state.started))
+            html.write_text_permissive(_("Started at %s") % render.date_and_time(state.started))
             duration = time.time() - state.started
             if state.state == "finished":
                 assert state.finished is not None
-                html.write_text(", Finished at %s" % render.date_and_time(state.started))
+                html.write_text_permissive(", Finished at %s" % render.date_and_time(state.started))
                 duration = state.finished - state.started
 
-            html.write_text(_(" (Duration: %s)") % render.timespan(duration))
+            html.write_text_permissive(_(" (Duration: %s)") % render.timespan(duration))
         html.close_td()
         html.close_tr()
 
@@ -1500,9 +1506,9 @@ class Target:
                 table.cell(_("Size"), render.fmt_bytes(info.size))
                 table.cell(_("Encrypted"))
                 if (encrypt := info.config["encrypt"]) is not None:
-                    html.write_text(encrypt)
+                    html.write_text_permissive(encrypt)
                 else:
-                    html.write_text(_("No"))
+                    html.write_text_permissive(_("No"))
 
     def backups(self) -> Mapping[str, SiteBackupInfo]:
         return self._target_type().backups()
@@ -1540,7 +1546,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
         for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(nr)
+            html.write_text_permissive(nr)
             table.cell(_("Actions"), css=["buttons"])
             restore_url = makeuri_contextless(
                 request,

@@ -134,7 +134,7 @@ class ModeRoles(WatoMode):
                 table.row()
 
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons"])
@@ -267,7 +267,7 @@ class ModeEditRole(WatoMode):
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
 
         if self._role.builtin:
-            html.write_text("{} ({})".format(self._role_id, _("built-in role")))
+            html.write_text_permissive("{} ({})".format(self._role_id, _("built-in role")))
             html.hidden_field("id", self._role_id)
         else:
             html.text_input("id", self._role_id)

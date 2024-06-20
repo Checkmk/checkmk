@@ -429,24 +429,26 @@ class ABCEditGlobalSettingMode(WatoMode):
                 self._show_global_setting()
 
             forms.section(_("Factory setting"))
-            html.write_text(self._valuespec.value_to_html(defvalue))
+            html.write_text_permissive(self._valuespec.value_to_html(defvalue))
 
             forms.section(_("Current state"))
             if is_configured_globally:
-                html.write_text(
+                html.write_text_permissive(
                     _('This variable is configured in <a href="%s">global settings</a>.')
                     % ("wato.py?mode=edit_configvar&varname=%s" % self._varname)
                 )
             elif not is_configured:
-                html.write_text(_("This variable is at factory settings."))
+                html.write_text_permissive(_("This variable is at factory settings."))
             else:
                 curvalue = self._current_settings[self._varname]
                 if is_configured_globally and curvalue == self._global_settings[self._varname]:
-                    html.write_text(_("Site setting and global setting are identical."))
+                    html.write_text_permissive(_("Site setting and global setting are identical."))
                 elif curvalue == defvalue:
-                    html.write_text(_("Your setting and factory settings are identical."))
+                    html.write_text_permissive(
+                        _("Your setting and factory settings are identical.")
+                    )
                 else:
-                    html.write_text(self._valuespec.value_to_html(curvalue))
+                    html.write_text_permissive(self._valuespec.value_to_html(curvalue))
 
             forms.end()
             html.hidden_fields()

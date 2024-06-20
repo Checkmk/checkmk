@@ -212,19 +212,19 @@ class FilterNumberRange(Filter):  # type is int
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text(_("From:") + "&nbsp;")
+        html.write_text_permissive(_("From:") + "&nbsp;")
         html.text_input(
             self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
         )
         if self.unit:
-            html.write_text(" %s " % self.unit)
+            html.write_text_permissive(" %s " % self.unit)
 
-        html.write_text(" &nbsp; " + _("To:") + "&nbsp;")
+        html.write_text_permissive(" &nbsp; " + _("To:") + "&nbsp;")
         html.text_input(
             self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
         )
         if self.unit:
-            html.write_text(" %s " % self.unit)
+            html.write_text_permissive(" %s " % self.unit)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
@@ -352,7 +352,7 @@ def checkbox_row(
 ) -> None:
     html.begin_checkbox_group()
     if title:
-        html.write_text(title)
+        html.write_text_permissive(title)
     checkbox_default = not any(value.values())
     for var, text in options:
         html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)

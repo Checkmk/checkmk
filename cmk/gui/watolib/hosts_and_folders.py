@@ -3699,7 +3699,7 @@ def ajax_popup_host_action_menu() -> None:
     if request.get_str_input("show_clone_link"):
         html.open_a(href=host.clone_url())
         html.icon("insert")
-        html.write_text(_("Clone host"))
+        html.write_text_permissive(_("Clone host"))
         html.close_a()
 
     form_name: str = "hosts"
@@ -3712,7 +3712,7 @@ def ajax_popup_host_action_menu() -> None:
             % json.dumps([form_name, "_parentscan"]),
         )
         html.icon("parentscan")
-        html.write_text(_("Detect network parents"))
+        html.write_text_permissive(_("Detect network parents"))
         html.close_a()
 
     # Remove TLS registration
@@ -3735,7 +3735,7 @@ def ajax_popup_host_action_menu() -> None:
             ),
         )
         html.icon({"icon": "tls", "emblem": "remove"})
-        html.write_text(_("Remove TLS registration"))
+        html.write_text_permissive(_("Remove TLS registration"))
         html.close_a()
 
     # Delete host
@@ -3757,7 +3757,7 @@ def ajax_popup_host_action_menu() -> None:
             ),
         )
         html.icon("delete")
-        html.write_text(_("Delete host"))
+        html.write_text_permissive(_("Delete host"))
         html.close_a()
 
 

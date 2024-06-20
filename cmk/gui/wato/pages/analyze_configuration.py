@@ -215,7 +215,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         # assume all have the same test meta information (title, help, ...)
         table.cell(_("Title"), css=["title"] + ["stale"] if is_test_disabled else [])
-        html.write_text(row_data.title)
+        html.write_text_permissive(row_data.title)
 
         # Now loop all sites to display their results
         for site_id in site_ids:
@@ -274,13 +274,13 @@ class ModeAnalyzeConfig(WatoMode):
                         "acknowledge_test",
                     )
             else:
-                html.write_text("")
+                html.write_text_permissive("")
 
         # Add toggleable notitication context
         table.row(css=["ac_test_details", "hidden"], id_="test_result_details_%s" % test_id)
         table.cell(colspan=2 + 2 * len(site_ids))
 
-        html.write_text(row_data.help)
+        html.write_text_permissive(row_data.help)
 
         if not is_test_disabled:
             html.open_table()

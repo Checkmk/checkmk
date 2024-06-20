@@ -139,7 +139,7 @@ class ModeIcons(WatoMode):
                 table.row()
 
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
 
                 table.cell(_("Actions"), css=["buttons"])
                 category = IconSelector.category_alias(category_name)

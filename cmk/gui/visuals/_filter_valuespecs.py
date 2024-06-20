@@ -138,7 +138,7 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
         html.icon(
             "alert", _("This filter cannot be displayed") + " ({})\n{}".format(e, "".join(tbs))
         )
-        html.write_text(_("This filter cannot be displayed"))
+        html.write_text_permissive(_("This filter cannot be displayed"))
     html.close_div()
     html.close_div()
 

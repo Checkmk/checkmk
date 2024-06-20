@@ -109,16 +109,18 @@ class ModePasswords(SimpleListMode):
         table.cell(_("Title"), entry["title"])
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
-            html.write_text(
+            html.write_text_permissive(
                 _('Administrators (having the permission "Write access to all passwords")')
             )
         else:
-            html.write_text(self._contact_group_alias(entry["owned_by"]))
+            html.write_text_permissive(self._contact_group_alias(entry["owned_by"]))
         table.cell(_("Shared with"))
         if not entry["shared_with"]:
-            html.write_text(_("Not shared"))
+            html.write_text_permissive(_("Not shared"))
         else:
-            html.write_text(", ".join([self._contact_group_alias(g) for g in entry["shared_with"]]))
+            html.write_text_permissive(
+                ", ".join([self._contact_group_alias(g) for g in entry["shared_with"]])
+            )
 
     def _contact_group_alias(self, name: str) -> str:
         return self._contact_groups.get(name, {"alias": name})["alias"]

@@ -1033,7 +1033,7 @@ def render_mobile_list(
                     assert isinstance(rendered_content, (str, HTML))
                     html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
-                    html.write_text(": ")
+                    html.write_text_permissive(": ")
                     html.span(rendered_content, class_=rendered_class)
                     html.close_p()
 

@@ -106,9 +106,8 @@ class HTMLWriter:
         self.browser_reload = 0.0
         self._final_javascript: list[FinalJavaScript] = []
 
-    def write_text(self, text: HTMLContent) -> None:
+    def write_text_permissive(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
-        # This is going to be write_text_permissive CMK-13491
         self.write_html(HTML.without_escaping(escaping.escape_text(text)))
 
     def write_html(self, content: HTML) -> None:

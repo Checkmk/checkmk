@@ -601,7 +601,7 @@ class SidebarRenderer:
         styles = snapin_instance.styles()
         if styles:
             html.open_style()
-            html.write_text(styles)
+            html.write_text_permissive(styles)
             html.close_style()
 
     def _show_page_content(self, content: HTML | None) -> None:

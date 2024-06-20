@@ -466,7 +466,7 @@ class Age(ValueSpec[int]):
                 html.text_input(
                     varprefix + "_" + uid, default_value=str(val), size=4, cssclass="number"
                 )
-                html.write_text(" %s " % title)
+                html.write_text_permissive(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
 
@@ -574,7 +574,7 @@ class TimeSpan(ValueSpec[float]):
                 html.text_input(
                     varprefix + "_" + uid, default_value=str(round(val)), size=4, cssclass="number"
                 )
-                html.write_text(" %s " % title)
+                html.write_text_permissive(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
 
@@ -2138,7 +2138,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             self._valuespec.render_input(varprefix + "_%d" % nr, s)  # type: ignore[arg-type]
             if not self._vertical and self._separator:
                 html.nbsp()
-                html.write_text(self._separator)
+                html.write_text_permissive(self._separator)
                 html.nbsp()
             html.close_div()
         html.close_div()
@@ -3083,11 +3083,11 @@ class DropdownChoice(ValueSpec[T | None]):
             )
 
         if value is None and not options:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
             return
 
         if len(options) == 0:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
             return
 
         html.dropdown(
@@ -3266,7 +3266,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
 
     def render_input(self, varprefix: str, value: str | None) -> None:
         if self._label:
-            html.write_text(self._label)
+            html.write_text_permissive(self._label)
 
         clean_choices = [(value, value)] if value else self.choices()
 
@@ -3689,7 +3689,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         options: Choices = []
         choices = self.choices()
         if not choices:
-            html.write_text(self._no_elements_text)
+            html.write_text_permissive(self._no_elements_text)
             return
 
         for nr, (val, title, vs) in enumerate(choices):
@@ -3838,7 +3838,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                     indent=False,
                 ),
             ):
-                html.write_text(rendered_value)
+                html.write_text_permissive(rendered_value)
             return HTML.without_escaping(output_funnel.drain())
 
         return (
@@ -4017,7 +4017,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def render_input(self, varprefix: str, value: ListChoiceModel) -> None:
         self.load_elements()
         if not self._elements:
-            html.write_text(self._no_elements_text)
+            html.write_text_permissive(self._no_elements_text)
             return
 
         self._draw_listchoice(varprefix, value)
@@ -4159,7 +4159,7 @@ class DualListChoice(ListChoice):
     ) -> None:
         self.load_elements()
         if not self._elements:
-            html.write_text(_("There are no elements for selection."))
+            html.write_text_permissive(_("There are no elements for selection."))
             return
 
         # Use values from HTTP request in complain mode (value is empty or None)
@@ -4201,13 +4201,13 @@ class DualListChoice(ListChoice):
 
         html.open_tr()
         html.open_td(class_="head")
-        html.write_text(_("Available"))
+        html.write_text_permissive(_("Available"))
         if not self._instant_add:
             html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
         html.close_td()
 
         html.open_td(class_="head")
-        html.write_text(_("Selected"))
+        html.write_text_permissive(_("Selected"))
         if not self._instant_add:
             html.a("<", href="javascript:%s;" % unselect_func, class_=["control", "del"])
         html.close_td()
@@ -4691,7 +4691,7 @@ class AbsoluteDate(ValueSpec[None | float]):
         else:
             for count, val in enumerate(values):
                 if count > 0:
-                    html.write_text(" ")
+                    html.write_text_permissive(" ")
                 if val is None:
                     html.nbsp()
                 else:
@@ -4945,7 +4945,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
     def render_input(self, varprefix: str, value: TimeofdayRangeValue) -> None:
         self._bounds[0].render_input(varprefix + "_from", value[0] if value is not None else None)
         html.nbsp()
-        html.write_text("-")
+        html.write_text_permissive("-")
         html.nbsp()
         self._bounds[1].render_input(varprefix + "_until", value[1] if value is not None else None)
 
@@ -5530,7 +5530,7 @@ class Optional(ValueSpec[None | T]):
             value = self._valuespec.default_value()
         if self._valuespec.title():
             the_title = self._valuespec.title()
-            html.write_text(("???" if the_title is None else the_title) + " ")
+            html.write_text_permissive(("???" if the_title is None else the_title) + " ")
         self._valuespec.render_input(varprefix + "_value", value)
         html.close_span()
 
@@ -5814,7 +5814,7 @@ class Tuple(ValueSpec[TT]):
             if self._orientation == "vertical":
                 html.open_tr()
             elif self._orientation == "float":
-                html.write_text(self._separator)
+                html.write_text_permissive(self._separator)
 
             title = ""
             if self._show_titles:
@@ -5835,9 +5835,9 @@ class Tuple(ValueSpec[TT]):
                     if self._title_br and title:
                         html.br()
                     else:
-                        html.write_text(" ")
+                        html.write_text_permissive(" ")
                 else:
-                    html.write_text(" ")
+                    html.write_text_permissive(" ")
 
             elif self._orientation == "horizontal":
                 html.open_td(class_="tuple_td")
@@ -6061,8 +6061,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
         else:
             visible = True
             if label:
-                html.write_text(" ")
-                html.write_text(label)
+                html.write_text_permissive(" ")
+                html.write_text_permissive(label)
             # two_columns are used for space efficiency in very few places like e.g. filters
             # where it is clear from the context if values are required or not. Therefore, we
             # dont add a required label in this case.
@@ -6077,7 +6077,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         if not is_required_plain_checkbox:
             if two_columns:
                 if label and not colon_printed:
-                    html.write_text(":")
+                    html.write_text_permissive(":")
                 html.help(vs.help())
                 html.close_td()
                 html.open_td(class_="dictright")
@@ -6387,7 +6387,7 @@ class ElementSelection(ValueSpec[None | str]):
     def render_input(self, varprefix: str, value: str | None) -> None:
         self.load_elements()
         if len(self._elements) == 0:
-            html.write_text(self._empty_text)
+            html.write_text_permissive(self._empty_text)
         else:
             if self._label:
                 html.span(self._label, class_="vs_floating_text")
@@ -7713,7 +7713,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
         if id_.endswith("_emblem_img"):
             icon_tag = html.render_emblem(icon, title=title, id_=id_)
-            html.write_text(" + ")
+            html.write_text_permissive(" + ")
         else:
             icon_tag = html.render_icon(icon, title=title, id_=id_)
 
@@ -8092,10 +8092,10 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
 
     def render_input(self, varprefix: str, value: SSHKeyPairValue | None) -> None:
         if value:
-            html.write_text(_("Fingerprint: %s") % self.value_to_html(value))
+            html.write_text_permissive(_("Fingerprint: %s") % self.value_to_html(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
-            html.write_text(_("Key pair will be generated when you save."))
+            html.write_text_permissive(_("Key pair will be generated when you save."))
 
     def canonical_value(self) -> SSHKeyPairValue | None:
         return None

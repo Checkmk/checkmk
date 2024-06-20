@@ -572,7 +572,7 @@ class ModeRenameHost(WatoMode):
         ):
             forms.header(_("Rename host %s") % self._host.name())
             forms.section(_("Current name"))
-            html.write_text(self._host.name())
+            html.write_text_permissive(self._host.name())
             forms.section(_("New name"))
             html.text_input("newname", "")
             forms.end()

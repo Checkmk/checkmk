@@ -73,9 +73,9 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
         except HTTPRedirect:
             raise
         except Exception as e:
-            html.write_text(str(e))
+            html.write_text_permissive(str(e))
             if active_config.debug:
-                html.write_text(traceback.format_exc())
+                html.write_text_permissive(traceback.format_exc())
 
         return response
 
@@ -86,7 +86,7 @@ def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
     if request.has_var("_plain_error"):
-        html.write_text(_("Page not found"))
+        html.write_text_permissive(_("Page not found"))
     else:
         title = _("Page not found")
         make_header(

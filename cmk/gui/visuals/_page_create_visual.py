@@ -47,7 +47,7 @@ def page_create_visual(
     )
 
     html.open_p()
-    html.write_text(
+    html.write_text_permissive(
         _(
             "Depending on the chosen datasource, a %s can list <i>multiple</i> or <i>single</i> objects. "
             "For example, the <i>services</i> datasource can be used to simply create a list "

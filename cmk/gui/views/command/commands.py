@@ -171,11 +171,11 @@ class CommandReschedule(Command):
 
     def render(self, what: str) -> None:
         html.open_div(class_="group")
-        html.write_text(_("Spread over") + " ")
+        html.write_text_permissive(_("Spread over") + " ")
         html.text_input(
             "_resched_spread", default_value="5", size=3, cssclass="number", required=True
         )
-        html.write_text(" " + _("minutes"))
+        html.write_text_permissive(" " + _("minutes"))
         html.help(
             _(
                 "Spreading distributes checks evenly over the specified period. "
@@ -659,7 +659,7 @@ class CommandFakeCheckResult(Command):
     def _render_test_notification_tip(self):
         html.open_div(class_="info")
         html.icon("toggle_details")
-        html.write_text(
+        html.write_text_permissive(
             " &nbsp; "
             + _(
                 "If you are looking for a way to test your notification settings, try '%s' in Setup > Notifications"
@@ -682,7 +682,7 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Result") + " &nbsp; ")
+        html.write_text_permissive(_("Result") + " &nbsp; ")
         html.close_td()
         html.open_td()
         html.open_span(class_="inline_radio_group")
@@ -695,7 +695,7 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Plug-in output") + " &nbsp; ")
+        html.write_text_permissive(_("Plug-in output") + " &nbsp; ")
         html.close_td()
         html.open_td()
         html.text_input("_fake_output", "", size=60, placeholder=_("What is the purpose?"))
@@ -704,7 +704,7 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Performance data") + " &nbsp; ")
+        html.write_text_permissive(_("Performance data") + " &nbsp; ")
         html.close_td()
         html.open_td()
         html.text_input(
@@ -1024,9 +1024,9 @@ class CommandAcknowledge(Command):
         html.heading(_("Options"))
         if user.may("wato.global"):
             html.open_span()
-            html.write_text("(")
+            html.write_text_permissive("(")
             html.a(_("Edit defaults"), self._action_defaults_url())
-            html.write_text(")")
+            html.write_text_permissive(")")
             html.close_span()
 
         date, time_ = self._expiration_date_and_time(
@@ -1532,7 +1532,7 @@ class CommandScheduleDowntimes(Command):
         html.open_div(class_="group")
         html.button("_down_adhoc", _("Ad hoc for %d minutes") % adhoc_duration)
         html.nbsp()
-        html.write_text(_("Comment") + ": " + adhoc_comment)
+        html.write_text_permissive(_("Comment") + ": " + adhoc_comment)
         html.hr()
         html.close_div()
 
@@ -1571,7 +1571,7 @@ class CommandScheduleDowntimes(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Start"))
+        html.write_text_permissive(_("Start"))
         html.close_td()
         html.open_td()
         self._vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
@@ -1588,7 +1588,7 @@ class CommandScheduleDowntimes(Command):
         # End section
         html.open_tr()
         html.open_td()
-        html.write_text(_("End"))
+        html.write_text_permissive(_("End"))
         html.close_td()
         html.open_td()
         self._vs_date().render_input("_down_to_date", time.strftime("%Y-%m-%d"))
@@ -1605,7 +1605,7 @@ class CommandScheduleDowntimes(Command):
         # Repeat section
         html.open_tr()
         html.open_td()
-        html.write_text(_("Repeat"))
+        html.write_text_permissive(_("Repeat"))
         html.close_td()
         html.open_td()
         self.recurring_downtimes.show_input_elements(default="0")

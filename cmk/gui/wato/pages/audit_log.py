@@ -280,7 +280,7 @@ class ModeAuditLog(WatoMode):
     def page(self) -> None:
         with html.form_context("fileselection_form", method="POST"):
             if not request.has_var("file_selection"):
-                html.write_text(_("Please choose an audit log to view:"))
+                html.write_text_permissive(_("Please choose an audit log to view:"))
                 html.br()
                 html.br()
             self._vs_file_selection().render_input("file_selection", None)

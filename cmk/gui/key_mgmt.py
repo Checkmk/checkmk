@@ -212,7 +212,7 @@ class PageKeyManagement:
             for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
@@ -427,7 +427,7 @@ class PageUploadKey:
         #   encrypted (using that passphrase) and have the '-----BEGIN ENCRYPTED PRIVATE KEY-----'
         #   form. The positive side effect is that the user proves that they know the passphrase
         #   now, rather than later whenever the key is used.
-        html.write_text(
+        html.write_text_permissive(
             _(
                 "Here you can upload an existing certificate and private key. "
                 "The key must be an RSA key and it must be password protected."

@@ -197,7 +197,7 @@ class MasterControlSnapin(SidebarSnapin):
 
         command = commands.get((column, state))
         if not command:
-            html.write_text(_("Command %s/%d not found") % (column, state))
+            html.write_text_permissive(_("Command %s/%d not found") % (column, state))
             return
 
         sites.live().command("[%d] %s" % (int(time.time()), command), site)

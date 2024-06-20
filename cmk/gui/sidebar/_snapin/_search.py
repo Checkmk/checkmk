@@ -793,7 +793,7 @@ class QuicksearchResultRenderer:
 
             for result in sorted(results, key=lambda x: x.title):
                 html.open_a(id_="result_%s" % query, href=result.url, target="main")
-                html.write_text(
+                html.write_text_permissive(
                     result.title
                     + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
                 )
@@ -1410,7 +1410,7 @@ class MenuSearchResultsRenderer(abc.ABC):
     def _render_error(self, error: MKException) -> str:
         with output_funnel.plugged():
             html.open_div(class_="error")
-            html.write_text(f"{error}")
+            html.write_text_permissive(f"{error}")
             html.close_div()
             error_as_html = output_funnel.drain()
         return error_as_html
@@ -1494,7 +1494,7 @@ class MenuSearchResultsRenderer(abc.ABC):
                         href="",
                         onclick=f"cmk.search.on_click_show_all_results({json.dumps(topic)}, 'popup_menu_{self.search_type}');",
                     )
-                    html.write_text(_("Show all results"))
+                    html.write_text_permissive(_("Show all results"))
                     html.close_a()
                     html.close_li()
 
@@ -1503,7 +1503,7 @@ class MenuSearchResultsRenderer(abc.ABC):
                         class_="hidden warning",
                         **{"data-extended": "false"},
                     )
-                    html.write_text(
+                    html.write_text_permissive(
                         _("More than %d results available, please refine your search.")
                         % self.max_results_after_show_all
                     )
@@ -1544,7 +1544,7 @@ class MenuSearchResultsRenderer(abc.ABC):
             onclick=f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
             title=result.title + (" %s" % result.context if result.context else ""),
         )
-        html.write_text(
+        html.write_text_permissive(
             result.title + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
         )
         html.close_a()
@@ -1609,7 +1609,7 @@ class PageSearchSetup(AjaxPage):
             with output_funnel.plugged():
                 html.open_div(class_="topic")
                 html.open_ul()
-                html.write_text(_("Currently indexing, please try again shortly."))
+                html.write_text_permissive(_("Currently indexing, please try again shortly."))
                 html.close_ul()
                 html.close_div()
                 return output_funnel.drain()
@@ -1617,7 +1617,7 @@ class PageSearchSetup(AjaxPage):
             with output_funnel.plugged():
                 html.open_div(class_="error")
                 html.open_ul()
-                html.write_text(_("Redis server is not reachable."))
+                html.write_text_permissive(_("Redis server is not reachable."))
                 html.close_ul()
                 html.close_div()
                 return output_funnel.drain()

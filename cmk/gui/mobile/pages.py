@@ -338,7 +338,7 @@ def _page_view() -> None:
         logger.exception("error showing mobile view")
         if active_config.debug:
             raise
-        html.write_text("ERROR showing view: %s" % e)
+        html.write_text_permissive("ERROR showing view: %s" % e)
 
     mobile_html_foot()
     return None
@@ -410,7 +410,7 @@ class MobileViewRenderer(ABCViewRenderer):
             )
             html.open_div(id_="view_results")
             if len(rows) == 0:
-                html.write_text(_("No hosts/services found."))
+                html.write_text_permissive(_("No hosts/services found."))
             else:
                 try:
                     if cmk.gui.view_utils.row_limit_exceeded(
@@ -428,7 +428,7 @@ class MobileViewRenderer(ABCViewRenderer):
                     )
                 except Exception as e:
                     logger.exception("error rendering mobile view")
-                    html.write_text(_("Error showing view: %s") % e)
+                    html.write_text_permissive(_("Error showing view: %s") % e)
             html.close_div()
             jqm_page_navfooter(navbar, "data", page_id)
 
@@ -500,7 +500,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
             one_shown = True
     html.close_div()
     if not one_shown:
-        html.write_text(_("No commands are possible in this view"))
+        html.write_text_permissive(_("No commands are possible in this view"))
 
 
 # FIXME: Reduce duplicate code with views.py

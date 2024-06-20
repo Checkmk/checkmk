@@ -965,13 +965,13 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                     if not button_forth_shown:
                         html.disabled_icon_button("forth_off")
 
-                    html.write_text(" &nbsp; ")
+                    html.write_text_permissive(" &nbsp; ")
                     html.icon_button(
                         makeuri(request, [], delvars=["timewarp"]),
                         _("Close timewarp"),
                         "closetimewarp",
                     )
-                    html.write_text(
+                    html.write_text_permissive(
                         "%s %s"
                         % (
                             _("Timewarp to "),
@@ -1043,7 +1043,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
         for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
             table.row()
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(nr)
+            html.write_text_permissive(nr)
             table.cell("", css=["buttons"])
             anno_vars = [
                 ("anno_site", site_id),

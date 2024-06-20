@@ -567,7 +567,7 @@ class Cell:
         classes += self.painter().title_classes()
 
         html.open_th(class_=classes, onclick=onclick, title=title)
-        html.write_text(self.title())
+        html.write_text_permissive(self.title())
         html.close_th()
 
     def render(

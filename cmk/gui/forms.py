@@ -114,7 +114,7 @@ def _table_head(
     else:
         html.open_td(id_=f"nform.{treename}.{id_}", colspan=2)
 
-    html.write_text(title)
+    html.write_text_permissive(title)
     html.help(help_text)
     if show_more_toggle:
         html.more_button("foldable_" + id_, dom_levels_up=4, with_text=True)
@@ -173,13 +173,13 @@ def section(
                 class_=["title"] + (["withcheckbox"] if checkbox else []),
                 title=escaping.strip_tags(title),
             )
-            html.write_text(title)
+            html.write_text_permissive(title)
             html.span("." * 200, class_=["dots"] + (["required"] if is_required else []))
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
             if isinstance(checkbox, (str, HTML)):
-                html.write_text(checkbox)
+                html.write_text_permissive(checkbox)
             else:
                 name, active, attrname = checkbox
                 html.checkbox(

@@ -167,31 +167,33 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         table.cell(_("Conditions"))
         html.open_ul(class_="conditions")
         html.open_li()
-        html.write_text(
+        html.write_text_permissive(
             "{}: {}".format(
                 _("Folder"), folder_tree().folder(entry["conditions"]["host_folder"]).alias_path()
             )
         )
         html.close_li()
         html.close_ul()
-        html.write_text(vs_conditions().value_to_html(entry["conditions"]))
+        html.write_text_permissive(vs_conditions().value_to_html(entry["conditions"]))
 
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
-            html.write_text(
+            html.write_text_permissive(
                 _(
                     "Administrators (having the permission "
                     '"Write access to all predefined conditions")'
                 )
             )
         else:
-            html.write_text(self._contact_group_alias(entry["owned_by"]))
+            html.write_text_permissive(self._contact_group_alias(entry["owned_by"]))
 
         table.cell(_("Shared with"))
         if not entry["shared_with"]:
-            html.write_text(_("Not shared"))
+            html.write_text_permissive(_("Not shared"))
         else:
-            html.write_text(", ".join([self._contact_group_alias(g) for g in entry["shared_with"]]))
+            html.write_text_permissive(
+                ", ".join([self._contact_group_alias(g) for g in entry["shared_with"]])
+            )
 
     def _contact_group_alias(self, name: str) -> str:
         return self._contact_groups.get(name, {"alias": name})["alias"]

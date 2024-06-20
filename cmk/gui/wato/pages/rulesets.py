@@ -1111,24 +1111,24 @@ class ModeEditRuleset(WatoMode):
 
         match match_type:
             case "first":
-                html.write_text(_("The first matching rule defines the parameter."))
+                html.write_text_permissive(_("The first matching rule defines the parameter."))
             case "dict":
-                html.write_text(
+                html.write_text_permissive(
                     _(
                         "Each parameter is defined by the first matching rule where that "
                         "parameter is set (checked)."
                     )
                 )
             case "varies":
-                html.write_text(
+                html.write_text_permissive(
                     _(
                         "The match type is defined by the discovery ruleset type of the check plug-in."
                     )
                 )
             case "all" | "list":
-                html.write_text(_("All matching rules will add to the resulting list."))
+                html.write_text_permissive(_("All matching rules will add to the resulting list."))
             case _:
-                html.write_text(_("Unknown match type: %s") % match_type)
+                html.write_text_permissive(_("Unknown match type: %s") % match_type)
 
         html.close_div()
 
@@ -1229,7 +1229,7 @@ class ModeEditRuleset(WatoMode):
                 html.empty_icon()
 
         table.cell("#", css=["narrow nowrap"])
-        html.write_text(rulenr)
+        html.write_text_permissive(rulenr)
 
         table.cell("", css=["buttons"])
         if rule.is_disabled():
@@ -1408,7 +1408,7 @@ class ModeEditRuleset(WatoMode):
                 + escape_to_html(_("The value of this rule is not valid. "))
                 + escape_to_html_permissive(reason)
             )
-        html.write_text(value_html)
+        html.write_text_permissive(value_html)
 
         # Comment
         table.cell(_("Description"), css=["description"])
@@ -1419,14 +1419,14 @@ class ModeEditRuleset(WatoMode):
                 "url",
                 target="_blank",
             )
-            html.write_text("&nbsp;")
+            html.write_text_permissive("&nbsp;")
 
         desc = rule.rule_options.description or rule.rule_options.comment or ""
-        html.write_text(desc)
+        html.write_text_permissive(desc)
 
     def _rule_conditions(self, rule: Rule) -> None:
         self._predefined_condition_info(rule)
-        html.write_text(
+        html.write_text_permissive(
             VSExplicitConditions(rulespec=self._rulespec, render="normal").value_to_html(
                 rule.get_rule_conditions()
             )
@@ -1439,7 +1439,7 @@ class ModeEditRuleset(WatoMode):
 
         condition = self._predefined_conditions.get(condition_id)
         if condition is None:
-            html.write_text(
+            html.write_text_permissive(
                 _("Predefined condition: '%s' does not exist or using not permitted") % condition_id
             )
             return
@@ -1450,7 +1450,9 @@ class ModeEditRuleset(WatoMode):
                 ("ident", condition_id),
             ]
         )
-        html.write_text(_('Predefined condition: <a href="%s">%s</a>') % (url, condition["title"]))
+        html.write_text_permissive(
+            _('Predefined condition: <a href="%s">%s</a>') % (url, condition["title"])
+        )
 
     def _create_form(self) -> None:
         with html.form_context("new_rule", add_transid=False):

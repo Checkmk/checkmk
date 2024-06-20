@@ -116,11 +116,11 @@ def ajax_message_read():
     response.set_content_type("application/json")
     try:
         message.delete_gui_message(request.get_str_input_mandatory("id"))
-        html.write_text("OK")
+        html.write_text_permissive("OK")
     except Exception:
         if active_config.debug:
             raise
-        html.write_text("ERROR")
+        html.write_text_permissive("ERROR")
 
 
 class PageAjaxSidebarGetMessages(AjaxPage):
@@ -241,7 +241,7 @@ class MegaMenuRenderer:
         html.open_a(href="", onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
         if user.get_attribute("icons_per_item"):
             html.icon("trans")
-        html.write_text(_("Show all"))
+        html.write_text_permissive(_("Show all"))
         html.close_a()
         html.close_li()
         html.close_ul()
@@ -262,7 +262,7 @@ class MegaMenuRenderer:
     def _show_item_title(self, item: TopicMenuItem) -> None:
         item_title: HTML | str = item.title
         if not item.button_title:
-            html.write_text(item_title)
+            html.write_text_permissive(item_title)
             return
         html.span(item.title)
         html.button(item.name, item.button_title)

@@ -820,13 +820,13 @@ class DropdownEntryRenderer:
 def search_form(title: str | None = None, mode: str | None = None, default_value: str = "") -> None:
     with html.form_context("search", add_transid=False):
         if title:
-            html.write_text(title + " ")
+            html.write_text_permissive(title + " ")
         html.text_input("search", size=32, default_value=default_value)
         html.hidden_fields()
         if mode:
             html.hidden_field("mode", mode, add_var=True)
         html.set_focus("search")
-        html.write_text(" ")
+        html.write_text_permissive(" ")
         html.button("_do_seach", _("Search"))
 
 

@@ -579,7 +579,7 @@ def render_unacknowleged_werks() -> None:
     werks = unacknowledged_incompatible_werks()
     if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
-        html.write_text(
+        html.write_text_permissive(
             _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks)
         )
         html.br()
@@ -821,15 +821,15 @@ def render_nowiki_werk_description(  # pylint: disable=too-many-branches
                     html.close_pre()
                     in_code = False
                 elif line.startswith("OM:"):
-                    html.write_text("OMD[mysite]:~$ ")
+                    html.write_text_permissive("OMD[mysite]:~$ ")
                     html.b(line[3:])
                 elif line.startswith("RP:"):
-                    html.write_text("root@myhost:~# ")
+                    html.write_text_permissive("root@myhost:~# ")
                     html.b(line[3:])
                 elif not line.strip() and not in_code:
                     html.p("")
                 else:
-                    html.write_text(line + "\n")
+                    html.write_text_permissive(line + "\n")
 
         if in_list:
             html.close_ul()

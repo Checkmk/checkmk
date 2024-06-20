@@ -51,7 +51,9 @@ def ajax_popup_add() -> None:
             html.open_li()
 
             if not isinstance(entry.item, PageMenuLink):
-                html.write_text(f"Unhandled entry type '{type(entry.item)}': {entry.name}")
+                html.write_text_permissive(
+                    f"Unhandled entry type '{type(entry.item)}': {entry.name}"
+                )
                 continue
 
             html.open_a(
@@ -60,7 +62,7 @@ def ajax_popup_add() -> None:
                 target=entry.item.link.target,
             )
             html.icon(entry.icon_name or "trans")
-            html.write_text(entry.title)
+            html.write_text_permissive(entry.title)
             html.close_a()
             html.close_li()
 

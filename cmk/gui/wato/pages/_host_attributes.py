@@ -348,14 +348,14 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write_text(content)
+                    html.write_text_permissive(content)
                     html.close_b()
                 elif isinstance(attr, str):
                     html.b(_u(cast(str, content)))
                 else:
                     html.b(content)
 
-            html.write_text(explanation)
+            html.write_text_permissive(explanation)
             html.close_div()
 
         if topic_is_volatile:

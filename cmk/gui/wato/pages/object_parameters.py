@@ -322,7 +322,7 @@ class ModeObjectParameters(WatoMode):
         if rulespec is None or (
             rulespec_allow_list is not None and not rulespec_allow_list.is_visible(rulespec.name)
         ):
-            html.write_text(_("This check is not configurable via WATO"))
+            html.write_text_permissive(_("This check is not configurable via WATO"))
             return
 
         rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
@@ -344,7 +344,9 @@ class ModeObjectParameters(WatoMode):
             service_result=service_result,
         )
         assert isinstance(rulespec.valuespec, Tuple)
-        html.write_text(rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]))
+        html.write_text_permissive(
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])
+        )
         html.close_td()
         html.close_tr()
         html.close_table()
@@ -421,7 +423,7 @@ class ModeObjectParameters(WatoMode):
         if "command_line" in serviceinfo:
             html.tt(serviceinfo["command_line"])
         else:
-            html.write_text(_("(no command line, passive check)"))
+            html.write_text_permissive(_("(no command line, passive check)"))
         html.close_td()
 
         html.close_tr()
@@ -568,7 +570,7 @@ class ModeObjectParameters(WatoMode):
 
         if isinstance(known_settings, dict) and "tp_computed_params" in known_settings:
             computed_at = known_settings["tp_computed_params"]["computed_at"]
-            html.write_text(
+            html.write_text_permissive(
                 _("Timespecific parameters computed at %s")
                 % cmk.utils.render.date_and_time(computed_at)
             )
@@ -588,11 +590,11 @@ class ModeObjectParameters(WatoMode):
 
         elif known_settings is not self._PARAMETERS_UNKNOWN:
             try:
-                html.write_text(valuespec.value_to_html(known_settings))
+                html.write_text_permissive(valuespec.value_to_html(known_settings))
             except Exception as e:
                 if active_config.debug:
                     raise
-                html.write_text(_("Invalid parameter %r: %s") % (known_settings, e))
+                html.write_text_permissive(_("Invalid parameter %r: %s") % (known_settings, e))
 
         else:
             # For match type "dict" it can be the case the rule define some of the keys
@@ -610,20 +612,20 @@ class ModeObjectParameters(WatoMode):
             if valuespec and not rules:  # show the default value
                 if rulespec.factory_default is Rulespec.FACTORY_DEFAULT_UNUSED:
                     # Some rulesets are ineffective if they are empty
-                    html.write_text(_("(unused)"))
+                    html.write_text_permissive(_("(unused)"))
 
                 elif rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
                     # If there is a factory default then show that one
                     setting = rulespec.factory_default
-                    html.write_text(valuespec.value_to_html(setting))
+                    html.write_text_permissive(valuespec.value_to_html(setting))
 
                 elif ruleset.match_type() in ("all", "list"):
                     # Rulesets that build lists are empty if no rule matches
-                    html.write_text(_("(no entry)"))
+                    html.write_text_permissive(_("(no entry)"))
 
                 else:
                     # Else we use the default value of the valuespec
-                    html.write_text(valuespec.value_to_html(valuespec.default_value()))
+                    html.write_text_permissive(valuespec.value_to_html(valuespec.default_value()))
 
             # We have a setting
             elif valuespec:
@@ -636,7 +638,7 @@ class ModeObjectParameters(WatoMode):
                         )
                     )
                 else:
-                    html.write_text(valuespec.value_to_html(setting))
+                    html.write_text_permissive(valuespec.value_to_html(setting))
 
             # Binary rule, no valuespec, outcome is True or False
             else:

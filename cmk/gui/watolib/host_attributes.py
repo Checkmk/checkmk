@@ -967,7 +967,7 @@ class ABCHostAttributeFixedText(ABCHostAttributeText, abc.ABC):
     def render_input(self, varprefix: str, value: str | None) -> None:
         if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
-            html.write_text(value)
+            html.write_text_permissive(value)
 
     def from_html_vars(self, varprefix: str) -> str | None:
         return request.var(varprefix + "attr_" + self.name())

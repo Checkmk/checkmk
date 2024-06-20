@@ -148,7 +148,7 @@ def render_connections_page(
             table.row()
 
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(display_index)
+            html.write_text_permissive(display_index)
 
             table.cell(_("Actions"), css=["buttons"])
             connection_id = connection["id"]
@@ -199,8 +199,8 @@ def render_connections_page(
                 html.icon_button(
                     url, _("Context information about this connection"), "url", target="_blank"
                 )
-                html.write_text("&nbsp;")
-            html.write_text(connection["description"])
+                html.write_text_permissive("&nbsp;")
+            html.write_text_permissive(connection["description"])
 
 
 def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:

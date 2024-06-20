@@ -81,7 +81,7 @@ class ABCRowTable(RowTable):
         ):
             html.open_div(class_="livestatus message", onmouseover="this.style.display='none';")
             html.open_tt()
-            html.write_text(query.replace("\n", "<br>\n"))
+            html.write_text_permissive(query.replace("\n", "<br>\n"))
             html.close_tt()
             html.close_div()
 

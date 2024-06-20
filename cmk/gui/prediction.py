@@ -120,7 +120,7 @@ def _select_prediction(
         )
 
     with html.form_context("prediction"):
-        html.write_text(_("Show prediction for "))
+        html.write_text_permissive(_("Show prediction for "))
         html.dropdown(
             "prediction_selection",
             ((title, title) for title in available_predictions_sorted),

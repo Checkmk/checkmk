@@ -282,7 +282,7 @@ class ABCBIMode(WatoMode):
         if not sub_rule_ids:
             html.open_li()
             html.open_a(href=edit_url)
-            html.write_text(title)
+            html.write_text_permissive(title)
             html.close_a()
             html.close_li()
         else:
@@ -592,7 +592,7 @@ class ModeBIPacks(ABCBIMode):
 
                 table.row()
                 table.cell("#", css=["narrow", "nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if user.may("wato.bi_admin"):
                     target_mode = "bi_edit_pack"
@@ -985,7 +985,7 @@ class ModeBIRules(ABCBIMode):
                     html.checkbox("_c_rule_%s" % rule_id)
 
                     table.cell("#", css=["narrow nowrap"])
-                    html.write_text(nr)
+                    html.write_text_permissive(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     edit_url = self.url_to_pack(
                         [("mode", "bi_edit_rule"), ("id", rule_id)], self.bi_pack
@@ -2253,7 +2253,7 @@ class BIModeAggregations(ABCBIMode):
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
                 table.cell("#", css=["narrow", "nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = makeuri_contextless(
                     request,
@@ -2283,7 +2283,9 @@ class BIModeAggregations(ABCBIMode):
                 if cmk_version.edition() is cmk_version.Edition.CME:
                     table.cell(_("Customer"))
                     if bi_aggregation.customer:
-                        html.write_text(customer.get_customer_name_by_id(bi_aggregation.customer))
+                        html.write_text_permissive(
+                            customer.get_customer_name_by_id(bi_aggregation.customer)
+                        )
 
                 table.cell(_("Options"), css=["buttons"])
 

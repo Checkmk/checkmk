@@ -197,7 +197,7 @@ class ModePatternEditor(WatoMode):
         html.h3(_("Logfile patterns"))
         if ruleset.is_empty():
             html.open_div(class_="info")
-            html.write_text(
+            html.write_text_permissive(
                 "There are no logfile patterns defined. You may create "
                 'logfile patterns using the <a href="%s">Rule Editor</a>.'
                 % folder_preserving_link(
@@ -314,7 +314,7 @@ class ModePatternEditor(WatoMode):
 
                         table.row()
                         table.cell("#", css=["narrow nowrap"])
-                        html.write_text(rulenr)
+                        html.write_text_permissive(rulenr)
                         table.cell(_("Match"))
                         html.icon(match_img, match_title)
 

@@ -1954,7 +1954,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                 table.row(css=["matches_search"] if id_ in found_packs else [])
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
 
                 edit_url = makeuri_contextless(
@@ -2121,7 +2121,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 if edition() is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
-                        html.write_text(customer_api().get_customer_name(rule_pack))
+                        html.write_text_permissive(customer_api().get_customer_name(rule_pack))
 
                 table.cell(
                     _("Rules"),
@@ -2415,7 +2415,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 )
 
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
                 html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
@@ -2467,21 +2467,21 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 if edition() is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in self._rule_pack:
-                        html.write_text(
+                        html.write_text_permissive(
                             "{} ({})".format(
                                 customer_api().get_customer_name(self._rule_pack),
                                 _("Set by rule pack"),
                             )
                         )
                     else:
-                        html.write_text(customer_api().get_customer_name(rule))
+                        html.write_text_permissive(customer_api().get_customer_name(rule))
 
                 if rule.get("drop"):
                     table.cell(_("State"), css=["state statep nowrap"])
                     if rule["drop"] == "skip_pack":
-                        html.write_text(_("SKIP PACK"))
+                        html.write_text_permissive(_("SKIP PACK"))
                     else:
-                        html.write_text(_("DROP"))
+                        html.write_text_permissive(_("DROP"))
                 else:
                     if isinstance(rule["state"], tuple):
                         stateval: Literal["text_pattern", 0, 1, 2, 3, -1] = rule["state"][0]
@@ -2516,7 +2516,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.cell(_("Facility"))
                 if "match_facility" in rule:
                     facnr = rule["match_facility"]
-                    html.write_text(facilities[facnr])
+                    html.write_text_permissive(facilities[facnr])
 
                 table.cell(
                     _("Service level"),
@@ -2541,7 +2541,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         url, _("Context information about this rule"), "url", target="_blank"
                     )
                     html.nbsp()
-                html.write_text(rule.get("description", ""))
+                html.write_text_permissive(rule.get("description", ""))
 
                 # Move rule to other pack
                 if len(self._rule_packs) > 1:
@@ -2991,9 +2991,9 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         html.open_ul()
         html.li(_("Event Daemon is running."))
         html.open_li()
-        html.write_text("%s: " % _("Current replication mode"))
+        html.write_text_permissive("%s: " % _("Current replication mode"))
         html.open_b()
-        html.write_text(
+        html.write_text_permissive(
             {
                 "sync": _("synchronize"),
                 "takeover": _("Takeover!"),
@@ -3003,7 +3003,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         html.close_li()
         if repl_mode in ["sync", "takeover"]:
             html.open_li()
-            html.write_text(
+            html.write_text_permissive(
                 _("Status of last synchronization: <b>%s</b>")
                 % (status["status_replication_success"] and _("Success") or _("Failed!"))
             )
@@ -3574,7 +3574,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def page(self) -> None:
         self._verify_ec_enabled()
         html.h3(_("Upload MIB file"))
-        html.write_text(
+        html.write_text_permissive(
             _(
                 "Use this form to upload MIB files for translating incoming SNMP traps. "
                 "You can upload single MIB files with the extension <tt>.mib</tt> or "

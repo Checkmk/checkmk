@@ -882,7 +882,7 @@ class HTMLGenerator(HTMLWriter):
         class_name = "password_meter"
         # <label>
         self.write_html(render_start_tag(tag_name="label", close_tag=False))
-        self.write_text(str(_("Strength:")))
+        self.write_text_permissive(str(_("Strength:")))
         # <meter>
         self.write_html(
             render_start_tag(
@@ -1326,11 +1326,11 @@ class HTMLGenerator(HTMLWriter):
         )
         self.open_div(title=_("Show more") if not with_text else "", class_="show_more")
         if with_text:
-            self.write_text(_("show more"))
+            self.write_text_permissive(_("show more"))
         self.close_div()
         self.open_div(title=_("Show less") if not with_text else "", class_="show_less")
         if with_text:
-            self.write_text(_("show less"))
+            self.write_text_permissive(_("show less"))
         self.close_div()
         self.close_a()
 

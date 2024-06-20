@@ -794,7 +794,7 @@ class DiscoveryPageRenderer:
 
         # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
-        # html.write_text("Using discovery information from %s" % cmk.utils.render.date_and_time(
+        # html.write_text_permissive("Using discovery information from %s" % cmk.utils.render.date_and_time(
         #    discovery_result.check_table_created))
 
         by_group = self._group_check_table_by_state(discovery_result.check_table)
@@ -1165,7 +1165,7 @@ class DiscoveryPageRenderer:
         rulespec = rulespec_registry[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
-                html.write_text(
+                html.write_text_permissive(
                     _("Timespecific parameters computed at %s")
                     % cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"])
                 )
@@ -1184,7 +1184,7 @@ class DiscoveryPageRenderer:
             paramtext += "{}: <tt>{}</tt><br>".format(_("Variable"), varname)
             paramtext += _("Parameters:")
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
-            html.write_text(paramtext)
+            html.write_text_permissive(paramtext)
 
     def _show_discovered_labels(
         self,
@@ -2170,7 +2170,7 @@ def ajax_popup_service_action_menu() -> None:
 
     html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))
     html.icon("rulesets")
-    html.write_text(_("View and edit the parameters for this service"))
+    html.write_text_permissive(_("View and edit the parameters for this service"))
     html.close_a()
 
     check_parameters_url = DiscoveryPageRenderer.check_parameters_button_link(entry, hostname)
@@ -2178,5 +2178,5 @@ def ajax_popup_service_action_menu() -> None:
         return
     html.open_a(href=check_parameters_url)
     html.icon("check_parameters")
-    html.write_text(_("Edit and analyse the check parameters for this service"))
+    html.write_text_permissive(_("Edit and analyse the check parameters for this service"))
     html.close_a()

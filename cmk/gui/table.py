@@ -665,9 +665,9 @@ class Table:
                     html.span(header_title)
                     html.close_div()
                 else:
-                    html.write_text(header_title)
+                    html.write_text_permissive(header_title)
             else:
-                html.write_text(header_title)
+                html.write_text_permissive(header_title)
 
             html.close_th()
         html.close_tr()

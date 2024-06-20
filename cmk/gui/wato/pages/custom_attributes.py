@@ -224,7 +224,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
                 html.text_input("name", self._attr["name"], size=61)
                 html.set_focus("name")
             else:
-                html.write_text(self._name)
+                html.write_text_permissive(self._name)
                 html.set_focus("title")
 
             forms.section(_("Title") + "<sup>*</sup>", is_required=True)
@@ -244,7 +244,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             if self._new:
                 html.dropdown("type", custom_attr_types(), deflt=self._attr["type"])
             else:
-                html.write_text(dict(custom_attr_types())[self._attr["type"]])
+                html.write_text_permissive(dict(custom_attr_types())[self._attr["type"]])
 
             self._add_extra_form_sections()
             self._show_in_table_option()
@@ -518,7 +518,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             for nr, custom_attr in enumerate(sorted(self._attrs, key=lambda x: x["title"])):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
-                html.write_text(nr)
+                html.write_text_permissive(nr)
 
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link(

@@ -800,7 +800,7 @@ class ModeFolder(WatoMode):
                 class_=["floatfolder", "unlocked", "newfolder"],
                 onclick="location.href='%s'" % self._folder.url([("mode", "newfolder")]),
             )
-            html.write_text("+")
+            html.write_text_permissive("+")
             html.close_div()
             html.div("", class_="folder_foot")
 
@@ -840,7 +840,7 @@ class ModeFolder(WatoMode):
         if subfolder.permissions.may("read"):
             html.a(subfolder.title(), href=subfolder.url())
         else:
-            html.write_text(subfolder.title())
+            html.write_text_permissive(subfolder.title())
         html.close_div()
 
     def _show_subfolder_buttons(self, subfolder: Folder) -> None:
@@ -897,19 +897,19 @@ class ModeFolder(WatoMode):
         for num, pg in enumerate(permitted_groups):
             cgalias = groups.get(pg, {"alias": pg})["alias"]
             html.icon("contactgroups", _("Contact groups that have permission on this folder"))
-            html.write_text(" %s" % cgalias)
+            html.write_text_permissive(" %s" % cgalias)
             html.br()
             if num > 1 and len(permitted_groups) > 4:
-                html.write_text(
+                html.write_text_permissive(
                     _("<i>%d more contact groups</i><br>") % (len(permitted_groups) - num - 1)
                 )
                 break
 
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts == 1:
-            html.write_text(_("1 Host"))
+            html.write_text_permissive(_("1 Host"))
         elif num_hosts > 0:
-            html.write_text("%d %s" % (num_hosts, _("Hosts")))
+            html.write_text_permissive("%d %s" % (num_hosts, _("Hosts")))
         else:
             html.i(_("(no hosts)"))
         html.close_div()
@@ -1231,7 +1231,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
 
         choices = self._get_choices()
         if not choices:
-            html.write_text(_("No valid target folder."))
+            html.write_text_permissive(_("No valid target folder."))
             return None
 
         html.dropdown(

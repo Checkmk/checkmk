@@ -44,7 +44,7 @@ class DummyDashlet(Dashlet[DummyDashletConfig]):
         return 123
 
     def show(self):
-        html.write_text("dummy")
+        html.write_text_permissive("dummy")
 
 
 @pytest.fixture(name="reset_dashlet_registry")

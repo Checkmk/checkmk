@@ -324,13 +324,13 @@ class FilterECServiceLevelRange(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         selection = self._options()
         html.open_div(class_="service_level min")
-        html.write_text("From")
+        html.write_text_permissive("From")
         html.dropdown(
             self.lower_bound_varname, selection, deflt=value.get(self.lower_bound_varname, "")
         )
         html.close_div()
         html.open_div(class_="service_level max")
-        html.write_text("To")
+        html.write_text_permissive("To")
         html.dropdown(
             self.upper_bound_varname, selection, deflt=value.get(self.upper_bound_varname, "")
         )

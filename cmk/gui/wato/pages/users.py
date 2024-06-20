@@ -726,9 +726,11 @@ class ModeUsers(WatoMode):
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:
-                        html.write_text(f"{render.date(last_seen)} {render.time_of_day(last_seen)}")
+                        html.write_text_permissive(
+                            f"{render.date(last_seen)} {render.time_of_day(last_seen)}"
+                        )
                     else:
-                        html.write_text(_("Never"))
+                        html.write_text_permissive(_("Never"))
 
                 if cust := has_customer(
                     user_cxn=connection, cust_api=customer, user_spec=user_spec
@@ -823,7 +825,9 @@ class ModeUsers(WatoMode):
                     vs = attr.valuespec()
                     vs_title = vs.title()
                     table.cell(_u(vs_title) if isinstance(vs_title, str) else vs_title)
-                    html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
+                    html.write_text_permissive(
+                        vs.value_to_html(user_spec.get(name, vs.default_value()))
+                    )
 
         html.hidden_field("selection", weblib.selection_id())
         html.hidden_fields()
@@ -838,7 +842,7 @@ class ModeUsers(WatoMode):
         if not load_contact_group_information():
             url = "wato.py?mode=contact_groups"
             html.open_div(class_="info")
-            html.write_text(
+            html.write_text_permissive(
                 _(
                     "Note: you haven't defined any contact groups yet. If you <a href='%s'>"
                     "create some contact groups</a> you can assign users to them und thus "
@@ -847,7 +851,7 @@ class ModeUsers(WatoMode):
                 )
                 % url
             )
-            html.write_text(
+            html.write_text_permissive(
                 " you can assign users to them und thus "
                 "make them monitoring contacts. Only monitoring contacts can receive "
                 "notifications."
@@ -1242,7 +1246,7 @@ class ModeEditUser(WatoMode):
         )
 
         if not self._contact_groups:
-            html.write_text(
+            html.write_text_permissive(
                 _("Please first create some <a href='%s'>contact groups</a>") % groups_page_url
             )
         else:
@@ -1347,7 +1351,7 @@ class ModeEditUser(WatoMode):
         if not self._is_locked("email"):
             EmailAddress(size=73).render_input("email", email)
         else:
-            html.write_text(email)
+            html.write_text_permissive(email)
             html.hidden_field("email", email)
 
         html.help(
@@ -1374,7 +1378,7 @@ class ModeEditUser(WatoMode):
         if not self._is_locked("authorized_sites"):
             vs_sites.render_input("authorized_sites", authorized_sites)
         else:
-            html.write_text(vs_sites.value_to_html(authorized_sites))
+            html.write_text_permissive(vs_sites.value_to_html(authorized_sites))
         html.help(vs_sites.help())
 
         self._show_custom_user_attributes(custom_user_attr_topics.get("ident", []))
@@ -1436,7 +1440,7 @@ class ModeEditUser(WatoMode):
                 html.td(_("repeat:"))
                 html.open_td()
                 html.password_input("_password2_" + self._pw_suffix(), autocomplete="new-password")
-                html.write_text(" (%s)" % _("optional"))
+                html.write_text_permissive(" (%s)" % _("optional"))
                 html.close_td()
                 html.close_tr()
 
@@ -1454,7 +1458,7 @@ class ModeEditUser(WatoMode):
                         label=_("Change password at next login or access"),
                     )
                 else:
-                    html.write_text(
+                    html.write_text_permissive(
                         _("Not permitted to change the password. Change can not be enforced.")
                     )
             else:
@@ -1480,9 +1484,9 @@ class ModeEditUser(WatoMode):
                 placeholder="******" if "automation_secret" in self._user else "",
                 autocomplete="off",
             )
-            html.write_text(" ")
+            html.write_text_permissive(" ")
             html.open_b(style=["position: relative", "top: 4px;"])
-            html.write_text(" &nbsp;")
+            html.write_text_permissive(" &nbsp;")
             html.icon_button(
                 "javascript:cmk.wato.randomize_secret('automation_secret', 20, '%s');"
                 % _("Copied secret to clipboard"),
@@ -1517,7 +1521,7 @@ class ModeEditUser(WatoMode):
                     label=_("disable the login to this account"),
                 )
             else:
-                html.write_text(
+                html.write_text_permissive(
                     _("Login disabled") if self._user["locked"] else _("Login possible")
                 )
                 html.hidden_field("locked", "1" if self._user["locked"] else "")
@@ -1535,7 +1539,7 @@ class ModeEditUser(WatoMode):
             if not self._is_locked("idle_timeout"):
                 get_vs_user_idle_timeout().render_input("idle_timeout", idle_timeout)
             else:
-                html.write_text(idle_timeout)
+                html.write_text_permissive(idle_timeout)
                 html.hidden_field("idle_timeout", idle_timeout)
 
         if "roles" in options_to_render:
@@ -1571,7 +1575,7 @@ class ModeEditUser(WatoMode):
         # TODO: The cast is a big fat lie: value can be None, but things somehow seem to "work" even then. :-/
         value = cast(str, self._user.get(name, dflt))
         if self._is_locked(name):
-            html.write_text(value)
+            html.write_text_permissive(value)
             html.hidden_field(name, value)
         else:
             html.text_input(name, value, size=73)
@@ -1613,7 +1617,9 @@ class ModeEditUser(WatoMode):
             if not self._is_locked(name):
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
             else:
-                html.write_text(vs.value_to_html(self._user.get(name, vs.default_value())))
+                html.write_text_permissive(
+                    vs.value_to_html(self._user.get(name, vs.default_value()))
+                )
                 # Render hidden to have the values kept after saving
                 html.open_div(style="display:none")
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))

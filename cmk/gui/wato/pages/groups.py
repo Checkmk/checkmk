@@ -165,7 +165,7 @@ class ModeGroups(WatoMode, abc.ABC):
 
     def _show_row_cells(self, nr: int, table: Table, name: GroupName, group: GroupSpec) -> None:
         table.cell("#", css=["narrow nowrap"])
-        html.write_text(nr)
+        html.write_text_permissive(nr)
 
         table.cell(_("Actions"), css=["buttons"])
         edit_url = folder_preserving_link(
@@ -287,7 +287,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
                 html.text_input("name", size=50)
                 html.set_focus("name")
             else:
-                html.write_text(self._name)
+                html.write_text_permissive(self._name)
                 html.set_focus("alias")
 
             forms.section(_("Alias"), is_required=True)

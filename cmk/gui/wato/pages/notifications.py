@@ -339,7 +339,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 table.cell("#", css=["narrow nowrap"])
 
                 if show_buttons and self._actions_allowed(rule):
-                    html.write_text(nr)
+                    html.write_text_permissive(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     links = self._rule_links(rule, nr, profilemode, userid)
                     html.icon_button(links.edit, _("Edit this notification rule"), "edit")
@@ -384,8 +384,8 @@ class ABCNotificationsMode(ABCEventsMode):
                     html.icon_button(
                         url, _("Context information about this rule"), "url", target="_blank"
                     )
-                    html.write_text("&nbsp;")
-                html.write_text(rule["description"])
+                    html.write_text_permissive("&nbsp;")
+                html.write_text_permissive(rule["description"])
                 table.cell(_("Contacts"))
 
                 infos = self._rule_infos(rule)
@@ -408,7 +408,7 @@ class ABCNotificationsMode(ABCEventsMode):
                         title=title,
                         indent=False,
                     ):
-                        html.write_text(vs_match_conditions.value_to_html(rule))
+                        html.write_text_permissive(vs_match_conditions.value_to_html(rule))
                 else:
                     html.i(_("(no conditions)"))
 
@@ -973,7 +973,7 @@ class ModeNotifications(ABCNotificationsMode):
         html.open_div(class_="matching_message")
         html.icon("toggle_details")
         html.b(_("Matching: "))
-        html.write_text(
+        html.write_text_permissive(
             _(
                 "Each parameter is defined by the first matching rule where that parameter "
                 "is set (checked)."
@@ -991,16 +991,18 @@ class ModeNotifications(ABCNotificationsMode):
         html.open_div(class_="message_container")
         html.h2(_("Analysis results"))
         analyse_rules, analyse_resulting_notifications = analyse
-        html.write_text(
+        html.write_text_permissive(
             _("%s notification rules are matching")
             % len(tuple(entry for entry in analyse_rules if "match" in entry))
         )
         html.br()
-        html.write_text(_("%s resulting notifications") % len(analyse_resulting_notifications))
+        html.write_text_permissive(
+            _("%s resulting notifications") % len(analyse_resulting_notifications)
+        )
         html.br()
         if request.var("dispatch"):
-            html.write_text(_("Notifications have been sent. "))
-        html.write_text("View the following tables for more details.")
+            html.write_text_permissive(_("Notifications have been sent. "))
+        html.write_text_permissive("View the following tables for more details.")
         html.close_div()
         html.close_div()
 
@@ -1258,14 +1260,16 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Plug-in parameters"), ", ".join(parameters))
                 table.cell(_("Bulking"))
                 if bulk:
-                    html.write_text(_("Time horizon") + ": ")
+                    html.write_text_permissive(_("Time horizon") + ": ")
                     if is_always_bulk(bulk):
-                        html.write_text(Age().value_to_html(bulk["interval"]))
+                        html.write_text_permissive(Age().value_to_html(bulk["interval"]))
                     else:
-                        html.write_text(Age().value_to_html(0))
-                    html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                    html.write_text(", %s " % (_("group by")))
-                    html.write_text(self._vs_notification_bulkby().value_to_html(bulk["groupby"]))
+                        html.write_text_permissive(Age().value_to_html(0))
+                    html.write_text_permissive(", %s: %d" % (_("Maximum count"), bulk["count"]))
+                    html.write_text_permissive(", %s " % (_("group by")))
+                    html.write_text_permissive(
+                        self._vs_notification_bulkby().value_to_html(bulk["groupby"])
+                    )
 
     def _vs_notification_scripts(self) -> DropdownChoice:
         return DropdownChoice(

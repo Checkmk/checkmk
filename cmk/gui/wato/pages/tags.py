@@ -939,7 +939,7 @@ def _rename_tags_after_confirmation(
 
     if affected_folders:
         with output_funnel.plugged():
-            html.write_text(
+            html.write_text_permissive(
                 _(
                     "Affected folders with an explicit reference to this tag "
                     "group and that are affected by the change"
@@ -951,7 +951,7 @@ def _rename_tags_after_confirmation(
 
     if affected_hosts:
         with output_funnel.plugged():
-            html.write_text(
+            html.write_text_permissive(
                 _(
                     "Hosts where this tag group is explicitly set "
                     "and that are effected by the change"
@@ -963,7 +963,7 @@ def _rename_tags_after_confirmation(
 
     if affected_rulesets:
         with output_funnel.plugged():
-            html.write_text(
+            html.write_text_permissive(
                 _("Rulesets that contain rules with references to the changed tags") + ":"
             )
             _show_affected_rulesets(affected_rulesets)
@@ -973,9 +973,9 @@ def _rename_tags_after_confirmation(
         wato_html_head(title=operation.confirm_title(), breadcrumb=breadcrumb)
         html.open_div(class_="really")
         html.h3(_("Your modifications affect some objects"))
-        html.write_text(message)
+        html.write_text_permissive(message)
         html.br()
-        html.write_text(
+        html.write_text_permissive(
             _(
                 "Setup can repair things for you. It can rename tags in folders, host and rules. "
                 "Removed tag groups will be removed from hosts and folders, removed tags will be "
@@ -1033,11 +1033,11 @@ def _show_aux_tag_used_by_tags(tags: set[cmk.utils.tags.GroupedTag]) -> None:
     builtin_config = cmk.utils.tags.BuiltinTagConfig()
     for index, tag in enumerate(sorted(tags, key=lambda t: t.choice_title)):
         if index > 0:
-            html.write_text(", ")
+            html.write_text_permissive(", ")
 
         # Built-in tag groups can not be edited
         if builtin_config.tag_group_exists(tag.group.id):
-            html.write_text(_u(tag.choice_title))
+            html.write_text_permissive(_u(tag.choice_title))
         else:
             edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag.group.id)])
             html.a(_u(tag.choice_title), href=edit_url)
@@ -1059,11 +1059,11 @@ def _show_affected_hosts(affected_hosts: list[Host]) -> None:
     html.open_li()
     for nr, host in enumerate(affected_hosts):
         if nr > 20:
-            html.write_text(_("... (%d more)") % (len(affected_hosts) - 20))
+            html.write_text_permissive(_("... (%d more)") % (len(affected_hosts) - 20))
             break
 
         if nr > 0:
-            html.write_text(", ")
+            html.write_text_permissive(", ")
 
         html.a(host.name(), href=host.edit_url())
     html.close_li()

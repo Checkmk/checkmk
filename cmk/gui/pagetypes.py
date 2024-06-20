@@ -1134,7 +1134,7 @@ class ListPage(Page, Generic[_T]):
 
                 # Title
                 table.cell(_("Title"))
-                html.write_text(instance.render_title(instances))
+                html.write_text_permissive(instance.render_title(instances))
                 html.help(_u(instance.description()))
 
                 # Custom columns specific to that page type
@@ -1675,8 +1675,8 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
         if target_page:
             if not isinstance(target_page, str):
                 target_page = target_page.page_url()
-            html.write_text(target_page)
-        html.write_text("\n%s" % ("true" if need_sidebar_reload else "false"))
+            html.write_text_permissive(target_page)
+        html.write_text_permissive("\n%s" % ("true" if need_sidebar_reload else "false"))
 
     # Default implementation for generic containers - used e.g. by GraphCollection
     @classmethod

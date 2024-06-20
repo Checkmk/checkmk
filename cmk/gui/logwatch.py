@@ -349,7 +349,7 @@ def show_file(site, host_name, file_name):
                 _("Analyze this line"),
                 "analyze",
             )
-            html.write_text(line["line"].replace(" ", "&nbsp;").replace("\1", "<br>"))
+            html.write_text_permissive(line["line"].replace(" ", "&nbsp;").replace("\1", "<br>"))
             html.close_td()
             html.close_tr()
 

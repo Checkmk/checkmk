@@ -829,7 +829,7 @@ class ModeDistributedMonitoring(WatoMode):
     ) -> None:
         table.cell(_("Status connection"))
         vs_connection = self._site_mgmt.connection_method_valuespec()
-        html.write_text(vs_connection.value_to_html(site["socket"]))
+        html.write_text_permissive(vs_connection.value_to_html(site["socket"]))
 
     def _show_status_connection_status(
         self, table: Table, site_id: SiteId, site: SiteConfiguration
@@ -855,17 +855,17 @@ class ModeDistributedMonitoring(WatoMode):
     ) -> None:
         table.cell(_("Configuration connection"))
         if not site["replication"]:
-            html.write_text(_("Not enabled"))
+            html.write_text_permissive(_("Not enabled"))
             return
 
-        html.write_text(_("Enabled"))
+        html.write_text_permissive(_("Enabled"))
         parts = []
         if site.get("replicate_ec"):
             parts.append("EC")
         if site.get("replicate_mkps"):
             parts.append("MKPs")
         if parts:
-            html.write_text(" (%s)" % ", ".join(parts))
+            html.write_text_permissive(" (%s)" % ", ".join(parts))
 
     def _show_config_connection_status(
         self, table: Table, site_id: SiteId, site: SiteConfiguration
@@ -1262,7 +1262,9 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _show_global_setting(self) -> None:
         forms.section(_("Global setting"))
-        html.write_text(self._valuespec.value_to_html(self._global_settings[self._varname]))
+        html.write_text_permissive(
+            self._valuespec.value_to_html(self._global_settings[self._varname])
+        )
 
     def _back_url(self) -> str:
         return ModeEditSiteGlobals.mode_url(site=self._site_id)

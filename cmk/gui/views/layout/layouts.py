@@ -287,7 +287,7 @@ class GroupedBoxesLayout(Layout):
             render_group_checkbox_th()
         for cell in cells:
             cell.paint_as_header()
-            html.write_text("\n")
+            html.write_text_permissive("\n")
         html.close_tr()
 
     def _balance(
@@ -329,7 +329,7 @@ def grouped_row_title(
         align="absbottom",
         class_=["treeangle", "nform", "open" if is_open else "closed"],
     )
-    html.write_text("%s (%d)" % (group_spec["title"], num_rows))
+    html.write_text_permissive("%s (%d)" % (group_spec["title"], num_rows))
 
     html.close_td()
     html.close_tr()
@@ -558,32 +558,32 @@ class LayoutTiled(Layout):
             html.open_td(class_=["tl", rendered[1][0]])
             if show_checkboxes:
                 render_checkbox(view, row, len(render_cells) - 1)
-            html.write_text(rendered[1][1])
+            html.write_text_permissive(rendered[1][1])
             html.close_td()
             html.open_td(class_=["tr", rendered[2][0]])
-            html.write_text(rendered[2][1])
+            html.write_text_permissive(rendered[2][1])
             html.close_td()
             html.close_tr()
 
             html.open_tr()
             html.open_td(colspan=2, class_=["center", rendered[0][0]])
-            html.write_text(rendered[0][1])
+            html.write_text_permissive(rendered[0][1])
             html.close_td()
             html.close_tr()
 
             for css, cont in rendered[5:]:
                 html.open_tr()
                 html.open_td(colspan=2, class_=["cont", css])
-                html.write_text(cont)
+                html.write_text_permissive(cont)
                 html.close_td()
                 html.close_tr()
 
             html.open_tr()
             html.open_td(class_=["bl", rendered[3][0]])
-            html.write_text(rendered[3][1])
+            html.write_text_permissive(rendered[3][1])
             html.close_td()
             html.open_td(class_=["br", rendered[4][0]])
-            html.write_text(rendered[4][1])
+            html.write_text_permissive(rendered[4][1])
             html.close_td()
             html.close_tr()
 
@@ -867,8 +867,8 @@ class LayoutMatrix(Layout):
                         for cell_nr, cell in enumerate(cells[1:]):
                             _tdclass, content = cell.render(cell_row, link_renderer)
                             if cell_nr:
-                                html.write_text(",")
-                            html.write_text(content)
+                                html.write_text_permissive(",")
+                            html.write_text_permissive(content)
 
     def render(  # pylint: disable=too-many-branches
         self,
@@ -894,7 +894,7 @@ class LayoutMatrix(Layout):
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
                 html.open_td(class_="matrixhead")
-                html.write_text(cell.title(use_short=False))
+                html.write_text_permissive(cell.title(use_short=False))
                 html.close_td()
                 for _group, group_row in groups:
                     tdclass, content = cell.render(group_row, link_renderer)
@@ -904,7 +904,7 @@ class LayoutMatrix(Layout):
                         if majority_value is not None and majority_value != gv:
                             tdclass += " minority"
                     html.open_td(class_=["left", tdclass])
-                    html.write_text(content)
+                    html.write_text_permissive(content)
                     html.close_td()
                 html.close_tr()
 
@@ -926,7 +926,7 @@ class LayoutMatrix(Layout):
                     list(matrix_cells[rid].values())[0], link_renderer
                 )
                 html.open_td(class_=["left", tdclass])
-                html.write_text(content)
+                html.write_text_permissive(content)
                 html.close_td()
 
                 # Now go through the groups and paint the rest of the

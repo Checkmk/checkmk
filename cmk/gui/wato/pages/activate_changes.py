@@ -335,7 +335,7 @@ def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
 
             table.cell(_("Time"), render.date_and_time(change["time"]), css=["narrow nobr"])
             table.cell(_("User"), css=["narrow nobr"])
-            html.write_text(change["user_id"] if change["user_id"] else "")
+            html.write_text_permissive(change["user_id"] if change["user_id"] else "")
             if is_foreign_change(change):
                 html.icon("foreign_changes", _("This change has been made by another user"))
 
@@ -357,9 +357,9 @@ def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
 
             table.cell(_("Affected sites"), css=["affected_sites"])
             if affects_all_sites(change):
-                html.write_text("<i>%s</i>" % _("All sites"))
+                html.write_text_permissive("<i>%s</i>" % _("All sites"))
             else:
-                html.write_text(", ".join(sorted(change["affected_sites"])))
+                html.write_text_permissive(", ".join(sorted(change["affected_sites"])))
 
 
 class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
@@ -766,18 +766,18 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         status: str,
     ) -> None:
         if status == "dead":
-            html.write_text(str(site_status["exception"]))
+            html.write_text_permissive(str(site_status["exception"]))
             return
 
         last_state = self._last_activation_state(site_id)
 
         if not is_logged_in:
-            html.write_text(_("Is not logged in.") + " ")
+            html.write_text_permissive(_("Is not logged in.") + " ")
 
         if not last_state:
-            html.write_text(_("Has never been activated"))
+            html.write_text_permissive(_("Has never been activated"))
         elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
-            html.write_text(_("Activation needed"))
+            html.write_text_permissive(_("Activation needed"))
         else:
             html.javascript(
                 "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)

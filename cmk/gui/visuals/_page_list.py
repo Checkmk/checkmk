@@ -242,7 +242,7 @@ def page_list(  # pylint: disable=too-many-branches
                         target="_blank" if what_s == "report" else None,
                     )
                 else:
-                    html.write_text(title2)
+                    html.write_text_permissive(title2)
                 html.help(_u(str(visual["description"])))
 
                 # Custom cols

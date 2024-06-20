@@ -198,10 +198,32 @@ async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>>
         UniClient::Odbc(client) => {
             #[cfg(windows)]
             {
-                let blocks =
-                    odbc::execute(client.conn_string(), query, Some(ODBC_CONNECTION_TIMEOUT))?;
-                let answers: Vec<UniAnswer> = blocks.into_iter().map(UniAnswer::Block).collect();
-                Ok(answers)
+                let queries = query.split(';').collect::<Vec<&str>>();
+                if queries.len() == 3 && queries[2].is_empty() {
+                    log::debug!("ODBC does not support multiple queries in one call");
+                    let blocks_0 = odbc::execute(
+                        client.conn_string(),
+                        queries[0],
+                        Some(ODBC_CONNECTION_TIMEOUT),
+                    )?;
+                    let blocks_1 = odbc::execute(
+                        client.conn_string(),
+                        queries[1],
+                        Some(ODBC_CONNECTION_TIMEOUT),
+                    )?;
+                    let answers: Vec<UniAnswer> = blocks_0
+                        .into_iter()
+                        .chain(blocks_1.into_iter())
+                        .map(UniAnswer::Block)
+                        .collect();
+                    Ok(answers)
+                } else {
+                    let blocks =
+                        odbc::execute(client.conn_string(), query, Some(ODBC_CONNECTION_TIMEOUT))?;
+                    let answers: Vec<UniAnswer> =
+                        blocks.into_iter().map(UniAnswer::Block).collect();
+                    Ok(answers)
+                }
             }
             #[cfg(unix)]
             anyhow::bail!("ODBC is not supported for now `{}`", client.conn_string());

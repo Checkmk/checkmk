@@ -465,12 +465,12 @@ class VerificationRequest(BaseSchema):
     VERSION = fields.String(required=True, description="The version of the request", example="3.0")
     request_id = fields.String(
         required=True,
-        description="The id of the request",
+        description="The ID of the request",
         example="df17e557-0daf-4b78-b9f2-f3550252a8b5",
     )
     instance_id = fields.String(
         required=True,
-        description="The id of the instance the request is for",
+        description="The ID of the instance the request is for",
         example="6b9e78d1-de99-46ef-9644-32ee33a2b489",
     )
     created_at = fields.Integer(

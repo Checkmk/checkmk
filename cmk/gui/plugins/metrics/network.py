@@ -742,12 +742,6 @@ metric_info["current_users"] = {
     "color": "23/a",
 }
 
-metric_info["average_latency"] = {
-    "title": _("Average latency"),
-    "unit": "s",
-    "color": "35/a",
-}
-
 metric_info["total_active_sessions"] = {
     "title": _("Total active sessions"),
     "unit": "count",

@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.lib.wmi import parse_wmi_table, WMISection, WMITable
+from cmk.plugins.lib.wmi import parse_wmi_table, scale_counter, WMISection, WMITable
 
 
 class TestWMITable:
@@ -3966,3 +3966,32 @@ def test_parse_wmi_table(
     section: WMISection,
 ) -> None:
     assert parse_wmi_table(string_table) == section
+
+
+def scale_counter_reference(measure, factor, base):
+    # old, inefficient implementation
+    # takes ages for the arguments: 18446744073664412644, 1, 15143722
+    while (base * factor) < measure:
+        base += 1 << 32
+    return float(measure) / base
+
+
+@pytest.mark.parametrize(
+    "measure, factor, base",
+    [
+        (1, 1, 1),
+        (2, 1, 1),
+        (3, 2, 1),
+        ((1 << 32) - 1, 1, 1),
+        (1 + (1 << 32), 1, 1),
+        (1844674407, 1, 15143722),
+        (1844674407, 2, 15143722),
+        (1844674407, 13, 15143727),
+        (1844674407366441, 1, 15143722),
+    ],
+)
+def test_scale_counter(measure: float, factor: float, base: float) -> None:
+    assert (
+        abs(scale_counter(measure, factor, base) - scale_counter_reference(measure, factor, base))
+        < 1e-15
+    )

@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import pytest
 
-# fmt: off
-# mypy: disable-error-code=var-annotated
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.wmi import parse_wmi_table
+from cmk.plugins.msexch.agent_based.msexch_rpcclientaccess import (
+    check_msexch_rpcclientaccess,
+    discover_msexch_rpcclientaccess,
+    Params,
+)
 
-checkname = "msexch_rpcclientaccess"
-
-mock_item_state = {
-    "": {"RPCRequests_": (0, 0)}
-}
-
-info = [
+_AGENT_OUTPUT = [
     [
         "ActiveUserCount",
         "Caption",
@@ -103,43 +112,56 @@ info = [
     ],
 ]
 
-discovery = {"": [(None, {})]}
 
-checks = {
-    "": [
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
         (
-            None,
-            {"latency": (200.0, 250.0), "requests": (30, 40)},
+            _AGENT_OUTPUT,
             [
-                (
-                    0,
-                    "Average latency: 18 ms",
-                    [
-                        ("average_latency", 18.0, 200.0, 250.0, None, None),
-                    ],
-                ),
-                (
-                    0,
-                    "RPC Requests/sec: 0.00",
-                    [
-                        ("requests_per_sec", 0.0, 30, 40, None, None),
-                    ],
-                ),
-                (
-                    0,
-                    "Users: 0",
-                    [
-                        ("current_users", 0.0, None, None, None, None),
-                    ],
-                ),
-                (
-                    0,
-                    "Active users: 11",
-                    [
-                        ("active_users", 11.0, None, None, None, None),
-                    ],
-                ),
+                Service(item=None),
             ],
         ),
     ],
-}
+)
+def test_parse_msexch_rpcclientaccess(
+    string_table: StringTable, expected_result: DiscoveryResult
+) -> None:
+    section = parse_wmi_table(string_table)
+    assert sorted(discover_msexch_rpcclientaccess(section)) == expected_result
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.parametrize(
+    "string_table, params, expected_result",
+    [
+        (
+            _AGENT_OUTPUT,
+            Params(
+                latency_s=("fixed", (0.005, 0.01)),
+                requests=("no_levels", None),
+            ),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Average latency: 18 milliseconds (warn/crit at 5 milliseconds/10 milliseconds)",
+                ),
+                Metric("average_latency_s", 0.018, levels=(0.005, 0.01)),
+                Result(state=State.OK, summary="RPC Requests/sec: 0.00"),
+                Metric("requests_per_sec", 0.0),
+                Result(state=State.OK, summary="Users: 0.00"),
+                Metric("current_users", 0.0),
+                Result(state=State.OK, summary="Active users: 11.00"),
+                Metric("active_users", 11.0),
+            ],
+        ),
+    ],
+)
+def test_check_msexch_rpcclientaccess(
+    string_table: StringTable,
+    params: Params,
+    expected_result: CheckResult,
+) -> None:
+    get_value_store().update({"RPCRequests_": (0.0, 0.0)})
+    section = parse_wmi_table(string_table)
+    assert list(check_msexch_rpcclientaccess(params, section)) == expected_result

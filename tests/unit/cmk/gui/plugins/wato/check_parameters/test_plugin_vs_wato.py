@@ -484,16 +484,6 @@ class ErrorReporter:
         ("check", "mq_queues", RuleGroup.CheckgroupParameters("mq_queues")),
         (
             "check",
-            "msexch_isclienttype",
-            RuleGroup.CheckgroupParameters("msx_info_store"),
-        ),
-        (
-            "check",
-            "msexch_isstore",
-            RuleGroup.CheckgroupParameters("msx_info_store"),
-        ),
-        (
-            "check",
             "mssql_connections",
             RuleGroup.CheckgroupParameters("mssql_connections"),
         ),

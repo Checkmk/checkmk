@@ -2,11 +2,21 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import re
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
+from math import ceil
+from typing import Callable
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    LevelsT,
+    Service,
+    StringTable,
+)
 
 # This set of functions is used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -341,3 +351,215 @@ def get_wmi_time(table: WMITable, row: str | int) -> float:
     if not frequency:
         frequency = 1
     return float(timestamp) / float(frequency)
+
+
+# .
+#   .--Inventory-----------------------------------------------------------.
+#   |            ___                      _                                |
+#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
+#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
+#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
+#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
+#   |                                                   |___/              |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_wmi_table_instances(
+    tables: WMISection,
+    required_tables: Iterable[str] | None = None,
+    filt: Callable[[WMISection, str | int], bool] | None = None,
+    levels: Mapping[str, object] | None = None,
+) -> DiscoveryResult:
+    if required_tables is None:
+        required_tables = tables
+
+    if required_tables_missing(tables, required_tables):
+        return
+
+    potential_instances: set = set()
+    # inventarize one item per instance that exists in all tables
+    for required_table in required_tables:
+        table_rows = tables[required_table].row_labels
+        if potential_instances:
+            potential_instances &= set(table_rows)
+        else:
+            potential_instances = set(table_rows)
+
+    # don't include the summary line
+    potential_instances.discard(None)
+
+    for instance in potential_instances:
+        if filt is None or filt(tables, instance):
+            yield Service(item=instance, parameters=levels or {})
+
+
+def inventory_wmi_table_total(
+    tables: WMISection,
+    required_tables: Iterable[str] | None = None,
+    filt: Callable[[WMISection, None], bool] | None = None,
+) -> DiscoveryResult:
+    if required_tables is None:
+        required_tables = tables
+
+    if not tables or required_tables_missing(tables, required_tables):
+        return
+
+    if filt is not None and not filt(tables, None):
+        return
+
+    total_present = all(
+        None in tables[required_table].row_labels for required_table in required_tables
+    )
+
+    if not total_present:
+        return
+    yield Service(item=None)
+
+
+# .
+#   .--Check---------------------------------------------------------------.
+#   |                      ____ _               _                          |
+#   |                     / ___| |__   ___  ___| | __                      |
+#   |                    | |   | '_ \ / _ \/ __| |/ /                      |
+#   |                    | |___| | | |  __/ (__|   <                       |
+#   |                     \____|_| |_|\___|\___|_|\_\                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def wmi_yield_raw_counter(
+    table: WMITable,
+    row: str | int,
+    column: str | int,
+    metric_name: str | None = None,
+    label: str | None = None,
+    levels_upper: LevelsT | None = None,
+    levels_lower: LevelsT | None = None,
+    render_func: Callable[[float], str] | None = None,
+) -> CheckResult:
+    if row == "":
+        row = 0
+
+    try:
+        value = table.get(row, column)
+        assert value
+    except KeyError:
+        return
+
+    yield from check_levels(
+        int(value),
+        metric_name=metric_name,
+        label=label,
+        levels_upper=levels_upper,
+        levels_lower=levels_lower,
+        render_func=render_func,
+    )
+
+
+def wmi_calculate_raw_average(
+    table: WMITable,
+    row: str | int,
+    column: str,
+    factor: float,
+) -> float:
+    if row == "":
+        row = 0
+
+    measure = table.get(row, column)
+    base = table.get(row, column + "_Base")
+    assert measure
+    assert base
+
+    base_int = int(base)
+
+    if base_int < 0:
+        # this is confusing as hell. why does wmi return this value as a 4 byte signed int
+        # when it clearly needs to be unsigned? And how does WMI Explorer know to cast this
+        # to unsigned?
+        base_int += 1 << 32
+
+    if base_int == 0:
+        return 0.0
+
+    return scale_counter(int(measure) * factor, factor, base_int)
+
+
+def wmi_yield_raw_average(
+    table: WMITable,
+    row: str | int,
+    column: str,
+    factor: float,
+    metric_name: str | None = None,
+    label: str | None = None,
+    levels_upper: LevelsT | None = None,
+    levels_lower: LevelsT | None = None,
+    render_func: Callable[[float], str] | None = None,
+) -> CheckResult:
+    try:
+        value = wmi_calculate_raw_average(table, row, column, factor)
+    except KeyError:
+        return
+
+    yield from check_levels(
+        value,
+        metric_name=metric_name,
+        label=label,
+        levels_upper=levels_upper,
+        levels_lower=levels_lower,
+        render_func=render_func,
+    )
+
+
+def scale_counter(
+    measure: float,
+    factor: float,
+    base: float,
+) -> float:
+    # This is a total counter which can overflow on long-running systems
+    # the following forces the counter into a range of 0.0-1.0, but there is no way to know
+    # how often the counter overran, so this may still be wrong
+    times = (measure / factor - base) / (1 << 32)
+    base += ceil(times) * (1 << 32)
+    return measure / base
+
+
+def wmi_yield_raw_persec(
+    table: WMITable,
+    row: str | int,
+    column: str | int,
+    metric_name: str | None = None,
+    label: str | None = None,
+    levels_upper: LevelsT | None = None,
+    levels_lower: LevelsT | None = None,
+    render_func: Callable[[float], str] | None = None,
+) -> CheckResult:
+    if table is None:
+        # This case may be when a check was discovered with a table which subsequently disappeared again.
+        # We expect to get `None` in this case.
+        return
+
+    if row == "":
+        row = 0
+
+    try:
+        value = table.get(row, column)
+        assert value
+    except KeyError:
+        return
+
+    rate = get_rate(
+        get_value_store(),
+        f"{column}_{table.name}",
+        get_wmi_time(table, row),
+        int(value),
+        raise_overflow=True,
+    )
+
+    yield from check_levels(
+        rate,
+        metric_name=metric_name,
+        label=label,
+        levels_upper=levels_upper,
+        levels_lower=levels_lower,
+        render_func=render_func,
+    )

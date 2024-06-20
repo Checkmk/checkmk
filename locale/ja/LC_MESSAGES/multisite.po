@@ -53778,6 +53778,10 @@ msgstr "イベント履歴の新しいファイルが作成される期間を指
 msgid "Specify database names that the rule should apply to"
 msgstr "ルールを適用するデータベース名を指定します"
 
+#, fuzzy
+msgid "Specify database names that the rule should apply to."
+msgstr "ルールを適用するデータベース名を指定します"
+
 msgid "Specify discovery mode"
 msgstr "検出モードを指定します"
 

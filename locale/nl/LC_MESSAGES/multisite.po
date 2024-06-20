@@ -54807,6 +54807,10 @@ msgstr ""
 msgid "Specify database names that the rule should apply to"
 msgstr "Geef databanknamen op waarop de regel moet worden toegepast"
 
+#, fuzzy
+msgid "Specify database names that the rule should apply to."
+msgstr "Geef databanknamen op waarop de regel moet worden toegepast"
+
 msgid "Specify discovery mode"
 msgstr "Geef de zoekmodus aan"
 

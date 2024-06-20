@@ -54802,6 +54802,10 @@ msgstr ""
 msgid "Specify database names that the rule should apply to"
 msgstr "Especificar nomes de bancos de dados aos quais a regra deve se aplicar"
 
+#, fuzzy
+msgid "Specify database names that the rule should apply to."
+msgstr "Especificar nomes de bancos de dados aos quais a regra deve se aplicar"
+
 msgid "Specify discovery mode"
 msgstr "Especificar o modo de descoberta"
 

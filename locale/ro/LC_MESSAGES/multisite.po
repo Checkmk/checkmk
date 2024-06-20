@@ -54911,6 +54911,10 @@ msgstr ""
 msgid "Specify database names that the rule should apply to"
 msgstr "Specificați numele bazelor de date la care trebuie să se aplice regula"
 
+#, fuzzy
+msgid "Specify database names that the rule should apply to."
+msgstr "Specificați numele bazelor de date la care trebuie să se aplice regula"
+
 msgid "Specify discovery mode"
 msgstr "Specificați modul de descoperire"
 

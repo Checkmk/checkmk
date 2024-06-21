@@ -1,0 +1,9 @@
+Title: mk_docker.py: Don't crash if a devices '/sys/block/DEVICE/dev' is missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1726050962
+Edition: cre
+Level: 1
+Version: 2.2.0p34
+

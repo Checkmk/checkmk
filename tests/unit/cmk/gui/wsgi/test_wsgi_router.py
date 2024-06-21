@@ -143,9 +143,8 @@ def test_openapi_version(
 
 
 def test_openapi_app_exception(
-    wsgi_app_debug_off: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
+    wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
-    wsgi_app = wsgi_app_debug_off
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     resp = wsgi_app.get(

@@ -406,11 +406,6 @@ def wsgi_app() -> WebTestAppForCMK:
 
 
 @pytest.fixture()
-def wsgi_app_debug_off() -> WebTestAppForCMK:
-    return _make_webtest(debug=False, testing=False)
-
-
-@pytest.fixture()
 def logged_in_wsgi_app(
     wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]
 ) -> WebTestAppForCMK:

@@ -628,6 +628,20 @@ function render_graph(graph: GraphArtwork) {
         ctx.restore();
     }
 
+    ctx.save();
+
+    // Note: With clip we don't need to filter/handle points below lower
+    // vertical range limit or similar.
+    // TODO Cleanup manual clipping: CMK-17917
+    ctx.beginPath();
+    ctx.rect(
+        coordinate_trans.trans_t(t_range_from),
+        coordinate_trans.trans_v(v_range_to),
+        t_range * t_pixels_per_second,
+        v_range * v_pixels_per_unit
+    );
+    ctx.clip();
+
     // Paint curves
     const curves = graph["curves"];
     const step = graph["step"] / 2.0;
@@ -651,7 +665,6 @@ function render_graph(graph: GraphArtwork) {
                 TimeSeriesValue
             ][];
 
-            ctx.save();
             ctx.fillStyle = hex_to_rgba(color + opacity);
             ctx.imageSmoothingEnabled = true; // seems no difference on FF
             ctx.strokeStyle = color;
@@ -678,10 +691,8 @@ function render_graph(graph: GraphArtwork) {
                 corner_markers,
                 ctx
             );
-            ctx.restore();
         } else {
             // "line"
-            ctx.save();
             ctx.strokeStyle = color;
             ctx.lineWidth = curve_line_width;
             render_curve(
@@ -692,9 +703,9 @@ function render_graph(graph: GraphArtwork) {
                 points as TimeSeriesValue[],
                 ctx
             );
-            ctx.restore();
         }
     }
+    ctx.restore();
 
     if (!graph.render_config.preview && graph.render_config.show_time_axis) {
         // Paint time axis labels

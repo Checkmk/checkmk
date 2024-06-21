@@ -31,7 +31,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
@@ -279,11 +278,11 @@ class ModePatternEditor(WatoMode):
                                 match_start = matched.start()
                                 match_end = matched.end()
                                 disp_match_txt = (
-                                    escape_to_html(self._match_txt[:match_start])
+                                    HTML.with_escaping(self._match_txt[:match_start])
                                     + HTMLWriter.render_span(
                                         self._match_txt[match_start:match_end], class_="match"
                                     )
-                                    + escape_to_html(self._match_txt[match_end:])
+                                    + HTML.with_escaping(self._match_txt[match_end:])
                                 )
 
                                 if not already_matched:

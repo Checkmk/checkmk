@@ -1046,7 +1046,7 @@ class ModeBIRules(ABCBIMode):
                             + HTML.with_escaping(bi_rule.properties.title)
                         )
                     else:
-                        cell_title = escaping.escape_to_html(bi_rule.properties.title)
+                        cell_title = HTML.with_escaping(bi_rule.properties.title)
                     table.cell(_("Title"), cell_title)
 
                     aggr_func_data = BIAggregationFunctionSchema().dump(

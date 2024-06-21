@@ -5708,7 +5708,7 @@ class Alternative(ValueSpec[AlternativeModel]):
         if vs:
             output = HTML.empty()
             if self._show_alternative_title and (title := vs.title()):
-                output = escaping.escape_to_html(title) + HTMLWriter.render_br()
+                output = HTML.with_escaping(title) + HTMLWriter.render_br()
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
@@ -7750,7 +7750,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             selection_text = _("Choose another %s") % ("Emblem" if is_emblem else "Icon")
             content = self._render_icon(value, "", selection_text, id_=varprefix + "_img")
         else:
-            content = escaping.escape_to_html(_("Select an Icon"))
+            content = HTML.with_escaping(_("Select an Icon"))
 
         html.popup_trigger(
             content,

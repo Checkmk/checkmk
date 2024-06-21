@@ -3417,21 +3417,21 @@ def _paint_discovery_output(
                     "rulesets",
                     theme=theme,
                 )
-                + escaping.escape_to_html(_("Disabled (configured away by admin)")),
+                + HTML.with_escaping(_("Disabled (configured away by admin)")),
                 "vanished": html.render_icon_button(
                     discovery_url,
                     _("Vanished (checked, but no longer exist)"),
                     "services",
                     theme=theme,
                 )
-                + escaping.escape_to_html(_("Vanished (checked, but no longer exist)")),
+                + HTML.with_escaping(_("Vanished (checked, but no longer exist)")),
                 "unmonitored": html.render_icon_button(
                     discovery_url,
                     _("Available (missing)"),
                     "services",
                     theme=theme,
                 )
-                + escaping.escape_to_html(_("Available (missing)")),
+                + HTML.with_escaping(_("Available (missing)")),
             }.get(value, value),
         )
     if not (field == "discovery_service" and row["discovery_state"] == "vanished"):

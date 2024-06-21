@@ -64,7 +64,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
-from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
+from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -1405,7 +1405,7 @@ class ModeEditRuleset(WatoMode):
 
             value_html = (
                 html.render_icon("alert")
-                + escape_to_html(_("The value of this rule is not valid. "))
+                + HTML.with_escaping(_("The value of this rule is not valid. "))
                 + escape_to_html_permissive(reason)
             )
         html.write_text_permissive(value_html)
@@ -2691,7 +2691,7 @@ class RuleConditionRenderer:
                 phrase = _("is not one of regex") if regex_count else _("is not one of")
             else:
                 phrase = _("matches one of regex") if regex_count else _("is")
-            condition.append(escape_to_html(phrase))
+            condition.append(HTML.with_escaping(phrase))
 
             for host_spec in host_name_conditions:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
@@ -2718,7 +2718,8 @@ class RuleConditionRenderer:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
                     expression = _("does not match regex") if is_negate else _("matches regex")
                     text_list.append(
-                        escape_to_html(expression + " ") + HTMLWriter.render_b(host_spec["$regex"])
+                        HTML.with_escaping(expression + " ")
+                        + HTMLWriter.render_b(host_spec["$regex"])
                     )
                 elif isinstance(host_spec, str):
                     expression = _("is not") if is_negate else _("is")
@@ -2730,7 +2731,7 @@ class RuleConditionRenderer:
                         and (host := Host.host(HostName(host_spec))) is not None
                     ):
                         text_list.append(
-                            escape_to_html(expression + " ")
+                            HTML.with_escaping(expression + " ")
                             + HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))
                         )
                     else:
@@ -2745,7 +2746,7 @@ class RuleConditionRenderer:
             condition.append(text_list[0])
         else:
             condition.append(HTML.without_escaping(", ").join(text_list[:-1]))
-            condition.append(escape_to_html(_("or ")) + text_list[-1])
+            condition.append(HTML.with_escaping(_("or ")) + text_list[-1])
 
         return HTML.without_escaping(" ").join(condition)
 
@@ -2760,17 +2761,17 @@ class RuleConditionRenderer:
 
         is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
         if not service_conditions:
-            yield escape_to_html(_("Does not match any service"))
+            yield HTML.with_escaping(_("Does not match any service"))
             return
 
         condition = HTML.empty()
         if item_type == "service":
-            condition = escape_to_html(_("Service name"))
+            condition = HTML.with_escaping(_("Service name"))
         elif item_type == "item":
             if item_name is not None:
-                condition = escape_to_html(item_name)
+                condition = HTML.with_escaping(item_name)
             else:
-                condition = escape_to_html(_("Item"))
+                condition = HTML.with_escaping(_("Item"))
         condition += HTML.without_escaping(" ")
 
         exact_match_count = len(
@@ -2783,7 +2784,7 @@ class RuleConditionRenderer:
                 phrase = _("is not ") if exact_match_count else _("does not begin with ")
             else:
                 phrase = _("is ") if exact_match_count else _("begins with ")
-            condition += escape_to_html(phrase)
+            condition += HTML.with_escaping(phrase)
 
             for item_spec in service_conditions:
                 if isinstance(item_spec, dict) and "$regex" in item_spec:
@@ -2806,7 +2807,9 @@ class RuleConditionRenderer:
                     expression = _("is not ") if is_exact else _("begins not with ")
                 else:
                     expression = _("is ") if is_exact else _("begins with ")
-                text_list.append(escape_to_html(expression) + HTMLWriter.render_b(spec.rstrip("$")))
+                text_list.append(
+                    HTML.with_escaping(expression) + HTMLWriter.render_b(spec.rstrip("$"))
+                )
 
         if len(text_list) == 1:
             condition += text_list[0]

@@ -36,7 +36,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -321,7 +320,7 @@ def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
 
-    message = escape_to_html(_("The message has successfully been sent..."))
+    message = HTML.with_escaping(_("The message has successfully been sent..."))
     message += HTMLWriter.render_br()
 
     parts = []

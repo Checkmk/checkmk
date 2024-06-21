@@ -10,13 +10,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
 
-def test_escape_to_html() -> None:
-    assert isinstance(escaping.escape_to_html(""), HTML)
-    assert str(escaping.escape_to_html("")) == ""
-    assert str(escaping.escape_to_html("<script>")) == "&lt;script&gt;"
-    assert str(escaping.escape_to_html("<b>")) == "&lt;b&gt;"
-
-
 def test_escape_to_html_permissive() -> None:
     assert isinstance(escaping.escape_to_html_permissive(""), HTML)
     assert str(escaping.escape_to_html_permissive("")) == ""

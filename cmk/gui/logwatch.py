@@ -41,7 +41,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageRegistry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
@@ -681,7 +680,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):  # pylint: disabl
     except Exception as e:
         if active_config.debug:
             raise
-        raise MKGeneralException(escape_to_html(_("Cannot parse log file %s: %s") % (file_name, e)))
+        raise MKGeneralException(_("Cannot parse log file %s: %s") % (file_name, e))
 
     return log_chunks
 

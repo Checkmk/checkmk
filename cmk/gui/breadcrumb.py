@@ -13,7 +13,7 @@ from typing import NamedTuple
 
 import cmk.gui.htmllib.html
 from cmk.gui.type_defs import MegaMenu
-from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
 
@@ -52,9 +52,9 @@ class BreadcrumbRenderer:
 
         for item in breadcrumb:
             if item.url:
-                cmk.gui.htmllib.html.html.a(escape_to_html(str(item.title)), href=item.url)
+                cmk.gui.htmllib.html.html.a(HTML.with_escaping(str(item.title)), href=item.url)
             else:
-                cmk.gui.htmllib.html.html.span(escape_to_html(str(item.title)))
+                cmk.gui.htmllib.html.html.span(HTML.with_escaping(str(item.title)))
 
         cmk.gui.htmllib.html.html.close_div()
 

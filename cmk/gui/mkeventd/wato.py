@@ -73,7 +73,6 @@ from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, Icon, PermissionName
 from cmk.gui.user_sites import get_event_console_site_choices
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -1560,7 +1559,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
             raise MKUserError("event_p_host", _("Please specify a host name"))
         rfc = send_event(event)
         flash(
-            escape_to_html(_("Test event generated and sent to Event Console."))
+            HTML.with_escaping(_("Test event generated and sent to Event Console."))
             + HTMLWriter.render_br()
             + HTMLWriter.render_pre(rfc)
         )

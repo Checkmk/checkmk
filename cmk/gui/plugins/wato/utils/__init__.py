@@ -37,7 +37,6 @@ from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.site_config import is_wato_slave_site as is_wato_slave_site
 from cmk.gui.type_defs import Choices as Choices
 from cmk.gui.type_defs import ChoiceText as ChoiceText
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.transaction_manager import transactions as transactions
 from cmk.gui.utils.urls import make_confirm_link as make_confirm_link

@@ -31,15 +31,6 @@ _COMMENT_RE = re.compile("(<!--.*?-->)")
 _TAG_RE = re.compile(r"(<[^>]+?>)")
 
 
-def escape_to_html(value: str) -> HTML:
-    """Escape HTML and return as HTML object
-
-    >>> escape_to_html("foo<b>bar</b>")
-    HTML("foo&lt;b&gt;bar&lt;/b&gt;")
-    """
-    return HTML.with_escaping(value)
-
-
 def escape_to_html_permissive(value: str, escape_links: bool = True) -> HTML:
     """Escape HTML in permissive mode (keep simple markup tags) and return as HTML object
 

@@ -39,7 +39,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
 from cmk.gui.utils import escaping
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -351,7 +350,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             except KeyError:
                 pass
 
-            msg = escape_to_html(
+            msg = HTML.with_escaping(
                 _("Resetted configuration variable %s to its default.") % self._varname
             )
         else:
@@ -474,7 +473,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def title(self) -> str:
         if self._search:
-            return _("Global settings matching '%s'") % escape_to_html(self._search)
+            return _("Global settings matching '%s'") % self._search
         return _("Global settings")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

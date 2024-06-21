@@ -327,7 +327,7 @@ class PageCrash(ABCCrashReportPage):
         if not files:
             return
 
-        warn_text = escaping.escape_to_html(
+        warn_text = HTML.with_escaping(
             _(
                 "The following files located in the local hierarchy of your site are involved in this exception:"
             )
@@ -335,7 +335,7 @@ class PageCrash(ABCCrashReportPage):
         warn_text += HTMLWriter.render_ul(
             HTML.without_escaping("\n").join(map(HTMLWriter.render_li, files))
         )
-        warn_text += escaping.escape_to_html(
+        warn_text += HTML.with_escaping(
             _(
                 "Maybe these files are not compatible with your current Checkmk "
                 "version. Please verify and only report this crash when you think "

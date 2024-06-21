@@ -25,7 +25,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.rule_specs.legacy_converter import _convert_to_legacy_valuespec
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.utils.user_errors import user_errors
 
 from cmk.rulesets.v1 import Help, Title
@@ -742,7 +742,7 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> NativeVueForm
 
     try:
         # Convert custom_form_spec to valuespec and feed it to LegacyValueSpec
-        valuespec = _convert_to_legacy_valuespec(custom_form_spec, translate_to_current_language)
+        valuespec = convert_to_legacy_valuespec(custom_form_spec, translate_to_current_language)
         return LegacyValueSpec(
             title=Title(  # pylint: disable=localization-of-non-literal-string
                 str(valuespec.title() or "")

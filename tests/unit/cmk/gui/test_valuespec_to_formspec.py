@@ -7,7 +7,7 @@ import typing
 import pytest
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.rule_specs.legacy_converter import _convert_to_legacy_valuespec
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.valuespec import definitions
 from cmk.gui.valuespec.to_formspec import valuespec_to_formspec
 
@@ -144,7 +144,7 @@ def test_convert_round_trip(
     if expected_vs_instance is None:
         expected_vs_instance = vs_instance
 
-    vs_instance2 = _convert_to_legacy_valuespec(
+    vs_instance2 = convert_to_legacy_valuespec(
         valuespec_to_formspec(vs_instance),
         localizer=localizer,
     )

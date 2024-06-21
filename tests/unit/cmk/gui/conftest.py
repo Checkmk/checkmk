@@ -129,8 +129,9 @@ def patch_theme() -> Iterator[None]:
 
 
 @pytest.fixture()
-def request_context(flask_app: Flask) -> Iterator[None]:
+def request_context(wsgi_app: WebTestAppForCMK) -> Iterator[None]:
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
+    flask_app = wsgi_app.app
     with flask_app.test_request_context():
         flask_app.preprocess_request()
         yield
@@ -304,6 +305,8 @@ class WebTestAppForCMK(webtest.TestApp):  # type: ignore[misc]
     def call_method(  # type: ignore[no-untyped-def]
         self, method: HTTPMethod, url, *args, **kw
     ) -> webtest.TestResponse:
+        if method.lower() == "get":
+            _reset_cache_for_folders_and_hosts_setup()
         return getattr(self, method.lower())(url, *args, **kw)
 
     def has_link(self, resp: webtest.TestResponse, rel: str) -> bool:
@@ -344,9 +347,21 @@ class WebTestAppForCMK(webtest.TestApp):  # type: ignore[misc]
         return resp
 
 
-def _make_webtest(debug: bool = True, testing: bool = True) -> WebTestAppForCMK:
-    cookies = CookieJar()
-    return WebTestAppForCMK(session_wsgi_app(debug=debug, testing=testing), cookiejar=cookies)
+def _reset_cache_for_folders_and_hosts_setup() -> None:
+    """Reset redis client and corresponding cache initialized in the Checkmk flask app context.
+
+    Cache related to folder and hosts is reset, along with the redis client.
+
+    NOTE: further investigation to be performed as documented in CMK-14175.
+    `request_context` should be made specific to the Rest API calls.
+    """
+    from flask.globals import g
+
+    if hasattr(g, "folder_tree"):
+        g.folder_tree.invalidate_caches()
+
+    if hasattr(g, "wato_redis_client"):
+        del g.wato_redis_client
 
 
 @pytest.fixture()
@@ -401,8 +416,9 @@ def single_auth_request(flask_app: Flask, auth_request: http.Request) -> SingleR
 
 
 @pytest.fixture()
-def wsgi_app() -> WebTestAppForCMK:
-    return _make_webtest(debug=False, testing=True)
+def wsgi_app(flask_app: Flask) -> WebTestAppForCMK:
+    cookies = CookieJar()
+    return WebTestAppForCMK(flask_app, cookiejar=cookies)
 
 
 @pytest.fixture()
@@ -511,7 +527,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
 @pytest.fixture()
 def flask_app(patch_omd_site: None, use_fakeredis_client: None) -> Flask:
-    return session_wsgi_app(testing=True)
+    return session_wsgi_app(debug=False, testing=True)
 
 
 @pytest.fixture(name="base")

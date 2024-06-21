@@ -11,4 +11,5 @@ from tests.unit.cmk.gui.conftest import (  # NOQA
     with_admin,
     with_admin_login,
     with_user,
+    wsgi_app,
 )

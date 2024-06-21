@@ -14,6 +14,7 @@ from tests.unit.cmk.gui.conftest import (  # pylint: disable=unused-import
     load_config,
     request_context,
     with_admin,
+    wsgi_app,
 )
 
 from cmk.gui import http

@@ -4,4 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # pylint: disable=unused-import
 
-from tests.unit.cmk.gui.conftest import flask_app, gui_cleanup_after_test, request_context  # NOQA
+from tests.unit.cmk.gui.conftest import (  # NOQA
+    flask_app,
+    gui_cleanup_after_test,
+    request_context,
+    wsgi_app,
+)

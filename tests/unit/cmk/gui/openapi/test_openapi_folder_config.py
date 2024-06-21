@@ -358,7 +358,7 @@ def test_openapi_create_folder_with_network_scan(
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params=json.dumps(
             {
-                "name": "my_folder_name",
+                "name": "folder-1",
                 "title": "some title",
                 "parent": "~",
                 "attributes": {
@@ -392,7 +392,7 @@ def test_openapi_create_folder_with_network_scan(
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
-    path = paths.omd_root / "etc/check_mk/conf.d/wato/my_folder_name/.wato"
+    path = paths.omd_root / "etc/check_mk/conf.d/wato/folder-1/.wato"
     with path.open() as fo:
         result = literal_eval(fo.read())
     assert user == result["attributes"]["network_scan"].pop("run_as")
@@ -416,7 +416,7 @@ def test_openapi_show_folder_with_network_scan_result(
     aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
     _create_criticality_tag(aut_user_auth_wsgi_app)
-    path = paths.omd_root / "etc/check_mk/conf.d/wato/my_folder_name/.wato"
+    path = paths.omd_root / "etc/check_mk/conf.d/wato/folder-2/.wato"
     path.parent.mkdir(parents=True, exist_ok=True)
     user, _ = with_automation_user
     with path.open("w") as fo:
@@ -465,7 +465,7 @@ def test_openapi_show_folder_with_network_scan_result(
         headers={"Accept": "application/json"},
     )
     assert resp.json["value"][0]["extensions"] == {
-        "path": "/my_folder_name",
+        "path": "/folder-2",
         "attributes": {
             "network_scan": {
                 "addresses": [

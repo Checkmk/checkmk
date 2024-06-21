@@ -412,6 +412,7 @@ class DocReference(Enum):
     DCD = "dcd"  # dynamic host configuration
     DEVEL_CHECK_PLUGINS = "devel_intro"
     DIAGNOSTICS = "support_diagnostics"
+    DIAGNOSTICS_CLI = "support_diagnostics#commandline"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     EVENTCONSOLE = "ec"
     FORECAST_GRAPH = "forecast_graphs"

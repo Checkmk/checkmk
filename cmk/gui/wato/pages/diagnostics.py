@@ -66,7 +66,7 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -261,8 +261,13 @@ class ModeDiagnostics(WatoMode):
                                         "very large files are collected, it's also possible to "
                                         "call the support diagnostics from command line using "
                                         "the command 'cmk --create-diagnostics-dump' with "
-                                        " appropriate parameters in the context of the affected "
-                                        "site."
+                                        "appropriate parameters in the context of the affected "
+                                        "site. See the %s"
+                                    )
+                                    % html.render_a(
+                                        "user manual",
+                                        href=doc_reference_url(DocReference.DIAGNOSTICS_CLI),
+                                        target="_blank",
                                     ),
                                     default_value=timeout_default,
                                     minvalue=60,

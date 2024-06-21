@@ -194,6 +194,17 @@ SECTIONS: Sequence[tuple[str, ResultFn]] = (
             "id",
         ),
     ),
+    (
+        "nas_shares",
+        lambda conn: handler_nested(
+            conn,
+            (
+                BASE + "/data-services/nas/shares",
+                BASE + "/data-services/nas/shares/share",
+            ),
+            "id",
+        ),
+    ),
 )
 
 
